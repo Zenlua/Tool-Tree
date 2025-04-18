@@ -1,16 +1,24 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Rom decoding and apk editing app, includes tools java, python etc available**
+**Tools for ROM Decoding and Analysis**
 
-**Telegram: [Group](https://t.me/tooltree)**
++ These tools help in examining and extracting components from Android ROMs
 
-**Source: [Github](https://github.com/Zenlua/Tool-Tree)**
+**Tools for APK Editing**
 
-## Donate
++ These apps primarily focus on modifying APK files
 
-**Paypal: [Links](https://paypal.me/kakathic)**
+**Chat group**
+
++ Telegram: [Group](https://t.me/tooltree)
+
++ Source: [Github](https://github.com/Zenlua/Tool-Tree)
+
+**Donate**
+
++ Paypal: [Links](https://paypal.me/kakathic)
  
-**Techcombank Vietnam:** `19034902604017` (VTCBVNVX)
++ Techcombank Vietnam: `19034902604017` (VTCBVNVX)
 
 **Thank you for visiting**
 
