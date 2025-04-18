@@ -4,7 +4,7 @@
 
 + Author: [Kakathic](https://t.me/kakathic)
 
-+ Telegram: [Group](https://t.me/tooltree) | [Channel](https://t.me/tool_tree)
++ Telegram: [Group](https://t.me/tooltree) × [Channel](https://t.me/tool_tree)
 
 + Donate: [Paypal](https://paypal.me/kakathic)
 
