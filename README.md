@@ -2,4 +2,4 @@
 
 + Develop mod tool
 
-[Information](https://zenlua.github.io/Tool-Tree/Information/Pay.html)
+[Information](https://zenlua.github.io/Tool-Tree/Pay.html)
