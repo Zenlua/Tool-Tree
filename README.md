@@ -4,6 +4,6 @@
 
 ![](https://komarev.com/ghpvc/?username=Zenlua&abbreviated=true)
 
-[Information](https://zenlua.github.io/Tool-Tree/Pay.html)
+[Information](https://zenlua.github.io/Tool-Tree/Information.html)
 
 kkk
