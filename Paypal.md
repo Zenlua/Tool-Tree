@@ -16,7 +16,7 @@
 
 **Donate**
 
-+ Paypal: [Links](https://paypal.me/kakathic)
++ [Paypal](https://paypal.me/kakathic)
  
 + Techcombank Vietnam: `19034902604017` (VTCBVNVX)
 
