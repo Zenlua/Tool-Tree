@@ -14,7 +14,7 @@
 
 + Source: [Github](https://github.com/Zenlua/Tool-Tree)
 
-**Donate**
+**Donate for development**
 
 + [Paypal](https://paypal.me/kakathic)
  
