@@ -9,7 +9,8 @@ Terminal tool available python3 and open-jdk 21 and rom and apk editing tools
 
 + Source: [Github](https://github.com/Zenlua/Tool-Tree)
 
-> **Donate: [Paypal](https://paypal.me/kakathic)**
+### Donate
+> **Paypal: [Links](https://paypal.me/kakathic)**
 > 
 > Techcombank Vietnam `19034902604017` (VTCBVNVX)
 
