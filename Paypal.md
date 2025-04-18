@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Rom decoding and apk editing app, java, python etc available**
+**Rom decoding and apk editing app, includes tools java, python etc available**
 
 **Telegram: [Group](https://t.me/tooltree)**
 
