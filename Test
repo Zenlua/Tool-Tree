@@ -1,1 +1,6 @@
-xin chào
+fileqpk="Tool-Tree.apk"
+
+
+/data/local/7z x $fileqpk classes.dex resources.arsc assets/HOME/lib/module.so res/*/* -so 2>/dev/null | sha256sum -b
+echo
+/data/local/7z x `pm path com.tool.tree | cut -d: -f2` classes.dex resources.arsc assets/HOME/lib/module.so res/*/* -so 2>/dev/null | sha256sum -b
