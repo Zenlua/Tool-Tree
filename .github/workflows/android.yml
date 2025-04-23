@@ -19,7 +19,9 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: 17
-
+    - uses: gradle/actions/setup-gradle@v4.3.1
+      with:
+        dependency-graph: generate-and-submit
     - name: Make gradlew executable
       run: chmod +x ./gradlew
 
