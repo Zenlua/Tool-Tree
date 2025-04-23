@@ -16,7 +16,7 @@ import androidx.core.content.FileProvider;
 
 import java.io.File;
 
-public class MainActivity extends AppCompatActivity {
+public class InstallerActivity extends AppCompatActivity {
     private static final int REQUEST_READ_STORAGE = 100;
     private static final int REQUEST_INSTALL_PACKAGES = 101;
 
