@@ -23,7 +23,7 @@ jobs:
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
     - name: Make gradlew executable
       run: 
-          gradle wrapper
+          #gradle wrapper
           chmod +x ./gradlew
 
     - name: Build APK
