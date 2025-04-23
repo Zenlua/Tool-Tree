@@ -23,7 +23,9 @@ jobs:
       with:
         dependency-graph: generate-and-submit
     - name: Make gradlew executable
-      run: chmod +x ./gradlew
+      run: 
+          gradle wrapper
+          chmod +x ./gradlew
 
     - name: Build APK
       run: ./gradlew assembleDebug
