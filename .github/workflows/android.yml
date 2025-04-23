@@ -22,7 +22,7 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: |
-            sdk install gradle
+            
             chmod +x gradlew
     - name: Build with Gradle
       run: |
