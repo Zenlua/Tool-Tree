@@ -19,7 +19,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name=".InstallerActivity">
+        <activity android:name=".InstallerActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
