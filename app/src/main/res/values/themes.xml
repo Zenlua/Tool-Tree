@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.WakeLockApp" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Customize your theme here -->
+    </style>
+</resources>
