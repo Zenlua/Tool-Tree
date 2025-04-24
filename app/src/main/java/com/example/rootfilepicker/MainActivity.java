@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class MainActivity extends AppCompatActivity {
+    private List<String> fileFilter = new ArrayList<>();
     private String typeUri = "path";
     private List<String> fileExtensions = new ArrayList<>();
     private static final int PERMISSION_REQUEST_CODE = 1;
@@ -31,12 +32,20 @@ public class MainActivity extends AppCompatActivity {
     private final List<FileItem> fileItems = new ArrayList<>();
     private final List<FileItem> selectedItems = new ArrayList<>();
     private final String fileFilter = ""; // ví dụ: ".txt"
-private List<String> extensionFilter = new ArrayList<>();
+    private List<String> extensionFilter = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("type_uri")) {
-            typeUri = intent.getStringExtra("type_uri");
+
+        String extRaw = intent.getStringExtra("extension");
+        if (extRaw != null) {
+            for (String ext : extRaw.split(",")) {
+                fileFilter.add(ext.trim().toLowerCase());
+            }
+        }
+                typeUri = intent.getStringExtra("type_uri");
         if (intent.hasExtra("extension")) {
             String ext = intent.getStringExtra("extension").toLowerCase();
             fileExtensions = Arrays.asList(ext.split(","));
