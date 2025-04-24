@@ -1,3 +1,4 @@
+package com.example.rootfilepicker;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,7 +9,7 @@ import android.widget.Filterable;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.File;
-package com.example.rootfilepicker;
+
 
 import java.io.File;
 
