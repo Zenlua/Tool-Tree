@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private final List<FileItem> fileItems = new ArrayList<>();
     private final List<FileItem> selectedItems = new ArrayList<>();
     
-    private List<String> extensionFilter = new ArrayList<>();
+   
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,14 +51,7 @@ public class MainActivity extends AppCompatActivity {
     // Lưu khi app thoát
     Runtime.getRuntime().addShutdownHook(new Thread(this::saveSelectedPaths));
     
-        // Nhận danh sách đuôi file từ Intent
-        extensionFilter = new ArrayList<>();
-        String extRaw = getIntent().getStringExtra("extension");
-        if (extRaw != null) {
-            for (String ext : extRaw.split(",")) {
-                extensionFilter.add(ext.trim().toLowerCase());
-            }
-        }
+
         
         setContentView(R.layout.activity_main);
 
