@@ -1,18 +1,18 @@
-apply plugin: 'com.android.application'
+
+plugins {
+    id 'com.android.application'
+}
 
 android {
-    compileSdkVersion 33
-namespace 'com.example.wakelockapp' // <- Thêm dòng này
+    namespace 'com.example.wakelockapp'
+    compileSdk 33
 
-    
     defaultConfig {
         applicationId "com.example.wakelockapp"
-        minSdkVersion 21
-        targetSdkVersion 33
+        minSdk 21
+        targetSdk 33
         versionCode 1
         versionName "1.0"
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -25,5 +25,4 @@ namespace 'com.example.wakelockapp' // <- Thêm dòng này
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
 }
