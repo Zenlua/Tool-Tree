@@ -1,15 +1,19 @@
 package com.example.fileselector;
 
-import android.content.Context;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
+import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,75 +23,88 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private static final int REQ_PERMISSION = 100;
+    private static final String AUTHORITY = "com.example.fileselector.provider";
+    public static final String ACTION_FILES_SELECTED = "com.example.fileselector.ACTION_FILES_SELECTED";
+
     private EditText searchEdit, extEdit;
     private RecyclerView recyclerView;
     private Button confirmButton;
     private FileAdapter adapter;
-    private List<FileItem> fileList, selectedFiles = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        searchEdit = findViewById(R.id.searchEdit);
-        extEdit = findViewById(R.id.extEdit);
-        recyclerView = findViewById(R.id.recyclerView);
+        searchEdit    = findViewById(R.id.searchEdit);
+        extEdit       = findViewById(R.id.extEdit);
+        recyclerView  = findViewById(R.id.recyclerView);
         confirmButton = findViewById(R.id.confirmButton);
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        fileList = FileUtils.listFiles("/", true);
-        adapter = new FileAdapter(fileList, this, selected -> {
-            selectedFiles.clear();
-            for (FileItem item : adapter.getItems()) {
-                if (item.isSelected()) selectedFiles.add(item);
-            }
-        });
-        recyclerView.setAdapter(adapter);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                REQ_PERMISSION);
+        } else {
+            initList();
+        }
 
         searchEdit.addTextChangedListener(new SimpleTextWatcher() {
             @Override
             public void onTextChanged(String text) {
-                filter();
+                adapter.filter(text, extEdit.getText().toString().trim());
             }
         });
         extEdit.addTextChangedListener(new SimpleTextWatcher() {
             @Override
             public void onTextChanged(String text) {
-                filter();
+                adapter.filter(searchEdit.getText().toString().trim(), text);
             }
         });
 
         confirmButton.setOnClickListener(v -> {
-            Intent resultIntent = new Intent();
+            List<String> result = new ArrayList<>();
+            boolean useUri = false;
             String typeUri = getIntent().getStringExtra("type_uri");
-            boolean returnUri = "uri".equalsIgnoreCase(typeUri);
-            ArrayList<String> result = new ArrayList<>();
-            for (FileItem item : selectedFiles) {
-                File file = new File(item.getPath());
-                if (returnUri) {
-                    Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".provider", file);
+            if (typeUri != null) useUri = Boolean.parseBoolean(typeUri);
+
+            for (FileItem item : adapter.getSelectedItems()) {
+                File f = new File(item.getPath());
+                if (useUri) {
+                    Uri uri = FileProvider.getUriForFile(this, AUTHORITY, f);
                     result.add(uri.toString());
                 } else {
-                    result.add(file.getAbsolutePath());
+                    result.add(f.getAbsolutePath());
                 }
             }
-            // setResult
-            resultIntent.putStringArrayListExtra("selected_files", result);
-            setResult(RESULT_OK, resultIntent);
 
-            // broadcast
-            Intent broadcast = new Intent("com.yourapp.ACTION_FILES_SELECTED");
-            broadcast.putStringArrayListExtra("selected_files", result);
+            Intent broadcast = new Intent(ACTION_FILES_SELECTED);
+            broadcast.putStringArrayListExtra("selected_files", new ArrayList<>(result));
             sendBroadcast(broadcast);
-
             finish();
         });
     }
 
-    private void filter() {
-        String query = searchEdit.getText().toString();
-        String ext = extEdit.getText().toString();
-        adapter.filter(query, ext);
+    private void initList() {
+        String startPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        List<FileItem> items = FileUtils.listFiles(startPath);
+
+        adapter = new FileAdapter(this, items);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_PERMISSION && grantResults.length > 0
+            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            initList();
+        } else {
+            finish();
+        }
     }
 }
