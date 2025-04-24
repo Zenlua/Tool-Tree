@@ -62,6 +62,22 @@ public class MainActivity extends AppCompatActivity {
         adapter = new FileListAdapter(this, fileItems, selectedItems);
         listView.setAdapter(adapter);
 
+        SearchView searchView = findViewById(R.id.searchView);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                adapter.getFilter().filter(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                adapter.getFilter().filter(newText);
+                return true;
+            }
+        });
+    
+
         listView.setOnItemClickListener((adapterView, view, i, l) -> {
             FileItem item = fileItems.get(i);
             File file = item.getFile();
