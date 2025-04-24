@@ -138,26 +138,7 @@ private List<String> extensionFilter = new ArrayList<>();
                 writer.write(item.getFile().getAbsolutePath() + "\n");
             }
             }
-            Toast.makeText(this, "Đã lưu tại: " + outFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
-        } catch (IOException e) {
-            Toast.makeText(this, "Lỗi lưu file", Toast.LENGTH_SHORT).show();
-        }
-    }
 
-    private boolean checkPermission() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void requestPermission() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (currentDirectory != null && !currentDirectory.getAbsolutePath().equals("/")) {
-            loadDirectory(currentDirectory.getParentFile());
-        } else {
-            saveSelectedPaths();
         super.onBackPressed();
         }
     }
