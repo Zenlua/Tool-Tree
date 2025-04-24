@@ -4,6 +4,7 @@ plugins {
 }
 
 android {
+    namespace 'com.example.rootfilepicker'
     compileSdk 33
 
     defaultConfig {
