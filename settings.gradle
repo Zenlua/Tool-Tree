@@ -1,2 +1,2 @@
-rootProject.name = 'FileSelector'
+rootProject.name = 'RootFilePicker'
 include ':app'
