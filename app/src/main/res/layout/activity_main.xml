@@ -1,24 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:padding="10dp">
 
-    <EditText
-        android:id="@+id/searchEditText"
+    <TextView
+        android:id="@+id/tv_current_path"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Tìm kiếm đuôi file (.apk, .txt...)"/>
+        android:text="Path" android:textStyle="bold" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+    <SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:queryHint="Lọc theo tên hoặc đuôi file" />
+
+    <ListView
+        android:id="@+id/listview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:dividerHeight="1dp" />
 
     <Button
-        android:id="@+id/confirmButton"
+        android:id="@+id/btn_save_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Xác nhận chọn" />
+        android:text="Lưu danh sách" />
 </LinearLayout>
