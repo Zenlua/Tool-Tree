@@ -17,9 +17,9 @@ jobs:
         run: |
             #mkdir -p WakeLockApp
             rm -fr app
-            unzip -o WakeLockApp.zip -d ./
+            unzip -o *.zip -d ./
             #cp -rf WakeLockApp/* ./
-            rm -fr WakeLockApp
+            rm -fr *.zip
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
