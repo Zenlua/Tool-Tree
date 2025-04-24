@@ -31,8 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private final List<FileItem> fileItems = new ArrayList<>();
     private final List<FileItem> selectedItems = new ArrayList<>();
     private final String fileFilter = ""; // ví dụ: ".txt"
-private List<String> extensionFilter = new ArrayList<>();
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Intent intent = getIntent();
@@ -96,7 +95,11 @@ private List<String> extensionFilter = new ArrayList<>();
 
         btnSave.setOnClickListener(v -> saveSelectedPaths());
 
-        
+        if (checkPermission()) {
+            initFilePicker();
+        } else {
+            requestPermission();
+        }
     }
 
     private void initFilePicker() {
@@ -105,19 +108,32 @@ private List<String> extensionFilter = new ArrayList<>();
     }
 
     private void loadDirectory(File dir) {
-        currentDirectory = dir;
-        tvCurrentPath.setText(dir.getAbsolutePath());
-        File[] files = dir.listFiles();
-        fileItems.clear();
-        if (files != null) {
-            Arrays.sort(files, Comparator.comparing(File::getName));
-            for (File f : files) {
-                if (!fileFilter.isEmpty() && f.isFile() && !f.getName().endsWith(fileFilter)) continue;
-                fileItems.add(new FileItem(f));
+    currentDirectory = dir;
+    tvCurrentPath.setText(dir.getAbsolutePath());
+    File[] files = dir.listFiles();
+    fileItems.clear();
+    if (files != null) {
+        Arrays.sort(files, (f1, f2) -> {
+            if (f1.isDirectory() && !f2.isDirectory()) return -1;
+            if (!f1.isDirectory() && f2.isDirectory()) return 1;
+            return f1.getName().compareToIgnoreCase(f2.getName());
+        });
+        for (File f : files) {
+            if (!fileFilter.isEmpty() && f.isFile()) {
+                boolean matched = false;
+                for (String ext : fileFilter) {
+                    if (f.getName().toLowerCase().endsWith(ext)) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) continue;
             }
+            fileItems.add(new FileItem(f));
         }
-        adapter.notifyDataSetChanged();
     }
+    adapter.notifyDataSetChanged();
+}
 
     private void saveSelectedPaths() {
         File outFile = new File(Environment.getExternalStorageDirectory(), "list.txt");
@@ -134,12 +150,38 @@ private List<String> extensionFilter = new ArrayList<>();
                 writer.write(item.getFile().getAbsolutePath() + "\n");
             }
             }
+            Toast.makeText(this, "Đã lưu tại: " + outFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Toast.makeText(this, "Lỗi lưu file", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean checkPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermission() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (currentDirectory != null && !currentDirectory.getAbsolutePath().equals("/")) {
+            loadDirectory(currentDirectory.getParentFile());
+        } else {
+            saveSelectedPaths();
         super.onBackPressed();
         }
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                initFilePicker();
+            } else {
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 }
-
-
-
-
-
