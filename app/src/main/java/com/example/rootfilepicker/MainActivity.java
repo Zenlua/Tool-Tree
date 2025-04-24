@@ -23,15 +23,14 @@ import java.util.*;
 public class MainActivity extends AppCompatActivity {
     private List<String> fileFilter = new ArrayList<>();
     private String typeUri = "path";
-    private List<String> fileExtensions = new ArrayList<>();
-    private static final int PERMISSION_REQUEST_CODE = 1;
+        private static final int PERMISSION_REQUEST_CODE = 1;
     private ListView listView;
     private File currentDirectory;
     private TextView tvCurrentPath;
     private FileListAdapter adapter;
     private final List<FileItem> fileItems = new ArrayList<>();
     private final List<FileItem> selectedItems = new ArrayList<>();
-    private final String fileFilter = ""; // ví dụ: ".txt"
+    
     private List<String> extensionFilter = new ArrayList<>();
 
     @Override
@@ -46,10 +45,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
                 typeUri = intent.getStringExtra("type_uri");
-        if (intent.hasExtra("extension")) {
-            String ext = intent.getStringExtra("extension").toLowerCase();
-            fileExtensions = Arrays.asList(ext.split(","));
-        }
+        
         }
         super.onCreate(savedInstanceState);
     // Lưu khi app thoát
