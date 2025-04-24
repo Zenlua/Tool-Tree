@@ -1,16 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace 'com.example.namespace'
+    namespace 'com.example.fileselector'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.fileselector"
+        applicationId 'com.example.fileselector'
         minSdk 21
         targetSdk 33
         versionCode 1
-        versionName "1.0"
-        vectorDrawables.useSupportLibrary = true
+        versionName '1.0'
     }
 
     buildTypes {
