@@ -45,8 +45,18 @@ public class MainActivity extends AppCompatActivity {
         });
         recyclerView.setAdapter(adapter);
 
-        searchEdit.addTextChangedListener(new SimpleTextWatcher(text -> filter()));
-        extEdit.addTextChangedListener(new SimpleTextWatcher(text -> filter()));
+        searchEdit.addTextChangedListener(new SimpleTextWatcher() {
+            @Override
+            public void onTextChanged(String text) {
+                filter();
+            }
+        });
+        extEdit.addTextChangedListener(new SimpleTextWatcher() {
+            @Override
+            public void onTextChanged(String text) {
+                filter();
+            }
+        });
 
         confirmButton.setOnClickListener(v -> {
             Intent resultIntent = new Intent();
