@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private final List<FileItem> fileItems = new ArrayList<>();
     private final List<FileItem> selectedItems = new ArrayList<>();
     private final String fileFilter = ""; // ví dụ: ".txt"
-
+private List<String> extensionFilter = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Intent intent = getIntent();
