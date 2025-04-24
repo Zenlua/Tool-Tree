@@ -7,6 +7,11 @@ import android.widget.Filterable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.io.File;
+package com.example.rootfilepicker;
+
+import java.io.File;
+
 
 public class FileItem {
     private final File file;
