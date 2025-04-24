@@ -43,6 +43,18 @@ public class MainActivity extends AppCompatActivity {
         }
         }
         super.onCreate(savedInstanceState);
+    // Lưu khi app thoát
+    Runtime.getRuntime().addShutdownHook(new Thread(this::saveSelectedPaths));
+    
+        // Nhận danh sách đuôi file từ Intent
+        extensionFilter = new ArrayList<>();
+        String extRaw = getIntent().getStringExtra("extension");
+        if (extRaw != null) {
+            for (String ext : extRaw.split(",")) {
+                extensionFilter.add(ext.trim().toLowerCase());
+            }
+        }
+        
         setContentView(R.layout.activity_main);
 
         listView = findViewById(R.id.listview);
@@ -144,7 +156,8 @@ public class MainActivity extends AppCompatActivity {
         if (currentDirectory != null && !currentDirectory.getAbsolutePath().equals("/")) {
             loadDirectory(currentDirectory.getParentFile());
         } else {
-            super.onBackPressed();
+            saveSelectedPaths();
+        super.onBackPressed();
         }
     }
 
