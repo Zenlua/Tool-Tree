@@ -1,18 +1,15 @@
-
-plugins {
-    id 'com.android.application'
-}
+apply plugin: 'com.android.application'
 
 android {
-    namespace 'com.example.wakelockapp'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.wakelockapp"
+        applicationId "com.example.fileselector"
         minSdk 21
         targetSdk 33
         versionCode 1
         versionName "1.0"
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
@@ -25,4 +22,6 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.recyclerview:recyclerview:1.3.0'
+    implementation 'com.google.android.material:material:1.9.0'
 }
