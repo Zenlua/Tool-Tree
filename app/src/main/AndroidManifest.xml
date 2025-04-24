@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.wakelockapp">
+    >
 
     <!-- Permission để giữ CPU awake -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
