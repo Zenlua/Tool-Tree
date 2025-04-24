@@ -1,6 +1,9 @@
 name: Unpack
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '*.zip'
 concurrency:
   group: repo-only
   cancel-in-progress: false
