@@ -98,7 +98,10 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        btnSave.setOnClickListener(v -> saveSelectedPaths());
+        btnSave.setOnClickListener(v -> {
+    saveSelectedPaths();
+    finish(); // Thoát app sau khi lưu
+});
 
         if (checkPermission()) {
             initFilePicker();
