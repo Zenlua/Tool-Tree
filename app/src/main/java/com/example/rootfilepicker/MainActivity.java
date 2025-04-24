@@ -96,11 +96,7 @@ private List<String> extensionFilter = new ArrayList<>();
 
         btnSave.setOnClickListener(v -> saveSelectedPaths());
 
-        if (checkPermission()) {
-            initFilePicker();
-        } else {
-            requestPermission();
-        }
+        
     }
 
     private void initFilePicker() {
