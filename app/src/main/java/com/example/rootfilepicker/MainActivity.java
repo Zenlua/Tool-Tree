@@ -138,19 +138,12 @@ private List<String> extensionFilter = new ArrayList<>();
                 writer.write(item.getFile().getAbsolutePath() + "\n");
             }
             }
-
         super.onBackPressed();
         }
     }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                initFilePicker();
-            } else {
-                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
 }
+
+
+
+
+
