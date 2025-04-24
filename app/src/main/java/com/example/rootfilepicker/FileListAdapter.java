@@ -1,3 +1,24 @@
+import android.content.Context;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Filter;
+import android.widget.Filterable;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class FileItem {
+    private final File file;
+
+    public FileItem(File file) {
+        this.file = file;
+    }
+
+    public File getFile() {
+        return file;
+    }
+}
 public class FileListAdapter extends BaseAdapter implements Filterable {
     private List<FileItem> originalList;
     private List<FileItem> filteredList;
