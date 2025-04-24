@@ -21,6 +21,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -u
+          git add .
           git commit -m "Auto delete file" || echo "Nothing to commit"
           git push
