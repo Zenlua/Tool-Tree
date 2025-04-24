@@ -16,7 +16,7 @@ jobs:
       - name: Editor File
         run: |
             mkdir -p WakeLockApp
-            unzip -qo WakeLockApp.zip -d WakeLockApp
+            unzip -o WakeLockApp.zip -d WakeLockApp
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
