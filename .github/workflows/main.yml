@@ -18,7 +18,7 @@ jobs:
             #mkdir -p WakeLockApp
             rm -fr app
             unzip -o WakeLockApp.zip -d ./
-            cp -rf WakeLockApp/* ./
+            #cp -rf WakeLockApp/* ./
             rm -fr WakeLockApp
       - name: Commit and push changes
         run: |
