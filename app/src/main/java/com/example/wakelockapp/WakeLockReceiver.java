@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.Toast;
 
 public class WakeLockReceiver extends BroadcastReceiver {
     private static PowerManager.WakeLock wakeLock;
@@ -21,9 +22,11 @@ public class WakeLockReceiver extends BroadcastReceiver {
 
         if ("on".equals(action) && !wakeLock.isHeld()) {
             wakeLock.acquire();
+            Toast.makeText(context, "Wake Lock đã BẬT", Toast.LENGTH_SHORT).show();
             Log.i("WakeLockReceiver", "WakeLock acquired via broadcast");
         } else if ("off".equals(action) && wakeLock.isHeld()) {
             wakeLock.release();
+            Toast.makeText(context, "Wake Lock đã TẮT", Toast.LENGTH_SHORT).show();
             Log.i("WakeLockReceiver", "WakeLock released via broadcast");
         }
     }
