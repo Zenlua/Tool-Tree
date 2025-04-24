@@ -2,7 +2,9 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 33
+namespace 'com.example.wakelockapp' // <- Thêm dòng này
 
+    
     defaultConfig {
         applicationId "com.example.wakelockapp"
         minSdkVersion 21
