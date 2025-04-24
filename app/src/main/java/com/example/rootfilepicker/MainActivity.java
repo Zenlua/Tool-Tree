@@ -21,6 +21,18 @@ import java.io.IOException;
 import java.util.*;
 
 public class MainActivity extends AppCompatActivity {
+
+private void testRootAccess() {
+    try {
+        Process process = Runtime.getRuntime().exec(new String[]{"su", "-c", "id"});
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        String output = reader.readLine();
+        Toast.makeText(this, "su output: " + output, Toast.LENGTH_LONG).show();
+    } catch (Exception e) {
+        Toast.makeText(this, "su failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+    }
+}
+
     private List<String> fileFilter = new ArrayList<>();
     private String typeUri = "path";
         private static final int PERMISSION_REQUEST_CODE = 1;
@@ -48,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         
         }
         super.onCreate(savedInstanceState);
+        testRootAccess();
     // Lưu khi app thoát
     Runtime.getRuntime().addShutdownHook(new Thread(this::saveSelectedPaths));
     
