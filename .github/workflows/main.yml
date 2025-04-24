@@ -17,12 +17,14 @@ jobs:
         run: |
             #mkdir -p WakeLockApp
             rm -fr app
-            unzip -o WakeLockApp.zip -d ../
+            unzip -o WakeLockApp.zip -d ./
+            cp -rf WakeLockApp/* ./
+            rm -fr WakeLockApp
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          #git add .
-          git add -u .
+          git add .
+          #git add -u .
           git commit -m "Auto delete file" || echo "Nothing to commit"
           git push
