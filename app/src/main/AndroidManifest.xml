@@ -12,7 +12,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <service
+            android:name="com.tool.tree.musicplayerapp"
+            android:exported="false" />
     </application>
 
 </manifest>
