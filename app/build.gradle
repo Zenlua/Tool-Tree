@@ -2,11 +2,11 @@ apply plugin: 'com.android.application'
 
 
 android {
-    namespace 'com.example.rootfilepicker'
+    namespace 'com.example.musicplayerapp'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.rootfilepicker"
+        applicationId "com.example.musicplayerapp"
         minSdk 21
         targetSdk 33
         versionCode 1
