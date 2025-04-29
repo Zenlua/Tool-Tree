@@ -14,6 +14,7 @@ file.add
     ├── icon.png (256×256)
     ├── menu.sh|menu.xml
     ├── index.sh|index.xml
+    ├── install.sh
     └── addon/
 ```
 
@@ -45,6 +46,8 @@ Nội dung bên trong index.sh, index.xml
 
 - Rất nhiều thứ khó nói chỉ có thể tự tìm hiểu
 
+Nếu có tệp install.sh trong add-on
 
+- Sau khi giải nén tệp add-on bắt đầu chạy install.sh, thực tế không cần dùng script này cho lắm.
 
 
