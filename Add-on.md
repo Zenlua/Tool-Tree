@@ -9,7 +9,7 @@ Cấu trúc bên trong tệp add-on:
 
 ```
 file.add
-└── (sau khi giải nén)
+└── (nội dung bên trong tệp)
     ├── addon.prop
     ├── icon.png
     ├── menu.sh|menu.xml
