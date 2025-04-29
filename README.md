@@ -1,8 +1,12 @@
-# [Tool-Tree](https://zenlua.github.io/Tool-Tree)
+# [Tool-Tree](https://zenlua.github.io/Tool-Tree) 
 
-[![Unpack](https://github.com/Zenlua/Tool-Tree/actions/workflows/Unpack.yml/badge.svg)](https://github.com/Zenlua/Tool-Tree/actions/workflows/Unpack.yml) | [![Build APK](https://github.com/Zenlua/Tool-Tree/actions/workflows/android.yml/badge.svg)](https://github.com/Zenlua/Tool-Tree/actions/workflows/android.yml)
+![](https://komarev.com/ghpvc/?username=Zenlua&abbreviated=true)
+
+English | Việt Nam
 
 Tool-Tree là một ứng dụng mạnh mẽ dành cho Android, hỗ trợ người dùng chỉnh sửa ROM và APK với nhiều tiện ích tích hợp sẵn cùng hệ thống add-on mở rộng linh hoạt.
+
+[Information](https://zenlua.github.io/Tool-Tree/Paypal.html)
 
 **Tính năng nổi bật:**
 
@@ -15,8 +19,4 @@ Tool-Tree là một ứng dụng mạnh mẽ dành cho Android, hỗ trợ ngư�
 - Hệ thống add-on: Cho phép mở rộng chức năng ứng dụng qua các module, script, công cụ bên ngoài.
 
 Tool-Tree là công cụ đắc lực cho các lập trình viên, modder, hoặc những ai yêu thích vọc vạch Android.
-
-![](https://komarev.com/ghpvc/?username=Zenlua&abbreviated=true)
-
-[Information](https://zenlua.github.io/Tool-Tree/Paypal.html)
 
