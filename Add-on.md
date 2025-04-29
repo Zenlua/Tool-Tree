@@ -32,7 +32,7 @@ web=https://github.com/Zenlua/Add-on
 
 Hình ảnh icon
 
-- icon.png là tệp hình ảnh có thể 100x100 ~ 500x500
+- icon.png là tệp hình ảnh có thể có kích thước 100x100 ~ 500x500
 
 Nội dung bên trong menu.sh, menu.xml
 
