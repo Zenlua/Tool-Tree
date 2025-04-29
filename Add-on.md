@@ -16,3 +16,35 @@ file.add
     ├── index.sh|index.xml
     └── addon/
 ```
+
+Nội dung tệp addon.prop
+
+```
+id=test
+name=Thử nghiệm
+author=Kakathic
+description=Thử nghiệm add-on
+version=1.0
+versionCode=100
+web=https://github.com/Zenlua/Add-on
+```
+
+Hình ảnh icon
+
+- icon.png là tệp hình ảnh có thể 100x100 ~ 500x500
+
+Nội dung bên trong menu.sh, menu.xml
+
+- [Xem chi tiết](https://github.com/helloklf/kr-scripts/blob/master/docs/Page.md)
+
+- Chủ yếu dùng page để chuyển vào index
+
+Nội dung bên trong index.sh, index.xml
+
+- [Xem chi tiết](https://github.com/helloklf/kr-scripts)
+
+- Rất nhiều thứ khó nói chỉ có thể tự tìm hiểu
+
+
+
+
