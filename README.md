@@ -10,11 +10,11 @@
 
 ### Tính năng nổi bật
 
-- Chỉnh sửa ROM: Mở, giải nén, chỉnh sửa và đóng gói lại ROM nhanh chóng.
+- Chỉnh sửa ROM: Giải nén, chỉnh sửa và đóng gói lại ROM nhanh chóng.
 
-- Chỉnh sửa APK: Decompile, chỉnh sửa smali/XML, ký lại và cài đặt APK dễ dàng.
+- Chỉnh sửa APK: Decompile, chỉnh sửa smali/xml, ký lại và cài đặt APK dễ dàng.
 
-- Tiện ích kèm theo: Hỗ trợ vá avb, unpack APK, gộp super, giải nén Payload, chuyển đổi tệp, tổng hợp super, v.v.
+- Tiện ích kèm theo: Hỗ trợ vá avb, unpack, gộp super, giải nén Payload, chuyển đổi tệp, tổng hợp super.
 
 - Hệ thống add-on: Cho phép mở rộng chức năng ứng dụng qua các module, script, công cụ bên ngoài.
 
