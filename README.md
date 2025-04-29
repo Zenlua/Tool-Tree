@@ -20,7 +20,7 @@
 
 ### Hướng dẫn tạo add-on
 
-- **[Xem chi tiết](https://zenlua.github.io/Tool-Tree/add-on.html)**
+- **[Xem chi tiết](https://zenlua.github.io/Tool-Tree/Add-on.html)**
 
 - Tệp add-on là một tệp nén 7z hoặc zip sau đó phải đổi tên đuôi là file.add
 
