@@ -32,6 +32,6 @@
 
 - **[Kr-Script](https://github.com/helloklf/kr-scripts)**
 
-- **[Kr-Script](https://github.com/ColdWindScholar/kr-scripts) modified**
+- **[Kr-Script](https://github.com/ColdWindScholar/kr-scripts) (modified)**
 
 
