@@ -30,8 +30,6 @@
 
 - Rất nhiều nguồn khác không thể ghi ra hết chỉ có thể lấy nguồn khung app
 
-- **[Kr-Script](https://github.com/helloklf/kr-scripts)**
-
-- **[Kr-Script](https://github.com/ColdWindScholar/kr-scripts) (modified)**
+- **[Kr-Script](https://github.com/helloklf/kr-scripts), [Kr-Script](https://github.com/ColdWindScholar/kr-scripts) (modified)**
 
 
