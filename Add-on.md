@@ -1,4 +1,3 @@
-
 Định dạng tệp add-on
 
 - Là một file nén dạng .zip hoặc .7z
@@ -33,6 +32,8 @@ web=https://github.com/Zenlua/Add-on
 Biểu tượng add-on
 
 - Tệp icon.png là tệp hình ảnh có thể có kích thước 100x100 ~ 500x500
+
+- Cũng có thể đổi tên icon_true.png, icon_false.png, true là chế độ tối, false là chế độ sáng.
 
 Nội dung bên trong menu.sh, menu.xml
 
