@@ -2,7 +2,7 @@
 
 Tool-Tree là một ứng dụng mạnh mẽ dành cho Android, hỗ trợ người dùng chỉnh sửa ROM và APK với nhiều tiện ích tích hợp sẵn cùng hệ thống add-on mở rộng linh hoạt.
 
-## Liên kết liên quan
+## Xem chi tiết
 
 **[Thông tin](https://zenlua.github.io/Tool-Tree/Information.html),  [English](https://zenlua.github.io/Tool-Tree/English.html)**
 
