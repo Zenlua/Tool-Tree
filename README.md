@@ -18,3 +18,10 @@ Tool-Tree là một ứng dụng mạnh mẽ dành cho Android, hỗ trợ ngư�
 
 - Hệ thống add-on: Cho phép mở rộng chức năng ứng dụng qua các module, script, công cụ bên ngoài.
 
+**Hướng dẫn tạo add-on**
+
+[Xem chi tiết](https://zenlua.github.io/Tool-Tree/add-on.html)
+
+
+
+
