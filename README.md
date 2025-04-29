@@ -4,7 +4,7 @@
 
 ## Xem chi tiết
 
-- **[Thông tin](https://zenlua.github.io/Tool-Tree/Information.html),  [English](https://zenlua.github.io/Tool-Tree/English.html)**
+- **[Thông tin](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
 
 - Tool-Tree là công cụ đắc lực cho các lập trình viên, modder, hoặc những ai yêu thích vọc vạch Android.
 
