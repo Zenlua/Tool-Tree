@@ -1,8 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree) 
 
-![](https://komarev.com/ghpvc/?username=Zenlua&abbreviated=true)
-
-English | Việt Nam
+English
 
 Tool-Tree là một ứng dụng mạnh mẽ dành cho Android, hỗ trợ người dùng chỉnh sửa ROM và APK với nhiều tiện ích tích hợp sẵn cùng hệ thống add-on mở rộng linh hoạt.
 
