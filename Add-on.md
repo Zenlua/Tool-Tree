@@ -11,7 +11,7 @@ Cấu trúc bên trong tệp add-on:
 file.add
 └── (nội dung bên trong tệp)
     ├── addon.prop
-    ├── icon.png
+    ├── icon.png (256x256)
     ├── menu.sh|menu.xml
     ├── index.sh|index.xml
     └── addon/
