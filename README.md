@@ -4,9 +4,9 @@
 
 ## Xem chi tiết
 
-- **[Thông tin](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
-
 - Tool-Tree là công cụ đắc lực cho các lập trình viên, modder, hoặc những ai yêu thích vọc vạch Android.
+
+- **[Thông tin](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
 
 ### Tính năng nổi bật
 
@@ -20,10 +20,11 @@
 
 ### Hướng dẫn tạo add-on
 
-- **[Xem chi tiết](https://zenlua.github.io/Tool-Tree/Add-on.html)**
-
 - Tệp add-on là một tệp nén 7z hoặc zip sau đó phải đổi tên đuôi là file.add
 
 - Trong tệp add-on có addon.prop, icon.png, menu.sh, index.sh và một thư mục addon
+
+- **[Xem chi tiết](https://zenlua.github.io/Tool-Tree/Add-on.html)**
+
 
 
