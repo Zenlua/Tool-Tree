@@ -1,11 +1,11 @@
 
-Định dạng tệp add-on:
+Định dạng tệp add-on
 
 - Là một file nén dạng .zip hoặc .7z
 
 - Sau khi nén xong, đổi tên đuôi thành file.add
 
-Cấu trúc bên trong tệp add-on:
+Cấu trúc bên trong tệp add-on
 
 ```
 file.add
@@ -36,15 +36,15 @@ Hình ảnh icon
 
 Nội dung bên trong menu.sh, menu.xml
 
-- [Xem chi tiết](https://github.com/helloklf/kr-scripts/blob/master/docs/Page.md)
-
 - Chủ yếu dùng page để chuyển vào index
+
+- [Xem chi tiết](https://github.com/helloklf/kr-scripts/blob/master/docs/Page.md)
 
 Nội dung bên trong index.sh, index.xml
 
-- [Xem chi tiết](https://github.com/helloklf/kr-scripts)
-
 - Rất nhiều thứ khó nói chỉ có thể tự tìm hiểu
+
+- [Xem chi tiết](https://github.com/helloklf/kr-scripts)
 
 Nếu có tệp install.sh trong add-on
 
