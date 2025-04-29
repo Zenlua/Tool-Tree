@@ -26,5 +26,12 @@
 
 - **[Xem chi tiết](https://zenlua.github.io/Tool-Tree/Add-on.html)**
 
+### Các nguồn có liên quan
+
+- Rất nhiều nguồn khác không thể ghi ra hết chỉ có thể lấy nguồn khung app
+
+- [Kr-Script](https://github.com/helloklf/kr-scripts)
+
+- [Kr-Script modified](https://github.com/ColdWindScholar/kr-scripts)
 
 
