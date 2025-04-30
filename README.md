@@ -2,7 +2,7 @@
 
 - Là một ứng dụng mạnh mẽ dành cho Android, hỗ trợ người dùng chỉnh sửa ROM và APK với nhiều tiện ích tích hợp sẵn cùng hệ thống add-on mở rộng linh hoạt.
 
-## Xem chi tiết
+### Xem chi tiết
 
 - Tool-Tree là công cụ đắc lực cho các lập trình viên, modder, hoặc những ai yêu thích vọc vạch Android.
 
