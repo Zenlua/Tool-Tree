@@ -24,7 +24,7 @@
 
 - Trong tệp add-on có addon.prop, icon.png, menu.sh, index.sh và một thư mục addon
 
-- **[Xem chi tiết](https://zenlua.github.io/Tool-Tree/Add-on.html)**
+- **[Xem chi tiết](https://zenlua.github.io/Tool-Tree/Instruct.html)**
 
 ### Các nguồn có liên quan
 
