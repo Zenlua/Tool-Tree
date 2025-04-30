@@ -51,4 +51,4 @@ Nếu có tệp install.sh trong add-on
 
 - Sau khi giải nén tệp add-on bắt đầu chạy install.sh, thực tế không cần dùng script này cho lắm.
 
-
+**Tải về:** [Mẫu 1](https://github.com/Zenlua/Tool-Tree/releases/download/tmp/Test1.add)
