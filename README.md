@@ -6,6 +6,9 @@
 
 - **[Changelog](https://zenlua.github.io/Tool-Tree/Version.html)**
 
+> [!Tip]
+> Download: [Release](https://github.com/Zenlua/Tool-Tree/releases)
+
 ### See details
 
 - Tool-Tree is a powerful tool for programmers, modders, or anyone who loves to tinker with Android.
