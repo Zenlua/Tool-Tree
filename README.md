@@ -24,7 +24,7 @@
 
 - Add-on system: Allows extending application functionality through modules, scripts, and external tools.
 
-### Instructions for creating add-ons
+### Instructions add-on
 
 - The add-on file is a 7z or zip archive then the extension must be renamed to file.add
 
