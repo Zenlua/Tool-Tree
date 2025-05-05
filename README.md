@@ -12,7 +12,7 @@
 
 - Tool-Tree is a powerful tool for programmers, modders, or anyone who loves to tinker with Android.
 
-- **[Information](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
+- **[Infor](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
 
 - To allow MT Manager application to access Tool-Tree application data, follow the instructions below for non-rooted phones.
 
