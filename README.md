@@ -36,6 +36,12 @@
 
 - **[See details](https://zenlua.github.io/Tool-Tree/Instruct.html)**
 
+### Add language and update
+
+- Add new languages or update languages to match the feature.
+
+- **[See details](https://github.com/Zenlua/Tool-Tree/tree/main/lang)**
+
 ### Related sources
 
 - There are many other sources that cannot be listed, only the app framework source can be taken.
