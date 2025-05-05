@@ -4,7 +4,7 @@
 
 - Supports both root and non-root
 
-- [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)
+- **[Changelog](https://zenlua.github.io/Tool-Tree/Version.html)**
 
 ### See details
 
