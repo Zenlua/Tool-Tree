@@ -8,6 +8,10 @@
 
 - **[Thông tin](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
 
+- Để ứng dụng MT Manager có thể truy cập dữ liệu ứng dụng Tool-Tree có thể làm theo hướng dẫn dưới đây áp dụng cho điện thoại chưa root
+
+- **[Truy cập dữ liệu](https://zenlua.github.io/Tool-Tree/Data.html)**
+
 ### Tính năng nổi bật
 
 - Chỉnh sửa ROM: Giải nén, chỉnh sửa và đóng gói lại ROM nhanh chóng.
