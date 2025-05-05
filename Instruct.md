@@ -1,14 +1,14 @@
-Định dạng tệp add-on
+Add-on file format
 
-- Là một file nén dạng .zip hoặc .7z
+- Is a compressed file in .zip or .7z format
 
-- Sau khi nén xong, đổi tên đuôi thành file.add
+- After compression is complete, rename the extension to file.add
 
-Cấu trúc bên trong tệp add-on
+Internal structure of add-on file
 
 ```
 file.add
-└── (nội dung bên trong tệp)
+└── (contents inside the file)
     ├── addon.prop
     ├── icon.png (256×256)
     ├── menu.sh|menu.xml
@@ -17,38 +17,46 @@ file.add
     └── addon/
 ```
 
-Nội dung tệp addon.prop
+Contents of addon.prop file
 
 ```
 id=test
-name=Thử nghiệm
+name=Test
 author=Kakathic
-description=Thử nghiệm add-on
+description=Test add-on
 version=1.0
 versionCode=100
 web=https://github.com/Zenlua/Add-on
 ```
 
-Biểu tượng add-on
+Add-on icon
 
-- Tệp icon.png là tệp hình ảnh có thể có kích thước 100x100 ~ 500x500
+- The icon.png file is an image file that can be 100x100 ~ 500x500 in size
 
-- Cũng có thể đổi tên icon_true.png, icon_false.png, true là chế độ tối, false là chế độ sáng.
+- Can also rename icon_true.png, icon_false.png, true is dark mode, false is light mode.
 
-Nội dung bên trong menu.sh, menu.xml
+Content inside menu.sh, menu.xml
 
-- Chủ yếu dùng page để chuyển vào index
+- Mainly use page to move to index
 
-- [Xem chi tiết](https://github.com/helloklf/kr-scripts/blob/master/docs/Page.md)
+- [See details](https://github.com/helloklf/kr-scripts/blob/master/docs/Page.md)
 
-Nội dung bên trong index.sh, index.xml
+Content inside index.sh, index.xml
 
-- Rất nhiều thứ khó nói chỉ có thể tự tìm hiểu
+- There are many things that are difficult to say that can only be found out by yourself.
 
-- [Xem chi tiết](https://github.com/helloklf/kr-scripts)
+- [See details](https://github.com/helloklf/kr-scripts)
 
-Nếu có tệp install.sh trong add-on
+If there is an install.sh file in the add-on
 
-- Sau khi giải nén tệp add-on bắt đầu chạy install.sh, thực tế không cần dùng script này cho lắm.
+- After unzipping the add-on file start running install.sh, there is actually no need to use this script.
 
-**Tải về:** [Mẫu 1](https://github.com/Zenlua/Tool-Tree/releases/download/tmp/Test1.add)
+**Download:** [Sample 1](https://github.com/Zenlua/Tool-Tree/releases/download/tmp/Test1.add)
+
+
+
+
+
+
+
+
