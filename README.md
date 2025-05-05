@@ -2,12 +2,11 @@
 
 - As a powerful application for Android, it supports users to edit ROMs and APKs with many built-in utilities and a flexible add-on system.
 
-- Supports both root and non-root
-
 - **[Changelog](https://zenlua.github.io/Tool-Tree/Version.html)**
 
-> [!Tip]
-**Download: [Tool-Tree V1.0](https://github.com/Zenlua/Tool-Tree/releases/download/V1/Tool-Tree-V1.0.apk)**
+- Supports both root and non-root
+
+- **Download: [Tool-Tree V1.0](https://github.com/Zenlua/Tool-Tree/releases/download/V1/Tool-Tree-V1.0.apk)**
 
 ### See details
 
@@ -17,7 +16,7 @@
 
 - To allow MT Manager application to access Tool-Tree application data, follow the instructions below for non-rooted phones.
 
-- **[Data Access](https://zenlua.github.io/Tool-Tree/Data.html)**
+- **[Data access](https://zenlua.github.io/Tool-Tree/Data.html)**
 
 ### Outstanding features
 
