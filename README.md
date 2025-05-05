@@ -1,40 +1,40 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree) 
 
-- Là một ứng dụng mạnh mẽ dành cho Android, hỗ trợ người dùng chỉnh sửa ROM và APK với nhiều tiện ích tích hợp sẵn cùng hệ thống add-on mở rộng linh hoạt.
+- As a powerful application for Android, it supports users to edit ROMs and APKs with many built-in utilities and a flexible add-on system.
 
-- Hỗ trợ cả root và không root
+- Supports both root and non-root
 
-### Xem chi tiết
+### See details
 
-- Tool-Tree là công cụ đắc lực cho các lập trình viên, modder, hoặc những ai yêu thích vọc vạch Android.
+- Tool-Tree is a powerful tool for programmers, modders, or anyone who loves to tinker with Android.
 
-- **[Thông tin](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
+- **[Information](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
 
-- Để ứng dụng MT Manager có thể truy cập dữ liệu ứng dụng Tool-Tree có thể làm theo hướng dẫn dưới đây áp dụng cho điện thoại chưa root
+- To allow MT Manager application to access Tool-Tree application data, follow the instructions below for non-rooted phones.
 
-- **[Truy cập dữ liệu](https://zenlua.github.io/Tool-Tree/Data.html)**
+- **[Data Access](https://zenlua.github.io/Tool-Tree/Data.html)**
 
-### Tính năng nổi bật
+### Outstanding features
 
-- Chỉnh sửa ROM: Giải nén, chỉnh sửa và đóng gói lại ROM nhanh chóng.
+- ROM Edit: Unpack, edit and repack ROMs quickly.
 
-- Chỉnh sửa APK: Decompile, chỉnh sửa smali/xml, ký lại và cài đặt APK dễ dàng.
+- Edit APK: Decompile, edit smali/xml, re-sign and install APK easily.
 
-- Tiện ích kèm theo: Hỗ trợ vá avb, unpack, gộp super, giải nén Payload, chuyển đổi tệp, tổng hợp super.
+- Additional utilities: Support avb patching, unpacking, super merging, Payload decompression, file conversion, super synthesis.
 
-- Hệ thống add-on: Cho phép mở rộng chức năng ứng dụng qua các module, script, công cụ bên ngoài.
+- Add-on system: Allows extending application functionality through modules, scripts, and external tools.
 
-### Hướng dẫn tạo add-on
+### Instructions for creating add-ons
 
-- Tệp add-on là một tệp nén 7z hoặc zip sau đó phải đổi tên đuôi là file.add
+- The add-on file is a 7z or zip archive then the extension must be renamed to file.add
 
-- Trong tệp add-on có addon.prop, icon.png, menu.sh, index.sh và một thư mục addon
+- In the add-on file there is addon.prop, icon.png, menu.sh, index.sh and an addon folder
 
-- **[Xem chi tiết](https://zenlua.github.io/Tool-Tree/Instruct.html)**
+- **[See details](https://zenlua.github.io/Tool-Tree/Instruct.html)**
 
-### Các nguồn có liên quan
+### Related sources
 
-- Rất nhiều nguồn khác không thể ghi ra hết chỉ có thể lấy nguồn khung app
+- There are many other sources that cannot be listed, only the app framework source can be taken.
 
 - **[Kr-Script](https://github.com/helloklf/kr-scripts), [Kr-Script](https://github.com/ColdWindScholar/kr-scripts) (modified)**
 
