@@ -26,7 +26,7 @@ author=Kakathic
 description=Test add-on
 version=1.0
 versionCode=100
-web=https://github.com/Zenlua/Add-on
+web=https://zenlua.github.io/Tool-Tree/Instruct.html
 ```
 
 Add-on icon
