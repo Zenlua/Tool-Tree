@@ -6,7 +6,7 @@
 
 - Supports both root and non-root
 
-- **Download: [![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/total?label=Tool-Tree&logo=github&abbreviated=true&color=blue)](https://github.com/Zenlua/Tool-Tree/releases/latest/download/Tool-Tree.apk)**
+- [![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/total?label=Downloads&logo=github&abbreviated=true&color=blue)](https://github.com/Zenlua/Tool-Tree/releases/latest/download/Tool-Tree.apk)
 
 ### See details
 
