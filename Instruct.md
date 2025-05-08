@@ -9,7 +9,7 @@ Internal structure of add-on file
 ```
 file.add
 └── (contents inside the file)
-    ├── addon.prop
+    ├── addon.sh
     ├── icon.png (256×256)
     ├── menu.sh|menu.xml
     ├── index.sh|index.xml
@@ -17,17 +17,38 @@ file.add
     └── addon/
 ```
 
-Contents of addon.prop file
+Contents of addon.sh file
 
 ```
+# is a shell script file
+
 id=test
-name=Test
 author=Kakathic
-description=Test add-on
 version=1.0
 versionCode=100
 web=https://zenlua.github.io/Tool-Tree/Instruct.html
+
+langen(){
+name="Test"
+description="Test add-on 1"
+}
+
+langvi(){
+name="Thử nghiệm"
+description="Mẫu thử nghiệm 1"
+}
+
+case "$LANGUAGE" in
+    "vi")
+    langvi;
+    ;;
+    *)
+    langen;
+    ;;
+esac
 ```
+
+- Both for containing language and language data
 
 Add-on icon
 
