@@ -16,7 +16,7 @@
 
 - **[Infor](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
 
-- Report: **[issues](https://github.com/Zenlua/Tool-Tree/issues)**, or telegram above
+- Report: **[issues](https://github.com/Zenlua/Tool-Tree/issues)**, or `Telegram` above
 
 - To allow MT Manager application to access Tool-Tree application data, follow the instructions below for non-rooted phones.
 
