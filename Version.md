@@ -1,3 +1,8 @@
+**Version: 1.0.3 (upcoming)**
+
++ Change Payload.bin decompression for faster decompression
++ Fixed some minor bugs
+
 **Version: 1.0.2**
 
 + Add dex decoding using baksmali/smali
@@ -5,6 +10,6 @@
 
 **Version: 1.0**
 
-- The first version will not have logs.
++ The first version will not have logs.
 
 
