@@ -1,5 +1,6 @@
 **Version: 1.0.3 (upcoming)**
 
++ Speed up file processing
 + Add f2fs build and unpack
 + Update erofs, unpack and build
 + Change Payload.bin decompression for faster decompression
