@@ -4,5 +4,5 @@
   "feature_enabled": true,
   "version": "1.5.2",
   "message": "Xin chào Hiếu!",
-  "shell": "env; getprop; appops get com.tool.pif"
+  "shell": "getprop"
 }
