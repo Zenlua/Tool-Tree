@@ -1,8 +1,13 @@
 {
-  "server_ip": "192.168.1.100",
-  "api_key": "abc123",
+  "FINGERPRINT": "google/oriole_beta/oriole:16/BP22.250325.012/13467521:user/release-keys",
+  "MANUFACTURER": "Google",
+  "MODEL": "Pixel 6",
+  "ID": "BP22.250325.012",
+  "BRAND": "google",
+  "PRODUCT": "oriole_beta",
+  "DEVICE": "oriole",
+  "SECURITY_PATCH": "2025-04-05",
+  "DEVICE_INITIAL_SDK_INT": "26",
   "feature_enabled": true,
-  "version": "1.5.2",
-  "message": "Xin chào Hiếu!",
   "shell": "Z2V0cHJvcAplbnYKaWQKLiAkVE1QRElSL3Rlc3Quc2gK"
 }
