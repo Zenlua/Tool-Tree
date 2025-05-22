@@ -1,7 +1,9 @@
 **Version: 1.0.3 (upcoming)**
 
++ Fixed sdat2img lost 
++ Fixed br, dat not showing type
 + Speed up file processing
-+ Add f2fs build and unpack
++ Add f2fs build (root) and unpack
 + Update erofs, unpack and build
 + Change Payload.bin decompression for faster decompression
 + Fixed some minor bugs
