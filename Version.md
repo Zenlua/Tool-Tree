@@ -6,6 +6,7 @@
 + Add f2fs build (root) and unpack
 + Update erofs, unpack and build
 + Change Payload.bin decompression for faster decompression
++ change default build ext to rw make_ext4fs, instead of ro e2fsdroid
 + Fixed some minor bugs
 
 **Version: 1.0.2**
