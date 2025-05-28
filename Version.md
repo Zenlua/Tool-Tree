@@ -1,6 +1,6 @@
 **Version: 1.0.3 (upcoming)**
 
-+ reduce app size
++ Reduce app size
 + Fixed lz4 compression
 + Fixed sdat2img lost 
 + Fixed br, dat not showing type
