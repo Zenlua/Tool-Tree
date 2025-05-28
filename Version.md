@@ -1,5 +1,8 @@
 **Version: 1.0.3 (upcoming)**
 
++ Fixed notification
++ Add background running
++ Turn off noti sound
 + Reduce app size
 + Fixed lz4 compression
 + Fixed sdat2img lost 
