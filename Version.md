@@ -1,5 +1,6 @@
-**Version: 1.0.3 (upcoming)**
+**Version: 1.0.3**
 
++ Super optimized 
 + Fixed notification
 + Add background running
 + Turn off noti sound
