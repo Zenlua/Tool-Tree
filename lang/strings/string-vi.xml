@@ -87,7 +87,7 @@
     <string name="kr_please_choose_folder">Chọn một thư mục</string>
     <string name="kr_please_input_color">Vui lòng nhập màu</string>
     <string name="kr_please_select">Vui lòng chọn</string>
-    <string name="kr_script_task_finished">Nhiệm vụ kết thúc</string>
+    <string name="kr_script_task_finished">Kết thúc</string>
     <string name="kr_script_task_has_error">Một lỗi đã xảy ra</string>
     <string name="kr_script_task_notification">Thông báo nhiệm vụ nền</string>
     <string name="kr_script_task_running">Bắt đầu chạy</string>
@@ -149,7 +149,7 @@ Hãy nhớ bật quyền cho phép tạo lối tắt màn hình chính trước 
     <string name="pio_permission_checking">Kiểm tra và nhận các quyền bắt buộc...</string>
     <string name="please_wait">Vui lòng chờ</string>
     <string name="pop_before_start">Chuẩn bị khởi chạy ứng dụng...</string>
-    <string name="pop_started">Khởi động hoàn thành</string>
+    <string name="pop_started">Khởi động ứng dụng</string>
     <string name="script_losted">Tài nguyên kịch bản bị mất</string>
     <string name="search_menu_title">Tìm kiếm</string>
     <string name="select_all">Chọn tất cả</string>
@@ -170,4 +170,5 @@ Hãy nhớ bật quyền cho phép tạo lối tắt màn hình chính trước 
     <string name="zpower">Chọn hành động</string>
     <string name="selector_item">Bạn có muốn chọn ?</string>
     <string name="wakelock1">WakeLock đang hoạt động trong nền</string>
+    <string name="wakelock2">Đang hoạt động trong nền</string>
 </resources>
