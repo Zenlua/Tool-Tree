@@ -173,7 +173,7 @@ Remember to enable the permission to create home screen shortcuts before perform
     <string name="pio_starting">~•-•~</string>
     <string name="please_wait">Please wait</string>
     <string name="pop_before_start">Preparing to launch the application...</string>
-    <string name="pop_started">Startup is complete!</string>
+    <string name="pop_started">Start application</string>
     <string name="power_emergency_cmd">sync;reboot edl;</string>
     <string name="power_fastboot_cmd">sync;reboot bootloader;</string>
     <string name="power_hot_reboot_cmd">sync;am restart || busybox killall system_server;</string>
@@ -203,4 +203,5 @@ Remember to enable the permission to create home screen shortcuts before perform
     <string name="zpower">Select action power </string>
     <string name="selector_item">Do you want to choose ?</string>
     <string name="wakelock1">WakeLock is running in the background</string>
+    <string name="wakelock2">Running in the background</string>
 </resources>
