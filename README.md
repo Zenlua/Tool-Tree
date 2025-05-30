@@ -2,23 +2,17 @@
 
 - As a powerful application for Android, it supports users to edit ROMs and APKs with many built-in utilities and a flexible add-on system.
 
-- View change log: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
+- View changelog: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
 - Supports both root and non-root
 
-- **Download: [Tool-Tree.apk](https://github.com/Zenlua/Tool-Tree/releases/latest/download/Tool-Tree.apk)**
+- **[Download.apk](https://github.com/Zenlua/Tool-Tree/releases/latest/download/Tool-Tree.apk)**
 
 ### See details
 
 - Tool-Tree is a powerful tool for programmers, modders, or anyone who loves to tinker with Android.
 
-- **[Infor](https://zenlua.github.io/Tool-Tree/Information.html),  [Telegram](https://t.me/tooltree)**
-
-- Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)**, or `Telegram` above
-
-- To allow MT Manager application to access Tool-Tree application data, follow the instructions below for non-rooted phones.
-
-- **[Data access](https://zenlua.github.io/Tool-Tree/Data.html)**
+- Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)**, or [Telegram](https://t.me/tooltree) above
 
 ### Outstanding features
 
@@ -29,8 +23,6 @@
 - Additional utilities: Support avb patching, unpacking, super merging, Payload decompression, file conversion, super synthesis.
 
 - Add-on system: Allows extending application functionality through modules, scripts, and external tools.
-
-- **[Guide App](https://zenlua.github.io/Tool-Tree/Guide.html)**
 
 ### Instructions add-on
 
