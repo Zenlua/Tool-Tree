@@ -30,6 +30,8 @@
 
 - Add-on system: Allows extending application functionality through modules, scripts, and external tools.
 
+- **[Guide App](https://zenlua.github.io/Tool-Tree/Guide.html)**
+
 ### Instructions add-on
 
 - The add-on file is a 7z or zip archive then the extension must be renamed to file.add
