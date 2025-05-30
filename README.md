@@ -1,4 +1,4 @@
-# [Tool-Tree](https://zenlua.github.io/Tool-Tree) ![GitHub Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=Version)
+# [Tool-Tree](https://zenlua.github.io/Tool-Tree) ![GitHub Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=)
 
 - As a powerful application for Android, it supports users to edit ROMs and APKs with many built-in utilities and a flexible add-on system `root` `no-root`
 
