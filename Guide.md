@@ -6,8 +6,8 @@ Application user guide
 
 - **[See instructions](https://zenlua.github.io/Tool-Tree/Data.html)**
 
-- Can copy rom, and apk to following folder for decryption `/storage/emulated/0/TREE/`
+- Can copy rom, and apk to following folder for decryption: `/storage/emulated/0/TREE/`
 
-- Where to store decrypted roms and apk `/data/user/0/com.tool.tree/files/home/TREE` `/data/user/0/com.tool.tree/files/home/TOOL`
+- Where to store decrypted roms and apk: `/data/user/0/com.tool.tree/files/home/TREE` `/data/user/0/com.tool.tree/files/home/TOOL`
 
 - More discover it yourself
