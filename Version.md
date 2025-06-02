@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.0.4**
+**Version: 1.0.4 (Dev)**
 
 + Code optimization
 
