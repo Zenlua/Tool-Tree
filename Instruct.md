@@ -29,6 +29,7 @@ author=Kakathic
 version=1.0
 versionCode=100
 web=https://zenlua.github.io/Tool-Tree/Instruct.html
+root=false
 
 langen(){
 name="Test"
