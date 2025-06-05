@@ -31,22 +31,22 @@ versionCode=100
 web=https://zenlua.github.io/Tool-Tree/Instruct.html
 root=false
 
-langen(){
+langEn(){
 name="Test"
 description="Test add-on 1"
 }
 
-langvi(){
+langVi(){
 name="Thử nghiệm"
 description="Mẫu thử nghiệm 1"
 }
 
 case "$LANGUAGE" in
     "vi")
-    langvi;
+    langVi;
     ;;
     *)
-    langen;
+    langEn;
     ;;
 esac
 ```
