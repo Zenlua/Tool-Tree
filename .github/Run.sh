@@ -44,7 +44,7 @@ if [ -z "$PRODUCT" ]; then
 fi;
 echo "$MODEL ($PRODUCT)";
 
-(wget -q -O PIXEL_ZIP_METADATA --no-check-certificate $OTA) 2>/dev/null;
+(wget -q --max-filesize=2k -O PIXEL_ZIP_METADATA --no-check-certificate $OTA) 2>/dev/null;
 FINGERPRINT="$(grep -am1 'post-build=' PIXEL_ZIP_METADATA 2>/dev/null | cut -d= -f2)";
 SECURITY_PATCH="$(grep -am1 'security-patch-level=' PIXEL_ZIP_METADATA 2>/dev/null | cut -d= -f2)";
 if [ -z "$FINGERPRINT" -o -z "$SECURITY_PATCH" ]; then
@@ -65,6 +65,48 @@ echo '{
   "SECURITY_PATCH": "'$SECURITY_PATCH'"
 }
 }' | tee test.json
+else
+echo error9 >&2
+exit 1
 fi
 
-mv .github/PIF.json PIF.json
+wget -q -O PIF_METADATA --no-check-certificate https://github.com/Zenlua/Tool-Tree/releases/download/V1/PIF.json 2>/dev/null
+
+
+if [[ "$(cat PIF_METADATA)" ]];the
+
+if [[ "$LUN" ]];then
+cat PIF_METADATA | jq '. + {
+  "spoof_config": "'$(echo ”$LUN” | base64 -w0)'"
+}' > PIF_METADATA2
+mv PIF_METADATA2 PIF_METADATA
+fi
+
+cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + {
+  "com.google.android.gms": {
+  "FINGERPRINT": "'$FINGERPRINT'",
+  "MANUFACTURER": "Google",
+  "BRAND": "google",
+  "MODEL": "'$MODEL'",
+  "PRODUCT": "'$PRODUCT'",
+  "DEVICE": "'$DEVICE'",
+  "BOARD": "'$DEVICE'",
+  "SECURITY_PATCH": "'$SECURITY_PATCH'"
+}
+}' | base64 -w0 > metaindex
+
+if [[ "$LUN" ]];then
+cat PIF_METADATA | jq '. + {
+  "shell": "'$(echo ”$LUN” | base64 -w0)'"
+}' > PIF_METADATA2
+mv PIF_METADATA2 PIF_METADATA
+fi
+
+cat PIF_METADATA | jq '. + {
+  "spoof_config": "'$(cat metaindex)'"
+}' > PIF.json
+
+else
+echo "Lỗi tải pif"
+exit 1
+fi
