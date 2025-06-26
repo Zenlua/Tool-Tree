@@ -44,7 +44,7 @@ if [ -z "$PRODUCT" ]; then
 fi;
 echo "$MODEL ($PRODUCT)";
 
-(wget -q --max-filesize=2m -O PIXEL_ZIP_METADATA --no-check-certificate $OTA) 2>/dev/null;
+(wget -q -O PIXEL_ZIP_METADATA --no-check-certificate $OTA) 2>/dev/null;
 FINGERPRINT="$(grep -am1 'post-build=' PIXEL_ZIP_METADATA 2>/dev/null | cut -d= -f2)";
 SECURITY_PATCH="$(grep -am1 'security-patch-level=' PIXEL_ZIP_METADATA 2>/dev/null | cut -d= -f2)";
 if [ -z "$FINGERPRINT" -o -z "$SECURITY_PATCH" ]; then
@@ -71,7 +71,6 @@ exit 1
 fi
 
 wget -q -O PIF_METADATA --no-check-certificate https://github.com/Zenlua/Tool-Tree/releases/download/V1/PIF.json 2>/dev/null
-
 
 if [[ "$(cat PIF_METADATA)" ]];the
 
