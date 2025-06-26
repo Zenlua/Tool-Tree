@@ -74,7 +74,7 @@ fi
 
 wget -q -O PIF_METADATA --no-check-certificate https://github.com/Zenlua/Tool-Tree/releases/download/V1/PIF.json 2>/dev/null || curl -s -L -k -o PIF_METADATA https://github.com/Zenlua/Tool-Tree/releases/download/V1/PIF.json 2>/dev/null
 
-if [[ "$(cat PIF_METADATA | jq -r .spoof_config)" ]];then
+if [[ "$(cat PIF_METADATA | grep -cm1 spoof_config)" == 1 ]];then
 
 if [[ "$LIT" ]];then
 cat PIF_METADATA | jq '. + {
