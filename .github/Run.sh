@@ -101,7 +101,7 @@ cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + {
   "BOARD": "'$DEVICE'",
   "SECURITY_PATCH": "'$SECURITY_PATCH'"
 }
-}' | base64 -w0 > metaindex
+}' | base64 -w0 | tee metaindex
 
 cat PIF_METADATA | jq '. + {
   "spoof_config": "'$(cat metaindex)'"
