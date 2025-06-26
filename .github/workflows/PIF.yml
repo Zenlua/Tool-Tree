@@ -2,10 +2,10 @@ name: PIF
 on:
   schedule:
     - cron: '0 0 * * *'
-  workflow_dispatch: 
   push:
     paths:
       - '.github/Run.sh'
+  workflow_dispatch: 
    inputs:
       LIT:
         description: 'Thêm spoof'
@@ -31,3 +31,9 @@ jobs:
         run: |
           # Kakathic         
           bash .github/Run.sh
+      - name: Upload Pif
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Pif
+          tag_name: V1
+          files: PIF.json
