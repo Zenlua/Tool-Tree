@@ -81,6 +81,7 @@ cat PIF_METADATA | jq '. + {
   "spoof_config": "'$LIT'"
 }' > PIF_METADATA2
 mv PIF_METADATA2 PIF_METADATA
+cat PIF_METADATA
 fi
 
 if [[ "$LUN" ]];then
@@ -88,6 +89,7 @@ cat PIF_METADATA | jq '. + {
   "shell": "'$LUN'"
 }' > PIF_METADATA2
 mv PIF_METADATA2 PIF_METADATA
+cat PIF_METADATA
 fi
 
 cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + '"$(cat test.json)"'' | base64 -w0 | tee metaindex
