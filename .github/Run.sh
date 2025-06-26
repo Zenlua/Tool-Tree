@@ -90,19 +90,7 @@ cat PIF_METADATA | jq '. + {
 mv PIF_METADATA2 PIF_METADATA
 fi
 
-cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + {
-  "com.google.android.gms": {
-  "FINGERPRINT": "'$FINGERPRINT'",
-  "MANUFACTURER": "Google",
-  "BRAND": "google",
-  "MODEL": "'$MODEL'",
-  "PRODUCT": "'$PRODUCT'",
-  "DEVICE": "'$DEVICE'",
-  "BOARD": "'$DEVICE'",
-  "SECURITY_PATCH": "'$SECURITY_PATCH'"
-}
-}' | base64 -w0 | tee metaindex
-
+cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + '"$(cat test.json)"'' | base64 -w0 | tee metaindex
 cat PIF_METADATA | jq '. + {
   "spoof_config": "'$(cat metaindex)'"
 }' > PIF.json
