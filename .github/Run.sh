@@ -44,7 +44,7 @@ if [ -z "$PRODUCT" ]; then
 fi;
 echo "$MODEL ($PRODUCT)";
 
-(wget -q --max-filesize=2k -O PIXEL_ZIP_METADATA --no-check-certificate $OTA) 2>/dev/null;
+(wget -q --max-filesize=2m -O PIXEL_ZIP_METADATA --no-check-certificate $OTA) 2>/dev/null;
 FINGERPRINT="$(grep -am1 'post-build=' PIXEL_ZIP_METADATA 2>/dev/null | cut -d= -f2)";
 SECURITY_PATCH="$(grep -am1 'security-patch-level=' PIXEL_ZIP_METADATA 2>/dev/null | cut -d= -f2)";
 if [ -z "$FINGERPRINT" -o -z "$SECURITY_PATCH" ]; then
