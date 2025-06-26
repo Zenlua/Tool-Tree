@@ -107,6 +107,8 @@ cat PIF_METADATA | jq '. + {
   "spoof_config": "'$(cat metaindex)'"
 }' > PIF.json
 
+[[ -z "$(cat PIF_METADATA | jq -r .spoof_config)" ]] && rm PIF.json
+
 cat PIF.json
 cat PIF.json | jq -r .spoof_config | base64 -d
 cat PIF.json | jq -r .shell | base64 -d
