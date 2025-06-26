@@ -2,6 +2,9 @@
 
 **Version: 1.0.4 (Dev)**
 
++ Remove baksmali and smali because it is included in apk build
++ Add apk language
++ Big improvement 
 + Code optimization
 
 **Version: 1.0.3**
