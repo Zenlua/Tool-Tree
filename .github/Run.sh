@@ -52,16 +52,19 @@ if [ -z "$FINGERPRINT" -o -z "$SECURITY_PATCH" ]; then
   exit 1;
 fi;
 
+if [[ "$FINGERPRINT" ]] && [[ "$MODEL" ]];then
 echo '{
   "com.google.android.gms": {
+  "FINGERPRINT": "'$FINGERPRINT'",
   "MANUFACTURER": "Google",
   "BRAND": "google",
   "MODEL": "'$MODEL'",
-  "FINGERPRINT": "'$FINGERPRINT'",
   "PRODUCT": "'$PRODUCT'",
   "DEVICE": "'$DEVICE'",
   "BOARD": "'$DEVICE'",
   "SECURITY_PATCH": "'$SECURITY_PATCH'"
 }
-}' | tee pif.json
+}' | tee test.json
+fi
 
+mv .github/PIF.json PIF.json
