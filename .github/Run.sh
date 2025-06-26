@@ -75,9 +75,16 @@ wget -q -O PIF_METADATA --no-check-certificate https://github.com/Zenlua/Tool-Tr
 
 if [[ "$(cat PIF_METADATA)" ]];the
 
+if [[ "$LIT" ]];then
+cat PIF_METADATA | jq '. + {
+  "spoof_config": "'$LIT'"
+}' > PIF_METADATA2
+mv PIF_METADATA2 PIF_METADATA
+fi
+
 if [[ "$LUN" ]];then
 cat PIF_METADATA | jq '. + {
-  "spoof_config": "'$(echo ”$LUN” | base64 -w0)'"
+  "shell": "'$LUN'"
 }' > PIF_METADATA2
 mv PIF_METADATA2 PIF_METADATA
 fi
@@ -95,17 +102,13 @@ cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + {
 }
 }' | base64 -w0 > metaindex
 
-if [[ "$LUN" ]];then
-cat PIF_METADATA | jq '. + {
-  "shell": "'$(echo ”$LUN” | base64 -w0)'"
-}' > PIF_METADATA2
-mv PIF_METADATA2 PIF_METADATA
-fi
-
 cat PIF_METADATA | jq '. + {
   "spoof_config": "'$(cat metaindex)'"
 }' > PIF.json
 
+cat PIF.json
+cat PIF.json | jq -r .spoof_config | base64 -d
+cat PIF.json | jq -r .shell | base64 -d
 else
 echo "Lỗi tải pif"
 exit 1
