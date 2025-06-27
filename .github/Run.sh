@@ -76,6 +76,7 @@ wget -q -O PIF_METADATA --no-check-certificate https://github.com/Zenlua/Tool-Tr
 
 if [[ "$(cat PIF_METADATA | grep -cm1 spoof_config)" == 1 ]];then
 
+echo
 cat PIF_METADATA
 
 if [[ "$LIT" ]];then
@@ -91,7 +92,7 @@ cat PIF_METADATA | jq '. + {
 }' > PIF_METADATA2
 mv PIF_METADATA2 PIF_METADATA
 fi
-echo
+
 cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + '"$(cat test.json)"'' | base64 -w0 > metaindex
 cat PIF_METADATA | jq '. + {
   "spoof_config": "'$(cat metaindex)'"
