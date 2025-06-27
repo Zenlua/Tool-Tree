@@ -79,6 +79,13 @@ if [[ "$(cat PIF_METADATA | grep -cm1 spoof_config)" == 1 ]];then
 echo
 cat PIF_METADATA
 
+if [[ -f test.json ]];then
+cat PIF_METADATA | jq '. + {
+  "gms_config": "'$(cat test.json | base64 -w0)'"
+}' > PIF_METADATA2
+mv PIF_METADATA2 PIF_METADATA
+fi
+
 if [[ "$LIT" ]];then
 cat PIF_METADATA | jq '. + {
   "spoof_config": "'$LIT'"
@@ -93,15 +100,12 @@ cat PIF_METADATA | jq '. + {
 mv PIF_METADATA2 PIF_METADATA
 fi
 
-cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + '"$(cat test.json)"'' | base64 -w0 > metaindex
-cat PIF_METADATA | jq '. + {
-  "spoof_config": "'$(cat metaindex)'"
-}' > PIF.json
-
-[[ -z "$(cat PIF_METADATA | jq -r .spoof_config)" ]] && ( rm PIF.json; exit 1 )
+mv PIF_METADATA PIF.json
 
 echo
 cat PIF.json
+echo
+cat PIF.json | jq -r .gms_config | base64 -d
 echo
 cat PIF.json | jq -r .spoof_config | base64 -d
 echo
