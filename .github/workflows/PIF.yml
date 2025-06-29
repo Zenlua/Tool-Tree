@@ -15,6 +15,10 @@ on:
         description: 'Thêm shell'
         required: false
         default: ''
+      DEL:
+        description: 'Xoá phần tử'
+        required: false
+        default: ''
 permissions: write-all
 jobs:
   build:
@@ -24,6 +28,7 @@ jobs:
     env:
       LIT: ${{ inputs.LIT }}
       LUN: ${{ inputs.LUN }}
+      DEL: ${{ inputs.DEL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
