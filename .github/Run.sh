@@ -65,7 +65,7 @@ echo '{
   "DEVICE": "'$DEVICE'",
   "BOARD": "'$DEVICE'",
   "SECURITY_PATCH": "'$SECURITY_PATCH'"
-}
+  }
 }' | tee test.json
 else
 echo error9 >&2
