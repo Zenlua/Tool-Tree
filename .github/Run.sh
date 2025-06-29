@@ -100,6 +100,11 @@ cat PIF_METADATA | jq '. + {
 mv PIF_METADATA2 PIF_METADATA
 fi
 
+if [[ "$DEL" ]];then
+cat PIF_METADATA | jq 'del(.["'$DEL'"])' > PIF_METADATA2
+mv PIF_METADATA2 PIF_METADATA
+fi
+
 mv PIF_METADATA PIF.json
 
 echo
