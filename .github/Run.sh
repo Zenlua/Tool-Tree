@@ -114,7 +114,7 @@ cat PIF.json | jq -r .gms_config | base64 -d
 echo
 cat PIF.json | jq -r .spoof_config | base64 -d
 echo
-[ "$(grep -cm1 shell PIF.json 2>/dev/null)" == 1 ] && cat PIF.json | jq -r .shell | base64 -d
+[ "$(jq -r .shell PIF.json)" == 'null' ] || jq -r .shell PIF.json | base64 -d
 
 else
 echo "Lỗi tải pif"
