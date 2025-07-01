@@ -64,6 +64,7 @@ echo '{
   "PRODUCT": "'$PRODUCT'",
   "DEVICE": "'$DEVICE'",
   "BOARD": "'$DEVICE'",
+  "DEVICE_INITIAL_SDK_INT": "32",
   "SECURITY_PATCH": "'$SECURITY_PATCH'"
   }
 }' | tee test.json
