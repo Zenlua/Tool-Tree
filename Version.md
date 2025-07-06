@@ -3,6 +3,8 @@
 **Version: 1.0.4 (Dev)**
 
 + Remove baksmali and smali because it is included in apk build
++ Add dex2oat
++ Can now unpack each partition in super and payload 
 + Add apk language
 + Big improvement 
 + Code optimization
