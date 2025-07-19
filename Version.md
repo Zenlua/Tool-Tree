@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.0.4 (Dev)**
+**Version: 1.0.4**
 
 + Remove baksmali and smali because it is included in apk build
 + Add dex2oat
