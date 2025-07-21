@@ -1,5 +1,11 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.0.5 (DEV)**
+
+- Update jdk can run apktool
+- Update apkeditor 1.4.4
+- Update erofs unpack and build
+
 **Version: 1.0.4**
 
 + Remove baksmali and smali because it is included in apk build
