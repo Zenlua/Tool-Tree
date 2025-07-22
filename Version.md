@@ -2,6 +2,9 @@
 
 **Version: 1.0.5 (DEV)**
 
+- Delete warning dt_*
+- Now when running shell, the volume cannot be adjusted.
+- Support for Android 7 ↓
 - Update jdk can run apktool
 - Update apkeditor 1.4.4
 - Update erofs unpack and build
