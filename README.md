@@ -17,7 +17,7 @@
 
 - ROM Edit: Unpack, edit and repack ROMs quickly.
 
-- APK Edit: Decompile, edit smali/xml, re-sign and install APK easily.
+- [APK Edit](https://github.com/REAndroid/APKEditor): Decompile, edit smali/xml, re-sign and install APK easily.
 
 - Additional utilities: Support avb patching, unpacking, super merging, Payload decompression, file conversion, super synthesis.
 
