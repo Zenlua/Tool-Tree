@@ -2,11 +2,14 @@
 
 **Version: 1.0.5 (DEV)**
 
-- Delete warning dt_*
-- Support for Android 7 ↓
-- Update jdk can run apktool
-- Update apkeditor 1.4.4
-- Update erofs unpack and build
++ Dex2oat is now available for no-root
++ Add log information and app updates
++ Update and fix errors
++ Delete warning dt_*0000
++ Support Android 7 and below 
++ Update jdk can run apktool
++ Update apkeditor 1.4.4
++ Update erofs unpack and build
 
 **Version: 1.0.4**
 
