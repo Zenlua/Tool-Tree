@@ -1,10 +1,13 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.0.5 (DEV)**
+**Version: 1.0.6 (Coming soon)**
 
 + Dex2oat is now available for no-root
 + Add log information and app updates
 + Update and fix errors
+
+**Version: 1.0.5**
+
 + Delete warning dt_*0000
 + Support Android 7 and below 
 + Update jdk can run apktool
