@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.0.6 (Coming soon)**
+**Version: 1.0.6 (28-7-2025)**
 
 + Dex2oat is now available for no-root
 + Add log information and app updates
