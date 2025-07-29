@@ -2,6 +2,8 @@
 
 - As a powerful application for Android, it supports users to edit ROMs and APKs with many built-in utilities and a flexible add-on system `root` `no-root`
 
+- Arm64 only supported
+
 - View changelog: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
 - **[![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/total?label=Downloads&logo=github&abbreviated=true&color=blue)](https://github.com/Zenlua/Tool-Tree/releases/latest/download/Tool-Tree.apk)**
