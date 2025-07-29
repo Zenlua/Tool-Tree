@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.0.6 (28-7-2025)**
+**Version: 1.0.6 (29-7-2025)**
 
++ Fix repack boot problem
 + Dex2oat is now available for no-root
 + Add log information and app updates
 + Update and fix errors
