@@ -75,7 +75,7 @@ If there is an install.sh file in the add-on
 
 - After unzipping the add-on file start running install.sh, there is actually no need to use this script.
 
-**Download:** [Sample 1](https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/add-on/Test)
+**Download:** [Sample](https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/add-on/Test)
 
 
 
