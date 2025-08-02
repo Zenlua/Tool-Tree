@@ -2,6 +2,8 @@
 
 - As a powerful application for Android, it supports users to edit ROMs and APKs with many built-in utilities and a flexible add-on system `root` `no-root`
 
+- Tools like java, python3 and many more are available.
+
 - `Arm64` only supported
 
 - Share this app to help it grow and improve.
