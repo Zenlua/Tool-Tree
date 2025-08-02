@@ -4,7 +4,7 @@
 
 - Tools like java, python3 and many more are available.
 
-- `Arm64` only supported
+- `Arm64` support only
 
 - Share this app to help it grow and improve.
 
