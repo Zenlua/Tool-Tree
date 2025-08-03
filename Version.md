@@ -2,6 +2,7 @@
 
 **Version: 1.0.7 (3-8-2025)**
 
++ 🆕 Add app update notification when new version is available
 + Fix super decompression issue
 + Fix some minor bugs
 + Update tools in the application
