@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.0.7 (coming soon)**
+**Version: 1.0.7 (3-8-2025)**
 
 + Fix super decompression issue
 + Fix some minor bugs
