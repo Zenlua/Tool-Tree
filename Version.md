@@ -1,8 +1,14 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.0.8 (coming soon)**
+
++ Update magiskboot
++ Fix boot decryption
++ Fix avb dtb, kernel_dtb
+
 **Version: 1.0.7 (3-8-2025)**
 
-+ 🆕 Add app update notification when new version is available
++ Add app update notification
 + Fix super decompression issue
 + Fix some minor bugs
 + Update tools in the application
