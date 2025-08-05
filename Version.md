@@ -1,8 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.0.8 (coming soon)**
+**Version: 1.0.8 (5-8-2025)**
 
-+ Update magiskboot
++ Fix boot dtbo mtk unpack, repack
++ Update magiskboot latest
 + Fix boot decryption
 + Fix avb dtb, kernel_dtb
 
