@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.0.8 (coming soon)**
+**Version: 1.0.9 (coming soon)**
 
 + Added feature: always keep screen on when running command 
 
