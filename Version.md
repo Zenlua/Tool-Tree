@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.0.8 (coming soon)**
+
++ Added feature: always keep screen on when running command 
+
 **Version: 1.0.8 (5-8-2025)**
 
 + Fix boot dtbo mtk unpack, repack
