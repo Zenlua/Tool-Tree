@@ -2,6 +2,7 @@
 
 **Version: 1.0.9 (coming soon)**
 
++ Add unpack, repack logo Xiaomi
 + Feature: Always keep screen on when running command 
 
 **Version: 1.0.8 (5-8-2025)**
