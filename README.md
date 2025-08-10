@@ -12,6 +12,8 @@
 
   **[![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/total?label=Downloads&logo=github&abbreviated=true&color=blue)](https://github.com/Zenlua/Tool-Tree/releases/latest)**
 
+- Latest release: [Download](https://github.com/Zenlua/Tool-Tree/releases/latest)
+
 ### See details
 
 - Information: **[Infor](https://zenlua.github.io/Tool-Tree/Information.html)**, or **[Guide app](https://zenlua.github.io/Tool-Tree/Guide.html)**
