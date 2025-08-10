@@ -22,6 +22,14 @@
 
 ### Outstanding features
 
+- Download add-ons: [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html) | [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html)
+
+   - Addon: the section for ROM editing.
+
+   - Apkon: the section for APK editing.
+
+   - You can enter data in either one; I just separated them for easier distinction.
+
 - ROM Edit: Unpack, edit and repack ROMs quickly.
 
 - [APK Edit](https://github.com/REAndroid/APKEditor): Decompile, edit smali/xml, re-sign and install APK easily.
