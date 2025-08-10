@@ -11,47 +11,28 @@ Internal structure of add-on file
 ```
 file.add
 └── (contents inside the file)
-    ├── addon.sh
+    ├── addon.prop
     ├── icon.png (256×256)
-    ├── menu.sh|menu.xml
+    ├── menu.sh
     ├── index.sh|index.xml
-    ├── install.sh
-    └── addon/
+    ├── early_start.sh
+    └── language.sh
 ```
 
-Contents of addon.sh file
+Contents of addon.prop file
 
 ```
 # is a shell script file
 
 id=test
+id=Test
+name=Test add-on
 author=Kakathic
+description=Short description
 version=1.0
 versionCode=100
-web=https://zenlua.github.io/Tool-Tree/Instruct.html
 root=false
-
-langEn(){
-name="Test"
-description="Test add-on 1"
-}
-
-langVi(){
-name="Thử nghiệm"
-description="Mẫu thử nghiệm 1"
-}
-
-case "$LANGUAGE" in
-    "vi")
-    langVi;
-    ;;
-    *)
-    langEn;
-    ;;
-esac
 ```
-
-- Both for containing language and language data
 
 Add-on icon
 
@@ -59,21 +40,11 @@ Add-on icon
 
 - Can also rename icon_true.png, icon_false.png, true is dark mode, false is light mode.
 
-Content inside menu.sh, menu.xml
-
-- Mainly use page to move to index
-
-- [See details](https://github.com/helloklf/kr-scripts/blob/master/docs/Page.md)
-
 Content inside index.sh, index.xml
 
 - There are many things that are difficult to say that can only be found out by yourself.
 
 - [See details](https://github.com/helloklf/kr-scripts)
-
-If there is an install.sh file in the add-on
-
-- After unzipping the add-on file start running install.sh, there is actually no need to use this script.
 
 **Download:** [Sample](https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/add-on/Test)
 
