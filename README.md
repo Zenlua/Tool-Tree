@@ -48,6 +48,6 @@
 
 - There are many other sources that cannot be listed, only the app framework source can be taken.
 
-- **[Kr-Script](https://github.com/helloklf/kr-scripts), [Kr-Script](https://github.com/ColdWindScholar/kr-scripts) (modified)**
+- **[Kr-Script](https://github.com/helloklf/kr-scripts), [Kr-Script](https://github.com/ColdWindScholar/kr-scripts) (modified), [Termux](https://github.com/termux/termux-app)**
 
 
