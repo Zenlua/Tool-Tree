@@ -2,6 +2,7 @@
 
 **Version: 1.0.9 (coming soon)**
 
++ Fix f2fs build, unpack
 + Change the entire addon structure
 + Add unpack, repack logo Xiaomi
 + Feature: Always keep screen on when running command 
