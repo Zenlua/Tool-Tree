@@ -22,7 +22,9 @@
 
 ### Outstanding features
 
-- Download add-ons: [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html), or [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html)
+- Download add-ons:
+
+   - [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html), or [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html)
 
    - Addon: the section for ROM editing.
 
