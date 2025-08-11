@@ -42,7 +42,7 @@
 
 - The add-on file is a 7z or zip archive then the extension must be renamed to file.add
 
-- In the add-on file there is addon.sh, icon.png, menu.sh, index.sh and an addon folder
+- In the add-on file there is addon.prop, icon.png, menu.sh, index.sh and an addon folder
 
 - **[See details](https://zenlua.github.io/Tool-Tree/Instruct.html)**
 
