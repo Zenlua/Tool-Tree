@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.0.9 (coming soon)**
+**Version: 1.0.9 (11-8-2025)**
 
 + Fix f2fs build, unpack
 + Change the entire addon structure
