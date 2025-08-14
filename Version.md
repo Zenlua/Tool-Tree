@@ -2,6 +2,9 @@
 
 **Version: 1.1.0 (coming soon)**
 
++ Optimize unpack img again
++ Update bash, 7z command
++ Update APK editor 1.4.5
 + Fix all unpack, repack f2fs
 
 **Version: 1.0.9 (11-8-2025)**
