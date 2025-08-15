@@ -1,7 +1,7 @@
 name: PIF
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 */7 * *'
   push:
     paths:
       - '.github/Run.sh'
