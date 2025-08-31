@@ -2,6 +2,10 @@
 
 **Version: 1.1.0 (coming soon)**
 
++ Fix minor bugs, remove strings
++ Add language Chinese, Russian
++ Code optimization, more 
++ Speed up file processing
 + Optimize unpack img again
 + Update bash, 7z command
 + Update APK editor 1.4.5
