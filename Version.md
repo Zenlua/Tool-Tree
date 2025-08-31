@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.1.0 (coming soon)**
+**Version: 1.1.0 (31-8-2025)**
 
 + Fix minor bugs, remove strings
 + Add language Chinese, Russian
