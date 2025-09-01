@@ -2,6 +2,7 @@
 
 **Version: 1.1.0 (31-8-2025)**
 
++ Fix bash version not available
 + Fix minor bugs, remove strings
 + Add language Chinese, Russian
 + Code optimization, more 
