@@ -68,6 +68,19 @@ echo '{
   "SECURITY_PATCH": "'$SECURITY_PATCH'"
   }
 }' | tee test.json
+echo '{
+  "com.android.vending": {
+  "FINGERPRINT": "'$FINGERPRINT'",
+  "MANUFACTURER": "Google",
+  "BRAND": "google",
+  "MODEL": "'$MODEL'",
+  "PRODUCT": "'$PRODUCT'",
+  "DEVICE": "'$DEVICE'",
+  "BOARD": "'$DEVICE'",
+  "DEVICE_INITIAL_SDK_INT": "32",
+  "SECURITY_PATCH": "'$SECURITY_PATCH'"
+  }
+}' | tee testch.json
 else
 echo error9 >&2
 exit 1
@@ -106,29 +119,24 @@ cat PIF_METADATA | jq 'del(.["'$DEL'"])' > PIF_METADATA2
 mv PIF_METADATA2 PIF_METADATA
 fi
 
-cat PIF_METADATA | jq -r .spoof_config | base64 -d > chplay.json
-jq --arg FINGERPRINT "$FINGERPRINT" \
-   --arg MODEL "$MODEL" \
-   --arg PRODUCT "$PRODUCT" \
-   --arg DEVICE "$DEVICE" \
-   --arg SECURITY_PATCH "$SECURITY_PATCH" \
-'. + {
+cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + {
   "com.android.vending": {
-    "FINGERPRINT": $FINGERPRINT,
+    "FINGERPRINT": "'"$FINGERPRINT"'",
     "MANUFACTURER": "Google",
     "BRAND": "google",
-    "MODEL": $MODEL,
-    "PRODUCT": $PRODUCT,
-    "DEVICE": $DEVICE,
-    "BOARD": $DEVICE,
+    "MODEL": "'"$MODEL"'",
+    "PRODUCT": "'"$PRODUCT"'",
+    "DEVICE": "'"$DEVICE"'",
+    "BOARD": "'"$DEVICE"'",
     "DEVICE_INITIAL_SDK_INT": "32",
-    "SECURITY_PATCH": $SECURITY_PATCH
+    "SECURITY_PATCH": "'"$SECURITY_PATCH"'"
   }
-}' chplay.json > chplay2.json
+}' > chplay.json
 
 cat PIF_METADATA | jq '. + {
-  "spoof_config": "'$(cat chplay2.json | base64 -w0)'"
-}' > PIF_METADATA
+  "spoof_config": "'$(cat chplay.json | base64 -w0)'"
+}' > PIF_METADATA2
+mv PIF_METADATA2 PIF_METADATA
 
 mv PIF_METADATA PIF.json
 
