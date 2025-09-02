@@ -119,12 +119,11 @@ jq '. + {
   "DEVICE_INITIAL_SDK_INT": "32",
   "SECURITY_PATCH": "'$SECURITY_PATCH'"
   }
-}' chplay.json
+}' chplay.json > chplay2.json
 
 cat PIF_METADATA | jq '. + {
-  "spoof_config": "'$(cat chplay.json | base64 -w0)'"
-}' > PIF_METADATA2
-mv PIF_METADATA2 PIF_METADATA
+  "spoof_config": "'$(cat chplay2.json | base64 -w0)'"
+}' > PIF_METADATA
 
 mv PIF_METADATA PIF.json
 
