@@ -119,7 +119,9 @@ cat PIF_METADATA | jq 'del(.["'$DEL'"])' > PIF_METADATA2
 mv PIF_METADATA2 PIF_METADATA
 fi
 
-cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + {
+cat PIF_METADATA | jq -r .spoof_config | base64 -d > mauch.json
+
+jq '. + {
   "com.android.vending": {
     "FINGERPRINT": "'"$FINGERPRINT"'",
     "MANUFACTURER": "Google",
@@ -131,8 +133,9 @@ cat PIF_METADATA | jq -r .spoof_config | base64 -d | jq '. + {
     "DEVICE_INITIAL_SDK_INT": "32",
     "SECURITY_PATCH": "'"$SECURITY_PATCH"'"
   }
-}' > chplay.json
+}' mauch.json > chplay.json
 
+cat chplay.json
 cat PIF_METADATA | jq '. + {
   "spoof_config": "'$(cat chplay.json | base64 -w0)'"
 }' > PIF_METADATA2
