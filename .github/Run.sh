@@ -107,17 +107,22 @@ mv PIF_METADATA2 PIF_METADATA
 fi
 
 cat PIF_METADATA | jq -r .spoof_config | base64 -d > chplay.json
-jq '. + {
+jq --arg FINGERPRINT "$FINGERPRINT" \
+   --arg MODEL "$MODEL" \
+   --arg PRODUCT "$PRODUCT" \
+   --arg DEVICE "$DEVICE" \
+   --arg SECURITY_PATCH "$SECURITY_PATCH" \
+'. + {
   "com.android.vending": {
-  "FINGERPRINT": "'$FINGERPRINT'",
-  "MANUFACTURER": "Google",
-  "BRAND": "google",
-  "MODEL": "'$MODEL'",
-  "PRODUCT": "'$PRODUCT'",
-  "DEVICE": "'$DEVICE'",
-  "BOARD": "'$DEVICE'",
-  "DEVICE_INITIAL_SDK_INT": "32",
-  "SECURITY_PATCH": "'$SECURITY_PATCH'"
+    "FINGERPRINT": $FINGERPRINT,
+    "MANUFACTURER": "Google",
+    "BRAND": "google",
+    "MODEL": $MODEL,
+    "PRODUCT": $PRODUCT,
+    "DEVICE": $DEVICE,
+    "BOARD": $DEVICE,
+    "DEVICE_INITIAL_SDK_INT": "32",
+    "SECURITY_PATCH": $SECURITY_PATCH
   }
 }' chplay.json > chplay2.json
 
