@@ -120,7 +120,7 @@ mv PIF_METADATA2 PIF_METADATA
 fi
 
 cat PIF_METADATA | jq -r .spoof_config | base64 -d > mauch.json
-jq '. + '"$(cat testch.json)"'' mauch.json | tee chplay.json
+jq '. + '"$(cat testch.json)"'' mauch.json > chplay.json
 
 LITk="$(cat chplay.json | base64 -w0)"
 cat PIF_METADATA | jq '. + {
@@ -130,6 +130,7 @@ mv PIF_METADATA2 PIF_METADATA
 
 mv PIF_METADATA PIF.json
 
+[ -z "$LITk" ] && exit 1
 echo
 cat PIF.json
 echo
