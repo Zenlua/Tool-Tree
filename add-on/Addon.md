@@ -2,7 +2,7 @@
 
 - List of add-ons in favorites tab 
 
-### Merge system-root
+#### Merge system-root
 
 - Merge partitions into system_root
 
