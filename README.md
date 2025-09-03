@@ -52,7 +52,7 @@
 
 - Add new languages or update languages to match the feature.
 
-- **[See details](https://github.com/Zenlua/Tool-Tree/tree/main/lang)**
+- **[See details](https://github.com/Zenlua/Tool-Tree/tree/main/.github/lang)**
 
 ### Related sources
 
