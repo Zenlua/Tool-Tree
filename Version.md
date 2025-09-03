@@ -2,6 +2,7 @@
 
 **Version: 1.1.1 (3-9-2025)**
 
++ Fix java command
 + Brotli command update
 + Add language Hungarian 
 
