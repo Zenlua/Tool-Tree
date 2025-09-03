@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.1.1 (coming soon)**
+**Version: 1.1.1 (3-9-2025)**
 
 + Brotli command update
 + Add language Hungarian 
