@@ -2,6 +2,7 @@
 
 **Version: 1.1.2 (coming soon)**
 
++ Update system light and dark mode
 + Add conversion in build 
 
 **Version: 1.1.1 (3-9-2025)**
