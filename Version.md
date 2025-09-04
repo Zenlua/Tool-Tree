@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.1.2 (coming soon)**
+
++ Add conversion in build 
+
 **Version: 1.1.1 (3-9-2025)**
 
 + Fix java command
@@ -18,6 +22,7 @@
 + Update bash, 7z command
 + Update APK editor 1.4.5
 + Fix all unpack, repack f2fs
++ delete dex2oat
 
 **Version: 1.0.9 (11-8-2025)**
 
