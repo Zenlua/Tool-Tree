@@ -14,6 +14,8 @@ Application user guide
 
 - More discover it yourself
 
+- The following images are for non-root users only, to be able to access data in the tool-tree application
+
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img1.jpg" alt="1" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img2.jpg" alt="2" style="width:49%;">
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img3.jpg" alt="3" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img4.jpg" alt="4" style="width:49%;">
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img5.jpg" alt="5" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img6.jpg" alt="6" style="width:49%;">
