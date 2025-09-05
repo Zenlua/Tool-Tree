@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.1.2 (coming soon)**
+**Version: 1.1.2 (5-9-2025)**
 
 + Update system light and dark mode
 + Add conversion in build 
