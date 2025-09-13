@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.1.3 (13-9-2025)**
+
++ Fix theme interface bug
++ Fix smali build with smali
+
 **Version: 1.1.2 (5-9-2025)**
 
 + Update system light and dark mode
