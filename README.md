@@ -52,6 +52,8 @@
 
 - Add new languages or update languages to match the feature.
 
+- Language can be submitted in the issue creation section.
+
 - **[See details](https://github.com/Zenlua/Tool-Tree/tree/main/.github/lang)**
 
 ### Related sources
