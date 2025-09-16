@@ -86,23 +86,6 @@ echo error9 >&2
 exit 1
 fi
 
-vantay='{
-  "com.android.vending": {
-  "FINGERPRINT": "Xiaomi/raphael/raphael:11/RKQ1.200826.002/V12.5.2.0.RFKMIXM:user/release-keys",
-  "MANUFACTURER": "Xiaomi",
-  "BRAND": "raphael",
-  "MODEL": "Mi 9T Pro",
-  "PRODUCT": "raphael",
-  "DEVICE": "raphael",
-  "BOARD": "raphael",
-  "DEVICE_INITIAL_SDK_INT": "30",
-  "SECURITY_PATCH": "2021-07-01"
-  }
-}'
-
-echo "$vantay" > test.json
-echo "$vantay" > testch.json
-
 wget -q -O PIF_METADATA --no-check-certificate https://github.com/Zenlua/Tool-Tree/releases/download/V1/PIF.json 2>/dev/null || curl -s -L -k -o PIF_METADATA https://github.com/Zenlua/Tool-Tree/releases/download/V1/PIF.json 2>/dev/null
 
 if [[ "$(cat PIF_METADATA | grep -cm1 spoof_config)" == 1 ]];then
