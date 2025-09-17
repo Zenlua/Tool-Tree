@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.1.4 (17-9-2025)**
+
++ Was able to extract zip files containing rom files, Payload
+
 **Version: 1.1.3 (13-9-2025)**
 
 + Fix theme interface bug
