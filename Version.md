@@ -2,7 +2,7 @@
 
 **Version: 1.1.4 (17-9-2025)**
 
-+ Was able to extract zip files containing rom files, Payload
++ Was able to decompile zip files containing rom files, Payload
 
 **Version: 1.1.3 (13-9-2025)**
 
