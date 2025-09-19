@@ -2,6 +2,7 @@
 
 **Version: 1.1.4 (17-9-2025)**
 
++ Fix module decompile failure issue 
 + Was able to decompile zip files containing rom files, Payload
 
 **Version: 1.1.3 (13-9-2025)**
