@@ -8,6 +8,8 @@
 
 - Tools like `java`, `python3` and many more are available, `Arm64` support only
 
+- Committed to not collecting user data, Tool-Tree includes many other open source tools combined, feel free to use, be careful if using add-ons from outside.
+
 - Share this app to help it grow and improve.
 
 - Release: **[Download](https://github.com/Zenlua/Tool-Tree/releases)**
