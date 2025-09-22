@@ -16,7 +16,7 @@
 
 ### See details
 
-- Information: **[No-Root](https://zenlua.github.io/Tool-Tree/Guide.html)**
+- Instruct: **[No-Root](https://zenlua.github.io/Tool-Tree/Guide.html)**
 
 - If you are rooted, give the app permission to access the path directly on the screen after decrypting or saving the file.
 
