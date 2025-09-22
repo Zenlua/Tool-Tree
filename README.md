@@ -4,12 +4,11 @@
 
 - View changelog: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
-> The tool only uses the network when entering the application to check the version, otherwise it does not use the network, and does not collect user data at all. You can turn off the network if you do not trust it.
+   - The tool only uses the network when entering the application to check the version, otherwise it does not use the network, and does not collect user data at all. You can turn off the network if you do not trust it.
 
-> The reason Tool-Tree is not open source is simply because the application is developed entirely by hand, based on Kr-Script PIO engine.
+   - The reason Tool-Tree is not open source is simply because the application is developed entirely by hand, based on Kr-Script PIO engine.
 
-> [!tip]
-> Release: **[Download](https://github.com/Zenlua/Tool-Tree/releases)**
+- Release: **[Download](https://github.com/Zenlua/Tool-Tree/releases)**
 
 - Share this app to help it grow and improve.
 
