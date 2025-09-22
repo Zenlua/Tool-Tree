@@ -27,11 +27,9 @@
 
 - Download add-ons:
 
-   - [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html), or [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html)
+   - [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html): the section for ROM editing.
 
-   - Addon: the section for ROM editing.
-
-   - Apkon: the section for APK editing.
+   - [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html): the section for APK editing.
 
 - One side is rom editing, and the other side is apk editing
 
