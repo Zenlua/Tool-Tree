@@ -18,7 +18,7 @@
 
 - Instruct: **[No-Root](https://zenlua.github.io/Tool-Tree/Guide.html)**
 
-- If you are rooted, give the app permission to access the path directly on the screen after decrypting or saving the file.
+- If you are rooted, give the app root access to the app, so that it can directly go to the path on the screen after decrypting or saving the file.
 
 - Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)**, or **[Telegram](https://t.me/tooltree)**
 
