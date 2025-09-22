@@ -4,21 +4,21 @@
 
 - View changelog: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
-  **[![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/total?label=Downloads&logo=github&abbreviated=true&color=blue)](https://github.com/Zenlua/Tool-Tree/releases/latest)**
+- The tool only uses the network when entering the application to check the version, otherwise it does not use the network, and does not collect user data at all. You can turn off the network if you do not trust it.
 
-- Tools like `java`, `python3` and many more are available, `Arm64` support only
-
-- Committed to not collecting user data, Tool-Tree includes many other open source tools combined, feel free to use, be careful if using add-ons from outside.
+- The reason Tool-Tree is not open source is simply because the application is developed entirely by hand, based on Kr-Script PIO engine.
 
 - Share this app to help it grow and improve.
+
+- You can contribute add-ons if they are useful it will be an official part of Tool-Tree.
 
 - Release: **[Download](https://github.com/Zenlua/Tool-Tree/releases)**
 
 ### See details
 
-- Information: **[Infor](https://zenlua.github.io/Tool-Tree/Information.html)**, or **[Guide app](https://zenlua.github.io/Tool-Tree/Guide.html)**
+- Information: **[No-Root](https://zenlua.github.io/Tool-Tree/Guide.html)**
 
-- Tool-Tree is a powerful tool for programmers, modders, or anyone who loves to tinker with Android.
+- If you are rooted, give the app permission to access the path directly on the screen after decrypting or saving the file.
 
 - Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)**, or **[Telegram](https://t.me/tooltree)**
 
@@ -32,35 +32,29 @@
 
    - Apkon: the section for APK editing.
 
-   - You can enter data in either one; I just separated them for easier distinction.
+- One side is rom editing, and the other side is apk editing
 
-- ROM Edit: Unpack, edit and repack ROMs quickly.
+- ROM Edit: Unpack and Repack ROMs quickly.  
 
 - [APK Edit](https://github.com/REAndroid/APKEditor): Decompile, edit smali/xml, re-sign and install APK easily.
 
-- Additional utilities: Support avb patching, unpacking, super merging, Payload decompression, file conversion, super synthesis.
-
-- Add-on system: Allows extending application functionality through modules, scripts, and external tools.
-
 ### Instructions add-on
-
-- The add-on file is a 7z or zip archive then the extension must be renamed to file.add
-
-- In the add-on file there is addon.prop, icon.png, menu.sh, index.sh and an addon folder
 
 - **[See details](https://zenlua.github.io/Tool-Tree/Instruct.html)**
 
-### Add language and update
+### Add languages 
 
-- Add new languages or update languages to match the feature.
+- Contact me directly via telegram, or send the language file via issue.
 
-- Language can be submitted in the issue creation section.
+### Buy me a coffee
 
-- **[See details](https://github.com/Zenlua/Tool-Tree/tree/main/.github/lang)**
+- **[Infor](https://zenlua.github.io/Tool-Tree/Information.html)**
 
 ### Related sources
 
 - There are many other sources that cannot be listed, only the app framework source can be taken.
+
+- Many other small tools 
 
 - **[Kr-Script](https://github.com/helloklf/kr-scripts), [Kr-Script](https://github.com/ColdWindScholar/kr-scripts) (modified), [Termux](https://github.com/termux/termux-app)**
 
