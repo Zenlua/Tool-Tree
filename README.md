@@ -54,6 +54,6 @@
 
 - Many other small tools 
 
-- **[Kr-Script](https://github.com/helloklf/kr-scripts), [Kr-Script](https://github.com/ColdWindScholar/kr-scripts) (modified), [Termux](https://github.com/termux/termux-app)**
+- **[Kr-Script](https://github.com/helloklf/kr-scripts), [Termux](https://github.com/termux/termux-app)**
 
 
