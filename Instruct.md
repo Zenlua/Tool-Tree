@@ -13,9 +13,10 @@ file.add
 └── (contents inside the file)
     ├── addon.prop
     ├── icon.png (256×256)
-    ├── menu.sh
+    ├── menu.sh|menu.xml
     ├── index.sh|index.xml
     ├── early_start.sh
+    ├── uninstall.sh
     └── language.sh
 ```
 
