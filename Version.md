@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.1.5**
+**Version: 1.1.5 (28-10-2025)**
 
 + Fixed some other minor bugs
 + Move apkeditor inside utilities
