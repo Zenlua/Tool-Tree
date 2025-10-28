@@ -7,7 +7,7 @@
 + Add feature in utilities
 + Add new add-ons 
 + Change some add-on parts 
-+ Update apk build
++ Auto update id apk build
 
 **Version: 1.1.4 (19-9-2025)**
 
