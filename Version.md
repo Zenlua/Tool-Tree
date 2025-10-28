@@ -1,5 +1,14 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.1.5**
+
++ Fixed some other minor bugs
++ Move apkeditor inside utilities
++ Add feature in utilities
++ Add new add-ons 
++ Change some add-on parts 
++ Update apk build
+
 **Version: 1.1.4 (19-9-2025)**
 
 + Fix module decompile failure issue 
