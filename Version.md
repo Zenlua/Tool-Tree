@@ -1,5 +1,11 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.1.6 (28-10-2025)**
+
++ Update toybox version 8.1.3
++ Fix apk build error
++ Update some commands
+
 **Version: 1.1.5 (28-10-2025)**
 
 + Fixed some other minor bugs
