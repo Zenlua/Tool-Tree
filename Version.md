@@ -1,14 +1,15 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.1.6 (28-10-2025)**
+**Version: 1.1.6 (----)**
 
 + Update toybox version 8.1.3
-+ Fix apk build error
++ Fixed apk build error
 + Update some commands
-+ Fix add language feature
++ Fixed add language feature
 
 **Version: 1.1.5 (28-10-2025)**
 
++ Fixed power menu command
 + Fixed some other minor bugs
 + Move apkeditor inside utilities
 + Add feature in utilities
@@ -23,8 +24,8 @@
 
 **Version: 1.1.3 (13-9-2025)**
 
-+ Fix theme interface bug
-+ Fix smali build with smali
++ Fixed theme interface bug
++ Fixed smali build with smali
 
 **Version: 1.1.2 (5-9-2025)**
 
@@ -33,7 +34,7 @@
 
 **Version: 1.1.1 (3-9-2025)**
 
-+ Fix java command
++ Fixed java command
 + Brotli command update
 + Add language Hungarian 
 
