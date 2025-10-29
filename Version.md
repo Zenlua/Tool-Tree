@@ -5,6 +5,7 @@
 + Update toybox version 8.1.3
 + Fix apk build error
 + Update some commands
++ Fix add language feature
 
 **Version: 1.1.5 (28-10-2025)**
 
