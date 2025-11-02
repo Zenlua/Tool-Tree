@@ -11,14 +11,14 @@ Internal structure of add-on file
 ```
 file.add
 └── (file.add)
-    ├── addon.prop      # add-on information 
-    ├── icon.png (256×256)
+    ├── addon.prop           # add-on information 
+    ├── icon.png (256×256)   # is the icon of the add-on
     ├── menu.sh|menu.xml     # 3-dot menu button
-    ├── index.sh|index.xml     # After entering the page, all content will be displayed. 
-    ├── early_start.sh      # The first time the application starts, it will run the shell.
-    ├── install.sh      # When the add-on is unzipped, it will run the shell. 
-    ├── uninstall.sh    # remove add-on it will run shell
-    └── language.sh      # subfile of index.sh to add language 
+    ├── index.sh|index.xml   # After entering the page, all content will be displayed. 
+    ├── early_start.sh       # The first time the application starts, it will run the shell.
+    ├── install.sh           # When the add-on is unzipped, it will run the shell. 
+    ├── uninstall.sh         # remove add-on it will run shell
+    └── language.sh          # subfile of index.sh to add language 
 ```
 
 Contents of addon.prop file
@@ -28,11 +28,15 @@ Contents of addon.prop file
 
 id=test
 name=Test add-on
+
 author=Kakathic
 description=Short description
+
 version=1.0
 versionCode=100
-root=false  # if set to "true" root is required for add-on to work 
+
+# if set to "true" root is required for add-on to work
+root=false 
 ```
 
 Add-on icon
