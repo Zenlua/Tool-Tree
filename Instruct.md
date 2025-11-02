@@ -16,6 +16,7 @@ file.add
     ├── menu.sh|menu.xml
     ├── index.sh|index.xml
     ├── early_start.sh
+    ├── install.sh
     ├── uninstall.sh
     └── language.sh
 ```
