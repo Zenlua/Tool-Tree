@@ -4,7 +4,7 @@
 
 #### Apex tool editor
 
-- Decode and build apex, capex files, This add-on is only available from tool-tree version 1.1.5 and above.
+- Decode and build apex, capex files
 
 - [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/apex_editor.add)
 
