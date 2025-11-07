@@ -10,7 +10,7 @@ Internal structure of add-on file
 
 ```
 file.add
-└── (file.add)
+└── (in file.add)
     ├── addon.prop           # add-on information 
     ├── icon.png (256×256)   # is the icon of the add-on
     ├── menu.sh|menu.xml     # 3-dot menu button
