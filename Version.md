@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.1.8**
+**Version: 1.1.8 (Coming soon)**
 
 + Update python to 3.14.0
 + Downgrade java to 17 to save space 
