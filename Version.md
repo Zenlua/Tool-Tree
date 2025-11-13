@@ -2,10 +2,11 @@
 
 **Version: 1.1.8 (Coming soon)**
 
++ Update other commands
 + Minor bug fixes
 + Update openssl
 + Update python to 3.14.0
-+ Downgrade java to 17 to save space 
++ Use java17 as default 
 
 **Version: 1.1.7 (7-11-2025)**
 
