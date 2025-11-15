@@ -4,7 +4,7 @@
 
 #### Payload dumper online
 
-- Download partitions online
+- Extract payload online
 
 - [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/apex_editor.add)
 
