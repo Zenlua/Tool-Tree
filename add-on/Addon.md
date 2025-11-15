@@ -2,6 +2,12 @@
 
 - List of add-ons in favorites tab 
 
+#### Payload dumper online
+
+- Download partitions online
+
+- [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/apex_editor.add)
+
 #### Apex tool editor
 
 - Decode and build apex, capex files
