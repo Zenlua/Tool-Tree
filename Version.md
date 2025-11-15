@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.1.8 (Coming soon)**
+**Version: 1.1.8 (15-11-2025)**
 
 + Update other commands
 + Minor bug fixes
