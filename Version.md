@@ -7,7 +7,7 @@
 + Fix all code in apk customization
 + Fix some code
 + Print log to screen
-+ Change some apk editing commands
++ Change apk command name
 
 **Version: 1.1.8 (15-11-2025)**
 
