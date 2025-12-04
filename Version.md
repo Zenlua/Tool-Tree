@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.1.9 (Coming soon)**
+**Version: 1.1.9 (04-12-2025)**
 
 + Support apktool to decode apk
 + Remove add language feature
