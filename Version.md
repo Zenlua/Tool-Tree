@@ -8,6 +8,7 @@
 + Fix some code
 + Print log to screen
 + Change apk command name
++ Add dexopt speed app startup 
 
 **Version: 1.1.8 (15-11-2025)**
 
