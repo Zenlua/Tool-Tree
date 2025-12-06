@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.2.0 (coming soon)**
+
++ Fix the code to decrypt boot
++ Fix f2fs decryption code
+
 **Version: 1.1.9 (04-12-2025)**
 
 + Support apktool to decode apk
