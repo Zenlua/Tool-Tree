@@ -2,10 +2,11 @@
 
 **Version: 1.2.0 (coming soon)**
 
++ Allows creation of Payload.bin
 + Fix unpack cpio boot code
 + Fix f2fs decryption code
 + Fix bug and downgrade python version to 3.12
-+ Fix code proot
++ Fix code proot, and other code
 + f2fs build has added 'ro'
 
 **Version: 1.1.9 (04-12-2025)**
