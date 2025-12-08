@@ -4,6 +4,9 @@
 
 + Fix unpack cpio boot code
 + Fix f2fs decryption code
++ Fix bug and downgrade python version to 3.12
++ Fix code proot
++ f2fs build has added 'ro'
 
 **Version: 1.1.9 (04-12-2025)**
 
