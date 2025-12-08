@@ -7,7 +7,7 @@
 + Fix f2fs decryption code
 + Fix bug and downgrade python version to 3.12
 + Fix code proot, and other code
-+ f2fs build has added 'ro'
++ Add f2fs build has added 'ro'
 
 **Version: 1.1.9 (04-12-2025)**
 
