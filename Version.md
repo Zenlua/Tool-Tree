@@ -2,6 +2,8 @@
 
 **Version: 1.2.0 (coming soon)**
 
++ Add Apex editor tools
++ Add button Apktool tools
 + Allows creation of Payload.bin
 + Fix unpack cpio boot code
 + Fix f2fs decryption code
