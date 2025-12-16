@@ -2,19 +2,19 @@
 
 - List of add-ons in utilities tab
 
-#### Jre21
+#### Jre21 lite
 
 - update Java 21 jre
 
 - [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/jre21.add)
 
-#### Jre25
+#### Jre25 lite
 
 - update Java 25 jre
 
 - [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/jre21.add)
 
-#### Jdk25
+#### Jdk25 Full
 
 - update Java 25 jdk
 
