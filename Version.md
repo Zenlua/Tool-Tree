@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.2.0 (coming soon)**
+**Version: 1.2.0 (16-12-2025)**
 
 + Add Apex editor tools
 + Add button Apktool tools
