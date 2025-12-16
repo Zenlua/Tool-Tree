@@ -2,8 +2,8 @@
 
 **Version: 1.2.0 (17-12-2025)**
 
-+ It is recommended to delete all application data to
-  update Tool-Tree to a more stable version
++ It is recommended to delete all application data
++ to update Tool-Tree to a more stable version
 + Add Apex editor tools
 + Add button Apktool tools
 + Allows creation of Payload.bin
