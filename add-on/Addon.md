@@ -8,12 +8,6 @@
 
 - [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/apex_editor.add)
 
-#### Apex tool editor
-
-- Decode and build apex, capex files
-
-- [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/apex_editor.add)
-
 #### Mi Thermal edit
 
 - Encrypt/decrypt thermal**.conf
