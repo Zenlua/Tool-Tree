@@ -1,6 +1,11 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.2.0 (17-12-2025)**
+**Version: 1.2.1 (17-12-2025)**
+
++ Add Google Translate language
++ Add more small online utilities
+
+**Version: 1.2.0 (16-12-2025)**
 
 + It is recommended to delete all application data
 + to update Tool-Tree to a more stable version
