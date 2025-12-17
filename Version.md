@@ -2,8 +2,8 @@
 
 **Version: 1.2.1 (17-12-2025)**
 
-+ Add Google Translate language
-+ Add more small online utilities
++ Add Google translate language
++ Add online utilities small
 
 **Version: 1.2.0 (16-12-2025)**
 
