@@ -4,7 +4,7 @@
 
 #### Payload dumper online
 
-- Extract payload online
+- Import ROM file path for faster download
 
 - [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/apex_editor.add)
 
