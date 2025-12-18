@@ -8,12 +8,6 @@
 
 - [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/apex_editor.add)
 
-#### Mi Thermal edit
-
-- Encrypt/decrypt thermal**.conf
-
-- [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/mi_thermald.add)
-
 #### Merge system-root
 
 - Merge partitions into system_root
