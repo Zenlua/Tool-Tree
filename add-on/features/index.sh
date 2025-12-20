@@ -3,8 +3,11 @@
 
 MPAT="${0%/*}"
 
-# Dịch tự động
+# Ngôn ngữ mặc định
 source $MPAT/addon.prop
+
+# Dịch tự động
+if [ "$(glog auto_trans_text)" == 1 ];then
 sum_md5_small="$(sha256sum -b $MPAT/addon.prop)"
 if [[ "$sum_md5_small" != "$(cat $MPAT/md5)" ]] || [[ ! -f $MPAT/auto.sh ]] || [[ "$(grep -cm1 '=\"\"' $MPAT/auto.sh)" == 1 ]];then
 [ -f $MPAT/auto.sh ] && rm -fr $MPAT/auto.sh
@@ -20,10 +23,29 @@ done
     fi
 fi
 [[ -f $MPAT/auto.sh ]] && source $MPAT/auto.sh
+fi
 
 # index
 echo '<?xml version="1.0" encoding="UTF-8" ?>
 <page>
+
+<group><action>
+<title>Sign boot</title>
+<desc>Sign AVB 1.0 boot, vendor_boot</desc>
+<param name="NAME" label="'$sign_text_1'" value-sh="glog name_boot_key boot" type="text" placeholder="boot"/>
+<param name="SIGN" value-sh="glog sign_boot_key testkey" label="'$sign_text_2'" options-sh="cd $ETC/key; ls *.pem | sed '"'s|.x509.pem||'"' "/>
+<param name="FILE" desc="'$input_text_1' boot.img, '$folder_text_1' '$PTSD'" options-sh="cd $PTSD; ls *.img | grep boot" label="'$select_text_1'" required="true"/>
+<set>
+slog name_boot_key "$NAME"
+slog sign_boot_key "$SIGN"
+mkdir -p $PTSD/out
+cp -rf "$PTSD/$FILE" "$PTSD/out/$FILE"
+magiskboot sign "$PTSD/out/$FILE" "/$NAME" "$ETC/key/$SIGN.x509.pem" "$ETC/key/$SIGN.pk8" &>/dev/null
+magiskboot verify "$PTSD/out/$FILE" "$ETC/key/$SIGN.x509.pem" 2>&1 || abort "failed to sign"
+echo
+echo "'$save_text_1': $PTSD/out/$FILE"
+</set>
+</action></group>
 
 <group><action>
 <title>Protoc</title>
