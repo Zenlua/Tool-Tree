@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Manager</title>
+<style>
+body { font-family: monospace; background: #0d1117; color: #c9d1d9; margin: 0; padding: 12px; }
+h3 { color: #58a6ff; font-size: 20px; margin-bottom: 6px; }
+button { margin-right: 6px; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 24px; line-height: 1; }
+button.home { background: #238636; color: white; }
+button.back { background: #1f6feb; color: white; }
+#pathContainer { display: flex; align-items: center; flex-wrap: wrap; background: #010409; border: 1px solid #30363d; border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; }
+#currentPath { color: #79c0ff; font-weight: bold; font-size: 16px; word-break: break-all; flex: 1; }
+pre { margin: 0; padding: 10px; background: #010409; border: 1px solid #30363d; border-radius: 6px; flex: 1; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+.file-item { cursor: pointer; font-size: 18px; padding: 4px 6px; border-bottom: 1px solid #30363d; }
+.file-item:hover { background: #161b22; }
+</style>
+</head>
+<body>
+
+<h3>File Manager</h3>
+
+<div id="pathContainer">
+    <button class="home" onclick="goHome()">🏠</button>
+    <button class="back" onclick="goBack()">👈</button>
+    <span id="currentPath"></span>
+</div>
+
+<pre id="fileList"></pre>
+
+<script>
+var output = document.getElementById("fileList");
+var pathDisplay = document.getElementById("currentPath");
+
+// Thư mục ban đầu
+var HOME = KrScriptCore.executeShell('pwd').trim();
+var currentPath = HOME;
+
+// Escape shell
+function shellEscape(str) {
+    return str.replace(/(["$`\\])/g,'\\$1');
+}
+
+// Liệt kê file/folder chỉ dùng ls -1ALF và sort
+function listFiles() {
+    pathDisplay.textContent = currentPath;
+    try {
+        var cmd = 'ls -1ALF "' + shellEscape(currentPath) + '" | sort -f';
+        var result = KrScriptCore.executeShell(cmd);
+        if(result){
+            var lines = result.split('\n').filter(l => l.trim() !== '');
+            output.innerHTML = lines.map(l => {
+                var icon = '📄';
+                var isDir = '0';
+                if(l.endsWith('/')) { icon = '📁'; isDir='1'; l=l.slice(0,-1); }
+                else if(l.endsWith('@')) { icon = '🔗'; isDir='0'; l=l.slice(0,-1); }
+                else if(l.endsWith('*')) { icon = '🟢'; isDir='0'; l=l.slice(0,-1); }
+                return '<div class="file-item" data-name="'+l+'" data-dir="'+isDir+'">'+icon+' '+l+'</div>';
+            }).join('');
+        } else {
+            output.textContent = '(Empty folder)';
+        }
+    } catch(e) {
+        output.textContent = 'Error: ' + e;
+    }
+}
+
+// Vào folder, xử lý đường dẫn root để tránh //
+function enterFolder(folder) {
+    if(currentPath === '/') {
+        currentPath = '/' + folder;
+    } else {
+        currentPath = currentPath + '/' + folder;
+    }
+    // loại bỏ nhiều dấu /
+    currentPath = currentPath.replace(/\/+/g, '/');
+    listFiles();
+}
+
+// Back
+function goBack() {
+    if(currentPath === '/'){ return; }
+    var parent = KrScriptCore.executeShell('dirname "' + shellEscape(currentPath) + '"').trim();
+    if(parent){ currentPath = parent; }
+    listFiles();
+}
+
+// Home
+function goHome() {
+    currentPath = HOME;
+    listFiles();
+}
+
+// Click vào file/folder
+output.addEventListener('click', function(e){
+    var target = e.target.closest('.file-item');
+    if(!target) return;
+    var name = target.dataset.name;
+    var isDir = target.dataset.dir;
+    if(isDir === '1'){
+        enterFolder(name);
+    }
+});
+
+listFiles();
+</script>
+
+</body>
+</html>
