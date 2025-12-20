@@ -3,12 +3,12 @@ id=online_features
 name=Small utility
 author=Kakathic
 description=Many small amenities
-version=1.0
-versionCode=100
+version=1.1
+versionCode=101
 root=false
 
 # Language
-input_text_1="Input file:"
+input_text_1="Input file"
 folder_text_1="Folder containing:"
 error_text_1="Error file:"
 select_text_1="Select"
@@ -17,3 +17,6 @@ save_text_1="Save at"
 # Bảng ngôn ngữ
 mi_thermal_text_1="Decrypt - Encrypt mi_thermald"
 protoc_text_1="Decrypt - Encrypt binary .pb files"
+
+sign_text_1="Name"
+sign_text_2="Signature"
