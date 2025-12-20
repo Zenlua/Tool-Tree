@@ -34,7 +34,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>
 <desc>Sign AVB 1.0 boot, vendor_boot</desc>
 <param name="NAME" label="'$sign_text_1'" value-sh="glog name_boot_key boot" type="text" placeholder="boot"/>
 <param name="SIGN" value-sh="glog sign_boot_key testkey" label="'$sign_text_2'" options-sh="cd $ETC/key; ls *.pem | sed '"'s|.x509.pem||'"' "/>
-<param name="FILE" desc="'$input_text_1' boot.img, '$folder_text_1' '$PTSD'" options-sh="cd $PTSD; ls *.img | grep boot" label="'$select_text_1'" required="true"/>
+<param name="FILE" desc="'$input_text_1' .img, '$folder_text_1' '$PTSD'" options-sh="cd $PTSD; ls *.img | grep boot" label="'$select_text_1'" required="true"/>
 <set>
 slog name_boot_key "$NAME"
 slog sign_boot_key "$SIGN"
