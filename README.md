@@ -34,7 +34,7 @@
 
 - ROM Edit: Unpack and Repack ROMs quickly.  
 
-- [APK Edit](https://github.com/REAndroid/APKEditor): Decompile, edit smali/xml, re-sign and install APK easily.
+- APK Edit: Decompile, edit smali/xml, re-sign and install APK easily.
 
 ### Instructions add-on
 
