@@ -8,21 +8,21 @@ source $MPAT/addon.prop
 
 # Dịch tự động
 if [ "$(glog auto_trans_text)" == 1 ];then
-sum_md5_small="$(sha256sum -b $MPAT/addon.prop)"
-if [[ "$sum_md5_small" != "$(cat $MPAT/md5)" ]] || [[ ! -f $MPAT/auto.sh ]] || [[ "$(grep -cm1 '=\"\"' $MPAT/auto.sh)" == 1 ]];then
-[ -f $MPAT/auto.sh ] && rm -fr $MPAT/auto.sh
+rom_sum_md5_small="$(sha256sum -b $MPAT/addon.prop)"
+if [[ "$rom_sum_md5_small" != "$(glog rom_sum_md5_small)" ]] || [[ ! -f $MPAT/auto.bash ]] || [[ "$(grep -cm1 '=\"\"' $MPAT/auto.bash)" == 1 ]];then
+[ -f $MPAT/auto.bash ] && rm -fr $MPAT/auto.bash
 for vc in $(grep "_text_.*.=" $MPAT/addon.prop | cut -d= -f1); do
-echo "${vc}=\"$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY | awk '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\" #${!vc}" >>$MPAT/auto.sh &
+echo "${vc}=\"$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY | awk '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\" #${!vc}" >>$MPAT/auto.bash &
 done
     wait
-    if [[ "$(grep -cm1 '=\"\"' $MPAT/auto.sh)" == 1 ]];then
-    sed -i '/=\"\"/d' $MPAT/auto.sh
+    if [[ "$(grep -cm1 '=\"\"' $MPAT/auto.bash)" == 1 ]];then
+    sed -i '/=\"\"/d' $MPAT/auto.bash
     else
-    chmod 755 $MPAT/auto.sh
-    echo -n "$sum_md5_small" > $MPAT/md5
+    chmod 755 $MPAT/auto.bash
+    slog rom_sum_md5_small "$rom_sum_md5_small"
     fi
 fi
-[[ -f $MPAT/auto.sh ]] && source $MPAT/auto.sh
+[[ -f $MPAT/auto.bash ]] && source $MPAT/auto.bash
 fi
 
 # index
