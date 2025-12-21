@@ -2,7 +2,7 @@
 
 **Version: 1.2.3**
 
-+ Supports decoding and recompiling Amlogic
++ Supports unpack and pack Amlogic
 
 **Version: 1.2.2 (20-12-2025)**
 
