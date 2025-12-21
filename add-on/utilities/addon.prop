@@ -9,6 +9,7 @@ root=false
 
 # Language
 home_text_1="Patch apk"
+select_text_1="Select"
 clean_text_1="Project"
 clean_text_2="Present:"
 clean_text_3="Remove language"
