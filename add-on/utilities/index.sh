@@ -63,6 +63,11 @@ done
 home(){
 xml_print '<group>
 <page title="'$home_text_1'" config-sh="'$MPAT'/index.sh clean"/>
+</group>
+
+<group>
+<page html="https://zenlua.github.io/Tool-Tree/add-on/web/terminal.html" title="Web Terminal" />
+<page html="https://zenlua.github.io/Tool-Tree/add-on/web/manager.html" title="Web Manager" />
 </group>'; }
 
 # index
