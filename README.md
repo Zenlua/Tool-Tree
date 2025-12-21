@@ -57,8 +57,9 @@
 
 - There are many other sources that cannot be listed, only the app framework source can be taken.
 
-- Many other small tools 
+- References and source code
 
 - **[Kr-Script](https://github.com/helloklf/kr-scripts), [Termux](https://github.com/termux/termux-app)**
 
+- **[ColdWindScholar](https://github.com/ColdWindScholar)**
 
