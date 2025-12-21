@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.2.3**
+
++ Supports decoding and recompiling Amlogic
+
 **Version: 1.2.2 (20-12-2025)**
 
 + Fix the ext and f2fs repack errors
