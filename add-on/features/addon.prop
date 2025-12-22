@@ -11,7 +11,7 @@ root=false
 input_text_1="Input file"
 folder_text_1="Folder containing:"
 error_text_1="Error file:"
-select_text_1="Select"
+select_text_1="Options"
 save_text_1="Save at"
 
 # Bảng ngôn ngữ
