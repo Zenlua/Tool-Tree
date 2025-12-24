@@ -1,10 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.2.4**
+**Version: 1.2.4 (24-12-2025)**
 
 + Fix .dat extraction errors
 
-**Version: 1.2.3**
+**Version: 1.2.3 (22-12-2025)**
 
 + Supports unpack and pack Amlogic
 
