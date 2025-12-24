@@ -2,6 +2,8 @@
 
 **Version: 1.2.4 (24-12-2025)**
 
++ Fixing errors when ext4 e2fsdroid builds fail
++ Extracting the files via ext4 will be faster
 + Fix .dat extraction errors
 
 **Version: 1.2.3 (22-12-2025)**
