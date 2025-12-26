@@ -99,7 +99,7 @@ sum_md5="$(sha256sum -b $MPAT/addon.prop)"
 if [[ "$sum_md5" != "$(glog "sum_md5_${MPAT##*/}")" ]] || [[ ! -f $MPAT/auto.prop ]] || [[ "$(grep -cm1 '=\"\"' $MPAT/auto.prop)" == 1 ]];then
 [ -f $MPAT/auto.prop ] && rm -fr $MPAT/auto.prop
 for vc in $(grep -e '="' $MPAT/addon.prop | cut -d= -f1); do
-echo -e "#${!vc}\n${vc}=\"$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY | awk '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\"" >>$MPAT/auto.prop &
+echo -e "${vc}=\"$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY | awk '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\" #${!vc}" >>$MPAT/auto.prop &
 done
     wait
     if [[ "$(grep -cm1 '=\"\"' $MPAT/auto.prop)" == 1 ]];then
