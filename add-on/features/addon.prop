@@ -3,8 +3,8 @@ id=online_features
 name=ROM utility
 author=Kakathic
 description=Many small amenities
-version=1.1
-versionCode=101
+version=1.2
+versionCode=102
 root=false
 
 # language
