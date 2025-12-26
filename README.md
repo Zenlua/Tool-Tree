@@ -1,25 +1,19 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree) ![GitHub Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=)
 
-- As a powerful application for Android `arm64`, it supports users to edit ROMs and APKs with many built-in utilities and a flexible add-on system `root` `no-root`
+- Supports both root and non-root versions and is only for arm64-bit.
 
 - View changelog: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
-- Share this app to help it grow and improve.
-
-- You can contribute add-ons if they are useful it will be an official part of Tool-Tree.
-
 - Release: **[Download](https://github.com/Zenlua/Tool-Tree/releases)**
 
-- The tool only uses the network when entering the application to check the version, otherwise it does not use the network, and does not collect user data at all. You can turn off the network if you do not trust it.
-
-- The reason Tool-Tree is not open source is simply because the application is developed entirely by hand, based on Kr-Script PIO engine.
+- The application is not open source because it was built manually using MT Manager.
 
 ### See details
 
 - Instruct: **[No-Root](https://zenlua.github.io/Tool-Tree/Guide.html)**
 
-- If you are rooted, give the app root access to the app, so that it can directly go to the path on the screen after decrypting or saving the file.
-
+- If the application has root privileges, it will run faster; you can copy the path directly from the log to access it directly.
+  
 - Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)**, or **[Telegram](https://t.me/tooltree)**
 
 ### Outstanding features
@@ -29,12 +23,6 @@
    - [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html): the section for ROM editing.
 
    - [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html): the section for APK editing.
-
-- One side is rom editing, and the other side is apk editing
-
-- ROM Edit: Unpack and Repack ROMs quickly.  
-
-- APK Edit: Decompile, edit smali/xml, re-sign and install APK easily.
 
 ### Instructions add-on
 
