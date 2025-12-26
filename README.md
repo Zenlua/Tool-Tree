@@ -4,9 +4,9 @@
 
 - View changelog: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
-- Release: **[Download](https://github.com/Zenlua/Tool-Tree/releases)**
-
 - The application is not open source because it was built manually using MT Manager.
+
+- Release: **[Download](https://github.com/Zenlua/Tool-Tree/releases)**
 
 ### See details
 
