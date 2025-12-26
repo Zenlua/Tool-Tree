@@ -1,30 +1,6 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
 
-MPAT="${0%/*}"
-
-# Ngôn ngữ mặc định
-source $MPAT/addon.prop
-
-# Dịch tự động
-if [ "$(glog auto_trans_text_apk)" == 1 ];then
-apk_sum_md5_small="$(sha256sum -b $MPAT/addon.prop)"
-if [[ "$apk_sum_md5_small" != "$(glog apk_sum_md5_small)" ]] || [[ ! -f $MPAT/auto.bash ]] || [[ "$(grep -cm1 '=\"\"' $MPAT/auto.bash)" == 1 ]];then
-[ -f $MPAT/auto.bash ] && rm -fr $MPAT/auto.bash
-for vc in $(grep "_text_.*.=" $MPAT/addon.prop | cut -d= -f1); do
-echo "${vc}=\"$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY | awk '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\" #${!vc}" >>$MPAT/auto.bash &
-done
-    wait
-    if [[ "$(grep -cm1 '=\"\"' $MPAT/auto.bash)" == 1 ]];then
-    sed -i '/=\"\"/d' $MPAT/auto.bash
-    else
-    chmod 755 $MPAT/auto.bash
-    slog apk_sum_md5_small "$apk_sum_md5_small"
-    fi
-fi
-[[ -f $MPAT/auto.bash ]] && source $MPAT/auto.bash
-fi
-
 # clean
 clean(){
 if [ -n "$(glog project_apk_clean)" ];then
@@ -61,7 +37,7 @@ done
 
 # home
 home(){
-xml_print '<group>
+xml_print '<group title="'$trans_text'">
 <page title="'$home_text_1'" config-sh="'$MPAT'/index.sh clean"/>
 </group>
 
@@ -69,6 +45,31 @@ xml_print '<group>
 <page html="https://zenlua.github.io/Tool-Tree/add-on/web/terminal.html" title="Web Terminal" />
 <page html="https://zenlua.github.io/Tool-Tree/add-on/web/manager.html" title="Web Manager" />
 </group>'; }
+
+# Thư mục hiện tại
+MPAT="${0%/*}"
+
+# Ngôn ngữ mặc định
+eval "$(sed '1,/root=/d' $MPAT/addon.prop)"
+
+# Tự động dịch
+if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
+sum_md5="$(sha256sum -b $MPAT/addon.prop)"
+if [[ "$sum_md5" != "$(glog "sum_md5_${MPAT##*/}")" ]] || [[ ! -f $MPAT/auto.prop ]] || [[ "$(grep -cm1 '=\"\"' $MPAT/auto.prop)" == 1 ]];then
+[ -f $MPAT/auto.prop ] && rm -fr $MPAT/auto.prop
+for vc in $(grep -e '="' $MPAT/addon.prop | cut -d= -f1); do
+echo -e "${vc}=\"$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY | awk '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\" #${!vc}" >>$MPAT/auto.prop &
+done
+    wait
+    if [[ "$(grep -cm1 '=\"\"' $MPAT/auto.prop)" == 1 ]];then
+    sed -i '/=\"\"/d' $MPAT/auto.prop
+    else
+    slog "sum_md5_${MPAT##*/}" "$sum_md5"
+    fi
+fi
+[[ -f $MPAT/auto.prop ]] && source $MPAT/auto.prop
+trans_text="$google_text"
+fi
 
 # index
 echo '<?xml version="1.0" encoding="UTF-8" ?>
