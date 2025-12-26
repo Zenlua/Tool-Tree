@@ -16,13 +16,11 @@
   
 - Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)**, or **[Telegram](https://t.me/tooltree)**
 
-### Outstanding features
+### Download add-ons:
 
-- Download add-ons:
+- [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html): the section for ROM editing.
 
-   - [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html): the section for ROM editing.
-
-   - [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html): the section for APK editing.
+- [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html): the section for APK editing.
 
 ### Instructions add-on
 
