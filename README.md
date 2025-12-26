@@ -2,7 +2,7 @@
 
 - Supports both root and non-root versions and is only for arm64-bit.
 
-- View changelog: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
+- Version history: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
 - The application is not open source because it was built manually using MT Manager.
 
