@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.2.4 (24-12-2025)**
+**Version: 1.2.4 (28-12-2025)**
 
++ Fix the issue of extracting the zip payload and arbitrarily deleting the zip payload.
 + Fixing errors when ext4 e2fsdroid builds fail
 + Extracting the files via ext4 will be faster
 + Fix .dat extraction errors
