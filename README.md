@@ -18,9 +18,9 @@
 
 ### Download add-ons:
 
-- [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html): the section for ROM editing.
+- **[Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html)**: The section for ROM editor
 
-- [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html): the section for APK editing.
+- **[Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html)**: The section for APK editor
 
 ### Instructions add-on
 
@@ -49,4 +49,4 @@
 
 - **[ColdWindScholar](https://github.com/ColdWindScholar)**
 
-- Etc...
+
