@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.2.5 (30-12-2025)**
+
++ Last updated in 2025
++ Fix logic code errors
+
 **Version: 1.2.4 (28-12-2025)**
 
 + Fix the issue of extracting the zip payload and arbitrarily deleting the zip payload.
