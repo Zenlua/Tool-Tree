@@ -10,7 +10,7 @@
 
 ### See details
 
-- Instruct: **[No-Root](https://zenlua.github.io/Tool-Tree/Guide.html)**
+- Instruct: **[No-Root](https://zenlua.github.io/Tool-Tree/web/Guide.html)**
 
 - If the application has root privileges, it will run faster; you can copy the path directly from the log to access it directly.
   
@@ -18,13 +18,13 @@
 
 ### Download add-ons:
 
-- [Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html): the section for ROM editing.
+- [Addon](https://zenlua.github.io/Tool-Tree/add-on/web/Addon.html): the section for ROM editing.
 
-- [Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html): the section for APK editing.
+- [Apkon](https://zenlua.github.io/Tool-Tree/add-on/web/Apkon.html): the section for APK editing.
 
 ### Instructions add-on
 
-- **[See details](https://zenlua.github.io/Tool-Tree/Instruct.html)**
+- **[See details](https://zenlua.github.io/Tool-Tree/web/Instruct.html)**
 
 ### Add languages 
 
@@ -32,7 +32,7 @@
 
 ### Buy me a coffee
 
-- **[Infor](https://zenlua.github.io/Tool-Tree/Information.html)**
+- **[Infor](https://zenlua.github.io/Tool-Tree/web/Information.html)**
 
 ### Screenshot
 
