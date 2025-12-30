@@ -26,10 +26,6 @@
 
 - **[See details](https://zenlua.github.io/Tool-Tree/website/Instruct.html)**
 
-### Add languages 
-
-- Contact me directly via telegram, or send the language file via issue.
-
 ### Buy me a coffee
 
 - **[Infor](https://zenlua.github.io/Tool-Tree/website/Information.html)**
