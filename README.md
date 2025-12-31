@@ -12,7 +12,7 @@
 
 - If the application has root privileges, it will run faster; you can copy the path directly from the log to access it directly.
   
-- Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)**, or **[Telegram](https://t.me/tooltree)**
+- Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)** or **[Telegram](https://t.me/tooltree)**
 
 ### Download add-ons:
 
