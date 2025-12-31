@@ -1,0 +1,8 @@
+# Kakathic
+source language
+
+if [ "$1" == "-q" ];then
+echo "`date +%M:%S -d @$(($(date +%s) - $START_TIME))`"
+else
+echo "${checktime}: `date +%M:%S -d @$(($(date +%s) - $START_TIME))`"
+fi

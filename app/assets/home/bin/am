@@ -1,0 +1,9 @@
+# Kakathic
+
+if [ "$UID" != "0" ] && [ "$UID" != "1000" ] && [ "$UID" != "2000" ]; then
+export CLASSPATH="$ETC/am.apk"
+exec /system/bin/app_process -Xnoimage-dex2oat /system/bin \
+                          com.termux.termuxam.Am "$@"
+else
+exec /system/bin/am "$@"
+fi

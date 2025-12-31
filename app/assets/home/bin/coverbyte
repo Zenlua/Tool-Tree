@@ -1,0 +1,28 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+# Đọc đối số từ dòng lệnh hoặc từ stdin
+if [[ -n "$1" ]]; then
+    input="$1"
+else
+    read -r input
+fi
+
+# Nếu rỗng thì báo lỗi
+if [ "$input" == '-h' ] || [ "$input" == '--help' ] || [ -z "$input" ];then
+echo "Usage: coverbyte 123456"
+exit 1
+fi
+
+# Tính toán
+b=$input
+d=''
+s=0
+S=(B KB MB GB TB PB)
+
+while ((b >= 1024 && s < ${#S[@]} - 1)); do
+    d=$(printf ".%02d" $((b % 1024 * 100 / 1024)))
+    b=$((b / 1024))
+    ((s++))
+done
+
+echo "${b}${d}${S[$s]}"

@@ -1,0 +1,165 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# Kakathic
+
+IFS=$'\n'
+[ -e "$2" ] && cd "$2" || exit 1
+
+case "$1" in
+  0)
+    for vv in $(ls -1d *); do
+      [[ "$vv" == *config* || "$vv" == *raw* || ! -e "config/${vv}_info" ]] && continue
+      info=$(head -n1 "config/${vv}_info")
+      [[ -z "$info" ]] && continue
+      echo "$vv|$vv ($info)"
+    done
+    ;;
+
+  1)
+    for vv in $(ls -1d *.img *.dat *.zstd *.zst *.br); do
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      type=$(checktype "$vv")
+      echo "$vv|$vv ($type)" | grep -E '\(super\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(br\)'
+    done
+    ;;
+
+  2)
+    for vv in $(ls -1d *.img *.zstd *.zst *.br *.dat *.bin *.zip); do
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      type=$(checktype "$vv")
+      case "$type" in
+        payload)
+          listpayload "$vv" | awk -v f="$vv" '{print $1"="f"|Payload - "$1" "$2$3}'
+          ;;
+        super)
+          listsuper "$vv" | awk -v f="$vv" '{print $1"="f"|Super - "$1" "$2}'
+          ;;
+        zip)
+          [ -n "$(listpayload "$vv")" ] && listpayload "$vv" | awk -v f="$vv" '{print $1"="f"|Payload - "$1" "$2$3}' && continue
+          Listzipne="$(unzip -ql "$vv" | grep -e '.*.\.img'$ -e '.*.\.dat'$ -e '.*.\.br'$ -e '.*.\.zstd'$ -e '.*.\.zst'$ 2>/dev/null | awk '{cmd="coverbyte "$1; cmd|getline r; close(cmd); print $4" "r}')"
+          [ -n "$Listzipne" ] && echo "$Listzipne" | awk -v f="$vv" '{print $1"="f"|ZipRom - "$1" ("$2")"}' | sed '/\(0B\)/d'
+          ;;
+        *)
+          echo "$vv|$vv ($type)" | grep -E '\(amlogic\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(zst\)|\(dtbo\)|\(super\)|\(br\)|\(boot\)|\(logo\)|\(vendor_boot\)|\(vbmeta(_system)?\)'
+          ;;
+      esac
+    done
+    ;;
+
+  3)
+    for vv in $(ls -1d *.img); do
+      [[ "$vv" == *super* ]] && continue
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      type=$(checktype "$vv")
+      echo "$vv|$vv ($type)" | grep -E '\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)'
+    done
+    ;;
+
+  4)
+    for vv in $(ls -1d *); do
+      [[ -d "$vv" && $(ls "$vv" 2>/dev/null) ]] || continue
+      size=$(du -sm "$vv" | awk '{print $1}')
+      echo "$vv|$vv (${size}Mb)"
+    done
+    ;;
+
+  5)
+    for vv in $(ls -1d super.img.*); do
+      [[ -e "$vv" ]] && echo "$2/$vv|$vv"
+    done
+    ;;
+
+  6)
+    for vv in $(ls -1d system*.img); do
+      [[ "$vv" == *system_ext* ]] && continue
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      type=$(checktype "$vv")
+      echo "$vv|$vv ($type)" | grep -E '\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)'
+    done
+    ;;
+
+  7)
+    for vv in $(ls -1d super*.img); do
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      type=$(checktype "$vv")
+      echo "$vv|$vv ($type)" | grep -E '\(super\)|\(sparse\)'
+    done
+    ;;
+
+  8)
+    for vv in $(ls -1d *.img); do
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      type=$(checktype "$vv")
+      echo "$vv|$vv ($type)" | grep -v -E '\(sparse\)|\(super\)'
+    done
+    ;;
+
+  9)
+    for vv in $(ls -1d *.apk *.zip *.jar *.apks *.apkm *.xapk); do
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      info=$(checkapk "$vv")
+      echo "$vv|$vv ($info)" | grep -v -E '\(unknown\)|\(class\)|\(zip\)'
+    done
+    ;;
+
+  10)
+    for vv in $(ls -1d *.apk *.zip); do
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      info=$(checkapk "$vv")
+      echo "$vv|$vv ($info)" | grep "\(apk\)"
+    done
+    ;;
+
+  11)
+    for vv in $(ls -1d *.img); do
+      [[ "$vv" == *super* ]] && continue
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      type=$(checktype "$vv")
+      echo "$vv|$vv ($type)"
+    done
+    ;;
+
+  12)
+    for vv in $(ls -1d *.apex *.capex); do
+      [[ -s "$vv" && -f "$vv" ]] || continue
+      info=$(checkapk "$vv")
+      echo "$vv|$vv ($info)" | grep -E '\(capex\)|\(apex\)'
+    done
+    ;;
+
+  folders)
+    for d in $(ls -1d */); do
+      d="${d%/}"
+      echo "$2/$d|${2##*/}/$d"
+    done
+    ;;
+
+  folder)
+    for d in $(ls -1d */); do
+      echo "$2/${d%/}"
+    done
+    ;;
+
+  for)
+    for d in $(ls -1d */); do
+      echo "${d%/}"
+    done
+    ;;
+
+  forapk)
+    ls -1d */archive-info.json | sed 's|/archive-info.json||g'
+    ;;
+
+  forapkt)
+    ls -1d */apktool.yml | sed 's|/apktool.yml||g'
+    ;;
+
+  forapex)
+    ls -1d */apex_infor.ini | sed 's|/apex_infor.ini||g'
+    ;;
+
+  *)
+    for vv in $1; do
+      find . -maxdepth 1 -type f -name "*.$vv" -printf '%f\n'
+    done
+    ;;
+esac

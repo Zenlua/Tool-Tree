@@ -1,0 +1,145 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# Apkedit giải mã
+
+source language
+show_help() {
+  echo "Usage: apktool_decode -i <input> -o <output> <flags>"
+  echo
+  echo "  -i    input path"
+  echo "  -o    output path"
+  echo "  -d    class**.dex file decoding method"
+  echo "          0: unencrypted"
+  echo "          1: use apktool"
+  echo "          2: use baksmali (default)"
+  echo "  -r    decode resources:"
+  echo "          0: unencrypted"
+  echo "          1: full decode (default)"
+  echo "          2: only decode AndroidManifest.xml"
+  echo "  -b    remove debug-info when decoding smali"
+  echo "          0: keep the same"
+  echo "          1: remove all (default)"
+  echo "  -h    show help"
+  exit 1
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+INPUT=''; OUTPUT=''; RESAPK=''; DECODEX=''; DEBUGA=''; show_help='';
+while getopts ":i:o:r:d:b:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    o) OUTPUT="$OPTARG" ;;
+    r) RESAPK="$OPTARG" ;;
+    d) DECODEX="$OPTARG" ;;
+    b) DEBUGA="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+[[ -z "$DECODEX" ]] && DECODEX=2
+[[ -z "$DEBUGA" ]] && DEBUGA=1
+[[ -z "$RESAPK" ]] && RESAPK=1
+IFS=$'\n'
+
+# xác định tệp
+echo "$more_text_4 ${INPUT##*/}"
+echo
+
+# chuyển đổi apk
+typefile="$(checkapk "$INPUT")"
+if [ "$typefile" == "zipapk" ];then
+typeten="$(unzip -l -q "$INPUT" | grep -v '.*./.*.\.apk' | grep -i '\.apk'$ | awk '{print $4}')"
+unzip -qo "$INPUT" -d "${INPUT%/*}" $typeten &>/dev/null
+ptpk="${INPUT%/*}/$typeten"
+apkskk=1
+elif [ "$typefile" == "apks" ];then
+apkeditor m -f -i "$INPUT" -o "${INPUT%.*}.apk" &>/dev/null
+ptpk="${INPUT%.*}.apk"
+apkskk=1
+elif [ "$typefile" == "apk" ] || [ "$typefile" == "dex" ];then
+ptpk="$INPUT"
+fi
+
+# kiểm tra AndroidManifest.xml
+gwngfds="$(unzip -ql "$ptpk" AndroidManifest.xml | grep -cm1 'AndroidManifest.xml')"
+[ "$gwngfds" == 1 ] && apktool if "$ptpk" &>/dev/null
+
+# xác định tệp
+if [ -f "$ptpk" ];then
+
+# check dùng giải mã smali
+if [ "$RESAPK" == 0 ];then
+rdex='-r'
+elif [ "$RESAPK" == 2 ];then
+rdex='--only-manifest'
+fi
+    if [ "$DECODEX" == 1 ];then
+    rdex="--only-main-classes $rdex"
+    [ "$DEBUGA" == 1 ] && rdex="--no-debug-info $rdex"
+    else
+    rdex="-s $rdex"
+    fi
+
+# Đường dẫn
+Tmout="${INPUT%.*}"
+Tout="$OUTPUT/${Tmout##*/}"
+
+# lấy Api
+Lay_api="$(unzip -qp "$ptpk" AndroidManifest.xml > $TMP/1.xml && axmlprinter $TMP/1.xml && rm -fr $TMP/1.xml)"
+api1="$(echo "$Lay_api" | grep -m1 "android:compileSdkVersion=" | cut -d\" -f2)"
+api2="$(echo "$Lay_api" | grep -m1 "platformBuildVersionCode=" | cut -d\" -f2)"
+if [ -f "$HOME/.local/share/apktool/framework/1-$api1.apk" ];then
+ktfw="-t $api1"
+elif [ -f "$HOME/.local/share/apktool/framework/1-$api2.apk" ];then
+ktfw="-t $api2"
+fi
+
+# apktool
+eval "apktool d --match-original $ktfw -f $rdex -o \"$Tout\" \"$ptpk\" "
+
+# giải mã smali
+if [ "$DECODEX" == 2 ];then
+    [ "$DEBUGA" == 1 ] && hhhhfdr="false -l" || hhhhfdr='true'
+    for vkn in "$Tout"/classes*.dex; do
+    echo "I: Baksmali ${vkn##*/}..."
+    kout="$(basename $vkn .dex | sed 's|classes|smali|')"
+    mkdir -p "$Tout/$kout" "$Tout/.cache"
+    API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
+    eval "baksmali d --debug-info $hhhhfdr --bootclasspath $BOOTCLASSPATH --api $API \"$vkn\" -o \"$Tout/$kout\" "
+    check_changes.py "$Tout/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
+    done
+fi
+
+# check hash res
+if [ -d "$Tout/res" ];then
+    mkdir -p "$Tout/.cache"
+    check_changes.py "$Tout/res" "$Tout/.cache/hash_res.json" >/dev/null
+fi
+
+# di chuyển xml
+[ -f "$Tout/original/AndroidManifest.xml" ] && mv "$Tout/original/AndroidManifest.xml" "$Tout/.cache/AndroidManifest.xml"
+
+# lưu đường dẫn
+echo "${INPUT%/*}" > "$Tout/.cache/save.log"
+
+# lưu chữ ký
+apkeditor d -t sig -i "$ptpk" -sig "$Tout/signatures" &> "$Tout/.cache/sign.log"
+
+# xoá file
+[ "$apkskk" == 1 ] && rm -fr "$ptpk"
+
+# check thư mục
+[ -d "$Tout" ] || abort "$apke_text_1"
+
+else
+abort "$apke_text_3: $typefile"
+fi

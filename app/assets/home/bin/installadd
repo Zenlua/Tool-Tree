@@ -1,0 +1,31 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# Kakathic
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+echo "installadd file.add folder"
+exit
+fi
+
+source language
+echo "${more_text_4} $1"
+echo
+loadmd="$(7z x "$1" addon.prop -so 2>/dev/null)"
+loadid="$(echo "$loadmd" | gprop id)"
+echo "$name_text: $(echo "$loadmd" | gprop name) $(echo "$loadmd" | gprop version)"
+echo
+echo "ID: $loadid"
+echo
+echo "$author_text: $(echo "$loadmd" | gprop author)"
+echo
+[ -d "$2/$loadid" ] && rm -fr "$2/$loadid"
+mkdir -p "$2/$loadid"
+echo "$addon_text_3"
+echo
+7z x "$1" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
+echo 0 > "$2/$loadid/status"
+chmod -R 755 "$2/$loadid"
+if [ -f "$2/$loadid/install.sh" ];then
+"$2/$loadid/install.sh"
+rm -fr "$2/$loadid/install.sh"
+fi
+echo "$flash_text_12"

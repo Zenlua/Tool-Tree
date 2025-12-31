@@ -1,0 +1,1 @@
+exec $ETC/boot.rc

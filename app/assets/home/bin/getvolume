@@ -1,0 +1,20 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# kakathic
+
+if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ -z "$1" ];then
+echo 'Use: getvolume 10
+
+- Timeout: If within 10 seconds you don`t press the volume button it will return blank result
+- Press the volume button it will return the result: KEY_VOLUMEDOWN or KEY_VOLUMEUP
+- Sample:
+
+status=$(getvolume 10)
+[ "$status" == "KEY_VOLUMEUP" ] && echo Up
+[ "$status" == "KEY_VOLUMEDOWN" ] && echo Down
+[ -z "$status" ] && echo "Out of time"'
+exit
+fi
+
+echo true > $START_DIR/cache/block_volume
+timeout $1 getevent -ql | grep -om1 -e KEY_VOLUMEDOWN -e KEY_VOLUMEUP
+echo false > $START_DIR/cache/block_volume

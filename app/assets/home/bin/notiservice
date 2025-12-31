@@ -1,0 +1,12 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+echo "Use: notiservice --es delete false --ei id 123 --es tile 'Hello' --es message 'Xin chào'
+- delete [true/false]
+- id [number]
+- tile [string]
+- message [string]"
+exit
+fi
+
+[[ -n "$1" ]] && am startservice "$@" com.tool.tree/.NotiService &>/dev/null

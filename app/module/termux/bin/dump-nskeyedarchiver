@@ -1,0 +1,7 @@
+#!/data/data/com.tool.tree/files/home/termux/bin/python
+import sys
+from dissect.util.tools.dump_nskeyedarchiver import main
+if __name__ == '__main__':
+    if sys.argv[0].endswith('.exe'):
+        sys.argv[0] = sys.argv[0][:-4]
+    sys.exit(main())

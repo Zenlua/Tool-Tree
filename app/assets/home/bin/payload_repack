@@ -1,0 +1,126 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+source language
+show_help() {
+  echo "Usage: payload_repack -i <input> <flags>"
+  echo
+  echo "  -i    input path"
+  echo "  -m    input partition: system.img:vendor.img:..."
+  echo "  -s    payload signature: testkey"
+  echo "  -e    dynamic partition size: 11.5"
+  echo "             note: Only fill in the numbers 11.5 (GB)"
+  echo "  -w    create payload with dynamic partition: 0"
+  echo "             0: off"
+  echo "             1: on"
+  echo "  -g    dynamic partition name: qti_dynamic_partitions"
+  echo "  -h    show help"
+  exit 1
+}
+
+Xoa(){ sed 's/\[[^]]*\]//g'; }
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+INPUT=''; INPATH=''; INSIGN=''; show_help='';
+PSWITCH=''; PSSIZE=''; PSGROUP='';
+while getopts ":i:m:s:w:e:g:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    m) INPATH="$OPTARG" ;;
+    s) INSIGN="$OPTARG" ;;
+    w) PSWITCH="$OPTARG" ;;
+    e) PSSIZE="$OPTARG" ;;
+    g) PSGROUP="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "$INPATH" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+[ -z "$PSGROUP" ] && PSGROUP="qti_dynamic_partitions"
+[ -z "$PSSIZE" ] && PSSIZE=11
+[ -z "$PSWITCH" ] && PSWITCH=0
+[ -z "$INSIGN" ] && INSIGN="testkey"
+
+# danh sách file.img
+cd "$INPUT"
+for i in $INPATH; do
+i1+="$i:"
+i2+="${i%.*}:"
+done
+mkdir -p out
+
+if [ "$PSWITCH" == 1 ];then
+# kích thước chuyển đổi
+super_sizek="$(echo "$PSSIZE * 1024 * 1024 * 1024" | bc | cut -d. -f1)"
+echo "${sizes_text}: ${PSSIZE} GB ➠ ${super_sizek} bytes"
+echo
+echo "virtual_ab=true
+super_partition_size=$(echo "$super_sizek + 4194304" | bc)
+super_${PSGROUP}_group_size=$super_sizek
+super_partition_groups=$PSGROUP
+super_${PSGROUP}_partition_list=$(echo "$i2" | sed -e 's|:$||' -e 's|:| |g')" > "$TMP/super_dynamic.txt"
+#echo "RUN_POSTINSTALL_system=true
+#POSTINSTALL_PATH_system=bin/checkpoint_gc" > $TMP/postinstall_config.txt
+info_super="--dynamic_partition_info_file=$TMP/super_dynamic.txt"
+# --new_postinstall_config_file=$TMP/postinstall_config.txt
+fi
+
+echo -e "$replag_text_2...\n"
+delta_generator \
+--out_file="$TMP/unsign-payload.bin" --partition_names="${i2%:}" \
+--new_partitions="${i1%:}" 2>&1 | Xoa > "$TMP/payload_generator.log"
+echo -e "\n" >> "$TMP/payload_generator.log"
+[ -f "$TMP/unsign-payload.bin" ] || abort "Failed to create payload.bin, log: $TMP/payload_generator.log"
+
+echo "- Extract hash and metadata"
+delta_generator \
+--in_file="$TMP/unsign-payload.bin" --signature_size=256 \
+--out_metadata_hash_file="$TMP/metadata.bin" $info_super \
+--out_hash_file="$TMP/hash.bin" 2>&1 | Xoa >> "$TMP/payload_generator.log"
+echo -e "\n" >> "$TMP/payload_generator.log"
+[ -f "$TMP/metadata.bin" ] || abort "Extract metadata.bin failed, log: $TMP/payload_generator.log"
+[ -f "$TMP/hash.bin" ] || abort "Extract hash.bin failed, log: $TMP/payload_generator.log"
+
+echo "- Sign hash"
+openssl pkeyutl -sign -inkey "$ETC/key/2048/$INSIGN.pem" \
+-pkeyopt digest:sha256 -in "$TMP/hash.bin" \
+-out "$TMP/sign_hash.bin"
+[ -f "$TMP/sign_hash.bin" ] || abort "Sign sign_hash.bin failed"
+
+echo "- Sign metadata"
+openssl pkeyutl -sign -inkey "$ETC/key/2048/$INSIGN.pem" \
+-pkeyopt digest:sha256 -in "$TMP/metadata.bin" \
+-out "$TMP/sign_metadata.bin"
+[ -f "$TMP/sign_metadata.bin" ] || abort "Sign sign_metadata.bin failed"
+
+echo "- Sign payload"
+delta_generator --in_file="$TMP/unsign-payload.bin" \
+--out_file=out/payload.bin --signature_size=256 \
+--metadata_signature_file="$TMP/sign_metadata.bin" \
+--payload_signature_file="$TMP/sign_hash.bin" 2>&1 | Xoa >> $TMP/payload_generator.log
+echo -e "\n" >> $TMP/payload_generator.log
+[ -f "out/payload.bin" ] || abort "Sign payload.bin failed, log: $TMP/payload_generator.log"
+
+echo "- Create payload_properties.txt"
+delta_generator --in_file=out/payload.bin \
+--properties_file="$TMP/payload_properties.txt" 2>&1 | Xoa >> $TMP/payload_generator.log
+
+# tạo zip
+[ -f "out/meta.zip" ] && rm -fr out/meta.zip
+zip -qjr out/meta.zip "$TMP/super_dynamic.txt" "$TMP/sign_metadata.bin" "$TMP/sign_hash.bin" "$TMP/payload_properties.txt"
+#"$TMP/postinstall_config.txt"
+
+echo "- Clean up junk files"
+rm -fr "$TMP/unsign-payload.bin" "$TMP/metadata.bin" "$TMP/hash.bin" "$TMP/super_dynamic.txt" "$TMP/sign_metadata.bin" "$TMP/sign_hash.bin" "$TMP/payload_properties.txt"
+
+echo "- Complete: payload.bin, meta.zip"
+
+echo
+echo "$save_text $INPUT/out"

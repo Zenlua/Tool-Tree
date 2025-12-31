@@ -1,0 +1,88 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+#kakathic
+
+show_help() {
+  echo "Usage: repack_super -i <input> -m ''file1 file2'' -g <group> -s <size-gb> -f [raw, sparse] -t [A, AB, VAB]"
+  echo
+  echo "  -i    input folder"
+  echo "  -m    partitions in the import directory: system.img product.img"
+  echo "  -g    super group name: qti_dynamic_partitions"
+  echo "  -s    default: 8.5 (GB)"
+  echo "  -f    file format: raw, sparse"
+  echo "  -t    default: A"
+  echo "          A: Single Slot"
+  echo "          AB: A/B Partition Scheme"
+  echo "          VAB: Virtual A/B (Dynamic Partitions)"
+  echo "  -h    show help"
+  exit 1
+}
+
+INPUT=""; MIMGPA=""; SUPGRUP=""; SAIZESUP="";
+DANGIMG=""; TYPEIMG=""; show_help='';
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+while getopts ":i:m:g:s:f:t:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    m) MIMGPA="$OPTARG" ;;
+    g) SUPGRUP="$OPTARG" ;;
+    s) SAIZESUP="$OPTARG" ;;
+    f) DANGIMG="$OPTARG" ;;
+    t) TYPEIMG="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "$MIMGPA" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+[[ -z "$SUPGRUP" ]] && LVLNEN='qti_dynamic_partitions'
+[[ -z "$SAIZESUP" ]] && SAIZESUP='8.5'
+[[ -z "$DANGIMG" ]] && DANGIMG='raw'
+[[ -z "$TYPEIMG" ]] && TYPEIMG='A'
+
+source language
+super_sizek="$(echo "$SAIZESUP * 1024 * 1024 * 1024" | bc -l | cut -d. -f1)"
+echo "${sizes_text}: ${SAIZESUP} GB ➠ ${super_sizek} bytes"
+echo
+
+argvs="-super-name super --metadata-size 65536 "
+cd "$INPUT"
+
+if [ $TYPEIMG = "A" ];then
+argvs+="-metadata-slots 2 -device super:${super_sizek} --group ${SUPGRUP}:${super_sizek} "
+fi
+
+for i in $MIMGPA; do
+i1=$(echo "$i" | sed 's/.img//g')
+i2=$(echo "$i" | sed -e 's/_a.img//g' -e 's/_b.img//g' -e 's/.img//g')
+info=$(checktype "$INPUT/$i1.img")
+[ $info == "sparse" ] && simg2img "$INPUT/$i1.img"
+[ $TYPEIMG = "A" ] && argvs+="--partition ${i2}:readonly:$(wc -c <"$INPUT/$i1.img"):${SUPGRUP} --image ${i2}=$i1.img "
+if [ $TYPEIMG == "AB" ] || [ $TYPEIMG == "VAB" ];then
+ml1+="--partition ${i2}_a:readonly:$(wc -c <"$INPUT/$i1.img"):${SUPGRUP}_a --image ${i2}_a=$i1.img "
+ml2+="--partition ${i2}_b:readonly:0:${SUPGRUP}_b "
+fi
+done
+
+if [ $TYPEIMG = "AB" ] || [ $TYPEIMG = "VAB" ];then
+argvs+="-metadata-slots 3 -device super:${super_sizek} --group ${SUPGRUP}_a:${super_sizek} ${ml1} --group ${SUPGRUP}_b:${super_sizek} ${ml2} "
+fi
+[ $TYPEIMG = "VAB" ] && argvs+="--virtual-ab "
+[ $DANGIMG = "sparse" ] && argvs+="--sparse "
+
+mkdir -p out
+echo "lpmake ${argvs}-F --output out/super.img" | sed -z 's| --|\n--|g'
+lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.log
+
+if [ $? == 1 ];then
+abort "\n$supers_text_1"
+else
+echo -e "\n$supers_text_2"
+fi

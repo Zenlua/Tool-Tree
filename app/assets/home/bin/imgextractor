@@ -1,0 +1,8 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+if [ "$1" == "-h" ] || [ -z "$1" ]; then
+    echo "imgextractor file.img folder"
+    exit 1
+fi
+
+imgextractor.py "$1" "$2"

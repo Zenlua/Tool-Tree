@@ -1,0 +1,133 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# Apkedit xây dựng
+
+source language
+show_help() {
+  echo "Usage: apkeditor_build -i <input> -o <output> <flags>"
+  echo
+  echo "  -i    input file"
+  echo "  -o    output path"
+  echo "  -s    signature:"
+  echo "          default: Keep application signature"
+  echo "          testkey: use testkey signature"
+  echo "  -x    extractNativeLibs: manifest"
+  echo "          manifest: read and apply from manifest"
+  echo "          none: remove attribute from manifest and store"
+  echo "          false: set manifest attribute 'false' and store libraries un-compressed with 4096 alignment."
+  echo "          true: set manifest attribute 'true' and store"
+  echo "  -n    enable string filter:"
+  echo "          0: no filter"
+  echo "          1: use text filter"
+  echo "  -d    delete build folder after build is complete:"
+  echo "          0: do not delete project"
+  echo "          1: delete project"
+  echo "  -h    show help"
+  exit 1
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+INPUT=''; OUTPUT=''; SIGNAP=''; XTRALIB=''; FIRTVB=''; XDELF=''; show_help='';
+while getopts ":i:o:s:x:n:d:b:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    o) OUTPUT="$OPTARG" ;;
+    s) SIGNAP="$OPTARG" ;;
+    x) XTRALIB="$OPTARG" ;;
+    n) FIRTVB="$OPTARG" ;;
+    d) XDELF="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+[[ -z "$SIGNAP" ]] && SIGNAP='default'
+[[ -z "$FIRTVB" ]] && FIRTVB=1
+[[ -z "$XDELF" ]] && XDELF=0
+IFS=$'\n'
+
+echo "$apkb_text_1 ${INPUT##*/}"
+echo
+
+# Lọc vẫn bản
+if [ -d "$INPUT/resources/package_1/res/values" ] && [ "$FIRTVB" == 1 ];then
+echo "$apkb_text_2"
+echo
+cp "$INPUT/.cache/hash_res.json" "$INPUT/.cache/2hash_res.json"
+for vvv in $(check_changes.py "$INPUT/resources/package_1/res" "$INPUT/.cache/2hash_res.json" | grep -e 'fixed:' -e 'values' | awk '{print $2}'); do
+if [ "$(echo "$vvv" | grep -cm1 "values-.*/")" == 1 ];then
+ten_file="$(basename "$vvv" .xml)"
+text_filter.py "$INPUT/resources/package_1/res/values/$ten_file.xml" "$INPUT/resources/package_1/res/$vvv" >>$INPUT/.cache/text_filter.log
+xml_fix.py "$INPUT/resources/package_1/res/$vvv" >>$INPUT/.cache/xml_fix.log
+fi
+if [ "$(echo "$vvv" | grep -cm1 "values/")" == 1 ];then
+[ "$vvv" == "values/public.xml" ] || update_id.py --use-file "$INPUT/resources/package_1/res/values/public.xml" "$INPUT/resources/package_1/res/$vvv" >>$INPUT/.cache/public_log.log
+fi
+done
+rm -fr "$INPUT/.cache/2hash_res.json"
+echo "$apkb_text_3"
+echo
+fi
+
+echo "$replag_text_2"
+echo
+
+# xây dựng smali
+if [ -f "$INPUT/dex/classes.dex" ] && [ -d "$INPUT/smali" ];then
+for vkn in "$INPUT"/dex/classes*.dex; do
+    kout="$(basename $vkn .dex)"
+    cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
+    dkfjff="$(check_changes.py "$INPUT/smali/$kout" "$INPUT/.cache/2hash_$kout.json")"
+    rm -fr "$INPUT/.cache/2hash_$kout.json"
+    if [ -n "$dkfjff" ];then
+    API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
+    smali a --api $API -o "$INPUT/smali/$kout.dex" $(echo "$dkfjff" | grep -e "new:" -e "fixed:" | awk '{print "'$INPUT/smali/$kout'/"$2}')
+    dexupdater -g "$vkn" -e "$INPUT/smali/$kout.dex" -o "$INPUT/${kout}_s.dex" -api $API -delete $(echo "$dkfjff" | grep "deleted:" | awk '{print $2}' | sed "s|\.smali||g") > "$INPUT/.cache/build_$kout.log"
+        if [ -f "$INPUT/${kout}_s.dex" ];then
+        mv "$INPUT/${kout}_s.dex" "$vkn"
+        rm -fr "$INPUT/smali/$kout.dex"
+        fi
+    fi
+done
+[ -d "$INPUT/smali" ] && mv "$INPUT/smali" "$INPUT/smali_bak"
+fi
+
+# extra lib
+[[ -z "$XTRALIB" ]] || XTRALIB="-extractNativeLibs $XTRALIB"
+
+# tên file
+tenapkkk="$(cat "$INPUT/.cache/ten_file.log")"
+
+# xây dựng apk
+eval "apkeditor b -f $XTRALIB -i \"$INPUT\" -o \"$INPUT/dist/$tenapkkk\" 2>&1" | sed -e '1,/__/d' -e '/Delete:/d' -e '/Saved to:/d' -e 's|I: \[BUILD\] ||'
+
+# khôi phục thư mục
+[ -e "$INPUT/smali_bak" ] && mv "$INPUT/smali_bak" "$INPUT/smali"
+
+# tạo thư mục
+mkdir -p "$OUTPUT"
+
+# ký apk
+if [ "$SIGNAP" != 'default' ];then
+echo
+echo "$apkb_text_6 $SIGNAP"
+sign -i "$INPUT/dist/$tenapkkk" -o "$OUTPUT/$tenapkkk" -k "$ETC/key/$SIGNAP.pk8" -c "$ETC/key/$SIGNAP.x509.pem"
+else
+[ -f "$INPUT/dist/$tenapkkk" ] && cp -rf "$INPUT/dist/$tenapkkk" "$OUTPUT/$tenapkkk"
+fi
+
+# in đường dẫn lưu
+if [ -f "$OUTPUT/$tenapkkk" ];then
+# xoá dự án
+[ "$XDELF" == 1 ] && rm -fr "$INPUT"
+else
+abort "$apke_text_3: $INPUT"
+fi

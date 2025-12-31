@@ -1,0 +1,17 @@
+bodem=0
+echo "progress:[0/0]"
+if [ "$2" ];then
+while true; do
+bodem=$(($bodem + 1))
+echo "progress:[$bodem/$2]"
+if [ "$bodem" -ge $2 ]; then
+echo "progress:[-1/0]"
+break
+fi
+sleep $1
+done
+elif [ "$1" ];then
+echo "progress:[$1]"
+else
+echo "For: progress 1/100"
+fi

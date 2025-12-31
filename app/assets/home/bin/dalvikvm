@@ -1,0 +1,11 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+export ANDROID_DATA=$HOME/etc
+
+if [ -e /apex/com.android.art/bin/dalvikvm ]; then
+	DALVIKVM="/apex/com.android.art/bin/dalvikvm"
+else
+	DALVIKVM="/system/bin/dalvikvm"
+fi
+
+unset LD_LIBRARY_PATH LD_PRELOAD
+exec "$DALVIKVM" -Xusejit:true -Xnoimage-dex2oat -Djava.io.tmpdir=$TMP "$@"

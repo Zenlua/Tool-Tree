@@ -1,0 +1,8 @@
+#Kakathic
+
+if [ "$1" == "-h" ] || [ -z "$1" ]; then
+    sdat2img.py -h
+    exit 1
+fi
+
+sdat2img.py "$@"

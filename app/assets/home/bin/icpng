@@ -1,0 +1,12 @@
+# Kakathic
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+echo "Use: icpng name_file_icon path/folder,
+- Auto adjusts light and dark modes if changed
+- vd: test.png, test_[true|false].png icon="'$(png test path/folder)'""
+exit
+fi
+
+if [ "$(glog Ticon)" != 1 ];then
+[ -f "$2/$1_$DARK_MODE.png" ] && echo "$2/$1_$DARK_MODE.png" || echo "$2/$1.png"
+fi

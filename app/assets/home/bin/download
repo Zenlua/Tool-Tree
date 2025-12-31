@@ -1,0 +1,8 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+echo "download url://file.zip"
+exit
+fi
+
+[ "$1" ] && am start -a android.intent.action.MAIN -n "com.tool.tree/com.tool.tree.ActionPageOnline" -c android.intent.category.LAUNCHER --es downloadUrl "$1" --ez autoClose true --es taskId "$RANDOM" 1 >/dev/null

@@ -1,0 +1,17 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+[[ -z "$1" ]] && echo "Use: checkname path/file.zip"
+[[ -z "$1" ]] && exit 1
+
+check_name_tt1="${1%.*}"
+check_name_tt2="${1##*.}"
+if [ -f "$1" ];then
+for i in {1..100}; do
+if [ ! -f "${check_name_tt1}-$i.${check_name_tt2}" ]; then
+echo -n "${check_name_tt1}-$i.${check_name_tt2}"
+break
+fi
+done
+else
+echo -n "$1"
+fi

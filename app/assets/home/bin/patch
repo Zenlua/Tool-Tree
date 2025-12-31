@@ -1,0 +1,14 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+echo "patch path/folder path/fs_file path/context_file"
+exit 1
+fi
+
+if [ -f "$2" ];then
+fspatch.py "$1" "$2"
+fi
+
+if [ -f "$3" ];then
+contextpatch.py "$1" "$3"
+fi

@@ -1,0 +1,9 @@
+# kakathic
+
+if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ ! -f "$1" ];then
+echo "listpayload path/payload.[bin/zip]"
+exit 1
+fi
+(
+payload_dumper --out $TMP --list "$1" | sed "1,/-----/d" | awk '{print $1" ("$2$3")"}'
+) 2>/dev/null

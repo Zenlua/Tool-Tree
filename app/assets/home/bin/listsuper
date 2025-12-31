@@ -1,0 +1,27 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ -z "$1" ];then
+echo "listsuper path/super.img"
+exit 1
+fi
+
+if [[ "$(lpdump "$1" | grep -m1 'Header flags:' | awk '{print $3}')" == 'virtual_ab_device' ]];then
+slog typeheh 'VAB'
+else
+[[ "$(lpdump "$1" | grep 'Group:' | grep -c '_b$')" == 0 ]] && slog typeheh 'A' || slog typeheh 'AB'
+fi
+
+slog super_sizedj `echo "scale=1; $(lpdump "$1" | grep -A 5 'Block device table:' | grep 'Size:' | awk '{print $2}') / (1024*1024*1024)" | bc -l`
+slog super_group "$(lpdump "$1" | grep -m1 'Group:' | awk '{print $2}' | sed -e 's|_a||' -e 's|_b||')"
+
+lpdump "$1" | awk '/super:/ {
+    start = $2
+    gsub(":", "", $4)
+    end = $4
+    part = $5
+    size = (end - start + 1) * 512
+    cmd = "coverbyte " size
+    cmd | getline formatted
+    close(cmd)
+    print part, "(" formatted ")"
+}'

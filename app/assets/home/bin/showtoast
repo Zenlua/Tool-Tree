@@ -1,0 +1,10 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+echo "Use: showtoast 'Xin chào'"
+exit
+fi
+
+if [[ -n "$1" ]];then
+am broadcast -n com.tool.tree/.ToastReceiver -a com.tool.tree.SHOW --es text "$@" &>/dev/null
+fi

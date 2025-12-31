@@ -1,0 +1,11 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+echo "Use: checksum /path/folder"
+exit 1
+fi
+
+if [ -d "$1" ];then
+cd "${1%/*}"
+tar -cf - "${1##*/}" | sha256sum -b
+fi

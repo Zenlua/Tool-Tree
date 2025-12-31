@@ -1,0 +1,137 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+source language
+show_help() {
+  echo "Usage: apex_editor -i <input> -o <output> <flags>"
+  echo
+  echo "  -i    input path"
+  echo "  -o    output path"
+  echo "  -s    feature options:"
+  echo "            decom: decode apex for editor"
+  echo "            build: rebuild the apex project"
+  echo "  -a    build Apex with API: auto"
+  echo "            auto: default apex"
+  echo "            30: Android 11"
+  echo "            31: Android 12"
+  echo "            32: Android 12L"
+  echo "            33: Android 13"
+  echo "            34: Android 14"
+  echo "            35: Android 15"
+  echo "            36: Android 16"
+  echo "  -c    compress apex into capex: 0"
+  echo "            0: uncompressed"
+  echo "            1: compressed"
+  echo "  -d    Delete the project after construction is completed: 0"
+  echo "            0: no"
+  echo "            1: yes"
+  echo "  -k    choose a signature to sign on Apex: com.android.example.apex"
+  echo "  -f    select the apex_payload partition format: auto"
+  echo "            auto: automatic mode"
+  echo "            ext4: create partitions with ext4"
+  echo "            erofs: create partitions with erofs"
+  echo "            f2fs: create partitions with f2fs"
+  echo "  sample: apex_editor -s decom -i path/file.[apex,capex] -o path/dir"
+  echo "  sample: apex_editor -s build -f auto -a auto -k com.android.example.apex -c 0 -d 0 -i path/dir -o path/dir"
+  echo "  -h    show help"
+  exit 1
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+INPUT=''; OUTPUT=''; SELECT=''; show_help='';
+APIREPAK=''; COMPEV=''; DELLAPX=''; SIGNAPX=''; PTTTYPE='';
+while getopts ":i:o:s:p:a:c:d:k:f:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    o) OUTPUT="$OPTARG" ;;
+    s) SELECT="$OPTARG" ;;
+    a) APIREPAK="$OPTARG" ;;
+    c) COMPEV="$OPTARG" ;;
+    d) DELLAPX="$OPTARG" ;;
+    k) SIGNAPX="$OPTARG" ;;
+    f) PTTTYPE="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "$OUTPUT" || -z "$SELECT" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+# mặc định có sẵn
+[ -z "$APIREPAK" ] && APIREPAK='auto'
+[ -z "$COMPEV" ] && COMPEV=0
+[ -z "$DELLAPX" ] && DELLAPX=0
+[ -z "$SIGNAPX" ] && SIGNAPX='com.android.example.apex'
+[ -z "$PTTTYPE" ] && PTTTYPE='auto'
+
+if [ "$SELECT" == 'decom' ];then
+echo "$more_text_4 ${INPUT##*/}"
+echo
+# giải mã apex, capex
+ten_file="$(echo "${INPUT##*/}" | sed -e 's|\.apex$||' -e 's|\.capex$||')"
+deapexer.py extract -d "$OUTPUT/$ten_file" "$INPUT"
+# lấy API, name
+unzip -oq "$INPUT" AndroidManifest.xml -d "$OUTPUT/$ten_file" &>/dev/null
+echo -e "api: $(axmlprinter "$OUTPUT/$ten_file/AndroidManifest.xml" | grep -m1 'android:compileSdkVersion=' | cut -d\" -f2)" >>"$OUTPUT/$ten_file"/apex_infor.ini
+rm -fr "$OUTPUT/$ten_file/AndroidManifest.xml"
+# kết thúc
+fi
+
+if [ "$SELECT" == 'build' ];then
+echo "$apkb_text_1 ${INPUT##*/}"
+echo
+# Kiểm tra chữ ký
+if [ "$(openssl rsa -in "$ETC/key/4096/$SIGNAPX.pem" -text -noout | grep -cm1 '4096 bit')" != 1 ];then
+abort "Not a 4096-bit signature, verification failed."
+else
+echo "I: Verify signature 4096 bit success: $SIGNAPX.pem"
+cp -rf "$ETC/key/4096/$SIGNAPX.pem" "$TMP/apex.key.pem"
+cp -rf "$ETC/key/$SIGNAPX.pk8" "$TMP/apex.key.pk8"
+cp -rf "$ETC/key/$SIGNAPX.x509.pem" "$TMP/apex.key.x509.pem"
+avbtool extract_public_key --key "$TMP/apex.key.pem" --output "$TMP/apex.key.avbpubkey"
+fi
+# lấy api
+if [ "$APIREPAK" == 'auto' ];then
+API="$(grep 'api: ' "$INPUT/apex_infor.ini" | awk '{print $2}')"
+# tự động hạ api
+while true; do
+if [ -f "$HOME/.local/share/apktool/framework/1-$API.apk" ];then
+break
+else
+API=$((API - 1))
+fi
+done
+else
+API="$APIREPAK"
+fi
+# xây dựng apex
+mkdir -p "$OUTPUT"
+echo "I: Build apex with API: $API"
+if [ "$PTTTYPE" == 'auto' ]; then
+PTTTYPE="$(grep 'fscon: ' "$INPUT/apex_infor.ini" | awk '{print $2}')"
+fi
+echo "I: Build apex_payload in format: $PTTTYPE"
+apexer.py -f -p "$INPUT" --api $API --payload_fs_type $PTTTYPE "$OUTPUT/${INPUT##*/}.apex"
+# nén lại apex thành capex
+if [ -f "$OUTPUT/${INPUT##*/}.apex" ];then
+    if [ "$COMPEV" == 1 ];then
+    apex_compression_tool.py compress --input "$OUTPUT/${INPUT##*/}.apex" --output "$OUTPUT/${INPUT##*/}.capex"
+    [ -f "$OUTPUT/${INPUT##*/}.capex" ] && rm -fr "$OUTPUT/${INPUT##*/}.apex" || abort "Apex compression failed !"
+    fi
+else
+abort "Apex build failed !"
+fi
+# kiểm tra hoàn thành
+    if [[ -f "$OUTPUT/${INPUT##*/}.apex" || -f "$OUTPUT/${INPUT##*/}.capex" ]];then
+    [ "$DELLAPX" == 1 ] && rm -fr "$INPUT"
+    fi
+# kết thúc
+fi
+
+

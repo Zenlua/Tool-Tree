@@ -1,0 +1,3 @@
+from typing import BinaryIO
+
+def decompress(src: bytes | BinaryIO, header: bool = True, buflen: int = -1) -> bytes: ...

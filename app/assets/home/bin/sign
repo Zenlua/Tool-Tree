@@ -1,0 +1,50 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+show_help() {
+  echo "Usage: sign -z [number] -i <input> -o <output>"
+  echo
+  echo "  -i    Input file"
+  echo "  -o    Output file"
+  echo "  -z    Default: 0"
+  echo "          0: zipalign no alignment"
+  echo "          1: use zipalign"
+  echo "  -k    pk8 file path, if not have will use testkey.pk8"
+  echo "  -c    x509.pem file path, if not have will use testkey.x509.pem"
+  echo "  -h    show help"
+  exit 1
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+INPUT=''; OUTPUT=''; CKZIPS=''; KEYPK=''; CPEM=''; show_help='';
+while getopts ":i:o:z:k:c:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    o) OUTPUT="$OPTARG" ;;
+    z) CKZIPS="$OPTARG" ;;
+    k) KEYPK="$OPTARG" ;;
+    c) CPEM="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+[[ -z "$KEYPK" ]] && KEYPK="$ETC/key/testkey.pk8"
+[[ -z "$CPEM" ]] && CPEM="$ETC/key/testkey.x509.pem"
+
+if [[ "$CKZIPS" == 1 ]];then
+zipalign -f -p 4 "$INPUT" "$OUTPUT";
+apksigner sign --key "$KEYPK" --cert "$CPEM" "$OUTPUT"
+rm -fr "$OUTPUT".idsig
+else
+apksigner sign --key "$KEYPK" --cert "$CPEM" --in "$INPUT" --out "$OUTPUT"
+rm -fr "$OUTPUT".idsig
+fi

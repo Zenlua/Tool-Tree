@@ -1,0 +1,14 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+# Dọn dẹp tmp
+rm -fr $TMPDIR/* $HOME/cache/* $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
+
+# Khởi động các file shell ở add-on
+for vadd in $AON/*/early_start.sh $AOK/*/early_start.sh; do
+    if [ -f "$vadd" ];then
+    (
+    echo "run shell: $vadd" &>>$TEMP/Install.log
+    $vadd &>>$TEMP/Install.log
+    ) &
+    fi
+done

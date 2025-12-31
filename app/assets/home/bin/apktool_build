@@ -1,0 +1,132 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# Apkedit xây dựng
+
+source language
+show_help() {
+  echo "Usage: apktool_build -i <input> -o <output> <flags>"
+  echo
+  echo "  -i    input file"
+  echo "  -o    output path"
+  echo "  -s    signature:"
+  echo "          default: Keep application signature"
+  echo "          testkey: use testkey signature"
+  echo "  -n    enable string filter:"
+  echo "          0: no filter"
+  echo "          1: use text filter"
+  echo "  -d    delete build folder after build is complete:"
+  echo "          0: do not delete project"
+  echo "          1: delete project"
+  echo "  -c    copy signature file and AndroidManifest.xml:"
+  echo "          0: do not copy"
+  echo "          1: copy"
+  echo "  -h    show help"
+  exit 1
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+INPUT=''; OUTPUT=""; SIGNAP=''; FIRTVB=''; XDELF=''; COPYX=''; show_help='';
+while getopts ":i:o:s:n:d:c:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    o) OUTPUT="$OPTARG" ;;
+    s) SIGNAP="$OPTARG" ;;
+    n) FIRTVB="$OPTARG" ;;
+    d) XDELF="$OPTARG" ;;
+    c) COPYX="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "OUTPUT" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+[[ -z "$SIGNAP" ]] && SIGNAP='default'
+[[ -z "$FIRTVB" ]] && FIRTVB=1
+[[ -z "$XDELF" ]] && XDELF=0
+[[ -z "$COPYX" ]] && COPYX=0
+IFS=$'\n'
+
+echo "$apkb_text_1 ${INPUT##*/}"
+echo
+
+# Lọc vẫn bản
+if [ -d "$INPUT/res/values" ] && [ "$FIRTVB" == 1 ];then
+echo "$apkb_text_2"
+echo
+cp "$INPUT/.cache/hash_res.json" "$INPUT/.cache/2hash_res.json"
+for vvv in $(check_changes.py "$INPUT/res" "$INPUT/.cache/2hash_res.json" | grep -e 'fixed:' -e 'values' | awk '{print $2}'); do
+if [ "$(echo "$vvv" | grep -cm1 "values-.*/")" == 1 ];then
+ten_file="$(basename "$vvv" .xml)"
+text_filter.py "$INPUT/res/values/$ten_file.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/text_filter.log
+xml_fix.py "$INPUT/res/$vvv" >>$INPUT/.cache/xml_fix.log
+fi
+if [ "$(echo "$vvv" | grep -cm1 "values/")" == 1 ];then
+[ "$vvv" == "values/public.xml" ] || update_id.py --use-file "$INPUT/res/values/public.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/public_log.log
+fi
+done
+rm -fr "$INPUT/.cache/2hash_res.json"
+echo "$apkb_text_3"
+echo
+fi
+
+echo "$replag_text_2"
+echo
+
+if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ];then
+for vkn in "$INPUT"/classes*.dex; do
+    kout="$(basename $vkn .dex | sed 's|classes|smali|')"
+    cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
+    dkfjff="$(check_changes.py "$INPUT/$kout" "$INPUT/.cache/2hash_$kout.json")"
+    rm -fr "$INPUT/.cache/2hash_$kout.json"
+    if [ -n "$dkfjff" ];then
+    API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
+    smali a --api $API -o "$INPUT/$kout.dex" $(echo "$dkfjff" | grep -e "new:" -e "fixed:" | awk '{print "'$INPUT/$kout'/"$2}')
+    dexupdater -g "$vkn" -e "$INPUT/$kout.dex" -o "$INPUT/${kout}_s.dex" -api $API -delete $(echo "$dkfjff" | grep "deleted:" | awk '{print $2}' | sed "s|\.smali||g") > "$INPUT/.cache/build_$kout.log"
+        if [ -f "$INPUT/${kout}_s.dex" ];then
+        mv "$INPUT/${kout}_s.dex" "$vkn"
+        rm -fr "$INPUT/$kout.dex"
+        fi
+    fi
+done
+fi
+
+[ "$COPYX" == 1 ] && cp -rf "$INPUT/.cache/AndroidManifest.xml" "$INPUT/original/AndroidManifest.xml" || rm -fr "$INPUT/original/AndroidManifest.xml"
+
+# xoá bak
+find "$INPUT" -type f -name "*.bak" -delete >/dev/null
+
+# tên file
+tenapkkk="$(grep -m1 'apkFileName' "$INPUT/apktool.yml" | awk '{print $2}')"
+
+# xây dựng apk
+eval "apktool b --copy-original -f \"$INPUT\" "
+
+# tạo thư mục
+mkdir -p "$OUTPUT"
+
+# ký apk
+if [ "$SIGNAP" != 'default' ];then
+echo
+echo "$apkb_text_6 $SIGNAP"
+sign -i "$INPUT/dist/$tenapkkk" -o "$OUTPUT/$tenapkkk" -k "$ETC/key/$SIGNAP.pk8" -c "$ETC/key/$SIGNAP.x509.pem"
+else
+# khôi phục chữ ký
+    if [ -d "$INPUT/signatures" ];then
+    apkeditor b -f -t sig -i "$INPUT/dist/$tenapkkk" -sig "$INPUT/signatures" -o "$OUTPUT/$tenapkkk" &> "$INPUT/.cache/restore_sign.log"
+    fi
+fi
+
+# in đường dẫn lưu
+if [ -f "$OUTPUT/$tenapkkk" ];then
+# xoá dự án
+[ "$XDELF" == 1 ] && rm -fr "$INPUT"
+else
+abort "$apke_text_3: $INPUT"
+fi

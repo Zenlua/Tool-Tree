@@ -1,0 +1,325 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+shopt -s extglob
+#set -x
+source language 2>/dev/null
+threads=$(nproc)
+show_help() {
+  echo "Usage: repack_img -i <input> -o <output> <flags>"
+  echo
+  echo "  -i    input file"
+  echo "  -o    output folder"
+  echo "  -n    compressed erofs: lz4hc"
+  echo "          lz4hc: 0-12"
+  echo "          lz4: 0"
+  echo "          lzma: 0-9"
+  echo "          deflate: 0-9"
+  echo "          zstd: 0-22"
+  echo "  -l    default: 8, 0-22"
+  echo "  -c    list convert: raw, dat, br, zstd, sparse, default: raw"
+  echo "  -s    default: 0, free size calculated by mb for example 100mb free only works in ext, f2fs"
+  echo "  -a    if you want to patch avb to value 1: 0"
+  echo "          0: false"
+  echo "          1: true"
+  echo "  -k    build default: 0"
+  echo "          0: auto detect partition"
+  echo "          1: ro-erofs, (mkfs.erofs)"
+  echo "          2: rw-ext4, (make_ext4fs)"
+  echo "          3: rw-ext4, (e2fsdroid)"
+  echo "          4: ro-f2fs, (make_f2fs)"
+  echo "          5: rw-f2fs, (make_f2fs)"
+  echo "  -d    delete folder after build: 1"
+  echo "          0: false"
+  echo "          1: true"
+  echo "  -h    show help"
+  exit 1
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+AVBIMG=''; OUTPUT=''; NENEROFS=''; CONVER=''; LVLNEN=''; 
+SAINEN=''; TTBUILDI=''; CDELIMG=''; show_help='';
+while getopts ":i:o:n:l:c:s:k:d:a:h" opt; do
+  case $opt in
+    a) AVBIMG="$OPTARG" ;;
+    i) INPUT="$OPTARG" ;;
+    o) OUTPUT="$OPTARG" ;;
+    n) NENEROFS="$OPTARG" ;;
+    c) CONVER="$OPTARG" ;;
+    l) LVLNEN="$OPTARG" ;;
+    s) SAINEN="$OPTARG" ;;
+    k) TTBUILDI="$OPTARG" ;;
+    d) CDELIMG="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+[[ -z "$NENEROFS" ]] && NENEROFS='lz4hc'
+[[ -z "$LVLNEN" ]] && LVLNEN=8
+[[ -z "$SAINEN" ]] && SAINEN=0
+[[ -z "$TTBUILDI" ]] && TTBUILDI=0
+[[ -z "$AVBIMG" ]] && AVBIMG=0
+[[ -z "$CDELIMG" ]] && CDELIMG=1
+[[ -z "$CONVER" ]] && CONVER='raw'
+
+info="${INPUT%/*}/config/${INPUT##*/}_info"
+fs_config="${INPUT%/*}/config/${INPUT##*/}_fs_config"
+file_contexts="${INPUT%/*}/config/${INPUT##*/}_file_contexts"
+fs_options="${INPUT%/*}/config/${INPUT##*/}_fs_options"
+saved="$OUTPUT/out/${INPUT##*/}.img"
+info_size="${INPUT%/*}/config/${INPUT##*/}_size.txt"
+kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
+dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
+checkro="${INPUT%/*}/config/${INPUT##*/}_f2fs_ro"
+MKE2FS_CONFIG="$ETC/mke2fs.conf"
+
+if [[ "$(cat $info)" =~ ^(vendor_boot|boot|vbmeta|vbmeta_system|dtbo)$ ]];then
+TTBUILDI=0
+CONVER='raw'
+fi
+
+[ -f "$saved" ] && rm -fr "$saved"
+
+# Chọn định dạng tệp phân vùng
+if [ "$TTBUILDI" == 1 ];then
+partition='erofs'
+elif [ "$TTBUILDI" == 2 ] || [ "$TTBUILDI" == 3 ];then
+partition='ext'
+[ "$TTBUILDI" == 3 ] && e2fsdroid=1
+elif [ "$TTBUILDI" == 4 ] || [ "$TTBUILDI" == 5 ];then
+partition='f2fs'
+[ "$TTBUILDI" == 5 ] && f2fsrw=1
+else
+partition="$(cat $info)"
+fi
+
+if [ "$NENEROFS" == "lz4" ];then
+zlsize=''
+elif [ "$NENEROFS" == "lz4hc" ];then
+[ "$LVLNEN" -gt 12 ] && zlsize=",12" || zlsize=",$LVLNEN"
+elif [ "$NENEROFS" == "deflate" ] || [ "$NENEROFS" == "lzma" ];then
+[ "$LVLNEN" -gt 9 ] && zlsize=",9" || zlsize=",$LVLNEN"
+else
+[ "$LVLNEN" -gt 22 ] && zlsize=",22" || zlsize=",$LVLNEN"
+fi
+
+[ -e "$OUTPUT/out" ] || mkdir -p "$OUTPUT/out"
+echo -e "$build_text: ${INPUT##*/} ($partition) ➠ ($CONVER)...\n"
+
+# patch fstab
+if [ "$AVBIMG" == 1 ];then
+listfab="$(find "$INPUT"/*ramdisk -type f -name "fstab.*" 2>/dev/null)"
+for fstab in $listfab; do
+   if [ -f "$fstab" ];then
+     if [ "$2" == 1 ];then
+       if [[ -n $(cat "$fstab" | grep -v "avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey" | grep -i "avb") ]]; then
+         sed -i "s/avb,//g; s/,avb=vbmeta_system//; s/,avb=vbmeta//; s/,,/,/g" "$fstab"
+         echo "Deleted avb in fstab: ${fstab##*/}"
+       else
+         echo "avb_key not found: ${fstab##*/}"
+       fi
+       if [[ -n $(cat "$fstab" | egrep -i "fileencryption|keydirectory") ]]; then
+         sed -i 's/fileencryption=[^,]*,//' "$fstab"
+         sed -i 's/keydirectory=[^,]*,//' "$fstab"
+         echo "Decrypted data: ${fstab##*/}"
+       else
+         echo "No data encryption found in: ${fstab##*/}"
+       fi
+     fi
+   fi
+done
+fi
+
+if [ "$partition" == "erofs" ];then
+  patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
+  mkfs.erofs --quiet --workers=$threads -z${NENEROFS}${zlsize} -T 0 --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" 2>$TMP/mkfs_erofs.log || abort "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved"
+  echo
+elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
+    # xây dựng cpio
+    for vch in $(cat "$INPUT/cache/cpio" 2>/dev/null); do
+    cd "$INPUT/${vch%.*}"
+    find | sed 1d | cpio -H newc -R 0:0 -o -F "$INPUT/$vch"
+    done
+    # xây dựng dtb
+    cd "$INPUT"
+    for redts in $(ls -1d dts_*.+([0-9]) 2>/dev/null | sort -n -t . -k 2); do
+        nrep="${redts/dts_/}"
+        if [ "$(sha256sum -b $redts)" == "$(cat cache/md5_$nrep)" ];then
+        cp -f cache/${nrep} ${nrep}
+        else
+        echo "Build DTB: $redts"
+        dtc -q -I dts -O dtb -@ -o ${nrep} $redts
+        [ "$?" != 0 ] && abort "Error: Build DTB"
+        fi
+    done
+    for bdts in $(ls -1d cache/type_* 2>/dev/null); do
+        nedts="${bdts/cache\/type_/}"
+        tydbs="$(cat $bdts)"
+        if [ "$tydbs" == 'dtb' ] || [ "$tydbs" == 'dtbo' ];then
+        [ "$tydbs" == 'dtb' ] && merge_dtb.py $nedts $(ls -1d $nedts.* | sort -n -t . -k 2) >/dev/null
+        [ "$tydbs" == 'dtbo' ] && dtbo create $nedts $(ls -1d $nedts.* | sort -n -t . -k 2) >/dev/null
+        fi
+        rm -f $nedts.*
+    done
+    if [ "$AVBIMG" == 1 ];then
+    for dt in dtb kernel_dtb extra; do
+      if [ -f $dt ]; then
+        if magiskboot dtb $dt test; then
+          if magiskboot dtb $dt patch; then
+            echo "- Patch dtb in boot image $dt"
+          fi
+        fi
+      fi
+    done
+    fi
+    # xây dựng boot
+    magiskboot repack "${INPUT##*/}.img" "$saved" 2>&1
+    echo
+elif [ "$partition" = "vbmeta_system" ] || [ "$partition" = "vbmeta" ]; then
+  cd $INPUT
+  if [ "$AVBIMG" == 1 ];then
+  magiskboot hexpatch ${INPUT##*/}.img 0000000000000000617662746F6F6C20 0000000200000000617662746F6F6C20
+  fi
+  cp -rf "${INPUT##*/}.img" "$saved"
+elif [ "$partition" = "logo" ];then
+  logo_dumper.py --out "$INPUT/new-logo.img" --bmpdir "$INPUT" "$INPUT/logo.img" repack
+  mv -f "$INPUT/new-logo.img" "$saved"
+  echo
+elif [ "$partition" = "dtbo" ];then
+  cd "$INPUT"
+  for dtbo in $(ls -1d dts.* | sort -n -t . -k 2); do
+    if [ "$(sha256sum -b $dtbo)" == "$(cat cache/md5_$dtbo 2>/dev/null)" ];then
+    echo "Copy raw: dtb.${dtbo##*.}"
+    cp -f cache/dtb.${dtbo##*.} dtb.${dtbo##*.}
+    else
+    echo "Build dtb: $dtbo"
+    dtc -q -I dts -O dtb -@ -o dtb.${dtbo##*.} $dtbo
+    [ "$?" != 0 ] && abort "Error: Build dtb"
+    fi
+  done
+  dtbo create dtbo.img $(ls -1d dtb.* | sort -n -t . -k 2) >/dev/null
+  rm -fr dtb.*
+  cp -f dtbo.img "$saved"
+  echo
+elif [ "$partition" == "f2fs" ];then
+  if [ "$ROT" == 0 ];then
+  abort "Error build: f2fs, $root_warning_text"
+  fi
+  patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
+  if [ -f "$info_size" ] && [ "$(cat $info)" == "f2fs" ] && [ "$TTBUILDI" == 0 ];then
+  size_real=$(cat $info_size 2>/dev/null);
+  size_real="$(echo "$SAINEN * 1024 * 1024 + $size_real" | bc)"
+  truncate -s $size_real "$saved"
+  else
+  size_orig="$(du -bs "$INPUT" | awk '{ print $1 }')"
+  size_real="$(echo "($SAINEN + 6) * 1024 * 1024 + $size_orig" | bc)"
+  truncate -s $size_real "$saved"
+  fi
+  if [ -f "$INPUT/${INPUT##*/}/build.prop" ];then
+  mount_dir="/"
+  cp -rf "$fs_config" "${fs_config}_s"
+  cp -rf "$file_contexts" "${file_contexts}_s"
+  fs_config="${fs_config}_s"
+  file_contexts="${file_contexts}_s"
+  sed -i 's|^system/|/|' "$fs_config"
+  sed -i 's|^/system||' "$file_contexts"
+  else
+  mount_dir="/${INPUT##*/}"
+  fi
+  echo "Partition size: ${size_real}b, $(coverbyte $size_real)"
+  if [ "$TTBUILDI" == 0 ];then
+  [ -f "$checkro" ] && f2fsrw=0 || f2fsrw=1
+  fi
+  [ -f "$TMP/make_f2fs.log" ] && rm -fr "$TMP/make_f2fs.log"
+  if [ "$f2fsrw" == 1 ];then
+  make_f2fs -T 0 -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || abort "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+  echo " "
+  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T 0 -f "$INPUT" -c "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
+  else
+  make_f2fs -T 0 -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || abort "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+  echo " "
+  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T 0 -f "$INPUT" "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
+  fi
+  [ "$(grep -cm1 'Done:' $TMP/sload_f2fs.log)" == 0 ] && abort "Error build sload_f2fs, Suggestion: Increase free MB, log: $TMP/sload_f2fs.log" "$saved";
+  [ -f "$INPUT/${INPUT##*/}/build.prop" ] && rm -fr "$file_contexts" "$fs_config"
+  echo
+elif [ "$partition" == "ext" ];then
+  patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
+  [ -f "$INPUT/${INPUT##*/}/build.prop" ] && mount_dir="/" || mount_dir="/${INPUT##*/}"
+  size_real=$(cat $info_size 2>/dev/null);
+  size_orig="$(du -sb "$INPUT" | awk '{ print $1 }')"
+  if test "$size_orig" -le "52428800"; then
+  size_orig=209715200
+  else
+  size_orig="$(echo "$size_orig * 1.1" | bc)"
+  fi
+  if [ "$SAINEN" == 0 ] && [ "$(cat $info)" == "ext" ] && [ "$TTBUILDI" == 0 ];then
+    if [ "$e2fsdroid" == 1 ];then
+    size="$(echo "$size_real / 4096" | bc)";
+    mke2fs -O ^has_journal,^quota,^project,^resize_inode -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "$mount_dir" "$saved" $size 2>&1
+    e2fsdroid -e -T 0 -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || abort "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved"
+    else
+    make_ext4fs -J -T 0 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || abort "Error build process make_ext4fs" "$saved"
+    echo
+    fi
+  else
+    if [ "$e2fsdroid" == 1 ];then
+    size="$(echo "$size_orig / 4096" | bc)";
+    mke2fs -O ^has_journal,^quota,^project,^resize_inode -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "$mount_dir" "$saved" $size 2>&1
+    e2fsdroid -e -T 0 -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_exts.log || abort "Error build process e2fsdroid, log: $TMP/e2fsdroid_exts.log" "$saved"
+    else
+    make_ext4fs -J -T 0 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || abort "Error build process make_ext4fs" "$saved"
+    echo
+    fi
+    resize2fs -M "$saved" 2>&1
+    if [[ "$SAINEN" != 0 ]];then
+    kichthuoc="$(resize2fs -P "$saved" 2>/dev/null | grep -o '[0-9]*')"
+    resize2fs -f "$saved" $(echo "$SAINEN * 1024 / 4 + $kichthuoc" | bc) 2>&1
+    fi
+  fi
+fi
+
+if [[ -f $OUTPUT/dynamic_partitions_op_list ]] && [[ "$partition" =~ ^(ext|f2fs|erofs)$ ]];then
+    if [ ! -f $OUTPUT/out/dynamic_partitions_op_list ];then
+    cp -f $OUTPUT/dynamic_partitions_op_list $OUTPUT/out/dynamic_partitions_op_list
+    fi
+    if [ -f "$saved" ];then
+    img_size=$(wc -c <"$saved")
+    sed -i "s/resize ${INPUT##*/} [^*]*/resize ${INPUT##*/} $img_size/" $OUTPUT/out/dynamic_partitions_op_list
+    fi
+fi
+
+lvnen="$(glog nen_br 8)";
+if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
+    if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
+    zstd -f -$lvnen -T$threads --format=$CONVER --compress "$saved" -o "${saved%.*}.img.$CONVER" &>/dev/null
+    [ "$?" == 0 ] && rm -f "$saved"
+    elif [ "$CONVER" == 'dat' ];then
+    img2simg $saved >/dev/null
+    img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p ${INPUT##*/} >/dev/null
+    [ "$?" == 0 ] && rm -f "$saved"
+    elif [ "$CONVER" == 'br' ];then
+    LEVEL="$(echo "$lvnen / 2" | bc)"
+    img2simg $saved >/dev/null
+    img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p ${INPUT##*/} >/dev/null
+    [ -f "$OUTPUT/out/${INPUT##*/}.new.dat" ] || abort "Error creating file ${INPUT##*/}.new.dat failed !!!"
+    brotli -fq "$LEVEL" "$OUTPUT/out/${INPUT##*/}.new.dat" -o "$OUTPUT/out/${INPUT##*/}.new.dat.br" >/dev/null
+    [ "$?" == 0 ] && rm -f "$saved" "$OUTPUT/out/${INPUT##*/}.new.dat"
+    elif [ "$CONVER" == 'sparse' ];then
+    img2simg "$saved" >/dev/null
+    fi
+fi
+
+if [ "$CDELIMG" == 1 ];then
+rm -fr "$INPUT" "$file_contexts" "$fs_config" "$info" "$fs_options" "$info_size"
+[ "$(ls ${INPUT%/*}/config 2>/dev/null)" ] || rm -fr "${INPUT%/*}/config"
+[ "$(ls ${INPUT%/*} 2>/dev/null)" ] || rm -fr "${INPUT%/*}"
+fi

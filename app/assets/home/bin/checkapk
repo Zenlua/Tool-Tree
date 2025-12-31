@@ -1,0 +1,27 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# Kakathic
+
+if [ "$#" -ne 1 ] || [ -z "$1" ] || [ "$1" == '-h' ]; then
+    echo "Usage: checkapk <file>"
+    exit 1
+fi
+
+List_unzip="$(unzip -ql "$1")"
+
+if [ "$(echo "$List_unzip" | grep -icm1 ' original_apex'$)" == 1 ]; then
+echo capex
+elif [ "$(echo "$List_unzip" | grep -icm1 ' apex_payload.img'$)" == 1 ]; then
+echo apex
+elif [ "$(echo "$List_unzip" | grep -ic -e ' classes.dex'$ -e 'AndroidManifest.xml'$ -e ' resources.arsc'$)" -ge 2 ]; then
+echo apk
+elif [ "$(echo "$List_unzip" | grep -ic -e ' classes.dex'$ -e ' classes[0-9]*.dex'$)" -ge 1 ]; then
+echo dex
+elif [ "$(echo "$List_unzip" | grep -ic '.*.\.class'$)" -ge 1 ]; then
+echo class
+elif [ "$(echo "$List_unzip" | sed '/\//d' | grep -ic '.*.\.apk'$)" -ge 2 ]; then
+echo apks
+elif [ "$(echo "$List_unzip" | sed '/\//d' | grep -ic '.*.\.apk'$)" -ge 1 ]; then
+echo zipapk
+else
+checktype "$1"
+fi

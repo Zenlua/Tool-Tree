@@ -1,0 +1,241 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# kakathic
+
+threads=$(nproc)
+show_help() {
+  echo "Usage: unpak_img -i <input> -o <output> -p <partition> -n [0/1] -d [0/1]"
+  echo
+  echo "  -i    input file"
+  echo "  -o    output folder"
+  echo "  -p    extract partition for payload, super, path in zip file"
+  echo "  -n    img decode not: 0"
+  echo "            0: false"
+  echo "            1: true"
+  echo "  -d    delete file after decode: 0"
+  echo "            0: false"
+  echo "            1: true"
+  echo "  -h    show help"
+  exit 1
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+INPUT=''; OUTPUT=''; NODECO=''; XOAIMG=''; PVUGBIN=''; show_help='';
+while getopts ":i:o:n:d:p:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    o) OUTPUT="$OPTARG" ;;
+    n) NODECO="$OPTARG" ;;
+    d) XOAIMG="$OPTARG" ;;
+    p) PVUGBIN="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+[[ -z "$XOAIMG" ]] && XOAIMG=0
+[[ -z "$NODECO" ]] && NODECO=0
+
+source language 2>/dev/null
+dang_tep="$(checktype "$INPUT")"
+
+# xử lý zip
+if [ "$dang_tep" == 'zip' ];then
+xacnhatpay="$(listpayload "$INPUT")"
+xoazip=1
+    if [ -z "$xacnhatpay" ];then
+    echo -e "$unpack_text_1 $PVUGBIN...\n"
+    tenpjag="$(echo "${PVUGBIN##*/}" | cut -d. -f1)"
+    unzip -qo "$INPUT" $PVUGBIN ${PVUGBIN%/*}/$tenpjag.transfer.list $tenpjag.transfer.list -d $TMP 2>/dev/null
+    INPUT="$TMP/$PVUGBIN";
+    dang_tep="$(checktype "$INPUT")"
+        if [ "$dang_tep" == 'super' ];then
+        echo -e "$unpack_text_7\n" >&2
+        mv "$INPUT" "$PTSD"
+        exit
+        fi
+    fi
+fi
+
+if [ "$dang_tep" == 'zstd' ];then
+  echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
+  file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
+  zstd -T$threads -f -d -k "$INPUT" -o "$file_img" &>/dev/null
+elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
+  tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
+  [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || abort "$more_text_5 $tenpjanvung.transfer.list"
+  echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
+  [ "${INPUT##*.}" == 'br' ] && brotli -f -d "$INPUT" -o "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" &>/dev/null
+  file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
+  sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" &>/dev/null
+elif [ "$dang_tep" == 'sparse' ];then
+  echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
+  file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
+  simg2img "$INPUT" "$file_img"
+elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
+  echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
+  payload_dumper --no-parallel --out "$TMP" --images "$PVUGBIN" "$INPUT" >/dev/null || abort "Payload unpack error"
+  file_img="$TMP/$PVUGBIN.img"
+elif [ "$dang_tep" == 'super' ];then
+  echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
+  lpunpack -p "$PVUGBIN" "$INPUT" "$TMP" >/dev/null
+  file_img="$TMP/$(echo $PVUGBIN).img"
+elif [ "$dang_tep" == 'amlogic' ];then
+  echo -e "$unpack_text_1 (${INPUT##*/}) ➠ (unpack)...\n"
+  ten_paion="$(echo "${INPUT##*/}" | cut -d. -f1)"
+  ampack unpack "$INPUT" "${INPUT%/*}/${ten_paion}_amlogic" >$TMP/ampack_unpack.log && sed -i $'s/\033\\[[0-9;]*m//g' "$TMP/ampack_unpack.log"
+  for vck in ${INPUT%/*}/${ten_paion}_amlogic/*.PARTITION; do
+  echo "mv: ${vck##*/} ➠ $(echo "${vck##*/}" | sed 's|\.PARTITION$|\.img|')"
+  mv "$vck" "${vck%.*}.img"
+  done
+  echo
+  file_img="${INPUT%/*}/${ten_paion}_amlogic/super.img"
+else
+  file_img="$INPUT"
+fi
+
+# phòng hờ
+if [ "$(checktype "$file_img")" == 'sparse' ];then
+simg2img "$file_img" >$TMP/simg2img.log
+fi
+
+dang_file="$(checktype "$file_img")"
+if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [ "$dang_file" != "super" ];then
+
+echo -e "$decompile_text: ${file_img##*/} ($dang_file)...\n"
+
+namepv="${file_img%.*}"
+rm -fr "$OUTPUT/${namepv##*/}"
+mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
+
+# xoá cũ
+[ -d "$OUTPUT/${namepv##*/}" ] && rm -fr \
+"$OUTPUT/config/${namepv##*/}_info" \
+"$OUTPUT/config/${namepv##*/}_file_contexts" \
+"$OUTPUT/config/${namepv##*/}_fs_config" \
+"$OUTPUT/config/${namepv##*/}_size.txt" \
+"$OUTPUT/config/exception.log" \
+"$OUTPUT/config/${namepv##*/}_f2fs_ro"
+
+    if [ "$dang_file" == 'ext' ];then
+      imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
+      echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
+    elif [ "$dang_file" == 'f2fs' ];then
+      if [ "$ROT" == 0 ];then
+      abort "Error Unpack: f2fs, $root_warning_text"
+      fi
+      #dump.f2fs -r -P -L -f -o "$OUTPUT/${namepv##*/}" "$file_img"
+      mkdir -p "$TMP/${namepv##*/}"
+      mount -v -r "$file_img" "$TMP/${namepv##*/}" &>$TMP/unpack_f2fs.log
+      cp -af --preserve=all "$TMP/${namepv##*/}" "$OUTPUT" &>>$TMP/unpack_f2fs.log
+      getfscontex.py "$TMP/${namepv##*/}" "$OUTPUT/config" >>$TMP/unpack_f2fs.log
+      umount -v -f -l "$TMP/${namepv##*/}" &>>$TMP/unpack_f2fs.log
+      rm -fr "$TMP/${namepv##*/}"
+      echo "$(stat -c%s "$file_img")" > "$OUTPUT/config/${namepv##*/}_size.txt"
+      echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
+      echo "$(fsck.f2fs "$file_img" | grep 'superblock features' | grep -cm1 ro)" > "$OUTPUT/config/${namepv##*/}_f2fs_ro"
+    elif [ "$dang_file" == 'erofs' ];then
+      extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || abort "\nextract.erofs error: ${namepv##*/}" "$OUTPUT/${namepv##*/}"
+      echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
+      if [ -f $OUTPUT/config/exception.log ];then
+      rm -fr "$OUTPUT/${namepv##*/}"
+      cat $OUTPUT/config/exception.log >&2
+      abort "\nIncomplete file error please check hash" $OUTPUT/config/exception.log
+      fi
+    elif [ "$dang_file" == 'logo' ];then
+    logo_dumper.py --out "$OUTPUT/${namepv##*/}" "$file_img" unpack
+    echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
+    cp -f "$file_img" "$OUTPUT/${namepv##*/}/logo.img"
+    echo
+    elif [ "$dang_file" == 'vbmeta' ] || [ "$dang_file" == 'vbmeta_system' ];then
+      cp -f "$file_img" "$OUTPUT/${namepv##*/}"
+      echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
+    elif [ "$dang_file" == 'boot' ] || [ "$dang_file" == 'vendor_boot' ];then
+      cd "$OUTPUT/${namepv##*/}"
+      cp -f "$file_img" "$OUTPUT/${namepv##*/}"
+      magiskboot unpack -h "$file_img" 2>&1
+      if [ "$?" = '1' ];then
+        rm -rf "$OUTPUT/${namepv##*/}"
+        abort "$unpack_text_3"
+      else
+        # unpack dtb, dtbo
+        for unp in $(ls -1d * 2>/dev/null | sort -n -t . -k 2); do
+          type_unp="$(checktype $unp)"
+          if [ -f $unp ];then
+            if [ "$type_unp" == 'dtb' ] || [ "$type_unp" == 'dtbo' ];then
+            mkdir -p cache
+            echo "$type_unp" > cache/type_$unp
+            [ "$type_unp" == 'dtb' ] && split_dtb.py $unp >$TMP/split_dtb.log
+            [ "$type_unp" == 'dtbo' ] && dtbo dump $unp -b $unp >$TMP/dtbo_boot.log
+            rm $unp
+            fi
+          fi
+        done
+        for unsl in $(ls -1 *.[0-9]* 2>/dev/null | sort -n -t . -k 2); do
+            echo "Decode: $unsl > dts_$unsl"
+            dtc -q -@ -I dtb -O dts -o dts_$unsl $unsl
+            [ "$?" != 0 ] && abort "$unpack_text_5 $unsl"
+            mv $unsl cache/$unsl
+            sha256sum -b dts_$unsl > cache/md5_$unsl
+        done
+        # unpack cpio
+        for vch in $(ls -1d *.cpio vendor_ramdisk/*.cpio 2>/dev/null); do
+        mkdir -p "${vch%.*}" "cache"
+        echo "$vch" >> cache/cpio
+        cd "${vch%.*}"
+        EXTRACT_UNSAFE_SYMLINKS=1 cpio -d -F "$OUTPUT/${namepv##*/}/$vch" -i 2>&1
+        if [ "$?" != 0 -o ! "$(ls)" ];then
+          abort "$unpack_text_4"
+        else
+        rm -f "$OUTPUT/${namepv##*/}/$vch"
+        fi
+        cd "$OUTPUT/${namepv##*/}"
+        done
+      echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
+      echo
+      fi
+    elif [ "$dang_file" == 'dtbo' ];then
+      echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
+      cd "$OUTPUT/${namepv##*/}"
+      dtbo dump "$file_img" -b dtb &>$TMP/dtbo.log
+      mkdir -p cache
+      for dtbo in $(ls -t dtb.* | sort -n -t . -k 2);do
+        echo "Decode: $dtbo"
+        dtc -q -@ -I dtb -O dts -o dts.${dtbo##*.} $dtbo
+        [ "$?" != 0 ] && abort "$unpack_text_5 $dtbo"
+        mv $dtbo cache/$dtbo
+        sha256sum -b dts.${dtbo##*.} > cache/md5_dts.${dtbo##*.}
+      done
+      echo
+    else
+    rm -fr "$OUTPUT/${namepv##*/}"
+    echo -e "$unpack_text_8 ${file_img##*/} ($dang_file)\n" >&2
+    fi
+else
+    if [ "$dang_file" == "super" ];then
+    echo -e "$unpack_text_7\n"
+    [ "$dang_tep" == 'amlogic' ] && echo -e "$save_text ${INPUT%/*}/${ten_paion}_amlogic\n" || echo -e "$save_text $INPUT\n"
+    fi
+echo -e "$unpack_text_6 ${file_img##*/} ($dang_file)\n"
+[ "$NODECO" == 1 ] && mv "$file_img" "$PTSD/out/${file_img##*/}"
+fi
+
+if [[ "$dang_tep" =~ ^(sparse|zstd|dat|br|payload|super|zip)$ ]];then
+    [ "$xoazip" == 1 ] && rm -f "$TMP/*.transfer.list"
+    if [ "$NODECO" != 1 ];then
+    [ -f "$file_img" ] && rm -f "$file_img"
+    [ "$dang_tep" == "br" ] && rm -f "${file_img%.*}.new.dat"
+    fi
+fi
+
+if [ "$XOAIMG" = 1 ];then
+rm -f "$INPUT" "${INPUT%/*}/$(echo "${INPUT##*/}" | cut -d. -f1).new.dat" "${INPUT%/*}/$(echo "${INPUT##*/}" | cut -d. -f1).transfer.list"
+fi

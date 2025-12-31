@@ -1,0 +1,48 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+unset backup_text
+if [ "$1" == '-b' ];then
+backup_text=1
+shift
+fi
+
+TARGET_LANG="$1"
+if [ -z "$TARGET_LANG" ] || [ "$TARGET_LANG" = "-h" ] || [ "$TARGET_LANG" = "--help" ]; then
+    echo "Usage:"
+    echo "  ${0##*/} [-b] vi \"hello world\""
+    echo "  echo \"hello\" | ${0##*/} [-b] vi"
+    exit 1
+fi
+shift
+
+# ---- LẤY TEXT (giữ newline) ----
+if [ "$#" -gt 0 ]; then
+    TEXT="$*"
+else
+    TEXT="$(cat)"
+fi
+
+[ -z "$TEXT" ] && exit 0
+
+# ---- GỌI API ----
+RESULT="$(curl -s -G -L \
+  "https://translate.googleapis.com/translate_a/single" \
+  --data-urlencode "client=gtx" \
+  --data-urlencode "sl=auto" \
+  --data-urlencode "tl=${TARGET_LANG}" \
+  --data-urlencode "dt=t" \
+  --data-urlencode "q=${TEXT}"
+)"
+
+# ---- TRÍCH KẾT QUẢ ----
+OUT="$(echo "$RESULT" | jq -r '.[0] | map(.[0]) | join("")' 2>/dev/null)"
+
+# ---- FALLBACK ----
+if [ -z "$OUT" ]; then
+    if [ "$backup_text" == 1 ]; then
+        printf '%s\n' "$TEXT"
+    fi
+    exit 0
+fi
+
+printf '%s\n' "$OUT"

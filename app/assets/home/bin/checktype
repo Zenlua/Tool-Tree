@@ -1,0 +1,9 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# Kakathic
+
+if [ "$#" -ne 1 ] || [ -z "$1" ]; then
+    echo "Usage: $0 <file>"
+    exit 1
+fi
+
+gettype.py "$(realpath "$1")"

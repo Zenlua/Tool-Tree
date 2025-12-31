@@ -1,0 +1,18 @@
+# Add-on
+id=online_utilities
+name=Apk utility
+author=Kakathic
+description=Many small amenities
+version=1.0
+versionCode=100
+root=false
+
+# language
+home_text_1="Patch apk"
+select_text_1="Options"
+clean_text_1="Project"
+clean_text_2="Present:"
+clean_text_3="Remove language"
+clean_text_4="Select the languages you want to delete"
+clean_text_5="Deleted:"
+google_text="Currently using google translate"

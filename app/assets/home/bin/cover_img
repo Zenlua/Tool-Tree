@@ -1,0 +1,129 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+source language
+threads=$(nproc)
+show_help() {
+  echo
+  echo "Usage: cover_img -i <input> -o <output> -c <conver> -l <level> -d <delete>"
+  echo
+  echo "  -i    input file path"
+  echo "  -o    output folder path"
+  echo "  -c    file type to convert to: raw, sparse, br, dat, zstd"
+  echo "  -l    compression level: 0 ~ 22, default: 8"
+  echo "  -d    delete original file after conversion:"
+  echo "              1: true, 0: false"
+  echo "  -h    show help"
+  exit 1
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+INPUT=''; OUTPUT=''; CONVER=''; LEVEL=''; DELETE=''; show_help='';
+while getopts ":i:o:c:l:d:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    o) OUTPUT="$OPTARG" ;;
+    c) CONVER="$OPTARG" ;;
+    l) LEVEL="$OPTARG" ;;
+    d) DELETE="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" ]] || [[ -z "$OUTPUT" ]] || [[ -z "$CONVER" ]] || [[ ! -f "$INPUT" ]] || [[ ! -d "$OUTPUT" ]]; then
+echo "Incorrect input, output or conversion format, please check again" >&2
+show_help
+fi
+
+[[ -z "$LEVEL" ]] && LEVEL=8
+[[ -z "$DELETE" ]] && DELETE=0
+
+# kiểm tra dạng file đầu vào
+dang_type="$(checktype "$INPUT")"
+logcv="$TMP/log_conver.txt"
+namerd="tmp_cv$RANDOM"
+namesv="$(echo "${INPUT##*/}" | sed 's/\..*$//')"
+
+if [[ "$dang_type" == "$CONVER" ]]; then
+abort "The input file is: $namesv ($dang_type), and you want to convert to: ($CONVER) ???"
+fi
+rm -fr "$logcv"
+mkdir -p "$OUTPUT"
+
+# Xử lý các tệp nén
+if [ "$dang_type" == 'zstd' ];then
+echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
+zstd -T$threads -f -d -k "$INPUT" -o "$TMP/$namerd" &>>$logcv
+elif [ "$dang_type" == 'br' ];then
+echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
+brotli -vf -d "$INPUT" -o "$TMP/$namerd" &>>$logcv
+    if [ "$(checktype "$TMP/$namerd")" == 'dat' ];then
+    [ -f "${INPUT%%.*}.transfer.list" ] || abort "Missing file: ${INPUT%%.*}.transfer.list"
+    sdat2img "${INPUT%%.*}.transfer.list" "$TMP/$namerd" "$TMP/2_$namerd" &>>$logcv
+    [ -f "$TMP/2_$namerd" ] && mv "$TMP/2_$namerd" "$TMP/$namerd" || abort "Conversion failed error !!!"
+    fi
+elif [ "$dang_type" == 'dat' ];then
+[ -f "${INPUT%%.*}.transfer.list" ] || abort "Missing file: ${INPUT%%.*}.transfer.list"
+echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
+sdat2img "${INPUT%%.*}.transfer.list" "$INPUT" "$TMP/$namerd" &>>$logcv
+fi
+
+# xử lý sparse
+if [ "$(checktype "$INPUT")" == 'sparse' ];then
+echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
+simg2img "$INPUT" "$TMP/$namerd" &>>$logcv
+fi
+
+# nhận file
+if [ -f "$TMP/$namerd" ];then
+file_img="$TMP/$namerd"
+else
+file_img="$INPUT"
+fi
+
+echo -e "$unpack_text_0 (${file_img##*/}) ➠ ($CONVER)...\n"
+
+# chuyển đổi
+if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
+zstd -f -$LEVEL -T$threads --format=$CONVER --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" &>>$logcv
+elif [ "$CONVER" == 'dat' ];then
+    if [ -f "$TMP/$namerd" ];then
+    img2simg $file_img &>>$logcv
+    else
+    img2simg "$file_img" "$TMP/$namerd" &>>$logcv
+    file_img="$TMP/$namerd"
+    fi
+img2sdat "$file_img" -o "$OUTPUT" -v 4 -p $namesv &>>$logcv
+elif [ "$CONVER" == 'br' ];then
+LEVEL="$(echo "$LEVEL / 2" | bc)"
+    if [ -f "$TMP/$namerd" ];then
+    img2simg $file_img &>>$logcv
+    else
+    img2simg "$file_img" "$TMP/$namerd" &>>$logcv
+    file_img="$TMP/$namerd"
+    fi
+img2sdat "$file_img" -o "$OUTPUT" -v 4 -p $namesv &>>$logcv
+[ -f "$OUTPUT/$namesv.new.dat" ] || abort "Error creating file $namesv.new.dat failed !!!"
+brotli -vfq "$LEVEL" "$OUTPUT/$namesv.new.dat" -o "$OUTPUT/$namesv.new.dat.br" &>>$logcv
+rm -fr "$OUTPUT/$namesv.new.dat"
+elif [ "$CONVER" == 'sparse' ];then
+img2simg "$file_img" "$OUTPUT/$namesv.img"
+else
+    if [ "$file_img" == "$INPUT" ];then
+    abort "Nothing to convert !!!"
+    else
+    mv -f "$file_img" "$OUTPUT/$namesv.img"
+    fi
+fi
+
+# xác nhận để xóa rác
+if [ "$file_img" != "$INPUT" ];then
+[ -f "$file_img" ] && rm -fr "$file_img"
+fi
+
+# xoá file cũ
+[ "$DELETE" == 1 ] && rm -fr "$INPUT"

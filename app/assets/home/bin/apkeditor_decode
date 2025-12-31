@@ -1,0 +1,130 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# Apkedit giải mã
+
+source language
+show_help() {
+  echo "Usage: apkeditor_decode -i <input> -o <output> <flags>"
+  echo
+  echo "  -i    input file"
+  echo "  -o    output folder"
+  echo "  -t    type: xml"
+  echo "          raw: no resource decryption"
+  echo "          xml: decode output to xml"
+  echo "          json: decode output to json"
+  echo "          reso: decode only resources.arsc"
+  echo "  -d    extract class**.dex: smali"
+  echo "          nodex: do not decode class**.dex files"
+  echo "          internal: dex decoding and 042 version support."
+  echo "          smali: use baksmali version 041 to decode"
+  echo "          jf: old version of baksmali support version 035"
+  echo "  -b    debug information:"
+  echo "          0: keep the information intact"
+  echo "          1: clean up debug info"
+  echo "  -h    show help"
+  exit 1
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+INPUT=''; OUTPUT=''; TYPEAPK=''; DECODEX=''; DEBUGA=''; show_help='';
+while getopts ":i:o:t:d:b:h" opt; do
+  case $opt in
+    i) INPUT="$OPTARG" ;;
+    o) OUTPUT="$OPTARG" ;;
+    t) TYPEAPK="$OPTARG" ;;
+    d) DECODEX="$OPTARG" ;;
+    b) DEBUGA="$OPTARG" ;;
+    h) show_help ;;
+    \?) echo "! Not understand -$OPTARG"; show_help ;;
+    :) echo "! Lack of value for -$OPTARG"; show_help ;;
+  esac
+done
+
+if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
+echo "Lack of value" >&2
+show_help
+fi
+
+[[ -z "$TYPEAPK" ]] && TYPEAPK='xml'
+[[ -z "$DECODEX" ]] && DECODEX='smali'
+[[ -z "$DEBUGA" ]] && DEBUGA=1
+IFS=$'\n'
+
+echo "$more_text_4 ${INPUT##*/}"
+echo
+
+# chuyển đổi tệp tin
+typefile="$(checkapk "$INPUT")"
+if [ "$typefile" == "zipapk" ];then
+typeten="$(unzip -l -q "$INPUT" | grep -v '.*./.*.\.apk' | grep '\.apk'$ | awk '{print $4}')"
+unzip -q -o "$INPUT" -d "${INPUT%/*}" $typeten &>/dev/null
+ptpk="${INPUT%/*}/$typeten"
+apkskk=1
+elif [ "$typefile" == "apks" ];then
+apkeditor m -f -i "$INPUT" -o "${INPUT%.*}.apk" &>/dev/null
+ptpk="${INPUT%.*}.apk"
+apkskk=1
+elif [ "$typefile" == "apk" ] || [ "$typefile" == "dex" ];then
+ptpk="$INPUT"
+fi
+
+# xác định tệp
+if [ -f "$ptpk" ];then
+
+# check dùng giải mã smali
+if [ "$DECODEX" == "nodex" ] || [ "$DECODEX" == "smali" ];then
+setkkh="-dex"
+else
+setkkh="-dex-lib $DECODEX"
+[ "$DEBUGA" == 1 ] && setkkh="-no-dex-debug $setkkh" || setkkh="-smali-registers $setkkh"
+fi
+
+# decode only resources.arsc
+if [ "$TYPEAPK" == 'reso' ];then
+TYPEAPK="xml"
+setkkh="-keep-res-path $setkkh"
+fi
+
+# Đường dẫn
+Tmout="${INPUT%.*}"
+Tout="$OUTPUT/${Tmout##*/}"
+
+# bắt đầu giải mã
+echo "$replag_text_1"
+echo
+
+# apkeditor
+eval "apkeditor d -f -t \"$TYPEAPK\" $setkkh -i \"$ptpk\" -o \"$Tout\" 2>&1" | sed -e '1,/__/d' -e '/Delete:/d' -e '/Saved to:/d' -e 's|I: \[DECOMPILE\] ||'
+
+# giải mã smali
+if [ "$DECODEX" == "smali" ];then
+    [ "$DEBUGA" == 1 ] && hhhhfdr="false -l" || hhhhfdr="true"
+    for vkn in "$Tout"/dex/classes*.dex; do
+    kout="$(basename $vkn .dex)"
+    mkdir -p "$Tout/smali/$kout" "$Tout/.cache"
+    API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
+    eval "baksmali d --debug-info $hhhhfdr --bootclasspath $BOOTCLASSPATH --api $API \"$vkn\" -o \"$Tout/smali/$kout\" "
+    check_changes.py "$Tout/smali/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
+    done
+fi
+
+# check hash res
+if [ -d "$Tout/resources/package_1/res" ];then
+    mkdir -p "$Tout/.cache"
+    check_changes.py "$Tout/resources/package_1/res" "$Tout/.cache/hash_res.json" >/dev/null
+fi
+
+# lưu tên
+echo "${ptpk##*/}" > "$Tout/.cache/ten_file.log"
+
+# xoá file
+[ "$apkskk" == 1 ] && rm -fr "$ptpk"
+
+# check thư mục
+[ -d "$Tout" ] || abort "$apke_text_1"
+
+else
+abort "$apke_text_3: $typefile"
+fi
