@@ -6,7 +6,7 @@
 
 - Import ROM file path for faster download
 
-- [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/apex_editor.add)
+- [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/payload_online.add)
 
 #### Merge system-root
 
