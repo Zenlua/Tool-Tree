@@ -388,7 +388,7 @@ if [[ "$websum" != "$(sha256sum -b "$PATH_APK_APP")" ]];then
 sleep 1
 showtoast "'$update_text_3'"
 sleep 2
-downloadb "https://github.com/Zenlua/Tool-Tree/releases/latest/download/Tool-Tree.apk" "$TMP/Tool-Tree.apk" true &>/dev/null
+downloadb "$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true &>/dev/null
 sleep 1
     if [[ "$websum" == "$(sha256sum -b "$TMP/Tool-Tree.apk")" ]];then
     cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
