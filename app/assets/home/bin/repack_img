@@ -140,7 +140,7 @@ fi
 
 if [ "$partition" == "erofs" ];then
   patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
-  mkfs.erofs --quiet --workers=$threads -z${NENEROFS}${zlsize} -T 0 --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" 2>$TMP/mkfs_erofs.log || abort "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved"
+  mkfs.erofs --quiet --workers=$threads -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" 2>$TMP/mkfs_erofs.log || abort "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved"
   echo
 elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
     # xây dựng cpio
@@ -240,13 +240,13 @@ elif [ "$partition" == "f2fs" ];then
   fi
   [ -f "$TMP/make_f2fs.log" ] && rm -fr "$TMP/make_f2fs.log"
   if [ "$f2fsrw" == 1 ];then
-  make_f2fs -T 0 -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || abort "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+  make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || abort "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
   echo " "
-  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T 0 -f "$INPUT" -c "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
+  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T 1230768000 -f "$INPUT" -c "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
   else
-  make_f2fs -T 0 -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || abort "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+  make_f2fs -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || abort "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
   echo " "
-  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T 0 -f "$INPUT" "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
+  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T 1230768000 -f "$INPUT" "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
   fi
   [ "$(grep -cm1 'Done:' $TMP/sload_f2fs.log)" == 0 ] && abort "Error build sload_f2fs, Suggestion: Increase free MB, log: $TMP/sload_f2fs.log" "$saved";
   [ -f "$INPUT/${INPUT##*/}/build.prop" ] && rm -fr "$file_contexts" "$fs_config"
@@ -265,18 +265,18 @@ elif [ "$partition" == "ext" ];then
     if [ "$e2fsdroid" == 1 ];then
     size="$(echo "$size_real / 4096" | bc)";
     mke2fs -O ^has_journal,^quota,^project,^resize_inode -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "$mount_dir" "$saved" $size 2>&1
-    e2fsdroid -e -T 0 -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || abort "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved"
+    e2fsdroid -e -T 1230768000 -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || abort "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved"
     else
-    make_ext4fs -J -T 0 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || abort "Error build process make_ext4fs" "$saved"
+    make_ext4fs -J -T 1230768000 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || abort "Error build process make_ext4fs" "$saved"
     echo
     fi
   else
     if [ "$e2fsdroid" == 1 ];then
     size="$(echo "$size_orig / 4096" | bc)";
     mke2fs -O ^has_journal,^quota,^project,^resize_inode -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "$mount_dir" "$saved" $size 2>&1
-    e2fsdroid -e -T 0 -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_exts.log || abort "Error build process e2fsdroid, log: $TMP/e2fsdroid_exts.log" "$saved"
+    e2fsdroid -e -T 1230768000 -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_exts.log || abort "Error build process e2fsdroid, log: $TMP/e2fsdroid_exts.log" "$saved"
     else
-    make_ext4fs -J -T 0 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || abort "Error build process make_ext4fs" "$saved"
+    make_ext4fs -J -T 1230768000 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || abort "Error build process make_ext4fs" "$saved"
     echo
     fi
     resize2fs -M "$saved" 2>&1
