@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.2.6 (3-1-2026)**
+
++ Minor code logic fixes
+
 **Version: 1.2.5 (30-12-2025)**
 
 + Last updated in 2025
