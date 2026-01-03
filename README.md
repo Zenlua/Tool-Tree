@@ -27,6 +27,7 @@
 ### APK build Termux
 
 ```shell
+pkg install git -y
 git clone https://github.com/Zenlua/Tool-Tree.git
 cd Tool-Tree
 chmod 777 ./.github/build_termux.sh
