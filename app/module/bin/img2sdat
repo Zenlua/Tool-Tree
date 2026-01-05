@@ -5,4 +5,4 @@ if [ "$1" == "-h" ] || [ -z "$1" ]; then
     exit 1
 fi
 
-python $(which img2sdat.py) "$@"
+img2sdat.py "$@"
