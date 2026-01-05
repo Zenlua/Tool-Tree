@@ -23,7 +23,7 @@ import fnmatch
 import getopt
 import getpass
 import gzip
-import imp
+import importlib.util
 import time
 import json
 import logging
@@ -2788,22 +2788,34 @@ class DeviceSpecificParams(object):
     self.extras = OPTIONS.extras
 
     if self.module is None:
-      path = OPTIONS.device_specific
-      if not path:
-        return
-      try:
-        if os.path.isdir(path):
-          info = imp.find_module("releasetools", [path])
-        else:
-          d, f = os.path.split(path)
-          b, x = os.path.splitext(f)
-          if x == ".py":
-            f = b
-          info = imp.find_module(f, [d])
-        logger.info("loaded device-specific extensions from %s", path)
-        self.module = imp.load_module("device_specific", *info)
-      except ImportError:
-        logger.info("unable to load device-specific module; assuming none")
+        path = OPTIONS.device_specific
+        if not path:
+            return
+        try:
+            if os.path.isdir(path):
+                # Tìm module releasetools trong thư mục
+                spec = importlib.util.find_spec("releasetools", [path])
+                if spec is None:
+                    raise ImportError("Cannot find releasetools in {}".format(path))
+            else:
+                d, f = os.path.split(path)
+                b, x = os.path.splitext(f)
+                if x == ".py":
+                    f = b
+                spec = importlib.util.find_spec(f, [d])
+                if spec is None:
+                    raise ImportError("Cannot find {} in {}".format(f, d))
+    
+            logger.info("loaded device-specific extensions from %s", path)
+    
+            # Tạo module device_specific giống hành vi imp.load_module
+            module = importlib.util.module_from_spec(spec)
+            sys.modules["device_specific"] = module
+            spec.loader.exec_module(module)
+            self.module = module
+    
+        except ImportError:
+            logger.info("unable to load device-specific module; assuming none")
 
   def _DoCall(self, function_name, *args, **kwargs):
     """Call the named function in the device-specific module, passing
