@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.2.6 (3-1-2026)**
+**Version: 1.2.6 (8-1-2026)**
 
++ Fix the .dat decoding error
 + Minor code logic fixes
 
 **Version: 1.2.5 (30-12-2025)**
