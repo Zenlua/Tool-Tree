@@ -427,7 +427,7 @@ class DialogHelper {
                             if (isFloating) {
                                 val d = bg.toDrawable()
                                 setBackgroundDrawable(d)
-                                setDimAmount(0.95f)
+                                setDimAmount(0.9f)
                                 return
                             } else {
                                 if (wallpaperMode || isNightMode(context)) {

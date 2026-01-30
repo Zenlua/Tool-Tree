@@ -36,7 +36,7 @@ class ParamsSingleSelect(
     }
 
     fun render(): View {
-        if (options.size > 5) {
+        if (options.size > 6) {
             val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_single_select, null)
             val textView = layout.findViewById<TextView>(R.id.kr_param_single_select)
             val valueView = layout.findViewById<TextView>(R.id.kr_param_value).apply {
