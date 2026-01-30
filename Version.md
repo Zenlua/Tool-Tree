@@ -3,6 +3,7 @@
 **Version: 1.2.7 (30-1-2026)**
 
 + Transfer build configuration items into the project.
++ Add a cancel button while the script is running.
 + Repair the entire APK
 
 **Version: 1.2.6 (8-1-2026)**

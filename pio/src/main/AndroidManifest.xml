@@ -25,6 +25,7 @@
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/AppTheme"
+        android:localeConfig="@xml/locale_config"
         tools:ignore="GoogleAppIndexingWarning" >
         <meta-data
             android:name="android.max_aspect"

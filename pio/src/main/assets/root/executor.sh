@@ -67,7 +67,9 @@ export xu=xu
 fi
 
 if [ "$CPU_ABI" != 'arm64-v8a' ];then
-echo "Only arm64-v8a devices supported"
+text_error="Only arm64-v8a devices supported" 
+showtoast "$text_error"
+echo "$text_error" >&2
 sleep 10
 exit 1
 else
