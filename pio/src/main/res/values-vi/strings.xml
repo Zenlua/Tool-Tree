@@ -1,0 +1,56 @@
+<resources>
+    <string name="float_monitor_tips">Nhấn đúp vào cửa sổ nổi để đóng, hoặc nhấn giữ và kéo để điều chỉnh vị trí</string>
+    <string name="permission_float">Vui lòng cấp quyền hiển thị cửa sổ nổi!</string>
+
+    <string name="please_wait">Vui lòng chờ</string>
+    <string name="title_activity_action_page">Trang chức năng</string>
+    <string name="about_title">Giới thiệu</string>
+    <string name="appliction_desc">Rất nhiều tiện ích trên điện thoại</string>
+    <string name="appliction_author">Công cụ tuyệt vời</string>
+    <string name="engine_version_name">Đang phát triển ứng dụng</string>
+
+    <string name="tab_home">Trang chủ</string>
+    <string name="tab_favorites">Yêu thích</string>
+    <string name="tab_pages">Tiện ích</string>
+
+    <string name="monitor_laod">Tải: %d%%</string>
+    <string name="monitor_core_count">%d nhân</string>
+    <string name="monitor_cache_cleared">Bộ nhớ đệm RAM đã được giải phóng</string>
+    <string name="monitor_ram_cleared">Các phân mảnh RAM đã được dọn dẹp</string>
+
+    <string name="copy_success">Sao chép thành công</string>
+    <string name="pop_before_start">Đang khởi động ứng dụng…</string>
+    <string name="pop_started">Khởi động ứng dụng</string>
+    <string name="transparent_ui">Ui trong suốt</string>
+    <string name="title_activity_file_selector">Vui lòng chọn tệp</string>
+    <string name="title_activity_folder_selector">Vui lòng chọn thư mục</string>
+
+    <string name="text_power_shutdown">Tắt nguồn</string>
+    <string name="text_power_reboot">Khởi động lại</string>
+    <string name="text_power_dowload">Dowload</string>
+    <string name="text_power_recovery">Recovery</string>
+    <string name="text_power_fastboot">Fastboot</string>
+    <string name="text_power_edl">9008 (EDL)</string>
+    <string name="menu_power">Chọn hành động nguồn</string>
+    <string name="storage_available">khả dụng</string>
+
+    <string name="permission_dialog_message">"Yêu cầu các quyền sau:
+
+• Thông báo
+• Truy cập toàn bộ tệp tin
+• Danh sách ứng dụng
+• Root (nếu được cho phép)
+• Tạo phím tắt
+• Truy cập mạng dữ liệu
+
+Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
+    <string name="permission_dialog_title">Điều khoản sử dụng ứng dụng</string>
+
+    <string name="notification_ui">"Thông báo "</string>
+    <string name="wakelock_service_running">Dịch vụ WakeLock đang chạy</string>
+    <string name="service_active_with_wakelock">Đang hoạt động trong nền</string>
+    <string name="stop">Dừng</string>
+    <string name="turn_off_wakelock">Tắt WakeLock</string>
+    <string name="turn_on_wakelock">Bật WakeLock</string>
+
+</resources>

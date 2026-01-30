@@ -1,0 +1,14 @@
+<resources>
+    <string name="execute_success">Execution successful</string>
+    <string name="execute_fail">Execution failed</string>
+    <string name="execute_wait">Executing, please wait...</string>
+    <string name="app_chooser_search_hint">Enter application name/package name to search</string>
+    <string name="item_chooser_search_hint">Search options</string>
+    <string name="select_all">"Select All "</string>
+    <string name="help_title">Instructions</string>
+    <string name="confirm_message">Reminder message</string>
+    <string name="confirm_title">Reminder title</string>
+    <string name="btn_execute"/>
+    <string name="btn_cancel"/>
+    <string name="btn_confirm"/>
+</resources>

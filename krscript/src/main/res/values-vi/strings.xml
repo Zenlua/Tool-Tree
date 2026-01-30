@@ -1,0 +1,65 @@
+<resources>
+    <string name="shell_executor">Trình thực thi script</string>
+    <string name="btn_skip">Bỏ qua</string>
+    <string name="btn_exit">Thoát</string>
+    <string name="btn_hide">Ẩn</string>
+    <string name="btn_cancel">Hủy</string>
+    <string name="btn_confirm">Xác nhận</string>
+    <string name="btn_execute">Thực hiện</string>
+    <string name="onloading">Đang tải dữ liệu…</string>
+    <string name="kr_shell_completed">\nThực thi script hoàn tất</string>
+    <string name="kr_shell_finish_error">Thực thi đã kết thúc nhưng có lỗi xảy ra</string>
+    <string name="script_losted">Thiếu tài nguyên script\n</string>
+    <string name="btn_copy_output">Sao chép</string>
+    <string name="copy_success">Log đầu ra đã được sao chép vào bộ nhớ tạm</string>
+    <string name="copy_fail">Sao chép thất bại</string>
+    <string name="do_not_empty">Không được để trống</string>
+    <string name="kr_param_load">"Lấy trạng thái "</string>
+    <string name="kr_param_options_load">"Đang tải danh sách "</string>
+    <string name="kr_params_render">Đang dựng giao diện…</string>
+    <string name="kr_please_choose_folder">Vui lòng chọn thư mục</string>
+    <string name="kr_please_choose_file">Vui lòng chọn tệp</string>
+    <string name="kr_please_choose_app">Vui lòng chọn ứng dụng</string>
+    <string name="kr_please_input_color">Vui lòng nhập màu</string>
+    <string name="kr_please_select">Vui lòng chọn</string>
+    <string name="kr_write_external_storage">Cần quyền đọc/ghi bộ nhớ ngoài!</string>
+    <string name="kr_download_create_fail">Không thể tạo tác vụ tải xuống</string>
+    <string name="kr_download_create_success">Đã bắt đầu tải tệp</string>
+    <string name="kr_download_confirm">Tải tệp này?</string>
+    <string name="kr_download_completed">Tải tệp thành công</string>
+    <string name="kr_download_downloading">Đang tải tệp</string>
+    <string name="kr_color_picker">Chọn màu</string>
+    <string name="kr_invalid_color">Giá trị màu không hợp lệ. Chỉ hỗ trợ định dạng như #ff88aa00</string>
+
+    <string name="kr_shortcut_create_fail">Tạo phím tắt thất bại</string>
+    <string name="kr_shortcut_create_success">Yêu cầu tạo phím tắt đã được gửi</string>
+    <string name="kr_shortcut_create">Thêm phím tắt</string>
+    <string formatted="false" name="kr_shortcut_create_desc">Bạn có muốn thêm “%s” vào màn hình chính để truy cập nhanh không?</string>
+    <string name="kr_ushortcut_nsupported">Tính năng này không hỗ trợ thêm phím tắt</string>
+    <string name="kr_script_task_notification">Thông báo tác vụ nền</string>
+    <string name="kr_bg_task_start">Tác vụ nền đã bắt đầu</string>
+    <string name="kr_script_task_running">Đã bắt đầu thực thi</string>
+    <string name="kr_script_task_has_error">Đã xảy ra lỗi</string>
+    <string name="kr_script_task_finished">Tác vụ đã hoàn tất</string>
+    <string name="kr_bg_task_start_desc">Bạn có thể xem tiến trình và log tác vụ thông qua trung tâm thông báo hệ thống</string>
+    <string name="kr_slice_script_result">Kết quả script</string>
+    <string name="kr_slice_activity_fail">Không thể mở activity~</string>
+
+    <string name="kr_page_before_load">Đang chuẩn bị phân tích cấu hình</string>
+    <string name="kr_page_loading">Đang phân tích cấu hình</string>
+    <string name="kr_page_after_load">Phân tích cấu hình hoàn tất</string>
+    <string name="kr_page_sh_invalid">Đầu ra cấu hình trang không hợp lệ</string>
+    <string name="kr_page_sh_file_permission">Tệp cấu hình được chỉ định không tồn tại hoặc không có quyền đọc</string>
+    <string name="kr_page_load_fail">Tải trang thất bại</string>
+    <string name="kr_page_load_success">Tải trang thành công</string>
+    <string name="kr_auto_run_item_losted">Mục được chỉ định không tồn tại</string>
+    <string name="kr_hidden_task_running">Quá nhanh! Thao tác trước đó vẫn chưa hoàn tất</string>
+    <string name="kr_lock_message">Tính năng này đã bị khóa</string>
+    <string name="kr_sdk_too_low">Phiên bản hệ thống quá thấp</string>
+    <string name="kr_sdk_overtop">Phiên bản hệ thống quá cao</string>
+    <string formatted="false" name="kr_sdk_message">Tính năng này chỉ chạy trên hệ thống có SDK từ %d đến %d</string>
+    <string name="kr_sdk_discrepancy">Phiên bản hệ thống không phù hợp</string>
+    <string formatted="false" name="kr_sdk_discrepancy_message">Tính năng này chỉ chạy trên hệ thống có SDK %d</string>
+    <string name="picker_not_item">Không có tùy chọn khả dụng</string>
+    <string name="picker_select_none">Chưa chọn mục nào</string>
+</resources>

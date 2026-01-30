@@ -1,0 +1,12 @@
+# Kakathic
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+    echo "Use: gprop ro.vip /path/file or echo 'ro.vip=1' | gprop ro.vip" >&2
+    exit 1
+fi
+
+if [ -f "$2" ];then
+    grep "^$1=" $2 | cut -d= -f2
+else
+    [ "$1" ] && grep "^$1=" /dev/stdin | cut -d= -f2
+fi

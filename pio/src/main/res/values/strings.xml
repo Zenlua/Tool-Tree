@@ -1,0 +1,71 @@
+<resources>
+
+    <string name="kr_script_config">kr-script.conf</string>
+    <bool name="force_root">false</bool>
+    <string name="app_name">Tool-Tree</string>
+
+    <string name="float_monitor_tips">Double-tap the floating window to close it, or press and drag to adjust its position</string>
+    <string name="permission_float">Please grant permission to display floating windows!</string>
+    <string name="please_wait">Please wait</string>
+    <string name="title_activity_action_page">Function Pages</string>
+
+    <string name="author_name">Kakathic</string>
+    <string name="about_title">About</string>
+    <string name="appliction_desc">Lots of utilities on the phone</string>
+    <string name="appliction_name">[•-•]</string>
+    <string name="appliction_author">Great tools</string>
+    <string name="engine_version_name">Developing this project</string>
+
+    <string name="tab_home">Home</string>
+    <string name="tab_favorites">Favorites</string>
+    <string name="tab_pages">Utilities</string>
+
+    <string name="monitor_laod">Load: %d%%</string>
+    <string name="monitor_core_count">%d Cores</string>
+    <string name="monitor_cache_cleared">Cached RAM has been reclaimed</string>
+    <string name="monitor_ram_cleared">RAM fragments have been defragmented</string>
+
+    <string name="copy_success">Copy successful</string>
+    <string name="pio_starting">~•-•~</string>
+    <string name="pop_before_start">Preparing to start the application…</string>
+    <string name="pop_started">Start application</string>
+    <string name="transparent_ui">Transparent UI</string>
+    <string name="title_activity_file_selector">Please select a file</string>
+    <string name="title_activity_folder_selector">Please select a directory</string>
+
+    <string name="text_power_shutdown">Shutdown</string>
+    <string name="text_power_reboot">Restart</string>
+    <string name="text_power_dowload">Download</string>
+    <string name="text_power_recovery">Recovery</string>
+    <string name="text_power_fastboot">Fastboot</string>
+    <string name="text_power_edl">9008 (EDL)</string>
+    <string name="menu_power">Select action power</string>
+    <string name="storage_available">available</string>
+    
+    <string name="power_emergency_cmd">sync; svc power reboot edl || reboot edl</string>
+    <string name="power_fastboot_cmd">sync; svc power reboot bootloader || reboot bootloader</string>
+    <string name="power_download_cmd">sync; svc power reboot download || reboot download;</string>
+    <string name="power_reboot_cmd">sync; svc power reboot || reboot;</string>
+    <string name="power_recovery_cmd">sync; svc power reboot recovery || reboot recovery</string>
+    <string name="power_shutdown_cmd">sync; svc power shutdown || reboot -p;</string>
+
+    <string name="permission_dialog_message">"Request the following permissions:
+
+• Notification
+• Access all files
+• List of applications
+• Root (if permitted)
+• Create shortcut
+• Data network access
+
+If you agree, click the confirmation button to continue."</string>
+    <string name="permission_dialog_title">Application Terms of Use</string>
+
+    <string name="notification_ui">"Notification "</string>
+    <string name="wakelock_service_running">WakeLock Service Running</string>
+    <string name="service_active_with_wakelock">Running in the background</string>
+    <string name="stop">Stop</string>
+    <string name="turn_off_wakelock">Turn off WakeLock</string>
+    <string name="turn_on_wakelock">Turn on WakeLock</string>
+
+</resources>

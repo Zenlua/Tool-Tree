@@ -1,9 +1,0 @@
-# kakathic
-
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-echo -e "use: slog key 1 \n use 'glog key' => 1"
-exit
-fi
-
-[ "$1" ] && echo "$2" > "$LOG/$1"
-[ "$2" ] || echo -n > "$LOG/$1"

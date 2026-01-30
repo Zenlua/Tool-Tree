@@ -1,0 +1,57 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 36
+    namespace "com.tool.tree"
+    viewBinding {
+        enabled = true
+    }
+    kotlin {
+        jvmToolchain(17)
+    }
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError false
+        checkReleaseBuilds false
+    }
+    defaultConfig {
+        resourceConfigurations += ['zh', 'vi']
+        minSdkVersion 23
+        targetSdkVersion 28
+        versionCode Integer.parseInt(new java.text.SimpleDateFormat("yyMMddHH").format(new Date()))
+        versionName "1.2.7"
+    }
+    signingConfigs {
+        release {
+            storeFile file("Kakathic.jks")
+            storePassword System.getenv("KEY_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
+            enableV3Signing true
+        }
+    }
+    buildTypes {
+        release {
+            shrinkResources true
+            minifyEnabled = true
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation project(':common')
+    implementation project(':krscript')
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.android.material:material:1.13.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+    implementation "androidx.activity:activity-ktx:1.9.3"
+}
+repositories {
+    mavenCentral()
+}

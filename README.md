@@ -24,22 +24,6 @@
 
 - **[See details](https://zenlua.github.io/Tool-Tree/website/Instruct.html)**
 
-### APK build Termux
-
-```shell
-pkg install git -y
-git clone https://github.com/Zenlua/Tool-Tree.git
-cd Tool-Tree
-chmod 777 ./.github/build_termux.sh
-./.github/build_termux.sh
-```
-
-```shell
-# Copy APK to SD card
-termux-setup-storage
-cp -rf Tool-Tree.apk /sdcard/Tool-Tree.apk
-```
-
 ### Buy me a coffee
 
 - **[Infor](https://zenlua.github.io/Tool-Tree/website/Information.html)**

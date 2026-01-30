@@ -1,0 +1,65 @@
+<resources>
+    <string name="shell_executor">Script Executor</string>
+    <string name="btn_skip">Skip</string>
+    <string name="btn_exit">Exit</string>
+    <string name="btn_hide">Hide</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_confirm">Confirm</string>
+    <string name="btn_execute">Execute</string>
+    <string name="onloading">Loading data…</string>
+    <string name="kr_shell_completed">\nScript execution completed</string>
+    <string name="kr_shell_finish_error">Execution finished, but errors occurred</string>
+    <string name="script_losted">Script resources are missing\n</string>
+    <string name="btn_copy_output">Copy</string>
+    <string name="copy_success">Output log has been copied to the clipboard</string>
+    <string name="copy_fail">Copy failed</string>
+    <string name="do_not_empty">Cannot be empty</string>
+    <string name="kr_param_load">Get status\u0020</string>
+    <string name="kr_param_options_load">Loading candidate list\u0020</string>
+    <string name="kr_params_render">Rendering UI…</string>
+    <string name="kr_please_choose_folder">Please select a folder</string>
+    <string name="kr_please_choose_file">Please select a file</string>
+    <string name="kr_please_choose_app">Please select an app</string>
+    <string name="kr_please_input_color">Please enter a color</string>
+    <string name="kr_please_select">Please select</string>
+    <string name="kr_write_external_storage">Read/write external storage permission is required!</string>
+    <string name="kr_download_create_fail">Failed to create download task</string>
+    <string name="kr_download_create_success">File download started</string>
+    <string name="kr_download_confirm">Download the file?</string>
+    <string name="kr_download_completed">File downloaded successfully</string>
+    <string name="kr_download_downloading">Downloading file</string>
+    <string name="kr_color_picker">Select a color</string>
+    <string name="kr_invalid_color">Invalid color value. Only formats like #ff88aa00 are supported</string>
+
+    <string name="kr_shortcut_create_fail">Failed to create shortcut</string>
+    <string name="kr_shortcut_create_success">Shortcut creation request has been sent</string>
+    <string name="kr_shortcut_create">Add shortcut</string>
+    <string formatted="false" name="kr_shortcut_create_desc">Do you want to add “%s” to the home screen for quick access?</string>
+    <string name="kr_ushortcut_nsupported">This feature does not support adding shortcuts</string>
+    <string name="kr_script_task_notification">Background task notification</string>
+    <string name="kr_bg_task_start">Background task started</string>
+    <string name="kr_script_task_running">Execution started</string>
+    <string name="kr_script_task_has_error">An error occurred</string>
+    <string name="kr_script_task_finished">Task finished</string>
+    <string name="kr_bg_task_start_desc">You can view the task progress and logs through the system notification center</string>
+    <string name="kr_slice_script_result">Script output</string>
+    <string name="kr_slice_activity_fail">Unable to open activity~</string>
+
+    <string name="kr_page_before_load">Preparing to parse configuration</string>
+    <string name="kr_page_loading">Parsing configuration</string>
+    <string name="kr_page_after_load">Configuration parsing completed</string>
+    <string name="kr_page_sh_invalid">Invalid page configuration output</string>
+    <string name="kr_page_sh_file_permission">The specified configuration file does not exist or lacks read permission</string>
+    <string name="kr_page_load_fail">Failed to load page</string>
+    <string name="kr_page_load_success">Page loaded successfully</string>
+    <string name="kr_auto_run_item_losted">Specified item is missing</string>
+    <string name="kr_hidden_task_running">Too fast! The previous operation has not finished yet</string>
+    <string name="kr_lock_message">This feature is locked</string>
+    <string name="kr_sdk_too_low">System version is too low</string>
+    <string name="kr_sdk_overtop">System version is too high</string>
+    <string formatted="false" name="kr_sdk_message">This feature only runs on systems with SDK %d to %d</string>
+    <string name="kr_sdk_discrepancy">System version mismatch</string>
+    <string formatted="false" name="kr_sdk_discrepancy_message">This feature only runs on systems with SDK %d</string>
+    <string name="picker_not_item">No available options</string>
+    <string name="picker_select_none">No item selected</string>
+</resources>

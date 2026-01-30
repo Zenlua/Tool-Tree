@@ -1,0 +1,83 @@
+name: Android CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      UPAPK:
+        description: 'Release APK'
+        type: boolean
+        default: false
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+permissions: write-all
+env:
+    KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+    KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+    UPAPK: ${{ inputs.UPAPK }}
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build APK
+        run: |
+          chmod +x ./gradlew ./.github/modun.sh
+          ./.github/modun.sh
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --daemon -x lint -x test
+          if [ "$UPAPK" == 'true' ];then
+          VER=$(grep 'versionName' pio/build.gradle | cut -d'"' -f2)
+          echo "Tool-Tree $VER"
+          echo "VER=$VER" >> $GITHUB_ENV
+          mkdir -p Up
+          cp -rf pio/build/outputs/apk/*/*.apk "Up/Tool-Tree.$VER.apk"
+          ls Up
+          echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: pio/build/outputs/apk/*/*.apk
+
+      - name: Release APK
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.UPAPK == true }}
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Tool-Tree ${{ env.VER }}"
+          tag_name: "V${{ env.VER }}"
+          files: Up/*
+          body_path: "change.txt"
+
+  build-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build APK
+        run: |
+          chmod +x ./gradlew ./.github/modun.sh
+          ./.github/modun.sh
+          ./gradlew assembleDebug --no-daemon -x lint -x test
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: pio/build/outputs/apk/*/*.apk

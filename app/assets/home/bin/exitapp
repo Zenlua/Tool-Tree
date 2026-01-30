@@ -1,8 +1,0 @@
-#!/data/data/com.tool.tree/files/home/bin/bash
-if [ "$1" == "reset" ];then
-am start -n com.tool.tree/.ExitActivity --es mode $1 &>/dev/null
-elif [ "$1" == "exit" ];then
-am start -n com.tool.tree/.ExitActivity &>/dev/null
-else
-echo "Use: exitapp [reset/exit]"
-fi
