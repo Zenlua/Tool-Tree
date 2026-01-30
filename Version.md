@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.2.7 (30-1-2026)**
+
++ Transfer build configuration items into the project.
++ Repair the entire APK
+
 **Version: 1.2.6 (8-1-2026)**
 
 + Fix the .dat decoding error

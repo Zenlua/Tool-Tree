@@ -1,0 +1,65 @@
+<resources>
+    <string name="shell_executor">Исполнитель скриптов</string>
+    <string name="btn_skip">Пропустить</string>
+    <string name="btn_exit">Выход</string>
+    <string name="btn_hide">Скрыть</string>
+    <string name="btn_cancel">Отмена</string>
+    <string name="btn_confirm">Подтвердить</string>
+    <string name="btn_execute">Выполнить</string>
+    <string name="onloading">Загрузка данных…</string>
+    <string name="kr_shell_completed">\nВыполнение скрипта завершено</string>
+    <string name="kr_shell_finish_error">Выполнение завершено, но произошла ошибка</string>
+    <string name="script_losted">Отсутствуют ресурсы скрипта\n</string>
+    <string name="btn_copy_output">Копировать</string>
+    <string name="copy_success">Выходной лог скопирован в буфер обмена</string>
+    <string name="copy_fail">Копирование не удалось</string>
+    <string name="do_not_empty">Не может быть пустым</string>
+    <string name="kr_param_load">"Получение состояния "</string>
+    <string name="kr_param_options_load">"Загрузка списка "</string>
+    <string name="kr_params_render">Построение интерфейса…</string>
+    <string name="kr_please_choose_folder">Пожалуйста, выберите папку</string>
+    <string name="kr_please_choose_file">Пожалуйста, выберите файл</string>
+    <string name="kr_please_choose_app">Пожалуйста, выберите приложение</string>
+    <string name="kr_please_input_color">Пожалуйста, введите цвет</string>
+    <string name="kr_please_select">Пожалуйста, выберите</string>
+    <string name="kr_write_external_storage">Требуется разрешение на чтение/запись внешнего хранилища!</string>
+    <string name="kr_download_create_fail">Не удалось создать задачу загрузки</string>
+    <string name="kr_download_create_success">Загрузка файла начата</string>
+    <string name="kr_download_confirm">Загрузить этот файл?</string>
+    <string name="kr_download_completed">Файл успешно загружен</string>
+    <string name="kr_download_downloading">Идет загрузка файла</string>
+    <string name="kr_color_picker">Выбор цвета</string>
+    <string name="kr_invalid_color">Недопустимое значение цвета. Поддерживается только формат вида #ff88aa00</string>
+
+    <string name="kr_shortcut_create_fail">Не удалось создать ярлык</string>
+    <string name="kr_shortcut_create_success">Запрос на создание ярлыка отправлен</string>
+    <string name="kr_shortcut_create">Добавить ярлык</string>
+    <string formatted="false" name="kr_shortcut_create_desc">Добавить «%s» на главный экран для быстрого доступа?</string>
+    <string name="kr_ushortcut_nsupported">Эта функция не поддерживает добавление ярлыков</string>
+    <string name="kr_script_task_notification">Уведомление фоновой задачи</string>
+    <string name="kr_bg_task_start">Фоновая задача запущена</string>
+    <string name="kr_script_task_running">Выполнение начато</string>
+    <string name="kr_script_task_has_error">Произошла ошибка</string>
+    <string name="kr_script_task_finished">Задача завершена</string>
+    <string name="kr_bg_task_start_desc">Вы можете просматривать прогресс и логи задачи через центр системных уведомлений</string>
+    <string name="kr_slice_script_result">Результат скрипта</string>
+    <string name="kr_slice_activity_fail">Не удалось открыть Activity~</string>
+
+    <string name="kr_page_before_load">Подготовка к анализу конфигурации</string>
+    <string name="kr_page_loading">Анализ конфигурации</string>
+    <string name="kr_page_after_load">Анализ конфигурации завершён</string>
+    <string name="kr_page_sh_invalid">Недопустимый вывод конфигурации страницы</string>
+    <string name="kr_page_sh_file_permission">Указанный файл конфигурации не существует или отсутствуют права на чтение</string>
+    <string name="kr_page_load_fail">Загрузка страницы не удалась</string>
+    <string name="kr_page_load_success">Страница успешно загружена</string>
+    <string name="kr_auto_run_item_losted">Указанный элемент не существует</string>
+    <string name="kr_hidden_task_running">Слишком быстро! Предыдущее действие ещё не завершено</string>
+    <string name="kr_lock_message">Эта функция заблокирована</string>
+    <string name="kr_sdk_too_low">Версия системы слишком низкая</string>
+    <string name="kr_sdk_overtop">Версия системы слишком высокая</string>
+    <string formatted="false" name="kr_sdk_message">Эта функция работает только на системах с SDK от %d до %d</string>
+    <string name="kr_sdk_discrepancy">Несоответствие версии системы</string>
+    <string formatted="false" name="kr_sdk_discrepancy_message">Эта функция работает только на системах с SDK %d</string>
+    <string name="picker_not_item">Нет доступных вариантов</string>
+    <string name="picker_select_none">Ничего не выбрано</string>
+</resources>

@@ -133,7 +133,7 @@ public class MTDataFilesProvider extends DocumentsProvider {
             } catch (Exception ignored) {}
         }
 
-        String summary = formatSizeSmart(total) + " / " + formatSizeSmart(free) + " " + getContext().getString(R.string.storage_available);
+        String summary = formatSizeSmart(total) + "/" + formatSizeSmart(free) + " " + getContext().getString(R.string.storage_available);
         row.add(Root.COLUMN_SUMMARY, summary);
         row.add(Root.COLUMN_FLAGS, Root.FLAG_SUPPORTS_CREATE | Root.FLAG_SUPPORTS_IS_CHILD);
         row.add(Root.COLUMN_TITLE, label);
@@ -396,9 +396,9 @@ public class MTDataFilesProvider extends DocumentsProvider {
     }
 
     private static String formatSizeSmart(long size) {
-        if (size >= 1024 * 1024 * 1024) return (size / (1024 * 1024 * 1024)) + " GB";
-        if (size >= 1024 * 1024) return (size / (1024 * 1024)) + " MB";
-        if (size >= 1024) return (size / 1024) + " KB";
-        return size + " B";
+        if (size >= 1024 * 1024 * 1024) return (size / (1024 * 1024 * 1024)) + "GB";
+        if (size >= 1024 * 1024) return (size / (1024 * 1024)) + "MB";
+        if (size >= 1024) return (size / 1024) + "KB";
+        return size + "B";
     }
 }

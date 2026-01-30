@@ -1,0 +1,11 @@
+<resources>
+    <string name="execute_success">Выполнение успешно</string>
+    <string name="execute_fail">Ошибка выполнения</string>
+    <string name="execute_wait">Выполняется, пожалуйста, подождите...</string>
+    <string name="app_chooser_search_hint">Введите имя приложения или имя пакета для поиска</string>
+    <string name="item_chooser_search_hint">Поиск параметров</string>
+    <string name="select_all">"Выбрать все "</string>
+    <string name="help_title">Инструкция</string>
+    <string name="confirm_message">Текст уведомления</string>
+    <string name="confirm_title">Заголовок уведомления</string>
+</resources>

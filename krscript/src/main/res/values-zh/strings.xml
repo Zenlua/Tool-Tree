@@ -1,0 +1,65 @@
+<resources>
+    <string name="shell_executor">脚本执行器</string>
+    <string name="btn_skip">跳过</string>
+    <string name="btn_exit">退出</string>
+    <string name="btn_hide">隐藏</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_confirm">确认</string>
+    <string name="btn_execute">执行</string>
+    <string name="onloading">正在加载数据…</string>
+    <string name="kr_shell_completed">\n脚本执行完成</string>
+    <string name="kr_shell_finish_error">执行已结束，但发生错误</string>
+    <string name="script_losted">缺少脚本资源\n</string>
+    <string name="btn_copy_output">复制</string>
+    <string name="copy_success">输出日志已复制到剪贴板</string>
+    <string name="copy_fail">复制失败</string>
+    <string name="do_not_empty">不能为空</string>
+    <string name="kr_param_load">"获取状态 "</string>
+    <string name="kr_param_options_load">"正在加载列表 "</string>
+    <string name="kr_params_render">正在构建界面…</string>
+    <string name="kr_please_choose_folder">请选择文件夹</string>
+    <string name="kr_please_choose_file">请选择文件</string>
+    <string name="kr_please_choose_app">请选择应用</string>
+    <string name="kr_please_input_color">请输入颜色</string>
+    <string name="kr_please_select">请选择</string>
+    <string name="kr_write_external_storage">需要读取/写入外部存储的权限！</string>
+    <string name="kr_download_create_fail">无法创建下载任务</string>
+    <string name="kr_download_create_success">已开始下载文件</string>
+    <string name="kr_download_confirm">下载此文件？</string>
+    <string name="kr_download_completed">文件下载成功</string>
+    <string name="kr_download_downloading">正在下载文件</string>
+    <string name="kr_color_picker">选择颜色</string>
+    <string name="kr_invalid_color">颜色值无效。仅支持如 #ff88aa00 的格式</string>
+
+    <string name="kr_shortcut_create_fail">创建快捷方式失败</string>
+    <string name="kr_shortcut_create_success">已发送创建快捷方式请求</string>
+    <string name="kr_shortcut_create">添加快捷方式</string>
+    <string formatted="false" name="kr_shortcut_create_desc">是否将“%s”添加到主屏幕以便快速访问？</string>
+    <string name="kr_ushortcut_nsupported">此功能不支持添加快捷方式</string>
+    <string name="kr_script_task_notification">后台任务通知</string>
+    <string name="kr_bg_task_start">后台任务已开始</string>
+    <string name="kr_script_task_running">已开始执行</string>
+    <string name="kr_script_task_has_error">发生错误</string>
+    <string name="kr_script_task_finished">任务已完成</string>
+    <string name="kr_bg_task_start_desc">你可以通过系统通知中心查看任务进度和日志</string>
+    <string name="kr_slice_script_result">脚本结果</string>
+    <string name="kr_slice_activity_fail">无法打开 Activity~</string>
+
+    <string name="kr_page_before_load">正在准备解析配置</string>
+    <string name="kr_page_loading">正在解析配置</string>
+    <string name="kr_page_after_load">配置解析完成</string>
+    <string name="kr_page_sh_invalid">页面配置输出无效</string>
+    <string name="kr_page_sh_file_permission">指定的配置文件不存在或没有读取权限</string>
+    <string name="kr_page_load_fail">页面加载失败</string>
+    <string name="kr_page_load_success">页面加载成功</string>
+    <string name="kr_auto_run_item_losted">指定的项目不存在</string>
+    <string name="kr_hidden_task_running">太快了！之前的操作尚未完成</string>
+    <string name="kr_lock_message">此功能已被锁定</string>
+    <string name="kr_sdk_too_low">系统版本过低</string>
+    <string name="kr_sdk_overtop">系统版本过高</string>
+    <string formatted="false" name="kr_sdk_message">此功能仅可在 SDK %d 到 %d 的系统上运行</string>
+    <string name="kr_sdk_discrepancy">系统版本不匹配</string>
+    <string formatted="false" name="kr_sdk_discrepancy_message">此功能仅可在 SDK %d 的系统上运行</string>
+    <string name="picker_not_item">没有可用选项</string>
+    <string name="picker_select_none">未选择任何项目</string>
+</resources>

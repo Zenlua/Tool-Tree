@@ -1,0 +1,65 @@
+<resources>
+    <string name="shell_executor">Szkript végrehajtó</string>
+    <string name="btn_skip">Kihagyás</string>
+    <string name="btn_exit">Kilépés</string>
+    <string name="btn_hide">Elrejtés</string>
+    <string name="btn_cancel">Mégse</string>
+    <string name="btn_confirm">Megerősítés</string>
+    <string name="btn_execute">Végrehajtás</string>
+    <string name="onloading">Adatok betöltése…</string>
+    <string name="kr_shell_completed">\nA szkript végrehajtása befejeződött</string>
+    <string name="kr_shell_finish_error">A végrehajtás befejeződött, de hiba történt</string>
+    <string name="script_losted">Hiányzó szkript erőforrás\n</string>
+    <string name="btn_copy_output">Másolás</string>
+    <string name="copy_success">A kimeneti napló a vágólapra másolva</string>
+    <string name="copy_fail">Sikertelen másolás</string>
+    <string name="do_not_empty">Nem lehet üres</string>
+    <string name="kr_param_load">"Állapot lekérése "</string>
+    <string name="kr_param_options_load">"Lista betöltése "</string>
+    <string name="kr_params_render">Felület felépítése…</string>
+    <string name="kr_please_choose_folder">Kérjük, válasszon mappát</string>
+    <string name="kr_please_choose_file">Kérjük, válasszon fájlt</string>
+    <string name="kr_please_choose_app">Kérjük, válasszon alkalmazást</string>
+    <string name="kr_please_input_color">Kérjük, adja meg a színt</string>
+    <string name="kr_please_select">Kérjük, válasszon</string>
+    <string name="kr_write_external_storage">Külső tárhely olvasási/írási engedély szükséges!</string>
+    <string name="kr_download_create_fail">Nem sikerült létrehozni a letöltési feladatot</string>
+    <string name="kr_download_create_success">A fájl letöltése elindult</string>
+    <string name="kr_download_confirm">Letölti ezt a fájlt?</string>
+    <string name="kr_download_completed">A fájl letöltése sikeres</string>
+    <string name="kr_download_downloading">A fájl letöltése folyamatban</string>
+    <string name="kr_color_picker">Szín kiválasztása</string>
+    <string name="kr_invalid_color">Érvénytelen színérték. Csak az olyan formátum támogatott, mint a #ff88aa00</string>
+
+    <string name="kr_shortcut_create_fail">Parancsikon létrehozása sikertelen</string>
+    <string name="kr_shortcut_create_success">A parancsikon létrehozási kérelem elküldve</string>
+    <string name="kr_shortcut_create">Parancsikon hozzáadása</string>
+    <string formatted="false" name="kr_shortcut_create_desc">Szeretné hozzáadni a(z) „%s” elemet a kezdőképernyőhöz a gyors eléréshez?</string>
+    <string name="kr_ushortcut_nsupported">Ez a funkció nem támogatja a parancsikonok hozzáadását</string>
+    <string name="kr_script_task_notification">Háttérfeladat értesítés</string>
+    <string name="kr_bg_task_start">A háttérfeladat elindult</string>
+    <string name="kr_script_task_running">A végrehajtás elkezdődött</string>
+    <string name="kr_script_task_has_error">Hiba történt</string>
+    <string name="kr_script_task_finished">A feladat befejeződött</string>
+    <string name="kr_bg_task_start_desc">A feladat előrehaladását és naplóit a rendszer értesítési központján keresztül tekintheti meg</string>
+    <string name="kr_slice_script_result">Szkript eredménye</string>
+    <string name="kr_slice_activity_fail">Az Activity megnyitása nem sikerült~</string>
+
+    <string name="kr_page_before_load">A konfiguráció elemzésének előkészítése</string>
+    <string name="kr_page_loading">Konfiguráció elemzése</string>
+    <string name="kr_page_after_load">A konfiguráció elemzése befejeződött</string>
+    <string name="kr_page_sh_invalid">Érvénytelen oldal konfigurációs kimenet</string>
+    <string name="kr_page_sh_file_permission">A megadott konfigurációs fájl nem létezik vagy nincs olvasási jogosultság</string>
+    <string name="kr_page_load_fail">Az oldal betöltése sikertelen</string>
+    <string name="kr_page_load_success">Az oldal betöltése sikeres</string>
+    <string name="kr_auto_run_item_losted">A megadott elem nem létezik</string>
+    <string name="kr_hidden_task_running">Túl gyors! Az előző művelet még nem fejeződött be</string>
+    <string name="kr_lock_message">Ez a funkció zárolva van</string>
+    <string name="kr_sdk_too_low">A rendszer verziója túl alacsony</string>
+    <string name="kr_sdk_overtop">A rendszer verziója túl magas</string>
+    <string formatted="false" name="kr_sdk_message">Ez a funkció csak %d és %d közötti SDK-val rendelkező rendszereken fut</string>
+    <string name="kr_sdk_discrepancy">A rendszer verziója nem megfelelő</string>
+    <string formatted="false" name="kr_sdk_discrepancy_message">Ez a funkció csak %d SDK-val rendelkező rendszereken fut</string>
+    <string name="picker_not_item">Nincsenek elérhető lehetőségek</string>
+    <string name="picker_select_none">Nincs kiválasztott elem</string>
+</resources>

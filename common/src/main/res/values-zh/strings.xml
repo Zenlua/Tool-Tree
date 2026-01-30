@@ -1,0 +1,11 @@
+<resources>
+    <string name="execute_success">执行成功</string>
+    <string name="execute_fail">执行失败</string>
+    <string name="execute_wait">正在执行，请稍候...</string>
+    <string name="app_chooser_search_hint">输入应用名称或包名进行搜索</string>
+    <string name="item_chooser_search_hint">搜索选项</string>
+    <string name="select_all">"全选 "</string>
+    <string name="help_title">使用说明</string>
+    <string name="confirm_message">提示内容</string>
+    <string name="confirm_title">提示标题</string>
+</resources>

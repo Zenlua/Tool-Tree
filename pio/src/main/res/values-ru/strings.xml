@@ -1,0 +1,55 @@
+<resources>
+    <string name="float_monitor_tips">Дважды нажмите на плавающее окно, чтобы закрыть его, или нажмите и удерживайте, затем перетащите для изменения положения</string>
+    <string name="permission_float">Пожалуйста, предоставьте разрешение на отображение плавающего окна!</string>
+
+    <string name="please_wait">Пожалуйста, подождите</string>
+    <string name="title_activity_action_page">Страница функций</string>
+    <string name="about_title">О приложении</string>
+    <string name="appliction_desc">Множество полезных инструментов на телефоне</string>
+    <string name="appliction_author">Отличный инструмент</string>
+    <string name="engine_version_name">Приложение в разработке</string>
+
+    <string name="tab_home">Главная</string>
+    <string name="tab_favorites">Избранное</string>
+    <string name="tab_pages">Инструменты</string>
+
+    <string name="monitor_laod">Нагрузка: %d%%</string>
+    <string name="monitor_core_count">%d ядер</string>
+    <string name="monitor_cache_cleared">Кэш RAM освобождён</string>
+    <string name="monitor_ram_cleared">Фрагментация RAM очищена</string>
+
+    <string name="copy_success">Копирование выполнено успешно</string>
+    <string name="pop_before_start">Запуск приложения…</string>
+    <string name="pop_started">Приложение запущено</string>
+    <string name="transparent_ui">Прозрачный UI</string>
+    <string name="title_activity_file_selector">Пожалуйста, выберите файл</string>
+    <string name="title_activity_folder_selector">Пожалуйста, выберите папку</string>
+
+    <string name="text_power_shutdown">Выключение</string>
+    <string name="text_power_reboot">Перезагрузка</string>
+    <string name="text_power_dowload">Загрузка</string>
+    <string name="text_power_recovery">Recovery</string>
+    <string name="text_power_fastboot">Fastboot</string>
+    <string name="text_power_edl">9008 (EDL)</string>
+    <string name="menu_power">Выбор действия питания</string>
+    <string name="storage_available">доступно</string>
+
+    <string name="permission_dialog_message">"Требуются следующие разрешения:
+
+• Уведомления
+• Доступ ко всем файлам
+• Список приложений
+• Root (если разрешено)
+• Создание ярлыков
+• Доступ к мобильной сети
+
+Если вы согласны, нажмите кнопку подтверждения для продолжения."</string>
+    <string name="permission_dialog_title">Условия использования приложения</string>
+
+    <string name="notification_ui">"Уведомление "</string>
+    <string name="wakelock_service_running">Служба WakeLock запущена</string>
+    <string name="service_active_with_wakelock">Работает в фоновом режиме</string>
+    <string name="stop">Остановить</string>
+    <string name="turn_off_wakelock">Выключить WakeLock</string>
+    <string name="turn_on_wakelock">Включить WakeLock</string>
+</resources>

@@ -1,0 +1,55 @@
+<resources>
+    <string name="float_monitor_tips">双击悬浮窗口以关闭，或长按并拖动以调整位置</string>
+    <string name="permission_float">请授予悬浮窗显示权限！</string>
+
+    <string name="please_wait">请稍候</string>
+    <string name="title_activity_action_page">功能页面</string>
+    <string name="about_title">关于</string>
+    <string name="appliction_desc">手机上的多种实用工具</string>
+    <string name="appliction_author">强大的工具</string>
+    <string name="engine_version_name">应用正在开发中</string>
+
+    <string name="tab_home">首页</string>
+    <string name="tab_favorites">收藏</string>
+    <string name="tab_pages">工具</string>
+
+    <string name="monitor_laod">负载：%d%%</string>
+    <string name="monitor_core_count">%d 核心</string>
+    <string name="monitor_cache_cleared">RAM 缓存已释放</string>
+    <string name="monitor_ram_cleared">RAM 碎片已清理</string>
+
+    <string name="copy_success">复制成功</string>
+    <string name="pop_before_start">正在启动应用…</string>
+    <string name="pop_started">应用已启动</string>
+    <string name="transparent_ui">透明 UI</string>
+    <string name="title_activity_file_selector">请选择文件</string>
+    <string name="title_activity_folder_selector">请选择文件夹</string>
+
+    <string name="text_power_shutdown">关机</string>
+    <string name="text_power_reboot">重启</string>
+    <string name="text_power_dowload">下载模式</string>
+    <string name="text_power_recovery">恢复模式</string>
+    <string name="text_power_fastboot">Fastboot</string>
+    <string name="text_power_edl">9008（EDL）</string>
+    <string name="menu_power">选择电源操作</string>
+    <string name="storage_available">可用</string>
+
+    <string name="permission_dialog_message">"需要以下权限：
+
+• 通知
+• 访问所有文件
+• 应用列表
+• Root（如允许）
+• 创建快捷方式
+• 访问网络数据
+
+如果同意，请点击确认按钮继续。"</string>
+    <string name="permission_dialog_title">应用使用条款</string>
+
+    <string name="notification_ui">"通知 "</string>
+    <string name="wakelock_service_running">WakeLock 服务正在运行</string>
+    <string name="service_active_with_wakelock">正在后台运行</string>
+    <string name="stop">停止</string>
+    <string name="turn_off_wakelock">关闭 WakeLock</string>
+    <string name="turn_on_wakelock">开启 WakeLock</string>
+</resources>

@@ -1,0 +1,55 @@
+<resources>
+    <string name="float_monitor_tips">Koppintson duplán a lebegő ablakra a bezáráshoz, vagy tartsa lenyomva és húzza a pozíció módosításához</string>
+    <string name="permission_float">Kérjük, adja meg a lebegő ablak megjelenítési engedélyét!</string>
+
+    <string name="please_wait">Kérjük, várjon</string>
+    <string name="title_activity_action_page">Funkciók oldala</string>
+    <string name="about_title">Névjegy</string>
+    <string name="appliction_desc">Számos hasznos eszköz a telefonon</string>
+    <string name="appliction_author">Nagyszerű eszköz</string>
+    <string name="engine_version_name">Az alkalmazás fejlesztés alatt áll</string>
+
+    <string name="tab_home">Kezdőlap</string>
+    <string name="tab_favorites">Kedvencek</string>
+    <string name="tab_pages">Eszközök</string>
+
+    <string name="monitor_laod">Terhelés: %d%%</string>
+    <string name="monitor_core_count">%d mag</string>
+    <string name="monitor_cache_cleared">A RAM gyorsítótár felszabadítva</string>
+    <string name="monitor_ram_cleared">A RAM töredezettsége megtisztítva</string>
+
+    <string name="copy_success">Sikeres másolás</string>
+    <string name="pop_before_start">Alkalmazás indítása…</string>
+    <string name="pop_started">Alkalmazás elindítva</string>
+    <string name="transparent_ui">Átlátszó UI</string>
+    <string name="title_activity_file_selector">Kérjük, válasszon fájlt</string>
+    <string name="title_activity_folder_selector">Kérjük, válasszon mappát</string>
+
+    <string name="text_power_shutdown">Kikapcsolás</string>
+    <string name="text_power_reboot">Újraindítás</string>
+    <string name="text_power_dowload">Letöltés</string>
+    <string name="text_power_recovery">Recovery</string>
+    <string name="text_power_fastboot">Fastboot</string>
+    <string name="text_power_edl">9008 (EDL)</string>
+    <string name="menu_power">Energiagazdálkodási művelet kiválasztása</string>
+    <string name="storage_available">elérhető</string>
+
+    <string name="permission_dialog_message">"A következő engedélyek szükségesek:
+
+• Értesítések
+• Teljes fájlhozzáférés
+• Alkalmazáslista
+• Root (ha engedélyezett)
+• Parancsikonok létrehozása
+• Hálózati adat-hozzáférés
+
+Ha egyetért, a folytatáshoz nyomja meg a megerősítés gombot."</string>
+    <string name="permission_dialog_title">Az alkalmazás használati feltételei</string>
+
+    <string name="notification_ui">"Értesítés "</string>
+    <string name="wakelock_service_running">A WakeLock szolgáltatás fut</string>
+    <string name="service_active_with_wakelock">Háttérben fut</string>
+    <string name="stop">Leállítás</string>
+    <string name="turn_off_wakelock">WakeLock kikapcsolása</string>
+    <string name="turn_on_wakelock">WakeLock bekapcsolása</string>
+</resources>
