@@ -111,7 +111,7 @@ backup_text_4="Đang sao lưu:"
 # flash img
 flash_text_1="Flash IMG"
 flash_text_2="Khởi động lại khi hoàn thành"
-flash_text_3="Khởi động vào chế độ Recovery sau khi Flash"
+flash_text_3="Khởi động vào Recovery khi hoàn thành"
 flash_text_4="Chọn IMAGE để flash"
 flash_text_5="Lưu ý: Kích thước của IMAGE không được vượt quá kích thước ban đầu, nếu không sẽ bị lỗi treo máy"
 flash_text_6="Nhập tệp (***.img) muốn flash"
