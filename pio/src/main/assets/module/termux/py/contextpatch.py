@@ -15,7 +15,7 @@ fix_permission = {
     "bin/logcat": "u:object_r:logcat_exec:s0",
     "system/bin": "u:object_r:system_file:s0",
     "/system/bin/init": "u:object_r:init_exec:s0",
-    r"/lost\+found": "u:object_r:rootfs:s0"
+    "/vendor/bin/hw/android.hardware.wifi@1.0": "u:object_r:hal_wifi_default_exec:s0"
 }
 
 
@@ -37,7 +37,7 @@ def scan_context(file) -> dict:
 
 def scan_dir(folder) -> list:
     part_name = os.path.basename(folder)
-    allfiles = ['/', '/lost+found', f'/{part_name}/lost+found', f'/{part_name}', f'/{part_name}/']
+    allfiles = ['/', f'/{part_name}/lost+found', f'/{part_name}', f'/{part_name}/']
     for root, dirs, files in os.walk(folder, topdown=True):
         for dir_ in dirs:
             if os.name == 'nt':
@@ -52,7 +52,7 @@ def scan_dir(folder) -> list:
     return sorted(set(allfiles), key=allfiles.index)
 
 
-def context_patch(fs_file, filename) -> dict:  # Receive two dictionaries for comparison
+def context_patch(fs_file, filename) -> dict:
     new_fs = {}
     permission_d = fs_file.get(list(fs_file)[0])
     if not permission_d:

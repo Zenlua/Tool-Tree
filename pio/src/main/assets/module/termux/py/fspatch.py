@@ -20,22 +20,20 @@ def scanfs(file) -> dict:
                 print(f"[Warn] Current {line_num}: {filepath} there are too many schools ({len(other)}).")
     return filesystem_config
 
-def scan_dir(folder) -> list:
-    allfiles = ['/', '/lost+found']
-    if os.name == 'nt':
-        yield os.path.basename(folder).replace('\\', '')
-    elif os.name == 'posix':
-        yield os.path.basename(folder).replace('/', '')
-    else:
-        return ''
-    for root, dirs, files in os.walk(folder, topdown=True):
-        for dir_ in dirs:
-            yield os.path.join(root, dir_).replace(folder, os.path.basename(folder)).replace('\\', '/')
-        for file in files:
-            yield os.path.join(root, file).replace(folder, os.path.basename(folder)).replace('\\', '/')
-        for rv in allfiles:
-            yield rv
-
+def scan_dir(folder):
+    base = os.path.basename(os.path.normpath(folder))
+    yield base
+    yield '/'
+    yield f'{base}/lost+found'
+    for root, dirs, files in os.walk(folder):
+        rel_root = os.path.relpath(root, folder)
+        rel_root = '' if rel_root == '.' else rel_root
+        for d in dirs:
+            path = os.path.join(base, rel_root, d)
+            yield path.replace('\\', '/')
+        for f in files:
+            path = os.path.join(base, rel_root, f)
+            yield path.replace('\\', '/')
 
 def islink(file) -> str and None:
     if os.name == 'nt':
