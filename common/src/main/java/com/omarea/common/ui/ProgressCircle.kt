@@ -14,7 +14,7 @@ import androidx.core.content.withStyledAttributes
 
 class ProgressCircle : View {
     //-------------必须给的数据相关-------------
-    private val str = arrayOf("已用", "可用")
+    private val str = arrayOf("Already used", "Available")
     private var ratio = 0
     private var ratioState = 0
 

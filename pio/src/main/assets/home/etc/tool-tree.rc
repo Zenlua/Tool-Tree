@@ -341,10 +341,7 @@ $shella5"
 }
 
 Update(){
-if [ -f "$TEMP/update" ];then
-show_update=1
-show_update_text="§"
-fi
+[ -f "$TEMP/update" ] && show_update=1
 xml_print '<group>
 <page icon="'`urlpng like`'" link="https://zenlua.github.io/Tool-Tree/website/Information.html" >
 <title>Kakathic</title>
@@ -389,7 +386,7 @@ fi
 </set>
 </action>
 <text>
-<desc>'"$(cat $TEMP/version.txt 2>/dev/null)"$show_update_text'</desc>
+<desc>'"$(cat $TEMP/version.txt 2>/dev/null)"'</desc>
 </text>
 </group>'
 }

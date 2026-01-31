@@ -33,7 +33,7 @@ public class ShellExecutor {
                     if (!path.isEmpty()) {
                         defaultEnvPath = path;
                     } else {
-                        throw new RuntimeException("未能获取到$PATH参数");
+                        throw new RuntimeException("Unable to obtain $PATH parameter");
                     }
                 } catch (Exception ex) {
                     defaultEnvPath = "/sbin:/system/sbin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin";

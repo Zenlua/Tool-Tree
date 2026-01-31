@@ -64,7 +64,7 @@ class PageLayoutRender(private val mContext: Context,
             try {
                 val item = findItemByDynamicIndex(key, itemConfigList)
                 if (item == null) {
-                    Log.e("onItemClick", "找不到指定ID的项 index: $key")
+                    Log.e("onItemClick", "Item with the specified ID not found index: $key")
                     return
                 } else {
                     onItemClick(item, listItemView)
@@ -114,7 +114,7 @@ class PageLayoutRender(private val mContext: Context,
                     parent.addView(uiRender)
                 }
             } catch (ex: Exception) {
-                Toast.makeText(mContext, it.title + "界面渲染异常" + ex.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(mContext, it.title + "Interface rendering error" + ex.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
