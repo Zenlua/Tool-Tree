@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.omarea.common.R
-
+import androidx.fragment.app.DialogFragment
 
 /*
 继承使用示例：
