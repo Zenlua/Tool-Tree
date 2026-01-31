@@ -1105,8 +1105,8 @@ checktime
 <group>
 <action icon="'`urlpng restore_sign`'">
 <title>'$restore_apk_text_3'</title>
-<param name="FILE" title="'$restore_apk_text_1'" value-sh="glog apk_restore_sign" option-sh="findfile 10 $PTAD" required="true" />
-<param name="FILE2" title="'$restore_apk_text_2'" value-sh="glog apk_restore_sign2" option-sh="findfile 10 $PTAD" required="true" />
+<param name="FILE" title="'$restore_apk_text_1'" value-sh="glog apk_restore_sign" option-sh="findfile 10 $PTAD" required="true" label="'$option_text'"/>
+<param name="FILE2" title="'$restore_apk_text_2'" value-sh="glog apk_restore_sign2" option-sh="findfile 10 $PTAD" required="true" label="'$option_text'"/>
 <set>
 slog apk_restore_sign "$FILE"
 slog apk_restore_sign2 "$FILE2"

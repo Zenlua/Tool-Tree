@@ -3,6 +3,20 @@
 # Dọn dẹp tmp
 rm -fr $TMPDIR/* $HOME/cache/* $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
 
+(
+# Cấp quyền tự động nếu đã root
+if [ "$ROT" == 1 ];then
+    # Thêm không giới hạn tiết kiệm pin
+    dumpsys deviceidle whitelist +$PACKAGE_NAME
+
+    # Cấp quyền ở miui, hyper
+    # Danh sách các ứng dụng đã cài đặt
+    cmd appops set $PACKAGE_NAME 10022 allow
+    # Phím tắt màn hình chính
+    cmd appops set $PACKAGE_NAME 10017 allow
+fi
+) &
+
 # Khởi động các file shell ở add-on
 for vadd in $AON/*/early_start.sh $AOK/*/early_start.sh; do
     if [ -f "$vadd" ];then
