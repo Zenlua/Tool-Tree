@@ -16,7 +16,7 @@ if [ "$ROT" == 1 ];then
     # Phím tắt màn hình chính
     cmd appops set $PACKAGE_NAME 10017 allow
 fi
-) &
+) &>>$TEMP/Install.log &
 
 # Khởi động các file shell ở add-on
 for vadd in $AON/*/early_start.sh $AOK/*/early_start.sh; do
