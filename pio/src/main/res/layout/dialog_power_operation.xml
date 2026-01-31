@@ -90,74 +90,67 @@
         </LinearLayout>
         <LinearLayout
             android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp">
+            android:id="@+id/power_recovery"
+            android:background="@drawable/krscript_item_ripple"
+            android:layout_height="65dp"
+            android:layout_weight="1.0"
+            style="@style/ListCardItemSmall">
+            <ImageView
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/action_menu_icon_bg"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/power_recovery"
+                android:scaleType="centerInside"
+                android:alpha="0.8"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                android:backgroundTint="#FF00BCD4"
+                app:tint="#FFFFFFFF" />
             <LinearLayout
-                android:orientation="horizontal"
-                android:id="@+id/power_recovery"
-                android:background="@drawable/krscript_item_ripple"
-                android:layout_height="65dp"
-                android:layout_weight="1.0"
-                style="@style/ListCardItemSmall">
-                <ImageView
-                    android:layout_gravity="center_vertical"
-                    android:background="@drawable/action_menu_icon_bg"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/power_recovery"
-                    android:scaleType="centerInside"
-                    android:alpha="0.8"
-                    android:layout_marginEnd="@dimen/activity_horizontal_margin"
-                    android:backgroundTint="#FF00BCD4"
-                    app:tint="#FFFFFFFF" />
-                <LinearLayout
-                    android:layout_gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:layout_width="0dp"
+                android:layout_gravity="center_vertical"
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0">
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.0">
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:text="@string/text_power_recovery"
-                        style="@style/textTitle" />
-                </LinearLayout>
+                    android:layout_marginBottom="4dp"
+                    android:text="@string/text_power_recovery"
+                    style="@style/textTitle" />
             </LinearLayout>
-            
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:id="@+id/power_fastboot"
+            android:background="@drawable/krscript_item_ripple"
+            android:layout_height="65dp"
+            android:layout_weight="1.0"
+            style="@style/ListCardItemSmall">
+            <ImageView
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/action_menu_icon_bg"
+                android:padding="10dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/power_fastboot"
+                android:scaleType="centerInside"
+                android:alpha="0.8"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                android:backgroundTint="#FFEA3F00"
+                app:tint="#FFFFFFFF" />
             <LinearLayout
-                android:orientation="horizontal"
-                android:id="@+id/power_fastboot"
-                android:background="@drawable/krscript_item_ripple"
-                android:layout_height="65dp"
-                android:layout_weight="1.0"
-                style="@style/ListCardItemSmall">
-                <ImageView
-                    android:layout_gravity="center_vertical"
-                    android:background="@drawable/action_menu_icon_bg"
-                    android:padding="10dp"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/power_fastboot"
-                    android:scaleType="centerInside"
-                    android:alpha="0.8"
-                    android:layout_marginEnd="@dimen/activity_horizontal_margin"
-                    android:backgroundTint="#FFEA3F00"
-                    app:tint="#FFFFFFFF" />
-                <LinearLayout
-                    android:layout_gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:layout_width="0dp"
+                android:layout_gravity="center_vertical"
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0">
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.0">
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:text="@string/text_power_fastboot"
-                        style="@style/textTitle" />
-                </LinearLayout>
+                    android:layout_marginBottom="4dp"
+                    android:text="@string/text_power_fastboot"
+                    style="@style/textTitle" />
             </LinearLayout>
         </LinearLayout>
         <LinearLayout
