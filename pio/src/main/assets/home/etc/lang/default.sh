@@ -292,4 +292,4 @@ apex_text_2="File support: apex, capex"
 build_time_text_1="ROM build time"
 build_time_text_2="Automatic: 0, can be changed, for example: 1766318047"
 
-xoaoat_text_1="Clean OAT and ODEX entries"
+xoaoat_text_1="Clean oat and odex entries"

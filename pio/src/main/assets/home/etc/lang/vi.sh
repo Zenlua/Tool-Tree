@@ -292,4 +292,4 @@ apex_text_2="Danh sách hỗ trợ tệp: apex, capex"
 build_time_text_1="Thời gian xây dựng rom"
 build_time_text_2="Tự động: 0, có thể thay đổi ví dụ: 1766318047"
 
-xoaoat_text_1="Dọn dẹp mục OAT và ODEX"
+xoaoat_text_1="Dọn dẹp mục oat và odex"
