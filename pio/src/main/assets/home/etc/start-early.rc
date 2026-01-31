@@ -12,6 +12,7 @@ if [ "$ROT" == 1 ];then
     # Cấp quyền ở miui, hyper
     # Danh sách các ứng dụng đã cài đặt
     cmd appops set $PACKAGE_NAME 10022 allow
+    cmd appops set $PACKAGE_NAME QUERY_ALL_PACKAGES allow
     # Phím tắt màn hình chính
     cmd appops set $PACKAGE_NAME 10017 allow
 fi
