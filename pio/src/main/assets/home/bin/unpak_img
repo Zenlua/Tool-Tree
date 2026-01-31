@@ -14,6 +14,9 @@ show_help() {
   echo "  -d    delete file after decode: 0"
   echo "            0: false"
   echo "            1: true"
+  echo "  -r    clean up oat and odex files: 0"
+  echo "            0: false"
+  echo "            1: true"
   echo "  -h    show help"
   exit 1
 }
@@ -22,13 +25,15 @@ if [[ $# -eq 0 || "$1" != -* ]]; then
 show_help
 fi
 
-INPUT=''; OUTPUT=''; NODECO=''; XOAIMG=''; PVUGBIN=''; show_help='';
-while getopts ":i:o:n:d:p:h" opt; do
+INPUT=''; OUTPUT=''; NODECO=''; XOAIMG=''; PVUGBIN='';
+show_help=''; XOAOAT='';
+while getopts ":i:o:n:d:p:r:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
     o) OUTPUT="$OPTARG" ;;
     n) NODECO="$OPTARG" ;;
     d) XOAIMG="$OPTARG" ;;
+    r) XOAOAT="$OPTARG" ;;
     p) PVUGBIN="$OPTARG" ;;
     h) show_help ;;
     \?) echo "! Not understand -$OPTARG"; show_help ;;
@@ -43,6 +48,7 @@ fi
 
 [[ -z "$XOAIMG" ]] && XOAIMG=0
 [[ -z "$NODECO" ]] && NODECO=0
+[[ -z "$XOAOAT" ]] && XOAOAT=0
 
 source language 2>/dev/null
 dang_tep="$(checktype "$INPUT")"
@@ -226,6 +232,14 @@ else
     fi
 echo -e "$unpack_text_6 ${file_img##*/} ($dang_file)\n"
 [ "$NODECO" == 1 ] && mv "$file_img" "$PTSD/out/${file_img##*/}"
+fi
+
+if [ "$XOAOAT" == 1 ];then
+find "$OUTPUT/${namepv##*/}" -type d -name "oat" -exec rm -rf {} +
+find "$OUTPUT/${namepv##*/}" -type f -name "*.fsv_meta" -exec rm -rf {} +
+find "$OUTPUT/${namepv##*/}" -type f -name "*.bprof" -exec rm -rf {} +
+find "$OUTPUT/${namepv##*/}" -type f -name "*.prof" -exec rm -rf {} +
+find "$OUTPUT/${namepv##*/}" -type f -name "*.vdex" -exec rm -rf {} +
 fi
 
 if [[ "$dang_tep" =~ ^(sparse|zstd|dat|br|payload|super|zip)$ ]];then

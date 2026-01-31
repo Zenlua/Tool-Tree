@@ -289,3 +289,5 @@ apex_text_2="支持的文件：apex、capex"
 
 build_time_text_1="ROM 构建时间"
 build_time_text_2="自动：0，可更改，例如：1766318047"
+
+xoaoat_text_1="清理 OAT 和 ODEX 项"

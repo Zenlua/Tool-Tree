@@ -291,3 +291,5 @@ apex_text_2="Fájltámogatás: apex, capex"
 
 build_time_text_1="ROM build ideje"
 build_time_text_2="Automatikus: 0, módosítható, például: 1766318047"
+
+xoaoat_text_1="OAT és ODEX bejegyzések törlése"

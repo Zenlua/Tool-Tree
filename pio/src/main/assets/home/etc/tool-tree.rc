@@ -777,6 +777,7 @@ xml_print '<group>
 <action icon="'`urlpng decode_img`'" desc="'"$folder_text: $(glog PTSD | sed "s|$SDCARD_PATH|\/sdcard|")"'">
 <title>'$decompile_text'</title>
 <param name="cboxk" value-sh="glog dkhdh" label="'$deleted_file_text'" type="checkbox" />
+<param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" />
 <param name="nounpak" value-sh="glog dkjdj" label="'$decode_text_1'" desc="'$decode_text_2'" type="switch" />
 <param name="IMAGES" desc="'$decode_text_3'" multiple="true" options-sh="findfile 2 $PTSD" required="true"/>
 <set>
@@ -786,9 +787,9 @@ for vkl in $IMAGES; do
 tppq1="$(echo "$vkl" | grep = | cut -d= -f1)"
 tppq2="$(echo "$vkl" | grep = | cut -d= -f2)"
 if [ -f "$PTSD/$tppq2" ];then
-unpak_img -i "$PTSD/$tppq2" -p "$tppq1" -o "$SDH/$PTSH" -n $nounpak -d $cboxk
+unpak_img -i "$PTSD/$tppq2" -p "$tppq1" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot
 else
-unpak_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk
+unpak_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot
 fi
 done
 [ "$nounpak" == 0 ] && echo "'$save_text' $SDH/$PTSH" || echo "'$save_text' $PTSD/out"

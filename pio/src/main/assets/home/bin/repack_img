@@ -42,7 +42,7 @@ show_help
 fi
 
 AVBIMG=''; OUTPUT=''; NENEROFS=''; CONVER=''; LVLNEN=''; 
-SAINEN=''; TTBUILDI=''; CDELIMG=''; show_help='';
+SAINEN=''; TTBUILDI=''; CDELIMG=''; show_help=''; DISATFS='';
 while getopts ":i:o:n:l:c:s:k:d:a:p:h" opt; do
   case $opt in
     a) AVBIMG="$OPTARG" ;;
