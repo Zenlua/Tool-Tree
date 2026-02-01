@@ -123,8 +123,8 @@ echo "${ptpk##*/}" > "$Tout/.cache/ten_file.log"
 [ "$apkskk" == 1 ] && rm -fr "$ptpk"
 
 # check thư mục
-[ -d "$Tout" ] || abort "$apke_text_1"
+[ -d "$Tout" ] || killtree "$apke_text_1"
 
 else
-abort "$apke_text_3: $typefile"
+killtree "$apke_text_3: $typefile"
 fi

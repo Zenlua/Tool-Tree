@@ -128,5 +128,5 @@ if [ -f "$OUTPUT/$tenapkkk" ];then
 # xoá dự án
 [ "$XDELF" == 1 ] && rm -fr "$INPUT"
 else
-abort "$apke_text_3: $INPUT"
+killtree "$apke_text_3: $INPUT"
 fi

@@ -146,7 +146,7 @@ fi
 
 if [ "$partition" == "erofs" ];then
   [ "$DISATFS" == 1 ] || patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
-  mkfs.erofs --quiet -T $time_build --workers=$threads -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" 2>$TMP/mkfs_erofs.log || abort "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved"
+  mkfs.erofs --quiet -T $time_build --workers=$threads -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" 2>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved"
   echo
 elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
     # xây dựng cpio
@@ -163,7 +163,7 @@ elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
         else
         echo "Build DTB: $redts"
         dtc -q -I dts -O dtb -@ -o ${nrep} $redts
-        [ "$?" != 0 ] && abort "Error: Build DTB"
+        [ "$?" != 0 ] && killtree "Error: Build DTB"
         fi
     done
     for bdts in $(ls -1d cache/type_* 2>/dev/null); do
@@ -208,7 +208,7 @@ elif [ "$partition" = "dtbo" ];then
     else
     echo "Build dtb: $dtbo"
     dtc -q -I dts -O dtb -@ -o dtb.${dtbo##*.} $dtbo
-    [ "$?" != 0 ] && abort "Error: Build dtb"
+    [ "$?" != 0 ] && killtree "Error: Build dtb"
     fi
   done
   dtbo create dtbo.img $(ls -1d dtb.* | sort -n -t . -k 2) >/dev/null
@@ -217,7 +217,7 @@ elif [ "$partition" = "dtbo" ];then
   echo
 elif [ "$partition" == "f2fs" ];then
   if [ "$ROT" == 0 ];then
-  abort "Error build: f2fs, $root_warning_text"
+  killtree "Error build: f2fs, $root_warning_text"
   fi
   [ "$DISATFS" == 1 ] || patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
   if [ -f "$info_size" ] && [ "$(cat $info)" == "f2fs" ] && [ "$TTBUILDI" == 0 ];then
@@ -246,15 +246,15 @@ elif [ "$partition" == "f2fs" ];then
   fi
   [ -f "$TMP/make_f2fs.log" ] && rm -fr "$TMP/make_f2fs.log"
   if [ "$f2fsrw" == 1 ];then
-  make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || abort "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+  make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
   echo " "
   sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" -c "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
   else
-  make_f2fs -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || abort "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+  make_f2fs -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
   echo " "
   sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
   fi
-  [ "$(grep -cm1 'Done:' $TMP/sload_f2fs.log)" == 0 ] && abort "Error build sload_f2fs, Suggestion: Increase free MB, log: $TMP/sload_f2fs.log" "$saved";
+  [ "$(grep -cm1 'Done:' $TMP/sload_f2fs.log)" == 0 ] && killtree "Error build sload_f2fs, Suggestion: Increase free MB, log: $TMP/sload_f2fs.log" "$saved";
   [ -f "$INPUT/${INPUT##*/}/build.prop" ] && rm -fr "$file_contexts" "$fs_config"
   echo
 elif [ "$partition" == "ext" ];then
@@ -271,18 +271,18 @@ elif [ "$partition" == "ext" ];then
     if [ "$e2fsdroid" == 1 ];then
     size="$(echo "$size_real / 4096" | bc)";
     mke2fs -O ^has_journal,^quota,^project,^resize_inode -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "$mount_dir" "$saved" $size 2>&1
-    e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || abort "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved"
+    e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved"
     else
-    make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || abort "Error build process make_ext4fs" "$saved"
+    make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved"
     echo
     fi
   else
     if [ "$e2fsdroid" == 1 ];then
     size="$(echo "$size_orig / 4096" | bc)";
     mke2fs -O ^has_journal,^quota,^project,^resize_inode -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "$mount_dir" "$saved" $size 2>&1
-    e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_exts.log || abort "Error build process e2fsdroid, log: $TMP/e2fsdroid_exts.log" "$saved"
+    e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_exts.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_exts.log" "$saved"
     else
-    make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || abort "Error build process make_ext4fs" "$saved"
+    make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved"
     echo
     fi
     resize2fs -M "$saved" 2>&1
@@ -316,7 +316,7 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
     LEVEL="$(echo "$lvnen / 2" | bc)"
     img2simg $saved >/dev/null
     img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p ${INPUT##*/} >/dev/null
-    [ -f "$OUTPUT/out/${INPUT##*/}.new.dat" ] || abort "Error creating file ${INPUT##*/}.new.dat failed !!!"
+    [ -f "$OUTPUT/out/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed !!!"
     brotli -fq "$LEVEL" "$OUTPUT/out/${INPUT##*/}.new.dat" -o "$OUTPUT/out/${INPUT##*/}.new.dat.br" >/dev/null
     [ "$?" == 0 ] && rm -f "$saved" "$OUTPUT/out/${INPUT##*/}.new.dat"
     elif [ "$CONVER" == 'sparse' ];then

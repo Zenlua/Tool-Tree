@@ -77,7 +77,7 @@ if [ "$dang_tep" == 'zstd' ];then
   zstd -T$threads -f -d -k "$INPUT" -o "$file_img" &>/dev/null
 elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
   tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
-  [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || abort "$more_text_5 $tenpjanvung.transfer.list"
+  [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || killtree "$more_text_5 $tenpjanvung.transfer.list"
   echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
   [ "${INPUT##*.}" == 'br' ] && brotli -f -d "$INPUT" -o "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" &>/dev/null
   file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
@@ -88,7 +88,7 @@ elif [ "$dang_tep" == 'sparse' ];then
   simg2img "$INPUT" "$file_img"
 elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
   echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
-  payload_dumper --no-parallel --out "$TMP" --images "$PVUGBIN" "$INPUT" >/dev/null || abort "Payload unpack error"
+  payload_dumper --no-parallel --out "$TMP" --images "$PVUGBIN" "$INPUT" >/dev/null || killtree "Payload unpack error"
   file_img="$TMP/$PVUGBIN.img"
 elif [ "$dang_tep" == 'super' ];then
   echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
@@ -136,7 +136,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
     elif [ "$dang_file" == 'f2fs' ];then
       if [ "$ROT" == 0 ];then
-      abort "Error Unpack: f2fs, $root_warning_text"
+      killtree "Error Unpack: f2fs, $root_warning_text"
       fi
       #dump.f2fs -r -P -L -f -o "$OUTPUT/${namepv##*/}" "$file_img"
       mkdir -p "$TMP/${namepv##*/}"
@@ -149,12 +149,12 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
       echo "$(fsck.f2fs "$file_img" | grep 'superblock features' | grep -cm1 ro)" > "$OUTPUT/config/${namepv##*/}_f2fs_ro"
     elif [ "$dang_file" == 'erofs' ];then
-      extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || abort "\nextract.erofs error: ${namepv##*/}" "$OUTPUT/${namepv##*/}"
+      extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$OUTPUT/${namepv##*/}"
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
       if [ -f $OUTPUT/config/exception.log ];then
       rm -fr "$OUTPUT/${namepv##*/}"
       cat $OUTPUT/config/exception.log >&2
-      abort "\nIncomplete file error please check hash" $OUTPUT/config/exception.log
+      killtree "\nIncomplete file error please check hash" $OUTPUT/config/exception.log
       fi
     elif [ "$dang_file" == 'logo' ];then
     logo_dumper.py --out "$OUTPUT/${namepv##*/}" "$file_img" unpack
@@ -170,7 +170,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       magiskboot unpack -h "$file_img" 2>&1
       if [ "$?" = '1' ];then
         rm -rf "$OUTPUT/${namepv##*/}"
-        abort "$unpack_text_3"
+        killtree "$unpack_text_3"
       else
         # unpack dtb, dtbo
         for unp in $(ls -1d * 2>/dev/null | sort -n -t . -k 2); do
@@ -188,7 +188,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
         for unsl in $(ls -1 *.[0-9]* 2>/dev/null | sort -n -t . -k 2); do
             echo "Decode: $unsl > dts_$unsl"
             dtc -q -@ -I dtb -O dts -o dts_$unsl $unsl
-            [ "$?" != 0 ] && abort "$unpack_text_5 $unsl"
+            [ "$?" != 0 ] && killtree "$unpack_text_5 $unsl"
             mv $unsl cache/$unsl
             sha256sum -b dts_$unsl > cache/md5_$unsl
         done
@@ -199,7 +199,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
         cd "${vch%.*}"
         EXTRACT_UNSAFE_SYMLINKS=1 cpio -d -F "$OUTPUT/${namepv##*/}/$vch" -i 2>&1
         if [ "$?" != 0 -o ! "$(ls)" ];then
-          abort "$unpack_text_4"
+          killtree "$unpack_text_4"
         else
         rm -f "$OUTPUT/${namepv##*/}/$vch"
         fi
@@ -216,7 +216,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       for dtbo in $(ls -t dtb.* | sort -n -t . -k 2);do
         echo "Decode: $dtbo"
         dtc -q -@ -I dtb -O dts -o dts.${dtbo##*.} $dtbo
-        [ "$?" != 0 ] && abort "$unpack_text_5 $dtbo"
+        [ "$?" != 0 ] && killtree "$unpack_text_5 $dtbo"
         mv $dtbo cache/$dtbo
         sha256sum -b dts.${dtbo##*.} > cache/md5_dts.${dtbo##*.}
       done
@@ -225,13 +225,17 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
     rm -fr "$OUTPUT/${namepv##*/}"
     echo -e "$unpack_text_8 ${file_img##*/} ($dang_file)\n" >&2
     fi
+    [ -d "$OUTPUT/${namepv##*/}" ] && echo -e "$save_text $OUTPUT/${namepv##*/}\n"
 else
     if [ "$dang_file" == "super" ];then
     echo -e "$unpack_text_7\n"
     [ "$dang_tep" == 'amlogic' ] && echo -e "$save_text ${INPUT%/*}/${ten_paion}_amlogic\n" || echo -e "$save_text $INPUT\n"
     fi
-echo -e "$unpack_text_6 ${file_img##*/} ($dang_file)\n"
-[ "$NODECO" == 1 ] && mv "$file_img" "$PTSD/out/${file_img##*/}"
+    echo -e "$unpack_text_6 ${file_img##*/} ($dang_file)\n"
+    if [ "$NODECO" == 1 ];then
+    echo -e "$save_text $PTSD/out\n"
+    mv "$file_img" "$PTSD/out/${file_img##*/}"
+    fi
 fi
 
 if [ "$XOAOAT" == 1 ];then

@@ -188,13 +188,13 @@ if [ "$menu_id" == "v1" ];then
 elif [ "$menu_id" == "v2" ];then
 echo "'$more_text_4' $file"
 echo
-[ "$(unzip -ql "$file" | grep -cm1 ".x509.pem")" == 1 ] || abort "'$more_text_5' .x509.pem"
-[ "$(unzip -ql "$file" | grep -cm1 ".pk8")" == 1 ] || abort "'$more_text_5' .pk8"
+[ "$(unzip -ql "$file" | grep -cm1 ".x509.pem")" == 1 ] || killtree "'$more_text_5' .x509.pem"
+[ "$(unzip -ql "$file" | grep -cm1 ".pk8")" == 1 ] || killtree "'$more_text_5' .pk8"
 unzip -o "$file" *.x509.pem *.pk8 -d "$ETC/key"
 elif [ "$menu_id" == "v3" ];then
 echo "'$more_text_4' $file"
 echo
-cp -rf "$file" $ETC/apkeditor.jar || abort "File copy error"
+cp -rf "$file" $ETC/apkeditor.jar || killtree "File copy error"
 fi
 </handler>
 </page>
@@ -302,7 +302,7 @@ sum_md5_kk="$(sha256sum -b $ETC/lang/vi.sh)"
   wait
   if [ "$(grep -cm1 \"\" $ETC/lang/auto.sh)" == 1 ];then
   error_txxt_bug="$(echo "Translation error detected:" | trans -b $LANGUAGE-$COUNTRY)"
-  abort "\n$error_txxt_bug $(grep -c \"\" $ETC/lang/auto.sh)" >&2
+  killtree "\n$error_txxt_bug $(grep -c \"\" $ETC/lang/auto.sh)" >&2
   slog language ""
   else
   slog sum_md5_kk "$sum_md5_kk"
@@ -565,7 +565,7 @@ echo "'$save_text' $Extract"
 <set>
 e=${IMG##*/}
 if [ "$e" = "vendor" ] || [ "$e" = "system" ] || [ "$e" = "super" ];then
-abort "($e) '$flash_text_8'"
+killtree "($e) '$flash_text_8'"
 fi
 echo "'$more_text_4' $Brush_in"
 echo
@@ -595,7 +595,7 @@ fi
         reboot
         fi
     else
-        abort "! ($Brush_in) '$flash_text_11' ($e)"
+        killtree "! ($Brush_in) '$flash_text_11' ($e)"
     fi
 echo
 echo "'$flash_text_12'"
@@ -750,7 +750,7 @@ sed -i $'"'s/\033\\[[0-9;]*m//g'"' "$TMP/amlogic_pack.log"
 for vv in $(ls -1d $PTSD/$FOLDER/*.PARTITION 2>/dev/null); do
 mv "$vv" "${vv%.*}.img"
 done
-[ "$bug_rom" == 1 ] && abort "Log check error: $TMP/amlogic_pack.log"
+[ "$bug_rom" == 1 ] && killtree "Log check error: $TMP/amlogic_pack.log"
 [ "$amlogic_boolbox" == 1 ] && rm -fr "$PTSD/$FOLDER"
 echo "'$unpack_text_2' $TMP/amlogic_pack.log"
 echo
@@ -789,8 +789,6 @@ else
 unpak_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot
 fi
 done
-[ "$nounpak" == 0 ] && echo "'$save_text' $SDH/$PTSH" || echo "'$save_text' $PTSD/out"
-echo
 checktime
 </set>
 </action>
@@ -804,10 +802,6 @@ checktime
 <option value="raw">File.img (raw)</option>
 <option value="sparse">File.img (sparse)</option>
 <option value="zstd">File.img.zstd</option>
-<option value="lzma">File.img.lzma</option>
-<option value="lz4">File.img.lz4</option>
-<option value="xz">File.img.xz</option>
-<option value="gz">File.img.gz</option>
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
@@ -1171,7 +1165,7 @@ elif [ "$menu_id" == "v3" ];then
     echo "'$more_text_4' $file"
     echo
     unzip -oq $ETC/apktool.jar prebuilt/linux/aapt2 -d $TMP
-    cp -rf "$file" $TMP/apktool.jar || abort "File copy error"
+    cp -rf "$file" $TMP/apktool.jar || killtree "File copy error"
     cd $TMP
     zip -qr apktool.jar prebuilt/*
     mv apktool.jar $ETC/apktool.jar

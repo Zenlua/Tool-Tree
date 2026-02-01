@@ -88,7 +88,7 @@ echo "$apkb_text_1 ${INPUT##*/}"
 echo
 # Kiểm tra chữ ký
 if [ "$(openssl rsa -in "$ETC/key/4096/$SIGNAPX.pem" -text -noout | grep -cm1 '4096 bit')" != 1 ];then
-abort "Not a 4096-bit signature, verification failed."
+killtree "Not a 4096-bit signature, verification failed."
 else
 echo "I: Verify signature 4096 bit success: $SIGNAPX.pem"
 cp -rf "$ETC/key/4096/$SIGNAPX.pem" "$TMP/apex.key.pem"
@@ -122,10 +122,10 @@ apexer.py -f -p "$INPUT" --api $API --payload_fs_type $PTTTYPE "$OUTPUT/${INPUT#
 if [ -f "$OUTPUT/${INPUT##*/}.apex" ];then
     if [ "$COMPEV" == 1 ];then
     apex_compression_tool.py compress --input "$OUTPUT/${INPUT##*/}.apex" --output "$OUTPUT/${INPUT##*/}.capex"
-    [ -f "$OUTPUT/${INPUT##*/}.capex" ] && rm -fr "$OUTPUT/${INPUT##*/}.apex" || abort "Apex compression failed !"
+    [ -f "$OUTPUT/${INPUT##*/}.capex" ] && rm -fr "$OUTPUT/${INPUT##*/}.apex" || killtree "Apex compression failed !"
     fi
 else
-abort "Apex build failed !"
+killtree "Apex build failed !"
 fi
 # kiểm tra hoàn thành
     if [[ -f "$OUTPUT/${INPUT##*/}.apex" || -f "$OUTPUT/${INPUT##*/}.capex" ]];then

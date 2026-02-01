@@ -77,7 +77,7 @@ delta_generator \
 --out_file="$TMP/unsign-payload.bin" --partition_names="${i2%:}" \
 --new_partitions="${i1%:}" 2>&1 | Xoa > "$TMP/payload_generator.log"
 echo -e "\n" >> "$TMP/payload_generator.log"
-[ -f "$TMP/unsign-payload.bin" ] || abort "Failed to create payload.bin, log: $TMP/payload_generator.log"
+[ -f "$TMP/unsign-payload.bin" ] || killtree "Failed to create payload.bin, log: $TMP/payload_generator.log"
 
 echo "- Extract hash and metadata"
 delta_generator \
@@ -85,20 +85,20 @@ delta_generator \
 --out_metadata_hash_file="$TMP/metadata.bin" $info_super \
 --out_hash_file="$TMP/hash.bin" 2>&1 | Xoa >> "$TMP/payload_generator.log"
 echo -e "\n" >> "$TMP/payload_generator.log"
-[ -f "$TMP/metadata.bin" ] || abort "Extract metadata.bin failed, log: $TMP/payload_generator.log"
-[ -f "$TMP/hash.bin" ] || abort "Extract hash.bin failed, log: $TMP/payload_generator.log"
+[ -f "$TMP/metadata.bin" ] || killtree "Extract metadata.bin failed, log: $TMP/payload_generator.log"
+[ -f "$TMP/hash.bin" ] || killtree "Extract hash.bin failed, log: $TMP/payload_generator.log"
 
 echo "- Sign hash"
 openssl pkeyutl -sign -inkey "$ETC/key/2048/$INSIGN.pem" \
 -pkeyopt digest:sha256 -in "$TMP/hash.bin" \
 -out "$TMP/sign_hash.bin"
-[ -f "$TMP/sign_hash.bin" ] || abort "Sign sign_hash.bin failed"
+[ -f "$TMP/sign_hash.bin" ] || killtree "Sign sign_hash.bin failed"
 
 echo "- Sign metadata"
 openssl pkeyutl -sign -inkey "$ETC/key/2048/$INSIGN.pem" \
 -pkeyopt digest:sha256 -in "$TMP/metadata.bin" \
 -out "$TMP/sign_metadata.bin"
-[ -f "$TMP/sign_metadata.bin" ] || abort "Sign sign_metadata.bin failed"
+[ -f "$TMP/sign_metadata.bin" ] || killtree "Sign sign_metadata.bin failed"
 
 echo "- Sign payload"
 delta_generator --in_file="$TMP/unsign-payload.bin" \
@@ -106,7 +106,7 @@ delta_generator --in_file="$TMP/unsign-payload.bin" \
 --metadata_signature_file="$TMP/sign_metadata.bin" \
 --payload_signature_file="$TMP/sign_hash.bin" 2>&1 | Xoa >> $TMP/payload_generator.log
 echo -e "\n" >> $TMP/payload_generator.log
-[ -f "out/payload.bin" ] || abort "Sign payload.bin failed, log: $TMP/payload_generator.log"
+[ -f "out/payload.bin" ] || killtree "Sign payload.bin failed, log: $TMP/payload_generator.log"
 
 echo "- Create payload_properties.txt"
 delta_generator --in_file=out/payload.bin \

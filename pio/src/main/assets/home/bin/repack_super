@@ -82,7 +82,7 @@ echo "lpmake ${argvs}-F --output out/super.img" | sed -z 's| --|\n--|g'
 lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.log
 
 if [ $? == 1 ];then
-abort "\n$supers_text_1"
+killtree "\n$supers_text_1"
 else
 echo -e "\n$supers_text_2"
 fi
