@@ -4,15 +4,36 @@ import android.content.Context
 import java.lang.Exception
 import java.lang.StringBuilder
 import java.util.*
+import android.content.res.Configuration
+import android.content.res.Resources
+import java.io.File
 
 // 从Resource解析字符串，实现输出内容多语言
 class ShellTranslation(val context: Context) {
     // 示例：
     // @string:home_shell_01
-    private val regex1 = Regex("^@(string|dimen):[_a-z]+.*", RegexOption.IGNORE_CASE)
+    private val regex1 = Regex("@(string|dimen):[_a-z][_0-9a-z]+", RegexOption.IGNORE_CASE)
     // 示例
     // @string/home_shell_01
-    private val regex2 = Regex("^@(string|dimen)/[_a-z]+.*", RegexOption.IGNORE_CASE)
+    private val regex2 = Regex("@(string|dimen)/[_a-z][_0-9a-z]+", RegexOption.IGNORE_CASE)
+
+    private val appResources: Resources by lazy {
+        runCatching {
+            val langFile = File(context.filesDir, "home/log/language")
+            val lang = langFile
+                .takeIf { it.exists() }
+                ?.readText()
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+                ?: return@runCatching context.resources
+            val locale = Locale.forLanguageTag(lang.replace("_", "-"))
+            val config = Configuration(context.resources.configuration)
+            config.setLocale(locale)
+            context.createConfigurationContext(config).resources
+        }.getOrElse {
+            context.resources
+        }
+    }
 
     fun resolveRow(originRow: String): String {
         val separator = if (regex1.matches(originRow)) {
@@ -24,7 +45,8 @@ class ShellTranslation(val context: Context) {
         }
         if (separator != null) {
             val row = originRow.trim()
-            val resources = context.resources
+            // val resources = context.resources
+            val resources = appResources
             val type = row.substring(1, row.indexOf(separator)).lowercase(Locale.ENGLISH)
             val name = row.substring(row.indexOf(separator) + 1)
 
