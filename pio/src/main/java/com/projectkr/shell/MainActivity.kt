@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.graphics.Color
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
@@ -36,6 +37,7 @@ import androidx.core.view.isVisible
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.WindowCompat
 
 class MainActivity : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
