@@ -49,14 +49,14 @@ class MainActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applyTheme()
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
         setTitle(R.string.app_name)
-
         krScriptConfig = KrScriptConfig()
-
         binding.mainTabhost.setup()
+
         val tabIconHelper = TabIconHelper(binding.mainTabhost, this)
         if (tabIconHelper != null) {
             if (hasRoot && krScriptConfig.allowHomePage) {
@@ -123,6 +123,15 @@ class MainActivity : AppCompatActivity() {
                 onBackPressedDispatcher.onBackPressed()
             }
         })
+    }
+
+    private fun applyTheme() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = ContextCompat.getColor(this, R.color.splash_bg_color)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
+        }
     }
 
     private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {
