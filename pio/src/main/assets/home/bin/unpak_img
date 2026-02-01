@@ -239,11 +239,13 @@ else
 fi
 
 if [ "$XOAOAT" == 1 ];then
+(
 find "$OUTPUT/${namepv##*/}" -type d -name "oat" -exec rm -rf {} +
 find "$OUTPUT/${namepv##*/}" -type f -name "*.fsv_meta" -exec rm -rf {} +
 find "$OUTPUT/${namepv##*/}" -type f -name "*.bprof" -exec rm -rf {} +
 find "$OUTPUT/${namepv##*/}" -type f -name "*.prof" -exec rm -rf {} +
 find "$OUTPUT/${namepv##*/}" -type f -name "*.vdex" -exec rm -rf {} +
+) &>$TMP/delete_oat.log
 fi
 
 if [[ "$dang_tep" =~ ^(sparse|zstd|dat|br|payload|super|zip)$ ]];then
