@@ -1,6 +1,6 @@
 # Add-on
 id=online_utilities
-name=Apk utility
+name=Utility
 author=Kakathic
 description=Many small amenities
 version=1.0
@@ -8,11 +8,20 @@ versionCode=100
 root=false
 
 # language
-home_text_1="Patch apk"
-select_text_1="Options"
-clean_text_1="Project"
-clean_text_2="Present:"
-clean_text_3="Remove language"
-clean_text_4="Select the languages you want to delete"
-clean_text_5="Deleted:"
 google_text="Currently using google translate"
+
+fs_text_1="Run fstrim to clean up blocks"
+fs_text_2="Clean block"
+fs_text_3="Root access is required"
+fs_text_4="Clean blocks:"
+
+ufs_text_1="EOL status:"
+ufs_text_2="Unknown"
+ufs_text_3="Wear level:"
+ufs_text_4="Exceeded lifespan"
+ufs_text_5="Warning"
+ufs_text_6="Normal"
+
+check_ufs_text="UFS check"
+check_ufs_text_1="Measuring reading speed..."
+check_ufs_text_2="Measuring recording speed..."

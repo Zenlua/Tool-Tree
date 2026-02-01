@@ -1,50 +1,48 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
 
-# clean
-clean(){
-if [ -n "$(glog project_apk_clean)" ];then
-show_clean=1
-path_clean="$(glog project_apk_clean)"
-fi
-xml_print '
-<group>
-<action shell="hidden" reload="true">
-<title>'$clean_text_1'</title>
-<summary>'$clean_text_2' '"$path_clean"'</summary>
-<param name="project" label="'$select_text_1'" options-sh="cd $APK/$PTAH; ls -1d */apktool.yml */archive-info.json | sed -e '"'s|/apktool.yml||'"' -e '"'s|/archive-info.json||'"' " value-sh="glog project_apk_clean" required="true" />
-<set>slog project_apk_clean "$project"</set>
+# home
+home(){
+[ "$ROT" == 0 ] && text_root="ROOT: $ROOT" || text_rr="$fs_text_1"
+xml_print '<group>
+<action title="'$check_ufs_text'" summary="'$text_root'">
+<lock>
+[ "$ROT" == 0 ] && echo "'$fs_text_3'" || echo 0
+</lock>
+<set>
+export MPAT='$MPAT'
+'$MPAT'/scrip/ufs.sh
+</set>
 </action>
 </group>
 
 <group>
-<action reload="true" visible="echo '$show_clean'">
-<title>'$clean_text_3'</title>
-<param name="LIST" desc="'$clean_text_4'" multiple="multiple" options-sh="cd $APK/$PTAH/'$path_clean'; ls -1d resources/package_1/res/values-*/strings.xml res/values-*/strings.xml | sed -e '"'s|resources/package_1/||'"' -e '"'s|res/||'"' -e '"'s|/strings.xml||'"' "/>
+<action title="'$fs_text_2'" desc="'$text_rr'" summary="'$text_root'">
+<lock>
+[ "$ROT" == 0 ] && echo "'$fs_text_3'" || echo 0
+</lock>
 <set>
-for vv in $LIST; do
-echo "'$clean_text_5' $vv"
-if [ -d "$APK/$PTAH/'$path_clean'/resources/package_1/res" ];then
-rm -fr "$APK/$PTAH/'$path_clean'/resources/package_1/res/$vv"
-elif [ -d "$APK/$PTAH/'$path_clean'/res" ];then
-rm -fr "$APK/$PTAH/'$path_clean'/res/$vv"
-fi
-done
+    echo "'$fs_text_4' /data"
+    fstrim /data;
+    echo "'$fs_text_4' /cache"
+    fstrim /cache
+    echo "'$fs_text_4' auto"
+    echo
+    sm fstrim
+    echo
+    checktime
 </set>
 </action>
-</group>'
-}
-
-# home
-home(){
-xml_print '<group title="'$trans_text'">
-<page title="'$home_text_1'" config-sh="'$MPAT'/index.sh clean"/>
 </group>
 
 <group>
 <page html="https://zenlua.github.io/Tool-Tree/add-on/web/terminal.html" title="Web Terminal" />
+</group>
+
+<group>
 <page html="https://zenlua.github.io/Tool-Tree/add-on/web/manager.html" title="Web Manager" />
-</group>'; }
+</group>'
+}
 
 # Thư mục hiện tại
 MPAT="${0%/*}"
