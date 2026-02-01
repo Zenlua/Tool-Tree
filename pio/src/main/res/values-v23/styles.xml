@@ -13,7 +13,7 @@
     </style>
 
     <style name="AppThemeWallpaperLight" parent="AppTheme">
-        <item name="android:navigationBarColor">#00ffffff</item>
+        <item name="android:navigationBarColor">#c0ffffff</item>
         <item name="android:statusBarColor">#c0ffffff</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:colorForegroundInverse">#c0ffffff</item>

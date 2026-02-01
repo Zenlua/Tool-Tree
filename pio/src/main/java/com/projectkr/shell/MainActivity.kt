@@ -9,7 +9,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.graphics.Color
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
@@ -37,7 +36,6 @@ import androidx.core.view.isVisible
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.core.view.WindowCompat
 
 class MainActivity : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
@@ -51,7 +49,6 @@ class MainActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applyTheme()
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -125,15 +122,6 @@ class MainActivity : AppCompatActivity() {
                 onBackPressedDispatcher.onBackPressed()
             }
         })
-    }
-
-    private fun applyTheme() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = ContextCompat.getColor(this, R.color.splash_bg_color)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
-        }
     }
 
     private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {
