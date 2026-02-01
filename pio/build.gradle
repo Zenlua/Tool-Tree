@@ -20,7 +20,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 28
         versionCode Integer.parseInt(new java.text.SimpleDateFormat("yyMMddHH").format(new Date()))
-        versionName "1.2.7"
+        versionName "1.2.8"
     }
     signingConfigs {
         release {

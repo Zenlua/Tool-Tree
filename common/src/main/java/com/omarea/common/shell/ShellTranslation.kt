@@ -12,10 +12,8 @@ import java.io.File
 class ShellTranslation(val context: Context) {
     // 示例：
     // @string:home_shell_01
-    private val regex1 = Regex("@(string|dimen):[_a-z][_0-9a-z]+", RegexOption.IGNORE_CASE)
-    // 示例
-    // @string/home_shell_01
-    private val regex2 = Regex("@(string|dimen)/[_a-z][_0-9a-z]+", RegexOption.IGNORE_CASE)
+    private val resRegex =
+    Regex("@(string|dimen)[:/][_a-z][_0-9a-z]*", RegexOption.IGNORE_CASE)
 
     private val appResources: Resources by lazy {
         runCatching {
@@ -36,38 +34,28 @@ class ShellTranslation(val context: Context) {
     }
 
     fun resolveRow(originRow: String): String {
-        val separator = if (regex1.matches(originRow)) {
-            ':'
-        } else if (regex2.matches(originRow)) {
-            '/'
-        } else {
-            null
-        }
-        if (separator != null) {
-            val row = originRow.trim()
-            // val resources = context.resources
-            val resources = appResources
-            val type = row.substring(1, row.indexOf(separator)).lowercase(Locale.ENGLISH)
+        var result = originRow
+        val res = appResources
+    
+        resRegex.findAll(originRow).forEach { match ->
+            val row = match.value   // @string:notification_ui
+            val separator = if (row.contains(":")) ':' else '/'
+            val type = row.substring(1, row.indexOf(separator))
             val name = row.substring(row.indexOf(separator) + 1)
-
-            try {
-                val id = resources.getIdentifier(name, type, context.packageName)
-                when (type) {
-                    "string" -> {
-                        return resources.getString(id)
-                    }
-                    "dimen" -> {
-                        return resources.getDimension(id).toString()
-                    }
+    
+            val id = res.getIdentifier(name, type, context.packageName)
+            if (id != 0) {
+                val value = when (type) {
+                    "string" -> res.getString(id)
+                    "dimen" -> res.getDimensionPixelSize(id).toString()
+                    else -> null
                 }
-            } catch (_: Exception) {
-                if (row.contains("[(") && row.contains(")]")) {
-                    return row.substring(row.indexOf("[(") + 2, row.indexOf(")]"))
+                if (value != null) {
+                    result = result.replace(row, value)
                 }
             }
         }
-
-        return originRow
+        return result
     }
 
     fun resolveRows(rows: List<String>): String {
