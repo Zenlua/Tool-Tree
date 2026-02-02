@@ -25,7 +25,7 @@
                 android:textSize="11sp" />
             <CheckBox
                     android:textSize="11dp"
-                    android:textColor="#888"
+                    android:textColor="#BB888888"
                     android:id="@+id/notification_ui"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
