@@ -443,13 +443,7 @@ class DialogHelper {
                             setBackgroundDrawable(d)
                         }
                     } catch (_: java.lang.Exception) {
-                        if (isNightMode(context)) {
-                            val d = Color.argb(255, 18, 18, 18).toDrawable()
-                            setBackgroundDrawable(d)
-                        } else {
-                            val d = Color.argb(255, 245, 245, 245).toDrawable()
-                            setBackgroundDrawable(d)
-                        }
+                        setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
                     }
                 }
             }
