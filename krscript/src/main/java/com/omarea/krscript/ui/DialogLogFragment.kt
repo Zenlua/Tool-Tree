@@ -70,7 +70,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
             openExecutor(node)?.let { shellHandler ->
                 ShellExecutor().execute(activity, node, script, onExit, params, shellHandler)
             }
-        } ?: closeView()
+        } ?: dismissAllowingStateLoss()
     }
 
     private fun openExecutor(nodeInfo: RunnableNode): ShellHandlerBase {
@@ -237,9 +237,9 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         }
 
         override fun onExit(msg: Any?) {
+            if (!hasError) actionEventHandler.onSuccess()
             updateLog(context?.getString(R.string.kr_shell_completed), endColor)
             actionEventHandler.onCompleted()
-            if (!hasError) actionEventHandler.onSuccess()
         }
 
         override fun updateLog(msg: SpannableString?) {
