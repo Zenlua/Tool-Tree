@@ -201,11 +201,6 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
             }
         }
 
-        private fun isAtBottom(scrollView: ScrollView): Boolean {
-            val child = scrollView.getChildAt(0)
-            return child.bottom <= scrollView.height + scrollView.scrollY + 4
-        }
-
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 EVENT_EXIT -> onExit(msg.obj)
@@ -256,14 +251,8 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         override fun updateLog(msg: SpannableString?) {
             msg?.let {
                 logView?.post {
-                    val scrollView = logView?.parent as? ScrollView
-                    val shouldScroll = scrollView?.let { isAtBottom(it) } ?: true
-        
                     logView?.append(it)
-        
-                    if (shouldScroll) {
-                        scrollView?.fullScroll(ScrollView.FOCUS_DOWN)
-                    }
+                    (logView?.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
                 }
             }
         }
