@@ -267,6 +267,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
                 }
             }
         }
+    }
 
     override fun onResume() {
         super.onResume()
