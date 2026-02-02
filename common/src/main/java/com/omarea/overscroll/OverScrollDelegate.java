@@ -115,7 +115,7 @@ public class OverScrollDelegate {
 	public static final int OS_FLING = 4;
 
 	private static final int DRAG_BACK_DURATION = 420;
-	private static final int FLING_BACK_DURATION = 550;
+	private static final int FLING_BACK_DURATION = 700;
 
 	private static final int INVALID_POINTER = -1;
 
@@ -131,7 +131,7 @@ public class OverScrollDelegate {
 
 	private final View mView;
 	private final OverScrollable mOverScrollable;
-	private boolean mEnableDragOverScroll = true;
+	private boolean mEnableDragOverScroll = false;
 	private boolean mEnableFlingOverScroll = true;
 	private OverScrollStyle mStyle;
 
@@ -247,7 +247,7 @@ public class OverScrollDelegate {
 	private void onAbsorb(final int velocityY) {
 		// offset the start of fling 1px
 		mOffsetY = velocityY > 0 ? -1 : 1;
-		final float overY = velocityY * 0.07f;
+		final float overY = velocityY * 0.1f;
 		log("velocityY->" + velocityY + " overY->" + overY);
 		mScroller.start(overY, FLING_BACK_DURATION, sFlingBackPathPointsHolder);
 		setState(OS_FLING);

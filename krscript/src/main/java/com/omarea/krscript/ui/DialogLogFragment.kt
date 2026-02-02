@@ -18,7 +18,6 @@ import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.fragment.app.DialogFragment
 import com.omarea.common.ui.DialogHelper
 import com.omarea.krscript.R
 import com.omarea.krscript.databinding.KrDialogLogBinding
@@ -26,7 +25,7 @@ import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
 
-class DialogLogFragment : DialogFragment() {
+class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
     private var binding: KrDialogLogBinding? = null
     private var running = false
@@ -68,8 +67,9 @@ class DialogLogFragment : DialogFragment() {
             if (node.reloadPage) {
                 binding?.btnHide?.visibility = View.GONE
             }
-            val handler = openExecutor(node)
-            ShellExecutor().execute(activity, node, script, onExit, params, handler)
+            openExecutor(node)?.let { shellHandler ->
+                ShellExecutor().execute(activity, node, script, onExit, params, shellHandler)
+            }
         } ?: dismissAllowingStateLoss()
     }
 
@@ -131,7 +131,7 @@ class DialogLogFragment : DialogFragment() {
 
         binding?.actionProgress?.isIndeterminate = true
 
-        val handler = MyShellHandler(object : IActionEventHandler {
+        return MyShellHandler(object : IActionEventHandler {
             override fun onCompleted() {
                 running = false
                 onExit.run()
@@ -169,22 +169,8 @@ class DialogLogFragment : DialogFragment() {
                     binding?.btnCancel?.visibility = View.GONE
                 }
             }
-        },
-        binding?.shellOutput,
-        binding?.actionProgress
-        )
 
-        val scrollView = binding?.shellOutput?.parent as? ScrollView
-        scrollView?.setOnScrollChangeListener { v, _, scrollY, _, _ ->
-            val child = v.getChildAt(0) ?: return@setOnScrollChangeListener
-            val diff = child.bottom - (v.height + scrollY)
-
-            // <= 2 để tránh sai số layout
-            handler.setAutoScroll(diff <= 2)
-        }
-
-        binding?.actionProgress?.isIndeterminate = true
-        return handler
+        }, binding?.shellOutput, binding?.actionProgress)
     }
 
     @FunctionalInterface
@@ -206,10 +192,7 @@ class DialogLogFragment : DialogFragment() {
         private val scriptColor = getColor(R.color.kr_shell_log_script)
         private val endColor = getColor(R.color.kr_shell_log_end)
         private var hasError = false
-        private var autoScroll = true
-        fun setAutoScroll(enable: Boolean) {
-            autoScroll = enable
-        }
+
         private fun getColor(resId: Int): Int {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 context!!.getColor(resId)
@@ -266,12 +249,10 @@ class DialogLogFragment : DialogFragment() {
         }
 
         override fun updateLog(msg: SpannableString?) {
-            msg ?: return
-            logView?.post {
-                logView.append(msg)
-                if (autoScroll) {
-                    (logView.parent as? ScrollView)
-                        ?.fullScroll(ScrollView.FOCUS_DOWN)
+            msg?.let {
+                logView?.post {
+                    logView?.append(it)
+                    (logView?.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
                 }
             }
         }
