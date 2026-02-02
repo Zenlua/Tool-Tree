@@ -522,26 +522,23 @@ public class OverScrollDelegate {
 			}
 			break;
 		}
-        case MotionEvent.ACTION_UP:
-        case MotionEvent.ACTION_CANCEL: {
-        
-            if (mOffsetY != 0f) {
-        
-                if (isOsTop()) {
-                    // 🔼 KÉO LÊN → GIỮ NGUYÊN, KHÔNG AUTO CUỘN
-                    setState(OS_NONE);
-                    // giữ mOffsetY, không spring
-                } else if (isOsBottom()) {
-                    // 🔽 KÉO XUỐNG ĐÁY → VẪN SPRING BACK
-                    final int startScrollY = Math.round(mOffsetY);
-                    mScroller.start(startScrollY, DRAG_BACK_DURATION, sDragBackPathPointsHolder);
-                    setState(OS_SPRING_BACK);
-                }
-                mView.invalidate();
-            }
-        
-            mActivePointerId = INVALID_POINTER;
-        }
+		case MotionEvent.ACTION_UP:
+		case MotionEvent.ACTION_CANCEL: {
+			if (mOffsetY != 0f) {
+				// Sping back to 0
+				final int startScrollY = Math.round(mOffsetY);
+				// mScroller.startScroll(0, startScrollY, 0, -startScrollY,
+				// SPRING_BACK_DURATION);
+				// mPath.reset();
+				// mPath.moveTo(0f, startScrollY);
+				// mPath.lineTo(1f, 0);
+				// mScroller.start(1f, SPRING_BACK_DURATION, mPath);
+				mScroller.start(startScrollY, DRAG_BACK_DURATION, sDragBackPathPointsHolder);
+				setState(OS_SPRING_BACK);
+				mView.invalidate();
+			}
+			mActivePointerId = INVALID_POINTER;
+		}
 		}
 		return isOsDrag();
 	}
