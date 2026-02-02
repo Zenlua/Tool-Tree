@@ -70,7 +70,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
             openExecutor(node)?.let { shellHandler ->
                 ShellExecutor().execute(activity, node, script, onExit, params, shellHandler)
             }
-        } ?: dismissAllowingStateLoss()
+        } ?: closeView()
     }
 
     private fun openExecutor(nodeInfo: RunnableNode): ShellHandlerBase {
@@ -81,7 +81,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         binding?.btnHide?.setOnClickListener {
             uiVisible = false
             wakeLock?.release()
-            dismissAllowingStateLoss()
+            closeView()
         }
 
         binding?.btnCancel?.setOnClickListener {
@@ -95,7 +95,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
         binding?.btnExit?.setOnClickListener {
             isCancelable = true
-            dismissAllowingStateLoss()
+            closeView()
         }
 
         binding?.btnCopy?.setOnClickListener {
@@ -145,7 +145,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
             override fun onSuccess() {
                 if (nodeInfo.autoOff) {
-                    dismissAllowingStateLoss()
+                    closeView()
                 }
             }
 
@@ -243,9 +243,9 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         }
 
         override fun onExit(msg: Any?) {
+            if (!hasError) actionEventHandler.onSuccess()
             updateLog(context?.getString(R.string.kr_shell_completed), endColor)
             actionEventHandler.onCompleted()
-            if (!hasError) actionEventHandler.onSuccess()
         }
 
         override fun updateLog(msg: SpannableString?) {
