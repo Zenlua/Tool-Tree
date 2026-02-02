@@ -240,11 +240,11 @@ fi
 
 if [ "$XOAOAT" == 1 ];then
 (
-find "$OUTPUT/${namepv##*/}" -type d -name "oat" -exec rm -rf {} +
-find "$OUTPUT/${namepv##*/}" -type f -name "*.fsv_meta" -exec rm -rf {} +
-find "$OUTPUT/${namepv##*/}" -type f -name "*.bprof" -exec rm -rf {} +
-find "$OUTPUT/${namepv##*/}" -type f -name "*.prof" -exec rm -rf {} +
-find "$OUTPUT/${namepv##*/}" -type f -name "*.vdex" -exec rm -rf {} +
+find "$OUTPUT/${namepv##*/}" -type d -name "oat" -print -exec rm -rf {} +
+find "$OUTPUT/${namepv##*/}" -type f -name "*.fsv_meta" -delete
+find "$OUTPUT/${namepv##*/}" -type f -name "*.bprof" -delete
+find "$OUTPUT/${namepv##*/}" -type f -name "*.prof" -delete
+find "$OUTPUT/${namepv##*/}" -type f -name "*.vdex" -delete
 ) &>$TMP/delete_oat.log
 fi
 
