@@ -526,8 +526,7 @@ public class OverScrollDelegate {
 		case MotionEvent.ACTION_CANCEL: {
 			if (mOffsetY != 0f) {
 				// Sping back to 0
-				int boost = Math.min(400, Math.abs(mReleaseVelocityY) / 3);
-				final int startScrollY = Math.round(mOffsetY + (mOffsetY > 0 ? boost : -boost));
+				final int startScrollY = Math.round(mOffsetY * 1.2f);
 				// mScroller.startScroll(0, startScrollY, 0, -startScrollY,
 				// SPRING_BACK_DURATION);
 				// mPath.reset();
