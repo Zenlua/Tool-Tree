@@ -24,6 +24,7 @@ import com.omarea.krscript.databinding.KrDialogLogBinding
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
+import android.view.WindowManager
 
 class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
@@ -31,7 +32,6 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     private var running = false
     private var canceled = false
     private var uiVisible = true
-    private var wakeLock: PowerManager.WakeLock? = null
     private var nodeInfo: RunnableNode? = null
     private lateinit var onExit: Runnable
     private lateinit var script: String
@@ -80,7 +80,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
         binding?.btnHide?.setOnClickListener {
             uiVisible = false
-            wakeLock?.release()
+            offScreen()
             closeView()
         }
 
@@ -135,7 +135,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
             override fun onCompleted() {
                 running = false
                 onExit.run()
-                wakeLock?.release()
+                offScreen()
                 binding?.btnHide?.visibility = View.GONE
                 binding?.btnCancel?.visibility = View.GONE
                 binding?.btnExit?.visibility = View.VISIBLE
@@ -154,13 +154,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
                 canceled = false
                 forceStopRunnable = forceStop
 
-                context?.let {
-                    val powerManager = it.getSystemService(Context.POWER_SERVICE) as PowerManager
-                    if (wakeLock == null || !wakeLock!!.isHeld) {
-                        wakeLock = powerManager.newWakeLock(0x2000000a, "KeepScreenOn")
-                        wakeLock?.acquire()
-                    }
-                }
+                dialog?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
                 if (nodeInfo.interruptable && forceStop != null) {
                     binding?.btnCancel?.visibility = View.VISIBLE
@@ -264,6 +258,12 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
             if (!uiVisible || !running) return@setOnKeyListener false
             event.action == KeyEvent.ACTION_DOWN &&
                     (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)
+        }
+    }
+
+    private fun offScreen() {
+        dialog?.window?.let { window ->
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 
