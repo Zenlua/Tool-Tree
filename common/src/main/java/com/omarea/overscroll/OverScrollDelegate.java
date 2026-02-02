@@ -114,8 +114,8 @@ public class OverScrollDelegate {
 	public static final int OS_SPRING_BACK = 3;
 	public static final int OS_FLING = 4;
 
-	private static final int DRAG_BACK_DURATION = 400;
-	private static final int FLING_BACK_DURATION = 400;
+	private static final int DRAG_BACK_DURATION = 420;
+	private static final int FLING_BACK_DURATION = 420;
 
 	private static final int INVALID_POINTER = -1;
 
@@ -134,6 +134,7 @@ public class OverScrollDelegate {
 	private boolean mEnableDragOverScroll = true;
 	private boolean mEnableFlingOverScroll = true;
 	private OverScrollStyle mStyle;
+	private boolean mAllowAutoInvalidate = true;
 
 	// private final Path mPath = new Path();
 
@@ -153,7 +154,7 @@ public class OverScrollDelegate {
 		mScroller = new PathScroller();
 		ViewConfiguration configuration = ViewConfiguration.get(context);
 		// TouchSlop() / 2 to make TouchSlop "more sensible"
-		mTouchSlop = configuration.getScaledTouchSlop() / 2;// 8dp/2
+		mTouchSlop = configuration.getScaledTouchSlop() / 2; // 8dp/2
 		mStyle = sDefaultStyle;
 	}
 
@@ -259,6 +260,11 @@ public class OverScrollDelegate {
 			mOverScrollable.superDraw(canvas);
 		} else {
 			if (mState == OS_SPRING_BACK || mState == OS_FLING) {
+    			if (!mAllowAutoInvalidate) {
+                    mScroller.abortAnimation();
+                    setState(OS_NONE);
+                    return;
+                }
 				if (mScroller.computeScrollOffset()) {
 					mOffsetY = mScroller.getCurrY();
 				} else {
@@ -480,6 +486,12 @@ public class OverScrollDelegate {
 			if (isOsDrag()) {
 				// mLastMotionX = MotionEventCompat.getX(ev, pointerIndex);
 				mOffsetY += yDiff;
+				
+				if ((isOsBottom() && yDiff > 0) || (isOsTop() && yDiff < 0)) {
+				mAllowAutoInvalidate = false;
+				mScroller.abortAnimation();
+				}
+
 				if (isOsTop()) {// mDragOffsetY should > 0
 					if (mOffsetY <= 0) {
 						setState(OS_NONE);
@@ -522,23 +534,21 @@ public class OverScrollDelegate {
 			}
 			break;
 		}
-		case MotionEvent.ACTION_UP:
-		case MotionEvent.ACTION_CANCEL: {
-			if (mOffsetY != 0f) {
-				// Sping back to 0
-				final int startScrollY = Math.round(mOffsetY * 1.2f);
-				// mScroller.startScroll(0, startScrollY, 0, -startScrollY,
-				// SPRING_BACK_DURATION);
-				// mPath.reset();
-				// mPath.moveTo(0f, startScrollY);
-				// mPath.lineTo(1f, 0);
-				// mScroller.start(1f, SPRING_BACK_DURATION, mPath);
-				mScroller.start(startScrollY, DRAG_BACK_DURATION, sDragBackPathPointsHolder);
-				setState(OS_SPRING_BACK);
-				mView.invalidate();
-			}
-			mActivePointerId = INVALID_POINTER;
-		}
+        case MotionEvent.ACTION_UP:
+        case MotionEvent.ACTION_CANCEL: {
+            if (mOffsetY != 0f) {
+                final int startScrollY = Math.round(mOffsetY);
+                if (isOsBottom()) {
+                    mAllowAutoInvalidate = true;
+                    mScroller.start(startScrollY, DRAG_BACK_DURATION, sDragBackPathPointsHolder);
+                    setState(OS_SPRING_BACK);
+                    mView.invalidate();
+                } else {
+                    setState(OS_NONE);
+                }
+            }
+            mActivePointerId = INVALID_POINTER;
+        }
 		}
 		return isOsDrag();
 	}
