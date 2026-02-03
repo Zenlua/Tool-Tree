@@ -13,7 +13,7 @@ import android.widget.Filterable
 import com.omarea.common.R
 
 class DialogAppChooser(
-        darkMode: Boolean,
+        private val darkMode: Boolean,
         private var packages: ArrayList<AdapterAppChooser.AppInfo>,
         private val multiple: Boolean = false,
         private var callback: Callback? = null) : DialogFullScreen(R.layout.dialog_app_chooser, darkMode) {
@@ -69,7 +69,7 @@ class DialogAppChooser(
                     }
                 }
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    (absListView.adapter as Filterable).getFilter().filter(s?.toString() ?: "")
+                    (absListView.adapter as Filterable).getFilter().filter(if (s == null) "" else s.toString())
                 }
             })
         }
@@ -88,7 +88,7 @@ class DialogAppChooser(
         fun onConfirm(apps: List<AdapterAppChooser.AppInfo>)
     }
 
-    fun setExcludeApps(apps: Array<String>): DialogAppChooser {
+    public fun setExcludeApps(apps: Array<String>): DialogAppChooser {
         this.excludeApps = apps
         if (this.view != null) {
             Log.e("@DialogAppChooser", "Unable to set the exclusion list, The list has been loaded")
@@ -97,7 +97,7 @@ class DialogAppChooser(
         return this
     }
 
-    fun setAllowAllSelect(allow: Boolean): DialogAppChooser {
+    public fun setAllowAllSelect(allow: Boolean): DialogAppChooser {
         this.allowAllSelect = allow
         view?.findViewById<CompoundButton?>(R.id.select_all)?.visibility = if (allow) View.VISIBLE else View.GONE
 
