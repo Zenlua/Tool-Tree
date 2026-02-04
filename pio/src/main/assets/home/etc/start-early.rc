@@ -9,13 +9,19 @@ if [ "$ROT" == 1 ];then
     # Tạo link home
     [ -e /data/local/Tool-Tree ] || ln -sf $HOME /data/local/Tool-Tree
     # Thêm không giới hạn tiết kiệm pin
-    dumpsys deviceidle whitelist +$PACKAGE_NAME
+    dumpsys deviceidle whitelist +$PACKAGE_NAME &>/dev/null
     # Cấp quyền ở miui, hyper
     # Danh sách các ứng dụng đã cài đặt
     cmd appops set $PACKAGE_NAME 10022 allow
-    cmd appops set $PACKAGE_NAME QUERY_ALL_PACKAGES allow
+    cmd appops set $PACKAGE_NAME GET_USAGE_STATS allow
     # Phím tắt màn hình chính
     cmd appops set $PACKAGE_NAME 10017 allow
+    cmd appops set $PACKAGE_NAME INSTALL_SHORTCUT allow
+    # Thông báo
+    pm grant $PACKAGE_NAME android.permission.POST_NOTIFICATIONS
+    cmd appops set $PACKAGE_NAME POST_NOTIFICATION allow
+    # Loaded sẵn danh sách img
+    search_image &>/dev/null
 fi
 ) &>>$TEMP/Install.log &
 
