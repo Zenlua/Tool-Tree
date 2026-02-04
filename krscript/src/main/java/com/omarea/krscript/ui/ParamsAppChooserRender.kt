@@ -73,8 +73,8 @@ private fun loadPackages(includeMissing: Boolean = false): ArrayList<AdapterAppC
         for (item in actionParamInfo.optionsFromShell!!) {
             if (!result.containsKey(item.value)) {
                 result[item.value] = AdapterAppChooser.AppInfo().apply {
-                    packageName = item.value ?: ""
-                    appName = item.title ?: item.value
+                    appName = "" + item.title
+                    packageName = "" + item.value
                 }
             }
         }
