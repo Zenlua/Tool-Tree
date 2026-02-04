@@ -43,10 +43,10 @@ class ParamsAppChooserRender(private var actionParamInfo: ActionParamInfo, priva
     }
 
     private fun openAppChooser() {
+        packages = loadPackages(actionParamInfo.type == "packages")
         setSelectStatus()
-
-        // Gọi DialogAppChooser với chế độ tối/sáng
-        DialogAppChooser(darkMode, packages, actionParamInfo.multiple, this).show(context.supportFragmentManager, "app-chooser")
+        DialogAppChooser(darkMode, packages, actionParamInfo.multiple, this)
+            .show(context.supportFragmentManager, "app-chooser")
     }
 
 private fun loadPackages(includeMissing: Boolean = false): ArrayList<AdapterAppChooser.AppInfo> {
