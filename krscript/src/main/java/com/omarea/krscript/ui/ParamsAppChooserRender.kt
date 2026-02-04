@@ -41,24 +41,31 @@ class ParamsAppChooserRender(private var actionParamInfo: ActionParamInfo, priva
 
         return layout
     }
-
+    
     private fun openAppChooser() {
         packages = loadPackages(actionParamInfo.type == "packages")
+    
+        val collator = Collator.getInstance(Locale.getDefault())
+        packages.sortWith { a, b ->
+            collator.compare(a.appName ?: "", b.appName ?: "")
+        }
+    
         setSelectStatus()
+    
         DialogAppChooser(darkMode, packages, actionParamInfo.multiple, this)
             .show(context.supportFragmentManager, "app-chooser")
     }
 
-private fun loadPackages(includeMissing: Boolean = false): ArrayList<AdapterAppChooser.AppInfo> {
-    val pm = context.packageManager
-
-    val filterSet = actionParamInfo.optionsFromShell
-        ?.map { it.value }
-        ?.toHashSet()
-
-    val result = HashMap<String, AdapterAppChooser.AppInfo>(128)
-
-    pm.getInstalledApplications(PackageManager.MATCH_ALL).forEach { app ->
+    private fun loadPackages(includeMissing: Boolean = false): ArrayList<AdapterAppChooser.AppInfo> {
+        val pm = context.packageManager
+    
+        val filterSet = actionParamInfo.optionsFromShell
+            ?.map { it.value }
+            ?.toHashSet()
+    
+        val result = HashMap<String, AdapterAppChooser.AppInfo>(128)
+    
+        pm.getInstalledApplications(PackageManager.MATCH_ALL).forEach { app ->
         val pkg = app.packageName
         if (filterSet == null || filterSet.contains(pkg)) {
             result[pkg] = AdapterAppChooser.AppInfo().apply {
@@ -109,56 +116,50 @@ private fun loadPackages(includeMissing: Boolean = false): ArrayList<AdapterAppC
     }
 
     // 设置界面显示和元素赋值
-private fun setTextView() {
-    packages = loadPackages(actionParamInfo.type == "packages")
+    private fun setTextView() {
+        packages = loadPackages(actionParamInfo.type == "packages")
 
-    // sort theo locale
-    val collator = Collator.getInstance(Locale.getDefault())
-    packages.sortWith { a, b ->
-        collator.compare(a.appName ?: "", b.appName ?: "")
-    }
-
-    // map nhanh theo packageName
-    val packageMap = packages
-        .filter { it.packageName != null }
-        .associateBy { it.packageName!! }
-
-    if (actionParamInfo.multiple) {
-        ActionParamsLayoutRender.getParamValues(actionParamInfo)
-            ?.forEach { value ->
-                packageMap[value]?.selected = true
-            }
-
-        // giữ hành vi cũ: hiển thị ngay
-        onConfirm(packages.filter { it.selected })
-
-    } else {
-        val validOptions = ArrayList<SelectItem>(packages.size)
-        packages.forEach {
-            validOptions.add(
-                SelectItem().apply {
-                    title = it.appName ?: ""
-                    value = it.packageName ?: ""
+        // map nhanh theo packageName
+        val packageMap = packages
+            .filter { it.packageName != null }
+            .associateBy { it.packageName!! }
+    
+        if (actionParamInfo.multiple) {
+            ActionParamsLayoutRender.getParamValues(actionParamInfo)
+                ?.forEach { value ->
+                    packageMap[value]?.selected = true
                 }
-            )
-        }
-
-        val currentIndex =
-            ActionParamsLayoutRender.getParamOptionsCurrentIndex(
-                actionParamInfo,
-                validOptions
-            )
-
-        if (currentIndex >= 0) {
-            val item = packages[currentIndex]
-            valueView.text = item.packageName.orEmpty()
-            nameView.text = item.appName.orEmpty()
+    
+            // giữ hành vi cũ: hiển thị ngay
+            onConfirm(packages.filter { it.selected })
+    
         } else {
-            valueView.text = ""
-            nameView.text = ""
+            val validOptions = ArrayList<SelectItem>(packages.size)
+            packages.forEach {
+                validOptions.add(
+                    SelectItem().apply {
+                        title = it.appName ?: ""
+                        value = it.packageName ?: ""
+                    }
+                )
+            }
+    
+            val currentIndex =
+                ActionParamsLayoutRender.getParamOptionsCurrentIndex(
+                    actionParamInfo,
+                    validOptions
+                )
+    
+            if (currentIndex >= 0) {
+                val item = packages[currentIndex]
+                valueView.text = item.packageName.orEmpty()
+                nameView.text = item.appName.orEmpty()
+            } else {
+                valueView.text = ""
+                nameView.text = ""
+            }
         }
     }
-}
 
     override fun onConfirm(apps: List<AdapterAppChooser.AppInfo>) {
         if (actionParamInfo.multiple) {
