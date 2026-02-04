@@ -62,8 +62,8 @@ class AdapterAppChooser(
         }
 
         override fun performFiltering(constraint: CharSequence?): FilterResults {
-            val results = Filter.FilterResults()
-            val prefix: String = if (constraint == null) "" else constraint.toString()
+            val results = FilterResults()
+            val prefix: String = constraint?.toString() ?: ""
 
             if (prefix.isEmpty()) {
                 val list: ArrayList<AppInfo>
@@ -141,14 +141,9 @@ class AdapterAppChooser(
                     val installInfo = context.packageManager.getPackageInfo(packageName, 0)
                     iconCaches.put(
                             packageName,
-                            installInfo.applicationInfo?.let {
-                                iconCaches.put(
-                                    packageName,
-                                    it.loadIcon(context.packageManager)
-                                )
-                            }
+                        installInfo.applicationInfo?.loadIcon(context.packageManager)
                     )
-                } catch (ex: Exception) {
+                } catch (_: Exception) {
                     app.notFound = true
                 } finally {
                 }
@@ -177,12 +172,12 @@ class AdapterAppChooser(
             val visibleFirstPosi = listView.firstVisiblePosition
             val visibleLastPosi = listView.lastVisiblePosition
 
-            if (position >= visibleFirstPosi && position <= visibleLastPosi) {
+            if (position in visibleFirstPosi..visibleLastPosi) {
                 filterApps[position] = AppInfo
                 val view = listView.getChildAt(position - visibleFirstPosi)
                 updateRow(position, view)
             }
-        } catch (ex: Exception) {
+        } catch (_: Exception) {
         }
     }
 
@@ -249,7 +244,7 @@ class AdapterAppChooser(
         return apps.filter { it.selected }
     }
 
-    inner class ViewHolder {
+    class ViewHolder {
         internal var packageName: String? = null
 
         internal var itemTitle: TextView? = null
