@@ -51,17 +51,17 @@ class ParamsAppChooserRender(private var actionParamInfo: ActionParamInfo, priva
 
     private fun loadPackages(includeMissing: Boolean = false): List<AdapterAppChooser.AppInfo> {
         val pm = context.packageManager
-        val filterSet = actionParamInfo.optionsFromShell
-            ?.map { it.value }
-            ?.toSet()
+        val filter = actionParamInfo.optionsFromShell?.map {
+            it.value
+        }
 
         val packages = pm.getInstalledPackages(0).filter {
-            filterSet == null || filterSet.contains(it.packageName)
+            filter == null || filter.contains(it.packageName)
         }
 
         val options = ArrayList(packages.map {
             AdapterAppChooser.AppInfo().apply {
-                appName = it.applicationInfo?.loadLabel(pm)?.toString() ?: ""
+                appName = "" + it.applicationInfo?.loadLabel(pm)
                 packageName = it.packageName
             }
         })
@@ -69,7 +69,7 @@ class ParamsAppChooserRender(private var actionParamInfo: ActionParamInfo, priva
         // 是否包含丢失的应用程序
         if (includeMissing && actionParamInfo.optionsFromShell != null) {
             for (item in actionParamInfo.optionsFromShell!!) {
-                if (options.filter { it.packageName == item.value }.isEmpty()) {
+                if (options.none { it.packageName == item.value }) {
                     options.add(AdapterAppChooser.AppInfo().apply {
                         appName = "" + item.title
                         packageName = "" + item.value
@@ -100,7 +100,7 @@ class ParamsAppChooserRender(private var actionParamInfo: ActionParamInfo, priva
             val current = packages.find { it.packageName == currentValue }
             val currentIndex = if (current != null) packages.indexOf(current) else -1
             if (currentIndex > -1) {
-                packages.get(currentIndex).selected = true
+                packages[currentIndex].selected = true
             }
         }
     }
@@ -150,8 +150,8 @@ class ParamsAppChooserRender(private var actionParamInfo: ActionParamInfo, priva
 
     override fun onConfirm(apps: List<AdapterAppChooser.AppInfo>) {
         if (actionParamInfo.multiple) {
-            val values = apps.map { it.packageName }.joinToString(actionParamInfo.separator)
-            val labels = apps.map { it.appName }.joinToString("，")
+            val values = apps.joinToString(actionParamInfo.separator) { it.packageName }
+            val labels = apps.joinToString("，") { it.appName }
             valueView.text = values
             nameView.text = labels
         } else {
