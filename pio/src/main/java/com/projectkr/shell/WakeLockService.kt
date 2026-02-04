@@ -21,6 +21,7 @@ import com.tool.tree.R
 import android.os.Process
 import android.app.ActivityManager
 
+@Suppress("DEPRECATION"
 class WakeLockService : Service() {
 
     private var wakeLock: PowerManager.WakeLock? = null

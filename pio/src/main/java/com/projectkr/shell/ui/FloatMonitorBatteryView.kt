@@ -11,9 +11,10 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import com.tool.tree.R
 
+@Suppress("DEPRECATION"
 class FloatMonitorBatteryView : View {
     //-------------必须给的数据相关-------------
-    private val str = arrayOf("已用", "可用")
+    private val str = arrayOf("Already used", "Available")
     private var ratio = 0
     private var ratioState = 0
     //圆的直径

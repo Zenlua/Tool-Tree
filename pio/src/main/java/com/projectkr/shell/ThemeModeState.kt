@@ -13,6 +13,7 @@ import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
 import com.omarea.common.ui.ThemeMode
 
+@Suppress("DEPRECATION"
 object ThemeModeState {
     private var themeMode: ThemeMode = ThemeMode()
 
