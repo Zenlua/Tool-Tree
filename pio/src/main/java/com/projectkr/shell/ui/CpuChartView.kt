@@ -9,7 +9,7 @@ import android.util.AttributeSet
 import android.view.View
 import com.tool.tree.R
 
-@Suppress("DEPRECATION"
+@Suppress("DEPRECATION")
 class CpuChartView : View {
     //-------------必须给的数据相关-------------
     private val str = arrayOf("Already used", "Available")

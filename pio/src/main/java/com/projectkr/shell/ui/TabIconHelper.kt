@@ -9,7 +9,7 @@ import android.widget.TabHost
 import android.widget.TextView
 import com.tool.tree.R
 
-@Suppress("DEPRECATION"
+@Suppress("DEPRECATION")
 class TabIconHelper(private var tabHost: TabHost, private var activity: Activity) {
     private var views = ArrayList<View>()
 

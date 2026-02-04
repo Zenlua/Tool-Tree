@@ -11,7 +11,7 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import com.tool.tree.R
 
-@Suppress("DEPRECATION"
+@Suppress("DEPRECATION")
 class FloatMonitorBatteryView : View {
     //-------------必须给的数据相关-------------
     private val str = arrayOf("Already used", "Available")
