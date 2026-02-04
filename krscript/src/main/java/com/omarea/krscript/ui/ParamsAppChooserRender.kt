@@ -90,10 +90,11 @@ class ParamsAppChooserRender(
         // include missing packages
         if (includeMissing && actionParamInfo.optionsFromShell != null) {
             for (item in actionParamInfo.optionsFromShell!!) {
-                if (!appMap.containsKey(item.value)) {
-                    appMap[item.value] = AdapterAppChooser.AppInfo().apply {
-                        packageName = item.value
-                        appName = item.title
+                val pkg = item.value ?: continue
+                if (!appMap.containsKey(pkg)) {
+                    appMap[pkg] = AdapterAppChooser.AppInfo().apply {
+                        packageName = pkg
+                        appName = item.title ?: ""
                     }
                 }
             }
