@@ -51,17 +51,17 @@ class ParamsAppChooserRender(private var actionParamInfo: ActionParamInfo, priva
 
     private fun loadPackages(includeMissing: Boolean = false): List<AdapterAppChooser.AppInfo> {
         val pm = context.packageManager
-        val filter = actionParamInfo.optionsFromShell?.map {
-            it.value
-        }
+        val filterSet = actionParamInfo.optionsFromShell
+            ?.map { it.value }
+            ?.toSet()
 
         val packages = pm.getInstalledPackages(0).filter {
-            filter == null || filter.contains(it.packageName)
+            filterSet == null || filterSet.contains(it.packageName)
         }
 
         val options = ArrayList(packages.map {
             AdapterAppChooser.AppInfo().apply {
-                appName = "" + it.applicationInfo.loadLabel(pm)
+                appName = it.applicationInfo?.loadLabel(pm)?.toString() ?: ""
                 packageName = it.packageName
             }
         })
