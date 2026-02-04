@@ -101,7 +101,7 @@ class ParamsAppChooserRender(
 
         val collator = Collator.getInstance(Locale.getDefault())
         val result = appMap.values.sortedWith { a, b ->
-            collator.compare(a.appName, b.appName)
+            collator.compare(a.appName ?: "", b.appName ?: "")
         }
 
         if (includeMissing) {
@@ -116,7 +116,9 @@ class ParamsAppChooserRender(
      * Đặt trạng thái selected (O(n))
      */
     private fun setSelectStatus() {
-        val map = packages.associateBy { it.packageName }
+        val map = packages
+            .filter { it.packageName != null }
+            .associateBy { it.packageName!! }
         packages.forEach { it.selected = false }
 
         if (actionParamInfo.multiple) {
@@ -145,8 +147,8 @@ class ParamsAppChooserRender(
             packages.forEach {
                 validOptions.add(
                     SelectItem().apply {
-                        title = it.appName
-                        value = it.packageName
+                        title = it.appName ?: ""
+                        value = it.packageName ?: ""
                     }
                 )
             }
@@ -159,8 +161,8 @@ class ParamsAppChooserRender(
 
             if (currentIndex >= 0) {
                 val item = packages[currentIndex]
-                valueView.text = item.packageName
-                nameView.text = item.appName
+                valueView.text = item.packageName ?: ""
+                nameView.text = item.appName ?: ""
             } else {
                 valueView.text = ""
                 nameView.text = ""
@@ -174,9 +176,9 @@ class ParamsAppChooserRender(
     override fun onConfirm(apps: List<AdapterAppChooser.AppInfo>) {
         if (actionParamInfo.multiple) {
             valueView.text =
-                apps.joinToString(actionParamInfo.separator) { it.packageName }
+                apps.joinToString(actionParamInfo.separator) { it.packageName ?: "" }
             nameView.text =
-                apps.joinToString("，") { it.appName }
+                apps.joinToString("，") { it.appName ?: "" }
         } else {
             val item = apps.firstOrNull()
             valueView.text = item?.packageName.orEmpty()
