@@ -72,9 +72,10 @@ private fun loadPackages(includeMissing: Boolean = false): ArrayList<AdapterAppC
     if (includeMissing && actionParamInfo.optionsFromShell != null) {
         for (item in actionParamInfo.optionsFromShell!!) {
             if (!result.containsKey(item.value)) {
-                result[item.value] = AdapterAppChooser.AppInfo().apply {
-                    appName = "" + item.title
-                    packageName = "" + item.value
+                val pkg = item.value ?: ""
+                result[pkg] = AdapterAppChooser.AppInfo().apply {
+                    packageName = pkg
+                    appName = item.title ?: ""
                 }
             }
         }
