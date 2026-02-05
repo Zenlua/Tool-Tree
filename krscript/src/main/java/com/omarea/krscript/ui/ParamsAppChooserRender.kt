@@ -33,6 +33,19 @@ class ParamsAppChooserRender(
     // collator dùng chung cho toàn bộ quá trình sort
     private val collator: Collator = Collator.getInstance(Locale.getDefault())
 
+    private val selectedValues: Set<String>
+        get() = if (actionParamInfo.multiple) {
+            valueView.text.toString()
+                .split(actionParamInfo.separator)
+                .filter { it.isNotEmpty() }
+                .toSet()
+        } else {
+            valueView.text.toString()
+                .takeIf { it.isNotEmpty() }
+                ?.let { setOf(it) }
+                ?: emptySet()
+        }
+
     fun render(): View {
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.kr_param_app, null)
