@@ -85,5 +85,13 @@
             style="@style/dialogConfirmBtn"
             android:text="@string/btn_confirm">
         </Button>
+        
+        <ProgressBar
+            android:id="@+id/loading"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:visibility="gone"
+            style="?android:attr/progressBarStyleLarge"/>
     </LinearLayout>
 </LinearLayout>

@@ -66,6 +66,8 @@ class ParamsAppChooserRender(
 
         // ✅ SHOW NGAY
         dialog.show(context.supportFragmentManager, "app-chooser")
+        
+        dialog.showLoading(true)
 
         // ✅ LOAD SAU KHI DIALOG ĐÃ HIỆN
         loadPackagesAsync(dialog, actionParamInfo.type == "packages")
@@ -142,6 +144,7 @@ class ParamsAppChooserRender(
                 }
                 setSelectStatus()
                 dialog.notifyDataChanged()
+                dialog.showLoading(false)
             }
         }
     }

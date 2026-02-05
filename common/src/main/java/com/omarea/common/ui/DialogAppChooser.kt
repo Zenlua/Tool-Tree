@@ -22,10 +22,14 @@ class DialogAppChooser(
     private var allowAllSelect = true
     private var excludeApps: Array<String> = arrayOf()
     private lateinit var adapter: AdapterAppChooser
+    private var loadingView: View? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        loadingView = view.findViewById(R.id.loading)
+        showLoading(true)
+        
         val absListView = view.findViewById<AbsListView>(R.id.app_list)
         setup(absListView)
 
@@ -108,6 +112,10 @@ if (multiple) {
 
         adapter = AdapterAppChooser(gridView.context, filtered, multiple)
         gridView.adapter = adapter
+    }
+
+    fun showLoading(show: Boolean) {
+        loadingView?.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     fun notifyDataChanged() {
