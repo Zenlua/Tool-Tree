@@ -78,24 +78,27 @@ class ParamsAppChooserRender(
     // =======================
     private fun insertSorted(
         list: MutableList<AdapterAppChooser.AppInfo>,
-        item: AdapterAppChooser.AppInfo
+        item: AdapterAppChooser.AppInfo,
+        collator: Collator
     ) {
         var low = 0
         var high = list.size
-    
-        val itemName = item.appName ?: ""
+        val name = item.appName ?: ""
     
         while (low < high) {
             val mid = (low + high) ushr 1
-            val midName = list[mid].appName ?: ""
+            val m = list[mid]
     
-            if (collator.compare(midName, itemName) < 0) {
-                low = mid + 1
-            } else {
-                high = mid
+            when {
+                m.selected != item.selected ->
+                    if (item.selected) high = mid else low = mid + 1
+    
+                collator.compare(m.appName ?: "", name) < 0 ->
+                    low = mid + 1
+    
+                else -> high = mid
             }
         }
-    
         list.add(low, item)
     }
 
