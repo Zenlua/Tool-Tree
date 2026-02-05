@@ -42,6 +42,7 @@ class ParamsAppChooserRender(
 
         // giữ hành vi cũ: không load package ở đây
         setTextView()
+        resolveCurrentAppName()
 
         layout.findViewById<View>(R.id.kr_param_app_btn).setOnClickListener {
             openAppChooser()
