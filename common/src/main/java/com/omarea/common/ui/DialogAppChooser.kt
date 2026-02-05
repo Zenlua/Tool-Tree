@@ -23,6 +23,7 @@ class DialogAppChooser(
     private var excludeApps: Array<String> = arrayOf()
     private lateinit var adapter: AdapterAppChooser
     private var loadingView: View? = null
+    private var selectAllCheckBox: CompoundButton? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -41,7 +42,8 @@ class DialogAppChooser(
         }
 
         // 全选
-        val selectAll = view.findViewById<CompoundButton?>(R.id.select_all)
+        selectAllCheckBox = view.findViewById(R.id.select_all)
+        val selectAll = selectAllCheckBox
         if (selectAll != null) {
             if (multiple) {
                 val adapter = absListView.adapter as? AdapterAppChooser
@@ -123,8 +125,17 @@ class DialogAppChooser(
     }
 
     fun notifyDataChanged() {
-        if (::adapter.isInitialized) {
-            adapter.notifyDataSetChanged()
+        if (!::adapter.isInitialized) return
+    
+        adapter.notifyDataSetChanged()
+    
+        // 🔥 sync lại trạng thái "Chọn tất cả"
+        if (multiple) {
+            val allSelected =
+                adapter.count > 0 &&
+                adapter.getSelectedItems().size == adapter.count
+    
+            selectAllCheckBox?.isChecked = allSelected
         }
     }
 
