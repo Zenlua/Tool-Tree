@@ -11,245 +11,168 @@ import kotlinx.coroutines.*
 import java.util.*
 
 class AdapterAppChooser(
-        private val context: Context,
-        private var apps: ArrayList<AppInfo>,
-        private val multiple: Boolean
+    private val context: Context,
+    private var apps: ArrayList<AppInfo>,
+    private val multiple: Boolean
 ) : BaseAdapter(), Filterable {
+
     interface SelectStateListener {
         fun onSelectChange(selected: List<AppInfo>)
     }
 
     open class AppInfo {
-        var appName: String = ""
-        var packageName: String = ""
-
-        // 是否未找到此应用
+        var appName: String? = null
+        var packageName: String? = null
         var notFound: Boolean = false
         var selected: Boolean = false
     }
 
     private var selectStateListener: SelectStateListener? = null
     private var filter: Filter? = null
+
     internal var filterApps: ArrayList<AppInfo> = apps
     private val mLock = Any()
 
-    private class ArrayFilter(private var adapter: AdapterAppChooser) : Filter() {
-        override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-            adapter.filterApps = results!!.values as ArrayList<AppInfo>
-            if (results.count > 0) {
-                adapter.notifyDataSetChanged()
-            } else {
-                adapter.notifyDataSetInvalidated()
-            }
-        }
-
-        private fun searchStr(valueText: String, keyword: String): Boolean {
-            // First match against the whole, non-splitted value
-            if (valueText.contains(keyword)) {
-                return true
-            } else {
-                val words = valueText.split(" ".toRegex()).dropLastWhile({ it.isEmpty() }).toTypedArray()
-                val wordCount = words.size
-
-                // Start at index 0, in case valueText starts with space(s)
-                for (k in 0 until wordCount) {
-                    if (words[k].contains(keyword)) {
-                        return true
-                    }
-                }
-            }
-            return false
-        }
+    private class ArrayFilter(private val adapter: AdapterAppChooser) : Filter() {
 
         override fun performFiltering(constraint: CharSequence?): FilterResults {
             val results = FilterResults()
-            val prefix: String = constraint?.toString() ?: ""
+            val prefix = constraint?.toString()?.lowercase() ?: ""
 
             if (prefix.isEmpty()) {
-                val list: ArrayList<AppInfo>
                 synchronized(adapter.mLock) {
-                    list = ArrayList<AppInfo>(adapter.apps)
+                    results.values = ArrayList(adapter.apps)
+                    results.count = adapter.apps.size
                 }
-                results.values = list
-                results.count = list.size
-            } else {
-                val prefixString = prefix.lowercase()
-
-                val values: ArrayList<AppInfo>
-                synchronized(adapter.mLock) {
-                    values = ArrayList<AppInfo>(adapter.apps)
-                }
-                val selected = adapter.getSelectedItems()
-
-                val count = values.size
-                val newValues = ArrayList<AppInfo>()
-
-                for (i in 0 until count) {
-                    val value = values[i]
-                    if (selected.contains(value)) {
-                        newValues.add(value)
-                    } else {
-                        val labelText = value.appName.lowercase()
-                        val valueText = value.packageName.lowercase()
-                        if (searchStr(labelText, prefixString)) {
-                            newValues.add(value)
-                        } else if (searchStr(valueText, prefixString)) {
-                            newValues.add(value)
-                        }
-                    }
-                }
-
-                results.values = newValues
-                results.count = newValues.size
+                return results
             }
 
+            val selected = adapter.getSelectedItems()
+            val newValues = ArrayList<AppInfo>()
+
+            for (item in adapter.apps) {
+                if (selected.contains(item)) {
+                    newValues.add(item)
+                    continue
+                }
+
+                val name = item.appName?.lowercase() ?: ""
+                val pkg = item.packageName?.lowercase() ?: ""
+
+                if (name.contains(prefix) || pkg.contains(prefix)) {
+                    newValues.add(item)
+                }
+            }
+
+            results.values = newValues
+            results.count = newValues.size
             return results
+        }
+
+        override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+            if (results?.values is ArrayList<*>) {
+                @Suppress("UNCHECKED_CAST")
+                adapter.filterApps = results.values as ArrayList<AppInfo>
+                adapter.notifyDataSetChanged()
+            }
         }
     }
 
     override fun getFilter(): Filter {
-        if (filter == null) {
-            filter = ArrayFilter(this)
-        }
+        if (filter == null) filter = ArrayFilter(this)
         return filter!!
     }
 
     private val iconCaches = LruCache<String, Drawable>(100)
 
-    init {
-        filterApps.sortBy { !it.selected }
-    }
+    override fun getCount(): Int = filterApps.size
 
-    override fun getCount(): Int {
-        return filterApps.size
-    }
+    override fun getItem(position: Int): AppInfo = filterApps[position]
 
-    override fun getItem(position: Int): AppInfo {
-        return filterApps[position]
-    }
+    override fun getItemId(position: Int): Long = position.toLong()
 
-    override fun getItemId(position: Int): Long {
-        return position.toLong()
+    override fun getView(position: Int, view: View?, parent: ViewGroup): View {
+        val convertView = view ?: View.inflate(
+            context,
+            if (multiple) R.layout.app_multiple_chooser_item
+            else R.layout.app_single_chooser_item,
+            null
+        )
+
+        updateRow(position, convertView)
+        return convertView
     }
 
     private fun loadIcon(app: AppInfo): Deferred<Drawable?> {
         return GlobalScope.async(Dispatchers.IO) {
-            val packageName = app.packageName
-            val icon: Drawable? = iconCaches.get(packageName)
-            if (icon == null && !app.notFound) {
+            val pkg = app.packageName ?: return@async null
+            val cached = iconCaches.get(pkg)
+            if (cached != null) return@async cached
+
+            if (!app.notFound) {
                 try {
-                    val installInfo = context.packageManager.getPackageInfo(packageName, 0)
-                    iconCaches.put(
-                            packageName,
-                        installInfo.applicationInfo?.loadIcon(context.packageManager)
-                    )
+                    val info = context.packageManager.getPackageInfo(pkg, 0)
+                    val icon = info.applicationInfo?.loadIcon(context.packageManager)
+                    if (icon != null) iconCaches.put(pkg, icon)
                 } catch (_: Exception) {
                     app.notFound = true
-                } finally {
                 }
-                return@async iconCaches.get(packageName)
-            } else {
-                return@async icon
             }
-        }
-    }
-
-    override fun getView(position: Int, view: View?, parent: ViewGroup): View {
-        var convertView = view
-        if (convertView == null) {
-            convertView = View.inflate(context, if (multiple) {
-                R.layout.app_multiple_chooser_item
-            } else {
-                R.layout.app_single_chooser_item
-            }, null)
-        }
-        updateRow(position, convertView!!)
-        return convertView
-    }
-
-    fun updateRow(position: Int, listView: OverScrollGridView, AppInfo: AppInfo) {
-        try {
-            val visibleFirstPosi = listView.firstVisiblePosition
-            val visibleLastPosi = listView.lastVisiblePosition
-
-            if (position in visibleFirstPosi..visibleLastPosi) {
-                filterApps[position] = AppInfo
-                val view = listView.getChildAt(position - visibleFirstPosi)
-                updateRow(position, view)
-            }
-        } catch (_: Exception) {
+            iconCaches.get(pkg)
         }
     }
 
     fun updateRow(position: Int, convertView: View) {
         val item = getItem(position)
 
-        val viewHolder = if (convertView.tag != null) {
-            convertView.tag as ViewHolder
-        } else {
-            ViewHolder().apply {
-                itemTitle = convertView.findViewById(R.id.ItemTitle)
-                itemDesc = convertView.findViewById(R.id.ItemDesc)
-                imgView = convertView.findViewById(R.id.ItemIcon)
-                checkBox = convertView.findViewById(R.id.ItemChecBox)
-            }
+        val holder = (convertView.tag as? ViewHolder) ?: ViewHolder(convertView).also {
+            convertView.tag = it
         }
 
-        val packageName = item.packageName
-        viewHolder.packageName = packageName
+        holder.itemTitle.text = item.appName ?: ""
+        holder.itemDesc.text = item.packageName ?: ""
+        holder.checkBox?.isChecked = item.selected
 
         convertView.setOnClickListener {
-            if (multiple || item.selected) {
-                if (multiple) {
-                    item.selected = !item.selected
-                    viewHolder.checkBox?.isChecked = item.selected
-                }
+            if (multiple) {
+                item.selected = !item.selected
+                holder.checkBox?.isChecked = item.selected
             } else {
-                val current = apps.find { it.selected }
-                current?.selected = false
+                apps.forEach { it.selected = false }
                 item.selected = true
                 notifyDataSetChanged()
             }
             selectStateListener?.onSelectChange(getSelectedItems())
         }
 
-        viewHolder.run {
-            itemTitle?.text = item.appName
-            itemDesc?.text = item.packageName
-            checkBox?.isChecked = item.selected
+        val pkg = item.packageName
+        holder.imgView.tag = pkg
 
-            val imgView = imgView!!
-            imgView.tag = packageName
-            GlobalScope.launch(Dispatchers.Main) {
-                val icon = loadIcon(item).await()
-                if (icon != null && imgView.tag == packageName) {
-                    imgView.setImageDrawable(icon)
-                }
+        GlobalScope.launch(Dispatchers.Main) {
+            val icon = loadIcon(item).await()
+            if (icon != null && holder.imgView.tag == pkg) {
+                holder.imgView.setImageDrawable(icon)
             }
         }
     }
 
     fun setSelectAllState(allSelected: Boolean) {
-        apps.forEach {
-            it.selected = allSelected
-        }
+        apps.forEach { it.selected = allSelected }
         notifyDataSetChanged()
+        selectStateListener?.onSelectChange(getSelectedItems())
     }
 
-    fun setSelectStateListener(selectStateListener: SelectStateListener?) {
-        this.selectStateListener = selectStateListener
+    fun getSelectedItems(): List<AppInfo> =
+        apps.filter { it.selected }
+
+    fun setSelectStateListener(listener: SelectStateListener?) {
+        this.selectStateListener = listener
     }
 
-    fun getSelectedItems(): List<AppInfo> {
-        return apps.filter { it.selected }
-    }
-
-    class ViewHolder {
-        internal var packageName: String? = null
-
-        internal var itemTitle: TextView? = null
-        internal var itemDesc: TextView? = null
-        internal var imgView: ImageView? = null
-        internal var checkBox: CompoundButton? = null
+    class ViewHolder(view: View) {
+        val itemTitle: TextView = view.findViewById(R.id.ItemTitle)
+        val itemDesc: TextView = view.findViewById(R.id.ItemDesc)
+        val imgView: ImageView = view.findViewById(R.id.ItemIcon)
+        val checkBox: CompoundButton? = view.findViewById(R.id.ItemChecBox)
     }
 }

@@ -58,21 +58,21 @@ class ParamsAppChooserRender(
     // OPEN DIALOG
     // =======================
     private fun openAppChooser() {
-        packages = ArrayList()
-
+        // 🔥 preload app đã có value
+        packages = preloadSelectedApps()
+    
         val dialog = DialogAppChooser(
             darkMode,
             packages,
             actionParamInfo.multiple,
             this
         )
-
+    
         dialog.show(context.supportFragmentManager, "app-chooser")
         dialog.showLoading(true)
-
+    
         loadPackagesAsync(dialog, actionParamInfo.type == "packages")
     }
-
     // =======================
     // SORTED INSERT
     // =======================
@@ -144,6 +144,7 @@ class ParamsAppChooserRender(
 
                     withContext(Dispatchers.Main) {
                         for (info in copy) {
+                            if (packages.any { it.packageName == info.packageName }) continue
                             insertSorted(packages, info)
                         }
                         setSelectStatus()
@@ -226,6 +227,31 @@ class ParamsAppChooserRender(
         }
     }
 
+    private fun preloadSelectedApps(): ArrayList<AdapterAppChooser.AppInfo> {
+        val result = ArrayList<AdapterAppChooser.AppInfo>()
+        val pm = context.packageManager
+    
+        val values = ActionParamsLayoutRender
+            .getParamValues(actionParamInfo)
+            ?: return result
+    
+        for (pkg in values) {
+            if (pkg.isBlank()) continue
+            try {
+                val appInfo = pm.getApplicationInfo(pkg, 0)
+                result.add(
+                    AdapterAppChooser.AppInfo().apply {
+                        packageName = pkg
+                        appName = pm.getApplicationLabel(appInfo)?.toString()
+                        selected = true
+                    }
+                )
+            } catch (_: Exception) {
+                // app không tồn tại → bỏ qua (giữ hành vi cũ)
+            }
+        }
+        return result
+    }
     // =======================
     // CALLBACK
     // =======================
