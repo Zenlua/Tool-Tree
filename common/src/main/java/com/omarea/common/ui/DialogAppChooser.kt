@@ -164,8 +164,5 @@ class DialogAppChooser(
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        if (::adapter.isInitialized) {
-            adapter.release()
-        }
     }
 }
