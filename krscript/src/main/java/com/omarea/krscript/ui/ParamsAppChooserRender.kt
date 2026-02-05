@@ -61,11 +61,6 @@ class ParamsAppChooserRender(
     private fun openAppChooser() {
         // 🔥 preload app đã chọn → có appName
         packages = preloadSelectedApps()
-
-if (packages.isEmpty()) {
-    // đảm bảo dialog không hiểu nhầm có selection
-    packages.clear()
-}
     
         val dialog = DialogAppChooser(
             darkMode,
@@ -234,74 +229,74 @@ if (packages.isEmpty()) {
         }
     }
 
-private fun resolveCurrentAppName() {
-    val pm = context.packageManager
-
-    if (actionParamInfo.multiple) {
-        val pkgs = valueView.text.toString()
-            .split(actionParamInfo.separator)
-            .filter { it.isNotEmpty() }
-
-        val names = ArrayList<String>(pkgs.size)
-        for (pkg in pkgs) {
-            try {
-                val app = pm.getApplicationInfo(pkg, 0)
-                names.add(app.loadLabel(pm)?.toString() ?: pkg)
-            } catch (_: Exception) {
-                names.add(pkg)
+    private fun resolveCurrentAppName() {
+        val pm = context.packageManager
+    
+        if (actionParamInfo.multiple) {
+            val pkgs = valueView.text.toString()
+                .split(actionParamInfo.separator)
+                .filter { it.isNotEmpty() }
+    
+            val names = ArrayList<String>(pkgs.size)
+            for (pkg in pkgs) {
+                try {
+                    val app = pm.getApplicationInfo(pkg, 0)
+                    names.add(app.loadLabel(pm)?.toString() ?: pkg)
+                } catch (_: Exception) {
+                    names.add(pkg)
+                }
+            }
+            nameView.text = names.joinToString("，")
+        } else {
+            val pkg = valueView.text.toString()
+            if (pkg.isNotEmpty()) {
+                try {
+                    val app = pm.getApplicationInfo(pkg, 0)
+                    nameView.text = app.loadLabel(pm)?.toString() ?: pkg
+                } catch (_: Exception) {
+                    nameView.text = pkg
+                }
             }
         }
-        nameView.text = names.joinToString("，")
-    } else {
-        val pkg = valueView.text.toString()
-        if (pkg.isNotEmpty()) {
+    }
+
+    private fun preloadSelectedApps(): ArrayList<AdapterAppChooser.AppInfo> {
+        val pm = context.packageManager
+        val result = ArrayList<AdapterAppChooser.AppInfo>()
+    
+        val values = if (actionParamInfo.multiple) {
+            valueView.text.toString()
+                .split(actionParamInfo.separator)
+                .filter { it.isNotEmpty() }
+        } else {
+            listOf(valueView.text.toString()).filter { it.isNotEmpty() }
+        }
+    
+        // ✅ nếu chưa chọn gì → trả list rỗng
+        if (values.isEmpty()) return result
+    
+        for (pkg in values) {
             try {
                 val app = pm.getApplicationInfo(pkg, 0)
-                nameView.text = app.loadLabel(pm)?.toString() ?: pkg
+                result.add(
+                    AdapterAppChooser.AppInfo().apply {
+                        packageName = pkg
+                        appName = app.loadLabel(pm)?.toString() ?: pkg
+                        selected = true
+                    }
+                )
             } catch (_: Exception) {
-                nameView.text = pkg
+                result.add(
+                    AdapterAppChooser.AppInfo().apply {
+                        packageName = pkg
+                        appName = pkg
+                        selected = true
+                    }
+                )
             }
         }
+        return result
     }
-}
-
-private fun preloadSelectedApps(): ArrayList<AdapterAppChooser.AppInfo> {
-    val pm = context.packageManager
-    val result = ArrayList<AdapterAppChooser.AppInfo>()
-
-    val values = if (actionParamInfo.multiple) {
-        valueView.text.toString()
-            .split(actionParamInfo.separator)
-            .filter { it.isNotEmpty() }
-    } else {
-        listOf(valueView.text.toString()).filter { it.isNotEmpty() }
-    }
-
-    // ✅ nếu chưa chọn gì → trả list rỗng
-    if (values.isEmpty()) return result
-
-    for (pkg in values) {
-        try {
-            val app = pm.getApplicationInfo(pkg, 0)
-            result.add(
-                AdapterAppChooser.AppInfo().apply {
-                    packageName = pkg
-                    appName = app.loadLabel(pm)?.toString() ?: pkg
-                    selected = true
-                }
-            )
-        } catch (_: Exception) {
-            result.add(
-                AdapterAppChooser.AppInfo().apply {
-                    packageName = pkg
-                    appName = pkg
-                    selected = true
-                }
-            )
-        }
-    }
-    return result
-}
     // =======================
     // CALLBACK
     // =======================

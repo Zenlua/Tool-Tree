@@ -47,19 +47,21 @@ class DialogAppChooser(
                 val adapter = absListView.adapter as? AdapterAppChooser
                 selectAll.visibility = View.VISIBLE
                 selectAll.isChecked =
-                    packages.isNotEmpty() &&
-                    packages.size > 1 &&
-                    packages.count { it.selected } == packages.size
+                    adapter != null &&
+                    adapter.count > 0 &&
+                    adapter.getSelectedItems().size == adapter.count
             
                 selectAll.setOnClickListener {
                     adapter?.setSelectAllState((it as CompoundButton).isChecked)
                 }
             
-                adapter?.setSelectStateListener(object : AdapterAppChooser.SelectStateListener {
-                    override fun onSelectChange(selected: List<AdapterAppChooser.AppInfo>) {
-                        selectAll.isChecked = selected.size == packages.size
-                    }
-                })
+                adapter?.let { ad ->
+                    ad.setSelectStateListener(object : AdapterAppChooser.SelectStateListener {
+                        override fun onSelectChange(selected: List<AdapterAppChooser.AppInfo>) {
+                            selectAll.isChecked = selected.size == ad.count
+                        }
+                    })
+                }
             
                 if (!allowAllSelect) {
                     selectAll.visibility = View.GONE
@@ -162,5 +164,8 @@ class DialogAppChooser(
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
+        if (::adapter.isInitialized) {
+            adapter.release()
+        }
     }
 }
