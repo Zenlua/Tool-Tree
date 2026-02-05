@@ -78,27 +78,31 @@ class ParamsAppChooserRender(
     // =======================
     private fun insertSorted(
         list: MutableList<AdapterAppChooser.AppInfo>,
-        item: AdapterAppChooser.AppInfo,
-        collator: Collator
+        item: AdapterAppChooser.AppInfo
     ) {
         var low = 0
         var high = list.size
+    
         val name = item.appName ?: ""
+        val selected = item.selected
     
         while (low < high) {
             val mid = (low + high) ushr 1
             val m = list[mid]
     
             when {
-                m.selected != item.selected ->
-                    if (item.selected) high = mid else low = mid + 1
+                // 1️⃣ Ưu tiên app đã chọn
+                m.selected != selected ->
+                    if (selected) high = mid else low = mid + 1
     
+                // 2️⃣ Cùng trạng thái → sort A–Z (đa ngôn ngữ)
                 collator.compare(m.appName ?: "", name) < 0 ->
                     low = mid + 1
     
                 else -> high = mid
             }
         }
+    
         list.add(low, item)
     }
 
