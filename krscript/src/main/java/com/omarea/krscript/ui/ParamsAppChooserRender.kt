@@ -173,7 +173,6 @@ class ParamsAppChooserRender(
                             if (packages.any { it.packageName == info.packageName }) continue
                             insertSorted(packages, info)
                         }
-                        // setSelectStatus()
                         dialog.notifyDataChanged()
                     }
                 }
@@ -204,28 +203,9 @@ class ParamsAppChooserRender(
 
             // kết thúc load
             withContext(Dispatchers.Main) {
-                setSelectStatus()
                 dialog.notifyDataChanged()
                 dialog.showLoading(false)
             }
-        }
-    }
-
-    // =======================
-    // SELECTION LOGIC
-    // =======================
-    private fun setSelectStatus() {
-        val currentValues = if (actionParamInfo.multiple) {
-            valueView.text.toString()
-                .split(actionParamInfo.separator)
-                .filter { it.isNotEmpty() }
-                .toSet()
-        } else {
-            setOf(valueView.text.toString())
-        }
-    
-        packages.forEach {
-            it.selected = it.packageName != null && currentValues.contains(it.packageName)
         }
     }
 
