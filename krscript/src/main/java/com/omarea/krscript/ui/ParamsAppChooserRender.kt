@@ -80,15 +80,23 @@ class ParamsAppChooserRender(
         list: MutableList<AdapterAppChooser.AppInfo>,
         item: AdapterAppChooser.AppInfo
     ) {
-        val index = list.binarySearch(item) { a, b ->
-            collator.compare(a.appName ?: "", b.appName ?: "")
+        var low = 0
+        var high = list.size
+    
+        val itemName = item.appName ?: ""
+    
+        while (low < high) {
+            val mid = (low + high) ushr 1
+            val midName = list[mid].appName ?: ""
+    
+            if (collator.compare(midName, itemName) < 0) {
+                low = mid + 1
+            } else {
+                high = mid
+            }
         }
-
-        if (index < 0) {
-            list.add(-index - 1, item)
-        } else {
-            list.add(index, item)
-        }
+    
+        list.add(low, item)
     }
 
     // =======================
