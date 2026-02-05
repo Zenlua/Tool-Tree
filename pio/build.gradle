@@ -42,7 +42,7 @@ android {
 }
 
 androidComponents {
-    onVariants { variant ->
+    onVariants(selector().all()) { variant ->
         variant.outputs.forEach { output ->
             output.outputFileName.set(
                 "Tool-Tree_${variant.versionName.get()}_" +
