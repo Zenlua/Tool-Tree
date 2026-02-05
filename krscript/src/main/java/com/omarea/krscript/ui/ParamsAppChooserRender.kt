@@ -149,7 +149,7 @@ class ParamsAppChooserRender(
             val apps = pm.getInstalledApplications(PackageManager.MATCH_ALL)
 
             val result = HashMap<String, AdapterAppChooser.AppInfo>(apps.size)
-            val batch = ArrayList<AdapterAppChooser.AppInfo>(10)
+            val batch = ArrayList<AdapterAppChooser.AppInfo>(20)
 
             for ((index, app) in apps.withIndex()) {
                 val pkg = app.packageName
@@ -164,7 +164,7 @@ class ParamsAppChooserRender(
                 }
 
                 // đổ batch
-                if (batch.size == 10 || index == apps.lastIndex) {
+                if (batch.size == 20 || index == apps.lastIndex) {
                     val copy = ArrayList(batch)
                     batch.clear()
 
