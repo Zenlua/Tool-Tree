@@ -58,7 +58,7 @@ class ParamsAppChooserRender(
     // OPEN DIALOG
     // =======================
     private fun openAppChooser() {
-        // 🔥 preload app đã có value
+        // 🔥 preload app đã chọn → có appName
         packages = preloadSelectedApps()
     
         val dialog = DialogAppChooser(
@@ -71,8 +71,10 @@ class ParamsAppChooserRender(
         dialog.show(context.supportFragmentManager, "app-chooser")
         dialog.showLoading(true)
     
+        // load phần còn lại async
         loadPackagesAsync(dialog, actionParamInfo.type == "packages")
     }
+
     // =======================
     // SORTED INSERT
     // =======================
@@ -147,7 +149,7 @@ class ParamsAppChooserRender(
                             if (packages.any { it.packageName == info.packageName }) continue
                             insertSorted(packages, info)
                         }
-                        setSelectStatus()
+                        // setSelectStatus()
                         dialog.notifyDataChanged()
                     }
                 }
@@ -189,18 +191,17 @@ class ParamsAppChooserRender(
     // SELECTION LOGIC
     // =======================
     private fun setSelectStatus() {
-        packages.forEach { it.selected = false }
-
-        val currentValue = valueView.text.toString()
-
-        if (actionParamInfo.multiple) {
-            currentValue
+        val currentValues = if (actionParamInfo.multiple) {
+            valueView.text.toString()
                 .split(actionParamInfo.separator)
-                .forEach { value ->
-                    packages.find { it.packageName == value }?.selected = true
-                }
+                .filter { it.isNotEmpty() }
+                .toSet()
         } else {
-            packages.find { it.packageName == currentValue }?.selected = true
+            setOf(valueView.text.toString())
+        }
+    
+        packages.forEach {
+            it.selected = it.packageName != null && currentValues.contains(it.packageName)
         }
     }
 
@@ -228,28 +229,39 @@ class ParamsAppChooserRender(
     }
 
     private fun preloadSelectedApps(): ArrayList<AdapterAppChooser.AppInfo> {
-        val result = ArrayList<AdapterAppChooser.AppInfo>()
         val pm = context.packageManager
+        val result = ArrayList<AdapterAppChooser.AppInfo>()
     
-        val values = ActionParamsLayoutRender
-            .getParamValues(actionParamInfo)
-            ?: return result
+        val values = if (actionParamInfo.multiple) {
+            valueView.text.toString()
+                .split(actionParamInfo.separator)
+                .filter { it.isNotEmpty() }
+        } else {
+            listOf(valueView.text.toString()).filter { it.isNotEmpty() }
+        }
     
         for (pkg in values) {
-            if (pkg.isBlank()) continue
             try {
-                val appInfo = pm.getApplicationInfo(pkg, 0)
+                val app = pm.getApplicationInfo(pkg, 0)
                 result.add(
                     AdapterAppChooser.AppInfo().apply {
                         packageName = pkg
-                        appName = pm.getApplicationLabel(appInfo)?.toString()
+                        appName = app.loadLabel(pm)?.toString() ?: pkg
                         selected = true
                     }
                 )
             } catch (_: Exception) {
-                // app không tồn tại → bỏ qua (giữ hành vi cũ)
+                // app không tồn tại → vẫn thêm
+                result.add(
+                    AdapterAppChooser.AppInfo().apply {
+                        packageName = pkg
+                        appName = pkg
+                        selected = true
+                    }
+                )
             }
         }
+    
         return result
     }
     // =======================

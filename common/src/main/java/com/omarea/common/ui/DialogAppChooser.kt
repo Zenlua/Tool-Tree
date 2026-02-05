@@ -115,6 +115,7 @@ class DialogAppChooser(
 
     fun showLoading(show: Boolean) {
         loadingView?.visibility = if (show) View.VISIBLE else View.GONE
+        view?.findViewById<CompoundButton?>(R.id.select_all)?.isEnabled = !show
     }
 
     fun notifyDataChanged() {
