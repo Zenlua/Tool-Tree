@@ -60,7 +60,8 @@ class ParamsAppChooserRender(
     // =======================
     private fun openAppChooser() {
         // 🔥 preload app đã chọn → có appName
-        packages = preloadSelectedApps()
+        // packages = preloadSelectedApps()
+        packages = ArrayList()
     
         val dialog = DialogAppChooser(
             darkMode,
