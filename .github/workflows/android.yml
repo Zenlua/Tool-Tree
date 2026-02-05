@@ -35,7 +35,7 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleRelease --daemon -x lint -x test
           if [ "$UPAPK" == 'true' ];then
-          VER=$(grep 'versionName' pio/build.gradle | cut -d'"' -f2)
+          VER=$(grep -m1 'versionName ' pio/build.gradle | cut -d'"' -f2)
           echo "Tool-Tree $VER"
           echo "VER=$VER" >> $GITHUB_ENV
           mkdir -p Up
