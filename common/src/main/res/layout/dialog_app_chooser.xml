@@ -67,6 +67,17 @@
         android:layout_width="match_parent"
         android:layout_height="0dp" />
 
+    <ProgressBar
+        android:layout_gravity="center_horizontal"
+        android:id="@+id/loading"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_marginTop="6dp"
+        android:max="100"
+        android:indeterminate="true"
+        style="?android:attr/progressBarStyleHorizontal" />
+
     <LinearLayout
         android:id="@+id/bottom_buttons"
         android:layout_marginTop="16dp"
@@ -85,13 +96,5 @@
             style="@style/dialogConfirmBtn"
             android:text="@string/btn_confirm">
         </Button>
-        
-        <ProgressBar
-            android:id="@+id/loading"
-            android:layout_marginTop="12dp"
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:visibility="gone"
-            style="?android:attr/progressBarStyleLarge"/>
     </LinearLayout>
 </LinearLayout>

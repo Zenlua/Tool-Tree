@@ -30,6 +30,9 @@ class ParamsAppChooserRender(
     private lateinit var nameView: TextView
     private lateinit var packages: ArrayList<AdapterAppChooser.AppInfo>
 
+    // collator dùng chung cho toàn bộ quá trình sort
+    private val collator: Collator = Collator.getInstance(Locale.getDefault())
+
     fun render(): View {
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.kr_param_app, null)
@@ -37,7 +40,7 @@ class ParamsAppChooserRender(
         valueView = layout.findViewById(R.id.kr_param_app_package)
         nameView = layout.findViewById(R.id.kr_param_app_name)
 
-        // ✅ GIỮ HÀNH VI CŨ: KHÔNG LOAD PACKAGE Ở ĐÂY
+        // giữ hành vi cũ: không load package ở đây
         setTextView()
 
         layout.findViewById<View>(R.id.kr_param_app_btn).setOnClickListener {
@@ -52,7 +55,7 @@ class ParamsAppChooserRender(
     }
 
     // =======================
-    // OPEN DIALOG (KHÔNG BLOCK UI)
+    // OPEN DIALOG
     // =======================
     private fun openAppChooser() {
         packages = ArrayList()
@@ -64,17 +67,32 @@ class ParamsAppChooserRender(
             this
         )
 
-        // ✅ SHOW NGAY
         dialog.show(context.supportFragmentManager, "app-chooser")
-        
         dialog.showLoading(true)
 
-        // ✅ LOAD SAU KHI DIALOG ĐÃ HIỆN
         loadPackagesAsync(dialog, actionParamInfo.type == "packages")
     }
 
     // =======================
-    // LOAD PACKAGE ASYNC + BATCH
+    // SORTED INSERT
+    // =======================
+    private fun insertSorted(
+        list: MutableList<AdapterAppChooser.AppInfo>,
+        item: AdapterAppChooser.AppInfo
+    ) {
+        val index = list.binarySearch(item) { a, b ->
+            collator.compare(a.appName ?: "", b.appName ?: "")
+        }
+
+        if (index < 0) {
+            list.add(-index - 1, item)
+        } else {
+            list.add(index, item)
+        }
+    }
+
+    // =======================
+    // LOAD PACKAGE ASYNC + SORT TRONG LÚC LOAD
     // =======================
     private fun loadPackagesAsync(
         dialog: DialogAppChooser,
@@ -97,27 +115,29 @@ class ParamsAppChooserRender(
 
                 if (filterSet == null || filterSet.contains(pkg)) {
                     val info = AdapterAppChooser.AppInfo().apply {
-                        packageName = pkg                     // GIỮ NULL
-                        appName = app.loadLabel(pm)?.toString() // GIỮ NULL
+                        packageName = pkg
+                        appName = app.loadLabel(pm)?.toString()
                     }
                     result[pkg] = info
                     batch.add(info)
                 }
 
-                // đổ dần
+                // đổ batch
                 if (batch.size == 10 || index == apps.lastIndex) {
                     val copy = ArrayList(batch)
                     batch.clear()
 
                     withContext(Dispatchers.Main) {
-                        packages.addAll(copy)
+                        for (info in copy) {
+                            insertSorted(packages, info)
+                        }
                         setSelectStatus()
                         dialog.notifyDataChanged()
                     }
                 }
             }
 
-            // thêm app bị thiếu (giữ hành vi cũ)
+            // thêm app thiếu (giữ hành vi cũ)
             if (includeMissing && actionParamInfo.optionsFromShell != null) {
                 val missing = ArrayList<AdapterAppChooser.AppInfo>()
                 for (item in actionParamInfo.optionsFromShell!!) {
@@ -126,22 +146,22 @@ class ParamsAppChooserRender(
                         missing.add(
                             AdapterAppChooser.AppInfo().apply {
                                 packageName = pkg
-                                appName = item.title // có thể null
+                                appName = item.title
                             }
                         )
                     }
                 }
+
                 withContext(Dispatchers.Main) {
-                    packages.addAll(missing)
+                    for (info in missing) {
+                        insertSorted(packages, info)
+                    }
+                    dialog.notifyDataChanged()
                 }
             }
 
-            // sort cuối (giữ hành vi cũ)
+            // kết thúc load
             withContext(Dispatchers.Main) {
-                val collator = Collator.getInstance(Locale.getDefault())
-                packages.sortWith { a, b ->
-                    collator.compare(a.appName ?: "", b.appName ?: "")
-                }
                 setSelectStatus()
                 dialog.notifyDataChanged()
                 dialog.showLoading(false)
@@ -150,7 +170,7 @@ class ParamsAppChooserRender(
     }
 
     // =======================
-    // SELECTION LOGIC (GIỮ NGUYÊN)
+    // SELECTION LOGIC
     // =======================
     private fun setSelectStatus() {
         packages.forEach { it.selected = false }
@@ -169,7 +189,7 @@ class ParamsAppChooserRender(
     }
 
     // =======================
-    // INIT UI VALUE (GIỮ NGUYÊN HÀNH VI CŨ)
+    // INIT UI VALUE (GIỮ NGUYÊN)
     // =======================
     private fun setTextView() {
         if (actionParamInfo.multiple) {
@@ -185,33 +205,10 @@ class ParamsAppChooserRender(
                 .getParamValues(actionParamInfo)
                 ?.firstOrNull()
                 ?: ""
-            
+
             valueView.text = value
             nameView.text = value
         }
-    }
-
-    // =======================
-    // HÀM CŨ – KHÔNG DÙNG (TRÁNH BLOCK UI)
-    // =======================
-    @Deprecated(
-        message = "DO NOT USE - blocks UI thread. Use loadPackagesAsync instead",
-        level = DeprecationLevel.WARNING
-    )
-    private fun loadPackages(includeMissing: Boolean): ArrayList<AdapterAppChooser.AppInfo> {
-        val pm = context.packageManager
-        val list = ArrayList<AdapterAppChooser.AppInfo>()
-
-        val apps = pm.getInstalledApplications(PackageManager.MATCH_ALL)
-        for (app in apps) {
-            list.add(
-                AdapterAppChooser.AppInfo().apply {
-                    packageName = app.packageName
-                    appName = app.loadLabel(pm)?.toString()
-                }
-            )
-        }
-        return list
     }
 
     // =======================
