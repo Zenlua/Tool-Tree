@@ -1,1 +1,1 @@
-exec $ETC/boot.rc
+exec $ETC/boot.rc 2>&1 | tee $TEMP/boot.log

@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.2.8 (5-2-2026)**
+
++ Revise the UI loading list of applications.
++ Fix the hidden UI error when running the shell.
+
 **Version: 1.2.7 (30-1-2026)**
 
 + Transfer build configuration items into the project.
