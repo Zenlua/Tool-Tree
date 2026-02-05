@@ -7,7 +7,6 @@ import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
-import com.omarea.common.model.SelectItem
 import com.omarea.common.ui.AdapterAppChooser
 import com.omarea.common.ui.DialogAppChooser
 import com.omarea.krscript.R
@@ -32,11 +31,13 @@ class ParamsAppChooserRender(
     private lateinit var packages: ArrayList<AdapterAppChooser.AppInfo>
 
     fun render(): View {
-        val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_app, null)
+        val layout = LayoutInflater.from(context)
+            .inflate(R.layout.kr_param_app, null)
+
         valueView = layout.findViewById(R.id.kr_param_app_package)
         nameView = layout.findViewById(R.id.kr_param_app_name)
 
-        // giữ hành vi cũ
+        // ✅ GIỮ HÀNH VI CŨ: KHÔNG LOAD PACKAGE Ở ĐÂY
         setTextView()
 
         layout.findViewById<View>(R.id.kr_param_app_btn).setOnClickListener {
@@ -51,7 +52,7 @@ class ParamsAppChooserRender(
     }
 
     // =======================
-    // OPEN DIALOG + LOAD ASYNC
+    // OPEN DIALOG (KHÔNG BLOCK UI)
     // =======================
     private fun openAppChooser() {
         packages = ArrayList()
@@ -63,15 +64,22 @@ class ParamsAppChooserRender(
             this
         )
 
+        // ✅ SHOW NGAY
         dialog.show(context.supportFragmentManager, "app-chooser")
+
+        // ✅ LOAD SAU KHI DIALOG ĐÃ HIỆN
         loadPackagesAsync(dialog, actionParamInfo.type == "packages")
     }
 
+    // =======================
+    // LOAD PACKAGE ASYNC + BATCH
+    // =======================
     private fun loadPackagesAsync(
         dialog: DialogAppChooser,
         includeMissing: Boolean
     ) {
         val pm = context.packageManager
+
         val filterSet = actionParamInfo.optionsFromShell
             ?.mapNotNull { it.value }
             ?.toHashSet()
@@ -87,13 +95,14 @@ class ParamsAppChooserRender(
 
                 if (filterSet == null || filterSet.contains(pkg)) {
                     val info = AdapterAppChooser.AppInfo().apply {
-                        packageName = pkg          // GIỮ NULL
+                        packageName = pkg                     // GIỮ NULL
                         appName = app.loadLabel(pm)?.toString() // GIỮ NULL
                     }
                     result[pkg] = info
                     batch.add(info)
                 }
 
+                // đổ dần
                 if (batch.size == 10 || index == apps.lastIndex) {
                     val copy = ArrayList(batch)
                     batch.clear()
@@ -106,7 +115,7 @@ class ParamsAppChooserRender(
                 }
             }
 
-            // thêm app bị thiếu (giữ nguyên hành vi cũ)
+            // thêm app bị thiếu (giữ hành vi cũ)
             if (includeMissing && actionParamInfo.optionsFromShell != null) {
                 val missing = ArrayList<AdapterAppChooser.AppInfo>()
                 for (item in actionParamInfo.optionsFromShell!!) {
@@ -144,62 +153,47 @@ class ParamsAppChooserRender(
         packages.forEach { it.selected = false }
 
         val currentValue = valueView.text.toString()
+
         if (actionParamInfo.multiple) {
-            currentValue.split(actionParamInfo.separator).forEach { value ->
-                packages.find { it.packageName == value }?.selected = true
-            }
+            currentValue
+                .split(actionParamInfo.separator)
+                .forEach { value ->
+                    packages.find { it.packageName == value }?.selected = true
+                }
         } else {
             packages.find { it.packageName == currentValue }?.selected = true
         }
     }
 
     // =======================
-    // INIT UI VALUE (GIỮ NGUYÊN HÀNH VI)
+    // INIT UI VALUE (GIỮ NGUYÊN HÀNH VI CŨ)
     // =======================
     private fun setTextView() {
-        packages = loadPackages(actionParamInfo.type == "packages")
-
-        val packageMap = packages
-            .filter { it.packageName != null }
-            .associateBy { it.packageName!! }
-
         if (actionParamInfo.multiple) {
-            ActionParamsLayoutRender.getParamValues(actionParamInfo)
-                ?.forEach { value ->
-                    packageMap[value]?.selected = true
-                }
-            onConfirm(packages.filter { it.selected })
+            val values = ActionParamsLayoutRender
+                .getParamValues(actionParamInfo)
+                ?.joinToString(actionParamInfo.separator)
+                ?: ""
+
+            valueView.text = values
+            nameView.text = values
         } else {
-            val validOptions = ArrayList<SelectItem>(packages.size)
-            packages.forEach {
-                validOptions.add(
-                    SelectItem().apply {
-                        title = it.appName ?: ""
-                        value = it.packageName ?: ""
-                    }
-                )
-            }
+            val value = ActionParamsLayoutRender
+                .getParamValue(actionParamInfo)
+                ?: ""
 
-            val currentIndex =
-                ActionParamsLayoutRender.getParamOptionsCurrentIndex(
-                    actionParamInfo,
-                    validOptions
-                )
-
-            if (currentIndex >= 0) {
-                val item = packages[currentIndex]
-                valueView.text = item.packageName ?: ""
-                nameView.text = item.appName ?: ""
-            } else {
-                valueView.text = ""
-                nameView.text = ""
-            }
+            valueView.text = value
+            nameView.text = value
         }
     }
 
     // =======================
-    // GIỮ HÀM CŨ (FIX Unresolved reference)
+    // HÀM CŨ – KHÔNG DÙNG (TRÁNH BLOCK UI)
     // =======================
+    @Deprecated(
+        message = "DO NOT USE - blocks UI thread. Use loadPackagesAsync instead",
+        level = DeprecationLevel.WARNING
+    )
     private fun loadPackages(includeMissing: Boolean): ArrayList<AdapterAppChooser.AppInfo> {
         val pm = context.packageManager
         val list = ArrayList<AdapterAppChooser.AppInfo>()
