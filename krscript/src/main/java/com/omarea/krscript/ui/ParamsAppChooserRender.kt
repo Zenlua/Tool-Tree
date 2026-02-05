@@ -84,22 +84,31 @@ class ParamsAppChooserRender(
         list: MutableList<AdapterAppChooser.AppInfo>,
         item: AdapterAppChooser.AppInfo
     ) {
+        val isSelected =
+            item.packageName != null &&
+            selectedValues.contains(item.packageName)
+    
+        // gán luôn trạng thái selected tại đây
+        item.selected = isSelected
+    
         var low = 0
         var high = list.size
-    
         val name = item.appName ?: ""
-        val selected = item.selected
     
         while (low < high) {
             val mid = (low + high) ushr 1
             val m = list[mid]
     
+            val mSelected =
+                m.packageName != null &&
+                selectedValues.contains(m.packageName)
+    
             when {
                 // 1️⃣ Ưu tiên app đã chọn
-                m.selected != selected ->
-                    if (selected) high = mid else low = mid + 1
+                mSelected != isSelected ->
+                    if (isSelected) high = mid else low = mid + 1
     
-                // 2️⃣ Cùng trạng thái → sort A–Z (đa ngôn ngữ)
+                // 2️⃣ Cùng trạng thái → sort A–Z
                 collator.compare(m.appName ?: "", name) < 0 ->
                     low = mid + 1
     
@@ -261,43 +270,6 @@ class ParamsAppChooserRender(
         }
     }
 
-    private fun preloadSelectedApps(): ArrayList<AdapterAppChooser.AppInfo> {
-        val pm = context.packageManager
-        val result = ArrayList<AdapterAppChooser.AppInfo>()
-    
-        val values = if (actionParamInfo.multiple) {
-            valueView.text.toString()
-                .split(actionParamInfo.separator)
-                .filter { it.isNotEmpty() }
-        } else {
-            listOf(valueView.text.toString()).filter { it.isNotEmpty() }
-        }
-    
-        // ✅ nếu chưa chọn gì → trả list rỗng
-        if (values.isEmpty()) return result
-    
-        for (pkg in values) {
-            try {
-                val app = pm.getApplicationInfo(pkg, 0)
-                result.add(
-                    AdapterAppChooser.AppInfo().apply {
-                        packageName = pkg
-                        appName = app.loadLabel(pm)?.toString() ?: pkg
-                        selected = true
-                    }
-                )
-            } catch (_: Exception) {
-                result.add(
-                    AdapterAppChooser.AppInfo().apply {
-                        packageName = pkg
-                        appName = pkg
-                        selected = true
-                    }
-                )
-            }
-        }
-        return result
-    }
     // =======================
     // CALLBACK
     // =======================
