@@ -14,9 +14,9 @@ if [ "$ROT" == 1 ];then
     # Danh sách các ứng dụng đã cài đặt
     cmd appops set $PACKAGE_NAME 10022 allow
     cmd appops set $PACKAGE_NAME GET_USAGE_STATS allow
+    cmd appops set $PACKAGE_NAME QUERY_ALL_PACKAGES allow
     # Phím tắt màn hình chính
     cmd appops set $PACKAGE_NAME 10017 allow
-    cmd appops set $PACKAGE_NAME INSTALL_SHORTCUT allow
     # Thông báo
     pm grant $PACKAGE_NAME android.permission.POST_NOTIFICATIONS
     cmd appops set $PACKAGE_NAME POST_NOTIFICATION allow

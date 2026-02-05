@@ -13,13 +13,15 @@ import android.widget.Filterable
 import com.omarea.common.R
 
 class DialogAppChooser(
-        private val darkMode: Boolean,
-        private var packages: ArrayList<AdapterAppChooser.AppInfo>,
-        private val multiple: Boolean = false,
-        private var callback: Callback? = null) : DialogFullScreen(R.layout.dialog_app_chooser, darkMode) {
+    private val darkMode: Boolean,
+    private var packages: ArrayList<AdapterAppChooser.AppInfo>,
+    private val multiple: Boolean = false,
+    private var callback: Callback? = null
+) : DialogFullScreen(R.layout.dialog_app_chooser, darkMode) {
 
     private var allowAllSelect = true
     private var excludeApps: Array<String> = arrayOf()
+    private lateinit var adapter: AdapterAppChooser
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -31,26 +33,32 @@ class DialogAppChooser(
             dismiss()
         }
         view.findViewById<View>(R.id.btn_confirm).setOnClickListener {
-            this.onConfirm(absListView)
+            onConfirm(absListView)
         }
 
-        // 全选功能
+        // 全选
         val selectAll = view.findViewById<CompoundButton?>(R.id.select_all)
         if (selectAll != null) {
             if (multiple) {
-                val adapter = (absListView.adapter as AdapterAppChooser?)
+                val listAdapter = absListView.adapter as? AdapterAppChooser
                 selectAll.visibility = View.VISIBLE
-                selectAll.isChecked = packages.filter { it.selected }.size == packages.size
+
+                selectAll.isChecked =
+                    listAdapter?.getSelectedItems()?.size == listAdapter?.count &&
+                            listAdapter.count > 0
+
                 selectAll.setOnClickListener {
-                    adapter?.setSelectAllState((it as CompoundButton).isChecked)
+                    listAdapter?.setSelectAllState((it as CompoundButton).isChecked)
                 }
-                adapter?.run {
-                    setSelectStateListener(object : AdapterAppChooser.SelectStateListener {
-                        override fun onSelectChange(selected: List<AdapterAppChooser.AppInfo>) {
-                            selectAll.isChecked = selected.size == packages.size
-                        }
-                    })
-                }
+
+                listAdapter?.setSelectStateListener(object :
+                    AdapterAppChooser.SelectStateListener {
+                    override fun onSelectChange(selected: List<AdapterAppChooser.AppInfo>) {
+                        selectAll.isChecked =
+                            selected.isNotEmpty() && selected.size == listAdapter.count
+                    }
+                })
+
                 if (!allowAllSelect) {
                     selectAll.visibility = View.GONE
                 }
@@ -62,54 +70,84 @@ class DialogAppChooser(
         val clearBtn = view.findViewById<View>(R.id.search_box_clear)
         val searchBox = view.findViewById<EditText>(R.id.search_box).apply {
             addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {}
+
                 override fun afterTextChanged(s: Editable?) {
-                    if (s != null) {
-                        clearBtn.visibility = if (s.length > 0) View.VISIBLE else View.GONE
-                    }
+                    clearBtn.visibility =
+                        if (!s.isNullOrEmpty()) View.VISIBLE else View.GONE
                 }
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    (absListView.adapter as Filterable).getFilter().filter(if (s == null) "" else s.toString())
+
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int
+                ) {
+                    (absListView.adapter as? Filterable)
+                        ?.filter
+                        ?.filter(s?.toString() ?: "")
                 }
             })
         }
-        clearBtn.visibility = if (searchBox.text.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+        clearBtn.visibility =
+            if (searchBox.text.isNullOrEmpty()) View.GONE else View.VISIBLE
+
         clearBtn.setOnClickListener {
             searchBox.text = null
         }
     }
 
     private fun setup(gridView: AbsListView) {
-        val filterResult = ArrayList<AdapterAppChooser.AppInfo>(packages.filter { !excludeApps.contains(it.packageName) })
-        gridView.adapter = AdapterAppChooser(gridView.context, filterResult, multiple)
+        // ⚠️ excludeApps chỉ áp dụng tại thời điểm init
+        // Load dần -> nên xử lý exclude trong Adapter
+        val filtered =
+            if (excludeApps.isEmpty()) packages
+            else ArrayList(packages.filter { !excludeApps.contains(it.packageName) })
+
+        adapter = AdapterAppChooser(gridView.context, filtered, multiple)
+        gridView.adapter = adapter
+    }
+
+    fun notifyDataChanged() {
+        if (::adapter.isInitialized) {
+            adapter.notifyDataSetChanged()
+        }
     }
 
     interface Callback {
         fun onConfirm(apps: List<AdapterAppChooser.AppInfo>)
     }
 
-    public fun setExcludeApps(apps: Array<String>): DialogAppChooser {
+    fun setExcludeApps(apps: Array<String>): DialogAppChooser {
         this.excludeApps = apps
         if (this.view != null) {
-            Log.e("@DialogAppChooser", "Unable to set the exclusion list, The list has been loaded")
+            Log.e(
+                "@DialogAppChooser",
+                "Exclusion list was set after view created, it may not take effect"
+            )
         }
-
         return this
     }
 
-    public fun setAllowAllSelect(allow: Boolean): DialogAppChooser {
+    fun setAllowAllSelect(allow: Boolean): DialogAppChooser {
         this.allowAllSelect = allow
-        view?.findViewById<CompoundButton?>(R.id.select_all)?.visibility = if (allow) View.VISIBLE else View.GONE
-
+        view?.findViewById<CompoundButton?>(R.id.select_all)?.visibility =
+            if (allow) View.VISIBLE else View.GONE
         return this
     }
 
     private fun onConfirm(gridView: AbsListView) {
-        val apps = (gridView.adapter as AdapterAppChooser).getSelectedItems()
+        val apps =
+            (gridView.adapter as? AdapterAppChooser)?.getSelectedItems() ?: emptyList()
 
         callback?.onConfirm(apps)
-
-        this.dismiss()
+        dismiss()
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
