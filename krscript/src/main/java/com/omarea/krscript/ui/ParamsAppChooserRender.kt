@@ -179,9 +179,10 @@ class ParamsAppChooserRender(
             nameView.text = values
         } else {
             val value = ActionParamsLayoutRender
-                .getParamValue(actionParamInfo)
+                .getParamValues(actionParamInfo)
+                ?.firstOrNull()
                 ?: ""
-
+            
             valueView.text = value
             nameView.text = value
         }
