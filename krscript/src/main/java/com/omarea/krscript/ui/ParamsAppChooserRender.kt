@@ -24,7 +24,7 @@ class ParamsAppChooserRender(
 ) : DialogAppChooser.Callback {
 
     private val uiMode = context.resources.configuration.uiMode
-    private var darkMode: Boolean =
+    private val darkMode: Boolean =
         (uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
     private lateinit var valueView: TextView
@@ -54,7 +54,7 @@ class ParamsAppChooserRender(
     // OPEN DIALOG + LOAD ASYNC
     // =======================
     private fun openAppChooser() {
-        packages = ArrayList() // rỗng ban đầu
+        packages = ArrayList()
 
         val dialog = DialogAppChooser(
             darkMode,
@@ -64,7 +64,6 @@ class ParamsAppChooserRender(
         )
 
         dialog.show(context.supportFragmentManager, "app-chooser")
-
         loadPackagesAsync(dialog, actionParamInfo.type == "packages")
     }
 
@@ -74,24 +73,23 @@ class ParamsAppChooserRender(
     ) {
         val pm = context.packageManager
         val filterSet = actionParamInfo.optionsFromShell
-            ?.map { it.value }
+            ?.mapNotNull { it.value }
             ?.toHashSet()
 
         context.lifecycleScope.launch(Dispatchers.IO) {
             val apps = pm.getInstalledApplications(PackageManager.MATCH_ALL)
 
+            val result = HashMap<String, AdapterAppChooser.AppInfo>(apps.size)
             val batch = ArrayList<AdapterAppChooser.AppInfo>(10)
-            val result = HashMap<String, AdapterAppChooser.AppInfo>(128)
 
             for ((index, app) in apps.withIndex()) {
                 val pkg = app.packageName
 
                 if (filterSet == null || filterSet.contains(pkg)) {
                     val info = AdapterAppChooser.AppInfo().apply {
-                        packageName = pkg                     // GIỮ NULL
+                        packageName = pkg          // GIỮ NULL
                         appName = app.loadLabel(pm)?.toString() // GIỮ NULL
                     }
-
                     result[pkg] = info
                     batch.add(info)
                 }
@@ -102,7 +100,7 @@ class ParamsAppChooserRender(
 
                     withContext(Dispatchers.Main) {
                         packages.addAll(copy)
-                        setSelectStatus()          // GIỮ LOGIC CŨ
+                        setSelectStatus()
                         dialog.notifyDataChanged()
                     }
                 }
@@ -111,7 +109,6 @@ class ParamsAppChooserRender(
             // thêm app bị thiếu (giữ nguyên hành vi cũ)
             if (includeMissing && actionParamInfo.optionsFromShell != null) {
                 val missing = ArrayList<AdapterAppChooser.AppInfo>()
-
                 for (item in actionParamInfo.optionsFromShell!!) {
                     val pkg = item.value
                     if (pkg != null && !result.containsKey(pkg)) {
@@ -123,13 +120,12 @@ class ParamsAppChooserRender(
                         )
                     }
                 }
-
                 withContext(Dispatchers.Main) {
                     packages.addAll(missing)
                 }
             }
 
-            // SORT SAU KHI LOAD XONG (GIỮ HÀNH VI CŨ)
+            // sort cuối (giữ hành vi cũ)
             withContext(Dispatchers.Main) {
                 val collator = Collator.getInstance(Locale.getDefault())
                 packages.sortWith { a, b ->
@@ -147,21 +143,18 @@ class ParamsAppChooserRender(
     private fun setSelectStatus() {
         packages.forEach { it.selected = false }
 
-        val currentValue = valueView.text
+        val currentValue = valueView.text.toString()
         if (actionParamInfo.multiple) {
             currentValue.split(actionParamInfo.separator).forEach { value ->
                 packages.find { it.packageName == value }?.selected = true
             }
         } else {
-            val current = packages.find { it.packageName == currentValue }
-            if (current != null) {
-                current.selected = true
-            }
+            packages.find { it.packageName == currentValue }?.selected = true
         }
     }
 
     // =======================
-    // INIT UI VALUE (GIỮ NGUYÊN 100%)
+    // INIT UI VALUE (GIỮ NGUYÊN HÀNH VI)
     // =======================
     private fun setTextView() {
         packages = loadPackages(actionParamInfo.type == "packages")
@@ -175,7 +168,6 @@ class ParamsAppChooserRender(
                 ?.forEach { value ->
                     packageMap[value]?.selected = true
                 }
-
             onConfirm(packages.filter { it.selected })
         } else {
             val validOptions = ArrayList<SelectItem>(packages.size)
@@ -196,8 +188,8 @@ class ParamsAppChooserRender(
 
             if (currentIndex >= 0) {
                 val item = packages[currentIndex]
-                valueView.text = item.packageName.orEmpty()
-                nameView.text = item.appName.orEmpty()
+                valueView.text = item.packageName ?: ""
+                nameView.text = item.appName ?: ""
             } else {
                 valueView.text = ""
                 nameView.text = ""
@@ -205,12 +197,34 @@ class ParamsAppChooserRender(
         }
     }
 
+    // =======================
+    // GIỮ HÀM CŨ (FIX Unresolved reference)
+    // =======================
+    private fun loadPackages(includeMissing: Boolean): ArrayList<AdapterAppChooser.AppInfo> {
+        val pm = context.packageManager
+        val list = ArrayList<AdapterAppChooser.AppInfo>()
+
+        val apps = pm.getInstalledApplications(PackageManager.MATCH_ALL)
+        for (app in apps) {
+            list.add(
+                AdapterAppChooser.AppInfo().apply {
+                    packageName = app.packageName
+                    appName = app.loadLabel(pm)?.toString()
+                }
+            )
+        }
+        return list
+    }
+
+    // =======================
+    // CALLBACK
+    // =======================
     override fun onConfirm(apps: List<AdapterAppChooser.AppInfo>) {
         if (actionParamInfo.multiple) {
             valueView.text =
-                apps.joinToString(actionParamInfo.separator) { it.packageName }
+                apps.joinToString(actionParamInfo.separator) { it.packageName ?: "" }
             nameView.text =
-                apps.joinToString("，") { it.appName }
+                apps.joinToString("，") { it.appName ?: "" }
         } else {
             val item = apps.firstOrNull()
             valueView.text = item?.packageName ?: ""
