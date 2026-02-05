@@ -234,11 +234,11 @@ class ParamsAppChooserRender(
             valueView.text =
                 apps.joinToString(actionParamInfo.separator) { it.packageName ?: "" }
             nameView.text =
-                apps.joinToString("，") { it.appName ?: "" }
+                apps.joinToString("，") { it.appName ?: it.packageName ?: "" }
         } else {
             val item = apps.firstOrNull()
             valueView.text = item?.packageName ?: ""
-            nameView.text = item?.appName ?: ""
+            nameView.text = item?.appName ?: item?.packageName ?: ""
         }
     }
 }
