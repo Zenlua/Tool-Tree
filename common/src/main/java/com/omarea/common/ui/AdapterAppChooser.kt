@@ -27,17 +27,25 @@ class AdapterAppChooser(
         var selected: Boolean = false
     }
 
+    // ================= Coroutine scope (THAY GlobalScope) =================
+
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.Main + job)
+
+    // ======================================================================
+
     private var selectStateListener: SelectStateListener? = null
     private var filter: Filter? = null
 
     internal var filterApps: ArrayList<AppInfo> = apps
     private val mLock = Any()
 
-    private class ArrayFilter(private val adapter: AdapterAppChooser) : Filter() {
+    // ================= Filter =================
 
+    private class ArrayFilter(private val adapter: AdapterAppChooser) : Filter() {
         override fun performFiltering(constraint: CharSequence?): FilterResults {
             val results = FilterResults()
-            val prefix = constraint?.toString()?.lowercase() ?: ""
+            val prefix = constraint?.toString()?.lowercase(Locale.getDefault()) ?: ""
 
             if (prefix.isEmpty()) {
                 synchronized(adapter.mLock) {
@@ -56,8 +64,8 @@ class AdapterAppChooser(
                     continue
                 }
 
-                val name = item.appName?.lowercase() ?: ""
-                val pkg = item.packageName?.lowercase() ?: ""
+                val name = item.appName?.lowercase(Locale.getDefault()) ?: ""
+                val pkg = item.packageName?.lowercase(Locale.getDefault()) ?: ""
 
                 if (name.contains(prefix) || pkg.contains(prefix)) {
                     newValues.add(item)
@@ -83,7 +91,11 @@ class AdapterAppChooser(
         return filter!!
     }
 
+    // ================= Icon cache =================
+
     private val iconCaches = LruCache<String, Drawable>(100)
+
+    // ================= Adapter basic =================
 
     override fun getCount(): Int = filterApps.size
 
@@ -103,31 +115,37 @@ class AdapterAppChooser(
         return convertView
     }
 
+    // ================= Icon loading =================
+
     private fun loadIcon(app: AppInfo): Deferred<Drawable?> {
-        return GlobalScope.async(Dispatchers.IO) {
+        return scope.async(Dispatchers.IO) {
             val pkg = app.packageName ?: return@async null
-            val cached = iconCaches.get(pkg)
-            if (cached != null) return@async cached
+
+            iconCaches.get(pkg)?.let { return@async it }
 
             if (!app.notFound) {
                 try {
                     val info = context.packageManager.getPackageInfo(pkg, 0)
                     val icon = info.applicationInfo?.loadIcon(context.packageManager)
-                    if (icon != null) iconCaches.put(pkg, icon)
+                    if (icon != null) {
+                        iconCaches.put(pkg, icon)
+                        return@async icon
+                    }
                 } catch (_: Exception) {
                     app.notFound = true
                 }
             }
-            iconCaches.get(pkg)
+            null
         }
     }
+
+    // ================= Row binding =================
 
     fun updateRow(position: Int, convertView: View) {
         val item = getItem(position)
 
-        val holder = (convertView.tag as? ViewHolder) ?: ViewHolder(convertView).also {
-            convertView.tag = it
-        }
+        val holder = (convertView.tag as? ViewHolder)
+            ?: ViewHolder(convertView).also { convertView.tag = it }
 
         holder.itemTitle.text = item.appName ?: ""
         holder.itemDesc.text = item.packageName ?: ""
@@ -148,13 +166,15 @@ class AdapterAppChooser(
         val pkg = item.packageName
         holder.imgView.tag = pkg
 
-        GlobalScope.launch(Dispatchers.Main) {
+        scope.launch {
             val icon = loadIcon(item).await()
             if (icon != null && holder.imgView.tag == pkg) {
                 holder.imgView.setImageDrawable(icon)
             }
         }
     }
+
+    // ================= Selection =================
 
     fun setSelectAllState(allSelected: Boolean) {
         apps.forEach { it.selected = allSelected }
@@ -168,6 +188,16 @@ class AdapterAppChooser(
     fun setSelectStateListener(listener: SelectStateListener?) {
         this.selectStateListener = listener
     }
+
+    // ================= Release (QUAN TRỌNG) =================
+
+    fun release() {
+        job.cancel()              // hủy toàn bộ coroutine
+        iconCaches.evictAll()      // clear cache icon
+        selectStateListener = null
+    }
+
+    // ================= ViewHolder =================
 
     class ViewHolder(view: View) {
         val itemTitle: TextView = view.findViewById(R.id.ItemTitle)
