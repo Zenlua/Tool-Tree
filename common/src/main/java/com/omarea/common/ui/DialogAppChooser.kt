@@ -30,7 +30,7 @@ class DialogAppChooser(
 
         loadingView = view.findViewById(R.id.loading)
         showLoading(true)
-        
+
         val absListView = view.findViewById<AbsListView>(R.id.app_list)
         setup(absListView)
 
@@ -41,30 +41,32 @@ class DialogAppChooser(
             onConfirm(absListView)
         }
 
-        // 全选
+        // ===== 全选 (Select All) =====
         selectAllCheckBox = view.findViewById(R.id.select_all)
         val selectAll = selectAllCheckBox
+
         if (selectAll != null) {
             if (multiple) {
-                val adapter = absListView.adapter as? AdapterAppChooser
+                val ad = this.adapter
+
                 selectAll.visibility = View.VISIBLE
                 selectAll.isChecked =
-                    adapter != null &&
-                    adapter.count > 0 &&
-                    adapter.getSelectedItems().size == adapter.count
-            
+                    ad.count > 0 &&
+                    ad.getSelectedItems().size == ad.count
+
                 selectAll.setOnClickListener {
-                    adapter?.setSelectAllState((it as CompoundButton).isChecked)
+                    ad.setSelectAllState((it as CompoundButton).isChecked)
                 }
-            
-                adapter?.let { ad ->
-                    ad.setSelectStateListener(object : AdapterAppChooser.SelectStateListener {
-                        override fun onSelectChange(selected: List<AdapterAppChooser.AppInfo>) {
-                            selectAll.isChecked = selected.size == ad.count
+
+                ad.setSelectStateListener(object : AdapterAppChooser.SelectStateListener {
+                    override fun onSelectChange(selected: List<AdapterAppChooser.AppInfo>) {
+                        val allSelected = selected.size == ad.count
+                        if (selectAll.isChecked != allSelected) {
+                            selectAll.isChecked = allSelected
                         }
-                    })
-                }
-            
+                    }
+                })
+
                 if (!allowAllSelect) {
                     selectAll.visibility = View.GONE
                 }
@@ -73,6 +75,7 @@ class DialogAppChooser(
             }
         }
 
+        // ===== Search =====
         val clearBtn = view.findViewById<View>(R.id.search_box_clear)
         val searchBox = view.findViewById<EditText>(R.id.search_box).apply {
             addTextChangedListener(object : TextWatcher {
@@ -110,8 +113,6 @@ class DialogAppChooser(
     }
 
     private fun setup(gridView: AbsListView) {
-        // ⚠️ excludeApps chỉ áp dụng tại thời điểm init
-        // Load dần -> nên xử lý exclude trong Adapter
         val filtered =
             if (excludeApps.isEmpty()) packages
             else ArrayList(packages.filter { !excludeApps.contains(it.packageName) })
@@ -126,16 +127,17 @@ class DialogAppChooser(
 
     fun notifyDataChanged() {
         if (!::adapter.isInitialized) return
-    
+
         adapter.notifyDataSetChanged()
-    
-        // 🔥 sync lại trạng thái "Chọn tất cả"
+
         if (multiple) {
             val allSelected =
                 adapter.count > 0 &&
                 adapter.getSelectedItems().size == adapter.count
-    
-            selectAllCheckBox?.isChecked = allSelected
+
+            if (selectAllCheckBox?.isChecked != allSelected) {
+                selectAllCheckBox?.isChecked = allSelected
+            }
         }
     }
 
@@ -167,10 +169,6 @@ class DialogAppChooser(
 
         callback?.onConfirm(apps)
         dismiss()
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
     }
 
     override fun onDismiss(dialog: DialogInterface) {
