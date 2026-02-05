@@ -46,7 +46,10 @@ class DialogAppChooser(
             if (multiple) {
                 val adapter = absListView.adapter as? AdapterAppChooser
                 selectAll.visibility = View.VISIBLE
-                selectAll.isChecked = packages.count { it.selected } == packages.size
+                selectAll.isChecked =
+                    packages.isNotEmpty() &&
+                    packages.size > 1 &&
+                    packages.count { it.selected } == packages.size
             
                 selectAll.setOnClickListener {
                     adapter?.setSelectAllState((it as CompoundButton).isChecked)
@@ -115,7 +118,6 @@ class DialogAppChooser(
 
     fun showLoading(show: Boolean) {
         loadingView?.visibility = if (show) View.VISIBLE else View.GONE
-        view?.findViewById<CompoundButton?>(R.id.select_all)?.isEnabled = !show
     }
 
     fun notifyDataChanged() {
