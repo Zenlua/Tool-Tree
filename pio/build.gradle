@@ -45,8 +45,8 @@ androidComponents {
     onVariants(selector().all()) { variant ->
         variant.outputs.forEach { output ->
             output.outputFileName.set(
-                "Tool-Tree_${variant.versionName.get()}_" +
-                "${variant.versionCode.get()}_" +
+                "Tool-Tree_${output.versionName.get()}_" +
+                "${output.versionCode.get()}_" +
                 "${variant.name}.apk"
             )
         }
