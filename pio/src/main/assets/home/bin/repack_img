@@ -122,6 +122,7 @@ echo -e "$build_text: ${INPUT##*/} ($partition) ➠ ($CONVER)...\n"
 
 # patch fstab
 if [ "$AVBIMG" == 1 ];then
+rm -fr $INPUT/bin/install-recovery.sh $INPUT/etc/init/vendor_flash_recovery.rc $INPUT/recovery-from-boot.p $INPUT/verity_key
 listfab="$(find "$INPUT"/*ramdisk -type f -name "fstab.*" 2>/dev/null)"
 for fstab in $listfab; do
    if [ -f "$fstab" ];then
@@ -135,6 +136,7 @@ for fstab in $listfab; do
        if [[ -n $(cat "$fstab" | egrep -i "fileencryption|keydirectory") ]]; then
          sed -i 's/fileencryption=[^,]*,//' "$fstab"
          sed -i 's/keydirectory=[^,]*,//' "$fstab"
+         sed -i 's/metadata_encryption=[^,]*,//' "$fstab"
          echo "Decrypted data: ${fstab##*/}"
        else
          echo "No data encryption found in: ${fstab##*/}"
