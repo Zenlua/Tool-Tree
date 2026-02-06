@@ -3,6 +3,7 @@
 **Version: 1.2.9 (dev action)**
 
 + Allows quick project selection
++ Fix the fstab patch code.
 
 **Version: 1.2.8 (5-2-2026)**
 

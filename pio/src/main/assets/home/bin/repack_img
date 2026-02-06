@@ -123,18 +123,16 @@ echo -e "$build_text: ${INPUT##*/} ($partition) ➠ ($CONVER)...\n"
 # patch fstab
 if [ "$AVBIMG" == 1 ];then
 rm -fr $INPUT/bin/install-recovery.sh $INPUT/etc/init/vendor_flash_recovery.rc $INPUT/recovery-from-boot.p $INPUT/verity_key
-listfab="$(find "$INPUT"/*ramdisk -type f -name "fstab.*" 2>/dev/null)"
+listfab="$(find "$INPUT" -type f -name "fstab*" 2>/dev/null)"
 for fstab in $listfab; do
    if [ -f "$fstab" ];then
      if [ "$2" == 1 ];then
        if [[ -n $(cat "$fstab" | grep -v "avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey" | grep -i "avb") ]]; then
-         sed -i "s/avb,//g; s/,avb=vbmeta//g; s/,avb=.*system//g; s/,avb=.*vendor//g; s/,avb=.*vbmeta//g; s/,avb_keys.*key//g; s/,avb//g; s/,,/,/g" "$fstab"
+         sed -i "s/avb,//g; s/,avb=.*system//g; s/,avb=.*vendor//g; s/,avb=.*vbmeta//g; s/,avb_keys.*key//g; s/,avb=vbmeta//g; s/,avb//g; s/,,/,/g" "$fstab"
          echo "Deleted avb in fstab: ${fstab##*/}"
        fi
-       if [[ -n $(cat "$fstab" | egrep -i "fileencryption|keydirectory") ]]; then
-         sed -i 's/fileencryption=[^,]*,//' "$fstab"
-         sed -i 's/keydirectory=[^,]*,//' "$fstab"
-         sed -i 's/metadata_encryption=[^,]*,//' "$fstab"
+       if [[ -n $(cat "$fstab" | egrep -i "fileencryption|keydirectory|metadata_encryption") ]]; then
+         sed -i -e 's/fileencryption=[^,]*,//' -e 's/keydirectory=[^,]*,//' -e 's/metadata_encryption=[^,]*,//' "$fstab"
          echo "Decrypted data: ${fstab##*/}"
        fi
      fi
