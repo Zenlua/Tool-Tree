@@ -10,6 +10,8 @@
 
 - Instruct: **[No-Root](https://zenlua.github.io/Tool-Tree/website/Guide.html)**
 
+- Home path after root: /data/local/Tool-Tree
+
 - If the application has root privileges, it will run faster you can copy the path directly from the log to access it directly.
 
 - Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)** or **[Telegram](https://t.me/tooltree)**

@@ -24,12 +24,17 @@ xml_print '
 <action icon="'`urlpng input_decom`'" shell="hidden" >
 <title>'$project_text_1'</title>
 <summary sh="echo -n '"'$folder_text: '"'; glog PTSD | sed '"'s|$SDCARD_PATH|\/sdcard|'"'" />
-<param name="Name" readonly="1" label="'$setting_text_3'" value-sh="glog PTSH" type="text"/>
+<param name="Name" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
 <param name="Folder" value-sh="glog PTSD" type="folder" editable="true" required="true"/>
 <set>
+if [ ! -d "$Folder" ] || [ ! -d "$SDH/${Folder##*/}" ];then
 slog PTSD "$Folder"
 slog PTSH "${Folder##*/}"
 mkdir -p "$SDH/${Folder##*/}" "$Folder"
+elif [ -d "$SDH/$Name" ];then
+slog PTSH "$Name"
+slog PTSD "$SDCARD_PATH/$Name"
+fi
 </set>
 </action>'
 }
@@ -39,12 +44,17 @@ xml_print '
 <action icon="'`urlpng build_decom`'" shell="hidden" >
 <title>'$project_text_2'</title>
 <summary sh="echo -n '"'$folder_text: '"'; glog PTAD | sed '"'s|$SDCARD_PATH|\/sdcard|'"'" />
-<param name="Name" readonly="1" label="'$setting_text_3'" value-sh="glog PTAH" type="text"/>
+<param name="Name" label="'$setting_text_3'" option-sh="findfile for $APK" value-sh="glog PTAH"/>
 <param name="Folder" value-sh="glog PTAD" type="folder" editable="true" required="true"/>
 <set>
+if [ ! -d "$Folder" ] || [ ! -d "$APK/${Folder##*/}" ];then
 slog PTAD "$Folder"
 slog PTAH "${Folder##*/}"
 mkdir -p "$APK/${Folder##*/}" "$Folder"
+elif [ -d "$APK/$Name" ];then
+slog PTAH "$Name"
+slog PTAD "$SDCARD_PATH/$Name"
+fi
 </set>
 </action>'
 }

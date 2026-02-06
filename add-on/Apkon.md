@@ -1,14 +1,14 @@
-# Apk-on
+## Apk-on
 
 - List of add-ons in utilities tab
 
-#### Jre21 lite
+#### Jre21 Lite
 
 - update Java 21 jre
 
 - [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/jre21.add)
 
-#### Jre25 lite
+#### Jre25 Lite
 
 - update Java 25 jre
 
