@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.2.9 (dev action)**
+
++ Allows quick project selection
+
 **Version: 1.2.8 (5-2-2026)**
 
 + Revise the UI loading list of applications.
