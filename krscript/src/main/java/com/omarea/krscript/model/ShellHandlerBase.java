@@ -18,13 +18,6 @@ import java.util.regex.Pattern;
  */
 
 public abstract class ShellHandlerBase extends Handler {
-
-    protected final Context context;
-    
-    protected ShellHandlerBase(Context context) {
-        this.context = context.getApplicationContext();
-    }
-
     /**
      * 处理启动信息
      */
@@ -153,6 +146,13 @@ public abstract class ShellHandlerBase extends Handler {
 
     protected void onAm(String type, String args) {
         try {
+            // Lấy Application Context nội bộ (KHÔNG cần truyền)
+            Context context = android.app.ActivityThread
+                    .currentApplication()
+                    .getApplicationContext();
+    
+            if (context == null) return;
+    
             Intent intent = parseIntentArgs(args);
     
             switch (type) {
@@ -173,7 +173,7 @@ public abstract class ShellHandlerBase extends Handler {
                     }
                     break;
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }
