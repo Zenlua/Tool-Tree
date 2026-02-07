@@ -152,6 +152,13 @@ class BgTaskThread(private var process: Process) : Thread() {
             progressTotal = total
             updateNotification()
         }
+
+        override fun onToast(text: String) {
+            synchronized(notificationMessageRows) {
+                notificationMessageRows.add(text)
+                updateNotification()
+            }
+        }
     }
 
     companion object {
