@@ -33,7 +33,7 @@ slog PTSH "${Folder##*/}"
 mkdir -p "$SDH/${Folder##*/}" "$Folder"
 elif [ -d "$SDH/$Name" ];then
 slog PTSH "$Name"
-slog PTSD "$SDCARD_PATH/$Name"
+slog PTSD "$SDC/$Name"
 fi
 </set>
 </action>'
@@ -53,7 +53,7 @@ slog PTAH "${Folder##*/}"
 mkdir -p "$APK/${Folder##*/}" "$Folder"
 elif [ -d "$APK/$Name" ];then
 slog PTAH "$Name"
-slog PTAD "$SDCARD_PATH/$Name"
+slog PTAD "$SDC/$Name"
 fi
 </set>
 </action>'
