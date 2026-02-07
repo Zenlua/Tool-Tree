@@ -38,6 +38,8 @@ public abstract class ShellHandlerBase extends Handler {
      * 处理Exitvalue
      */
     public static final int EVENT_EXIT = -2;
+    
+    protected abstract void onAm(String type, String args);
 
     protected abstract void onToast(String text);
 
@@ -99,12 +101,27 @@ public abstract class ShellHandlerBase extends Handler {
         }
     
         // toast:[text...]
-        if (log.startsWith("toast:[")) {
+        if (log.matches("^toast:\\[.*]$")) {
             int end = log.lastIndexOf(']');
             if (end > "toast:[".length()) {
                 String text = log.substring("toast:[".length(), end)
                         .replace("\\n", "\n");
                 onToast(text);
+            }
+            return;
+        }
+        
+        if (log.matches("^am:\\[(start|broadcast|service)\\|.+]$")) {
+            String prefix = "am:[";
+            int end = log.lastIndexOf("]");
+            if (end > prefix.length()) {
+                String body = log.substring(prefix.length(), end);
+                int sep = body.indexOf("|");
+                if (sep > 0) {
+                    String type = body.substring(0, sep).trim();
+                    String args = body.substring(sep + 1).trim();
+                    onAm(type, args);
+                }
             }
             return;
         }
@@ -123,6 +140,87 @@ public abstract class ShellHandlerBase extends Handler {
 
     protected void onError(Object msg) {
         updateLog(msg, "#ff0000");
+    }
+
+    @Override
+    protected void onAm(String type, String args) {
+        try {
+            Intent intent = parseIntentArgs(args);
+    
+            switch (type) {
+                case "start":
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                    break;
+    
+                case "broadcast":
+                    context.sendBroadcast(intent);
+                    break;
+    
+                case "service":
+                    if (Build.VERSION.SDK_INT >= 26) {
+                        context.startForegroundService(intent);
+                    } else {
+                        context.startService(intent);
+                    }
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Intent parseIntentArgs(String args) {
+        Intent intent = new Intent();
+    
+        String[] tokens = args.split("\\s+");
+        for (int i = 0; i < tokens.length; i++) {
+            switch (tokens[i]) {
+    
+                case "-a":
+                    intent.setAction(tokens[++i]);
+                    break;
+    
+                case "-d":
+                    intent.setData(Uri.parse(tokens[++i]));
+                    break;
+    
+                case "-n": {
+                    String[] cn = tokens[++i].split("/");
+                    intent.setComponent(new ComponentName(cn[0], cn[1]));
+                    break;
+                }
+    
+                case "--es": {
+                    String key = tokens[++i];
+                    String val = tokens[++i];
+                    intent.putExtra(key, val);
+                    break;
+                }
+    
+                case "--ei": {
+                    String key = tokens[++i];
+                    int val = Integer.parseInt(tokens[++i]);
+                    intent.putExtra(key, val);
+                    break;
+                }
+    
+                case "--el": {
+                    String key = tokens[++i];
+                    long val = Long.parseLong(tokens[++i]);
+                    intent.putExtra(key, val);
+                    break;
+                }
+    
+                case "--ez": {
+                    String key = tokens[++i];
+                    boolean val = Boolean.parseBoolean(tokens[++i]);
+                    intent.putExtra(key, val);
+                    break;
+                }
+            }
+        }
+        return intent;
     }
 
     /**
