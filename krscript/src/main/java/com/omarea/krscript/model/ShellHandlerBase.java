@@ -6,7 +6,11 @@ import android.os.Message;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
-
+import android.content.Context;
+import android.content.Intent;
+import android.content.ComponentName;
+import android.net.Uri;
+import android.os.Build;
 import java.util.regex.Pattern;
 
 /**
@@ -14,6 +18,13 @@ import java.util.regex.Pattern;
  */
 
 public abstract class ShellHandlerBase extends Handler {
+
+    protected final Context context;
+    
+    protected ShellHandlerBase(Context context) {
+        this.context = context.getApplicationContext();
+    }
+
     /**
      * 处理启动信息
      */
@@ -38,8 +49,6 @@ public abstract class ShellHandlerBase extends Handler {
      * 处理Exitvalue
      */
     public static final int EVENT_EXIT = -2;
-    
-    protected abstract void onAm(String type, String args);
 
     protected abstract void onToast(String text);
 
@@ -142,7 +151,6 @@ public abstract class ShellHandlerBase extends Handler {
         updateLog(msg, "#ff0000");
     }
 
-    @Override
     protected void onAm(String type, String args) {
         try {
             Intent intent = parseIntentArgs(args);
@@ -177,42 +185,55 @@ public abstract class ShellHandlerBase extends Handler {
         for (int i = 0; i < tokens.length; i++) {
             switch (tokens[i]) {
     
-                case "-a":
+                case "-a": // action
+                    if (i + 1 >= tokens.length) break;
                     intent.setAction(tokens[++i]);
                     break;
     
-                case "-d":
+                case "-d": // data
+                    if (i + 1 >= tokens.length) break;
                     intent.setData(Uri.parse(tokens[++i]));
                     break;
     
-                case "-n": {
-                    String[] cn = tokens[++i].split("/");
-                    intent.setComponent(new ComponentName(cn[0], cn[1]));
+                case "-n": { // component
+                    if (i + 1 >= tokens.length) break;
+                    String[] cn = tokens[++i].split("/", 2);
+                    if (cn.length == 2) {
+                        intent.setComponent(new ComponentName(cn[0], cn[1]));
+                    }
                     break;
                 }
     
-                case "--es": {
+                case "--es": { // string extra
+                    if (i + 2 >= tokens.length) break;
                     String key = tokens[++i];
                     String val = tokens[++i];
                     intent.putExtra(key, val);
                     break;
                 }
     
-                case "--ei": {
+                case "--ei": { // int extra
+                    if (i + 2 >= tokens.length) break;
                     String key = tokens[++i];
-                    int val = Integer.parseInt(tokens[++i]);
-                    intent.putExtra(key, val);
+                    try {
+                        int val = Integer.parseInt(tokens[++i]);
+                        intent.putExtra(key, val);
+                    } catch (NumberFormatException ignored) {}
                     break;
                 }
     
-                case "--el": {
+                case "--el": { // long extra
+                    if (i + 2 >= tokens.length) break;
                     String key = tokens[++i];
-                    long val = Long.parseLong(tokens[++i]);
-                    intent.putExtra(key, val);
+                    try {
+                        long val = Long.parseLong(tokens[++i]);
+                        intent.putExtra(key, val);
+                    } catch (NumberFormatException ignored) {}
                     break;
                 }
     
-                case "--ez": {
+                case "--ez": { // boolean extra
+                    if (i + 2 >= tokens.length) break;
                     String key = tokens[++i];
                     boolean val = Boolean.parseBoolean(tokens[++i]);
                     intent.putExtra(key, val);
