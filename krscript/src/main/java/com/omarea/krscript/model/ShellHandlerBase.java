@@ -100,9 +100,10 @@ public abstract class ShellHandlerBase extends Handler {
     
         // toast:[text...]
         if (log.startsWith("toast:[")) {
-            int end = log.lastIndexOf("]");
-            if (end > 0) {
-                String text = log.substring("toast:[".length(), end);
+            int end = log.lastIndexOf(']');
+            if (end > "toast:[".length()) {
+                String text = log.substring("toast:[".length(), end)
+                        .replace("\\n", "\n");
                 onToast(text);
             }
             return;
