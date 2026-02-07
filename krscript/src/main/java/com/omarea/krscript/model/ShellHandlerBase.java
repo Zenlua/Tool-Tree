@@ -39,6 +39,8 @@ public abstract class ShellHandlerBase extends Handler {
      */
     public static final int EVENT_EXIT = -2;
 
+    protected abstract void onToast(String text);
+
     protected abstract void onProgress(int current, int total);
 
     protected abstract void onStart(Object msg);
@@ -79,17 +81,35 @@ public abstract class ShellHandlerBase extends Handler {
     }
 
     protected void onReaderMsg(Object msg) {
-        if (msg != null) {
-            String log = msg.toString().trim();
-            if (Pattern.matches("^progress:\\[[\\-0-9\\\\]{1,}/[0-9\\\\]{1,}]$", log)) {
-                String[] values = log.substring("progress:[".length(), log.indexOf("]")).split("/");
-                int start = Integer.parseInt(values[0]);
-                int total = Integer.parseInt(values[1]);
-                onProgress(start, total);
-            } else {
-                onReader(msg);
-            }
+        if (msg == null) return;
+    
+        // KHÔNG trim để giữ newline
+        String log = msg.toString();
+    
+        // progress:[x/y]
+        if (Pattern.matches("^progress:\\[[\\-0-9]+/[0-9]+]$", log.trim())) {
+            String[] values = log
+                    .substring("progress:[".length(), log.indexOf("]"))
+                    .split("/");
+    
+            int start = Integer.parseInt(values[0]);
+            int total = Integer.parseInt(values[1]);
+            onProgress(start, total);
+            return;
         }
+    
+        // toast:[text...]
+        if (log.startsWith("toast:[")) {
+            int end = log.lastIndexOf("]");
+            if (end > 6) {
+                String text = log.substring(6, end);
+                onToast(text);
+            }
+            return;
+        }
+    
+        // log thường
+        onReader(msg);
     }
 
     protected void onReader(Object msg) {
