@@ -42,6 +42,8 @@ public abstract class ShellHandlerBase extends Handler {
      * 处理Exitvalue
      */
     public static final int EVENT_EXIT = -2;
+    
+    protected abstract Context getContext();
 
     protected abstract void onToast(String text);
 
@@ -146,34 +148,30 @@ public abstract class ShellHandlerBase extends Handler {
 
     protected void onAm(String type, String args) {
         try {
-            // Lấy Application Context nội bộ (KHÔNG cần truyền)
-            Context context = android.app.ActivityThread
-                    .currentApplication()
-                    .getApplicationContext();
-    
-            if (context == null) return;
+            Context ctx = getContext();
+            if (ctx == null) return;
     
             Intent intent = parseIntentArgs(args);
     
             switch (type) {
                 case "start":
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);
+                    ctx.startActivity(intent);
                     break;
     
                 case "broadcast":
-                    context.sendBroadcast(intent);
+                    ctx.sendBroadcast(intent);
                     break;
     
                 case "service":
                     if (Build.VERSION.SDK_INT >= 26) {
-                        context.startForegroundService(intent);
+                        ctx.startForegroundService(intent);
                     } else {
-                        context.startService(intent);
+                        ctx.startService(intent);
                     }
                     break;
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
