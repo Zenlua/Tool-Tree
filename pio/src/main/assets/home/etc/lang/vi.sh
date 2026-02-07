@@ -38,7 +38,7 @@ convert_text="Chuyển đổi"
 share_text="Chia sẻ"
 generate_text="Tạo"
 alignment_text="Căn chỉnh"
-synthetic_text="Tổng hợp"
+synthetic_text="Tổng hợp phân vùng"
 config_text="Cấu hình"
 time_text="Thời gian"
 

@@ -778,10 +778,13 @@ if [ "$(glog hide_show)" == 1 ];then
     echo "<group>"
     show_sett
     echo "</group>"
+else
+    desc_rom="$folder_text: $(glog PTSD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_rom1="$projects_text: $PTSH"
 fi
 
 xml_print '<group>
-<action icon="'`urlpng decode_img`'" desc="'"$folder_text: $(glog PTSD | sed "s|$SDCARD_PATH|\/sdcard|")"'">
+<action icon="'`urlpng decode_img`'" desc="'$desc_rom'">
 <title>'$decompile_text'</title>
 <param name="cboxk" value-sh="glog dkhdh" label="'$deleted_file_text'" type="checkbox" />
 <param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" />
@@ -803,7 +806,7 @@ checktime
 </set>
 </action>
 
-<action icon="'`urlpng build_img`'" desc="'"$projects_text: $PTSH"'">
+<action icon="'`urlpng build_img`'" desc="'$desc_rom1'">
 <title>'$build_text'</title>
 <param name="boolbox" value-sh="glog boolboxdjh" label="'$deleted_project_text'" type="checkbox" />
 <param name="IMAGES" desc="'$builds_text_1'" multiple="true" options-sh="findfile 0 $SDH/$PTSH" required="true"/>
@@ -925,13 +928,16 @@ if [ "$(glog hide_show_apktool)" == 1 ];then
     echo "<group>"
     show_apkset
     echo "</group>"
+else
+    desc_apk="$folder_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_apk1="$projects_text: $PTAH"
 fi
 
 xml_print '
 <group>
 <action icon="'`urlpng apk_decom`'">
 <title>'$decompile_text'</title>
-<desc>'$folder_text': '$(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")'</desc>
+<desc>'$desc_apk'</desc>
 <param name="dexlibk" label="'$option_text'" value-sh="glog dexlibk 2" option-sh="echo -e '"'0|$decom_apk_text_3\n1|$default_text\n2|Baksmali 3.0.9'"'" desc="'$decom_apk_text_12'"/>
 <param name="mutiresk" label="'$option_text'" value-sh="glog mutiresk 1" option-sh="echo -e '"'0|$decom_apk_text_3\n1|$default_text\n2|$decom_apk_text_5'"'" desc="'$decom_apk_text_11'"/>
 <param name="xoa_debug_info" value-sh="glog xoa_debug_info 1" label="'$decom_apk_text_7'" type="switch" />
@@ -951,7 +957,7 @@ checktime
 </set>
 </action>
 
-<action icon="'`urlpng apk_build`'" desc="'$projects_text: $PTAH'">
+<action icon="'`urlpng apk_build`'" desc="'$desc_apk1'">
 <title>'$build_text'</title>
 <param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
 <param name="sign" desc=" " value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
@@ -981,13 +987,16 @@ if [ "$(glog hide_show_apex)" == 1 ];then
     echo "<group>"
     show_apkset
     echo "</group>"
+else
+    desc_apkd="$folder_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_apkd1="$projects_text: $PTAH"
 fi
 
 xml_print '
 <group>
 <action icon="'`urlpng apk_decom`'">
 <title>'$decompile_text'</title>
-<desc>'$folder_text': '$(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")'</desc>
+<desc>'$desc_apkd'</desc>
 <param name="FILE" desc="'$apex_text_2'" multiple="true" options-sh="findfile 12 $PTAD" required="true"/>
 <set>
 IFS=$'"'\n'"'
@@ -1001,7 +1010,7 @@ checktime
 </set>
 </action>
 
-<action icon="'`urlpng apk_build`'" desc="'$projects_text: $PTAH'">
+<action icon="'`urlpng apk_build`'" desc="'$desc_apkd1'">
 <title>'$build_text'</title>
 <param name="gobo_apex" value-sh="glog gobo_apex" label="'$deleted_project_text'" type="checkbox" />
 <param name="SIGNS" value-sh="glog signs_apex com.android.example.apex" desc=" " options-sh="cd $ETC/key/4096; ls -1d *.pem | sed '"'s|.pem||'"' " label="'$sign_text'" />
@@ -1031,16 +1040,19 @@ Utiliapk(){
 mkdir -p $PTAD &>/dev/null &
 
 if [ "$(glog hide_show2)" == 1 ];then
-echo "<group>"
-show_apkset
-echo "</group>"
+    echo "<group>"
+    show_apkset
+    echo "</group>"
+else
+    desc_apks="$folder_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_apks1="$projects_text: $PTAH"
 fi
 
 xml_print '
 <group>
 <action icon="'`urlpng apk_decom`'">
 <title>'$decompile_text'</title>
-<desc>'$folder_text': '$(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")'</desc>
+<desc>'$desc_apks'</desc>
 <param name="type_apk" value-sh="glog type_apk xml" desc="'$decom_apk_text_8'" label="'$option_text'" >
 <option value="xml">'$decom_apk_text_1'</option>
 <option value="json">'$decom_apk_text_2'</option>
@@ -1065,7 +1077,7 @@ checktime
 </set>
 </action>
 
-<action icon="'`urlpng apk_build`'" desc="'$projects_text: $PTAH'">
+<action icon="'`urlpng apk_build`'" desc="'$desc_apks1'">
 <title>'$build_text'</title>
 <param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
 <param name="sign" desc=" " value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
@@ -1084,70 +1096,6 @@ echo
 done
 echo "'$save_text' $PTAD/out"
 echo
-checktime
-</set>
-</action></group>
-
-<group>
-<action icon="'`urlpng merge_apk`'" warning="'$apk_mager_text_1'">
-<title>'$apk_mager_text_2'</title>
-<param name="FILE" multiple="multiple" option-sh="findfile 9 $PTAD | grep -E '"'\(apks\)|\(apkm\)|\(xapk\)'"' " required="true" />
-<set>
-IFS=$'"'\n'"'
-for v in $FILE; do
-echo "'$more_text_4' $FILE"
-echo
-apkeditor m -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -e "1,/__/d"
-echo
-done
-checktime
-</set>
-</action></group>
-
-<group>
-<action icon="'`urlpng restore_sign`'">
-<title>'$restore_apk_text_3'</title>
-<param name="FILE" title="'$restore_apk_text_1'" value-sh="glog apk_restore_sign" option-sh="findfile 10 $PTAD" required="true" label="'$option_text'"/>
-<param name="FILE2" title="'$restore_apk_text_2'" value-sh="glog apk_restore_sign2" option-sh="findfile 10 $PTAD" required="true" label="'$option_text'"/>
-<set>
-slog apk_restore_sign "$FILE"
-slog apk_restore_sign2 "$FILE2"
-echo "'$more_text_4' $FILE"
-echo
-apkeditor d -f -t sig -i "$PTAD/$FILE" -sig "$TMP/signatures_dir" 2>&1
-echo
-apkeditor b -f -t sig -i "$PTAD/$FILE2" -sig "$TMP/signatures_dir" -o "$PTAD/out/$FILE2" 2>&1
-rm -fr "$TMP/signatures_dir"
-</set>
-</action></group>
-
-<group>
-<action icon="'`urlpng apk_distur`'" warning="'$distur_apk_text_1'">
-<title>'$distur_apk_text_2'</title>
-<param name="FILE" multiple="multiple" option-sh="findfile 10 $PTAD" required="true" />
-<set>
-IFS=$'"'\n'"'
-for v in $FILE; do
-echo "'$more_text_4' $FILE"
-echo
-apkeditor p -skip-manifest -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -e "1,/__/d"
-echo
-done
-checktime
-</set>
-</action>
-
-<action icon="'`urlpng apk_restore`'" warning="'$apk_restore_text_1'">
-<title>'$apk_restore_text_2'</title>
-<param name="FILE" multiple="multiple" option-sh="findfile 10 $PTAD" required="true" />
-<set>
-IFS=$'"'\n'"'
-for v in $FILE; do
-echo "'$more_text_4' $FILE"
-echo
-apkeditor x -fix-types -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -e "1,/__/d"
-echo
-done
 checktime
 </set>
 </action></group>
@@ -1197,7 +1145,71 @@ if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show_apex)" == 1 ] && slog hide_show_apex 0 || slog hide_show_apex 1
 fi
 </handler>
-</page></group>'
+</page></group>
+
+<group>
+<action icon="'`urlpng apk_distur`'" warning="'$distur_apk_text_1'">
+<title>'$distur_apk_text_2'</title>
+<param name="FILE" multiple="multiple" option-sh="findfile 10 $PTAD" required="true" />
+<set>
+IFS=$'"'\n'"'
+for v in $FILE; do
+echo "'$more_text_4' $FILE"
+echo
+apkeditor p -skip-manifest -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -e "1,/__/d"
+echo
+done
+checktime
+</set>
+</action>
+
+<action icon="'`urlpng apk_restore`'" warning="'$apk_restore_text_1'">
+<title>'$apk_restore_text_2'</title>
+<param name="FILE" multiple="multiple" option-sh="findfile 10 $PTAD" required="true" />
+<set>
+IFS=$'"'\n'"'
+for v in $FILE; do
+echo "'$more_text_4' $FILE"
+echo
+apkeditor x -fix-types -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -e "1,/__/d"
+echo
+done
+checktime
+</set>
+</action></group>
+
+<group>
+<action icon="'`urlpng merge_apk`'" warning="'$apk_mager_text_1'">
+<title>'$apk_mager_text_2'</title>
+<param name="FILE" multiple="multiple" option-sh="findfile 9 $PTAD | grep -E '"'\(apks\)|\(apkm\)|\(xapk\)'"' " required="true" />
+<set>
+IFS=$'"'\n'"'
+for v in $FILE; do
+echo "'$more_text_4' $FILE"
+echo
+apkeditor m -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -e "1,/__/d"
+echo
+done
+checktime
+</set>
+</action></group>
+
+<group>
+<action icon="'`urlpng restore_sign`'">
+<title>'$restore_apk_text_3'</title>
+<param name="FILE" title="'$restore_apk_text_1'" value-sh="glog apk_restore_sign" option-sh="findfile 10 $PTAD" required="true" label="'$option_text'"/>
+<param name="FILE2" title="'$restore_apk_text_2'" value-sh="glog apk_restore_sign2" option-sh="findfile 10 $PTAD" required="true" label="'$option_text'"/>
+<set>
+slog apk_restore_sign "$FILE"
+slog apk_restore_sign2 "$FILE2"
+echo "'$more_text_4' $FILE"
+echo
+apkeditor d -f -t sig -i "$PTAD/$FILE" -sig "$TMP/signatures_dir" 2>&1
+echo
+apkeditor b -f -t sig -i "$PTAD/$FILE2" -sig "$TMP/signatures_dir" -o "$PTAD/out/$FILE2" 2>&1
+rm -fr "$TMP/signatures_dir"
+</set>
+</action></group>'
 }
 
 Addon(){
