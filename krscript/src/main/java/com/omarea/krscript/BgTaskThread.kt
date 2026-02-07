@@ -153,6 +153,10 @@ class BgTaskThread(private var process: Process) : Thread() {
             updateNotification()
         }
 
+        override fun getContext(): Context {
+            return context
+        }
+
         override fun onToast(text: String) {
             synchronized(notificationMessageRows) {
                 notificationMessageRows.add(text)

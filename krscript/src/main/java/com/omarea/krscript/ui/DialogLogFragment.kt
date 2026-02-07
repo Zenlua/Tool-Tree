@@ -195,6 +195,10 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
             }
         }
 
+        override fun getContext(): Context {
+            return context
+        }
+
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 EVENT_EXIT -> onExit(msg.obj)

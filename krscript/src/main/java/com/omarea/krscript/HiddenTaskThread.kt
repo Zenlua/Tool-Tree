@@ -63,6 +63,10 @@ class HiddenTaskThread(private var process: Process) : Thread() {
             progressTotal = total
         }
 
+        override fun getContext(): Context {
+            return context
+        }
+
         override fun onToast(text: String) {
             Toast.makeText(context, text, Toast.LENGTH_LONG).show()
         }
