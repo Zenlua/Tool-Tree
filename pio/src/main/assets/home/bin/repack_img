@@ -133,6 +133,7 @@ for fstab in $listfab; do
        fi
        if [[ -n $(cat "$fstab" | egrep -i "fileencryption|keydirectory|metadata_encryption") ]]; then
          sed -i -e 's/fileencryption=[^,]*,//' -e 's/keydirectory=[^,]*,//' -e 's/metadata_encryption=[^,]*,//' "$fstab"
+         sed -i "s/,fileencryption=.*_v0//g; s/,fileencryption=.*v2//g; s/,metadata_encryption=.*_v0//g; s/,metadata_encryption=.*xts//g; s/,fileencryption=.*xts//g; s/,fileencryption=ice//g; s/fileencryption/encryptable/g" "$fstab"
          echo "Decrypted data: ${fstab##*/}"
        fi
      fi
