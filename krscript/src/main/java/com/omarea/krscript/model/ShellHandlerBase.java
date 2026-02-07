@@ -18,6 +18,14 @@ import java.util.regex.Pattern;
  */
 
 public abstract class ShellHandlerBase extends Handler {
+
+    protected Context context;
+
+    // ✅ THÊM: getter, KHÔNG abstract
+    protected Context getContext() {
+        return context;
+    }
+
     /**
      * 处理启动信息
      */
@@ -42,8 +50,6 @@ public abstract class ShellHandlerBase extends Handler {
      * 处理Exitvalue
      */
     public static final int EVENT_EXIT = -2;
-    
-    protected abstract Context getContext();
 
     protected abstract void onToast(String text);
 
