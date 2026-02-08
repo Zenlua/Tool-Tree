@@ -26,6 +26,7 @@ fi
 ) &>>$TEMP/Install.log &
 
 # Khởi động các file shell ở add-on
+chmod 777 $AON/*/* $AOK/*/*
 for vadd in $AON/*/early_start.sh $AOK/*/early_start.sh; do
     if [ -f "$vadd" ];then
     (

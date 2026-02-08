@@ -1,9 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.2.9 (dev action)**
+**Version: 1.2.9 (8-2-2026)**
 
 + Allows quick project selection
 + Fix the fstab patch code.
++ Fix checksum code.
 
 **Version: 1.2.8 (5-2-2026)**
 
