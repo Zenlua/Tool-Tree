@@ -30,6 +30,7 @@ while [ $# -gt 0 ]; do
       ;;
     -a|--am)
       AMON=1
+      shift
       ;;
     -h|--help)
       show_help
@@ -43,7 +44,7 @@ done
 
 # Mặc định
 [ "$DELETE" == "true" ] && DELETEs="--es delete true"
-[ "$ID" ] && IDs="--ei id '$ID'"
+[ "$ID" ] && IDs="--ei id $ID"
 [ "$TITLE" ] && TITLEs="--es title '$TITLE'"
 [ "$MESSAGE" ] && MESSAGEs="--es message '$MESSAGE'"
 
