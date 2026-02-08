@@ -28,6 +28,9 @@ while [ $# -gt 0 ]; do
       MESSAGE="$2"
       shift 2
       ;;
+    -a|--am)
+      AMON=1
+      ;;
     -h|--help)
       show_help
       ;;
@@ -44,5 +47,8 @@ done
 [ "$TITLE" ] && TITLEs="--es title '$TITLE'"
 [ "$MESSAGE" ] && MESSAGEs="--es message '$MESSAGE'"
 
-# am startservice "$@" com.tool.tree/com.tool.tree.NotiService &>/dev/null
-echo "am:[startservice -n com.tool.tree/com.tool.tree.NotiService $DELETEs $IDs $TITLEs $MESSAGEs]"
+if [ "$AMON" == 1 ];then
+    eval "am startservice $DELETEs $IDs $TITLEs $MESSAGEs com.tool.tree/com.tool.tree.NotiService" &>/dev/null
+else
+    echo "am:[startservice -n com.tool.tree/com.tool.tree.NotiService $DELETEs $IDs $TITLEs $MESSAGEs]"
+fi
