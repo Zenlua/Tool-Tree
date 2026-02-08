@@ -175,13 +175,14 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     }
 
     class MyShellHandler(
+        private val appContext: Context,
         private var actionEventHandler: IActionEventHandler,
         private var logView: TextView?,
         private var shellProgress: ProgressBar?
     ) : ShellHandlerBase() {
 
         init {
-            super.context = context
+            super.context = appContext
         }
 
         private val context = logView?.context
