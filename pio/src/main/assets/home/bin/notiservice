@@ -9,4 +9,5 @@ echo "Use: notiservice --es delete false --ei id 123 --es title 'Hello' --es mes
 exit
 fi
 
-[ -n "$1" ] && am startservice "$@" com.tool.tree/.NotiService &>/dev/null
+# am startservice "$@" com.tool.tree/com.tool.tree.NotiService &>/dev/null
+[ -n "$1" ] && echo "am:[startservice -n com.tool.tree/com.tool.tree.NotiService $@]"

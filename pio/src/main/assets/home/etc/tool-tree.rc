@@ -373,20 +373,20 @@ data_json="$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
 websum="$(echo "$data_json" | jq -r .assets[0].digest | cut -d: -f2)"
 name_apk="$(echo "$data_json" | jq -r .name)"
 if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$websum" == "$(sha256sum -b "$TMP/Tool-Tree.apk")" ]];then
-echo "am:[start -n '$PACKAGE_NAME'/'$PACKAGE_NAME'.OpenFileActivity --es path '$TMP'/Tool-Tree.apk]"
+openfile "$TMP/Tool-Tree.apk"
 exit
 fi
 if [[ "$websum" != "$(sha256sum -b "$PATH_APK")" ]];then
 sleep 1
 showtoast "'$update_text_3'"
 sleep 2
-downloadb "$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true &>/dev/null
+downloadb "$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true 2>/dev/null
 sleep 1
     if [[ "$websum" == "$(sha256sum -b "$TMP/Tool-Tree.apk")" ]];then
     cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
     showtoast "'$save_text' $SDCARD_PATH/Download/${name_apk}.apk"
     sleep 1
-    echo "am:[start -n '$PACKAGE_NAME'/'$PACKAGE_NAME'.OpenFileActivity --es path '$TMP'/Tool-Tree.apk]" &
+    openfile "$TMP/Tool-Tree.apk" &
     sleep 1
     rm -fr "$BIN" "$TERMUX/bin"
     fi

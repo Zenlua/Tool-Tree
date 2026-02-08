@@ -6,5 +6,6 @@ exit
 fi
 
 if [[ -n "$1" ]];then
-am broadcast -n com.tool.tree/.ToastReceiver -a com.tool.tree.SHOW --es text "$@" &>/dev/null
+# am broadcast -n com.tool.tree/com.tool.tree.ToastReceiver -a com.tool.tree.SHOW --es text "$@" &>/dev/null
+echo "am:[broadcast -n com.tool.tree/com.tool.tree.ToastReceiver -a com.tool.tree.SHOW --es text '$@']"
 fi
