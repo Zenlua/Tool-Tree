@@ -19,7 +19,8 @@ android {
         resourceConfigurations += ['zh', 'vi', 'ru', 'hu']
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode Integer.parseInt(new java.text.SimpleDateFormat("yyMMddHH").format(new Date()))
+        // versionCode Integer.parseInt(new java.text.SimpleDateFormat("yyMMddHH").format(new Date()))
+        versionCode 26020807
         versionName "1.2.9"
     }
     signingConfigs {
