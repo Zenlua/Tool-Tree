@@ -387,8 +387,6 @@ sleep 1
     showtoast "'$save_text' $SDCARD_PATH/Download/${name_apk}.apk"
     sleep 1
     openfile "$TMP/Tool-Tree.apk"
-    sleep 1
-    rm -fr "$BIN" "$TERMUX/bin"
     fi
 else
 showtoast "'$update_text_4'"
