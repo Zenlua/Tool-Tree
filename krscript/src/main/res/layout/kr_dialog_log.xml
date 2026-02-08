@@ -38,25 +38,13 @@
             style="@style/dialogDesc" />
     </LinearLayout>
 
-<com.omarea.common.ui.OverScrollView
-    android:layout_marginTop="16dp"
-    android:background="@drawable/krscript_item_ripple_inactive"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_above="@id/bottom_actions"
-    android:layout_below="@+id/top_bar">
-
-    <LinearLayout
-        android:id="@+id/log_root"
-        android:orientation="vertical"
+    <com.omarea.common.ui.OverScrollView
+        android:layout_marginTop="16dp"
+        android:background="@drawable/krscript_item_ripple_inactive"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <LinearLayout
-            android:id="@+id/log_container"
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_actions"
+        android:layout_below="@+id/top_bar">
 
         <TextView
             android:id="@+id/shell_output"
@@ -67,9 +55,7 @@
             android:fontFamily="monospace"
             android:textSize="12sp"
             android:padding="12dp" />
-
-    </LinearLayout>
-</com.omarea.common.ui.OverScrollView>
+    </com.omarea.common.ui.OverScrollView>
 
     <LinearLayout
         android:id="@+id/bottom_actions"
