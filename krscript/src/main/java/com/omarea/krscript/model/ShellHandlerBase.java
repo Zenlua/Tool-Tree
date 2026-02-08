@@ -109,7 +109,17 @@ public abstract class ShellHandlerBase extends Handler {
             onProgress(start, total);
             return;
         }
-    
+
+        // noti:[...]
+        if (log.startsWith("noti:[")) {
+            int end = log.lastIndexOf(']');
+            if (end > "noti:[".length()) {
+                String body = log.substring("noti:[".length(), end).trim();
+                onNoti(body);
+            }
+            return;
+        }
+
         // toast:[text...]
         if (log.startsWith("toast:[")) {
             int end = log.lastIndexOf(']');
@@ -144,6 +154,68 @@ public abstract class ShellHandlerBase extends Handler {
 
     protected void onError(Object msg) {
         updateLog(msg, "#ff0000");
+    }
+
+    protected void onNoti(String body) {
+        Context ctx = getContext();
+        if (ctx == null) return;
+    
+        try {
+            Map<String, String> args = parseKeyValueArgs(body);
+    
+            Intent intent = new Intent(
+                    ctx,
+                    com.tool.tree.NotiService.class
+            );
+    
+            if (args.containsKey("id")) {
+                intent.putExtra("id", Integer.parseInt(args.get("id")));
+            }
+    
+            if (args.containsKey("title")) {
+                intent.putExtra("title", args.get("title"));
+            }
+    
+            if (args.containsKey("message")) {
+                intent.putExtra("message", args.get("message"));
+            }
+    
+            if ("true".equals(args.get("delete"))) {
+                intent.putExtra("delete", "true");
+            }
+    
+            ctx.startService(intent);
+    
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Map<String, String> parseKeyValueArgs(String s) {
+        Map<String, String> map = new HashMap<>();
+    
+        Matcher m = Pattern.compile(
+                "(\\w+)=(?:'([^']*)'|\"([^\"]*)\"|(\\S+))"
+        ).matcher(s);
+    
+        while (m.find()) {
+            String key = m.group(1);
+            String val = m.group(2);
+            if (val == null) val = m.group(3);
+            if (val == null) val = m.group(4);
+    
+            map.put(key, unescape(val));
+        }
+        return map;
+    }
+
+    private String unescape(String s) {
+        if (s == null) return null;
+        return s
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\\"", "\"")
+                .replace("\\'", "'");
     }
 
     protected void onAmStart(String args) {
