@@ -1,5 +1,14 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
+show_help(){
+echo "Use: notiservice -d|--delete false -id|--id 123 -t|--title 'Hello' -m|--message 'Xin chào'"
+exit 0
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
 DELETE=""; ID=""; TITLE=""; MESSAGE="";
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -20,10 +29,7 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     -h|--help)
-      cat <<EOF
-Use: notiservice -d|--delete false -id|--id 123 -t|--title 'Hello' -m|--message 'Xin chào'
-EOF
-      exit 0
+      show_help
       ;;
     *)
       echo "Unknown option: $1"
