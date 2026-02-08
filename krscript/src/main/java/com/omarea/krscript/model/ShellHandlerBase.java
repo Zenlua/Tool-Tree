@@ -20,8 +20,7 @@ import java.util.regex.Pattern;
 public abstract class ShellHandlerBase extends Handler {
 
     protected Context context;
-
-    // ✅ THÊM: getter, KHÔNG abstract
+    
     protected Context getContext() {
         return context;
     }

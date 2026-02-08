@@ -26,6 +26,11 @@ class BgTaskThread(private var process: Process) : Thread() {
     }
 
     class ServiceShellHandler(private val context: Context, private val runnableNode: RunnableNode, private val notificationID: Int) : ShellHandlerBase() {
+    
+        init {
+            super.context = context
+        }
+        
         private var notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         private val notificationTitle = runnableNode.title
         private var notificationMessageRows = ArrayList<String>()
