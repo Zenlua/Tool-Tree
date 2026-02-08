@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.ComponentName;
 import android.net.Uri;
 import android.os.Build;
+import java.util.regex.Pattern;
 import java.util.*;
 
 /**
@@ -154,27 +155,20 @@ public abstract class ShellHandlerBase extends Handler {
 protected void onAm(String type, String args) {
     Context ctx = getContext();
     if (ctx == null) return;
-
     try {
         Intent intent = parseIntentArgs(args);
-
-        // Mặc định giới hạn trong app hiện tại
         if (intent.getComponent() == null) {
             intent.setPackage(ctx.getPackageName());
         }
-
         switch (type) {
+
             case "start": {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-                // ACTION_SEND + implicit → chooser
                 if (Intent.ACTION_SEND.equals(intent.getAction())
                         && intent.getComponent() == null) {
-
                     Intent chooser = Intent.createChooser(intent, null);
                     chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     ctx.startActivity(chooser);
-
                 } else {
                     ctx.startActivity(intent);
                 }
@@ -193,7 +187,6 @@ protected void onAm(String type, String args) {
                             "service requires -n <package/class>"
                     );
                 }
-
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     ctx.startForegroundService(intent);
                 } else {
