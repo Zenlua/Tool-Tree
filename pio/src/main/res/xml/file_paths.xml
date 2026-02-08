@@ -1,7 +1,25 @@
 <paths>
+    <files-path
+        name="internal"
+        path="." />
     <external-path
         name="external_files"
         path="." />
+    <external-path
+        name="files_root1"
+        path="Android/data/com.tool.tree/" />
+    <external-path
+        name="files_root2"
+        path="/data/user/0/com.tool.tree/" />
+    <external-path
+        name="files_root3"
+        path="/data/user/0/com.tool.tree/cache" />
+    <external-path
+        name="files_root4"
+        path="/data/data/com.tool.tree/" />
+    <external-path
+        name="files_root5"
+        path="/data/data/com.tool.tree/cache" />
     <root-path
         name="root"
         path="." />

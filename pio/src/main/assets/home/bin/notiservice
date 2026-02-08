@@ -1,13 +1,42 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-echo "Use: notiservice --es delete false --ei id 123 --es title 'Hello' --es message 'Xin chào'
-- delete [true/false]
-- id [number]
-- title [string]
-- message [string]"
-exit
-fi
+DELETE=""; ID=""; TITLE=""; MESSAGE="";
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -d|--delete)
+      DELETE="$2"
+      shift 2
+      ;;
+    -id|--id)
+      ID="$2"
+      shift 2
+      ;;
+    -t|--title)
+      TITLE="$2"
+      shift 2
+      ;;
+    -m|--message)
+      MESSAGE="$2"
+      shift 2
+      ;;
+    -h|--help)
+      cat <<EOF
+Use: notiservice -d|--delete false -id|--id 123 -t|--title 'Hello' -m|--message 'Xin chào'
+EOF
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
+# Mặc định
+[ "$DELETE" == "true" ] && DELETEs="--es delete true"
+[ "$ID" ] && IDs="--ei id '$ID'"
+[ "$TITLE" ] && TITLEs="--es title '$TITLE'"
+[ "$MESSAGE" ] && MESSAGEs="--es message '$MESSAGE'"
 
 # am startservice "$@" com.tool.tree/com.tool.tree.NotiService &>/dev/null
-[ -n "$1" ] && echo "am:[startservice -n com.tool.tree/com.tool.tree.NotiService $@]"
+echo "am:[startservice -n com.tool.tree/com.tool.tree.NotiService $DELETEs $IDs $TITLEs $MESSAGEs]"
