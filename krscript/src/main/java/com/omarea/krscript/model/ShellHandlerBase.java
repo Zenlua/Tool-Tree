@@ -241,6 +241,52 @@ public abstract class ShellHandlerBase extends Handler {
         return intent;
     }
 
+    private static String[] splitArgs(String args) {
+        ArrayList<String> out = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        boolean inQuote = false;
+        char quoteChar = 0;
+    
+        for (int i = 0; i < args.length(); i++) {
+            char c = args.charAt(i);
+    
+            if (inQuote) {
+                if (c == quoteChar) {
+                    inQuote = false;
+                } else if (c == '\\' && i + 1 < args.length()) {
+                    char n = args.charAt(++i);
+                    switch (n) {
+                        case 'n': cur.append('\n'); break;
+                        case 't': cur.append('\t'); break;
+                        case '\\': cur.append('\\'); break;
+                        case '"': cur.append('"'); break;
+                        case '\'': cur.append('\''); break;
+                        default: cur.append(n);
+                    }
+                } else {
+                    cur.append(c);
+                }
+            } else {
+                if (c == '"' || c == '\'') {
+                    inQuote = true;
+                    quoteChar = c;
+                } else if (Character.isWhitespace(c)) {
+                    if (cur.length() > 0) {
+                        out.add(cur.toString());
+                        cur.setLength(0);
+                    }
+                } else {
+                    cur.append(c);
+                }
+            }
+        }
+    
+        if (cur.length() > 0) {
+            out.add(cur.toString());
+        }
+        return out.toArray(new String[0]);
+    }
+
     /**
      * 输出指定颜色的内容
      *
