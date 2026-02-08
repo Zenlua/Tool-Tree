@@ -236,14 +236,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
                 }
             }
         }
-        
-        override fun onToast(text: String) {
-            logView?.post {
-                context?.let {
-                    Toast.makeText(it, text, Toast.LENGTH_LONG).show()
-                }
-            }
-        }
+       
 
         override fun onStart(msg: Any?) {
             logView?.text = ""

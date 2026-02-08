@@ -1,7 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-echo "Use: notiservice --es delete false --ei id 123 --es tile 'Hello' --es message 'Xin chào'
+echo "Use: notiservice --es delete false --ei id 123 --es title 'Hello' --es message 'Xin chào'
 - delete [true/false]
 - id [number]
 - title [string]

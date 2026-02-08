@@ -101,7 +101,7 @@ xml_print '<group>
 <desc>'$home_text_1'</desc>
 <option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
 <handler>
-[ "$menu_id" == "v1" ] && echo "amstart:[-a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
+[ "$menu_id" == "v1" ] && echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
 </handler>
 </page>
 </group>
@@ -141,7 +141,7 @@ case "$menu_id" in
   hide) slog settadd 1 & progress 0.02 10 & ;;
   xoa) slog settadd 2 & progress 0.02 10 & ;;
   home) slog settadd 0 & progress 0.02 10 & ;;
-  taive) echo "amstart:[-a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Addon.html]" & progress 0.02 10 & ;;
+  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Addon.html]" & progress 0.02 10 & ;;
   file) installadd "$file" "$AON"; slog settadd 0 ;;
 esac
 </handler>
@@ -180,7 +180,7 @@ xml_print '<group>
 <desc>'$home_text_1'</desc>
 <option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
 <handler>
-[ "$menu_id" == "v1" ] && echo "amstart:[-a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
+[ "$menu_id" == "v1" ] && echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
 </handler>
 </page>
 </group>'
@@ -232,7 +232,7 @@ case "$menu_id" in
   hide) slog settadd2 1 & progress 0.02 10 & ;;
   xoa) slog settadd2 2 & progress 0.02 10 & ;;
   home) slog settadd2 0 & progress 0.02 10 & ;;
-  taive) echo "amstart:[-a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Apkon.html]" & progress 0.02 10 & ;;
+  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Apkon.html]" & progress 0.02 10 & ;;
   file) installadd "$file" "$AOK"; slog settadd2 0 ;;
 esac
 </handler>
@@ -271,7 +271,7 @@ xml_print '<group>
 <handler>
 progress 0.02 10 &
 if [ "$menu_id" == "share" ]; then
-echo "amstart:[-a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
+echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
 fi
 </handler>
 </page>
@@ -373,7 +373,7 @@ data_json="$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
 websum="$(echo "$data_json" | jq -r .assets[0].digest | cut -d: -f2)"
 name_apk="$(echo "$data_json" | jq -r .name)"
 if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$websum" == "$(sha256sum -b "$TMP/Tool-Tree.apk")" ]];then
-openfile "$TMP/Tool-Tree.apk"
+echo "am:[start -n '$PACKAGE_NAME'/'$PACKAGE_NAME'.OpenFileActivity --es path '$TMP'/Tool-Tree.apk]"
 exit
 fi
 if [[ "$websum" != "$(sha256sum -b "$PATH_APK")" ]];then
@@ -386,7 +386,7 @@ sleep 1
     cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
     showtoast "'$save_text' $SDCARD_PATH/Download/${name_apk}.apk"
     sleep 1
-    openfile "$TMP/Tool-Tree.apk" &
+    echo "am:[start -n '$PACKAGE_NAME'/'$PACKAGE_NAME'.OpenFileActivity --es path '$TMP'/Tool-Tree.apk]" &
     sleep 1
     rm -fr "$BIN" "$TERMUX/bin"
     fi

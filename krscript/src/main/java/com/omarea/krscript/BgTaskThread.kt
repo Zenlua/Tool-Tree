@@ -63,7 +63,7 @@ class BgTaskThread(private var process: Process) : Thread() {
             }
 
             val expandView = RemoteViews(context.packageName, R.layout.kr_task_notification)
-            expandView.setTextViewText(R.id.kr_task_title, "$notificationTitle($notificationID)")
+            expandView.setTextViewText(R.id.kr_task_title, "$notificationTitle ($notificationID)")
             expandView.setTextViewText(R.id.kr_task_log, notificationMessageRows.joinToString("", if (someIgnored) "……\n" else "").trim())
             expandView.setProgressBar(R.id.kr_task_progress, progressTotal, progressCurrent, progressTotal < 0)
             expandView.setViewVisibility(R.id.kr_task_progress, if (progressTotal == progressCurrent) View.GONE else View.VISIBLE)
@@ -73,7 +73,7 @@ class BgTaskThread(private var process: Process) : Thread() {
             }
 
             val notificationBuilder = Notification.Builder(context, channelId)
-                    .setContentTitle("$notificationTitle($notificationID)")
+                    .setContentTitle("$notificationTitle ($notificationID)")
                     .setContentText("" + notificationMShortMsg + " >> " + notificationMessageRows.lastOrNull())
                     .setSmallIcon(R.drawable.kr_run)
                     .setAutoCancel(true)
@@ -156,13 +156,6 @@ class BgTaskThread(private var process: Process) : Thread() {
             progressCurrent = current
             progressTotal = total
             updateNotification()
-        }
-
-        override fun onToast(text: String) {
-            synchronized(notificationMessageRows) {
-                notificationMessageRows.add(text)
-                updateNotification()
-            }
         }
     }
 

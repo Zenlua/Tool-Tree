@@ -52,8 +52,6 @@ public abstract class ShellHandlerBase extends Handler {
      */
     public static final int EVENT_EXIT = -2;
 
-    protected abstract void onToast(String text);
-
     protected abstract void onProgress(int current, int total);
 
     protected abstract void onStart(Object msg);
@@ -62,11 +60,6 @@ public abstract class ShellHandlerBase extends Handler {
 
     protected abstract void onExit(Object msg);
 
-    /**
-     * 输出格式化内容
-     *
-     * @param msg
-     */
     protected abstract void updateLog(final SpannableString msg);
 
     @Override
@@ -111,27 +104,6 @@ public abstract class ShellHandlerBase extends Handler {
             return;
         }
 
-        // noti:[...]
-        if (log.startsWith("noti:[")) {
-            int end = log.lastIndexOf(']');
-            if (end > "noti:[".length()) {
-                String body = log.substring("noti:[".length(), end).trim();
-                onNoti(body);
-            }
-            return;
-        }
-
-        // toast:[text...]
-        if (log.startsWith("toast:[")) {
-            int end = log.lastIndexOf(']');
-            if (end > "toast:[".length()) {
-                String text = log.substring("toast:[".length(), end)
-                        .replace("\\n", "\n");
-                onToast(text);
-            }
-            return;
-        }
-        
         if (log.startsWith("am:[")) {
             int end = log.lastIndexOf(']');
             if (end > "am:[".length()) {
@@ -140,8 +112,6 @@ public abstract class ShellHandlerBase extends Handler {
             }
             return;
         }
-    
-        // log thường
         onReader(msg);
     }
 
@@ -157,76 +127,11 @@ public abstract class ShellHandlerBase extends Handler {
         updateLog(msg, "#ff0000");
     }
 
-    protected void onNoti(String body) {
-        Context ctx = getContext();
-        if (ctx == null) return;
-    
-        try {
-            Map<String, String> args = parseKeyValueArgs(body);
-    
-            Intent intent = new Intent();
-            intent.setComponent(new ComponentName(
-                    ctx.getPackageName(),
-                    ctx.getPackageName() + ".NotiService"
-            ));
-    
-            if (args.containsKey("id")) {
-                intent.putExtra("id", Integer.parseInt(args.get("id")));
-            }
-    
-            if (args.containsKey("title")) {
-                intent.putExtra("title", args.get("title"));
-            }
-    
-            if (args.containsKey("message")) {
-                intent.putExtra("message", args.get("message"));
-            }
-    
-            if ("true".equals(args.get("delete"))) {
-                intent.putExtra("delete", "true");
-            }
-    
-            ctx.startService(intent);
-    
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Map<String, String> parseKeyValueArgs(String s) {
-        Map<String, String> map = new HashMap<>();
-    
-        Matcher m = Pattern.compile(
-                "(\\w+)=(?:'([^']*)'|\"([^\"]*)\"|(\\S+))"
-        ).matcher(s);
-    
-        while (m.find()) {
-            String key = m.group(1);
-            String val = m.group(2);
-            if (val == null) val = m.group(3);
-            if (val == null) val = m.group(4);
-    
-            map.put(key, unescape(val));
-        }
-        return map;
-    }
-
-    private String unescape(String s) {
-        if (s == null) return null;
-        return s
-                .replace("\\n", "\n")
-                .replace("\\t", "\t")
-                .replace("\\\"", "\"")
-                .replace("\\'", "'");
-    }
-
     protected void onAm(String args) {
         Context ctx = getContext();
         if (ctx == null || args.isEmpty()) return;
-    
         String[] tokens = splitArgs(args);
         if (tokens.length == 0) return;
-    
         String cmd = tokens[0];
         String subArgs = args.substring(cmd.length()).trim();
     
@@ -240,11 +145,9 @@ public abstract class ShellHandlerBase extends Handler {
                     if ((Intent.ACTION_SEND.equals(intent.getAction())
                             || Intent.ACTION_SEND_MULTIPLE.equals(intent.getAction()))
                             && intent.getComponent() == null) {
-    
                         Intent chooser = Intent.createChooser(intent, null);
                         chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         ctx.startActivity(chooser);
-    
                     } else {
                         ctx.startActivity(intent);
                     }
@@ -266,12 +169,9 @@ public abstract class ShellHandlerBase extends Handler {
 
     private Intent parseIntentArgs(String args) {
         Intent intent = new Intent();
-    
         String[] tokens = splitArgs(args);
         for (int i = 0; i < tokens.length; i++) {
             switch (tokens[i]) {
-    
-                /* ---------- core ---------- */
     
                 case "-a": // action
                     if (++i < tokens.length)
@@ -317,8 +217,6 @@ public abstract class ShellHandlerBase extends Handler {
                     }
                     break;
                 }
-    
-                /* ---------- extras ---------- */
     
                 case "--es": // string
                     if (i + 2 < tokens.length)
@@ -398,8 +296,6 @@ public abstract class ShellHandlerBase extends Handler {
                     break;
                 }
     
-                /* ---------- uri permission ---------- */
-    
                 case "--grant-read-uri-permission":
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     break;
@@ -458,12 +354,6 @@ public abstract class ShellHandlerBase extends Handler {
         return out.toArray(new String[0]);
     }
 
-    /**
-     * 输出指定颜色的内容
-     *
-     * @param msg
-     * @param color
-     */
     protected void updateLog(final Object msg, final String color) {
         if (msg != null) {
             String msgStr = msg.toString();
