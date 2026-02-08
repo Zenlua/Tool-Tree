@@ -101,7 +101,7 @@ xml_print '<group>
 <desc>'$home_text_1'</desc>
 <option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
 <handler>
-[ "$menu_id" == "v1" ] && am start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree &>/dev/null
+[ "$menu_id" == "v1" ] && echo "amstart:[-a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
 </handler>
 </page>
 </group>
@@ -141,7 +141,7 @@ case "$menu_id" in
   hide) slog settadd 1 & progress 0.02 10 & ;;
   xoa) slog settadd 2 & progress 0.02 10 & ;;
   home) slog settadd 0 & progress 0.02 10 & ;;
-  taive) am start -a android.intent.action.VIEW -d "https://zenlua.github.io/Tool-Tree/add-on/Addon.html" &>/dev/null & progress 0.02 10 & ;;
+  taive) echo "amstart:[-a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Addon.html]" & progress 0.02 10 & ;;
   file) installadd "$file" "$AON"; slog settadd 0 ;;
 esac
 </handler>
@@ -180,7 +180,7 @@ xml_print '<group>
 <desc>'$home_text_1'</desc>
 <option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
 <handler>
-[ "$menu_id" == "v1" ] && am start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree &>/dev/null
+[ "$menu_id" == "v1" ] && echo "amstart:[-a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
 </handler>
 </page>
 </group>'
@@ -232,7 +232,7 @@ case "$menu_id" in
   hide) slog settadd2 1 & progress 0.02 10 & ;;
   xoa) slog settadd2 2 & progress 0.02 10 & ;;
   home) slog settadd2 0 & progress 0.02 10 & ;;
-  taive) am start -a android.intent.action.VIEW -d "https://zenlua.github.io/Tool-Tree/add-on/Apkon.html" &>/dev/null & progress 0.02 10 & ;;
+  taive) echo "amstart:[-a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Apkon.html]" & progress 0.02 10 & ;;
   file) installadd "$file" "$AOK"; slog settadd2 0 ;;
 esac
 </handler>
@@ -271,7 +271,7 @@ xml_print '<group>
 <handler>
 progress 0.02 10 &
 if [ "$menu_id" == "share" ]; then
-am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT "https://zenlua.github.io/Tool-Tree" &>/dev/null
+echo "amstart:[-a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
 fi
 </handler>
 </page>

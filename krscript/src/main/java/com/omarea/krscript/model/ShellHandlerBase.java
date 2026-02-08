@@ -132,11 +132,11 @@ public abstract class ShellHandlerBase extends Handler {
             return;
         }
         
-        if (log.startsWith("amstart:[")) {
+        if (log.startsWith("am:[")) {
             int end = log.lastIndexOf(']');
-            if (end > "amstart:[".length()) {
-                String args = log.substring("amstart:[".length(), end).trim();
-                onAmStart(args);
+            if (end > "am:[".length()) {
+                String args = log.substring("am:[".length(), end).trim();
+                onAm(args);
             }
             return;
         }
@@ -220,23 +220,44 @@ public abstract class ShellHandlerBase extends Handler {
                 .replace("\\'", "'");
     }
 
-    protected void onAmStart(String args) {
+    protected void onAm(String args) {
         Context ctx = getContext();
-        if (ctx == null) return;
+        if (ctx == null || args.isEmpty()) return;
+    
+        String[] tokens = splitArgs(args);
+        if (tokens.length == 0) return;
+    
+        String cmd = tokens[0];
+        String subArgs = args.substring(cmd.length()).trim();
     
         try {
-            Intent intent = parseIntentArgs(args);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            Intent intent = parseIntentArgs(subArgs);
     
-            if (Intent.ACTION_SEND.equals(intent.getAction())
-                    && intent.getComponent() == null) {
+            switch (cmd) {
+                case "start": {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     
-                Intent chooser = Intent.createChooser(intent, null);
-                chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(chooser);
+                    if ((Intent.ACTION_SEND.equals(intent.getAction())
+                            || Intent.ACTION_SEND_MULTIPLE.equals(intent.getAction()))
+                            && intent.getComponent() == null) {
     
-            } else {
-                ctx.startActivity(intent);
+                        Intent chooser = Intent.createChooser(intent, null);
+                        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        ctx.startActivity(chooser);
+    
+                    } else {
+                        ctx.startActivity(intent);
+                    }
+                    break;
+                }
+    
+                case "startservice":
+                    ctx.startService(intent);
+                    break;
+    
+                case "broadcast":
+                    ctx.sendBroadcast(intent);
+                    break;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -250,66 +271,142 @@ public abstract class ShellHandlerBase extends Handler {
         for (int i = 0; i < tokens.length; i++) {
             switch (tokens[i]) {
     
+                /* ---------- core ---------- */
+    
                 case "-a": // action
-                    if (i + 1 >= tokens.length) break;
-                    intent.setAction(tokens[++i]);
+                    if (++i < tokens.length)
+                        intent.setAction(tokens[i]);
                     break;
     
                 case "-d": // data
-                    if (i + 1 >= tokens.length) break;
-                    intent.setData(Uri.parse(tokens[++i]));
+                    if (++i < tokens.length)
+                        intent.setData(Uri.parse(tokens[i]));
                     break;
-
-                case "-t": { // mime type
-                    if (i + 1 >= tokens.length) break;
-                    intent.setType(tokens[++i]);
+    
+                case "-t": // mime
+                    if (++i < tokens.length)
+                        intent.setType(tokens[i]);
                     break;
-                }
-
+    
                 case "-n": { // component
-                    if (i + 1 >= tokens.length) break;
-                    String[] cn = tokens[++i].split("/", 2);
-                    if (cn.length == 2) {
-                        intent.setComponent(new ComponentName(cn[0], cn[1]));
+                    if (++i < tokens.length) {
+                        String[] cn = tokens[i].split("/", 2);
+                        if (cn.length == 2)
+                            intent.setComponent(new ComponentName(cn[0], cn[1]));
                     }
                     break;
                 }
     
-                case "--es": { // string extra
-                    if (i + 2 >= tokens.length) break;
-                    String key = tokens[++i];
-                    String val = tokens[++i];
-                    intent.putExtra(key, val);
+                case "-p": // package
+                    if (++i < tokens.length)
+                        intent.setPackage(tokens[i]);
+                    break;
+    
+                case "-c": // category
+                    if (++i < tokens.length)
+                        intent.addCategory(tokens[i]);
+                    break;
+    
+                case "-f": { // flags
+                    if (++i < tokens.length) {
+                        String v = tokens[i];
+                        int flags = v.startsWith("0x")
+                                ? Integer.parseInt(v.substring(2), 16)
+                                : Integer.parseInt(v);
+                        intent.addFlags(flags);
+                    }
                     break;
                 }
     
-                case "--ei": { // int extra
-                    if (i + 2 >= tokens.length) break;
-                    String key = tokens[++i];
-                    try {
-                        int val = Integer.parseInt(tokens[++i]);
-                        intent.putExtra(key, val);
-                    } catch (NumberFormatException ignored) {}
+                /* ---------- extras ---------- */
+    
+                case "--es": // string
+                    if (i + 2 < tokens.length)
+                        intent.putExtra(tokens[++i], tokens[++i]);
+                    break;
+    
+                case "--ei": // int
+                    if (i + 2 < tokens.length) {
+                        String k = tokens[++i];
+                        try {
+                            intent.putExtra(k, Integer.parseInt(tokens[++i]));
+                        } catch (Exception ignored) {}
+                    }
+                    break;
+    
+                case "--el": // long
+                    if (i + 2 < tokens.length) {
+                        String k = tokens[++i];
+                        try {
+                            intent.putExtra(k, Long.parseLong(tokens[++i]));
+                        } catch (Exception ignored) {}
+                    }
+                    break;
+    
+                case "--ez": // boolean
+                    if (i + 2 < tokens.length)
+                        intent.putExtra(tokens[++i], Boolean.parseBoolean(tokens[++i]));
+                    break;
+    
+                case "--ef": // float
+                    if (i + 2 < tokens.length) {
+                        String k = tokens[++i];
+                        try {
+                            intent.putExtra(k, Float.parseFloat(tokens[++i]));
+                        } catch (Exception ignored) {}
+                    }
+                    break;
+    
+                case "--ed": // double
+                    if (i + 2 < tokens.length) {
+                        String k = tokens[++i];
+                        try {
+                            intent.putExtra(k, Double.parseDouble(tokens[++i]));
+                        } catch (Exception ignored) {}
+                    }
+                    break;
+    
+                case "--esn": // null
+                    if (++i < tokens.length)
+                        intent.putExtra(tokens[i], (String) null);
+                    break;
+    
+                case "--esa": { // String[]
+                    if (++i < tokens.length) {
+                        String key = tokens[i];
+                        ArrayList<String> list = new ArrayList<>();
+                        while (i + 1 < tokens.length && !tokens[i + 1].startsWith("-"))
+                            list.add(tokens[++i]);
+                        intent.putExtra(key, list.toArray(new String[0]));
+                    }
                     break;
                 }
     
-                case "--el": { // long extra
-                    if (i + 2 >= tokens.length) break;
-                    String key = tokens[++i];
-                    try {
-                        long val = Long.parseLong(tokens[++i]);
-                        intent.putExtra(key, val);
-                    } catch (NumberFormatException ignored) {}
+                case "--eia": { // int[]
+                    if (++i < tokens.length) {
+                        String key = tokens[i];
+                        ArrayList<Integer> list = new ArrayList<>();
+                        while (i + 1 < tokens.length && !tokens[i + 1].startsWith("-")) {
+                            try {
+                                list.add(Integer.parseInt(tokens[++i]));
+                            } catch (Exception ignored) {}
+                        }
+                        int[] arr = new int[list.size()];
+                        for (int j = 0; j < list.size(); j++) arr[j] = list.get(j);
+                        intent.putExtra(key, arr);
+                    }
                     break;
                 }
     
-                case "--ez": { // boolean extra
-                    if (i + 2 >= tokens.length) break;
-                    String key = tokens[++i];
-                    boolean val = Boolean.parseBoolean(tokens[++i]);
-                    intent.putExtra(key, val);
+                /* ---------- uri permission ---------- */
+    
+                case "--grant-read-uri-permission":
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     break;
-                }
+    
+                case "--grant-write-uri-permission":
+                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    break;
             }
         }
         return intent;

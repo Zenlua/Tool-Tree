@@ -7,7 +7,7 @@ fi
 
 source language
 ranid="$RANDOM"
-notiservice --ei id $ranid --es title "$download_text" --es message "$load_text_1"
+echo "noti:[id=$ranid title='$download_text' message='$load_text_1']"
 taive_index="$(curl -sIL "$1")"
 if [ "$?" == 0 ];then
 taive_byte="$(echo "$taive_index" | grep -i "content-length" | awk '{print $2}' | tail -n 1)"
@@ -24,24 +24,24 @@ taive_byte_hientai=0
 echo >$TMPDIR/downloadb_$ranid.log
 while true; do
     if [ "$taive_byte" != 0 ]; then
-    notiservice --ei id $ranid --es title "$name_text: ${taive_path_file##*/}" --es message "$sizes_text: $(coverbyte $taive_byte_hientai)/$(coverbyte $taive_byte)"
+    echo "noti:[id=$ranid title='$name_text: ${taive_path_file##*/}' message='$sizes_text: $(coverbyte $taive_byte_hientai)/$(coverbyte $taive_byte)']"
     else
-    notiservice --ei id $ranid --es title "$name_text: ${taive_path_file##*/}" --es message "$sizes_text: $(coverbyte $taive_byte_hientai)"
+    echo "noti:[id=$ranid title='$name_text: ${taive_path_file##*/}' message='$sizes_text: $(coverbyte $taive_byte_hientai)']"
     fi
 [ -f "$taive_path_file" ] && taive_byte_hientai=$(wc -c <"$taive_path_file" 2>/dev/null)
     if [ "$(grep -cm1 'notification=0' $TMPDIR/downloadb_$ranid.log 2>/dev/null)" == 1 ];then
-    notiservice --ei id $ranid --es title "$name_text: ${taive_path_file##*/}" --es message "$flash_text_12"
+    echo "noti:[id=$ranid title='$name_text: ${taive_path_file##*/}' message='$flash_text_12']"
     sleep 3
-    [ "$3" == "true" ] && notiservice --es delete true --ei id $ranid
+    [ "$3" == "true" ] && echo "noti:[delete=true id=$ranid]"
     rm -fr $TMPDIR/downloadb_$ranid.log
     break
     elif [ "$(grep -cm1 notification= $TMPDIR/downloadb_$ranid.log 2>/dev/null)" == 1 ];then
-    notiservice --ei id $ranid --es title "Error: ${taive_path_file##*/}" --es message "($(gprop notification $TMPDIR/downloadb_$ranid.log)) $load_text_2"
+    echo "noti:[id=$ranid title='Error: ${taive_path_file##*/}' message='($(gprop notification $TMPDIR/downloadb_$ranid.log)) $load_text_2']"
     rm -fr $TMPDIR/downloadb_$ranid.log
     break
     else
         if [ ! -f $TMPDIR/downloadb_$ranid.log ];then
-        notiservice --es delete true --ei id $ranid
+        echo "noti:[delete=true id=$ranid]"
         break
         fi
     fi
@@ -53,7 +53,7 @@ done
 Taive "$1" "$taive_path_file"
 echo "notification=$?" &>$TMPDIR/downloadb_$ranid.log
 else
-notiservice --es delete true --ei id $ranid
+echo "noti:[delete=true id=$ranid]"
 echo "$load_text_2" >&2
 exit 1
 fi
