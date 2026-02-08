@@ -152,33 +152,46 @@ public abstract class ShellHandlerBase extends Handler {
     }
 
     protected void onAm(String type, String args) {
-        try {
-            Context ctx = getContext();
-            if (ctx == null) return;
+        Context ctx = getContext();
+        if (ctx == null) return;
     
-            Intent intent = parseIntentArgs(args);
+        new Thread(() -> {
+            try {
+                Intent intent = parseIntentArgs(args);
     
-            switch (type) {
-                case "start":
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    ctx.startActivity(intent);
-                    break;
+                switch (type) {
+                    case "start": {
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     
-                case "broadcast":
-                    ctx.sendBroadcast(intent);
-                    break;
+                        if (Intent.ACTION_SEND.equals(intent.getAction())
+                                && intent.getComponent() == null) {
     
-                case "service":
-                    if (Build.VERSION.SDK_INT >= 26) {
-                        ctx.startForegroundService(intent);
-                    } else {
-                        ctx.startService(intent);
+                            Intent chooser = Intent.createChooser(intent, null);
+                            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            ctx.startActivity(chooser);
+    
+                        } else {
+                            ctx.startActivity(intent);
+                        }
+                        break;
                     }
-                    break;
+    
+                    case "broadcast":
+                        ctx.sendBroadcast(intent);
+                        break;
+    
+                    case "service":
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            ctx.startForegroundService(intent);
+                        } else {
+                            ctx.startService(intent);
+                        }
+                        break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        }, "am-dispatcher").start();
     }
 
     private Intent parseIntentArgs(String args) {
@@ -197,7 +210,13 @@ public abstract class ShellHandlerBase extends Handler {
                     if (i + 1 >= tokens.length) break;
                     intent.setData(Uri.parse(tokens[++i]));
                     break;
-    
+
+                case "-t": { // mime type
+                    if (i + 1 >= tokens.length) break;
+                    intent.setType(tokens[++i]);
+                    break;
+                }
+
                 case "-n": { // component
                     if (i + 1 >= tokens.length) break;
                     String[] cn = tokens[++i].split("/", 2);
