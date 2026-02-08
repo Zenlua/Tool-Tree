@@ -12,6 +12,7 @@ import android.content.ComponentName;
 import android.net.Uri;
 import android.os.Build;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.*;
 
 /**
@@ -163,10 +164,11 @@ public abstract class ShellHandlerBase extends Handler {
         try {
             Map<String, String> args = parseKeyValueArgs(body);
     
-            Intent intent = new Intent(
-                    ctx,
-                    com.tool.tree.NotiService.class
-            );
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName(
+                    ctx.getPackageName(),
+                    ctx.getPackageName() + ".NotiService"
+            ));
     
             if (args.containsKey("id")) {
                 intent.putExtra("id", Integer.parseInt(args.get("id")));
