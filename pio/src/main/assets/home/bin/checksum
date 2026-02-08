@@ -1,11 +1,30 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-echo "Use: checksum /path/folder"
-exit 1
+# Help
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+  echo "Use:"
+  echo "  checksum <file|folder|string>"
+  echo "  echo data | checksum"
+  exit 0
 fi
 
-if [ -d "$1" ];then
-cd "${1%/*}"
-tar -cf - "${1##*/}" | sha256sum -b
+# Thư mục
+if [ -d "$1" ]; then
+  cd "${1%/*}" || exit 1
+  tar -cf - "${1##*/}" | sha256sum | awk '{print $1}'
+  exit 0
 fi
+
+# File
+if [ -f "$1" ]; then
+  sha256sum "$1" | awk '{print $1}'
+  exit 0
+fi
+
+if [ -z "$1" ]; then
+  sha256sum | awk '{print $1}'
+  exit 0
+fi
+
+# Chuỗi (checksum 123)
+echo -n "$1" | sha256sum | awk '{print $1}'

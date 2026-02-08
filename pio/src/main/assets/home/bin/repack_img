@@ -155,7 +155,7 @@ elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
     cd "$INPUT"
     for redts in $(ls -1d dts_*.+([0-9]) 2>/dev/null | sort -n -t . -k 2); do
         nrep="${redts/dts_/}"
-        if [ "$(sha256sum -b $redts)" == "$(cat cache/md5_$nrep)" ];then
+        if [ "$(checksum $redts)" == "$(cat cache/md5_$nrep)" ];then
         cp -f cache/${nrep} ${nrep}
         else
         echo "Build DTB: $redts"
@@ -199,7 +199,7 @@ elif [ "$partition" = "logo" ];then
 elif [ "$partition" = "dtbo" ];then
   cd "$INPUT"
   for dtbo in $(ls -1d dts.* | sort -n -t . -k 2); do
-    if [ "$(sha256sum -b $dtbo)" == "$(cat cache/md5_$dtbo 2>/dev/null)" ];then
+    if [ "$(checksum $dtbo)" == "$(cat cache/md5_$dtbo 2>/dev/null)" ];then
     echo "Copy raw: dtb.${dtbo##*.}"
     cp -f cache/dtb.${dtbo##*.} dtb.${dtbo##*.}
     else

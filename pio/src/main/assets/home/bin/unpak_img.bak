@@ -191,7 +191,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
             dtc -q -@ -I dtb -O dts -o dts_$unsl $unsl
             [ "$?" != 0 ] && killtree "$unpack_text_5 $unsl"
             mv $unsl cache/$unsl
-            checksum dts_$unsl > cache/md5_$unsl
+            sha256sum -b dts_$unsl > cache/md5_$unsl
         done
         # unpack cpio
         for vch in $(ls -1d *.cpio vendor_ramdisk/*.cpio 2>/dev/null); do
@@ -219,7 +219,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
         dtc -q -@ -I dtb -O dts -o dts.${dtbo##*.} $dtbo
         [ "$?" != 0 ] && killtree "$unpack_text_5 $dtbo"
         mv $dtbo cache/$dtbo
-        checksum dts.${dtbo##*.} > cache/md5_dts.${dtbo##*.}
+        sha256sum -b dts.${dtbo##*.} > cache/md5_dts.${dtbo##*.}
       done
       echo
     else

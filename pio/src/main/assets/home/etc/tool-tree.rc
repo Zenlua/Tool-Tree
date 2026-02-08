@@ -61,7 +61,7 @@ fi
 
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ];then
-sum_md5_kk="$(sha256sum $ETC/lang/vi.sh | awk '{print $1}')"
+sum_md5_kk="$(checksum $ETC/lang/vi.sh)"
     if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]] || [[ "$(grep -cm1 '=""' $ETC/lang/auto.sh)" == 1 ]] || [[ ! -f $ETC/lang/auto.sh ]];then
     source $ETC/lang/vi.sh
     [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
@@ -299,7 +299,7 @@ fi
 <set>
 slog language_kkts "$language_kkt"
 if [ "$language_kkt" == "auto" ];then
-sum_md5_kk="$(sha256sum $ETC/lang/vi.sh | cut -d" " -f1)"
+sum_md5_kk="$(checksum $ETC/lang/vi.sh)"
   source $ETC/lang/vi.sh
   [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
   for vc in $(grep "=" $ETC/lang/vi.sh | cut -d= -f1); do
@@ -372,17 +372,17 @@ showtoast "'$update_text_2'"
 data_json="$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
 websum="$(echo "$data_json" | jq -r .assets[0].digest | cut -d: -f2)"
 name_apk="$(echo "$data_json" | jq -r .name)"
-if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$websum" == "$(sha256sum "$TMP/Tool-Tree.apk" | cut -d" " -f1)" ]];then
+if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]];then
 openfile "$TMP/Tool-Tree.apk"
 exit
 fi
-if [[ "$websum" != "$(sha256sum "$PATH_APK" | cut -d" " -f1)" ]];then
+if [[ "$websum" != "$(checksum "$PATH_APK")" ]];then
 sleep 1
 showtoast "'$update_text_3'"
 sleep 2
 downloadb "$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true 2>/dev/null
 sleep 1
-    if [[ "$websum" == "$(sha256sum "$TMP/Tool-Tree.apk" | cut -d" " -f1)" ]];then
+    if [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]];then
     cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
     showtoast "'$save_text' $SDCARD_PATH/Download/${name_apk}.apk"
     sleep 1
