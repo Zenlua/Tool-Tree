@@ -121,17 +121,11 @@ public abstract class ShellHandlerBase extends Handler {
             return;
         }
         
-        if (log.startsWith("am:[")) {
-            String prefix = "am:[";
-            int end = log.lastIndexOf("]");
-            if (end > prefix.length()) {
-                String body = log.substring(prefix.length(), end);
-                int sep = body.indexOf("|");
-                if (sep > 0) {
-                    String type = body.substring(0, sep).trim();
-                    String args = body.substring(sep + 1).trim();
-                    onAm(type, args);
-                }
+        if (log.startsWith("amstart:[")) {
+            int end = log.lastIndexOf(']');
+            if (end > "amstart:[".length()) {
+                String args = log.substring("amstart:[".length(), end).trim();
+                onAmStart(args);
             }
             return;
         }
@@ -152,53 +146,28 @@ public abstract class ShellHandlerBase extends Handler {
         updateLog(msg, "#ff0000");
     }
 
-protected void onAm(String type, String args) {
-    Context ctx = getContext();
-    if (ctx == null) return;
-    try {
-        Intent intent = parseIntentArgs(args);
-        if (intent.getComponent() == null) {
-            intent.setPackage(ctx.getPackageName());
+    protected void onAmStart(String args) {
+        Context ctx = getContext();
+        if (ctx == null) return;
+    
+        try {
+            Intent intent = parseIntentArgs(args);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    
+            if (Intent.ACTION_SEND.equals(intent.getAction())
+                    && intent.getComponent() == null) {
+    
+                Intent chooser = Intent.createChooser(intent, null);
+                chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                ctx.startActivity(chooser);
+    
+            } else {
+                ctx.startActivity(intent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        switch (type) {
-
-            case "start": {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                if (Intent.ACTION_SEND.equals(intent.getAction())
-                        && intent.getComponent() == null) {
-                    Intent chooser = Intent.createChooser(intent, null);
-                    chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    ctx.startActivity(chooser);
-                } else {
-                    ctx.startActivity(intent);
-                }
-                break;
-            }
-
-            case "broadcast": {
-                ctx.sendBroadcast(intent);
-                break;
-            }
-
-            case "service": {
-                // ⚠ service nội bộ: KHUYẾN NGHỊ phải explicit
-                if (intent.getComponent() == null) {
-                    throw new IllegalArgumentException(
-                            "service requires -n <package/class>"
-                    );
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    ctx.startForegroundService(intent);
-                } else {
-                    ctx.startService(intent);
-                }
-                break;
-            }
-        }
-    } catch (Throwable e) {
-        e.printStackTrace();
     }
-}
 
     private Intent parseIntentArgs(String args) {
         Intent intent = new Intent();
@@ -270,52 +239,6 @@ protected void onAm(String type, String args) {
             }
         }
         return intent;
-    }
-
-    private static String[] splitArgs(String args) {
-        ArrayList<String> out = new ArrayList<>();
-        StringBuilder cur = new StringBuilder();
-        boolean inQuote = false;
-        char quoteChar = 0;
-    
-        for (int i = 0; i < args.length(); i++) {
-            char c = args.charAt(i);
-    
-            if (inQuote) {
-                if (c == quoteChar) {
-                    inQuote = false;
-                } else if (c == '\\' && i + 1 < args.length()) {
-                    char n = args.charAt(++i);
-                    switch (n) {
-                        case 'n': cur.append('\n'); break;
-                        case 't': cur.append('\t'); break;
-                        case '\\': cur.append('\\'); break;
-                        case '"': cur.append('"'); break;
-                        case '\'': cur.append('\''); break;
-                        default: cur.append(n);
-                    }
-                } else {
-                    cur.append(c);
-                }
-            } else {
-                if (c == '"' || c == '\'') {
-                    inQuote = true;
-                    quoteChar = c;
-                } else if (Character.isWhitespace(c)) {
-                    if (cur.length() > 0) {
-                        out.add(cur.toString());
-                        cur.setLength(0);
-                    }
-                } else {
-                    cur.append(c);
-                }
-            }
-        }
-    
-        if (cur.length() > 0) {
-            out.add(cur.toString());
-        }
-        return out.toArray(new String[0]);
     }
 
     /**
