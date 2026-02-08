@@ -11,7 +11,7 @@ import android.content.Intent;
 import android.content.ComponentName;
 import android.net.Uri;
 import android.os.Build;
-import java.util.regex.Pattern;
+import java.util.*;
 
 /**
  * Created by Hello on 2018/04/01.
