@@ -111,7 +111,7 @@ public abstract class ShellHandlerBase extends Handler {
         }
     
         // toast:[text...]
-        if (log.matches("^toast:\\[.*]$")) {
+        if (log.startsWith("toast:[")) {
             int end = log.lastIndexOf(']');
             if (end > "toast:[".length()) {
                 String text = log.substring("toast:[".length(), end)
@@ -121,7 +121,7 @@ public abstract class ShellHandlerBase extends Handler {
             return;
         }
         
-        if (log.matches("^am:\\[(start|broadcast|service)\\|.+]$")) {
+        if (log.startsWith("am:[")) {
             String prefix = "am:[";
             int end = log.lastIndexOf("]");
             if (end > prefix.length()) {
