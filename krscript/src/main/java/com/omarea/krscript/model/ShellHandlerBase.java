@@ -90,8 +90,7 @@ public abstract class ShellHandlerBase extends Handler {
         if (msg == null) return;
     
         // KHÔNG trim để giữ newline
-        // String log = msg.toString();
-        String log = msg.toString().replaceAll("\\[[0-9;]*m", "");
+        String log = msg.toString();
     
         // progress:[x/y]
         if (Pattern.matches("^progress:\\[[\\-0-9]+/[0-9]+]$", log.trim())) {
