@@ -2,7 +2,7 @@
 
 if [ -f "$1" ];then
 #am start -n com.tool.tree/.OpenFileActivity --es path "$1" &>/dev/null
-echo "am:[start -n com.tool.tree/com.tool.tree.OpenFileActivity --es path '"$1"']"
+echo "am:[start -n com.tool.tree/com.tool.tree.OpenFileActivity --es path '$1']"
 else
 echo -e "Use: openfile /path/file.apk \n- Any file it will suggest application to open"
 fi

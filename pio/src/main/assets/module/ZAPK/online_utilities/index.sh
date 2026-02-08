@@ -52,7 +52,7 @@ eval "$(sed '1,/root=/d' $MPAT/addon.prop)"
 
 # Tự động dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
-sum_md5="$(sha256sum -b $MPAT/addon.prop)"
+sum_md5="$(sha256sum $MPAT/addon.prop | awk '{print $1}')"
 if [[ "$sum_md5" != "$(glog "sum_md5_${MPAT##*/}")" ]] || [[ ! -f $MPAT/auto.prop ]] || [[ "$(grep -cm1 '=\"\"' $MPAT/auto.prop)" == 1 ]];then
 [ -f $MPAT/auto.prop ] && rm -fr $MPAT/auto.prop
 for vc in $(grep -e '="' $MPAT/addon.prop | cut -d= -f1); do
