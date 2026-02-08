@@ -106,7 +106,7 @@
     </provider>
     <receiver android:name=".ToastReceiver"
               android:enabled="true"
-              android:exported="false">
+              android:exported="true">
         <intent-filter>
             <action android:name="${applicationId}.broadcast.MESSAGE" />
         </intent-filter>
