@@ -153,17 +153,23 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       if [ -f $TMP/extract_erofs.log ];then
       while true; do
       number_kk="$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$TMP/extract_erofs.log" | grep -E 'Extract: \[[^]]+\]' | tail -n 1 | awk '{print $3}' | cut -d\. -f1)"
-      if [ -z "$number_kk" ] || [ "$number_kk" == 0 ];then
-      iv=$((iv+1))
-      [ "$iv" -ge 10 ] && break
-      fi
       if [ ${number_kk:-0} -ge 98 ] || [ "$(grep -cm1 "100.00%" $TMP/extract_erofs.log)" == 1 ];then
+      progress 98/100
+      sleep 1
       progress -1/0
       break
-      else
-      [ "$number_kk" ] && progress $number_kk/100
-      sleep 0.5
       fi
+      [ "$number_kk" ] && progress $number_kk/100
+      if [ -z "$number_kk" ]; then
+         iv=$((iv+1))
+      elif [ "${number_kk:-0}" == "${save_num:-1}" ]; then
+         iv=$((iv+1))
+      else
+         iv=0
+      fi
+      save_num="$number_kk"
+      [ "$iv" -ge 15 ] && break
+      sleep 0.5
       done
       fi
       wait
