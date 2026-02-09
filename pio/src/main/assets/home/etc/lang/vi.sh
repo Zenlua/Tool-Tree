@@ -262,10 +262,6 @@ update_text_4="Đang dùng phiên bản mới nhất."
 update_text_5="Github"
 update_text_6="Đã có phiên bản mới, hãy cập nhật ứng dụng, Cài đặt > Thông tin > Cập nhật"
 
-# thông báo
-noti_feature_text_1="Chạy trong nền"
-noti_feature_text_2="Chạy trong nền kèm wakelock"
-
 # dexopt
 dexopt_app_text="Dexopt"
 dexopt_app_text_1="Tăng tốc khởi động ứng dụng"
@@ -280,6 +276,7 @@ feature_hide_text="Bật/Tắt tính năng ẩn"
 use_apktool_text="Trình chỉnh sửa Apktool"
 use_network_text="Yêu cầu sử dụng mạng dữ liệu, để tiếp tục cập nhật"
 root_warning_text="Vui lòng root để sử dụng tính năng"
+root_warning_text_1="Cần root để sử dụng"
 deleted_file_text="Xoá tệp tin gốc sau khi hoàn thành"
 deleted_project_text="Xoá dự án sau khi xây dựng xong"
 google_translate_text="Google dịch"

@@ -260,10 +260,6 @@ update_text_4="已是最新版本."
 update_text_5="Github"
 update_text_6="已有新版本，请更新应用：设置 > 信息 > 更新"
 
-# thông báo
-noti_feature_text_1="在后台运行"
-noti_feature_text_2="在后台运行并保持 wakelock"
-
 # dexopt
 dexopt_app_text="Dexopt"
 dexopt_app_text_1="加快应用启动速度"
@@ -278,6 +274,7 @@ feature_hide_text="启用/禁用隐藏功能"
 use_apktool_text="Apktool 编辑器"
 use_network_text="需要使用数据网络才能继续更新"
 root_warning_text="请 root 后使用此功能"
+root_warning_text_1="需要root权限才能使用。"
 deleted_file_text="完成后删除原始文件"
 deleted_project_text="构建完成后删除项目"
 google_translate_text="谷歌翻译"

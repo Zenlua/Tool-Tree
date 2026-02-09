@@ -262,10 +262,6 @@ update_text_4="You are using the latest version."
 update_text_5="Github"
 update_text_6="A new version is available. Please update the app: Settings > About > Update"
 
-# notifications
-noti_feature_text_1="Run in background"
-noti_feature_text_2="Run in background with wakelock"
-
 # dexopt
 dexopt_app_text="Dexopt"
 dexopt_app_text_1="Speed up application startup"
@@ -280,6 +276,7 @@ feature_hide_text="Enable/Disable hidden features"
 use_apktool_text="Apktool editor"
 use_network_text="Data network usage required, to continue updating"
 root_warning_text="Please root the device to use this feature"
+root_warning_text_1="Root access is required to use"
 deleted_file_text="Delete original file after completion"
 deleted_project_text="Delete project after build"
 google_translate_text="Google translate"

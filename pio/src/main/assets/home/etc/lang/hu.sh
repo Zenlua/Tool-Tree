@@ -262,10 +262,6 @@ update_text_4="A legújabb verziót használod."
 update_text_5="Github"
 update_text_6="Új verzió érhető el. Kérjük, frissítse az alkalmazást: Beállítások > Névjegy > Frissítés"
 
-# notifications
-noti_feature_text_1="Futtassa a háttérben"
-noti_feature_text_2="Futtatás a háttérben wakelockkal"
-
 # dexopt
 dexopt_app_text="Dexopt"
 dexopt_app_text_1="Alkalmazásindítás felgyorsítása"
@@ -281,6 +277,7 @@ use_apktool_text="Apktool szerkesztő"
 use_network_text="A frissítés folytatásához adatforgalmi hálózat használata szükséges."
 root_warning_text="Kérjük, rootolja az eszközt a funkció használatához"
 deleted_file_text="Az eredeti fájl törlése a befejezés után"
+root_warning_text_1="Root hozzáférés szükséges a használatához"
 deleted_project_text="Projekt törlése a építés befejezése után"
 google_translate_text="Google fordító"
 

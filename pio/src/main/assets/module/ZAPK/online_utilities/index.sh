@@ -3,7 +3,7 @@
 
 # home
 home(){
-[ "$ROT" == 0 ] && text_root="ROOT: $ROOT" || text_rr="$fs_text_1"
+[ "$ROT" == 0 ] && text_root="ROOT" || text_rr="$fs_text_1"
 xml_print '<group>
 <action title="'$check_ufs_text'" summary="'$text_root'">
 <lock>

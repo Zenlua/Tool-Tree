@@ -261,10 +261,6 @@ update_text_4="Используется последняя версия."
 update_text_5="Github"
 update_text_6="Доступна новая версия, обновите приложение: Настройки > Информация > Обновление"
 
-# thông báo
-noti_feature_text_1="Работает в фоне"
-noti_feature_text_2="Работает в фоне с wakelock"
-
 # dexopt
 dexopt_app_text="Dexopt"
 dexopt_app_text_1="Ускорить запуск приложения"
@@ -279,6 +275,7 @@ feature_hide_text="Включить/отключить скрытые функц
 use_apktool_text="Редактор Apktool"
 use_network_text="Для продолжения обновления требуется использование сети передачи данных."
 root_warning_text="Пожалуйста, получите root для использования этой функции"
+root_warning_text_1="Для использования требуется доступ с правами root"
 deleted_file_text="Удалять исходный файл после завершения"
 deleted_project_text="Удалять проект после сборки"
 google_translate_text="Google переводчик"
