@@ -150,6 +150,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       echo "$(fsck.f2fs "$file_img" | grep 'superblock features' | grep -cm1 ro)" > "$OUTPUT/config/${namepv##*/}_f2fs_ro"
     elif [ "$dang_file" == 'erofs' ];then
       extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$OUTPUT/${namepv##*/}" &
+      sleep 1
       if [ -f $TMP/extract_erofs.log ];then
       while true; do
       number_kk="$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$TMP/extract_erofs.log" | grep -E 'Extract: \[[^]]+\]' | tail -n 1 | awk '{print $3}' | cut -d\. -f1)"
