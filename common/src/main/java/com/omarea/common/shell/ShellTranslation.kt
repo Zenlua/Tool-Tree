@@ -368,7 +368,10 @@ class ShellTranslation(val context: Context) {
     
         for (row in rows) {
             val resolved = resolveRow(row) ?: continue
-            if (!first) builder.append('\n')
+    
+            if (!first) {
+                builder.append('\n')
+            }
             builder.append(resolved)
             first = false
         }
