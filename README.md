@@ -28,7 +28,7 @@
 
 ### Language translation
 
-- [String 1](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/res) | [String 2](https://github.com/Zenlua/Tool-Tree/tree/main/krscript/src/main/res) | [String 3](https://github.com/Zenlua/Tool-Tree/tree/main/common/src/main/res) | [String 4](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/assets/home/etc/lang)
+- [String 1](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/res), [String 2](https://github.com/Zenlua/Tool-Tree/tree/main/krscript/src/main/res), [String 3](https://github.com/Zenlua/Tool-Tree/tree/main/common/src/main/res), [String 4](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/assets/home/etc/lang)
 
 ### Buy me a coffee
 
