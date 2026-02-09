@@ -32,8 +32,8 @@
 
 ### Language translation
 
-- [String pio](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/res), [String krscript](https://github.com/Zenlua/Tool-Tree/tree/main/krscript/src/main/res), [String common](https://github.com/Zenlua/Tool-Tree/tree/main/common/src/main/res)
-- [String shell](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/assets/home/etc/lang)
+- [String pio](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/res), [String krscript](https://github.com/Zenlua/Tool-Tree/tree/main/krscript/src/main/res)
+- [String common](https://github.com/Zenlua/Tool-Tree/tree/main/common/src/main/res), [String shell](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/assets/home/etc/lang)
 
 ### Screenshot
 
