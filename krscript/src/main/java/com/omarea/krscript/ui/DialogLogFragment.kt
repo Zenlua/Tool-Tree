@@ -131,7 +131,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
         binding?.actionProgress?.isIndeterminate = true
 
-        return MyShellHandler(requireContext(), object : IActionEventHandler {
+        return MyShellHandler(object : IActionEventHandler {
             override fun onCompleted() {
                 running = false
                 onExit.run()
@@ -175,15 +175,10 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     }
 
     class MyShellHandler(
-        appContext: Context,
         private var actionEventHandler: IActionEventHandler,
         private var logView: TextView?,
         private var shellProgress: ProgressBar?
     ) : ShellHandlerBase() {
-
-        init {
-            super.context = appContext
-        }
 
         private val context = logView?.context
         private val errorColor = getColor(R.color.kr_shell_log_error)

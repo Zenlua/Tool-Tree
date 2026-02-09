@@ -1259,7 +1259,7 @@ if [ "$(gprop root $vadd)" == 'true' ];then
 farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
-desc_tec="$root_warning_text_1"
+desc_tec="$(gprop version $vadd), $(gprop author $vadd) | $root_warning_text_1"
 text_desxxfc="summary"
 else
 desc_tec="$(gprop version $vadd), $(gprop author $vadd) | $(gprop description $vadd)"
