@@ -50,7 +50,7 @@ case "$1" in
       [[ "$vv" == *super* ]] && continue
       [[ -s "$vv" && -f "$vv" ]] || continue
       type=$(checktype "$vv")
-      echo "$vv|$vv ($type)" | grep -E '\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)'
+      echo "$vv|$vv ($type)" | grep -E '\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(unknown\)'
     done
     ;;
 
