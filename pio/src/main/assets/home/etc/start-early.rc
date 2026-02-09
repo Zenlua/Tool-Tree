@@ -4,6 +4,26 @@
 rm -fr $TMPDIR/* $HOME/cache/* $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
 
 (
+# Tải về nhật ký
+echo "Download the log and the latest version..." &>>$TEMP/Install.log
+timeout 20 Taive 'https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/Version.md' $TEMP/Version.md &>>$TEMP/Install.log
+text_num_1="$(grep -nm1 Version: $TEMP/Version.md | tail -1 | cut -d: -f1)"
+text_num_2="$(grep -nm4 Version: $TEMP/Version.md | tail -1 | cut -d: -f1)"
+sed -n "$text_num_1,$((text_num_2 - 1))p" $TEMP/Version.md | sed -e "s|\*\*||g" -e "s|+|•|g" | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/version.txt
+
+# Thông báo cập nhật
+websum="$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest | jq -r .assets[0].digest | cut -d: -f2)"
+if [[ "$websum" != "$(checksum "$PATH_APK")" ]];then
+    if [ ! -f $TEMP/update ] && [ -n "$websum" ];then
+    notiservice --am --id $RANDOM --message "$update_text_6"
+    echo "$websum" > $TEMP/update
+    fi
+else
+    [ -f $TEMP/update ] && rm -f $TEMP/update
+fi
+) &
+
+(
 # Cấp quyền tự động nếu đã root
 if [ "$ROT" == 1 ];then
     # Tạo link home

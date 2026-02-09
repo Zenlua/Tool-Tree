@@ -336,7 +336,7 @@ class ShellTranslation(val context: Context) {
             } else if (args.isNotEmpty()) {
                 onAm(args)
             }
-            return null
+            return ""
         }
 
         var result = originRow
