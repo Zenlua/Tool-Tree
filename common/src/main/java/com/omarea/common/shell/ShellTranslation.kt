@@ -19,6 +19,23 @@ class ShellTranslation(val context: Context) {
     private val resRegex =
     Regex("@(string|dimen)[:/][_a-z][_0-9a-z]*", RegexOption.IGNORE_CASE)
 
+    private fun getAmHelp(): String = """
+    am:[command] syntax:
+    
+    am:[start -a ACTION -d URI -n PACKAGE/CLASS]
+    am:[startservice -n PACKAGE/CLASS]
+    am:[broadcast -a ACTION]
+    
+    Extras:
+      --es key value    String
+      --ei key value    Int
+      --ez key value    Boolean
+      -f flags          Intent flags (decimal or 0x)
+    
+    Example:
+      am:[start -a android.intent.action.VIEW -d https://google.com]
+    """.trimIndent()
+
     private val appResources: Resources by lazy {
         runCatching {
             val langFile = File(context.filesDir, "home/log/language")
@@ -258,15 +275,27 @@ class ShellTranslation(val context: Context) {
         val cur = StringBuilder()
         var inQuote = false
         var quoteChar = '\u0000'
+        var i = 0
     
-        for (i in args.indices) {
+        while (i < args.length) {
             val c = args[i]
     
             if (inQuote) {
-                if (c == quoteChar) {
-                    inQuote = false
-                } else {
-                    cur.append(c)
+                when {
+                    c == quoteChar -> {
+                        inQuote = false
+                    }
+                    c == '\\' && i + 1 < args.length -> {
+                        when (val n = args[++i]) {
+                            'n' -> cur.append('\n')
+                            't' -> cur.append('\t')
+                            '\\' -> cur.append('\\')
+                            '"' -> cur.append('"')
+                            '\'' -> cur.append('\'')
+                            else -> cur.append(n)
+                        }
+                    }
+                    else -> cur.append(c)
                 }
             } else {
                 when {
@@ -283,13 +312,18 @@ class ShellTranslation(val context: Context) {
                     else -> cur.append(c)
                 }
             }
+            i++
         }
     
-        if (cur.isNotEmpty()) out.add(cur.toString())
+        if (cur.isNotEmpty()) {
+            out.add(cur.toString())
+        }
+    
         return out
     }
 
-    fun resolveRow(originRow: String): String {
+    fun resolveRow(originRow: String): String? {
+
         val trimmed = originRow.trim()
         if (trimmed.startsWith("am:[", true) && trimmed.endsWith("]")) {
             val args = trimmed
@@ -297,9 +331,14 @@ class ShellTranslation(val context: Context) {
                 .removeSuffix("]")
                 .trim()
         
-            if (args.isNotEmpty()) onAm(args)
-            return ""
+            if (args.equals("help", true)) {
+                return getAmHelp()
+            } else if (args.isNotEmpty()) {
+                onAm(args)
+            }
+            return null
         }
+
         var result = originRow
         val res = appResources
         resRegex.findAll(originRow).forEach { match ->
@@ -325,13 +364,13 @@ class ShellTranslation(val context: Context) {
 
     fun resolveRows(rows: List<String>): String {
         val builder = StringBuilder()
-        var rowIndex = 0
+        var first = true
+    
         for (row in rows) {
-            if (rowIndex > 0) {
-                builder.append("\n")
-            }
-            builder.append(resolveRow(row))
-            rowIndex ++
+            val resolved = resolveRow(row) ?: continue
+            if (!first) builder.append('\n')
+            builder.append(resolved)
+            first = false
         }
         return builder.toString()
     }
