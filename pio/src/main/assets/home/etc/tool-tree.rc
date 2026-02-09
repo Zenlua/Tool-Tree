@@ -61,11 +61,12 @@ fi
 
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ];then
-sum_md5_kk="$(checksum $ETC/lang/vi.sh)"
+[ -f $ETC/lang/$LANGUAGE.sh ] && texgg="$LANGUAGE.sh" || texgg=vi.sh
+sum_md5_kk="$(checksum $ETC/lang/$texgg)"
     if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]] || [[ "$(grep -cm1 '=""' $ETC/lang/auto.sh)" == 1 ]] || [[ ! -f $ETC/lang/auto.sh ]];then
-    source $ETC/lang/vi.sh
+    source $ETC/lang/$texgg
     [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
-    for vc in $(grep "=" $ETC/lang/vi.sh | cut -d= -f1); do
+    for vc in $(grep "=" $ETC/lang/$texgg | cut -d= -f1); do
     (
     xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
     echo "${vc}=\"${xfhtfvgf^}\" # ${!vc}" >>$ETC/lang/auto.sh
