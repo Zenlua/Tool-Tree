@@ -3,7 +3,39 @@
 
 # home
 home(){ xml_print '
-<group title="'$trans_text'"><action warn="'$oat_text_1'§§'$oat_text_2' '$PTSH'">
+<group title="'$trans_text'">
+<action>
+<title>Unpack splitapp</title>
+<desc>'$splitapp_desc_text'</desc>
+<param name="FILE" desc="'$input_text' .APP, '$folder_text' '$PTSD'" options-sh="cd $PTSD; ls *.app *.APP" required="true"/>
+<set>
+if [ -f "$FILE" ];then
+splitapp.py -f "$FILE" -o $PTSD/out
+echo
+echo "'$save_text': $PTSD/out"
+else
+echo "'$error_text' $FILE" >&2
+fi
+</set>
+</action>
+
+<action>
+<title>Unpack pac</title>
+<desc>'$pac_desc_text'</desc>
+<param name="FILE" desc="'$input_text' .pac, '$folder_text' '$PTSD'" options-sh="cd $PTSD; ls *.pac" required="true"/>
+<set>
+if [ -f "$FILE" ];then
+unpac.py extract -d $PTSD/out "$FILE"
+echo
+echo "'$save_text': $PTSD/out"
+else
+echo "'$error_text' $FILE" >&2
+fi
+</set>
+</action>
+</group>
+
+<group><action warn="'$oat_text_1'§§'$oat_text_2' '$PTSH'">
 <title>'$oat_text_3'</title>
 <desc>'$oat_text_4'</desc>
 <param name="framework_switch" value-sh="glog framework_switch 1" label="'$oat_text_5'" type="switch" />

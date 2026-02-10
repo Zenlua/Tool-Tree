@@ -1,5 +1,5 @@
 # Add-on
-id=online_features
+id=add_features
 name=ROM utility
 author=Kakathic
 description=Many small amenities
@@ -28,3 +28,5 @@ oat_text_6="Rebuild services oat"
 oat_text_7="Features"
 oat_text_8="Application"
 oat_text_9="Enter the classpath for the application. Some applications require a classpath; you can check the old odex file to see the classpath"
+splitapp_desc_text="Extract images from UPDATE.APP"
+pac_desc_text="Extract files from a pac file"

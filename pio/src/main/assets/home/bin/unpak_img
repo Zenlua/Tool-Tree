@@ -169,12 +169,15 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
          iv=0
       fi
       save_num="$number_kk"
-      [ "$iv" -ge 15 ] && break
+      [ "$iv" -ge 10 ] && echo "Warning: Possible extraction error (erofs), check log: $TMP/extract_erofs.log" >&2 && break
       sleep 0.5
       done
       fi
       wait
-      [ -f $TMP/extract_erofs.log ] && sed -i 's/\x1b\[[^m]*m//g' $TMP/extract_erofs.log
+      if [ -f $TMP/extract_erofs.log ];then
+      sed -i 's/\x1b\[[^m]*m//g' $TMP/extract_erofs.log
+      sed '/Extract: [.*.]/d' $TMP/extract_erofs.log
+      fi
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
       if [ -f $OUTPUT/config/exception.log ];then
       rm -fr "$OUTPUT/${namepv##*/}"
