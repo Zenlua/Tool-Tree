@@ -74,14 +74,10 @@ class ShellTranslation(val context: Context) {
                 val uri =
                     intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                         ?: intent.data
-            
                 if (uri != null) {
-                    intent.setClipData(
-                        ClipData.newRawUri(null, uri)
-                    )
+                    intent.putExtra(Intent.EXTRA_STREAM, uri)
+                    intent.clipData = ClipData.newRawUri(null, uri)
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    intent.removeExtra(Intent.EXTRA_STREAM)
-                    intent.data = null
                 }
             }
 
