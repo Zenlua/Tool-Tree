@@ -1,5 +1,13 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.3.0 (10-2-2026)**
+
++ Fix the contextpatch that's causing the crashes.
++ Add a progress bar when extracting erofs.
++ Add new plugin
++ Improve some code
++ Adding signature verification prevents application editing.
+
 **Version: 1.2.9 (8-2-2026)**
 
 + Allows quick project selection

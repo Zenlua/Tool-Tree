@@ -430,12 +430,10 @@ done
 <group>
 <action icon="'`urlpng write_setting`'">
 <title>'$config_text'</title>
-<param name="dang_nen" value-sh="glog dang_nen lz4hc" label="'$option_text'" title="'$builds_text_3'" options-sh="echo -e '"'lz4hc\nlz4\nlzma\ndeflate\nzstd'"'"/>
 <param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" title="'$builds_text_5'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar"/>
 <param name="nen_br" required="true" value-sh="glog nen_br 8" label="'$builds_text_4'" type="seekbar" min="0" max="22" title="'$convert_text_1'" desc="'$convert_text_2'"/>
 <param name="build_time" label="'$time_text'" value-sh="glog build_time 0" type="number" title="'$build_time_text_1'" desc="'$build_time_text_2'" required="required" />
 <set>
-slog dang_nen "$dang_nen"
 slog muc_nen "$muc_nen"
 slog nen_br "$nen_br"
 slog build_time "$build_time"
@@ -818,6 +816,7 @@ checktime
 <param name="boolbox" value-sh="glog boolboxdjh" label="'$deleted_project_text'" type="checkbox" />
 <param name="IMAGES" desc="'$builds_text_1'" multiple="true" options-sh="findfile 0 $SDH/$PTSH" required="true"/>
 <param name="dinh_dang" value-sh="glog dinh_dang 0" label="'$option_text'" desc="'$builds_text_2'" options-sh="echo -e '"'0|$default_text\n1|RO (erofs, mkfs.erofs)\n2|RW (ext4, make_ext4fs)\n3|RW (ext4, e2fsdroid)\n4|RO (f2fs, make_f2fs)\n5|RW (f2fs, make_f2fs)'"'"/>
+<param name="dang_nen" value-sh="glog dang_nen lz4hc" label="'$option_text'" desc="'$builds_text_3'" options-sh="echo -e '"'lz4hc\nlz4\nlzma\ndeflate\nzstd'"'"/>
 <param name="format_img" value-sh="glog format_imgs raw" label="'$convert_text'" desc="'$builds_text_10'">
 <option value="raw">File.img (raw)</option>
 <option value="sparse">File.img (sparse)</option>
@@ -829,6 +828,7 @@ checktime
 <param name="vavb" label="'$builds_text_8'" desc="'$builds_text_9'" type="switch"/>
 <param name="build_size" label="Megabit" value-sh="glog build_size 0" type="number" desc="'$builds_text_7'" required="required" />
 <set>
+slog dang_nen "$dang_nen"
 slog format_imgs "$format_img"
 slog vavbbgdf "$vavb"
 slog boolboxdjh "$boolbox"
@@ -836,7 +836,7 @@ slog dinh_dang "$dinh_dang"
 slog build_size "$build_size"
 slog off_fscontex "$off_fscontex"
 for vkl in $IMAGES; do
-repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD" -n $(glog dang_nen lz4hc) -l $(glog muc_nen 8) -k $dinh_dang -s $build_size -d $boolbox -a $vavb -c $format_img -p "$off_fscontex"
+repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD" -n "$dang_nen" -l $(glog muc_nen 8) -k $dinh_dang -s $build_size -d $boolbox -a $vavb -c $format_img -p "$off_fscontex"
 done
 echo "'$save_text' $PTSD/out"
 echo
