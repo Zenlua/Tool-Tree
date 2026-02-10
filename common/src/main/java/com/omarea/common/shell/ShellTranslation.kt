@@ -359,13 +359,12 @@ class ShellTranslation(val context: Context) {
                 .removePrefix("am:[")
                 .removeSuffix("]")
                 .trim()
-        
             if (args.equals("help", true)) {
                 return getAmHelp()
             } else if (args.isNotEmpty()) {
                 onAm(args)
             }
-            return ""
+            return
         }
 
         var result = originRow
