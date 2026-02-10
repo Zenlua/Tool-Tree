@@ -168,7 +168,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       fi
       save_num="$number_kk"
       if [ "$iv" -ge 40 ];then
-      echo "Warning: Slow erofs extraction speed, Stop checking the percentage to avoid an endless loop." >> $TMP/extract_erofs.log
+      showtoast -a "Warning: Slow erofs extraction speed, Stop checking the percentage to avoid an endless loop."
       progress -1/0
       break
       fi
