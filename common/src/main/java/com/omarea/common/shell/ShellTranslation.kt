@@ -68,6 +68,20 @@ class ShellTranslation(val context: Context) {
         try {
             val intent = parseIntentArgs(subArgs)
 
+            if (intent.action == Intent.ACTION_SEND
+                || intent.action == Intent.ACTION_SEND_MULTIPLE
+            ) {
+                val uri =
+                    intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                        ?: intent.data
+                if (uri != null) {
+                    intent.putExtra(Intent.EXTRA_STREAM, uri)
+                    intent.clipData = ClipData.newRawUri(null, uri)
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    intent.data = null
+                }
+            }
+
             when (cmd) {
                 "start" -> {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -76,7 +90,10 @@ class ShellTranslation(val context: Context) {
                         && intent.component == null
                     ) {
                         val chooser = Intent.createChooser(intent, null)
-                        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        chooser.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
                         ctx.startActivity(chooser)
                     } else {
                         ctx.startActivity(intent)
@@ -118,7 +135,13 @@ class ShellTranslation(val context: Context) {
                 // data uri
                 "-d" -> {
                     if (i + 1 < tokens.size) {
-                        intent.data = Uri.parse(tokens[++i])
+                        var value = stripQuote(tokens[++i])
+                        val uri = when {
+                            value.contains("://") -> Uri.parse(value)
+                            value.startsWith("/") -> Uri.fromFile(File(value))
+                            else -> Uri.parse(value)
+                        }
+                        intent.data = uri
                     }
                 }
     
@@ -217,8 +240,13 @@ class ShellTranslation(val context: Context) {
                 "--eu" -> {
                     if (i + 2 < tokens.size) {
                         val key = tokens[++i]
-                        val value = tokens[++i]
-                        intent.putExtra(key, Uri.parse(value))
+                        var value = stripQuote(tokens[++i])
+                        val uri = when {
+                            value.contains("://") -> Uri.parse(value)
+                            value.startsWith("/") -> Uri.fromFile(File(value))
+                            else -> Uri.parse(value)
+                        }
+                        intent.putExtra(key, uri)
                     }
                 }
 
