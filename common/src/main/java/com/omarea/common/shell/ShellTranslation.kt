@@ -78,7 +78,7 @@ class ShellTranslation(val context: Context) {
                     intent.putExtra(Intent.EXTRA_STREAM, uri)
                     intent.clipData = ClipData.newRawUri(null, uri)
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    intent.data = null
+                    // intent.data = null
                 }
             }
 
@@ -306,7 +306,18 @@ class ShellTranslation(val context: Context) {
         }
         return intent
     }
-    
+
+    private fun stripQuote(s: String): String {
+        if (s.length >= 2) {
+            val first = s.first()
+            val last = s.last()
+            if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+                return s.substring(1, s.length - 1)
+            }
+        }
+        return s
+    }
+
     private fun splitArgs(args: String): List<String> {
         val out = ArrayList<String>()
         val cur = StringBuilder()
