@@ -67,7 +67,7 @@ export xu=xu
 fi
 
 if [ "$CPU_ABI" != 'arm64-v8a' ];then
-text_error="Only arm64-v8a devices supported" 
+text_error="Only arm64-v8a devices supported"
 showtoast "$text_error"
 echo "$text_error" >&2
 sleep 10
@@ -76,11 +76,14 @@ else
 export ARCH=arm64
 fi
 
-if [ -f "$1" ];then
+if [ -f "$1" ]; then
+chmod 755 "$1" 2>/dev/null
 cd "$HOME";
 source "$1";
 rm -f "$1";
 else
-echo "Error file" >&2
-sleep 5
+    if [ "$1" ]; then
+    echo "Error file" >&2
+    sleep 5
+    fi
 fi
