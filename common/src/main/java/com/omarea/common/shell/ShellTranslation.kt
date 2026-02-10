@@ -68,18 +68,21 @@ class ShellTranslation(val context: Context) {
         try {
             val intent = parseIntentArgs(subArgs)
 
-            // emulate am for SEND (AOSP-compatible)
-            if ((intent.action == Intent.ACTION_SEND
-                    || intent.action == Intent.ACTION_SEND_MULTIPLE)
-                && intent.data != null
+            if (intent.action == Intent.ACTION_SEND
+                || intent.action == Intent.ACTION_SEND_MULTIPLE
             ) {
-                val uri = intent.data!!
-                intent.putExtra(Intent.EXTRA_STREAM, uri)
-                intent.setClipData(
-                    ClipData.newUri(ctx.contentResolver, null, uri)
-                )
-                intent.data = null
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                val uri =
+                    intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                        ?: intent.data
+            
+                if (uri != null) {
+                    intent.setClipData(
+                        ClipData.newRawUri(null, uri)
+                    )
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    intent.removeExtra(Intent.EXTRA_STREAM)
+                    intent.data = null
+                }
             }
 
             when (cmd) {
