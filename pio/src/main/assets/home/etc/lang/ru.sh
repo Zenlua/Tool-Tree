@@ -289,3 +289,4 @@ build_time_text_1="Время сборки ROM"
 build_time_text_2="Автоматически: 0, можно изменить, например: 1766318047"
 
 xoaoat_text_1="Очистить элементы oat и odex"
+open_activity_text="Открыть папку: "

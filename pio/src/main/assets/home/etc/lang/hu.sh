@@ -290,3 +290,4 @@ build_time_text_1="ROM build ideje"
 build_time_text_2="Automatikus: 0, módosítható, például: 1766318047"
 
 xoaoat_text_1="Bejegyzések törlése oat és odex"
+open_activity_text="Mappa megnyitása: "

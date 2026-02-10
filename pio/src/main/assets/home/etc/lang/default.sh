@@ -290,3 +290,4 @@ build_time_text_1="ROM build time"
 build_time_text_2="Automatic: 0, can be changed, for example: 1766318047"
 
 xoaoat_text_1="Clean oat and odex entries"
+open_activity_text="Open folder: "

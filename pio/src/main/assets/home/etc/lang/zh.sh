@@ -288,3 +288,4 @@ build_time_text_1="ROM 构建时间"
 build_time_text_2="自动：0，可更改，例如：1766318047"
 
 xoaoat_text_1="清理 oat 和 odex 项"
+open_activity_text="打开文件夹："

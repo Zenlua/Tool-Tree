@@ -286,7 +286,8 @@ apex_text="Trình chỉnh sửa Apex"
 apex_text_1="Nén apex thành capex"
 apex_text_2="Danh sách hỗ trợ tệp: apex, capex"
 
+# other
 build_time_text_1="Thời gian xây dựng rom"
 build_time_text_2="Tự động: 0, có thể thay đổi ví dụ: 1766318047"
-
 xoaoat_text_1="Dọn dẹp mục oat và odex"
+open_activity_text="Mở thư mục: "

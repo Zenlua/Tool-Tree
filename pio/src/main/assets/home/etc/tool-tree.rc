@@ -115,9 +115,17 @@ xml_print '<group>
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
+<option type="default" id="v2" auto-off="true" interruptible="false" >'$open_activity_text' ROM</option>
+<option type="default" id="v3" auto-off="true" interruptible="false" >'$open_activity_text' ROM (root-data)</option>
 <handler>
 if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
+elif [ "$menu_id" == "v2" ];then
+[ "$(pm list packages bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
+echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTSD#$SDCARD_PATH}']"
+elif [ "$menu_id" == "v3" ];then
+[ "$(pm list packages bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
+echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$SDH'/'$PTSH']"
 fi
 </handler>
 </page>
@@ -196,6 +204,8 @@ xml_print '<group>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
 <option type="file" id="v2" suffix="zip" auto-off="true">'$more_text_3'</option>
 <option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apkeditor.jar</option>
+<option type="default" id="v4" auto-off="true" interruptible="false" >'$open_activity_text' APK</option>
+<option type="default" id="v5" auto-off="true" interruptible="false" >'$open_activity_text' APK (root-data)</option>
 <handler>
 if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show2)" == 1 ] && slog hide_show2 0 || slog hide_show2 1
@@ -209,6 +219,12 @@ elif [ "$menu_id" == "v3" ];then
 echo "'$more_text_4' $file"
 echo
 cp -rf "$file" $ETC/apkeditor.jar || killtree "File copy error"
+elif [ "$menu_id" == "v4" ];then
+[ "$(pm list packages bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
+echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTAD#$SDCARD_PATH}']"
+elif [ "$menu_id" == "v5" ];then
+[ "$(pm list packages bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
+echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$APK'/'$PTAH']"
 fi
 </handler>
 </page>
