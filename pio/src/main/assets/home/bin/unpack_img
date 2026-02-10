@@ -170,7 +170,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       fi
       save_num="$number_kk"
       [ "$iv" -ge 10 ] && echo "Warning: Possible extraction error (erofs), check log: $TMP/extract_erofs.log" >&2 && break
-      sleep 0.5
+      sleep 1
       done
       fi
       wait
