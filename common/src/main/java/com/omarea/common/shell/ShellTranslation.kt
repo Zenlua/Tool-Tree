@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.ComponentName
 import android.net.Uri
 import android.os.Build
+import android.content.ClipData
 
 // 从Resource解析字符串，实现输出内容多语言
 class ShellTranslation(val context: Context) {
@@ -66,12 +67,17 @@ class ShellTranslation(val context: Context) {
     
         try {
             val intent = parseIntentArgs(subArgs)
-            // emulate am for SEND
+
+            // emulate am for SEND (AOSP-compatible)
             if ((intent.action == Intent.ACTION_SEND
                     || intent.action == Intent.ACTION_SEND_MULTIPLE)
                 && intent.data != null
             ) {
-                intent.putExtra(Intent.EXTRA_STREAM, intent.data)
+                val uri = intent.data!!
+                intent.putExtra(Intent.EXTRA_STREAM, uri)
+                intent.setClipData(
+                    ClipData.newUri(ctx.contentResolver, null, uri)
+                )
                 intent.data = null
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
