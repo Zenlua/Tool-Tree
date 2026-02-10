@@ -16,6 +16,27 @@
 
 - More discover it yourself
 
+**Features after root**
+
+- Use in MT Manager
+
+```shell
+source /data/data/com.tool.tree/files/root/executor.sh
+#. /data/data/com.tool.tree/files/root/executor.sh
+
+java -version
+echo
+apkeditor_decode
+echo
+apkeditor_build
+echo
+unpack_img
+echo
+repack_img
+```
+
+**Suggestions for non-rooted devices**
+
 - The following images are for non-root users only, to be able to access data in the tool-tree application
 
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img1.jpg" alt="1" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img2.jpg" alt="2" style="width:49%;">
