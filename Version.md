@@ -2,7 +2,7 @@
 
 **Version: 1.3.0 (10-2-2026)**
 
-+ Fix the contextpatch that's causing the crashes.
++ Fixed contextpatch that's causing the crashes.
 + Add a progress bar when extracting erofs.
 + Add new plugin
 + Improve some code
