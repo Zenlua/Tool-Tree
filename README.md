@@ -8,7 +8,7 @@
 
 ### See details
 
-- Instruct: **[No-Root](https://zenlua.github.io/Tool-Tree/website/Guide.html)**
+- Instruct: **[Root & No-Root](https://zenlua.github.io/Tool-Tree/website/Guide.html)**
 
 - Home path after root: /data/local/Tool-Tree
 
