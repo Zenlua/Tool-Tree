@@ -804,9 +804,9 @@ for vkl in $IMAGES; do
 tppq1="$(echo "$vkl" | grep = | cut -d= -f1)"
 tppq2="$(echo "$vkl" | grep = | cut -d= -f2)"
 if [ -f "$PTSD/$tppq2" ];then
-unpak_img -i "$PTSD/$tppq2" -p "$tppq1" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot
+unpack_img -i "$PTSD/$tppq2" -p "$tppq1" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot
 else
-unpak_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot
+unpack_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot
 fi
 done
 checktime

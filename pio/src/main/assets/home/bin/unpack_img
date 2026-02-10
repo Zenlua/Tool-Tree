@@ -3,7 +3,7 @@
 
 threads=$(nproc)
 show_help() {
-  echo "Usage: unpak_img -i <input> -o <output> -p <partition> -n [0/1] -d [0/1]"
+  echo "Usage: unpack_img -i <input> -o <output> -p <partition> -n [0/1] -d [0/1]"
   echo
   echo "  -i    input file"
   echo "  -o    output folder"
@@ -176,7 +176,8 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       wait
       if [ -f $TMP/extract_erofs.log ];then
       sed -i 's/\x1b\[[^m]*m//g' $TMP/extract_erofs.log
-      sed '/Extract: [.*.]/d' $TMP/extract_erofs.log
+      sed '/Extract: \[.*.\]/d' $TMP/extract_erofs.log
+      echo
       fi
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
       if [ -f $OUTPUT/config/exception.log ];then

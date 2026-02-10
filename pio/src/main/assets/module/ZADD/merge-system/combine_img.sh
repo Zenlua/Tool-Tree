@@ -7,7 +7,7 @@ for v in $3 $4; do
 hcdgv=$(($hcdgv + 2))
 
 progress $hcdgv/12
-unpak_img -i "$PTSD/$v" -o "$MPAT/tmp" -n 0 -d $1
+unpack_img -i "$PTSD/$v" -o "$MPAT/tmp" -n 0 -d $1
 tm="$(echo "$v" | cut -d "/" -f2 | cut -d "." -f1 \
 | sed -e 's|.img||' -e 's|.new.img||')"
     if [ "$tm" != "system" ];then
