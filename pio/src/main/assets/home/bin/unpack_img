@@ -160,25 +160,23 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       progress -1/0
       break
       fi
-      [ "$number_kk" ] && progress $number_kk/100
-      if [ -z "$number_kk" ]; then
-         iv=$((iv+1))
-      elif [ "${number_kk:-0}" == "${save_num:-1}" ]; then
+      if [ -z "$number_kk" ] || [ "${number_kk:-0}" == "${save_num:-1}" ]; then
          iv=$((iv+1))
       else
          iv=0
+         [ "$number_kk" ] && progress $number_kk/100
       fi
       save_num="$number_kk"
-      [ "$iv" -ge 10 ] && echo "Warning: Possible extraction error (erofs), check log: $TMP/extract_erofs.log" >&2 && break
+      if [ "$iv" -ge 40 ];then
+      echo "Warning: Slow erofs extraction speed, Stop checking the percentage to avoid an endless loop." >> $TMP/extract_erofs.log
+      progress -1/0
+      break
+      fi
       sleep 1
       done
       fi
       wait
-      if [ -f $TMP/extract_erofs.log ];then
-      sed -i 's/\x1b\[[^m]*m//g' $TMP/extract_erofs.log
-      sed '/Extract: \[.*.\]/d' $TMP/extract_erofs.log
-      echo
-      fi
+      [ -f $TMP/extract_erofs.log ] && sed -i 's/\x1b\[[^m]*m//g' $TMP/extract_erofs.log
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
       if [ -f $OUTPUT/config/exception.log ];then
       rm -fr "$OUTPUT/${namepv##*/}"

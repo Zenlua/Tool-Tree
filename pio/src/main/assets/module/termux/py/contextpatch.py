@@ -4,6 +4,7 @@
 import os
 import sys
 from re import sub
+from re import escape
 
 fix_permission = {
     "system/app/*/.apk": "u:object_r:system_file:s0",
@@ -18,6 +19,8 @@ fix_permission = {
     "/vendor/bin/hw/android.hardware.wifi@1.0": "u:object_r:hal_wifi_default_exec:s0"
 }
 
+def str_to_selinux(s: str) -> str:
+    return escape(s).replace('\\-', '-')
 
 def scan_context(file) -> dict:
     context = {}
@@ -25,13 +28,14 @@ def scan_context(file) -> dict:
         for i in file_.readlines():
             line = i.strip().replace('\\', '')
             if not line:
-                continue  # Bỏ qua dòng trống
+                continue
             if line.startswith('#'):
                 continue
             parts = line.split()
             if not parts:
-                continue  # An toàn thêm 1 lần
+                continue
             filepath, *other = parts
+            filepath = filepath.replace(r'\@', '@')
             context[filepath] = other
     return context
 
@@ -54,32 +58,33 @@ def scan_dir(folder) -> list:
 
 def context_patch(fs_file, filename) -> dict:
     new_fs = {}
-    permission_d = fs_file.get(list(fs_file)[0])
+    # Giữ logic cũ: lấy permission mặc định từ entry đầu
+    permission_d = fs_file.get(next(iter(fs_file)))
     if not permission_d:
         permission_d = ['u:object_r:system_file:s0']
     for i in filename:
+        selinux_path = str_to_selinux(i)
         if fs_file.get(i):
-            new_fs[sub(r'([^-_/a-zA-Z0-9])', r'\\\1', i)] = fs_file[i]
-        else:
-            permission = permission_d
-            if i:
-                if not i.isprintable():
-                    tmp = ''
-                    for c in i:
-                        tmp += c if c.isprintable() else '*'
-                    i = tmp
-                if i in fix_permission.keys():
-                    permission = fix_permission[i]
-                else:
-                    # Tìm context từ thư mục gần nhất có trong fs_file
-                    tmp_path = os.path.dirname(i)
-                    while tmp_path != "/" and tmp_path:
-                        if tmp_path in fs_file:
-                            permission = fs_file[tmp_path]
-                            break
-                        tmp_path = os.path.dirname(tmp_path)
-            print(f"ADD [{i}:{permission}]")
-            new_fs[sub(r'([^-_/a-zA-Z0-9])', r'\\\1', i)] = permission
+            new_fs[selinux_path] = fs_file[i]
+            continue
+        permission = permission_d
+        if i:
+            # giữ logic cũ: thay ký tự không printable bằng '*'
+            if not i.isprintable():
+                i = ''.join(c if c.isprintable() else '*' for c in i)
+            # giữ logic cũ: fix_permission
+            if i in fix_permission:
+                permission = fix_permission[i]
+            else:
+                # giữ nguyên logic tìm thư mục cha
+                tmp_path = os.path.dirname(i)
+                while tmp_path and tmp_path != "/":
+                    if tmp_path in fs_file:
+                        permission = fs_file[tmp_path]
+                        break
+                    tmp_path = os.path.dirname(tmp_path)
+        print(f"ADD [{i}:{permission}]")
+        new_fs[selinux_path] = permission
     return new_fs
 
 
