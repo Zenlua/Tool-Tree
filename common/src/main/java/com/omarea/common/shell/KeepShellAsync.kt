@@ -168,7 +168,7 @@ class KeepShellAsync(private var context: Context?, private var rootMode: Boolea
                 if (out == null) {
                     error?.run()
                 } else {
-                    showMsg("获取ROOT权限失败！")
+                    showMsg("Failed to obtain ROOT privileges!")
                 }
             } finally {
                 threadStarted = false
@@ -183,7 +183,7 @@ class KeepShellAsync(private var context: Context?, private var rootMode: Boolea
                 if (error != null) {
                     error.run()
                 } else {
-                    showMsg("获取Root权限超时！")
+                    showMsg("Root access granted timed out!")
                 }
                 threadStarted = false
             }
