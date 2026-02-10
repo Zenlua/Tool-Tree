@@ -66,17 +66,28 @@ class ShellTranslation(val context: Context) {
     
         try {
             val intent = parseIntentArgs(subArgs)
-    
+            // emulate am for SEND
+            if ((intent.action == Intent.ACTION_SEND
+                    || intent.action == Intent.ACTION_SEND_MULTIPLE)
+                && intent.data != null
+            ) {
+                intent.putExtra(Intent.EXTRA_STREAM, intent.data)
+                intent.data = null
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
             when (cmd) {
                 "start" -> {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                
                     if ((Intent.ACTION_SEND == intent.action
                             || Intent.ACTION_SEND_MULTIPLE == intent.action)
                         && intent.component == null
                     ) {
                         val chooser = Intent.createChooser(intent, null)
-                        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        chooser.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
                         ctx.startActivity(chooser)
                     } else {
                         ctx.startActivity(intent)
@@ -212,7 +223,16 @@ class ShellTranslation(val context: Context) {
                         } catch (_: Exception) {}
                     }
                 }
-    
+
+                // Uri extra
+                "--eu" -> {
+                    if (i + 2 < tokens.size) {
+                        val key = tokens[++i]
+                        val value = tokens[++i]
+                        intent.putExtra(key, Uri.parse(value))
+                    }
+                }
+
                 // double extra
                 "--ed" -> {
                     if (i + 2 < tokens.size) {
