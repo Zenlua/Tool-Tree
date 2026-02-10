@@ -78,6 +78,7 @@ class ShellTranslation(val context: Context) {
                     intent.putExtra(Intent.EXTRA_STREAM, uri)
                     intent.clipData = ClipData.newRawUri(null, uri)
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    intent.data = null
                 }
             }
 
