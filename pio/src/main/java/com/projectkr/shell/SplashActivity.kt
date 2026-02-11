@@ -202,8 +202,8 @@ class SplashActivity : AppCompatActivity() {
                     ShellExecutor.getSuperUserRuntime()
                 else
                     ShellExecutor.getRuntime()
-                process?.let {
-                    DataOutputStream(it.outputStream).use { os ->
+                process?.let { proc ->
+                    DataOutputStream(proc.outputStream).use { os ->
                         ScriptEnvironmen.executeShell(
                             this@SplashActivity,
                             os,
@@ -213,11 +213,15 @@ class SplashActivity : AppCompatActivity() {
                             "pio-splash"
                         )
                     }
+                    proc.waitFor()
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            withContext(Dispatchers.Main) {
+                gotoHome()
             }
         }
-        gotoHome()
     }
 
     // Buffer lưu 4 dòng cuối
