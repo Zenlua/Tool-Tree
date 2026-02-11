@@ -178,40 +178,31 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    private fun startToFinish() {
+        private fun startToFinish() {
         binding.startStateText.text = getString(R.string.pop_started)
-        val config = KrScriptConfig().init(this)
 
+        val config = KrScriptConfig().init(this)
         if (config.beforeStartSh.isNotEmpty()) {
-            runBeforeStartSh(config, hasRoot)
-        } else gotoHome()
+            BeforeStartThread(this, config, hasRoot, UpdateLogViewHandler(binding.startStateText) {
+                gotoHome()
+            })).start()
+        } else {
+            gotoHome()
+        }
     }
 
     private fun gotoHome() {
-        if (isFinishing || isDestroyed) return
-    
-        startActivity(
-            if (intent?.getBooleanExtra("JumpActionPage", false) == true)
-                Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
-            else Intent(this, MainActivity::class.java)
-        )
+        if (this.intent != null && this.intent.hasExtra("JumpActionPage") && this.intent.getBooleanExtra("JumpActionPage", false)) {
+            val actionPage = Intent(this.applicationContext, ActionPage::class.java)
+            actionPage.putExtras(this.intent)
+            startActivity(actionPage)
+        } else {
+            val home = Intent(this.applicationContext, MainActivity::class.java)
+            startActivity(home)
+        }
         finish()
     }
 
-    private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
-    
-        val updateHandler = UpdateLogViewHandler(binding.startStateText) {
-            gotoHome()
-        }
-    
-        BeforeStartThread(
-            this,
-            config,
-            hasRoot,
-            updateHandler
-        ).start()
-    }
-    
     private class UpdateLogViewHandler(
         private val logView: TextView,
         private val onExit: () -> Unit
@@ -237,13 +228,11 @@ class SplashActivity : AppCompatActivity() {
         }
     
         fun onExit() {
-            handler.post {
-                onExit()
-            }
+            handler.post { onExit() }
         }
     }
     
-    private class BeforeStartThread(private var context: Context, private val config: KrScriptConfig, private val hasRoot: Boolean, private var updateLogViewHandler: UpdateLogViewHandler) : Thread() {
+    private class BeforeStartThread(private val context: Context = context.applicationContext, private val config: KrScriptConfig, private val hasRoot: Boolean, private var updateLogViewHandler: UpdateLogViewHandler) : Thread() {
         val params = config.getVariables();
 
         override fun run() {
@@ -268,19 +257,16 @@ class SplashActivity : AppCompatActivity() {
         }
     }
     
-    private class StreamReadThread(
-        private val reader: BufferedReader,
-        private val updateHandler: UpdateLogViewHandler
-    ) : Thread() {
-    
+    private class StreamReadThread(private var reader: BufferedReader, private var updateLogViewHandler: UpdateLogViewHandler) : Thread() {
         override fun run() {
-            try {
-                var line: String?
-                while (true) {
-                    line = reader.readLine() ?: break
-                    updateHandler.onLogOutput(line)
+            var line: String? = ""
+            while (true) {
+                line = reader.readLine()
+                if (line == null) {
+                    break
+                } else {
+                    updateLogViewHandler.onLogOutput(line)
                 }
-            } catch (_: Exception) {
             }
         }
     }
