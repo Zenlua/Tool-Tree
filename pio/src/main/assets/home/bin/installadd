@@ -11,6 +11,7 @@ echo "${more_text_4} $1"
 echo
 loadmd="$(7z x "$1" addon.prop -so 2>/dev/null)"
 loadid="$(echo "$loadmd" | gprop id)"
+[ -z "$loadid" ] && killtree "ID not found in addon.prop"
 echo "$name_text: $(echo "$loadmd" | gprop name) $(echo "$loadmd" | gprop version)"
 echo
 echo "ID: $loadid"
