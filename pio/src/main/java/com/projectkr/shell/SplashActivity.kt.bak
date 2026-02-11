@@ -32,6 +32,7 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
+import android.os.Looper
 
 class SplashActivity : AppCompatActivity() {
 
@@ -178,71 +179,97 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun startToFinish() {
-        binding.startStateText.text = getString(R.string.pop_started)
         val config = KrScriptConfig().init(this)
-
         if (config.beforeStartSh.isNotEmpty()) {
-            runBeforeStartSh(config, hasRoot)
-        } else gotoHome()
+            BeforeStartThread(
+                this,
+                config,
+                hasRoot,
+                UpdateLogViewHandler(binding.startStateText) {
+                    gotoHome()
+                }
+            ).start()
+        } else {
+            gotoHome()
+        }
     }
 
     private fun gotoHome() {
-        startActivity(
-            if (intent?.getBooleanExtra("JumpActionPage", false) == true)
-                Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
-            else Intent(this, MainActivity::class.java)
-        )
+        if (this.intent != null && this.intent.hasExtra("JumpActionPage") && this.intent.getBooleanExtra("JumpActionPage", false)) {
+            val actionPage = Intent(this.applicationContext, ActionPage::class.java)
+            actionPage.putExtras(this.intent)
+            startActivity(actionPage)
+        } else {
+            val home = Intent(this.applicationContext, MainActivity::class.java)
+            startActivity(home)
+        }
         finish()
     }
 
-    private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val process = if (hasRoot)
-                    ShellExecutor.getSuperUserRuntime()
-                else
-                    ShellExecutor.getRuntime()
-                process?.let {
-                    DataOutputStream(it.outputStream).use { os ->
-                        ScriptEnvironmen.executeShell(
-                            this@SplashActivity,
-                            os,
-                            config.beforeStartSh,
-                            config.variables,
-                            null,
-                            "pio-splash"
-                        )
+    private class UpdateLogViewHandler(
+        private val logView: TextView,
+        private val onExit: () -> Unit
+    ) {
+        private val handler = Handler(Looper.getMainLooper())
+        private val rows = ArrayList<String>()
+        private var ignored = false
+    
+        fun onLogOutput(log: String) {
+            handler.post {
+                synchronized(rows) {
+                    if (rows.size > 4) {
+                        rows.removeAt(0)
+                        ignored = true
                     }
+                    rows.add(log)
+                    logView.text = rows.joinToString(
+                        "\n",
+                        if (ignored) "……\n" else ""
+                    ).trim()
                 }
-            } catch (_: Exception) {
             }
         }
-        gotoHome()
+    
+        fun onExit() {
+            handler.post { onExit() }
+        }
     }
+    
+    private class BeforeStartThread(private val context: Context = context.applicationContext, private val config: KrScriptConfig, private val hasRoot: Boolean, private var updateLogViewHandler: UpdateLogViewHandler) : Thread() {
+        val params = config.getVariables();
 
-    // Buffer lưu 4 dòng cuối
-    private val rows = mutableListOf<String>()
-    private var ignored = false
-    private val maxLines = 5
-    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        override fun run() {
+            try {
+                val process = if (hasRoot) ShellExecutor.getSuperUserRuntime() else ShellExecutor.getRuntime()
+                if (process != null) {
+                    val outputStream = DataOutputStream(process.outputStream)
 
-    private fun readStreamAsync(reader: BufferedReader) {
-        Thread {
-            reader.forEachLine { line ->
-                onLogOutput(line)
-            }
-        }.start()
-    }
+                    ScriptEnvironmen.executeShell(context, outputStream, config.beforeStartSh, params, null, "pio-splash")
 
-    private fun onLogOutput(log: String) {
-        handler.post {
-            synchronized(rows) {
-                if (rows.size >= maxLines) {
-                    rows.removeAt(0)
-                    ignored = true
+                    StreamReadThread(process.inputStream.bufferedReader(), updateLogViewHandler).start()
+                    StreamReadThread(process.errorStream.bufferedReader(), updateLogViewHandler).start()
+
+                    process.waitFor()
+                    updateLogViewHandler.onExit()
+                } else {
+                    updateLogViewHandler.onExit()
                 }
-                rows.add(log)
-                binding.startStateText.text = rows.joinToString("\n", if (ignored) "……\n" else "")
+            } catch (ex: Exception) {
+                updateLogViewHandler.onExit()
+            }
+        }
+    }
+    
+    private class StreamReadThread(private var reader: BufferedReader, private var updateLogViewHandler: UpdateLogViewHandler) : Thread() {
+        override fun run() {
+            var line: String? = ""
+            while (true) {
+                line = reader.readLine()
+                if (line == null) {
+                    break
+                } else {
+                    updateLogViewHandler.onLogOutput(line)
+                }
             }
         }
     }
