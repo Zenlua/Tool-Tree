@@ -243,55 +243,75 @@ class SplashActivity : AppCompatActivity() {
         }
     }
     
-    private class BeforeStartThread(
-        private val context: Context,
-        private val config: KrScriptConfig,
-        private val hasRoot: Boolean,
-        private val updateHandler: UpdateLogViewHandler
-    ) : Thread() {
-    
-        override fun run() {
-            try {
-    
-                val process = if (hasRoot)
-                    ShellExecutor.getSuperUserRuntime()
-                else
-                    ShellExecutor.getRuntime()
-    
-                if (process != null) {
-    
-                    val outputStream = DataOutputStream(process.outputStream)
-    
-                    ScriptEnvironmen.executeShell(
-                        context,
-                        outputStream,
-                        config.beforeStartSh,
-                        config.variables,
-                        null,
-                        "pio-splash"
-                    )
-    
-                    StreamReadThread(
-                        process.inputStream.bufferedReader(),
-                        updateHandler
-                    ).start()
-    
-                    StreamReadThread(
-                        process.errorStream.bufferedReader(),
-                        updateHandler
-                    ).start()
-    
-                    process.waitFor()
-                }
-    
-            } catch (e: Exception) {
-                e.printStackTrace()
+private class BeforeStartThread(
+    private var context: Context,
+    private val config: KrScriptConfig,
+    private var updateLogViewHandler: UpdateLogViewHandler
+) : Thread() {
+
+    private val params = config.getVariables()
+
+    override fun run() {
+        var process: Process? = null
+        var stdoutThread: Thread? = null
+        var stderrThread: Thread? = null
+
+        try {
+            process = if (CheckRootStatus.lastCheckResult)
+                ShellExecutor.getSuperUserRuntime()
+            else
+                ShellExecutor.getRuntime()
+
+            if (process == null) {
+                updateLogViewHandler.onExit()
+                return
             }
-    
-            // Quan trọng: giống code cũ
-            updateHandler.onExit()
+
+            val outputStream = DataOutputStream(process.outputStream)
+
+            // Gửi script vào shell
+            ScriptEnvironmen.executeShell(
+                context,
+                outputStream,
+                config.beforeStartSh,
+                params,
+                null,
+                "pio-splash"
+            )
+
+            // QUAN TRỌNG: đóng output để tránh treo
+            outputStream.flush()
+            outputStream.close()
+
+            // Đọc stdout + stderr
+            stdoutThread = StreamReadThread(
+                process.inputStream.bufferedReader(),
+                updateLogViewHandler
+            ).apply { start() }
+
+            stderrThread = StreamReadThread(
+                process.errorStream.bufferedReader(),
+                updateLogViewHandler
+            ).apply { start() }
+
+            // Chờ process kết thúc
+            process.waitFor()
+
+            // Chờ đọc hết log (fix mất 2 dòng cuối)
+            stdoutThread.join()
+            stderrThread.join()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            try {
+                process?.destroy()
+            } catch (_: Exception) {}
+
+            updateLogViewHandler.onExit()
         }
     }
+}
     
     private class StreamReadThread(
         private val reader: BufferedReader,

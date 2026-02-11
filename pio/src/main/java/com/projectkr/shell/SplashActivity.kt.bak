@@ -32,6 +32,7 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
+import android.os.Looper
 
 class SplashActivity : AppCompatActivity() {
 
@@ -187,6 +188,8 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun gotoHome() {
+        if (isFinishing || isDestroyed) return
+    
         startActivity(
             if (intent?.getBooleanExtra("JumpActionPage", false) == true)
                 Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
@@ -268,24 +271,28 @@ class SplashActivity : AppCompatActivity() {
                         "pio-splash"
                     )
     
-                    StreamReadThread(
+                    val outThread = StreamReadThread(
                         process.inputStream.bufferedReader(),
                         updateHandler
-                    ).start()
+                    )
     
-                    StreamReadThread(
+                    val errThread = StreamReadThread(
                         process.errorStream.bufferedReader(),
                         updateHandler
-                    ).start()
+                    )
+    
+                    outThread.start()
+                    errThread.start()
     
                     process.waitFor()
+                    
+                    outThread.join()
+                    errThread.join()
                 }
     
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-    
-            // Quan trọng: giống code cũ
             updateHandler.onExit()
         }
     }
