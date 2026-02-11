@@ -196,34 +196,56 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
-        lifecycleScope.launch(Dispatchers.IO) {
+    
+        Thread {
+    
             try {
                 val process = if (hasRoot)
                     ShellExecutor.getSuperUserRuntime()
                 else
                     ShellExecutor.getRuntime()
-                process?.let { proc ->
-                    readStreamAsync(proc.inputStream.bufferedReader())
-                    readStreamAsync(proc.errorStream.bufferedReader())
-                    DataOutputStream(proc.outputStream).use { os ->
-                        ScriptEnvironmen.executeShell(
-                            this@SplashActivity,
-                            os,
-                            config.beforeStartSh,
-                            config.variables,
-                            null,
-                            "pio-splash"
-                        )
-                    }
-                    proc.waitFor()
+    
+                if (process != null) {
+    
+                    val outputStream = DataOutputStream(process.outputStream)
+    
+                    ScriptEnvironmen.executeShell(
+                        this@SplashActivity,
+                        outputStream,
+                        config.beforeStartSh,
+                        config.variables,
+                        null,
+                        "pio-splash"
+                    )
+    
+                    // Đọc stdout
+                    Thread {
+                        process.inputStream.bufferedReader().forEachLine { line ->
+                            runOnUiThread { onLogOutput(line) }
+                        }
+                    }.start()
+    
+                    // Đọc stderr
+                    Thread {
+                        process.errorStream.bufferedReader().forEachLine { line ->
+                            runOnUiThread { onLogOutput(line) }
+                        }
+                    }.start()
+    
+                    // Chờ shell kết thúc
+                    process.waitFor()
                 }
+    
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            withContext(Dispatchers.Main) {
+    
+            // Khi shell exit mới vào Home
+            runOnUiThread {
                 gotoHome()
             }
-        }
+    
+        }.start()
     }
 
     // Buffer lưu 4 dòng cuối
