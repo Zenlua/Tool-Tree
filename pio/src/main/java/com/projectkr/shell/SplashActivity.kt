@@ -203,6 +203,8 @@ class SplashActivity : AppCompatActivity() {
                 else
                     ShellExecutor.getRuntime()
                 process?.let { proc ->
+                    readStreamAsync(proc.inputStream.bufferedReader())
+                    readStreamAsync(proc.errorStream.bufferedReader())
                     DataOutputStream(proc.outputStream).use { os ->
                         ScriptEnvironmen.executeShell(
                             this@SplashActivity,
