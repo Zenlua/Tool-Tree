@@ -32,7 +32,6 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
-import android.os.Looper
 
 class SplashActivity : AppCompatActivity() {
 
@@ -188,8 +187,6 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun gotoHome() {
-        if (isFinishing || isDestroyed) return
-    
         startActivity(
             if (intent?.getBooleanExtra("JumpActionPage", false) == true)
                 Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
