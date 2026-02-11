@@ -196,12 +196,10 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
+        // Coroutine IO
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val process = if (hasRoot)
-                    ShellExecutor.getSuperUserRuntime()
-                else
-                    ShellExecutor.getRuntime()
+                val process = if (hasRoot) ShellExecutor.getSuperUserRuntime() else ShellExecutor.getRuntime()
                 process?.let {
                     DataOutputStream(it.outputStream).use { os ->
                         ScriptEnvironmen.executeShell(
@@ -213,11 +211,17 @@ class SplashActivity : AppCompatActivity() {
                             "pio-splash"
                         )
                     }
+    
+                    // Đọc stdout và stderr bằng coroutine con
+                    launch { readStreamAsync(it.inputStream.bufferedReader()) }
+                    launch { readStreamAsync(it.errorStream.bufferedReader()) }
+    
+                    it.waitFor()
                 }
-            } catch (_: Exception) {
+            } finally {
+                withContext(Dispatchers.Main) { gotoHome() }
             }
         }
-        gotoHome()
     }
 
     // Buffer lưu 4 dòng cuối
