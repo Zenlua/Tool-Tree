@@ -178,17 +178,18 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-        private fun startToFinish() {
-        binding.startStateText.text = getString(R.string.pop_started)
-
-        val config = KrScriptConfig().init(this)
-        if (config.beforeStartSh.isNotEmpty()) {
-            BeforeStartThread(this, config, hasRoot, UpdateLogViewHandler(binding.startStateText) {
+    val config = KrScriptConfig().init(this)
+    if (config.beforeStartSh.isNotEmpty()) {
+        BeforeStartThread(
+            this,
+            config,
+            hasRoot,
+            UpdateLogViewHandler(binding.startStateText) {
                 gotoHome()
-            })).start()
-        } else {
-            gotoHome()
-        }
+            }
+        ).start()
+    } else {
+        gotoHome()
     }
 
     private fun gotoHome() {
