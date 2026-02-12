@@ -12,7 +12,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.HorizontalScrollView;
-import android.graphics.Color;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
@@ -35,7 +34,6 @@ public class CrashLogActivity extends AppCompatActivity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(24, 24, 24, 24);
-        root.setBackgroundColor(Color.BLACK);
 
         // ===== TITLE =====
         TextView title = new TextView(this);
@@ -87,7 +85,6 @@ public class CrashLogActivity extends AppCompatActivity {
         textView.setText(log);
         textView.setTextIsSelectable(true);
         textView.setTextSize(12);
-        textView.setTextColor(android.graphics.Color.argb(204, 255, 255, 255));
         textView.setTypeface(android.graphics.Typeface.MONOSPACE);
         
         // Không tự xuống dòng

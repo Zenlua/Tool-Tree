@@ -88,6 +88,7 @@
             </intent-filter>
         </activity>
         <activity
+            android:theme="@style/AppThemeDark"
             android:name=".CrashLogActivity"
             android:exported="false"
             />
