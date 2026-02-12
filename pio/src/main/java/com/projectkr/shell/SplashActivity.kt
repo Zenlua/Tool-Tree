@@ -218,8 +218,6 @@ class SplashActivity : AppCompatActivity() {
     
                     it.waitFor()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             } finally {
                 withContext(Dispatchers.Main) {
                     gotoHome()

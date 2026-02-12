@@ -17,7 +17,7 @@ public class ShellExecutor {
         if (extraEnvPath != null && !extraEnvPath.isEmpty()) {
             if (defaultEnvPath.isEmpty()) {
                 try {
-                    Process process = Runtime.getRuntime().exec("/system/bin/sh");
+                    Process process = Runtime.getRuntime().exec("sh");
                     OutputStream outputStream = process.getOutputStream();
                     outputStream.write("echo $PATH".getBytes());
                     outputStream.flush();
@@ -75,6 +75,6 @@ public class ShellExecutor {
     }
 
     public static Process getRuntime() throws IOException {
-        return getProcess("/system/bin/sh");
+        return getProcess("sh");
     }
 }

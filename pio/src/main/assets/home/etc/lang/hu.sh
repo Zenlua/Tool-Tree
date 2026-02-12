@@ -291,3 +291,12 @@ build_time_text_2="Automatikus: 0, módosítható, például: 1766318047"
 
 xoaoat_text_1="Bejegyzések törlése oat és odex"
 open_activity_text="Mappa megnyitása: "
+
+# boot
+boot_text_1="A Java telepítése a háttérben folyamatban van..."
+boot_text_2="A Java telepítése befejeződött"
+boot_text_3="Hibakeresési verzió"
+boot_text_4="10 perc alkalmazáshasználat."
+boot_text_5="A hibakeresési verzió csak 10 percig használható."
+boot_text_6="A hibakeresési verzió próbaideje lejárt."
+boot_text_7="Figyelmeztetés: Az alkalmazást módosították. Kérjük, töltse le a hivatalos verziót a GitHubról: Zenlua/Tool-Tree"

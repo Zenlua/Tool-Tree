@@ -21,7 +21,7 @@ if [[ "$websum" != "$(checksum "$PATH_APK")" ]];then
 else
     [ -f $TEMP/update ] && rm -f $TEMP/update
 fi
-)  &>>$TEMP/Install.log &
+) &>>$TEMP/Install.log &
 
 (
 # Cấp quyền tự động nếu đã root

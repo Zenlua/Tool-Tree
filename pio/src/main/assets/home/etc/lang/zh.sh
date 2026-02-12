@@ -289,3 +289,12 @@ build_time_text_2="自动：0，可更改，例如：1766318047"
 
 xoaoat_text_1="清理 oat 和 odex 项"
 open_activity_text="打开文件夹："
+
+# boot
+boot_text_1="Java 正在后台安装..."
+boot_text_2="Java 安装完成"
+boot_text_3="调试版本"
+boot_text_4="可使用应用 10 分钟。"
+boot_text_5="调试版本仅允许使用 10 分钟。"
+boot_text_6="调试版本的试用时间已结束。"
+boot_text_7="警告：应用程序已被修改。请从 GitHub 下载官方版本：Zenlua/Tool-Tree"

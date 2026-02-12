@@ -289,5 +289,15 @@ apex_text_2="File support: apex, capex"
 build_time_text_1="ROM build time"
 build_time_text_2="Automatic: 0, can be changed, for example: 1766318047"
 
+# other
 xoaoat_text_1="Clean oat and odex entries"
 open_activity_text="Open folder: "
+
+# boot
+boot_text_1="Java is being installed in the background..."
+boot_text_2="Java installation completed"
+boot_text_3="Debug version"
+boot_text_4="10 minutes of app usage."
+boot_text_5="The debug version can only be used for 10 minutes."
+boot_text_6="The trial time for the debug version has expired."
+boot_text_7="Warning: The application has been modified. Please download the official version from GitHub: Zenlua/Tool-Tree"

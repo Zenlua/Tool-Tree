@@ -291,3 +291,12 @@ build_time_text_1="Thời gian xây dựng rom"
 build_time_text_2="Tự động: 0, có thể thay đổi ví dụ: 1766318047"
 xoaoat_text_1="Dọn dẹp mục oat và odex"
 open_activity_text="Mở thư mục: "
+
+# boot
+boot_text_1="Java đang cài đặt ở chế độ nền..."
+boot_text_2="Java đã cài đặt xong"
+boot_text_3="Phiên bản gỡ lỗi"
+boot_text_4="10 phút sử dụng ứng dụng."
+boot_text_5="Phiên bản gỡ lỗi chỉ được phép sử dụng trong 10 phút."
+boot_text_6="Thời gian dùng thử của phiên bản gỡ lỗi đã hết."
+boot_text_7="Cảnh báo ứng dụng đã bị chỉnh sửa, hãy tải ở web GitHub: Zenlua/Tool-Tree với phiên bản chính thức"
