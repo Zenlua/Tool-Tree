@@ -36,7 +36,7 @@ public class ShellExecutor {
                         throw new RuntimeException("Unable to obtain $PATH parameter");
                     }
                 } catch (Exception ex) {
-                    defaultEnvPath = "/sbin:/system/sbin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin";
+                    defaultEnvPath = "/system/bin:/vendor/bin:/odm/bin:/system/xbin:/vendor/xbin:/system/sbin:/sbin";
                 }
             }
 
