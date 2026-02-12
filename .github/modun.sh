@@ -13,7 +13,7 @@ unzip -oq "$vnk" -d "${vnk%.*}®${vnk##*.}_7zv1"
 rm -fr "$vnk"
 done
 
-mkdir -p .cache/pip lib log root tmp TREE/ROM TOOL/APK usr
+mkdir -p lib log root tmp TREE/ROM TOOL/APK usr
 
 7z a -t7z -y -mx=9 ../module.so
 ls -lh ../module.so

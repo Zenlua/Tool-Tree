@@ -8,4 +8,4 @@ else
 fi
 
 unset LD_LIBRARY_PATH LD_PRELOAD
-exec "$DALVIKVM" -Xusejit:true -Xnoimage-dex2oat -Djava.io.tmpdir=$TMP "$@"
+exec "$DALVIKVM" -Xusejit:true -Xnoimage-dex2oat -Xcompiler-option --compiler-filter=speed -Djava.io.tmpdir=$TMP "$@"

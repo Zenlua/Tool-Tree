@@ -1,0 +1,1 @@
+exec dalvikvm -Xcompiler-option --compiler-filter=quicken -Xverify:none -cp $ETC/apksigner.jar com.android.apksigner.ApkSignerTool "$@"
