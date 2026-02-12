@@ -12,7 +12,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.HorizontalScrollView;
-
+import android.graphics.Color;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
