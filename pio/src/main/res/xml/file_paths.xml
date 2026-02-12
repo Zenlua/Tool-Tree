@@ -23,4 +23,7 @@
     <root-path
         name="root"
         path="." />
+    <cache-path
+        name="cache"
+        path="." />
 </paths>
