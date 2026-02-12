@@ -18,58 +18,79 @@ public class CrashLogActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+    
         String temp = getIntent().getStringExtra("crash_log");
         final String log = (temp != null) ? temp : "No log data available..";
-
+    
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(20, 20, 20, 20);
-
-        Button copyBtn = new Button(this);
-        copyBtn.setText("Copy log");
-
-        Button shareBtn = new Button(this);
-        shareBtn.setText("Share log");
-
-        ScrollView scrollView = new ScrollView(this);
-        LinearLayout.LayoutParams scrollParams =
+        root.setPadding(24, 24, 24, 24);
+    
+        // ===== BUTTON CONTAINER (1 dòng) =====
+        LinearLayout buttonRow = new LinearLayout(this);
+        buttonRow.setOrientation(LinearLayout.HORIZONTAL);
+        buttonRow.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+    
+        LinearLayout.LayoutParams btnParams =
                 new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
                         0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
                         1f
                 );
-        scrollView.setLayoutParams(scrollParams);
-
+    
+        Button copyBtn = new Button(this);
+        copyBtn.setText("Copy");
+        copyBtn.setTextSize(14);
+        copyBtn.setLayoutParams(btnParams);
+    
+        Button shareBtn = new Button(this);
+        shareBtn.setText("Share");
+        shareBtn.setTextSize(14);
+        shareBtn.setLayoutParams(btnParams);
+    
+        buttonRow.addView(copyBtn);
+        buttonRow.addView(shareBtn);
+    
+        // ===== SCROLL LOG =====
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+        ));
+    
         TextView textView = new TextView(this);
         textView.setText(log);
         textView.setTextIsSelectable(true);
         textView.setTextSize(12);
-
+        textView.setVerticalScrollBarEnabled(true);
+    
         scrollView.addView(textView);
-
-        root.addView(copyBtn);
-        root.addView(shareBtn);
+    
+        root.addView(buttonRow);
         root.addView(scrollView);
-
+    
         setContentView(root);
-
-        // COPY
+    
+        // ===== COPY =====
         copyBtn.setOnClickListener(v -> {
             ClipboardManager clipboard =
                     (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             ClipData clip = ClipData.newPlainText("Crash Log", log);
             clipboard.setPrimaryClip(clip);
-            Toast.makeText(this, "Log has been copied.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Copied.", Toast.LENGTH_SHORT).show();
         });
-
-        // SHARE
+    
+        // ===== SHARE =====
         shareBtn.setOnClickListener(v -> {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Crash Log");
             shareIntent.putExtra(Intent.EXTRA_TEXT, log);
-            startActivity(Intent.createChooser(shareIntent, "Share logs via"));
+            startActivity(Intent.createChooser(shareIntent, "Share via"));
         });
     }
 }

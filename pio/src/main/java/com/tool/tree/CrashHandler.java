@@ -18,21 +18,13 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
     public void uncaughtException(Thread thread, Throwable throwable) {
     
         String stackTrace = Log.getStackTraceString(throwable);
-    
         Intent intent = new Intent(context, CrashLogActivity.class);
         intent.putExtra("crash_log", stackTrace);
         intent.addFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK |
                 Intent.FLAG_ACTIVITY_CLEAR_TASK
         );
-    
         context.startActivity(intent);
-    
-        // Delay nhẹ để activity kịp mở
-        try {
-            Thread.sleep(300);
-        } catch (InterruptedException ignored) {}
-    
         android.os.Process.killProcess(android.os.Process.myPid());
         System.exit(1);
     }
