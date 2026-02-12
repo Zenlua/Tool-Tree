@@ -20,7 +20,6 @@ import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.BgTaskThread
 import com.omarea.krscript.HiddenTaskThread
 import com.omarea.krscript.R
-import com.omarea.common.R
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ScriptEnvironmen
@@ -335,8 +334,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 Thread {
                     for (actionParamInfo in actionParamInfos) {
                         handler.post {
-                            progressBarDialog.showDialog(this.requireContext().getString(R.string.kr_param_load) + if (!actionParamInfo.label.isNullOrEmpty()) actionParamInfo.label else actionParamInfo.name
-                            )
+                            progressBarDialog.showDialog(this.requireContext().getString(R.string.kr_param_load) + if (!actionParamInfo.label.isNullOrEmpty()) actionParamInfo.label else actionParamInfo.name)
                         }
                         if (actionParamInfo.valueShell != null) {
                             actionParamInfo.valueFromShell =
@@ -425,13 +423,13 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 dialogView.findViewById<TextView>(R.id.warn).text = action.warning
                             }
 
-                            dialogView.findViewById<View>(R.id.btn_cancel).setOnClickListener {
+                            dialogView.findViewById<View>(com.omarea.common.R.id.btn_cancel).setOnClickListener {
                                 try {
                                     dialog!!.dismiss()
                                 } catch (ex: java.lang.Exception) {
                                 }
                             }
-                            dialogView.findViewById<View>(R.id.btn_confirm).setOnClickListener {
+                            dialogView.findViewById<View>(com.omarea.common.R.id.btn_confirm).setOnClickListener {
                                 try {
                                     val params = render.readParamsValue(actionParamInfos)
                                     actionExecute(action, script, onExit, params)
