@@ -78,6 +78,7 @@ public class CrashLogActivity extends AppCompatActivity {
         textView.setText(log);
         textView.setTextIsSelectable(true);
         textView.setTextSize(12);
+        textView.setPadding(24, 24, 24, 24);
         
         // Không tự xuống dòng
         textView.setHorizontallyScrolling(true);
