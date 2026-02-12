@@ -123,11 +123,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             !clickableNode.locked
         })
         if (!unlocked) {
-            Toast.makeText(context, message.ifEmpty {
-                message
-            } else {
-                getString(R.string.kr_lock_message)
-            }, Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                if (message.isNotEmpty()) message else getString(R.string.kr_lock_message),
+                Toast.LENGTH_LONG
+            ).show()
         }
         return unlocked
     }
