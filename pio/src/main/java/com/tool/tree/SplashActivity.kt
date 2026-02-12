@@ -32,6 +32,7 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
+import android.content.res.Configuration
 
 class SplashActivity : AppCompatActivity() {
 
@@ -82,14 +83,22 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    private fun applyTheme() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = ContextCompat.getColor(this, R.color.splash_bg_color)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
-        }
-    }
+private fun applyTheme() {
+    val bgColor = ContextCompat.getColor(this, R.color.splash_bg_color)
+
+    window.statusBarColor = bgColor
+    window.navigationBarColor = bgColor
+
+    val controller = WindowCompat.getInsetsController(window, window.decorView)
+
+    val isDark =
+        (resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
+
+    controller?.isAppearanceLightStatusBars = !isDark
+    controller?.isAppearanceLightNavigationBars = !isDark
+}
 
     // =================== AGREEMENT ===================
     private fun showAgreementDialog() {
