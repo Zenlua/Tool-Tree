@@ -90,7 +90,7 @@
         <activity
             android:name=".CrashLogActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/AppThemeDark"/>
         <provider
             android:name=".MTDataFilesProvider"
             android:permission="android.permission.MANAGE_DOCUMENTS"
