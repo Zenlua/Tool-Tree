@@ -3,6 +3,7 @@ package com.omarea.krscript.executor;
 import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
+import android.os.Build;
 
 import com.omarea.krscript.model.RunnableNode;
 import com.omarea.krscript.model.ShellHandlerBase;
@@ -17,7 +18,7 @@ import java.util.Objects;
  */
 public class ShellExecutor {
     private boolean started = false;
-    private final String sessionTag = "pio_" + System.currentTimeMillis();
+    private String sessionTag = "pio_" + System.currentTimeMillis();
     private void killProcess(Context context) {
         ScriptEnvironmen.executeResultRoot(
                 context,
@@ -67,10 +68,18 @@ public class ShellExecutor {
                     process.getErrorStream().close();
                 } catch (Exception ignored) {}
 
-                try {
-                    process.destroyForcibly();
-                } catch (Exception ex) {
-                    Log.e("KrScriptError", Objects.requireNonNull(ex.getMessage()));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    try {
+                        process.destroyForcibly();
+                    } catch (Exception ex) {
+                        Log.e("KrScriptError", Objects.requireNonNull(ex.getMessage()));
+                    }
+                } else {
+                    try {
+                        process.destroy();
+                    } catch (Exception ex) {
+                        Log.e("KrScriptError", Objects.requireNonNull(ex.getMessage()));
+                    }
                 }
             }) : null;
             new SimpleShellWatcher().setHandler(context, process, shellHandlerBase, onExit);

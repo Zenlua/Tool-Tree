@@ -2,6 +2,7 @@ package com.omarea.common.shell
 
 import android.util.Log
 import com.omarea.common.shared.RootFileInfo
+import java.io.File
 
 /**
  * Created by Hello on 2018/07/06.
@@ -9,32 +10,23 @@ import com.omarea.common.shared.RootFileInfo
 
 object RootFile {
     fun itemExists(path: String): Boolean {
-        return KeepShellPublic.doCmdSync("if [[ -e \"$path\" ]]; then echo 1; fi;") == "1"
+        return File(path).exists()
     }
 
     fun fileExists(path: String): Boolean {
-        return KeepShellPublic.doCmdSync("if [[ -f \"$path\" ]]; then echo 1; fi;") == "1"
-    }
-
-    fun fileNotEmpty(path: String): Boolean {
-        return KeepShellPublic.doCmdSync("if [[ -f \"$path\" ]] && [[ -s \"$path\" ]]; then echo 1; fi;") == "1"
+        return File(path).isFile
     }
 
     fun dirExists(path: String): Boolean {
-        return KeepShellPublic.doCmdSync("if [[ -d \"$path\" ]]; then echo 1; fi;") == "1"
+        return File(path).isDirectory
     }
 
     fun deleteDirOrFile(path: String) {
-        KeepShellPublic.doCmdSync("rm -rf \"$path\"")
+        if (File(path).isDirectory)  File(path).deleteRecursively() else File(path).delete()
     }
 
     // 通过MD5比对两个文件是否相同
-    fun fileEquals(path1: String, path2: String): Boolean {
-        if (path1 == path2) {
-            return true
-        }
-        return KeepShellPublic.doCmdSync("if [[ -f \"$path1\" ]] && [[ -f \"$path2\" ]]; then\nif [[ `md5sum -b \"$path1\"` = `md5sum -b \"$path2\"` ]]; then\n echo 1\nfi\nfi") == "1"
-    }
+
 
     // 处理像 "drwxrwx--x   3 root     root         4096 1970-07-14 17:13 vendor_de/" 这样的数据行
     private fun shellFileInfoRow(row: String, parent: String): RootFileInfo? {

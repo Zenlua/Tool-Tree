@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
+import java.io.File
 import java.io.OutputStream
 import java.nio.charset.Charset
 import java.util.*
@@ -49,39 +50,25 @@ class KeepShell(private var rootMode: Boolean = true) {
     private val LOCK_TIMEOUT = 10000L
     private var enterLockTime = 0L
 
-    private var checkRootState =
-            // "if [[ \$(id -u 2>&1) == '0' ]] || [[ \$(\$UID) == '0' ]] || [[ \$(whoami 2>&1) == 'root' ]] || [[ \$(\$USER_ID) == '0' ]]; then\n" +
-            $$"if [[ $(id -u 2>&1) == '0' ]] || [[ $($UID) == '0' ]] || [[ $(whoami 2>&1) == 'root' ]] || [[ $(set | grep 'USER_ID=0') == 'USER_ID=0' ]]; then\n" +
-                    "  echo 'success'\n" +
-                    "else\n" +
-                    "if [[ -d /cache ]]; then\n" +
-                    "  echo 1 > /cache/vtools_root\n" +
-                    "  if [[ -f /cache/vtools_root ]] && [[ $(cat /cache/vtools_root) == '1' ]]; then\n" +
-                    "    echo 'success'\n" +
-                    "    rm -rf /cache/vtools_root\n" +
-                    "    return\n" +
-                    "  fi\n" +
-                    "fi\n" +
-                    "exit 1\n" +
-                    "exit 1\n" +
-                    "fi\n"
+
 
     fun checkRoot(): Boolean {
-        val r = doCmdSync(checkRootState).lowercase(Locale.getDefault())
-        return if (r == "error" || r.contains("permission denied") || r.contains("not allowed") || r == "not found") {
-            if (rootMode) {
-                tryExit()
-            }
-            false
-        } else if (r.contains("success")) {
-            true
-        } else {
-            if (rootMode) {
-                tryExit()
-            }
-            false
-        }
-    }
+        return if (
+            doCmdSync("id -u").lowercase(Locale.getDefault()) == "0" ||
+            doCmdSync("whoami").lowercase(Locale.getDefault()) == "root" ||
+            doCmdSync($$"echo $UID").lowercase(Locale.getDefault()) == "0" ||
+            doCmdSync($$"echo $USER_ID").lowercase(Locale.getDefault()) == "0"
+            ){ true } else {
+                if (File("/cache").exists()){
+                    File("/cache/vtools_root").writeText("1")
+                    if (File("/cache/vtools_root").exists()){
+                        File("/cache/vtools_root").delete()
+                        return true
+                    }
+                }
+            if (rootMode) { tryExit() }
+            false }}
+
 
     private fun getRuntimeShell() {
         if (p != null) return
@@ -93,24 +80,10 @@ class KeepShell(private var rootMode: Boolean = true) {
                     if (rootMode) ShellExecutor.getSuperUserRuntime() else ShellExecutor.getRuntime()
                 out = p!!.outputStream
                 reader = p!!.inputStream.bufferedReader()
-                if (rootMode) {
-                    out?.run {
-                        write(checkRootState.toByteArray(Charset.defaultCharset()))
-                        flush()
-                    }
+                if (!checkRoot() && rootMode){
+                    throw Exception("cannot get root")
                 }
-                Thread {
-                    try {
-                        val errorReader =
-                            p!!.errorStream.bufferedReader()
-                        while (true) {
-                            Log.e("KeepShellPublic", errorReader.readLine())
-                        }
-                    } catch (ex: Exception) {
-                        Log.e("c", "" + ex.message)
-                    }
-                }.start()
-            } catch (ex: Exception) {
+            } catch (_: Exception) {
                 Log.e("getRuntime", "" + ex.message)
             } finally {
                 enterLockTime = 0L
@@ -124,8 +97,6 @@ class KeepShell(private var rootMode: Boolean = true) {
             getSu.interrupt()
         }
     }
-
-    private var br = "\n\n".toByteArray(Charset.defaultCharset())
 
     private val shellOutputCache = StringBuilder()
     private val startTag = "|SH>>|"
