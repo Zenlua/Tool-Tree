@@ -75,6 +75,6 @@ public class ShellExecutor {
     }
 
     public static Process getRuntime() throws IOException {
-        return getProcess("sh");
+        return getProcess("/system/bin/sh");
     }
 }
