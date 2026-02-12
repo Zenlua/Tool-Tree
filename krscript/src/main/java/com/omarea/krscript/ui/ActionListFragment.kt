@@ -20,6 +20,7 @@ import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.BgTaskThread
 import com.omarea.krscript.HiddenTaskThread
 import com.omarea.krscript.R
+import com.omarea.common.R
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ScriptEnvironmen
