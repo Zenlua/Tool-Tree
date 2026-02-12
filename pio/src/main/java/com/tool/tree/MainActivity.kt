@@ -115,8 +115,6 @@ class MainActivity : AppCompatActivity() {
             WakeLockService.startService(applicationContext)
         }
 
-throw RuntimeException("Test crash")
-
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 startService(Intent(this@MainActivity, WakeLockService::class.java).apply { action = WakeLockService.ACTION_END_WAKELOCK })
