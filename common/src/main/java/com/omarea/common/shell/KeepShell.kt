@@ -83,7 +83,7 @@ class KeepShell(private var rootMode: Boolean = true) {
                 if (!checkRoot() && rootMode){
                     throw Exception("cannot get root")
                 }
-            } catch (_: Exception) {
+            } catch (ex: Exception) {
                 Log.e("getRuntime", "" + ex.message)
             } finally {
                 enterLockTime = 0L
