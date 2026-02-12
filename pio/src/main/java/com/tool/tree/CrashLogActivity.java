@@ -20,7 +20,7 @@ public class CrashLogActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         String temp = getIntent().getStringExtra("crash_log");
-        final String log = (temp != null) ? temp : "Không có dữ liệu log.";
+        final String log = (temp != null) ? temp : "No log data available..";
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -30,7 +30,7 @@ public class CrashLogActivity extends AppCompatActivity {
         copyBtn.setText("Copy log");
 
         Button shareBtn = new Button(this);
-        shareBtn.setText("Chia sẻ log");
+        shareBtn.setText("Share log");
 
         ScrollView scrollView = new ScrollView(this);
         LinearLayout.LayoutParams scrollParams =
@@ -60,7 +60,7 @@ public class CrashLogActivity extends AppCompatActivity {
                     (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             ClipData clip = ClipData.newPlainText("Crash Log", log);
             clipboard.setPrimaryClip(clip);
-            Toast.makeText(this, "Đã copy log", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Log has been copied.", Toast.LENGTH_SHORT).show();
         });
 
         // SHARE
@@ -69,7 +69,7 @@ public class CrashLogActivity extends AppCompatActivity {
             shareIntent.setType("text/plain");
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Crash Log");
             shareIntent.putExtra(Intent.EXTRA_TEXT, log);
-            startActivity(Intent.createChooser(shareIntent, "Chia sẻ log qua"));
+            startActivity(Intent.createChooser(shareIntent, "Share logs via"));
         });
     }
 }

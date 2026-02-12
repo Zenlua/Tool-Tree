@@ -49,8 +49,6 @@ class MainActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
-        throw RuntimeException("Test crash")
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -116,6 +114,8 @@ class MainActivity : AppCompatActivity() {
         if (themeConfig.getAllowNotificationUI()) {
             WakeLockService.startService(applicationContext)
         }
+
+throw RuntimeException("Test crash")
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {

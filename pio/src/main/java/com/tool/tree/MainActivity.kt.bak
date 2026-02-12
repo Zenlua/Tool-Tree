@@ -49,6 +49,8 @@ class MainActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        throw RuntimeException("Test crash")
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
