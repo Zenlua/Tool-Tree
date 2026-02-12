@@ -24,6 +24,7 @@
         <!--<item name="android:windowLightStatusBar">true</item>-->
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:windowFrame">@null</item>
         <item name="android:windowIsTranslucent">true</item>
