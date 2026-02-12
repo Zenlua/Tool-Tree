@@ -35,6 +35,7 @@ public class CrashLogActivity extends AppCompatActivity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(24, 24, 24, 24);
+        root.setBackgroundColor(Color.BLACK);
 
         // ===== BUTTON ROW =====
         LinearLayout buttonRow = new LinearLayout(this);
@@ -79,6 +80,8 @@ public class CrashLogActivity extends AppCompatActivity {
         textView.setTextIsSelectable(true);
         textView.setTextSize(12);
         textView.setPadding(32, 16, 32, 16);
+        textView.setTextColor(android.graphics.Color.argb(204, 255, 255, 255));
+        textView.setTypeface(android.graphics.Typeface.MONOSPACE);
         
         // Không tự xuống dòng
         textView.setHorizontallyScrolling(true);
