@@ -40,7 +40,7 @@ public class CrashLogActivity extends AppCompatActivity {
         title.setText("LOGCAT");
         title.setTextSize(25); // chữ to
         title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-        title.setPadding(0, 0, 0, 16);
+        title.setPadding(14, 0, 0, 16);
         root.addView(title);
 
         // ===== BUTTON ROW =====

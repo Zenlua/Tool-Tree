@@ -39,7 +39,7 @@ class ActionPage : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-throw RuntimeException("Test crash")
+
         // Nếu ứng dụng chưa được khởi động, chuyển đến trang khởi động (SplashActivity)
         if (!ScriptEnvironmen.isInited()) {
             val initIntent = Intent(this.applicationContext, SplashActivity::class.java)
