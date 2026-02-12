@@ -78,7 +78,7 @@ public class CrashLogActivity extends AppCompatActivity {
         textView.setText(log);
         textView.setTextIsSelectable(true);
         textView.setTextSize(12);
-        textView.setPadding(24, 24, 24, 24);
+        textView.setPadding(32, 16, 32, 16);
         
         // Không tự xuống dòng
         textView.setHorizontallyScrolling(true);
@@ -89,6 +89,15 @@ public class CrashLogActivity extends AppCompatActivity {
         
         root.addView(buttonRow);
         root.addView(verticalScroll);
+
+        // ===== TITLE =====
+        TextView title = new TextView(this);
+        title.setText("LOGCAT");
+        title.setTextSize(25); // chữ to
+        title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        title.setPadding(0, 0, 0, 16);
+        
+        root.addView(title);
 
         setContentView(root);
 
