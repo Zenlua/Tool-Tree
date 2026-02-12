@@ -19,10 +19,8 @@ public class CrashLogActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String log = getIntent().getStringExtra("crash_log");
-        if (log == null) {
-            log = "Không có dữ liệu log.";
-        }
+        String temp = getIntent().getStringExtra("crash_log");
+        final String log = (temp != null) ? temp : "Không có dữ liệu log.";
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -60,10 +58,8 @@ public class CrashLogActivity extends AppCompatActivity {
         copyBtn.setOnClickListener(v -> {
             ClipboardManager clipboard =
                     (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-
             ClipData clip = ClipData.newPlainText("Crash Log", log);
             clipboard.setPrimaryClip(clip);
-
             Toast.makeText(this, "Đã copy log", Toast.LENGTH_SHORT).show();
         });
 
@@ -73,7 +69,6 @@ public class CrashLogActivity extends AppCompatActivity {
             shareIntent.setType("text/plain");
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Crash Log");
             shareIntent.putExtra(Intent.EXTRA_TEXT, log);
-
             startActivity(Intent.createChooser(shareIntent, "Chia sẻ log qua"));
         });
     }
