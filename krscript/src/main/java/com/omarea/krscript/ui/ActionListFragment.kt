@@ -124,6 +124,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         })
         if (!unlocked) {
             Toast.makeText(context, message.ifEmpty {
+                message
+            } else {
                 getString(R.string.kr_lock_message)
             }, Toast.LENGTH_LONG).show()
         }
