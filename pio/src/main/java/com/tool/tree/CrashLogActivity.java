@@ -37,6 +37,14 @@ public class CrashLogActivity extends AppCompatActivity {
         root.setPadding(24, 24, 24, 24);
         root.setBackgroundColor(Color.BLACK);
 
+        // ===== TITLE =====
+        TextView title = new TextView(this);
+        title.setText("LOGCAT");
+        title.setTextSize(25); // chữ to
+        title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        title.setPadding(0, 0, 0, 16);
+        root.addView(title);
+
         // ===== BUTTON ROW =====
         LinearLayout buttonRow = new LinearLayout(this);
         buttonRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -79,7 +87,6 @@ public class CrashLogActivity extends AppCompatActivity {
         textView.setText(log);
         textView.setTextIsSelectable(true);
         textView.setTextSize(12);
-        textView.setPadding(32, 16, 32, 16);
         textView.setTextColor(android.graphics.Color.argb(204, 255, 255, 255));
         textView.setTypeface(android.graphics.Typeface.MONOSPACE);
         
@@ -92,15 +99,6 @@ public class CrashLogActivity extends AppCompatActivity {
         
         root.addView(buttonRow);
         root.addView(verticalScroll);
-
-        // ===== TITLE =====
-        TextView title = new TextView(this);
-        title.setText("LOGCAT");
-        title.setTextSize(25); // chữ to
-        title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-        title.setPadding(0, 0, 0, 16);
-        
-        root.addView(title);
 
         setContentView(root);
 
