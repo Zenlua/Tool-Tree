@@ -32,7 +32,6 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
-import android.content.res.Configuration
 
 class SplashActivity : AppCompatActivity() {
 
