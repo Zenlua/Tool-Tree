@@ -1,5 +1,11 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.3.1 (12-2-2026)**
+
++ Fix slow boot and boot failure issues.
++ Fix other potential issues
++ Support more devices
+
 **Version: 1.3.0 (10-2-2026)**
 
 + Fixed contextpatch that's causing the crashes.

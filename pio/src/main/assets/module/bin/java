@@ -1,11 +1,5 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-if [ "$($TERMUX/bin/java -version 2>&1 | grep -cm1 'java.lang.OutOfMemoryError')" == 1 ];then
-$TERMUX/bin/java
-echo "Java is corrupted and cannot be used!" >&2
-exit 1
-fi
-
 exec $TERMUX/bin/java \
 -Dfile.encoding=UTF-8 \
 -Xms100m \
