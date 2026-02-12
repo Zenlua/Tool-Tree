@@ -1,15 +1,8 @@
 *.iml
+*.bak
 .gradle
 .idea
 local.properties
 .idea/workspace.xml
 .idea/libraries
 .DS_Store
-build
-pio/build
-krscript/build
-common/build
-captures
-release
-release_mini
-app/build.gradle
