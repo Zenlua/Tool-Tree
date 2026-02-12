@@ -17,7 +17,7 @@ public class ShellExecutor {
         if (extraEnvPath != null && !extraEnvPath.isEmpty()) {
             if (defaultEnvPath.isEmpty()) {
                 try {
-                    Process process = Runtime.getRuntime().exec("sh");
+                    Process process = Runtime.getRuntime().exec("/system/bin/sh");
                     OutputStream outputStream = process.getOutputStream();
                     outputStream.write("echo $PATH".getBytes());
                     outputStream.flush();
