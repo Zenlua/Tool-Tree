@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
++ Fix some problems
++ Add process when compress ext4
++ Fix the killtree issue.
+
 **Version: 1.3.1 (12-2-2026)**
 
 + Fix slow boot and boot failure issues.
