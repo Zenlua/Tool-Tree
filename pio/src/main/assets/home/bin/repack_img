@@ -302,20 +302,21 @@ fi
 
 lvnen="$(glog nen_br 8)";
 if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
+    echo "$sizes_text: ${saved##*/} ($(wc -c <"$saved"))"
+    echo
     if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
     zstd -f -$lvnen -T$threads --format=$CONVER --compress "$saved" -o "${saved%.*}.img.$CONVER" &>/dev/null
     [ "$?" == 0 ] && rm -f "$saved"
-    elif [ "$CONVER" == 'dat' ];then
+    elif [ "$CONVER" == 'dat' ] || [ "$CONVER" == 'br' ];then
     img2simg $saved >/dev/null
-    img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p ${INPUT##*/} >/dev/null
+    img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p ${INPUT##*/} &>/dev/null
     [ "$?" == 0 ] && rm -f "$saved"
-    elif [ "$CONVER" == 'br' ];then
-    LEVEL="$(echo "$lvnen / 2" | bc)"
-    img2simg $saved >/dev/null
-    img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p ${INPUT##*/} >/dev/null
     [ -f "$OUTPUT/out/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed !!!"
+    if [ "$CONVER" == 'br' ];then
+    LEVEL="$(echo "$lvnen / 2" | bc)"
     brotli -fq "$LEVEL" "$OUTPUT/out/${INPUT##*/}.new.dat" -o "$OUTPUT/out/${INPUT##*/}.new.dat.br" >/dev/null
-    [ "$?" == 0 ] && rm -f "$saved" "$OUTPUT/out/${INPUT##*/}.new.dat"
+    [ "$?" == 0 ] && rm -f "$OUTPUT/out/${INPUT##*/}.new.dat"
+    fi
     elif [ "$CONVER" == 'sparse' ];then
     img2simg "$saved" >/dev/null
     fi
