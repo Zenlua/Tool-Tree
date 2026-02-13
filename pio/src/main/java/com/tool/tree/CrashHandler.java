@@ -18,13 +18,29 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
     public void uncaughtException(Thread thread, Throwable throwable) {
     
         String stackTrace = Log.getStackTraceString(throwable);
+    
         Intent intent = new Intent(context, CrashLogActivity.class);
         intent.putExtra("crash_log", stackTrace);
-        intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK |
-                Intent.FLAG_ACTIVITY_CLEAR_TASK
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
         );
-        context.startActivity(intent);
+    
+        AlarmManager alarmManager =
+                (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+    
+        if (alarmManager != null) {
+            alarmManager.set(
+                    AlarmManager.RTC,
+                    System.currentTimeMillis() + 100,
+                    pendingIntent
+            );
+        }
+    
         android.os.Process.killProcess(android.os.Process.myPid());
         System.exit(1);
     }

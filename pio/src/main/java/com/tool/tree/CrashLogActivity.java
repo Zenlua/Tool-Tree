@@ -14,7 +14,7 @@ import android.widget.Toast;
 import android.widget.HorizontalScrollView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
-
+import androidx.activity.OnBackPressedCallback;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
@@ -37,7 +37,7 @@ public class CrashLogActivity extends AppCompatActivity {
 
         // ===== TITLE =====
         TextView title = new TextView(this);
-        title.setText("LOGCAT");
+        title.setText("ERROR");
         title.setTextSize(25); // chữ to
         title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         title.setPadding(14, 0, 0, 16);
@@ -142,5 +142,25 @@ public class CrashLogActivity extends AppCompatActivity {
                 Toast.makeText(this, "Failed to share file.", Toast.LENGTH_SHORT).show();
             }
         });
+        
+        // Khởi động lại app khi bấm Back (có delay 200ms)
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = getPackageManager()
+                        .getLaunchIntentForPackage(getPackageName());
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    new android.os.Handler(android.os.Looper.getMainLooper())
+                            .postDelayed(() -> {
+                                startActivity(intent);
+                                finish();
+                            }, 200);
+                } else {
+                    finish();
+                }
+            }
+        });
+
     }
 }
