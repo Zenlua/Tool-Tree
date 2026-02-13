@@ -100,12 +100,14 @@ class ShellTranslation(val context: Context) {
                     }
                 }
     
-                "startservice" -> {
+                "foregroundservice" -> {
                     if (Build.VERSION.SDK_INT >= 26) {
                         ctx.startForegroundService(intent)
-                    } else {
-                        ctx.startService(intent)
                     }
+                }
+                
+                "startservice" -> {
+                    ctx.startService(intent)
                 }
     
                 "broadcast" -> {

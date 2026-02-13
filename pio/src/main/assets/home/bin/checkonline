@@ -1,7 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
 if ping -c 1 -W 2 8.8.8.8 &>/dev/null; then
-  echo true
+  exit 0
 else
-  echo false
+  exit 1
 fi

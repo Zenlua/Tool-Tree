@@ -8,53 +8,54 @@ fi
 source language
 ranid="$RANDOM"
 
-notiservice --id $ranid --title "$download_text" --message "$load_text_1"
+[ -z "$shell_progres" ] && notiservice="notiservice --am" || notiservice="notiservice"
+if ! checkonline; then
+    echo "$load_text_2" >&2
+    exit 1
+fi
+
+$notiservice --id $ranid --title "$download_text" --message "$load_text_1"
 taive_index="$(curl -sIL "$1")"
 if [ "$?" == 0 ];then
-taive_byte="$(echo "$taive_index" | grep -i "content-length" | awk '{print $2}' | tail -n 1)"
-taive_name="$(echo "$taive_index" | grep -i filename= | tail -n 1 | cut -d= -f2 | awk '{print $1}')"
-    if [ "$2" ];then
-    taive_path_file="$(realpath "$2")"
-    [ -f "$taive_path_file" ] && rm -fr "$taive_path_file"
-    else
-    [ "$taive_name" ] && taive_path_kk="$(realpath $taive_name)" || taive_path_kk="$(realpath Download.bin)"
-    taive_path_file="$(checkname "$taive_path_kk")"
-    fi
-(
-taive_byte_hientai=0
-echo >$TMPDIR/downloadb_$ranid.log
-while true; do
-    if [ "$taive_byte" != 0 ]; then
-    notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte $taive_byte_hientai)/$(coverbyte $taive_byte)"
-    else
-    notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte $taive_byte_hientai)"
-    fi
-[ -f "$taive_path_file" ] && taive_byte_hientai=$(wc -c <"$taive_path_file" 2>/dev/null)
-    if [ "$(grep -cm1 'notification=0' $TMPDIR/downloadb_$ranid.log 2>/dev/null)" == 1 ];then
-    notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$flash_text_12"
-    sleep 3
-    [ "$3" == "true" ] && notiservice --delete true --id $ranid
-    rm -fr $TMPDIR/downloadb_$ranid.log
-    break
-    elif [ "$(grep -cm1 notification= $TMPDIR/downloadb_$ranid.log 2>/dev/null)" == 1 ];then
-    notiservice --id $ranid --title "Error: ${taive_path_file##*/}" --message "($(gprop notification $TMPDIR/downloadb_$ranid.log)) $load_text_2"
-    rm -fr $TMPDIR/downloadb_$ranid.log
-    break
-    else
-        if [ ! -f $TMPDIR/downloadb_$ranid.log ];then
-        notiservice --delete true --id $ranid
-        break
+    taive_byte="$(echo "$taive_index" | grep -i "content-length" | awk '{print $2}' | tail -n 1)"
+    taive_name="$(echo "$taive_index" | grep -i filename= | tail -n 1 | cut -d= -f2 | awk '{print $1}')"
+        if [ "$2" ];then
+        taive_path_file="$(realpath "$2")"
+        [ -f "$taive_path_file" ] && rm -fr "$taive_path_file"
+        else
+        [ "$taive_name" ] && taive_path_kk="$(realpath $taive_name)" || taive_path_kk="$(realpath Download.bin)"
+        taive_path_file="$(checkname "$taive_path_kk")"
+        fi
+    (
+    Taive "$1" "$taive_path_file"
+    [ "$?" == 0 ] || checkdone="$?"
+    )&
+    PIDK=$!
+    while kill -0 $PIDK 2>/dev/null; do
+    if [ -f "$taive_path_file" ];then
+        num3=$(wc -c <"$taive_path_file")
+        if [ "$num3" ] && [ "${taive_byte:-0}" != 0 ];then
+        [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / taive_byte))/100"
+        num4="$num3"
+        $notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte $num3)/$(coverbyte $taive_byte)"
+        else
+        $notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte ${num3:-0})"
         fi
     fi
-sleep 1
-done
-) &
-
-
-Taive "$1" "$taive_path_file"
-echo "notification=$?" &>$TMPDIR/downloadb_$ranid.log
+    sleep 1
+    done
+    progress -1/0
+        if [ -z "$checkdone" ];then
+        $notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$flash_text_12"
+        else
+        $notiservice --id $ranid --title "Error: ${taive_path_file##*/}" --message "($checkdone) $load_text_2"
+        fi
+    (
+    sleep 3
+    $notiservice --delete true --id $ranid
+    ) &
 else
-notiservice --delete true --id $ranid
-echo "$load_text_2" >&2
-exit 1
+    $notiservice --delete true --id $ranid
+    echo "$load_text_2" >&2
+    exit 1
 fi

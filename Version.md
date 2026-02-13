@@ -2,6 +2,7 @@
 
 **Version: Dev**
 
++ Fix notification
 + Fix some problems
 + Add process when compress ext4
 + Fix the killtree issue.
