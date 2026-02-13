@@ -78,6 +78,7 @@ fi
 
 if [ -f "$1" ]; then
 chmod 755 "$1" 2>/dev/null
+export shell_progres="$2";
 cd "$HOME";
 source "$1";
 rm -f "$1";
