@@ -374,7 +374,7 @@ Update(){
 [ -f "$TEMP/update" ] && show_update=1
 xml_print '<group>
 <page icon="'`urlpng like`'" link="https://zenlua.github.io/Tool-Tree/website/Information.html" >
-<title>Kakathic</title>
+<title>'$author_text'</title>
 </page>
 </group>
 
