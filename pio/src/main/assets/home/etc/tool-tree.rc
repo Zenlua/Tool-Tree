@@ -795,7 +795,7 @@ checktime
 Utilities(){
 mkdir -p $PTSD &>/dev/null &
 
-if [ "$(glog hide_show)" == 1 ];then
+if [ "$(glog hide_show 1)" == 1 ];then
     echo "<group>"
     show_sett
     echo "</group>"
@@ -1062,7 +1062,7 @@ checktime
 Utiliapk(){
 mkdir -p $PTAD &>/dev/null &
 
-if [ "$(glog hide_show2)" == 1 ];then
+if [ "$(glog hide_show2 1)" == 1 ];then
     echo "<group>"
     show_apkset
     echo "</group>"
