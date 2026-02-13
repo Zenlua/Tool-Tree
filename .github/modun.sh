@@ -15,7 +15,7 @@ done
 
 mkdir -p lib log root tmp TREE/ROM TOOL/APK usr
 
-7z a -t7z -y -mx=9 ../modules
-ls -lh ../modules
-
+7z a -t7z -y -mx=9 ../module.7z
 rm -fr ../module
+mv module.7z module
+ls -lh ../module
