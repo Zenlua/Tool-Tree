@@ -25,6 +25,7 @@ class ShellTranslation(val context: Context) {
     
     am:[start -a ACTION -d URI -n PACKAGE/CLASS]
     am:[startservice -n PACKAGE/CLASS]
+    am:[foregroundservice -n PACKAGE/CLASS]
     am:[broadcast -a ACTION]
     
     Extras:

@@ -115,8 +115,8 @@ xml_print '<group>
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
-<option type="default" id="v2" auto-off="true" interruptible="false" >'$open_activity_text' '$PTSH'</option>
-<option type="default" id="v3" auto-off="true" interruptible="false" >'$open_activity_text' '$PTSH' (root-data)</option>
+<option type="default" id="v2" auto-off="true" interruptible="false" >'$open_activity_text' ROM</option>
+<option type="default" id="v3" auto-off="true" interruptible="false" >'$open_activity_text' (data-root)</option>
 <handler>
 if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
@@ -204,8 +204,8 @@ xml_print '<group>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
 <option type="file" id="v2" suffix="zip" auto-off="true">'$more_text_3'</option>
 <option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apkeditor.jar</option>
-<option type="default" id="v4" auto-off="true" interruptible="false" >'$open_activity_text' '$PTAH'</option>
-<option type="default" id="v5" auto-off="true" interruptible="false" >'$open_activity_text' '$PTAH' (root-data)</option>
+<option type="default" id="v4" auto-off="true" interruptible="false" >'$open_activity_text' APK</option>
+<option type="default" id="v5" auto-off="true" interruptible="false" >'$open_activity_text' (data-root)</option>
 <handler>
 if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show2)" == 1 ] && slog hide_show2 0 || slog hide_show2 1

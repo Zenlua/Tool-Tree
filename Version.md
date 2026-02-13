@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: Dev**
+**Version: 1.3.2 (14-2-2026)**
 
 + Fix notification
 + Fix some problems
