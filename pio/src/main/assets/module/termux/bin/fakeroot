@@ -109,7 +109,7 @@ if [ -n "$PATHS" ]
 then
     for dir in `echo $PATHS | sed 's/:/ /g'`
     do
-	if test -r "$dir/$FAKEROOT_LIB"
+	if [ -e "$dir/$FAKEROOT_LIB" ]
 	then
 	    libfound=yes
 	    ABSLIB="$dir/$FAKEROOT_LIB"
@@ -125,7 +125,7 @@ fi
 
 if test $libfound = no
 then
-    fatal "preload library \`$FAKEROOT_LIB' not found, aborting."
+    fatal "preload library '$FAKEROOT_LIB' not found, aborting."
 fi
 
 if test -n "$FAKEROOTKEY"
