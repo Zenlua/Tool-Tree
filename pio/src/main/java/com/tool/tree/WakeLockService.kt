@@ -20,6 +20,7 @@ import com.tool.tree.ThemeConfig
 import com.tool.tree.R
 import android.os.Process
 import android.app.ActivityManager
+import android.content.pm.ServiceInfo
 
 @Suppress("DEPRECATION")
 class WakeLockService : Service() {
@@ -80,8 +81,19 @@ class WakeLockService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
-        startForeground(1, buildNotification())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel()
+        }
+        val notification = buildNotification()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                1,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        } else {
+            startForeground(1, notification)
+        }
     }
 
     private fun createNotificationChannel() {

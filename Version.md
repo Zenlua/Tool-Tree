@@ -12,7 +12,7 @@
 + Add a progress bar when extracting erofs.
 + Add new plugin
 + Improve some code
-+ Adding signature verification prevents application editing.
++ Prevent app modifications
 
 **Version: 1.2.9 (8-2-2026)**
 

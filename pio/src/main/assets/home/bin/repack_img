@@ -268,9 +268,33 @@ elif [ "$partition" == "ext" ];then
     if [ "$e2fsdroid" == 1 ];then
     size="$(echo "$size_real / 4096" | bc)";
     mke2fs -O ^has_journal,^quota,^project,^resize_inode -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "$mount_dir" "$saved" $size 2>&1
-    e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved"
+    e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved" &
+    PIDK=$!
+    while kill -0 $PIDK 2>/dev/null; do
+    if [ -f "$saved" ];then
+        number_kk=$(wc -c <"$saved")
+        if [ "$number_kk" ];then
+        [ "${number_kk:-0}" == "${save_num:-1}" ] || progress "$((number_kk * 100 / size_real))/100"
+        save_num="$number_kk"
+        fi
+    fi
+    sleep 1
+    done
+    progress -1/0
     else
-    make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved"
+    make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
+    PIDK=$!
+    while kill -0 $PIDK 2>/dev/null; do
+    if [ -f "$saved" ];then
+        number_kk=$(wc -c <"$saved")
+        if [ "$number_kk" ];then
+        [ "${number_kk:-0}" == "${save_num:-1}" ] || progress "$((number_kk * 100 / size_real))/100"
+        save_num="$number_kk"
+        fi
+    fi
+    sleep 1
+    done
+    progress -1/0
     echo
     fi
   else

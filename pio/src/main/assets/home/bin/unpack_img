@@ -150,32 +150,18 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       echo "$(fsck.f2fs "$file_img" | grep 'superblock features' | grep -cm1 ro)" > "$OUTPUT/config/${namepv##*/}_f2fs_ro"
     elif [ "$dang_file" == 'erofs' ];then
       extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$OUTPUT/${namepv##*/}" &
-      sleep 0.5
+      PIDK=$!
+      while kill -0 $PIDK 2>/dev/null; do
       if [ -f $TMP/extract_erofs.log ];then
-      while true; do
       number_kk="$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$TMP/extract_erofs.log" | grep -E 'Extract: \[[^]]+\]' | tail -n 1 | awk '{print $3}' | cut -d\. -f1)"
-      if [ ${number_kk:-0} -ge 98 ] || [ "$(grep -cm1 "100.00%" $TMP/extract_erofs.log)" == 1 ];then
-      progress 98/100
-      sleep 0.5
-      progress -1/0
-      break
-      fi
-      if [ -z "$number_kk" ] || [ "${number_kk:-0}" == "${save_num:-1}" ]; then
-         iv=$((iv+1))
-      else
-         iv=0
-         [ "$number_kk" ] && progress $number_kk/100
-      fi
-      save_num="$number_kk"
-      if [ "$iv" -ge 40 ];then
-      showtoast -a "Warning: Slow erofs extraction speed, Stop checking the percentage to avoid an endless loop."
-      progress -1/0
-      break
+          if [ "$number_kk" ];then
+          [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
+          save_num="$number_kk"
+          fi
       fi
       sleep 1
       done
-      fi
-      wait
+      progress -1/0
       [ -f $TMP/extract_erofs.log ] && sed -i 's/\x1b\[[^m]*m//g' $TMP/extract_erofs.log
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
       if [ -f $OUTPUT/config/exception.log ];then

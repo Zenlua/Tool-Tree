@@ -562,9 +562,9 @@ echo "'$umount_text_2'"
 <lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>
-<param name="IMG" multiple="true" options-sh="search_image" label="IMAGE" desc="'$backup_text_2 $SDC'" required="true"/>
+<param name="IMG" multiple="true" options-sh="search_image" label="IMAGE" desc="'$backup_text_2 $PTSD'" required="true"/>
 <set>
-Extract=$SDC/backup
+Extract=$PTSD/backup
 [[ ! -d "$Extract" ]] && mkdir -p "$Extract"
 for i in $IMG; do
     e=${i##*/}
