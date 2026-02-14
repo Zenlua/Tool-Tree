@@ -32,5 +32,6 @@ dependencies {
     implementation project(':common')
 }
 repositories {
+    google()
     mavenCentral()
 }

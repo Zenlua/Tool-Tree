@@ -53,21 +53,20 @@ class KeepShell(private var rootMode: Boolean = true) {
 
 
     fun checkRoot(): Boolean {
-        return if (
-            doCmdSync("id -u").lowercase(Locale.getDefault()) == "0" ||
-            doCmdSync("whoami").lowercase(Locale.getDefault()) == "root" ||
-            doCmdSync($$"echo $UID").lowercase(Locale.getDefault()) == "0" ||
-            doCmdSync($$"echo $USER_ID").lowercase(Locale.getDefault()) == "0"
-            ){ true } else {
-                if (File("/cache").exists()){
-                    File("/cache/vtools_root").writeText("1")
-                    if (File("/cache/vtools_root").exists()){
-                        File("/cache/vtools_root").delete()
-                        return true
-                    }
-                }
-            if (rootMode) { tryExit() }
-            false }}
+        val uid = try {
+            doCmdSync("id -u").trim().toInt()
+        } catch (e: Exception) {
+            -1
+        }
+    
+        val isPrivileged = uid == 0 || uid == 1000 || uid == 2000
+    
+        if (!isPrivileged && rootMode) {
+            tryExit()
+        }
+    
+        return isPrivileged
+    }
 
 
     private fun getRuntimeShell() {

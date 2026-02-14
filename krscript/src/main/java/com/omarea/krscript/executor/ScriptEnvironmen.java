@@ -309,11 +309,15 @@ public class ScriptEnvironmen {
     static Process getRuntime() {
         try {
             if (rooted) {
-                return Runtime.getRuntime().exec("su");
+                try {
+                    return Runtime.getRuntime().exec("su");
+                } catch (Exception ignored) {
+                    return Runtime.getRuntime().exec("sh");
+                }
             } else {
                 return Runtime.getRuntime().exec("sh");
             }
-        } catch (Exception ex) {
+        } catch (Exception e) {
             return null;
         }
     }
