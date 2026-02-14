@@ -30,7 +30,7 @@ xml_print '
 if [ ! -d "$Folder" ] || [ ! -d "$SDH/${Folder##*/}" ];then
 slog PTSD "$Folder"
 slog PTSH "${Folder##*/}"
-mkdir -p "$SDH/${Folder##*/}" "$Folder"
+mkdir -p "$SDH/${Folder##*/}/out" "$Folder"
 elif [ -d "$SDH/$Name" ];then
 slog PTSH "$Name"
 slog PTSD "$SDC/$Name"
@@ -50,7 +50,7 @@ xml_print '
 if [ ! -d "$Folder" ] || [ ! -d "$APK/${Folder##*/}" ];then
 slog PTAD "$Folder"
 slog PTAH "${Folder##*/}"
-mkdir -p "$APK/${Folder##*/}" "$Folder"
+mkdir -p "$APK/${Folder##*/}/out" "$Folder"
 elif [ -d "$APK/$Name" ];then
 slog PTAH "$Name"
 slog PTAD "$SDC/$Name"
