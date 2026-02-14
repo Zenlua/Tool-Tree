@@ -26,7 +26,7 @@
 
 - **[See details](https://zenlua.github.io/Tool-Tree/website/Instruct.html)**
 
-### Buy me a coffee
+### Development team
 
 - **[Infor](https://zenlua.github.io/Tool-Tree/website/Information.html)**
 
