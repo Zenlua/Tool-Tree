@@ -8,13 +8,12 @@ fi
 source language
 ranid="$RANDOM"
 
-[ -z "$shell_progres" ] && notiservice="notiservice --am" || notiservice="notiservice"
 if ! checkonline; then
     echo "$load_text_2" >&2
     exit 1
 fi
 
-$notiservice --id $ranid --title "$download_text" --message "$load_text_1"
+notiservice --id $ranid --title "$download_text" --message "$load_text_1"
 taive_index="$(curl -sIL "$1")"
 if [ "$?" == 0 ];then
     taive_byte="$(echo "$taive_index" | grep -i "content-length" | awk '{print $2}' | tail -n 1)"
@@ -37,25 +36,25 @@ if [ "$?" == 0 ];then
         if [ "$num3" ] && [ "${taive_byte:-0}" != 0 ];then
         [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / taive_byte))/100"
         num4="$num3"
-        $notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte $num3)/$(coverbyte $taive_byte)"
+        notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte $num3)/$(coverbyte $taive_byte)"
         else
-        $notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte ${num3:-0})"
+        notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte ${num3:-0})"
         fi
     fi
     sleep 1
     done
     progress -1/0
         if [ -z "$checkdone" ];then
-        $notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$flash_text_12"
+        notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$flash_text_12"
         else
-        $notiservice --id $ranid --title "Error: ${taive_path_file##*/}" --message "($checkdone) $load_text_2"
+        notiservice --id $ranid --title "Error: ${taive_path_file##*/}" --message "($checkdone) $load_text_2"
         fi
     (
     sleep 3
-    $notiservice --delete true --id $ranid
+    notiservice --delete true --id $ranid
     ) &
 else
-    $notiservice --delete true --id $ranid
+    notiservice --delete true --id $ranid
     echo "$load_text_2" >&2
     exit 1
 fi

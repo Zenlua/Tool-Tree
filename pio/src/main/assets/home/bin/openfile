@@ -1,9 +1,11 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-if [ "$1" == "-a" ] || [ "$1" == "--am" ];then
-    [ -f "$2" ] && am start -n com.tool.tree/com.tool.tree.OpenFileActivity --es path "$2" &>/dev/null
+helps(){ echo -e "Use: openfile /path/file.apk \n- Any file it will suggest application to open"; }
+
+if [ "$1" == "-a" ] || [ "$1" == "--am" ] || [ -z "$shell_progres" ];then
+    [ -f "$2" ] && am start -n com.tool.tree/com.tool.tree.OpenFileActivity --es path "$2" &>/dev/null || helps
 elif [ -f "$1" ];then
     echo "am:[start -n com.tool.tree/com.tool.tree.OpenFileActivity --es path '$1']"
 else
-    echo -e "Use: openfile /path/file.apk \n- Any file it will suggest application to open"
+    helps
 fi

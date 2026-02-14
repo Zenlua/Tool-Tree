@@ -5,7 +5,7 @@ echo "Use: showtoast 'Xin chào'"
 exit
 fi
 
-if [ "$1" == "-a" ] || [ "$1" == "--am" ];then
+if [ "$1" == "-a" ] || [ "$1" == "--am" ] || [ -z "$shell_progres" ];then
     am broadcast -n com.tool.tree/com.tool.tree.ToastReceiver -a com.tool.tree.SHOW --es text "$2" &>/dev/null
 else
     echo "am:[broadcast -n com.tool.tree/com.tool.tree.ToastReceiver -a com.tool.tree.SHOW --es text '$@']"

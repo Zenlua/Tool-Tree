@@ -290,7 +290,8 @@ build_time_text_1="ROM build ideje"
 build_time_text_2="Automatikus: 0, módosítható, például: 1766318047"
 
 xoaoat_text_1="Bejegyzések törlése oat és odex"
-open_activity_text="Mappa megnyitása: "
+open_activity_text="Mappa megnyitása:"
+patch_text_fscontex="Tiltsa le az fs_config és fs_contexts javításokat"
 
 # boot
 boot_text_1="A Java telepítése a háttérben folyamatban van..."

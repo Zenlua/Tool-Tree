@@ -272,7 +272,7 @@ dexopt_app_text_3="Nếu bật lựa chọn này, mục danh sách ứng dụng 
 framework_auto_text="Nhập framework tự động"
 
 # Tính năng
-feature_hide_text="Bật/Tắt tính năng ẩn"
+feature_hide_text="Bật/Tắt tính năng"
 use_apktool_text="Trình chỉnh sửa Apktool"
 use_network_text="Yêu cầu sử dụng mạng dữ liệu, để tiếp tục cập nhật"
 root_warning_text="Vui lòng root để sử dụng tính năng"
@@ -290,7 +290,8 @@ apex_text_2="Danh sách hỗ trợ tệp: apex, capex"
 build_time_text_1="Thời gian xây dựng rom"
 build_time_text_2="Tự động: 0, có thể thay đổi ví dụ: 1766318047"
 xoaoat_text_1="Dọn dẹp mục oat và odex"
-open_activity_text="Mở thư mục: "
+open_activity_text="Mở thư mục:"
+patch_text_fscontex="Tắt vá fs_config, fs_contexts"
 
 # boot
 boot_text_1="Java đang cài đặt ở chế độ nền..."

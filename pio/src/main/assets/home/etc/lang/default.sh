@@ -272,7 +272,7 @@ dexopt_app_text_3="If this option is enabled, the application list above will ha
 framework_auto_text="Auto framework import"
 
 # Tính năng
-feature_hide_text="Enable/Disable hidden features"
+feature_hide_text="Features On/Off"
 use_apktool_text="Apktool editor"
 use_network_text="Data network usage required, to continue updating"
 root_warning_text="Please root the device to use this feature"
@@ -291,7 +291,8 @@ build_time_text_2="Automatic: 0, can be changed, for example: 1766318047"
 
 # other
 xoaoat_text_1="Clean oat and odex entries"
-open_activity_text="Open folder: "
+open_activity_text="Open folder:"
+patch_text_fscontex="Disable fs_config and fs_contexts patches"
 
 # boot
 boot_text_1="Java is being installed in the background..."

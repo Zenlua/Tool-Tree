@@ -840,7 +840,7 @@ checktime
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
-<param name="off_fscontex" value-sh="glog off_fscontex" label="Tắt vá fs_config, fs_contexts" type="switch" />
+<param name="off_fscontex" value-sh="glog off_fscontex" label="'$patch_text_fscontex'" type="switch" />
 <param name="vavb" label="'$builds_text_8'" desc="'$builds_text_9'" type="switch"/>
 <param name="build_size" label="Megabit" value-sh="glog build_size 0" type="number" desc="'$builds_text_7'" required="required" />
 <set>

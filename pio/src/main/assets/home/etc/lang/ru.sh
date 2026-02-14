@@ -289,7 +289,8 @@ build_time_text_1="Время сборки ROM"
 build_time_text_2="Автоматически: 0, можно изменить, например: 1766318047"
 
 xoaoat_text_1="Очистить элементы oat и odex"
-open_activity_text="Открыть папку: "
+open_activity_text="Открыть папку:"
+patch_text_fscontex="Отключите патчи fs_config и fs_contexts"
 
 # boot
 boot_text_1="Java устанавливается в фоновом режиме..."
