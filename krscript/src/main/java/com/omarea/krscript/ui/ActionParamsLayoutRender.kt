@@ -1,5 +1,6 @@
 package com.omarea.krscript.ui
 
+import android.graphics.Color
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -8,7 +9,6 @@ import androidx.fragment.app.FragmentActivity
 import com.omarea.common.model.SelectItem
 import com.omarea.krscript.R
 import com.omarea.krscript.model.ActionParamInfo
-import androidx.core.graphics.toColorInt
 
 class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity: FragmentActivity) {
     companion object {
@@ -194,62 +194,46 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 continue
             }
 
-            when (val view = linearLayout.findViewWithTag<View>(actionParamInfo.name)) {
-                is EditText -> {
-                    val text = view.text.toString()
-                    if (text.isNotEmpty()) {
-                        if ((actionParamInfo.type == "int" || actionParamInfo.type == "number")) {
-                            try {
-                                val value = text.toInt()
-                                if (value < actionParamInfo.min) {
-                                    throw Exception("${getFieldTips(actionParamInfo)} $value < ${actionParamInfo.min} !!!")
-                                } else if (value > actionParamInfo.max) {
-                                    throw Exception("${getFieldTips(actionParamInfo)} $value > ${actionParamInfo.max} !!!")
-                                }
-                            } catch (ex: java.lang.NumberFormatException) {
+            val view = linearLayout.findViewWithTag<View>(actionParamInfo.name)
+            if (view is EditText) {
+                val text = view.text.toString()
+                if (text.isNotEmpty()) {
+                    if ((actionParamInfo.type == "int" || actionParamInfo.type == "number")) {
+                        try {
+                            val value = text.toInt()
+                            if (value < actionParamInfo.min) {
+                                throw Exception("${getFieldTips(actionParamInfo)} $value < ${actionParamInfo.min} !!!")
+                            } else if (value > actionParamInfo.max) {
+                                throw Exception("${getFieldTips(actionParamInfo)} $value > ${actionParamInfo.max} !!!")
                             }
-                        } else if (actionParamInfo.type == "color") {
-                            try {
-                                text.toColorInt()
-                            } catch (ex: java.lang.Exception) {
-                                throw Exception(
-                                    "" + getFieldTips(actionParamInfo) + "  \n" + context.getString(
-                                        R.string.kr_invalid_color
-                                    )
-                                )
-                            }
+                        } catch (ex: java.lang.NumberFormatException) {
+                        }
+                    } else if (actionParamInfo.type == "color") {
+                        try {
+                            Color.parseColor(text)
+                        } catch (ex: java.lang.Exception) {
+                            throw Exception("" + getFieldTips(actionParamInfo) + "  \n" + context.getString(R.string.kr_invalid_color))
                         }
                     }
-                    actionParamInfo.value = text
                 }
-
-                is CheckBox -> {
-                    actionParamInfo.value = if (view.isChecked) "1" else "0"
-                }
-
-                is Switch -> {
-                    actionParamInfo.value = if (view.isChecked) "1" else "0"
-                }
-
-                is SeekBar -> {
-                    val text = (view.progress + actionParamInfo.min).toString()
-                    actionParamInfo.value = text
-                }
-
-                is TextView -> {
-                    actionParamInfo.value = view.text.toString()
-                }
-
-                is Spinner -> {
-                    val item = view.selectedItem
-                    when {
-                        item is SelectItem -> {
-                            actionParamInfo.value = item.value
-                        }
-
-                        item != null -> actionParamInfo.value = item.toString()
-                        else -> actionParamInfo.value = ""
+                actionParamInfo.value = text
+            } else if (view is CheckBox) {
+                actionParamInfo.value = if (view.isChecked) "1" else "0"
+            } else if (view is Switch) {
+                actionParamInfo.value = if (view.isChecked) "1" else "0"
+            } else if (view is SeekBar) {
+                val text = (view.progress + actionParamInfo.min).toString()
+                actionParamInfo.value = text
+            } else if (view is TextView) {
+                actionParamInfo.value = view.text.toString()
+            } else if (view is Spinner) {
+                val item = view.selectedItem
+                when {
+                    item is SelectItem -> {
+                        actionParamInfo.value = item.value
                     }
+                    item != null -> actionParamInfo.value = item.toString()
+                    else -> actionParamInfo.value = ""
                 }
             }
 
