@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.3.3 (15-2-2026)**
+**Version: 1.3.3 (16-2-2026)**
 
++ Re-released version 1.3.3 with bug fixes.
 + Improve performance
 + Fix the error
 + Fix the data settings
