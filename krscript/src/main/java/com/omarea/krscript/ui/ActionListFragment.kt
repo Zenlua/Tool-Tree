@@ -2,7 +2,6 @@ package com.omarea.krscript.ui
 
 import android.app.AlertDialog
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -26,6 +25,7 @@ import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.*
 import com.omarea.krscript.shortcut.ActionShortcutManager
+import androidx.core.net.toUri
 import android.content.res.Configuration
 
 class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.OnItemClickListener {
@@ -70,12 +70,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private lateinit var rootGroup: ListItemGroup
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        this.progressBarDialog = ProgressBarDialog(this.activity!!)
+        this.progressBarDialog = ProgressBarDialog(this.requireActivity())
 
-        rootGroup = ListItemGroup(this.context!!, true, GroupNode(""))
+        rootGroup = ListItemGroup(this.requireContext(), true, GroupNode(""))
 
         if (actionInfos != null) {
-            PageLayoutRender(this.context!!, actionInfos!!, this, rootGroup)
+            PageLayoutRender(this.requireContext(), actionInfos!!, this, rootGroup)
             val layout = rootGroup.getView()
 
             val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
@@ -96,19 +96,19 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private fun nodeUnlocked(clickableNode: ClickableNode): Boolean {
         val currentSDK = Build.VERSION.SDK_INT
         if (clickableNode.targetSdkVersion > 0 && currentSDK != clickableNode.targetSdkVersion) {
-            DialogHelper.helpInfo(context!!,
+            DialogHelper.helpInfo(requireContext(),
                     getString(R.string.kr_sdk_discrepancy),
                     getString(R.string.kr_sdk_discrepancy_message).format(clickableNode.targetSdkVersion)
             )
             return false
         } else if (currentSDK > clickableNode.maxSdkVersion) {
-            DialogHelper.helpInfo(context!!,
+            DialogHelper.helpInfo(requireContext(),
                     getString(R.string.kr_sdk_overtop),
                     getString(R.string.kr_sdk_message).format(clickableNode.minSdkVersion, clickableNode.maxSdkVersion)
             )
             return false
         } else if (currentSDK < clickableNode.minSdkVersion) {
-            DialogHelper.helpInfo(context!!,
+            DialogHelper.helpInfo(requireContext(),
                     getString(R.string.kr_sdk_too_low),
                     getString(R.string.kr_sdk_message).format(clickableNode.minSdkVersion, clickableNode.maxSdkVersion)
             )
@@ -123,11 +123,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             !clickableNode.locked
         })
         if (!unlocked) {
-            Toast.makeText(context, if (message.isNotEmpty()) {
-                message
-            } else {
-                getString(R.string.kr_lock_message)
-            }, Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                if (message.isNotEmpty()) message else getString(R.string.kr_lock_message),
+                Toast.LENGTH_LONG
+            ).show()
         }
         return unlocked
     }
@@ -139,11 +139,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         if (nodeUnlocked(item)) {
             val toValue = !item.checked
             if (item.confirm) {
-                DialogHelper.warning(activity!!, item.title, item.desc, {
+                DialogHelper.warning(requireActivity(), item.title, item.desc, {
                     switchExecute(item, toValue, onCompleted)
                 })
             } else if (item.warning.isNotEmpty()) {
-                DialogHelper.warning(activity!!, item.title, item.warning, {
+                DialogHelper.warning(requireActivity(), item.title, item.warning, {
                     switchExecute(item, toValue, onCompleted)
                 })
             } else {
@@ -170,14 +170,14 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         if (nodeUnlocked(item)) {
             if (context != null && item.link.isNotEmpty()) {
                 try {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.link))
+                    val intent = Intent(Intent.ACTION_VIEW, item.link.toUri())
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context?.startActivity(intent)
                 } catch (ex: Exception) {
                     Toast.makeText(context, context?.getString(R.string.kr_slice_activity_fail), Toast.LENGTH_SHORT).show()
                 }
             } else if (context != null && item.activity.isNotEmpty()) {
-                TryOpenActivity(context!!, item.activity).tryOpen()
+                TryOpenActivity(requireContext(), item.activity).tryOpen()
             } else {
                 krScriptActionHandler?.onSubPageClick(item)
             }
@@ -188,7 +188,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     override fun onItemLongClick(clickableNode: ClickableNode) {
         if (clickableNode.key.isEmpty()) {
             DialogHelper.alert(
-                    this.activity!!,
+                    this.requireActivity(),
                     getString(R.string.kr_shortcut_create_fail),
                     getString(R.string.kr_ushortcut_nsupported)
             )
@@ -220,11 +220,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     override fun onPickerClick(item: PickerNode, onCompleted: Runnable) {
         if (nodeUnlocked(item)) {
             if (item.confirm) {
-                DialogHelper.warning(activity!!, item.title, item.desc, {
+                DialogHelper.warning(requireActivity(), item.title, item.desc, {
                     pickerExecute(item, onCompleted)
                 })
             } else if (item.warning.isNotEmpty()) {
-                DialogHelper.warning(activity!!, item.title, item.warning, {
+                DialogHelper.warning(requireActivity(), item.title, item.warning, {
                     pickerExecute(item, onCompleted)
                 })
             } else {
@@ -279,7 +279,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 }
                             }
                         }
-                    }).show(activity!!.supportFragmentManager, "picker-item-chooser")
+                    }).show(requireActivity().supportFragmentManager, "picker-item-chooser")
                 } else {
                     Toast.makeText(context, getString(R.string.picker_not_item), Toast.LENGTH_SHORT).show()
                 }
@@ -306,11 +306,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
         if (nodeUnlocked(item)) {
             if (item.confirm) {
-                DialogHelper.warning(activity!!, item.title, item.desc, {
+                DialogHelper.warning(requireActivity(), item.title, item.desc, {
                     actionExecute(item, onCompleted)
                 })
             } else if (item.warning.isNotEmpty() && (item.params == null || item.params?.size == 0)) {
-                DialogHelper.warning(activity!!, item.title, item.warning, {
+                DialogHelper.warning(requireActivity(), item.title, item.warning, {
                     actionExecute(item, onCompleted)
                 })
             } else {
@@ -327,32 +327,32 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
         if (action.params != null) {
             val actionParamInfos = action.params!!
-            if (actionParamInfos.size > 0) {
-                val layoutInflater = LayoutInflater.from(this.context!!)
+            if (actionParamInfos.isNotEmpty()) {
+                val layoutInflater = LayoutInflater.from(this.requireContext())
                 val linearLayout = layoutInflater.inflate(R.layout.kr_params_list, null) as LinearLayout
 
                 val handler = Handler()
-                progressBarDialog.showDialog(this.context!!.getString(R.string.onloading))
+                progressBarDialog.showDialog(this.requireContext().getString(R.string.onloading))
                 Thread {
                     for (actionParamInfo in actionParamInfos) {
                         handler.post {
-                            progressBarDialog.showDialog(this.context!!.getString(R.string.kr_param_load) + if (!actionParamInfo.label.isNullOrEmpty()) actionParamInfo.label else actionParamInfo.name)
+                            progressBarDialog.showDialog(this.requireContext().getString(R.string.kr_param_load) + if (!actionParamInfo.label.isNullOrEmpty()) actionParamInfo.label else actionParamInfo.name)
                         }
                         if (actionParamInfo.valueShell != null) {
                             actionParamInfo.valueFromShell =
                                 executeScriptGetResult(actionParamInfo.valueShell!!, action)
                         }
                         handler.post {
-                            progressBarDialog.showDialog(this.context!!.getString(R.string.kr_param_options_load) + if (!actionParamInfo.label.isNullOrEmpty()) actionParamInfo.label else actionParamInfo.name)
+                            progressBarDialog.showDialog(this.requireContext().getString(R.string.kr_param_options_load) + if (!actionParamInfo.label.isNullOrEmpty()) actionParamInfo.label else actionParamInfo.name)
                         }
                         actionParamInfo.optionsFromShell =
                             getParamOptions(actionParamInfo, action) // 获取参数的可用选项
                     }
                     handler.post {
-                        progressBarDialog.showDialog(this.context!!.getString(R.string.kr_params_render))
+                        progressBarDialog.showDialog(this.requireContext().getString(R.string.kr_params_render))
                     }
                     handler.post {
-                        val render = ActionParamsLayoutRender(linearLayout, activity!!)
+                        val render = ActionParamsLayoutRender(linearLayout, requireActivity())
                         render.renderList(
                             actionParamInfos,
                             object : ParamsFileChooserRender.FileChooserInterface {
@@ -377,8 +377,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 val params = render.readParamsValue(actionParamInfos)
                                 actionExecute(action, script, onExit, params)
                             } catch (ex: Exception) {
-                                Toast.makeText(this.context!!, "" + ex.message, Toast.LENGTH_LONG)
-                                    .show()
+                                Toast.makeText(this.requireContext(),"" + ex.message,Toast.LENGTH_LONG
+                                ).show()
                             }
                         }
 
@@ -410,7 +410,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 }
                             } else {
                                 // AlertDialog.Builder(this.context).create()
-                                DialogHelper.customDialog(activity!!, dialogView).dialog
+                                DialogHelper.customDialog(requireActivity(), dialogView).dialog
                             })
 
                             dialogView.findViewById<TextView>(R.id.title).text = action.title
@@ -425,27 +425,25 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 dialogView.findViewById<TextView>(R.id.warn).text = action.warning
                             }
 
-                            dialogView.findViewById<View>(com.omarea.common.R.id.btn_cancel)
-                                .setOnClickListener {
-                                    try {
-                                        dialog!!.dismiss()
-                                    } catch (ex: java.lang.Exception) {
-                                    }
+                            dialogView.findViewById<View>(com.omarea.common.R.id.btn_cancel).setOnClickListener {
+                                try {
+                                    dialog!!.dismiss()
+                                } catch (ex: java.lang.Exception) {
                                 }
-                            dialogView.findViewById<View>(com.omarea.common.R.id.btn_confirm)
-                                .setOnClickListener {
-                                    try {
-                                        val params = render.readParamsValue(actionParamInfos)
-                                        actionExecute(action, script, onExit, params)
-                                        dialog!!.dismiss()
-                                    } catch (ex: Exception) {
-                                        Toast.makeText(
-                                            this.context!!,
-                                            "" + ex.message,
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
+                            }
+                            dialogView.findViewById<View>(com.omarea.common.R.id.btn_confirm).setOnClickListener {
+                                try {
+                                    val params = render.readParamsValue(actionParamInfos)
+                                    actionExecute(action, script, onExit, params)
+                                    dialog!!.dismiss()
+                                } catch (ex: Exception) {
+                                    Toast.makeText(
+                                        this.requireContext(),
+                                        "" + ex.message,
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                 }
+                            }
                         }
                     }
                 }.start()
@@ -497,14 +495,14 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     private fun executeScriptGetResult(shellScript: String, nodeInfoBase: NodeInfoBase): String {
-        return ScriptEnvironmen.executeResultRoot(this.context!!, shellScript, nodeInfoBase)
+        return ScriptEnvironmen.executeResultRoot(this.requireContext(), shellScript, nodeInfoBase)
     }
 
 
     // 标识是否有隐藏任务在运行中
     var hiddenTaskRunning = false
     private fun actionExecute(nodeInfo: RunnableNode, script: String, onExit: Runnable, params: HashMap<String, String>?) {
-        val context = context!!
+        val context = requireContext()
 
         if (nodeInfo.shell == RunnableNode.shellModeBgTask) {
             val onDismiss = Runnable {
@@ -530,7 +528,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
             val dialog = DialogLogFragment.create(nodeInfo, onExit, onDismiss, script, params, darkMode)
             dialog.isCancelable = false
-            dialog.show(fragmentManager!!, "")
+            dialog.show(requireFragmentManager(), "")
         }
     }
 }
