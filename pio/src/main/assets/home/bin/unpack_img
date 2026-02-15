@@ -242,7 +242,12 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
 else
     if [ "$dang_file" == "super" ];then
     echo -e "$unpack_text_7\n"
-    [ "$dang_tep" == 'amlogic' ] && echo -e "$save_text ${INPUT%/*}/${ten_paion}_amlogic\n" || echo -e "$save_text $INPUT\n"
+        if [ "$dang_tep" == 'amlogic' ];then
+        echo -e "$save_text ${INPUT%/*}/${ten_paion}_amlogic\n"
+        else
+        mv "$file_img" "$INPUT"
+        echo -e "$save_text $INPUT\n"
+        fi
     fi
     echo -e "$unpack_text_6 ${file_img##*/} ($dang_file)\n"
     if [ "$NODECO" == 1 ];then
