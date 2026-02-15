@@ -72,9 +72,9 @@ public class ShellExecutor {
 
     public static Process getSuperUserRuntime() throws IOException {
         try {
-            return Runtime.getRuntime().exec("su");
+            return getProcess("su");
         } catch (IOException e) {
-            return Runtime.getRuntime().exec("sh");
+            return getProcess("sh");
         }
     }
 
