@@ -254,7 +254,7 @@ public class ScriptEnvironmen {
         params.put("PACKAGE_NAME", context.getPackageName());
         params.put("PACKAGE_VERSION_NAME", packageInfo.versionName);
         params.put("PATH_APK", context.getApplicationInfo().sourceDir);
-        params.put("APP_ID", context.getApplicationInfo().packageName);
+        params.put("APP_UID", String.valueOf(android.os.Process.myUid()));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 params.put("PACKAGE_VERSION_CODE", String.valueOf(packageInfo.getLongVersionCode()));
             } else {
