@@ -6,7 +6,10 @@ exit
 fi
 
 if [ "$1" == "-a" ] || [ "$1" == "--am" ] || [ -z "$shell_progres" ];then
-    am broadcast -n com.tool.tree/com.tool.tree.ToastReceiver -a com.tool.tree.SHOW --es text "$2" &>/dev/null
+    if [ "$1" == "-a" ] || [ "$1" == "--am" ]; then
+        shift
+    fi
+    am broadcast -n com.tool.tree/com.tool.tree.ToastReceiver -a com.tool.tree.SHOW --es text "$1" &>/dev/null
 else
     echo "am:[broadcast -n com.tool.tree/com.tool.tree.ToastReceiver -a com.tool.tree.SHOW --es text '$@']"
 fi

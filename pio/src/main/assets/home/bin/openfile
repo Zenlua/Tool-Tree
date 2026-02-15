@@ -3,7 +3,10 @@
 helps(){ echo -e "Use: openfile /path/file.apk \n- Any file it will suggest application to open"; }
 
 if [ "$1" == "-a" ] || [ "$1" == "--am" ] || [ -z "$shell_progres" ];then
-    [ -f "$2" ] && am start -n com.tool.tree/com.tool.tree.OpenFileActivity --es path "$2" &>/dev/null || helps
+    if [ "$1" == "-a" ] || [ "$1" == "--am" ]; then
+        shift
+    fi
+    [ -f "$1" ] && am start -n com.tool.tree/com.tool.tree.OpenFileActivity --es path "$1" &>/dev/null || helps
 elif [ -f "$1" ];then
     echo "am:[start -n com.tool.tree/com.tool.tree.OpenFileActivity --es path '$1']"
 else
