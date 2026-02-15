@@ -34,7 +34,7 @@ while getopts ":i:o:c:l:d:h" opt; do
   esac
 done
 
-if [[ -z "$INPUT" ]] || [[ -z "$OUTPUT" ]] || [[ -z "$CONVER" ]] || [[ ! -f "$INPUT" ]] || [[ ! -d "$OUTPUT" ]]; then
+if [[ -z "$INPUT" ]] || [[ -z "$OUTPUT" ]] || [[ -z "$CONVER" ]]; then
 echo "Incorrect input, output or conversion format, please check again" >&2
 show_help
 fi
