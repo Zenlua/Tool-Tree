@@ -14,8 +14,7 @@ rm -fr "$vnk"
 done
 
 mkdir -p lib log root tmp TREE/ROM TOOL/APK usr
-
-7z a -t7z -y -mx=9 ../module.7z
+tar -cf - * | xz -9e > ../module.tar.xz
 rm -fr ../module
-mv ../module.7z ../module
+mv ../module.tar.xz ../module
 ls -lh ../module
