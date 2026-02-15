@@ -59,7 +59,7 @@ class KeepShell(private var rootMode: Boolean = true) {
             -1
         }
     
-        val isPrivileged = uid == 0 || uid == 1000 || uid == 2000
+        val isPrivileged = uid == 0 // || uid == 1000 || uid == 2000
     
         if (!isPrivileged && rootMode) {
             tryExit()

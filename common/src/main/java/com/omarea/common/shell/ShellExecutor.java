@@ -71,11 +71,7 @@ public class ShellExecutor {
     }
 
     public static Process getSuperUserRuntime() throws IOException {
-        try {
-            return getProcess("su");
-        } catch (IOException e) {
-            return getProcess("sh");
-        }
+        return getProcess("su");
     }
 
     public static Process getRuntime() throws IOException {
