@@ -1,8 +1,15 @@
 # Kakathic
 source language
 
-if [ "$1" == "-q" ];then
-echo "`date +%M:%S -d @$(($(date +%s) - $START_TIME))`"
+now=$(date +%s)
+diff=$((now - START_TIME))
+min=$((diff / 60))
+sec=$((diff % 60))
+
+printf -v time "%02d:%02d" "$min" "$sec"
+
+if [ "$1" = "-q" ]; then
+    echo "$time"
 else
-echo "${checktime}: `date +%M:%S -d @$(($(date +%s) - $START_TIME))`"
+    echo "$checktime: $time"
 fi
