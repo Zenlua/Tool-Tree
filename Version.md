@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.3.3 (15-2-2026)**
+
++ Fix the error
++ Fix the data settings
+
 **Version: 1.3.2 (14-2-2026)**
 
 + Fix notification
