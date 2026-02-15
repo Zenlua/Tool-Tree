@@ -7,7 +7,9 @@ https://www.baidu.com
 "
 
 for url in $urls; do
-  curl -s --connect-timeout 2 --max-time 3 "$url" >/dev/null && exit 0 &
+  if curl -s --connect-timeout 2 --max-time 3 "$url" >/dev/null; then
+    exit 0
+  fi
 done
-wait
+
 exit 1
