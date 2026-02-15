@@ -2,6 +2,7 @@
 
 **Version: 1.3.3 (15-2-2026)**
 
++ Improve performance
 + Fix the error
 + Fix the data settings
 
