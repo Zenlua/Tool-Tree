@@ -21,11 +21,11 @@ fi
 
 show_sett(){
 xml_print '
-<action icon="'`urlpng input_decom`'" shell="hidden" >
+<action icon="'`urlpng input_decom`'" shell="hidden" reload="true">
 <title>'$project_text_1'</title>
-<summary sh="echo -n '"'$folder_text: '"'; glog PTSD | sed '"'s|$SDCARD_PATH|\/sdcard|'"'" />
-<param name="Name" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
-<param name="Folder" value-sh="glog PTSD" type="folder" editable="true" required="true"/>
+<summary>'$folder_text': '${PTSD/$SDCARD_PATH/\/sdcard}'</summary>
+<param name="Name" label="'$setting_text_3'" option-sh="findfile for $SDH" desc="'$sizes_text': '"$(coverbyte $(du -sb $SDH/$PTSH | cut -f1))"'" value-sh="glog PTSH"/>
+<param name="Folder" desc="'$sizes_text': '"$(coverbyte $(du -sb $PTSD | cut -f1))"'" value-sh="glog PTSD" type="folder" editable="true" required="true"/>
 <set>
 if [ ! -d "$Folder" ] || [ ! -d "$SDH/${Folder##*/}" ];then
 slog PTSD "$Folder"
@@ -41,11 +41,11 @@ fi
 
 show_apkset(){
 xml_print '
-<action icon="'`urlpng build_decom`'" shell="hidden" >
+<action icon="'`urlpng build_decom`'" shell="hidden" reload="true">
 <title>'$project_text_2'</title>
-<summary sh="echo -n '"'$folder_text: '"'; glog PTAD | sed '"'s|$SDCARD_PATH|\/sdcard|'"'" />
-<param name="Name" label="'$setting_text_3'" option-sh="findfile for $APK" value-sh="glog PTAH"/>
-<param name="Folder" value-sh="glog PTAD" type="folder" editable="true" required="true"/>
+<summary>'$folder_text': '${PTAD/$SDCARD_PATH/\/sdcard}'</summary>
+<param name="Name" label="'$setting_text_3'" option-sh="findfile for $APK" desc="'$sizes_text': '"$(coverbyte $(du -sb $APK/$PTAH | cut -f1))"'" value-sh="glog PTAH"/>
+<param name="Folder" desc="'$sizes_text': '"$(coverbyte $(du -sb $PTAD | cut -f1))"'" value-sh="glog PTAD" type="folder" editable="true" required="true"/>
 <set>
 if [ ! -d "$Folder" ] || [ ! -d "$APK/${Folder##*/}" ];then
 slog PTAD "$Folder"
@@ -201,6 +201,9 @@ xml_print '<group>
 <page icon="'`urlpng apk_utility`'" config-sh="$ETC/tool-tree.rc Utiliapk">
 <title>'$utilities_text'</title>
 <desc>'$more_text_6'</desc>
+<lock>
+[ -f $LOG/javaww ] && echo "'$boot_text_1'" || echo 0
+</lock>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
 <option type="file" id="v2" suffix="zip" auto-off="true">'$more_text_3'</option>
 <option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apkeditor.jar</option>

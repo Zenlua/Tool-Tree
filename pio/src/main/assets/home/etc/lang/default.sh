@@ -295,8 +295,7 @@ open_activity_text="Open folder:"
 patch_text_fscontex="Disable fs_config and fs_contexts patches"
 
 # boot
-boot_text_1="Java is being installed in the background..."
-boot_text_2="Java installation completed"
+boot_text_1="Java is installing, please reopen after 1-2 minutes..."
 boot_text_3="Debug version"
 boot_text_4="10 minutes of app usage."
 boot_text_5="The debug version can only be used for 10 minutes."

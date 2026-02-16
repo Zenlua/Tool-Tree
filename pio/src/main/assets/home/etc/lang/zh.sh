@@ -292,8 +292,7 @@ open_activity_text="打开文件夹:"
 patch_text_fscontex="禁用 fs_config 和 fs_contexts 补丁"
 
 # boot
-boot_text_1="Java 正在后台安装..."
-boot_text_2="Java 安装完成"
+boot_text_1="Java正在安装，请稍等1-2分钟后重新打开……"
 boot_text_3="调试版本"
 boot_text_4="可使用应用 10 分钟。"
 boot_text_5="调试版本仅允许使用 10 分钟。"

@@ -21,8 +21,8 @@
 - Use in MT Manager
 
 ```shell
-source /data/data/com.tool.tree/files/root/executor.sh
-#. /data/data/com.tool.tree/files/root/executor.sh
+#!/data/data/com.tool.tree/files/home/bin/bash
+. /data/data/com.tool.tree/files/root/executor.sh
 
 java -version
 echo

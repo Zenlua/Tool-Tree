@@ -294,8 +294,7 @@ open_activity_text="Mở thư mục:"
 patch_text_fscontex="Tắt vá fs_config, fs_contexts"
 
 # boot
-boot_text_1="Java đang cài đặt ở chế độ nền..."
-boot_text_2="Java đã cài đặt xong"
+boot_text_1="Java đang cài đặt, mở lại sau 1~2 phút..."
 boot_text_3="Phiên bản gỡ lỗi"
 boot_text_4="10 phút sử dụng ứng dụng."
 boot_text_5="Phiên bản gỡ lỗi chỉ được phép sử dụng trong 10 phút."

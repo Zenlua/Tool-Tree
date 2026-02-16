@@ -294,8 +294,7 @@ open_activity_text="Mappa megnyitása:"
 patch_text_fscontex="Tiltsa le az fs_config és fs_contexts javításokat"
 
 # boot
-boot_text_1="A Java telepítése a háttérben folyamatban van..."
-boot_text_2="A Java telepítése befejeződött"
+boot_text_1="A Java telepítése folyamatban van, kérjük, nyissa meg újra 1-2 perc múlva..."
 boot_text_3="Hibakeresési verzió"
 boot_text_4="10 perc alkalmazáshasználat."
 boot_text_5="A hibakeresési verzió csak 10 percig használható."
