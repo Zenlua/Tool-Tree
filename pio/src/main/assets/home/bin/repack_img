@@ -236,13 +236,12 @@ elif [ "$partition" == "f2fs" ];then
   if [ -f "$info_size" ] && [ "$(cat $info)" == "f2fs" ] && [ "$TTBUILDI" == 0 ];then
   size_real=$(cat $info_size 2>/dev/null);
   size_real="$(echo "$SAINEN * 1024 * 1024 + $size_real" | bc)"
-  truncate -s $size_real "$saved"
   else
   size_orig="$(du -bs "$INPUT" | awk '{ print $1 }')"
   size_real="$(echo "($SAINEN + 6) * 1024 * 1024 + $size_orig" | bc)"
-  truncate -s $size_real "$saved"
   fi
-  if [ -f "$INPUT/${INPUT##*/}/build.prop" ];then
+  truncate -s $size_real "$saved"
+  if [ -f "$INPUT/system/build.prop" ];then
   mount_dir="/"
   cp -rf "$fs_config" "${fs_config}_s"
   cp -rf "$file_contexts" "${file_contexts}_s"
@@ -253,26 +252,22 @@ elif [ "$partition" == "f2fs" ];then
   else
   mount_dir="/${INPUT##*/}"
   fi
-  echo "Partition size: ${size_real}b, $(coverbyte $size_real)"
   if [ "$TTBUILDI" == 0 ];then
   [ -f "$checkro" ] && f2fsrw=0 || f2fsrw=1
   fi
   [ -f "$TMP/make_f2fs.log" ] && rm -fr "$TMP/make_f2fs.log"
   if [ "$f2fsrw" == 1 ];then
-  make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
-  echo " "
-  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" -c "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
+  make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" -c "$saved" 2>&1 | tee $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
   else
-  make_f2fs -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
-  echo " "
-  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" "$saved" 2>$TMP/sload_f2fs.log | tee -a $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
+  make_f2fs -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+  sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" "$saved" 2>&1 | tee $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
   fi
   [ "$(grep -cm1 'Done:' $TMP/sload_f2fs.log)" == 0 ] && killtree "Error build sload_f2fs, Suggestion: Increase free MB, log: $TMP/sload_f2fs.log" "$saved";
-  [ -f "$INPUT/${INPUT##*/}/build.prop" ] && rm -fr "$file_contexts" "$fs_config"
+  [ -f "$INPUT/system/build.prop" ] && rm -f "$file_contexts" "$fs_config"
   echo
 elif [ "$partition" == "ext" ];then
   [ "$DISATFS" == 1 ] || patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
-  [ -f "$INPUT/${INPUT##*/}/build.prop" ] && mount_dir="/" || mount_dir="/${INPUT##*/}"
   size_real=$(cat $info_size 2>/dev/null);
   size_orig="$(du -sb "$INPUT" | awk '{ print $1 }')"
   if test "$size_orig" -le "52428800"; then
@@ -283,7 +278,7 @@ elif [ "$partition" == "ext" ];then
   if [ "$SAINEN" == 0 ] && [ "$(cat $info)" == "ext" ] && [ "$TTBUILDI" == 0 ];then
     if [ "$e2fsdroid" == 1 ];then
     size="$(echo "$size_real / 4096" | bc)";
-    mke2fs -O ^has_journal,^quota,^project,^resize_inode -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "$mount_dir" "$saved" $size 2>&1
+    mke2fs -O ^has_journal -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
     e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved"
     else
     make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" & process_count $size_real "$saved"
@@ -292,7 +287,7 @@ elif [ "$partition" == "ext" ];then
   else
     if [ "$e2fsdroid" == 1 ];then
     size="$(echo "$size_orig / 4096" | bc)";
-    mke2fs -O ^has_journal,^quota,^project,^resize_inode -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "$mount_dir" "$saved" $size 2>&1
+    mke2fs -O ^has_journal -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
     e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_exts.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_exts.log" "$saved"
     else
     make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" & process_count $size_orig "$saved"

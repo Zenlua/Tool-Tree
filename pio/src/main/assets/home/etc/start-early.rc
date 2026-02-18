@@ -1,5 +1,6 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
+source language 2>/dev/null
 # Dọn dẹp tmp
 rm -fr $TMPDIR/* $HOME/cache/* $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
 

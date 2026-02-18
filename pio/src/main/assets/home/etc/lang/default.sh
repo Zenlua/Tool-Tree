@@ -272,7 +272,7 @@ dexopt_app_text_3="If this option is enabled, the application list above will ha
 framework_auto_text="Auto framework import"
 
 # Tính năng
-feature_hide_text="Features On/Off"
+feature_hide_text="Hidden features on/off"
 use_apktool_text="Apktool editor"
 use_network_text="Data network usage required, to continue updating"
 root_warning_text="Please root the device to use this feature"

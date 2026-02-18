@@ -272,7 +272,7 @@ dexopt_app_text_3="Nếu bật lựa chọn này, mục danh sách ứng dụng 
 framework_auto_text="Nhập framework tự động"
 
 # Tính năng
-feature_hide_text="Bật/Tắt tính năng"
+feature_hide_text="Bật/Tắt tính năng ẩn"
 use_apktool_text="Trình chỉnh sửa Apktool"
 use_network_text="Yêu cầu sử dụng mạng dữ liệu, để tiếp tục cập nhật"
 root_warning_text="Vui lòng root để sử dụng tính năng"

@@ -1,12 +1,6 @@
 # Kakathic
 
-if [ -z "$shell_progres" ];then
-    VALUE="$1"; CURRENT=${VALUE%/*}; TOTAL=${VALUE#*/}
-    printf "\rprogress: %s" "$VALUE"
-    if [ "$CURRENT" -ge "$TOTAL" ];then
-    printf "\n"
-    fi
-else
+if [ -n "$shell_progres" ];then
     if [ "$2" ];then
     bodem=0
     while true; do
@@ -24,3 +18,9 @@ else
     echo "For: progress 1/100"
     fi
 fi
+
+#VALUE="$1"; CURRENT=${VALUE%/*}; TOTAL=${VALUE#*/}
+#printf "\rprogress: %s" "$VALUE"
+#if [ "$CURRENT" -ge "$TOTAL" ];then
+#printf "\n"
+#fi

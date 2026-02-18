@@ -140,10 +140,14 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       fi
       #dump.f2fs -r -P -L -f -o "$OUTPUT/${namepv##*/}" "$file_img"
       mkdir -p "$TMP/${namepv##*/}"
-      mount -v -r "$file_img" "$TMP/${namepv##*/}" &>$TMP/unpack_f2fs.log
-      cp -af --preserve=all "$TMP/${namepv##*/}" "$OUTPUT" &>>$TMP/unpack_f2fs.log
+      mount -r "$file_img" "$TMP/${namepv##*/}" &>$TMP/unpack_f2fs.log || {
+      umount -f -l "$TMP/${namepv##*/}" &>>$TMP/unpack_f2fs.log
+      rm -fr "$TMP/${namepv##*/}"
+      killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log"
+      }
       getfscontex.py "$TMP/${namepv##*/}" "$OUTPUT/config" >>$TMP/unpack_f2fs.log
-      umount -v -f -l "$TMP/${namepv##*/}" &>>$TMP/unpack_f2fs.log
+      busybox cp -af "$TMP/${namepv##*/}" "$OUTPUT"
+      umount -f -l "$TMP/${namepv##*/}" &>>$TMP/unpack_f2fs.log
       rm -fr "$TMP/${namepv##*/}"
       echo "$(stat -c%s "$file_img")" > "$OUTPUT/config/${namepv##*/}_size.txt"
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
