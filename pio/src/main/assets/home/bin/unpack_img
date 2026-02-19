@@ -151,6 +151,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
       if [ -f "$OUTPUT/config/${namepv##*/}_fs_config" ];then
       luu_config="$(cat "$OUTPUT/config/${namepv##*/}_fs_config" | awk '{print "system"$0}' | sort)"
+      sed -i "s|s0/|s0\n/|g" "$OUTPUT/config/${namepv##*/}_file_contexts"
       echo "$luu_config" > "$OUTPUT/config/${namepv##*/}_fs_config"
       fi
       echo "$(stat -c%s "$file_img")" > "$OUTPUT/config/${namepv##*/}_size.txt"
