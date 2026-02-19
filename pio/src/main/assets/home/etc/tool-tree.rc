@@ -83,16 +83,21 @@ sum_md5_kk="$(checksum $ETC/lang/$texgg)"
     fi
 fi
 
-# ngôn ngữ
+# Tạo thư mục
+[ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null &
+[ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null &
+
+# Ngôn ngữ
 source language 2>/dev/null
 
-# thông tin
+
+# Thông tin
 text_id_1="\"$(glog show_infor_text_1 'ROOT: $ROOT  |  Android: $ANDROID_RELEASE  -  SDK: $API  |  CPU: $CPU_ABI')\""
 text_id_2="\"$(glog show_infor_text_2 '$trademark_text: $ANDROID_BRAND  |  $device_text: $ANDROID_DEVICE  |  $version_text: $PACKAGE_VERSION_NAME')\""
 [ "$text_id_2" == '""' ] || text_id_3="§§"
 Vip_text_infor="$(eval echo "${text_id_1}${text_id_3}${text_id_2}")"
 
-# check root
+# Check root
 [ "$ROT" == 0 ] && show_root="ROOT"
 
 # Văn bản
@@ -422,12 +427,9 @@ fi
 </group>'
 }
 
-Permissions(){
-true
-}
-
 Project(){
-
+mkdir -p $PTSD &>/dev/null &
+mkdir -p $PTAD &>/dev/null &
 # Thêm group
 echo "<group>"
 show_sett
@@ -796,7 +798,7 @@ checktime
 }
 
 Utilities(){
-mkdir -p $PTSD &>/dev/null &
+[ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null &
 
 if [ "$(glog hide_show 1)" == 1 ];then
     echo "<group>"
@@ -1063,7 +1065,7 @@ checktime
 }
 
 Utiliapk(){
-mkdir -p $PTAD &>/dev/null &
+[ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null &
 
 if [ "$(glog hide_show2 1)" == 1 ];then
     echo "<group>"
@@ -1320,7 +1322,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>
 
 # Lọc hệ thống
 case "$1" in
-    Home|More|Info|Project|Feature|Permissions|Root|Troot|Update|Utilities|Utiliapk|Addon|Apkon|Apex|Apktools|Generate)
+    Home|More|Info|Project|Feature|Root|Troot|Update|Utilities|Utiliapk|Addon|Apkon|Apex|Apktools|Generate)
         "$1"
         ;;
     *)

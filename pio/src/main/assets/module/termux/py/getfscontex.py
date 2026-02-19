@@ -149,8 +149,8 @@ def generate_fs_config_and_contexts(input_dir, output_dir):
     try:
         st_root = os.lstat(input_dir)
         mode_root = f"{stat.S_IMODE(st_root.st_mode):04o}"
-        uid_root = 0
-        gid_root = 0
+        uid_root = st_root.st_uid
+        gid_root = st_root.st_gid
 
         fs_config_entries.append(f"/ {uid_root} {gid_root} {mode_root}")
 
@@ -178,11 +178,19 @@ def generate_fs_config_and_contexts(input_dir, output_dir):
             try:
                 st = os.lstat(path)
                 mode = f"{stat.S_IMODE(st.st_mode):04o}"
-                uid = 0
-                gid = 0
+                uid = st.st_uid
+                gid = st.st_gid
 
                 # fs_config entry uses name/relpath
-                fs_config_entries.append(f"{name}/{rel_path} {uid} {gid} {mode}")
+                if os.path.islink(path):
+                    link_target = os.readlink(path)
+                    fs_config_entries.append(
+                        f"{name}/{rel_path} {uid} {gid} {mode} {link_target}"
+                    )
+                else:
+                    fs_config_entries.append(
+                        f"{name}/{rel_path} {uid} {gid} {mode}"
+                    )
 
                 # If this is a symlink, retrieve symlink's own xattr (do not follow)
                 follow = False
