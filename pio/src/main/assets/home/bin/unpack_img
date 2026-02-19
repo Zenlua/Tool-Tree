@@ -135,28 +135,19 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
     elif [ "$dang_file" == 'f2fs' ];then
-#      if [ "$ROT" == 0 ];then
-#      killtree "Error Unpack: f2fs, $root_warning_text"
-#      fi
-#      mkdir -p "$TMP/${namepv##*/}"
-      #dump.f2fs -r -L -f -o "$OUTPUT/${namepv##*/}" "$file_img"
-#      mount -t f2fs -r "$file_img" "$TMP/${namepv##*/}" &>$TMP/unpack_f2fs.log || {
-#      umount -f -l "$TMP/${namepv##*/}" &>>$TMP/unpack_f2fs.log
-#      rm -fr "$TMP/${namepv##*/}"
-#      killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log"; }
-#      getfscontex.py "$TMP/${namepv##*/}" "$OUTPUT/config" >>$TMP/unpack_f2fs.log
-#      busybox cp -af "$TMP/${namepv##*/}" "$OUTPUT"
-#      umount -f -l "$TMP/${namepv##*/}" &>>$TMP/unpack_f2fs.log
-#      rm -fr "$TMP/${namepv##*/}"
       extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
       if [ -f "$OUTPUT/config/${namepv##*/}_fs_config" ];then
-      luu_config="$(cat "$OUTPUT/config/${namepv##*/}_fs_config" | awk '{print "system"$0}' | sort)"
-      sed -i "s|s0/|s0\n/|g" "$OUTPUT/config/${namepv##*/}_file_contexts"
+      luu_contexts="$(sed -e "s|s0/|s0\n/|g" "$OUTPUT/config/${namepv##*/}_file_contexts" | sort)"
+          if [ -f "$OUTPUT/${namepv##*/}/system/build.prop" ];then
+          luu_config="$(cat "$OUTPUT/config/${namepv##*/}_fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
+          luu_contexts="$(echo "$luu_contexts" | sed -e "s|^/${namepv##*/} u|/${namepv##*/}/ u|")"
+          fi
       echo "$luu_config" > "$OUTPUT/config/${namepv##*/}_fs_config"
+      echo "$luu_contexts" > "$OUTPUT/config/${namepv##*/}_file_contexts"
       fi
       echo "$(stat -c%s "$file_img")" > "$OUTPUT/config/${namepv##*/}_size.txt"
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
-      echo "$(fsck.f2fs "$file_img" | grep 'superblock features' | grep -cm1 ro)" > "$OUTPUT/config/${namepv##*/}_fs_options"
+      echo -n "$(fsck.f2fs "$file_img" | grep 'superblock features' | grep -cm1 ro)" > "$OUTPUT/config/${namepv##*/}_fs_options"
     elif [ "$dang_file" == 'erofs' ];then
       extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$OUTPUT/${namepv##*/}" &
       PIDK=$!
