@@ -84,7 +84,6 @@ saved="$OUTPUT/out/${INPUT##*/}.img"
 info_size="${INPUT%/*}/config/${INPUT##*/}_size.txt"
 kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
 dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
-checkro="${INPUT%/*}/config/${INPUT##*/}_f2fs_ro"
 MKE2FS_CONFIG="$ETC/mke2fs.conf"
 
 if [[ "$(cat $info)" =~ ^(vendor_boot|boot|vbmeta|vbmeta_system|dtbo)$ ]];then
@@ -253,7 +252,7 @@ elif [ "$partition" == "f2fs" ];then
   mount_dir="/${INPUT##*/}"
   fi
   if [ "$TTBUILDI" == 0 ];then
-  [ -f "$checkro" ] && f2fsrw=0 || f2fsrw=1
+  [ "$(cat "$fs_options" 2>/dev/null)" == 1 ] && f2fsrw=0 || f2fsrw=1
   fi
   [ -f "$TMP/make_f2fs.log" ] && rm -fr "$TMP/make_f2fs.log"
   if [ "$f2fsrw" == 1 ];then

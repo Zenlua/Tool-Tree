@@ -127,9 +127,9 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
 "$OUTPUT/config/${namepv##*/}_info" \
 "$OUTPUT/config/${namepv##*/}_file_contexts" \
 "$OUTPUT/config/${namepv##*/}_fs_config" \
+"$OUTPUT/config/${namepv##*/}_fs_options" \
 "$OUTPUT/config/${namepv##*/}_size.txt" \
-"$OUTPUT/config/exception.log" \
-"$OUTPUT/config/${namepv##*/}_f2fs_ro"
+"$OUTPUT/config/exception.log"
 
     if [ "$dang_file" == 'ext' ];then
       imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
@@ -149,9 +149,13 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
 #      umount -f -l "$TMP/${namepv##*/}" &>>$TMP/unpack_f2fs.log
 #      rm -fr "$TMP/${namepv##*/}"
       extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
+      if [ -f "$OUTPUT/config/${namepv##*/}_fs_config" ];then
+      luu_config="$(cat "$OUTPUT/config/${namepv##*/}_fs_config" | awk '{print "system"$0}' | sort)"
+      echo "$luu_config" > "$OUTPUT/config/${namepv##*/}_fs_config"
+      fi
       echo "$(stat -c%s "$file_img")" > "$OUTPUT/config/${namepv##*/}_size.txt"
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
-      echo "$(fsck.f2fs "$file_img" | grep 'superblock features' | grep -cm1 ro)" > "$OUTPUT/config/${namepv##*/}_f2fs_ro"
+      echo "$(fsck.f2fs "$file_img" | grep 'superblock features' | grep -cm1 ro)" > "$OUTPUT/config/${namepv##*/}_fs_options"
     elif [ "$dang_file" == 'erofs' ];then
       extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$OUTPUT/${namepv##*/}" &
       PIDK=$!
