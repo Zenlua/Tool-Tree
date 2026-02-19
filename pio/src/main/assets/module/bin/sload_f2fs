@@ -1,0 +1,3 @@
+# Copy by DNA
+cd "$START_DIR"
+exec $TERMUX/lib/theft/sload_f2fs "$@"
