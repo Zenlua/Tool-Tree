@@ -3,7 +3,7 @@
 
 source language
 show_help() {
-  echo "Usage: apktool_decode -i <input> -o <output> <flags>"
+  echo "Usage: apktool_d -i <input> -o <output> <flags>"
   echo
   echo "  -i    input path"
   echo "  -o    output path"

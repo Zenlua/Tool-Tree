@@ -26,7 +26,7 @@ if [ "$?" == 0 ];then
         taive_path_file="$(checkname "$taive_path_kk")"
         fi
     (
-    Taive "$1" "$taive_path_file"
+    taive "$1" "$taive_path_file"
     [ "$?" == 0 ] || checkdone="$?"
     )&
     PIDK=$!

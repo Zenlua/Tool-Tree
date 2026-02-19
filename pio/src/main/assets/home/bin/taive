@@ -1,6 +1,8 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
+
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-echo "Xem http://file.txt"
+echo "taive http://file.zip path/save.zip"
 exit
 fi
-curl -s -G -L -H "$WEBS" "$@"
+
+curl -L -H "$WEBS" "$1" -o "$2"

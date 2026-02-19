@@ -2,7 +2,7 @@
 
 source language
 show_help() {
-  echo "Usage: apex_editor -i <input> -o <output> <flags>"
+  echo "Usage: apexeditor -i <input> -o <output> <flags>"
   echo
   echo "  -i    input path"
   echo "  -o    output path"
@@ -30,8 +30,8 @@ show_help() {
   echo "            ext4: create partitions with ext4"
   echo "            erofs: create partitions with erofs"
   echo "            f2fs: create partitions with f2fs"
-  echo "  sample: apex_editor -s decom -i path/file.[apex,capex] -o path/dir"
-  echo "  sample: apex_editor -s build -f auto -a auto -k com.android.example.apex -c 0 -d 0 -i path/dir -o path/dir"
+  echo "  sample: apexeditor -s decom -i path/file.[apex,capex] -o path/dir"
+  echo "  sample: apexeditor -s build -f auto -a auto -k com.android.example.apex -c 0 -d 0 -i path/dir -o path/dir"
   echo "  -h    show help"
   exit 1
 }

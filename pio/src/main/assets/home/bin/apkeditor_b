@@ -3,7 +3,7 @@
 
 source language
 show_help() {
-  echo "Usage: apkeditor_build -i <input> -o <output> <flags>"
+  echo "Usage: apkeditor_b -i <input> -o <output> <flags>"
   echo
   echo "  -i    input file"
   echo "  -o    output path"

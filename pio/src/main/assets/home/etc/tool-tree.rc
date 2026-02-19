@@ -19,13 +19,14 @@ if [ "$(glog Ticon)" != 1 ];then
 fi
 }
 
+
 show_sett(){
 xml_print '
 <action icon="'`urlpng input_decom`'" shell="hidden" reload="true">
 <title>'$project_text_1'</title>
 <summary>'$folder_text': '${PTSD/$SDCARD_PATH/\/sdcard}'</summary>
-<param name="Name" label="'$setting_text_3'" option-sh="findfile for $SDH" desc="'$sizes_text': '"$(coverbyte $(du -sb $SDH/$PTSH | cut -f1))"'" value-sh="glog PTSH"/>
-<param name="Folder" desc="'$sizes_text': '"$(coverbyte $(du -sb $PTSD | cut -f1))"'" value-sh="glog PTSD" type="folder" editable="true" required="true"/>
+<param name="Name" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
+<param name="Folder" value-sh="glog PTSD" type="folder" editable="true" required="true"/>
 <set>
 if [ ! -d "$Folder" ] || [ ! -d "$SDH/${Folder##*/}" ];then
 slog PTSD "$Folder"
@@ -44,8 +45,8 @@ xml_print '
 <action icon="'`urlpng build_decom`'" shell="hidden" reload="true">
 <title>'$project_text_2'</title>
 <summary>'$folder_text': '${PTAD/$SDCARD_PATH/\/sdcard}'</summary>
-<param name="Name" label="'$setting_text_3'" option-sh="findfile for $APK" desc="'$sizes_text': '"$(coverbyte $(du -sb $APK/$PTAH | cut -f1))"'" value-sh="glog PTAH"/>
-<param name="Folder" desc="'$sizes_text': '"$(coverbyte $(du -sb $PTAD | cut -f1))"'" value-sh="glog PTAD" type="folder" editable="true" required="true"/>
+<param name="Name" label="'$setting_text_3'" option-sh="findfile for $APK" value-sh="glog PTAH"/>
+<param name="Folder" value-sh="glog PTAD" type="folder" editable="true" required="true"/>
 <set>
 if [ ! -d "$Folder" ] || [ ! -d "$APK/${Folder##*/}" ];then
 slog PTAD "$Folder"
@@ -126,10 +127,10 @@ xml_print '<group>
 if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
 elif [ "$menu_id" == "v2" ];then
-[ "$(pm list packages bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
+[ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
 echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTSD#$SDCARD_PATH}']"
 elif [ "$menu_id" == "v3" ];then
-[ "$(pm list packages bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
+[ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
 echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$SDH'/'$PTSH']"
 fi
 </handler>
@@ -228,10 +229,10 @@ echo "'$more_text_4' $file"
 echo
 cp -rf "$file" $ETC/apkeditor.jar || killtree "File copy error"
 elif [ "$menu_id" == "v4" ];then
-[ "$(pm list packages bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
+[ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
 echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTAD#$SDCARD_PATH}']"
 elif [ "$menu_id" == "v5" ];then
-[ "$(pm list packages bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
+[ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
 echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$APK'/'$PTAH']"
 fi
 </handler>
@@ -397,7 +398,7 @@ xml_print '<group>
 <title>'$update_text'</title>
 <set>
 showtoast "'$update_text_2'"
-data_json="$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
+data_json="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
 websum="$(echo "$data_json" | jq -r .assets[0].digest | cut -d: -f2)"
 name_apk="$(echo "$data_json" | jq -r .name)"
 if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]];then
@@ -408,7 +409,7 @@ if [[ "$websum" != "$(checksum "$PATH_APK")" ]];then
 sleep 1
 showtoast "'$update_text_3'"
 sleep 2
-downloadb "$(Xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true 2>/dev/null
+downloadb "$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true 2>/dev/null
 sleep 1
     if [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]];then
     cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
@@ -976,7 +977,7 @@ IFS=$'"'\n'"'
     slog mutiresk "$mutiresk"
     slog xoa_debug_info "$xoa_debug_info"
 for vapk in $FILE; do
-apktool_decode -i "$PTAD/$vapk" -r "$mutiresk" -b "$xoa_debug_info" -d "$dexlibk" -o "$APK/$PTAH"
+apktool_d -i "$PTAD/$vapk" -r "$mutiresk" -b "$xoa_debug_info" -d "$dexlibk" -o "$APK/$PTAH"
 echo
 done
 echo "'$save_text' $APK/$PTAH"
@@ -999,7 +1000,7 @@ slog xoatm "$xoatm"
 slog copysign "$copysign"
 IFS=$'"'\n'"'
 for vbapk in $FOLDER; do
-apktool_build -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm"
+apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm"
 echo
 done
 echo "'$save_text' $PTAD/out"
@@ -1029,7 +1030,7 @@ xml_print '
 <set>
 IFS=$'"'\n'"'
 for vv in $FILE; do
-apex_editor -s decom -i "$PTAD/$vv" -o "$APK/$PTAH"
+apexeditor -s decom -i "$PTAD/$vv" -o "$APK/$PTAH"
 echo
 done
 echo "'$save_text' $APK/$PTAH"
@@ -1054,7 +1055,7 @@ slog payload_type "$payload_type"
 slog signs_apex "$SIGNS"
 IFS=$'"'\n'"'
 for vv in $FILE; do
-apex_editor -s build -f "$payload_type" -k "$SIGNS" -a "$APIs" -c "$nen_apex" -d "$gobo_apex" -i "$APK/$PTAH/$vv" -o "$PTAD/out"
+apexeditor -s build -f "$payload_type" -k "$SIGNS" -a "$APIs" -c "$nen_apex" -d "$gobo_apex" -i "$APK/$PTAH/$vv" -o "$PTAD/out"
 echo
 done
 echo "'$save_text' $PTAD/out"
@@ -1096,7 +1097,7 @@ slog xoa_debug_info "$xoa_debug_info"
 slog type_apk "$type_apk"
 IFS=$'"'\n'"'
 for vapk in $FILE; do
-apkeditor_decode -i "$PTAD/$vapk" -t "$type_apk" -b "$xoa_debug_info" -d "$dexlib" -o "$APK/$PTAH"
+apkeditor_d -i "$PTAD/$vapk" -t "$type_apk" -b "$xoa_debug_info" -d "$dexlib" -o "$APK/$PTAH"
 echo
 done
 echo "'$save_text' $APK/$PTAH"
@@ -1119,7 +1120,7 @@ slog sstring "$sstring"
 slog xoatm "$xoatm"
 IFS=$'"'\n'"'
 for vbapk in $FOLDER; do
-apkeditor_build -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib"
+apkeditor_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib"
 echo
 done
 echo "'$save_text' $PTAD/out"
