@@ -15,15 +15,18 @@ case "$1" in
     ;;
 
   1)
-    for vv in $(ls -1d *.img *.dat *.zstd *.zst *.br); do
+    for vv in $(ls -1d *.*); do
+      # *.img *.dat *.zstd *.zst *.br
       [[ -s "$vv" && -f "$vv" ]] || continue
       type=$(checktype "$vv")
-      echo "$vv|$vv ($type)" | grep -E '\(super\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(br\)'
+      echo "$vv|$vv ($type)"
+      # | grep -E '\(super\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(br\)'
     done
     ;;
 
   2)
-    for vv in $(ls -1d *.img *.zstd *.zst *.br *.dat *.bin *.zip); do
+    for vv in $(ls -1d *.*); do
+      # *.img *.zstd *.zst *.br *.dat *.bin *.zip
       [[ -s "$vv" && -f "$vv" ]] || continue
       type=$(checktype "$vv")
       case "$type" in
@@ -39,7 +42,8 @@ case "$1" in
           [ -n "$Listzipne" ] && echo "$Listzipne" | awk -v f="$vv" '{print $1"="f"|ZipRom - "$1" ("$2")"}' | sed '/\(0B\)/d'
           ;;
         *)
-          echo "$vv|$vv ($type)" | grep -E '\(squashfs\)|\(amlogic\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(zst\)|\(dtbo\)|\(super\)|\(br\)|\(boot\)|\(logo\)|\(vendor_boot\)|\(vbmeta(_system)?\)'
+          echo "$vv|$vv ($type)"
+          # | grep -E '\(squashfs\)|\(amlogic\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(zst\)|\(dtbo\)|\(super\)|\(br\)|\(boot\)|\(logo\)|\(vendor_boot\)|\(vbmeta(_system)?\)'
           ;;
       esac
     done

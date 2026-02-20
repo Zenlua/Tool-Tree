@@ -239,7 +239,7 @@ mkdir -p "$in_name" $OUTPUT/config
     elif [ "$dang_file" == 'squashfs' ];then
         [ "$ROT" == 0 ] && killtree "Error Unpack: squashfs, $root_warning_text"
         unsquashfs -s "$file_img" &> "$fs_options"
-        unsquashfs -f -d "$in_name" "$file_img" >$TMP/unsquashfs.log
+        unsquashfs -f -d "$in_name" "$file_img" >$TMP/unsquashfs.log || killtree "\nunsquashfs error: ${namepv##*/}" "$in_name" &
         PIDK=$!
         while kill -0 $PIDK 2>/dev/null; do
         if [ -f $TMP/unsquashfs.log ];then

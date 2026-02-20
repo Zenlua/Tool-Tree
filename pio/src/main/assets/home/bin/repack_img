@@ -235,7 +235,7 @@ elif [ "$partition" == "squashfs" ];then
     [ -z "$loai_block" ] && loai_block=131072
     loai_attrs="$(grep -cm1 '^Xattrs are compressed' "$fs_options")"
     [ -z "$loai_attrs" ] || loai_attrs='-xattrs'
-    mksquashfs "$INPUT" "${saved%.*}.squashfs" -comp "$loai_nen" -b $loai_block -Xdict-size 100% $loai_attrs -noappend >$TMP/mksquashfs.log &
+    mksquashfs "$INPUT" "${saved%.*}.squashfs" -comp "$loai_nen" -b $loai_block -Xdict-size 100% $loai_attrs -noappend >$TMP/mksquashfs.log || killtree "\nError build process mksquashfs, log: $TMP/mksquashfs.log" "${saved%.*}.squashfs" &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
     if [ -f $TMP/mksquashfs.log ];then
