@@ -285,12 +285,14 @@ apex_text="Редактор Apex"
 apex_text_1="Сжать вершину в вершину."
 apex_text_2="Поддержка файлов: apex, capex"
 
+# other
 build_time_text_1="Время сборки ROM"
 build_time_text_2="Автоматически: 0, можно изменить, например: 1766318047"
-
 xoaoat_text_1="Очистить элементы oat и odex"
 open_activity_text="Открыть папку:"
 patch_text_fscontex="Отключите патчи fs_config и fs_contexts"
+config_text_1="Преобразовать проект"
+config_text_2="Создать или выбрать папку"
 
 # boot
 boot_text_1="Идет установка Java, пожалуйста, откройте приложение через 1-2 минуты..."

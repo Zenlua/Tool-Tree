@@ -292,6 +292,8 @@ build_time_text_2="Tự động: 0, có thể thay đổi ví dụ: 1766318047"
 xoaoat_text_1="Dọn dẹp mục oat và odex"
 open_activity_text="Mở thư mục:"
 patch_text_fscontex="Tắt vá fs_config, fs_contexts"
+config_text_1="Chuyển đổi dự án"
+config_text_2="Tạo hoặc chọn thư mục"
 
 # boot
 boot_text_1="Java đang cài đặt, mở lại sau 1~2 phút..."

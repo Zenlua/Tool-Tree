@@ -251,6 +251,7 @@ mkdir -p "$in_name" $OUTPUT/config
         fi
         sleep 1
         done
+        progress -1/0
         echo "$dang_file" > $info
     else
     rm -fr "$in_name"

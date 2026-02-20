@@ -286,13 +286,14 @@ apex_text="Apex editor"
 apex_text_1="Compress apex into capex"
 apex_text_2="File support: apex, capex"
 
-build_time_text_1="ROM build time"
-build_time_text_2="Automatic: 0, can be changed, for example: 1766318047"
-
 # other
 xoaoat_text_1="Clean oat and odex entries"
 open_activity_text="Open folder:"
 patch_text_fscontex="Disable fs_config and fs_contexts patches"
+build_time_text_1="ROM build time"
+build_time_text_2="Automatic: 0, can be changed, for example: 1766318047"
+config_text_1="Convert project"
+config_text_2="Create or select folder"
 
 # boot
 boot_text_1="Java is installing, please reopen after 1-2 minutes..."

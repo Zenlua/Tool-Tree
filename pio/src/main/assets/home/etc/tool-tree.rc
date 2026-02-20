@@ -25,8 +25,8 @@ xml_print '
 <action icon="'`urlpng input_decom`'" shell="hidden" reload="true">
 <title>'$project_text_1'</title>
 <summary>'$folder_text': '${PTSD/$SDCARD_PATH/\/sdcard}'</summary>
-<param name="Name" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
-<param name="Folder" value-sh="glog PTSD" type="folder" editable="true" required="true"/>
+<param name="Name" desc="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
+<param name="Folder" desc="'$config_text_2'" value-sh="glog PTSD" type="folder" editable="true" required="true"/>
 <set>
 if [ ! -d "$Folder" ] || [ ! -d "$SDH/${Folder##*/}" ];then
 slog PTSD "$Folder"
@@ -45,8 +45,8 @@ xml_print '
 <action icon="'`urlpng build_decom`'" shell="hidden" reload="true">
 <title>'$project_text_2'</title>
 <summary>'$folder_text': '${PTAD/$SDCARD_PATH/\/sdcard}'</summary>
-<param name="Name" label="'$setting_text_3'" option-sh="findfile for $APK" value-sh="glog PTAH"/>
-<param name="Folder" value-sh="glog PTAD" type="folder" editable="true" required="true"/>
+<param name="Name" desc="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $APK" value-sh="glog PTAH"/>
+<param name="Folder" desc="'$config_text_2'" value-sh="glog PTAD" type="folder" editable="true" required="true"/>
 <set>
 if [ ! -d "$Folder" ] || [ ! -d "$APK/${Folder##*/}" ];then
 slog PTAD "$Folder"

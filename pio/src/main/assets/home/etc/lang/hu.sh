@@ -286,12 +286,14 @@ apex_text="Apex szerkesztő"
 apex_text_1="Az apex sűrítése capex-be"
 apex_text_2="Fájltámogatás: apex, capex"
 
+# other
 build_time_text_1="ROM build ideje"
 build_time_text_2="Automatikus: 0, módosítható, például: 1766318047"
-
 xoaoat_text_1="Bejegyzések törlése oat és odex"
 open_activity_text="Mappa megnyitása:"
 patch_text_fscontex="Tiltsa le az fs_config és fs_contexts javításokat"
+config_text_1="Projekt átalakítása"
+config_text_2="Mappa létrehozása vagy kiválasztása"
 
 # boot
 boot_text_1="A Java telepítése folyamatban van, kérjük, nyissa meg újra 1-2 perc múlva..."

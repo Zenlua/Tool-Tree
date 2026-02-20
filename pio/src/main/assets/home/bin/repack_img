@@ -158,6 +158,8 @@ progress -1/0
 
 if [ "$partition" == "erofs" ];then
   [ "$DISATFS" == 1 ] || patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
+  echo -e "$config_text: Threads $threads, Level $zlsize, Type $NENEROFS, Time $time_build"
+  echo
   mkfs.erofs --quiet -T $time_build --workers=$threads -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" 2>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved"
   echo
 elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
@@ -235,6 +237,7 @@ elif [ "$partition" == "squashfs" ];then
     [ -z "$loai_block" ] && loai_block=131072
     loai_attrs="$(grep -cm1 '^Xattrs are compressed' "$fs_options")"
     [ -z "$loai_attrs" ] || loai_attrs='-xattrs'
+    echo "$config_text: Compression $loai_nen, Block size $loai_block $loai_attrs"
     mksquashfs "$INPUT" "${saved%.*}.squashfs" -comp "$loai_nen" -b $loai_block -Xdict-size 100% $loai_attrs -noappend >$TMP/mksquashfs.log || killtree "\nError build process mksquashfs, log: $TMP/mksquashfs.log" "${saved%.*}.squashfs" &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
@@ -247,6 +250,8 @@ elif [ "$partition" == "squashfs" ];then
     fi
     sleep 1
     done
+    progress -1/0
+    echo
 elif [ "$partition" == "f2fs" ];then
   [ "$DISATFS" == 1 ] || patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
   if [ -f "$info_size" ] && [ "$(cat $info)" == "f2fs" ] && [ "$TTBUILDI" == 0 ];then
