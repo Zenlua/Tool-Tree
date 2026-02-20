@@ -60,6 +60,22 @@ fi
 </action>'
 }
 
+show_config(){
+xml_print '<group>
+<action icon="'`urlpng write_setting`'">
+<title>'$config_text'</title>
+<param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" title="'$builds_text_5'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar"/>
+<param name="nen_br" required="true" value-sh="glog nen_br 8" label="'$builds_text_4'" type="seekbar" min="0" max="22" title="'$convert_text_1'" desc="'$convert_text_2'"/>
+<param name="build_time" label="'$time_text'" value-sh="glog build_time 0" type="number" title="'$build_time_text_1'" desc="'$build_time_text_2'" required="required" />
+<set>
+slog muc_nen "$muc_nen"
+slog nen_br "$nen_br"
+slog build_time "$build_time"
+</set>
+</action>
+</group>'
+}
+
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ];then
 [ -f $ETC/lang/$LANGUAGE.sh ] && texgg="$LANGUAGE.sh" || texgg=vi.sh
@@ -91,7 +107,6 @@ fi
 # Ngôn ngữ
 source language 2>/dev/null
 
-
 # Thông tin
 text_id_1="\"$(glog show_infor_text_1 'ROOT: $ROOT  |  Android: $ANDROID_RELEASE  -  SDK: $API  |  CPU: $CPU_ABI')\""
 text_id_2="\"$(glog show_infor_text_2 '$trademark_text: $ANDROID_BRAND  |  $device_text: $ANDROID_DEVICE  |  $version_text: $PACKAGE_VERSION_NAME')\""
@@ -120,12 +135,15 @@ xml_print '<group>
 <page icon="'`urlpng utilities`'" config-sh="$ETC/tool-tree.rc Utilities">
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
+<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' ROM</option>
+<option type="default" id="v4" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $config_text'</option>
 <option type="default" id="v2" auto-off="true" interruptible="false" >'$open_activity_text' ROM</option>
 <option type="default" id="v3" auto-off="true" interruptible="false" >'$open_activity_text' (data-root)</option>
 <handler>
 if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
+elif [ "$menu_id" == "v4" ];then
+[ "$(glog hide_show_config)" == 1 ] && slog hide_show_config 0 || slog hide_show_config 1
 elif [ "$menu_id" == "v2" ];then
 [ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
 echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTSD#$SDCARD_PATH}']"
@@ -210,7 +228,7 @@ xml_print '<group>
 <lock>
 [ -f $LOG/javaww ] && echo "'$boot_text_1'" || echo 0
 </lock>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
+<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
 <option type="file" id="v2" suffix="zip" auto-off="true">'$more_text_3'</option>
 <option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apkeditor.jar</option>
 <option type="default" id="v4" auto-off="true" interruptible="false" >'$open_activity_text' APK</option>
@@ -429,8 +447,8 @@ fi
 }
 
 Project(){
-mkdir -p $PTSD &>/dev/null &
-mkdir -p $PTAD &>/dev/null &
+mkdir -p $PTSD/out &>/dev/null &
+mkdir -p $PTAD/out &>/dev/null &
 # Thêm group
 echo "<group>"
 show_sett
@@ -447,22 +465,9 @@ rm -fr "$vl"
 done
 </set>
 </action>
-</group>
-
-<group>
-<action icon="'`urlpng write_setting`'">
-<title>'$config_text'</title>
-<param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" title="'$builds_text_5'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar"/>
-<param name="nen_br" required="true" value-sh="glog nen_br 8" label="'$builds_text_4'" type="seekbar" min="0" max="22" title="'$convert_text_1'" desc="'$convert_text_2'"/>
-<param name="build_time" label="'$time_text'" value-sh="glog build_time 0" type="number" title="'$build_time_text_1'" desc="'$build_time_text_2'" required="required" />
-<set>
-slog muc_nen "$muc_nen"
-slog nen_br "$nen_br"
-slog build_time "$build_time"
-</set>
-</action>
 </group>'
 
+show_config
 }
 
 Feature(){
@@ -810,6 +815,7 @@ else
     desc_rom1="$projects_text: $PTSH"
 fi
 
+[ "$(glog hide_show_config 0)" == 1 ] && show_config
 xml_print '<group>
 <action icon="'`urlpng decode_img`'" desc="'$desc_rom'">
 <title>'$decompile_text'</title>
@@ -870,7 +876,7 @@ checktime
 <group>
 <page icon="'`urlpng generate`'" config-sh="$ETC/tool-tree.rc Generate">
 <title>'$synthetic_text'</title>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
+<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' ROM</option>
 <handler>
 if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show_generate)" == 1 ] && slog hide_show_generate 0 || slog hide_show_generate 1
@@ -1132,7 +1138,7 @@ checktime
 <group>
 <page icon="'`urlpng use_apktool`'" config-sh="$ETC/tool-tree.rc Apktools" >
 <title>'$use_apktool_text'</title>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
+<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
 <option type="default" id="v2" >'$framework_auto_text'</option>
 <option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apktool.jar</option>
 <option type="file" id="v4" suffix="apk" auto-off="true">'$more_text_10' framework</option>
@@ -1168,7 +1174,7 @@ fi
 <group>
 <page icon="'`urlpng apex`'" config-sh="$ETC/tool-tree.rc Apex" >
 <title>'$apex_text'</title>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$feature_hide_text'</option>
+<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
 <handler>
 if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show_apex)" == 1 ] && slog hide_show_apex 0 || slog hide_show_apex 1

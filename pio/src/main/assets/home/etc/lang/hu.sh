@@ -292,8 +292,8 @@ build_time_text_2="Automatikus: 0, módosítható, például: 1766318047"
 xoaoat_text_1="Bejegyzések törlése oat és odex"
 open_activity_text="Mappa megnyitása:"
 patch_text_fscontex="Tiltsa le az fs_config és fs_contexts javításokat"
-config_text_1="Projekt átalakítása"
-config_text_2="Mappa létrehozása vagy kiválasztása"
+config_text_1="Meglévő projekt átalakítása"
+config_text_2="Új projekt létrehozása vagy mappa kiválasztása"
 
 # boot
 boot_text_1="A Java telepítése folyamatban van, kérjük, nyissa meg újra 1-2 perc múlva..."
