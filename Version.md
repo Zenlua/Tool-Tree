@@ -1,5 +1,11 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.3.4 (xx-2-2026)**
+
++ Code optimization
++ Revise f2fs extraction and f2fs packaging.
++ Fix minor bugs
+
 **Version: 1.3.3 (16-2-2026)**
 
 + Re-released version 1.3.3 with bug fixes.

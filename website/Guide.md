@@ -26,9 +26,9 @@
 
 java -version
 echo
-apkeditor_decode
+apkeditor_d
 echo
-apkeditor_build
+apkeditor_b
 echo
 unpack_img
 echo

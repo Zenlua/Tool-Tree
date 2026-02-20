@@ -4,9 +4,9 @@
 export PROOT_LOADER=$HOME/libexec/proot/loader
 export PROOT_LOADER_32=$HOME/libexec/proot/loader32
 export PROOT_TMP_DIR="$TMP"
-export PATH="$START_DIR/home/bin:$TERMUX/bin:$PATH"
+export PATH="$PATH"
 
-ADGS="proot -0 -H -r $HOME -w / -b $START_DIR/home/bin:/bin -b $TMP:/tmp"
+ADGS="proot -0 -H -r $(pwd) -w / -b $TMP:/tmp"
 
 if [ "$ISLITE" == 'true' ];then
 LIST_XU="system data storage apex proc property_contexts linkerconfig/ld.config.txt"
@@ -18,4 +18,4 @@ for i in $LIST_XU; do
 [ -e /$i ] && ADGS+=" -b /$i"
 done
 
-exec $ADGS $START_DIR/home/bin/env "$@"
+exec $ADGS $BIN/env "$@"

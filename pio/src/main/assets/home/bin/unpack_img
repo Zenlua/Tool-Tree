@@ -147,7 +147,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       fi
       echo "$(stat -c%s "$file_img")" > "$OUTPUT/config/${namepv##*/}_size.txt"
       echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
-      echo -n "$(fsck.f2fs "$file_img" | grep 'superblock features' | grep -cm1 ro)" > "$OUTPUT/config/${namepv##*/}_fs_options"
+      fsck.f2fs "$file_img" &> "$OUTPUT/config/${namepv##*/}_fs_options"
     elif [ "$dang_file" == 'erofs' ];then
       extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$OUTPUT/${namepv##*/}" &
       PIDK=$!
@@ -222,18 +222,34 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       echo
       fi
     elif [ "$dang_file" == 'dtbo' ];then
-      echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
-      cd "$OUTPUT/${namepv##*/}"
-      dtbo dump "$file_img" -b dtb &>$TMP/dtbo.log
-      mkdir -p cache
-      for dtbo in $(ls -t dtb.* | sort -n -t . -k 2);do
-        echo "Decode: $dtbo"
-        dtc -q -@ -I dtb -O dts -o dts.${dtbo##*.} $dtbo
-        [ "$?" != 0 ] && killtree "$unpack_text_5 $dtbo"
-        mv $dtbo cache/$dtbo
-        checksum dts.${dtbo##*.} > cache/md5_dts.${dtbo##*.}
-      done
-      echo
+        echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
+        cd "$OUTPUT/${namepv##*/}"
+        dtbo dump "$file_img" -b dtb &>$TMP/dtbo.log
+        mkdir -p cache
+            for dtbo in $(ls -t dtb.* | sort -n -t . -k 2);do
+            echo "Decode: $dtbo"
+            dtc -q -@ -I dtb -O dts -o dts.${dtbo##*.} $dtbo
+            [ "$?" != 0 ] && killtree "$unpack_text_5 $dtbo"
+            mv $dtbo cache/$dtbo
+            checksum dts.${dtbo##*.} > cache/md5_dts.${dtbo##*.}
+            done
+        echo
+    elif [ "$dang_file" == 'squashfs' ];then
+        [ "$ROT" == 0 ] && killtree "Error Unpack: squashfs, $root_warning_text"
+        unsquashfs -s "$file_img" &> "$OUTPUT/config/${namepv##*/}_fs_options"
+        unsquashfs -f -d "$OUTPUT/squashfs-root" "$file_img" >$TMP/unsquashfs.log
+        PIDK=$!
+        while kill -0 $PIDK 2>/dev/null; do
+        if [ -f $TMP/unsquashfs.log ];then
+        number_kk="$(sed 's/[\r\t]/\n/g' $TMP/unsquashfs.log | sed -n 's/.* \([0-9]\+\)%$/\1/p' | tail -n 1)"
+          if [ "$number_kk" ];then
+          [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
+          save_num="$number_kk"
+          fi
+        fi
+        sleep 1
+        done
+        echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
     else
     rm -fr "$OUTPUT/${namepv##*/}"
     echo -e "$unpack_text_8 ${file_img##*/} ($dang_file)\n" >&2
@@ -241,7 +257,7 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
     [ -d "$OUTPUT/${namepv##*/}" ] && echo -e "$save_text $OUTPUT/${namepv##*/}\n"
 else
     if [ "$dang_file" == "super" ];then
-    echo -e "$unpack_text_7\n"
+        echo -e "$unpack_text_7\n"
         if [ "$dang_tep" == 'amlogic' ];then
         echo -e "$save_text ${INPUT%/*}/${ten_paion}_amlogic\n"
         else

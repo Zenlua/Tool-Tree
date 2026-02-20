@@ -227,6 +227,26 @@ elif [ "$partition" = "dtbo" ];then
   rm -fr dtb.*
   cp -f dtbo.img "$saved"
   echo
+elif [ "$partition" == "squashfs" ];then
+    [ "$ROT" == 0 ] && killtree "Error build: squashfs, $root_warning_text"
+    loai_nen="$(grep '^Compression' "$fs_options" | awk '{print $2}')"
+    [ -z "$loai_nen" ] && loai_nen='xz'
+    loai_block="$(grep '^Block size' "$fs_options" | awk '{print $3}')"
+    [ -z "$loai_block" ] && loai_block=131072
+    loai_attrs="$(grep -cm1 '^Xattrs are compressed' "$fs_options")"
+    [ -z "$loai_attrs" ] || loai_attrs='-xattrs'
+    mksquashfs "$INPUT" "${saved%.*}.squashfs" -comp "$loai_nen" -b $loai_block -Xdict-size 100% $loai_attrs -noappend >$TMP/mksquashfs.log &
+    PIDK=$!
+    while kill -0 $PIDK 2>/dev/null; do
+    if [ -f $TMP/mksquashfs.log ];then
+    number_kk="$(sed 's/[\r\t]/\n/g' $TMP/mksquashfs.log | sed -n 's/.* \([0-9]\+\)%$/\1/p' | tail -n 1)"
+      if [ "$number_kk" ];then
+      [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
+      save_num="$number_kk"
+      fi
+    fi
+    sleep 1
+    done
 elif [ "$partition" == "f2fs" ];then
   [ "$DISATFS" == 1 ] || patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
   if [ -f "$info_size" ] && [ "$(cat $info)" == "f2fs" ] && [ "$TTBUILDI" == 0 ];then
@@ -249,7 +269,7 @@ elif [ "$partition" == "f2fs" ];then
   mount_dir="/${INPUT##*/}"
   fi
   if [ "$TTBUILDI" == 0 ];then
-  [ "$(cat "$fs_options" 2>/dev/null)" == 1 ] && f2fsrw=0 || f2fsrw=1
+  [ "$(cat "$fs_options" 2>/dev/null | grep 'superblock features' | grep -cm1 ro)" == 1 ] && f2fsrw=0 || f2fsrw=1
   fi
   if [ "$f2fsrw" == 1 ];then
   make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
