@@ -2,6 +2,8 @@
 
 **Version: 1.3.4 (xx-2-2026)**
 
++ Supports viewing and converting more file types.
++ Add SquashFs extraction and packaging (root required)
 + Code optimization
 + Revise f2fs extraction and f2fs packaging.
 + Fix minor bugs
