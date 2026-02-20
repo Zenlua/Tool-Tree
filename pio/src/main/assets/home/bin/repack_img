@@ -84,7 +84,7 @@ saved="$OUTPUT/out/${INPUT##*/}.img"
 info_size="${INPUT%/*}/config/${INPUT##*/}_size.txt"
 kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
 dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
-MKE2FS_CONFIG="$ETC/mke2fs.conf"
+export MKE2FS_CONFIG="$ETC/mke2fs.conf"
 
 if [[ "$(cat $info)" =~ ^(vendor_boot|boot|vbmeta|vbmeta_system|dtbo)$ ]];then
 TTBUILDI=0

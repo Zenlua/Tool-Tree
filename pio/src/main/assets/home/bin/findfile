@@ -39,7 +39,7 @@ case "$1" in
           [ -n "$Listzipne" ] && echo "$Listzipne" | awk -v f="$vv" '{print $1"="f"|ZipRom - "$1" ("$2")"}' | sed '/\(0B\)/d'
           ;;
         *)
-          echo "$vv|$vv ($type)" | grep -E '\(amlogic\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(zst\)|\(dtbo\)|\(super\)|\(br\)|\(boot\)|\(logo\)|\(vendor_boot\)|\(vbmeta(_system)?\)'
+          echo "$vv|$vv ($type)" | grep -E '\(squashfs\)|\(amlogic\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(zst\)|\(dtbo\)|\(super\)|\(br\)|\(boot\)|\(logo\)|\(vendor_boot\)|\(vbmeta(_system)?\)'
           ;;
       esac
     done

@@ -119,37 +119,39 @@ if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [
 echo -e "$decompile_text: ${file_img##*/} ($dang_file)...\n"
 
 namepv="${file_img%.*}"
-rm -fr "$OUTPUT/${namepv##*/}"
-mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
+in_name="$OUTPUT/${namepv##*/}"
+info="$OUTPUT/config/${namepv##*/}_info"
+fs_config="$OUTPUT/config/${namepv##*/}_fs_config"
+file_contexts="$OUTPUT/config/${namepv##*/}_file_contexts"
+fs_options="$OUTPUT/config/${namepv##*/}_fs_options"
+info_size="$OUTPUT/config/${namepv##*/}_size.txt"
+
+# dọn dẹp trước khi tạo
+rm -fr "$in_name"
+mkdir -p "$in_name" $OUTPUT/config
 
 # xoá cũ
-[ -d "$OUTPUT/${namepv##*/}" ] && rm -fr \
-"$OUTPUT/config/${namepv##*/}_info" \
-"$OUTPUT/config/${namepv##*/}_file_contexts" \
-"$OUTPUT/config/${namepv##*/}_fs_config" \
-"$OUTPUT/config/${namepv##*/}_fs_options" \
-"$OUTPUT/config/${namepv##*/}_size.txt" \
-"$OUTPUT/config/exception.log"
+[ -d "$in_name" ] && rm -fr "$info" "$file_contexts" "$fs_config" "$fs_options" "$info_size" "$OUTPUT/config/exception.log"
 
     if [ "$dang_file" == 'ext' ];then
       imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
-      echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
+      echo "$dang_file" > "$info"
     elif [ "$dang_file" == 'f2fs' ];then
       extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
-      if [ -f "$OUTPUT/config/${namepv##*/}_fs_config" ];then
-      luu_contexts="$(sed -e "s|s0/|s0\n/|g" "$OUTPUT/config/${namepv##*/}_file_contexts" | sort)"
-          if [ -f "$OUTPUT/${namepv##*/}/system/build.prop" ];then
-          luu_config="$(cat "$OUTPUT/config/${namepv##*/}_fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
+      if [ -f "$fs_config" ];then
+      luu_contexts="$(sed -e "s|s0/|s0\n/|g" "$file_contexts" | sort)"
+          if [ -f "$in_name/system/build.prop" ];then
+          luu_config="$(cat "$fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
           luu_contexts="$(echo "$luu_contexts" | sed -e "s|^/${namepv##*/} u|/${namepv##*/}/ u|")"
           fi
-      echo "$luu_config" > "$OUTPUT/config/${namepv##*/}_fs_config"
-      echo "$luu_contexts" > "$OUTPUT/config/${namepv##*/}_file_contexts"
+      echo "$luu_config" > "$fs_config"
+      echo "$luu_contexts" > "$file_contexts"
       fi
-      echo "$(stat -c%s "$file_img")" > "$OUTPUT/config/${namepv##*/}_size.txt"
-      echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
-      fsck.f2fs "$file_img" &> "$OUTPUT/config/${namepv##*/}_fs_options"
+      echo "$(stat -c%s "$file_img")" > "$info_size"
+      echo "$dang_file" > "$info"
+      fsck.f2fs "$file_img" &> "$fs_options"
     elif [ "$dang_file" == 'erofs' ];then
-      extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$OUTPUT/${namepv##*/}" &
+      extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$in_name" &
       PIDK=$!
       while kill -0 $PIDK 2>/dev/null; do
       if [ -f $TMP/extract_erofs.log ];then
@@ -163,26 +165,26 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
       done
       progress -1/0
       [ -f $TMP/extract_erofs.log ] && sed -i 's/\x1b\[[^m]*m//g' $TMP/extract_erofs.log
-      echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
+      echo "$dang_file" > "$info"
       if [ -f $OUTPUT/config/exception.log ];then
-      rm -fr "$OUTPUT/${namepv##*/}"
+      rm -fr "$in_name"
       cat $OUTPUT/config/exception.log >&2
       killtree "\nIncomplete file error please check hash" $OUTPUT/config/exception.log
       fi
     elif [ "$dang_file" == 'logo' ];then
-    logo_dumper.py --out "$OUTPUT/${namepv##*/}" "$file_img" unpack
-    echo "$dang_file" > "$OUTPUT/config/${namepv##*/}_info"
-    cp -f "$file_img" "$OUTPUT/${namepv##*/}/logo.img"
+    logo_dumper.py --out "$in_name" "$file_img" unpack
+    echo "$dang_file" > "$info"
+    cp -f "$file_img" "$in_name/logo.img"
     echo
     elif [ "$dang_file" == 'vbmeta' ] || [ "$dang_file" == 'vbmeta_system' ];then
-      cp -f "$file_img" "$OUTPUT/${namepv##*/}"
-      echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
+      cp -f "$file_img" "$in_name"
+      echo "$dang_file" > $info
     elif [ "$dang_file" == 'boot' ] || [ "$dang_file" == 'vendor_boot' ];then
-      cd "$OUTPUT/${namepv##*/}"
-      cp -f "$file_img" "$OUTPUT/${namepv##*/}"
+      cd "$in_name"
+      cp -f "$file_img" "$in_name"
       magiskboot unpack -h "$file_img" 2>&1
       if [ "$?" = '1' ];then
-        rm -rf "$OUTPUT/${namepv##*/}"
+        rm -rf "$in_name"
         killtree "$unpack_text_3"
       else
         # unpack dtb, dtbo
@@ -210,20 +212,20 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
         mkdir -p "${vch%.*}" "cache"
         echo "$vch" >> cache/cpio
         cd "${vch%.*}"
-        EXTRACT_UNSAFE_SYMLINKS=1 cpio -d -F "$OUTPUT/${namepv##*/}/$vch" -i 2>&1
+        EXTRACT_UNSAFE_SYMLINKS=1 cpio -d -F "$in_name/$vch" -i 2>&1
         if [ "$?" != 0 -o ! "$(ls)" ];then
           killtree "$unpack_text_4"
         else
-        rm -f "$OUTPUT/${namepv##*/}/$vch"
+        rm -f "$in_name/$vch"
         fi
-        cd "$OUTPUT/${namepv##*/}"
+        cd "$in_name"
         done
-      echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
+      echo "$dang_file" > $info
       echo
       fi
     elif [ "$dang_file" == 'dtbo' ];then
-        echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
-        cd "$OUTPUT/${namepv##*/}"
+        echo "$dang_file" > $info
+        cd "$in_name"
         dtbo dump "$file_img" -b dtb &>$TMP/dtbo.log
         mkdir -p cache
             for dtbo in $(ls -t dtb.* | sort -n -t . -k 2);do
@@ -236,8 +238,8 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
         echo
     elif [ "$dang_file" == 'squashfs' ];then
         [ "$ROT" == 0 ] && killtree "Error Unpack: squashfs, $root_warning_text"
-        unsquashfs -s "$file_img" &> "$OUTPUT/config/${namepv##*/}_fs_options"
-        unsquashfs -f -d "$OUTPUT/squashfs-root" "$file_img" >$TMP/unsquashfs.log
+        unsquashfs -s "$file_img" &> "$fs_options"
+        unsquashfs -f -d "$in_name" "$file_img" >$TMP/unsquashfs.log
         PIDK=$!
         while kill -0 $PIDK 2>/dev/null; do
         if [ -f $TMP/unsquashfs.log ];then
@@ -249,12 +251,12 @@ mkdir -p "$OUTPUT/${namepv##*/}" $OUTPUT/config
         fi
         sleep 1
         done
-        echo "$dang_file" > $OUTPUT/config/${namepv##*/}_info
+        echo "$dang_file" > $info
     else
-    rm -fr "$OUTPUT/${namepv##*/}"
+    rm -fr "$in_name"
     echo -e "$unpack_text_8 ${file_img##*/} ($dang_file)\n" >&2
     fi
-    [ -d "$OUTPUT/${namepv##*/}" ] && echo -e "$save_text $OUTPUT/${namepv##*/}\n"
+    [ -d "$in_name" ] && echo -e "$save_text $in_name\n"
 else
     if [ "$dang_file" == "super" ];then
         echo -e "$unpack_text_7\n"
@@ -273,13 +275,13 @@ else
 fi
 
 if [ "$XOAOAT" == 1 ];then
-(
-find "$OUTPUT/${namepv##*/}" -type d -name "oat" -print -exec rm -rf {} +
-find "$OUTPUT/${namepv##*/}" -type f -name "*.fsv_meta" -delete
-find "$OUTPUT/${namepv##*/}" -type f -name "*.bprof" -delete
-find "$OUTPUT/${namepv##*/}" -type f -name "*.prof" -delete
-find "$OUTPUT/${namepv##*/}" -type f -name "*.vdex" -delete
-) &>$TMP/delete_oat.log
+{
+find "$in_name" -type d -name "oat" -print -exec rm -rf {} +
+find "$in_name" -type f -name "*.fsv_meta" -delete
+find "$in_name" -type f -name "*.bprof" -delete
+find "$in_name" -type f -name "*.prof" -delete
+find "$in_name" -type f -name "*.vdex" -delete
+} &>$TMP/delete_oat.log
 fi
 
 if [[ "$dang_tep" =~ ^(sparse|zstd|dat|br|payload|super|zip)$ ]];then
