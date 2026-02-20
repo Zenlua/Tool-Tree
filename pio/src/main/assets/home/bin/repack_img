@@ -86,7 +86,7 @@ kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
 dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
 export MKE2FS_CONFIG="$ETC/mke2fs.conf"
 
-if [[ "$(cat $info)" =~ ^(vendor_boot|boot|vbmeta|vbmeta_system|dtbo)$ ]];then
+if [[ "$(cat $info)" =~ ^(vendor_boot|logo|squashfs|boot|vbmeta|vbmeta_system|dtbo)$ ]];then
 TTBUILDI=0
 CONVER='raw'
 fi
