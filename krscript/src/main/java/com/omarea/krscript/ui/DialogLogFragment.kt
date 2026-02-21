@@ -175,10 +175,11 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     }
 
     class MyShellHandler(
+        context: Context,
         private var actionEventHandler: IActionEventHandler,
         private var logView: TextView?,
         private var shellProgress: ProgressBar?
-    ) : ShellHandlerBase() {
+    ) : ShellHandlerBase(context) {
 
         private val context = logView?.context
         private val errorColor = getColor(R.color.kr_shell_log_error)

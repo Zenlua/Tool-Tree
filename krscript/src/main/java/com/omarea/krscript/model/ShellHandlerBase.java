@@ -59,7 +59,7 @@ public abstract class ShellHandlerBase extends Handler {
     protected abstract void updateLog(final SpannableString msg);
 
     protected Context context;
-
+    
     public ShellHandlerBase(Context context) {
         this.context = context;
     }

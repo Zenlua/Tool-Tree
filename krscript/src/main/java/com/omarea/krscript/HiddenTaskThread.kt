@@ -16,7 +16,7 @@ class HiddenTaskThread(private var process: Process) : Thread() {
         }
     }
 
-    class ServiceShellHandler(private val context: Context) : ShellHandlerBase() {
+    class ServiceShellHandler(private val context: Context) : ShellHandlerBase(context) {
         private var errorRows = ArrayList<String>()
         private var notificationMShortMsg = ""
         private var progressCurrent = 0
