@@ -100,7 +100,7 @@ public abstract class ShellHandlerBase extends Handler {
             String args = trimmed.substring(4, trimmed.length() - 1).trim();
     
             if (args.equalsIgnoreCase("help")) {
-                updateLog(getAmHelp(), "#00cc55");
+                updateLog(getAmHelp());
             } else if (!args.isEmpty()) {
                 onAm(args);
             }
