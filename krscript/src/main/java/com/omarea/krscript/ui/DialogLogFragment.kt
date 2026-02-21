@@ -55,23 +55,25 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
     
-        DialogHelper.setWindowBlurBg(dialog?.window, requireActivity())
+        dialog?.window?.let { window ->
+            DialogHelper.setWindowBlurBg(window, requireActivity())
+        }
     
         nodeInfo?.let { node ->
             if (node.reloadPage) {
                 binding?.btnHide?.visibility = View.GONE
             }
     
-            openExecutor(node).let { shellHandler ->
-                ShellExecutor().execute(
-                    requireContext().applicationContext,
-                    node,
-                    script,
-                    onExit,
-                    params,
-                    shellHandler
-                )
-            }
+            val shellHandler = openExecutor(node)
+    
+            ShellExecutor().execute(
+                requireContext().applicationContext,
+                node,
+                script,
+                onExit,
+                params,
+                shellHandler
+            )
         } ?: dismissAllowingStateLoss()
     }
 
