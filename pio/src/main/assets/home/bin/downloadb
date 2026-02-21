@@ -1,8 +1,9 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-echo "downloadb http://file.zip save.zip"
-exit
+echo "downloadb http://file.zip save.zip false"
+echo "false: Turn off notifications"
+exit 1
 fi
 
 source language
@@ -13,22 +14,23 @@ if ! checkonline; then
     exit 1
 fi
 
-notiservice --id $ranid --title "$download_text" --message "$load_text_1"
+echo "$@" | grep -q false && cheks=1 || cheks=0
+[ "$cheks" == 1 ] || notiservice --id $ranid --title "$download_text" --message "$load_text_1"
 taive_index="$(curl -sIL "$1")"
 if [ "$?" == 0 ];then
     taive_byte="$(echo "$taive_index" | grep -i "content-length" | awk '{print $2}' | tail -n 1)"
     taive_name="$(echo "$taive_index" | grep -i filename= | tail -n 1 | cut -d= -f2 | awk '{print $1}')"
-        if [ "$2" ];then
-        taive_path_file="$(realpath "$2")"
-        [ -f "$taive_path_file" ] && rm -fr "$taive_path_file"
+        if [ "$2" ] && [ "$2" != "false" ];then
+        taive_path_file="$2"
+        [ -f "$taive_path_file" ] && rm -f "$taive_path_file"
         else
-        [ "$taive_name" ] && taive_path_kk="$(realpath $taive_name)" || taive_path_kk="$(realpath Download.bin)"
+        [ "$taive_name" ] && taive_path_kk="$taive_name" || taive_path_kk="download.bin"
         taive_path_file="$(checkname "$taive_path_kk")"
         fi
-    (
+    {
     taive "$1" "$taive_path_file"
     [ "$?" == 0 ] || checkdone="$?"
-    )&
+    } &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
     if [ -f "$taive_path_file" ];then
@@ -36,25 +38,25 @@ if [ "$?" == 0 ];then
         if [ "$num3" ] && [ "${taive_byte:-0}" != 0 ];then
         [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / taive_byte))/100"
         num4="$num3"
-        notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte $num3)/$(coverbyte $taive_byte)"
+        [ "$cheks" == 1 ] || notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte $num3)/$(coverbyte $taive_byte)"
         else
-        notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte ${num3:-0})"
+        [ "$cheks" == 1 ] || notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$sizes_text: $(coverbyte ${num3:-0})"
         fi
     fi
     sleep 1
     done
     progress -1/0
         if [ -z "$checkdone" ];then
-        notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$flash_text_12"
+        [ "$cheks" == 1 ] || notiservice --id $ranid --title "$name_text: ${taive_path_file##*/}" --message "$flash_text_12"
         else
-        notiservice --id $ranid --title "Error: ${taive_path_file##*/}" --message "($checkdone) $load_text_2"
+        [ "$cheks" == 1 ] || notiservice --id $ranid --title "Error: ${taive_path_file##*/}" --message "($checkdone) $load_text_2"
         fi
-    (
-    sleep 3
-    notiservice --delete true --id $ranid
-    ) &
+    {
+    sleep 5
+    [ "$cheks" == 1 ] || notiservice --delete true --id $ranid
+    } &
 else
-    notiservice --delete true --id $ranid
+    [ "$cheks" == 1 ] || notiservice --delete true --id $ranid
     echo "$load_text_2" >&2
     exit 1
 fi

@@ -449,6 +449,7 @@ fi
 Project(){
 mkdir -p $PTSD/out &>/dev/null &
 mkdir -p $PTAD/out &>/dev/null &
+
 # Thêm group
 echo "<group>"
 show_sett
@@ -528,9 +529,7 @@ xml_print '<group>
 <action icon="'`urlpng mount`'" interruptible="false">
 <title>'$mount_text_1'</title>
 <summary>'$show_root'</summary>
-<lock>
-[ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
-</lock>
+<lock>[ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0</lock>
 <set>
 for kkh in $IMG_NAME; do
 if [ "$(ls $SDH/raw/${kkh%.*} 2>/dev/null)" ];then
@@ -703,7 +702,6 @@ done
 }
 
 Generate(){
-
 # thêm ẩn
 if [ "$(glog hide_show_generate)" == 1 ];then
     echo "<group>"
@@ -817,7 +815,7 @@ fi
 
 [ "$(glog hide_show_config 0)" == 1 ] && show_config
 xml_print '<group>
-<action icon="'`urlpng decode_img`'" desc="'$desc_rom'">
+<action icon="'`urlpng decom`'" desc="'$desc_rom'">
 <title>'$decompile_text'</title>
 <param name="cboxk" value-sh="glog dkhdh" label="'$deleted_file_text'" type="checkbox" />
 <param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" />
@@ -839,7 +837,7 @@ checktime
 </set>
 </action>
 
-<action icon="'`urlpng build_img`'" desc="'$desc_rom1'">
+<action icon="'`urlpng build`'" desc="'$desc_rom1'">
 <title>'$build_text'</title>
 <param name="boolbox" value-sh="glog boolboxdjh" label="'$deleted_project_text'" type="checkbox" />
 <param name="IMAGES" desc="'$builds_text_1'" multiple="true" options-sh="findfile 0 $SDH/$PTSH" required="true"/>
@@ -958,7 +956,6 @@ checktime
 }
 
 Apktools(){
-
 if [ "$(glog hide_show_apktool)" == 1 ];then
     echo "<group>"
     show_apkset
@@ -968,9 +965,8 @@ else
     desc_apk1="$projects_text: $PTAH"
 fi
 
-xml_print '
-<group>
-<action icon="'`urlpng apk_decom`'">
+xml_print '<group>
+<action icon="'`urlpng decom`'">
 <title>'$decompile_text'</title>
 <desc>'$desc_apk'</desc>
 <param name="dexlibk" label="'$option_text'" value-sh="glog dexlibk 2" option-sh="echo -e '"'0|$decom_apk_text_3\n1|$default_text\n2|Baksmali 3.0.9'"'" desc="'$decom_apk_text_12'"/>
@@ -992,7 +988,7 @@ checktime
 </set>
 </action>
 
-<action icon="'`urlpng apk_build`'" desc="'$desc_apk1'">
+<action icon="'`urlpng build`'" desc="'$desc_apk1'">
 <title>'$build_text'</title>
 <param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
 <param name="sign" desc=" " value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
@@ -1017,7 +1013,6 @@ checktime
 }
 
 Apex(){
-
 if [ "$(glog hide_show_apex)" == 1 ];then
     echo "<group>"
     show_apkset
@@ -1029,7 +1024,7 @@ fi
 
 xml_print '
 <group>
-<action icon="'`urlpng apk_decom`'">
+<action icon="'`urlpng decom`'">
 <title>'$decompile_text'</title>
 <desc>'$desc_apkd'</desc>
 <param name="FILE" desc="'$apex_text_2'" multiple="true" options-sh="findfile 12 $PTAD" required="true"/>
@@ -1045,7 +1040,7 @@ checktime
 </set>
 </action>
 
-<action icon="'`urlpng apk_build`'" desc="'$desc_apkd1'">
+<action icon="'`urlpng build`'" desc="'$desc_apkd1'">
 <title>'$build_text'</title>
 <param name="gobo_apex" value-sh="glog gobo_apex" label="'$deleted_project_text'" type="checkbox" />
 <param name="SIGNS" value-sh="glog signs_apex com.android.example.apex" desc=" " options-sh="cd $ETC/key/4096; ls -1d *.pem | sed '"'s|.pem||'"' " label="'$sign_text'" />
@@ -1083,9 +1078,8 @@ else
     desc_apks1="$projects_text: $PTAH"
 fi
 
-xml_print '
-<group>
-<action icon="'`urlpng apk_decom`'">
+xml_print '<group>
+<action icon="'`urlpng decom`'">
 <title>'$decompile_text'</title>
 <desc>'$desc_apks'</desc>
 <param name="type_apk" value-sh="glog type_apk xml" desc="'$decom_apk_text_8'" label="'$option_text'" >
@@ -1112,7 +1106,7 @@ checktime
 </set>
 </action>
 
-<action icon="'`urlpng apk_build`'" desc="'$desc_apks1'">
+<action icon="'`urlpng build`'" desc="'$desc_apks1'">
 <title>'$build_text'</title>
 <param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
 <param name="sign" desc=" " value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
@@ -1262,7 +1256,6 @@ xml_print '<group><switch icon="'`iccpng icon`'" shell="hidden" warn="'$addon_te
 }
 
 Homeadd(){
-
 # Hủy bỏ biến
 unset pagesh code_menu farooot
 

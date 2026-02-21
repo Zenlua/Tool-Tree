@@ -29,7 +29,7 @@ download_text="Tải xuống"
 deleted_text="Gỡ addon"
 input_add_text="Nhập add-on"
 hide_add_text="Ẩn addon"
-build_text="Đóng gói"
+build_text="Xây dựng"
 decompile_text="Giải mã"
 projects_text="Dự án hiện tại"
 sizes_text="Kích thước"
@@ -53,7 +53,7 @@ home_text_7="Thực thi các lệnh để thử nghiệm"
 
 # More
 more_text_1="Apkeditor"
-more_text_2="Công cụ giải mã APK và đóng gói"
+more_text_2="Công cụ giải mã APK và xây dựng"
 more_text_3="Nhập chữ ký"
 more_text_4="Xác định tệp:"
 more_text_5="Thiếu tệp:"
@@ -128,15 +128,15 @@ decode_text_2="Tính năng này bật thì sẽ chỉ giải nén file img ra c�
 decode_text_3="Danh sách các tệp đầu vào .br .dat .img .zst .zstd .bin .zip"
 
 # Build
-builds_text_1="Đóng gói các dự án đã giải mã trước đó"
-builds_text_2="Định dạng phân vùng và công cụ đóng gói"
+builds_text_1="Xây dựng các dự án đã giải mã trước đó"
+builds_text_2="Định dạng phân vùng và công cụ xây dựng"
 builds_text_3="Phương pháp nén erofs"
 builds_text_4="Mức nén"
 builds_text_5="Cấp độ nén erofs"
 builds_text_6="Cấp độ"
 builds_text_7="Lưu ý: Giá trị 0 tương ứng với 0Mb trống, thêm kích thước trống chỉ áp dụng cho phân vùng ext4, f2fs"
 builds_text_8="Vá tệp avb, vbmeta và fstab"
-builds_text_9="Tự động tìm và vá tệp avb, vbmeta, fstab trước khi đóng gói"
+builds_text_9="Tự động tìm và vá tệp avb, vbmeta, fstab trước khi xây dựng"
 builds_text_10="Cấp độ nén sẽ lấy ở mục chuyển đổi tệp"
 
 # build super
@@ -144,10 +144,10 @@ super_text_2="Loại gói"
 super_text_3="Định dạng"
 super_text_5="Tên cụm"
 super_text_6="Mỗi thiết bị sẽ có tên cụm khác nhau"
-super_text_7="Chọn tệp IMG để đóng gói super.img"
+super_text_7="Chọn tệp IMG để xây dựng super.img"
 
 # build payload
-payload_text_2="Chọn tệp img để đóng gói payload.bin"
+payload_text_2="Chọn tệp img để xây dựng payload.bin"
 payload_text_3="Phân vùng động"
 payload_text_4="Chỉ có tác dụng khi bật phân vùng động"
 
@@ -171,9 +171,9 @@ super_merge_text_3="Chọn tệp super.img.* để hợp nhất thành tệp sup
 decom_apk_text_1="Giải mã dưới dạng XML"
 decom_apk_text_2="Giải mã dưới dạng Json"
 decom_apk_text_3="Không giải mã"
-decom_apk_text_4="Mặc định: 42, smali 2.5.2: 35, smali 3.0.9: 41 trở xuống"
+decom_apk_text_4="Mặc định: 41, smali 2.5.2: 35, smali 3.0.9: 41 trở xuống"
 decom_apk_text_5="Chỉ AndroidManifest.xml"
-decom_apk_text_6="Tính năng nâng cao"
+decom_apk_text_6="Tính năng khác"
 decom_apk_text_7="Xoá debug-info trong smali"
 decom_apk_text_8="Giải mã xml, json có thể chỉnh sửa được"
 decom_apk_text_9="Danh sách các loại tệp có thể hiện apk, zip, apks"
@@ -220,13 +220,13 @@ unpack_text_7="Lưu ý: Khi giải mã super (sparse) nó sẽ chỉ chuyển sa
 unpack_text_8="Chưa hỗ trợ giải mã dạng:"
 
 # Super
-supers_text_1="Đóng gói super thất bại !"
-supers_text_2="Đóng gói super thành công"
+supers_text_1="Xây dựng super thất bại !"
+supers_text_2="Xây dựng super thành công"
 
 # Repack
 replag_text_1="Bắt đầu giải mã"
-replag_text_2="Đang đóng gói"
-replag_text_3="Lỗi đóng gói - xem lỗi ở:"
+replag_text_2="Đang xây dựng"
+replag_text_3="Lỗi xây dựng - xem lỗi ở:"
 
 # Load
 load_text_1="Kết nối dữ liệu..."
@@ -241,7 +241,7 @@ apke_text_3="Lỗi tệp tin apk"
 apkb_text_1="Xác định mục:"
 apkb_text_2="Kiểm tra văn bản..."
 apkb_text_3="Kiểm tra xong"
-apkb_text_4="Đã đóng gói xong"
+apkb_text_4="Đã xây dựng xong"
 apkb_text_5="Giữ nguyên chữ ký"
 apkb_text_6="Sử dụng chữ ký:"
 
@@ -278,7 +278,7 @@ use_network_text="Yêu cầu sử dụng mạng dữ liệu, để tiếp tục 
 root_warning_text="Vui lòng root để sử dụng tính năng"
 root_warning_text_1="Cần root để sử dụng"
 deleted_file_text="Xoá tệp tin gốc sau khi hoàn thành"
-deleted_project_text="Xoá dự án sau khi đóng gói xong"
+deleted_project_text="Xoá dự án sau khi xây dựng xong"
 google_translate_text="Google dịch"
 
 # apex editor
@@ -287,7 +287,7 @@ apex_text_1="Nén apex thành capex"
 apex_text_2="Danh sách hỗ trợ tệp: apex, capex"
 
 # other
-build_time_text_1="Thời gian đóng gói rom"
+build_time_text_1="Thời gian xây dựng rom"
 build_time_text_2="Tự động: 0, có thể thay đổi ví dụ: 1766318047"
 xoaoat_text_1="Dọn dẹp mục oat và odex"
 open_activity_text="Mở thư mục:"
