@@ -107,9 +107,9 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
                 val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newPlainText("text", binding?.shellOutput?.text.toString())
                 clipboard.setPrimaryClip(clip)
-                Toast.makeText(context, getString(R.string.copy_success), Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.copy_success), Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                Toast.makeText(context, getString(R.string.copy_fail), Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.copy_fail), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -292,6 +292,11 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         binding = null
+    }
+
+    override fun onDestroy() {
+        offScreen()
+        super.onDestroy()
     }
 
     companion object {
