@@ -54,21 +54,23 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        activity?.let {
-            dialog?.window?.let { window ->
-                DialogHelper.setWindowBlurBg(window, it)
-            }
-        }
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    
+        DialogHelper.setWindowBlurBg(dialog?.window, requireActivity())
+    
         nodeInfo?.let { node ->
             if (node.reloadPage) {
                 binding?.btnHide?.visibility = View.GONE
             }
-            openExecutor(node)?.let { shellHandler ->
-                ShellExecutor().execute(activity, node, script, onExit, params, shellHandler)
+    
+            openExecutor(node).let { shellHandler ->
+                ShellExecutor().execute(
+                    requireContext().applicationContext,
+                    node,
+                    script,
+                    onExit,
+                    params,
+                    shellHandler
+                )
             }
         } ?: dismissAllowingStateLoss()
     }
@@ -131,7 +133,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
         binding?.actionProgress?.isIndeterminate = true
 
-        return MyShellHandler(object : IActionEventHandler {
+        return MyShellHandler(requireContext().applicationContext, object : IActionEventHandler {
             override fun onCompleted() {
                 running = false
                 onExit.run()
@@ -181,7 +183,6 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         private var shellProgress: ProgressBar?
     ) : ShellHandlerBase(context) {
 
-        private val context = logView?.context
         private val errorColor = getColor(R.color.kr_shell_log_error)
         private val basicColor = getColor(R.color.kr_shell_log_basic)
         private val scriptColor = getColor(R.color.kr_shell_log_script)
@@ -189,10 +190,11 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         private var hasError = false
 
         private fun getColor(resId: Int): Int {
+            val ctx = context
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                context!!.getColor(resId)
+                ctx.getColor(resId)
             } else {
-                context!!.resources.getColor(resId)
+                ctx.resources.getColor(resId)
             }
         }
 
@@ -239,8 +241,11 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         }
 
         override fun onExit(msg: Any?) {
-            if (!hasError) actionEventHandler.onSuccess()
-            updateLog(context?.getString(R.string.kr_shell_completed), endColor)
+            val code = (msg as? Int) ?: -1
+            if (!hasError && code == 0) {
+                actionEventHandler.onSuccess()
+            }
+            updateLog(context.getString(R.string.kr_shell_completed), endColor)
             actionEventHandler.onCompleted()
         }
 
@@ -280,6 +285,11 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         super.onDismiss(dialog)
         onDismissRunnable?.run()
         onDismissRunnable = null
+    }
+    
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
     }
 
     companion object {
