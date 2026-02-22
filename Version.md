@@ -2,6 +2,7 @@
 
 **Version: 1.3.4 (xx-2-2026)**
 
++ Change signature app
 + Supports viewing and converting more file types.
 + Add SquashFs extraction and packaging (root required)
 + Code optimization

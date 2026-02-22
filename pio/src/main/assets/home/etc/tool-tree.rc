@@ -287,7 +287,7 @@ esac
 </group>'
 
 [ "$(glog shellc)" == 1 ] && xml_print '<group>
-<action icon="'`urlpng shellc`'" title="'$home_text_5'" desc="'$more_text_9'">
+<action icon="'`urlpng shell`'" title="'$home_text_5'" desc="'$more_text_9'">
 <param name="shells" value-sh="glog shells" type="text" placeholder="#!/system/bin/sh"/>
 <param name="shells2" value-sh="glog shells2" type="text" placeholder="#!/system/bin/sh"/>
 <param name="shells3" value-sh="glog shells3" type="text" placeholder="#!/system/bin/sh"/>
