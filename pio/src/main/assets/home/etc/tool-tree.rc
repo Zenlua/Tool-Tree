@@ -22,7 +22,7 @@ fi
 
 show_sett(){
 xml_print '
-<action icon="'`urlpng input_decom`'" shell="hidden" reload="true">
+<action icon="'`urlpng folder_rom`'" shell="hidden" reload="true">
 <title>'$project_text_1'</title>
 <summary>'$folder_text': '${PTSD/$SDCARD_PATH/\/sdcard}'</summary>
 <param name="Name" desc="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
@@ -42,7 +42,7 @@ fi
 
 show_apkset(){
 xml_print '
-<action icon="'`urlpng build_decom`'" shell="hidden" reload="true">
+<action icon="'`urlpng folder_apk`'" shell="hidden" reload="true">
 <title>'$project_text_2'</title>
 <summary>'$folder_text': '${PTAD/$SDCARD_PATH/\/sdcard}'</summary>
 <param name="Name" desc="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $APK" value-sh="glog PTAH"/>
@@ -62,7 +62,7 @@ fi
 
 show_config(){
 xml_print '<group>
-<action icon="'`urlpng write_setting`'">
+<action icon="'`urlpng config`'">
 <title>'$config_text'</title>
 <param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" title="'$builds_text_5'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar"/>
 <param name="nen_br" required="true" value-sh="glog nen_br 8" label="'$builds_text_4'" type="seekbar" min="0" max="22" title="'$convert_text_1'" desc="'$convert_text_2'"/>
@@ -311,7 +311,7 @@ $shells5"
 
 Info(){
 xml_print '<group>
-<page icon="'`urlpng update`'" config-sh="$ETC/tool-tree.rc Update" >
+<page icon="'`urlpng info`'" config-sh="$ETC/tool-tree.rc Update" >
 <title>'$setting_text_1'</title>
 <desc>'$setting_text_2'</desc>
 <option type="default" id="share" auto-off="true" interruptible="false" >'$share_text'</option>
@@ -412,7 +412,7 @@ xml_print '<group>
 </group>
 
 <group>
-<action shell="hidden" icon="'`urlpng update1`'" warning="'$use_network_text'" visible="echo '$show_update'">
+<action shell="hidden" icon="'`urlpng update`'" warning="'$use_network_text'" visible="echo '$show_update'">
 <title>'$update_text'</title>
 <set>
 showtoast "'$update_text_2'"
@@ -457,7 +457,7 @@ show_apkset
 echo "</group>"
 
 xml_print '<group>
-<action icon="'`urlpng del_add`'" warning="'$project_text_4'" shell="hidden" >
+<action icon="'`urlpng cleanup`'" warning="'$project_text_4'" shell="hidden" >
 <title>'$project_text_3'</title>
 <param name="dels" label="'$option_text'" option-sh="findfile folders $SDH/$PTSH; findfile folders $APK/$PTAH" multiple="multiple"/>
 <set>
@@ -503,7 +503,7 @@ slog shellc $state
 </group>
 
 <group>
-<action icon="'`urlpng javah`'" warning="'$project_text_9'" shell="hidden" >
+<action icon="'`urlpng java`'" warning="'$project_text_9'" shell="hidden" >
 <title>'$project_text_10'</title>
 <param name="ramoccupied" label="'$option_text'" option-sh="echo -e '"'512\n1024\n2048\n3072\n4096\n5120\n6144\n7168\n8192'"' " value-sh="glog ramoccupied 2048" />
 <set>
@@ -1130,7 +1130,7 @@ checktime
 </action></group>
 
 <group>
-<page icon="'`urlpng use_apktool`'" config-sh="$ETC/tool-tree.rc Apktools" >
+<page icon="'`urlpng apktool`'" config-sh="$ETC/tool-tree.rc Apktools" >
 <title>'$use_apktool_text'</title>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
 <option type="default" id="v2" >'$framework_auto_text'</option>
