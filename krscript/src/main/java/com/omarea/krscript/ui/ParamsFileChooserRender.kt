@@ -57,6 +57,9 @@ class ParamsFileChooserRender(
             pathView.visibility = View.VISIBLE
             pathView.hint = hintText
         } else {
+            textView.visibility = View.VISIBLE
+            pathView.visibility = View.GONE
+            textView.text = hintText
             setEditTextReadOnly(pathView)
         }
 

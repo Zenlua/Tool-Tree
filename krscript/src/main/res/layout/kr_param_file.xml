@@ -27,7 +27,7 @@
         android:layout_weight="1"
         android:background="@android:color/transparent"
         android:textSize="15dp"
-        android:lines="3"
+        android:maxLines="3"
         android:visibility="gone" />
 
     <RelativeLayout
