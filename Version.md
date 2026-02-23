@@ -2,6 +2,7 @@
 
 **Version: 1.3.4 (23-2-2026)**
 
++ Automatically send release messages to Telegram
 + Update Apktool to version 3.0.0
 + Change icon
 + Change signature app
