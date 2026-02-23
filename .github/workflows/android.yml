@@ -6,7 +6,7 @@ on:
       UPAPK:
         description: 'Release APK'
         type: boolean
-        default: false
+        default: true
       UPTG:
         description: 'Send Telegram'
         type: boolean
