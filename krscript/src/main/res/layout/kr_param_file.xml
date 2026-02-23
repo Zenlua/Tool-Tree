@@ -13,11 +13,11 @@
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
         android:gravity="center_vertical"
-        android:hint="@string/kr_please_choose_file"
         android:marqueeRepeatLimit="marquee_forever"
         android:textColor="?android:textColorPrimary"
         android:breakStrategy="simple"
         android:textSize="15dp" />
+        <!-- android:hint="@string/kr_please_choose_file" -->
 
     <EditText
         android:id="@+id/kr_param_file_path"
@@ -27,6 +27,7 @@
         android:layout_weight="1"
         android:background="@android:color/transparent"
         android:textSize="15dp"
+        android:lines="3"
         android:visibility="gone" />
 
     <RelativeLayout

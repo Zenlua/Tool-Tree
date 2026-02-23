@@ -8,7 +8,10 @@ import android.widget.TextView
 import com.omarea.krscript.R
 import com.omarea.krscript.model.ActionParamInfo
 
-class ParamsFileChooserRender(private var actionParamInfo: ActionParamInfo, private var context: Context, private var fileChooser: FileChooserInterface?) {
+class ParamsFileChooserRender(
+    private var actionParamInfo: ActionParamInfo,
+    private var context: Context,
+    private var fileChooser: FileChooserInterface?) {
     interface FileChooserInterface {
         fun openFileChooser(fileSelectedInterface: FileSelectedInterface): Boolean
     }
@@ -100,8 +103,18 @@ class ParamsFileChooserRender(private var actionParamInfo: ActionParamInfo, priv
         } else if (!actionParamInfo.value.isNullOrEmpty()) {
             textView.text = actionParamInfo.value
             pathView.setText(actionParamInfo.value)
+        } else {
+            val isFolder = actionParamInfo.type.trim().lowercase() == "folder"
+            val hintText = if (isFolder) {
+                context.getString(R.string.kr_please_choose_folder)
+            } else {
+                context.getString(R.string.kr_please_choose_file)
+            }
+        
+            textView.text = hintText
+            pathView.hint = hintText
         }
-
+        
         pathView.tag = actionParamInfo.name
 
         return layout

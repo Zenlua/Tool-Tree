@@ -102,11 +102,13 @@ eval "apkeditor d -f -t \"$TYPEAPK\" $setkkh -i \"$ptpk\" -o \"$Tout\" 2>&1" | s
 if [ "$DECODEX" == "smali" ];then
     [ "$DEBUGA" == 1 ] && hhhhfdr="false -l" || hhhhfdr="true"
     for vkn in "$Tout"/dex/classes*.dex; do
+    if [ -f "$vkn" ];then
     kout="$(basename $vkn .dex)"
     mkdir -p "$Tout/smali/$kout" "$Tout/.cache"
     API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
     eval "baksmali d --debug-info $hhhhfdr --bootclasspath $BOOTCLASSPATH --api $API \"$vkn\" -o \"$Tout/smali/$kout\" "
     check_changes.py "$Tout/smali/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
+    fi
     done
 fi
 
