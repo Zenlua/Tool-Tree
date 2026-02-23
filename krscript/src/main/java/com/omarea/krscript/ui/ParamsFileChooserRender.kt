@@ -104,7 +104,7 @@ class ParamsFileChooserRender(
             textView.text = actionParamInfo.value
             pathView.setText(actionParamInfo.value)
         } else {
-            val isFolder = actionParamInfo.type?.trim()?.lowercase() == "folder"
+            val isFolder = actionParamInfo.type?.equals("folder", true) == true
             val hintText = if (isFolder) {
                 context.getString(R.string.kr_please_choose_folder)
             } else {
