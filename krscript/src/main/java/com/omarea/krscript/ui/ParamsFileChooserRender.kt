@@ -46,15 +46,18 @@ class ParamsFileChooserRender(
         val pathView = layout.findViewById<EditText>(R.id.kr_param_file_path)
         val btn = layout.findViewById<View>(R.id.kr_param_file_btn)
 
+        val hintText = if (actionParamInfo.type == "folder") {
+            context.getString(R.string.kr_please_choose_folder)
+        } else {
+            context.getString(R.string.kr_please_choose_file)
+        }
+        
         if (actionParamInfo.editable) {
             textView.visibility = View.GONE
             pathView.visibility = View.VISIBLE
-            pathView.hint = if (actionParamInfo.type == "folder") {
-                context.getString(R.string.kr_please_choose_folder)
-            } else {
-                context.getString(R.string.kr_please_choose_file)
-            }
+            pathView.hint = hintText
         } else {
+            pathView.hint = hintText
             setEditTextReadOnly(pathView)
         }
 
@@ -103,18 +106,8 @@ class ParamsFileChooserRender(
         } else if (!actionParamInfo.value.isNullOrEmpty()) {
             textView.text = actionParamInfo.value
             pathView.setText(actionParamInfo.value)
-        } else {
-            val isFolder = actionParamInfo.type?.equals("folder", true) == true
-            val hintText = if (isFolder) {
-                context.getString(R.string.kr_please_choose_folder)
-            } else {
-                context.getString(R.string.kr_please_choose_file)
-            }
-        
-            textView.text = hintText
-            pathView.hint = hintText
         }
-        
+
         pathView.tag = actionParamInfo.name
 
         return layout
