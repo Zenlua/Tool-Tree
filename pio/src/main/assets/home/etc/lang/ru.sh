@@ -171,7 +171,7 @@ super_merge_text_3="Выберите файлы super.img.* для объеди�
 decom_apk_text_1="Декодировать как XML"
 decom_apk_text_2="Декодировать как Json"
 decom_apk_text_3="Не декодировать"
-decom_apk_text_4="По умолчанию: 42, smali 2.5.2: 35, smali 3.0.9: 41 и ниже"
+decom_apk_text_4="По умолчанию: 41, smali 2.5.2: 35, smali 3.0.9: 41 и ниже"
 decom_apk_text_5="Только AndroidManifest.xml"
 decom_apk_text_6="Другие функции"
 decom_apk_text_7="Удалить debug-info в smali"
@@ -181,6 +181,7 @@ decom_apk_text_10="Декодировать Resources.arsc"
 decom_apk_text_11="Декодировать ресурсы"
 decom_apk_text_12="Декодировать classes*.dex"
 decom_apk_text_13="Скопировать оригинальный AndroidManifest.xml"
+decom_apk_text_14="Повторное разделение Dex"
 
 # build apk
 build_apk_text_1="Сортировать и фильтровать текст"

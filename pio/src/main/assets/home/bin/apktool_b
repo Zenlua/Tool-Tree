@@ -19,6 +19,9 @@ show_help() {
   echo "  -c    copy signature file and AndroidManifest.xml:"
   echo "          0: do not copy"
   echo "          1: copy"
+  echo "  -r    enable redivision dex:"
+  echo "          0: off"
+  echo "          1: on"
   echo "  -h    show help"
   exit 1
 }
@@ -28,7 +31,7 @@ show_help
 fi
 
 INPUT=''; OUTPUT=""; SIGNAP=''; FIRTVB=''; XDELF=''; COPYX=''; show_help='';
-while getopts ":i:o:s:n:d:c:h" opt; do
+while getopts ":i:o:s:n:d:r:c:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
     o) OUTPUT="$OPTARG" ;;
@@ -36,6 +39,7 @@ while getopts ":i:o:s:n:d:c:h" opt; do
     n) FIRTVB="$OPTARG" ;;
     d) XDELF="$OPTARG" ;;
     c) COPYX="$OPTARG" ;;
+    r) REDIVIS="$OPTARG" ;;
     h) show_help ;;
     \?) echo "! Not understand -$OPTARG"; show_help ;;
     :) echo "! Lack of value for -$OPTARG"; show_help ;;
@@ -51,6 +55,7 @@ fi
 [[ -z "$FIRTVB" ]] && FIRTVB=1
 [[ -z "$XDELF" ]] && XDELF=0
 [[ -z "$COPYX" ]] && COPYX=0
+[[ -z "$REDIVIS" ]] && REDIVIS=0
 IFS=$'\n'
 
 echo "$apkb_text_1 ${INPUT##*/}"
@@ -65,7 +70,7 @@ for vvv in $(check_changes.py "$INPUT/res" "$INPUT/.cache/2hash_res.json" | grep
 if [ "$(echo "$vvv" | grep -cm1 "values-.*/")" == 1 ];then
 ten_file="$(basename "$vvv" .xml)"
 text_filter.py "$INPUT/res/values/$ten_file.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/text_filter.log
-xml_fix.py "$INPUT/res/$vvv" >>$INPUT/.cache/xml_fix.log
+#xml_fix.py "$INPUT/res/$vvv" >>$INPUT/.cache/xml_fix.log
 fi
 if [ "$(echo "$vvv" | grep -cm1 "values/")" == 1 ];then
 [ "$vvv" == "values/public.xml" ] || update_id.py --use-file "$INPUT/res/values/public.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/public_log.log
@@ -78,6 +83,7 @@ fi
 
 echo "$replag_text_2"
 echo
+[ "$REDIVIS" == 1 ] && redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
 
 if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ];then
 for vkn in "$INPUT"/classes*.dex; do

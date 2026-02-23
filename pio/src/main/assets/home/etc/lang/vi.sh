@@ -181,6 +181,7 @@ decom_apk_text_10="Giải mã Resources.arsc"
 decom_apk_text_11="Giải mã tài nguyên"
 decom_apk_text_12="Giải mã classes*.dex"
 decom_apk_text_13="Sao chép Manifest.xml gốc"
+decom_apk_text_14="Phân chia lại Dex"
 
 # build apk
 build_apk_text_1="Sắp xếp và lọc văn bản"

@@ -171,7 +171,7 @@ super_merge_text_3="Válassza ki a super.img.* fájlokat a super.img fájlba val
 decom_apk_text_1="Visszafejtés XML formátumban"
 decom_apk_text_2="Visszafejtés Json formátumban"
 decom_apk_text_3="Nincs visszafejtés"
-decom_apk_text_4="Alapértelmezett: 42, smali 2.5.2: 35, smali 3.0.9: 41 vagy alatta"
+decom_apk_text_4="Alapértelmezett: 41, smali 2.5.2: 35, smali 3.0.9: 41 vagy alatta"
 decom_apk_text_5="Csak AndroidManifest.xml"
 decom_apk_text_6="Egyéb jellemzők"
 decom_apk_text_7="Debug-info törlése a smali fájlokból"
@@ -181,6 +181,7 @@ decom_apk_text_10="Resources.arsc visszafejtése"
 decom_apk_text_11="Erőforrások visszafejtése"
 decom_apk_text_12="classes*.dex visszafejtése"
 decom_apk_text_13="Eredeti Manifest.xml másolása"
+decom_apk_text_14="Dex újrafelosztása"
 
 # build apk
 build_apk_text_1="Szöveg rendezése és szűrése"

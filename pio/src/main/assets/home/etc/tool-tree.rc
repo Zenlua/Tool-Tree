@@ -993,6 +993,7 @@ checktime
 <param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
 <param name="sign" desc=" " value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
 <param name="sstring" label="'$build_apk_text_1'" type="switch" value-sh="glog sstring 1"/>
+<param name="redivdd" label="'$decom_apk_text_14'" type="switch" value-sh="glog redivdd"/>
 <param name="copysign" desc=" " label="'$decom_apk_text_13'" type="switch" value-sh="glog copysign"/>
 <param name="FOLDER" required="true" option-sh="findfile forapkt $APK/$PTAH" multiple="multiple" desc="'$builds_text_1'"/>
 <set>
@@ -1000,9 +1001,10 @@ slog sign "$sign"
 slog sstring "$sstring"
 slog xoatm "$xoatm"
 slog copysign "$copysign"
+slog redivdd "$redivdd"
 IFS=$'"'\n'"'
 for vbapk in $FOLDER; do
-apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm"
+apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm" -r "$redivdd"
 echo
 done
 echo "'$save_text' $PTAD/out"
@@ -1111,6 +1113,7 @@ checktime
 <param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
 <param name="sign" desc=" " value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
 <param name="sstring" label="'$build_apk_text_1'" type="switch" value-sh="glog sstring 1"/>
+<param name="redivdd" label="'$decom_apk_text_14'" type="switch" value-sh="glog redivdd"/>
 <param name="comlib" label="'$addlang_text_2'" desc="'$addlang_text_3'" value-sh="glog comlib" option-sh="echo -e '"'manifest|$default_text\ntrue|$on_text\nfalse|$off_text'"'"/>
 <param name="FOLDER" required="true" option-sh="findfile forapk $APK/$PTAH" multiple="multiple" desc="'$builds_text_1'"/>
 <set>
@@ -1118,9 +1121,10 @@ slog sign "$sign"
 slog comlib "$comlib"
 slog sstring "$sstring"
 slog xoatm "$xoatm"
+slog redivdd "$redivdd"
 IFS=$'"'\n'"'
 for vbapk in $FOLDER; do
-apkeditor_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib"
+apkeditor_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib" -r "$redivdd"
 echo
 done
 echo "'$save_text' $PTAD/out"

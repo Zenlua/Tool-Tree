@@ -83,7 +83,7 @@ elif [ "$RESAPK" == 2 ];then
 rdex='--only-manifest'
 fi
     if [ "$DECODEX" == 1 ];then
-    rdex="--only-main-classes $rdex"
+    rdex="$rdex"
     [ "$DEBUGA" == 1 ] && rdex="--no-debug-info $rdex"
     else
     rdex="-s $rdex"
