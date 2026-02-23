@@ -991,10 +991,10 @@ checktime
 <action icon="'`urlpng build`'" desc="'$desc_apk1'">
 <title>'$build_text'</title>
 <param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
-<param name="sign" desc=" " value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
+<param name="sign" value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
 <param name="sstring" label="'$build_apk_text_1'" type="switch" value-sh="glog sstring 1"/>
 <param name="redivdd" label="'$decom_apk_text_14'" type="switch" value-sh="glog redivdd"/>
-<param name="copysign" desc=" " label="'$decom_apk_text_13'" type="switch" value-sh="glog copysign"/>
+<param name="copysign" label="'$decom_apk_text_13'" type="switch" value-sh="glog copysign"/>
 <param name="FOLDER" required="true" option-sh="findfile forapkt $APK/$PTAH" multiple="multiple" desc="'$builds_text_1'"/>
 <set>
 slog sign "$sign"
@@ -1045,9 +1045,9 @@ checktime
 <action icon="'`urlpng build`'" desc="'$desc_apkd1'">
 <title>'$build_text'</title>
 <param name="gobo_apex" value-sh="glog gobo_apex" label="'$deleted_project_text'" type="checkbox" />
-<param name="SIGNS" value-sh="glog signs_apex com.android.example.apex" desc=" " options-sh="cd $ETC/key/4096; ls -1d *.pem | sed '"'s|.pem||'"' " label="'$sign_text'" />
+<param name="SIGNS" value-sh="glog signs_apex com.android.example.apex" options-sh="cd $ETC/key/4096; ls -1d *.pem | sed '"'s|.pem||'"' " label="'$sign_text'" />
 <param name="APIs" label="API" value-sh="glog apis_apex auto" options-sh="echo -e '"'auto|$default_text\n30\n31\n32\n33\n34\n35\n36'"' " />
-<param name="nen_apex" desc=" " value-sh="glog nen_apex" label="'$apex_text_1'" type="switch" />
+<param name="nen_apex" value-sh="glog nen_apex" label="'$apex_text_1'" type="switch" />
 <param name="payload_type" label="'$super_text_2'" value-sh="glog payload_type auto" options-sh="echo -e '"'auto|$default_text\next4\nerofs\nf2fs'"' " />
 <param name="FILE" multiple="true" options-sh="findfile forapex $APK/$PTAH" required="true" desc="'$builds_text_1'" />
 <set>
@@ -1111,7 +1111,7 @@ checktime
 <action icon="'`urlpng build`'" desc="'$desc_apks1'">
 <title>'$build_text'</title>
 <param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
-<param name="sign" desc=" " value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
+<param name="sign" value-sh="glog sign default" option-sh="cd $ETC/key; ls -1d *.pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
 <param name="sstring" label="'$build_apk_text_1'" type="switch" value-sh="glog sstring 1"/>
 <param name="redivdd" label="'$decom_apk_text_14'" type="switch" value-sh="glog redivdd"/>
 <param name="comlib" label="'$addlang_text_2'" desc="'$addlang_text_3'" value-sh="glog comlib" option-sh="echo -e '"'manifest|$default_text\ntrue|$on_text\nfalse|$off_text'"'"/>
