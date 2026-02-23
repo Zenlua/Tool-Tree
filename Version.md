@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.3.4 (xx-2-2026)**
+**Version: 1.3.4 (23-2-2026)**
 
++ Update Apktool to version 3.0.0
 + Change icon
 + Change signature app
 + Supports viewing and converting more file types.
