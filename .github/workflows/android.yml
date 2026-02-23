@@ -7,6 +7,10 @@ on:
         description: 'Release APK'
         type: boolean
         default: false
+      UPTG:
+        description: 'Send Telegram'
+        type: boolean
+        default: true
   push:
     branches: [ "main" ]
   pull_request:
@@ -15,7 +19,10 @@ permissions: write-all
 env:
     KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
     KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+    CHAT_ID: ${{ secrets.CHAT_ID }}
+    TG_TOKEN: ${{ secrets.TG_TOKEN }}
     UPAPK: ${{ inputs.UPAPK }}
+    UPTG: ${{ inputs.UPTG }}
 jobs:
   build-release:
     runs-on: ubuntu-latest
@@ -30,6 +37,7 @@ jobs:
 
       - name: Build APK
         run: |
+          [ "$UPTG" ] || UPTG=true
           chmod +x ./gradlew ./.github/modun.sh
           ./.github/modun.sh
           chmod +x ./gradlew
@@ -42,6 +50,19 @@ jobs:
           cp -rf pio/build/outputs/apk/*/*.apk "Up/Tool-Tree.$VER.apk"
           ls Up
           echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
+          if [ "$UPTG" == "true" ];then
+          echo "Telegram"
+          chat_tg="https://github.com/Zenlua/Tool-Tree/releases
+          
+          🎉 Release new version Tool-Tree
+          
+          • Notes: <a href=\"https://zenlua.github.io/Tool-Tree/Version.html\">changelog</a>
+          • Version: $VER"
+          # tooltree
+          curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
+          -d chat_id="$CHAT_ID" -d parse_mode="HTML" \
+          --data-urlencode text="$chat_tg"
+          fi
           fi
 
       - name: Upload APK
@@ -81,3 +102,4 @@ jobs:
         with:
           name: debug-apk
           path: pio/build/outputs/apk/*/*.apk
+
