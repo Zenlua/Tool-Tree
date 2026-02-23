@@ -995,6 +995,7 @@ checktime
 <param name="sstring" label="'$build_apk_text_1'" type="switch" value-sh="glog sstring 1"/>
 <param name="redivdd" label="'$decom_apk_text_14'" type="switch" value-sh="glog redivdd"/>
 <param name="copysign" label="'$decom_apk_text_13'" type="switch" value-sh="glog copysign"/>
+<param name="comlib" label="'$addlang_text_2'" desc="'$addlang_text_3'" value-sh="glog comlibs" option-sh="echo -e '"'manifest|$default_text\ntrue|$on_text\nfalse|$off_text'"'"/>
 <param name="FOLDER" required="true" option-sh="findfile forapkt $APK/$PTAH" multiple="multiple" desc="'$builds_text_1'"/>
 <set>
 slog sign "$sign"
@@ -1002,9 +1003,10 @@ slog sstring "$sstring"
 slog xoatm "$xoatm"
 slog copysign "$copysign"
 slog redivdd "$redivdd"
+slog comlibs "$comlib"
 IFS=$'"'\n'"'
 for vbapk in $FOLDER; do
-apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm" -r "$redivdd"
+apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm" -r "$redivdd" -x "$comlib"
 echo
 done
 echo "'$save_text' $PTAD/out"

@@ -57,10 +57,10 @@ class ParamsFileChooserRender(
             pathView.visibility = View.VISIBLE
             pathView.hint = hintText
         } else {
-            setEditTextReadOnly(pathView)
-            textView.visibility = View.VISIBLE
-            pathView.visibility = View.GONE
+            textView.visibility = View.GONE
+            pathView.visibility = View.VISIBLE
             textView.text = hintText
+            setEditTextReadOnly(pathView)
         }
 
         btn.setOnClickListener {

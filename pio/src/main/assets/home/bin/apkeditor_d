@@ -97,6 +97,7 @@ echo
 
 # apkeditor
 eval "apkeditor d -f -t \"$TYPEAPK\" $setkkh -i \"$ptpk\" -o \"$Tout\" 2>&1" | sed -e '1,/__/d' -e '/Delete:/d' -e '/Saved to:/d' -e 's|I: \[DECOMPILE\] ||'
+mkdir -p "$Tout/.cache"
 
 # giải mã smali
 if [ "$DECODEX" == "smali" ];then
@@ -104,7 +105,7 @@ if [ "$DECODEX" == "smali" ];then
     for vkn in "$Tout"/dex/classes*.dex; do
     if [ -f "$vkn" ];then
     kout="$(basename $vkn .dex)"
-    mkdir -p "$Tout/smali/$kout" "$Tout/.cache"
+    mkdir -p "$Tout/smali/$kout"
     API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
     eval "baksmali d --debug-info $hhhhfdr --bootclasspath $BOOTCLASSPATH --api $API \"$vkn\" -o \"$Tout/smali/$kout\" "
     check_changes.py "$Tout/smali/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
@@ -114,7 +115,6 @@ fi
 
 # check hash res
 if [ -d "$Tout/resources/package_1/res" ];then
-    mkdir -p "$Tout/.cache"
     check_changes.py "$Tout/resources/package_1/res" "$Tout/.cache/hash_res.json" >/dev/null
 fi
 

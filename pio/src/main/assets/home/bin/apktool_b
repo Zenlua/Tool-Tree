@@ -22,6 +22,10 @@ show_help() {
   echo "  -r    enable redivision dex:"
   echo "          0: off"
   echo "          1: on"
+  echo "  -x    extractNativeLibs: manifest"
+  echo "          manifest: read and apply from manifest"
+  echo "          false: set manifest attribute 'false' and store libraries un-compressed with 4096 alignment."
+  echo "          true: set manifest attribute 'true' and store"
   echo "  -h    show help"
   exit 1
 }
@@ -31,7 +35,7 @@ show_help
 fi
 
 INPUT=''; OUTPUT=""; SIGNAP=''; FIRTVB=''; XDELF=''; COPYX=''; show_help='';
-while getopts ":i:o:s:n:d:r:c:h" opt; do
+while getopts ":i:o:s:n:d:r:c:x:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
     o) OUTPUT="$OPTARG" ;;
@@ -40,6 +44,7 @@ while getopts ":i:o:s:n:d:r:c:h" opt; do
     d) XDELF="$OPTARG" ;;
     c) COPYX="$OPTARG" ;;
     r) REDIVIS="$OPTARG" ;;
+    x) XTRALIB="$OPTARG" ;;
     h) show_help ;;
     \?) echo "! Not understand -$OPTARG"; show_help ;;
     :) echo "! Lack of value for -$OPTARG"; show_help ;;
@@ -108,8 +113,15 @@ fi
 # xoá bak
 find "$INPUT" -type f -name "*.bak" -delete >/dev/null
 
+# Nén lib.so
+if [ "$(grep -cm1 '\- so' "$INPUT/apktool.yml")" == 1 ];then
+[ "$XTRALIB" == "true" ] && sed -i "/\- so/d" "$INPUT/apktool.yml"
+else
+[ "$XTRALIB" == "false" ] && echo "- so" >> "$INPUT/apktool.yml"
+fi
+
 # tên file
-tenapkkk="$(grep -m1 'apkFileName' "$INPUT/apktool.yml" | awk '{print $2}')"
+tenapkkk="$(cat "$INPUT/.cache/ten_file.log")"
 
 # xây dựng apk
 eval "apktool b --copy-original -f \"$INPUT\" "

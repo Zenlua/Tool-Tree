@@ -105,6 +105,7 @@ fi
 
 # apktool
 eval "apktool d --match-original $ktfw -f $rdex -o \"$Tout\" \"$ptpk\" "
+mkdir -p "$Tout/.cache"
 
 # giải mã smali
 if [ "$DECODEX" == 2 ];then
@@ -113,7 +114,7 @@ if [ "$DECODEX" == 2 ];then
     if [ -f "$vkn" ];then
     echo "I: Baksmali ${vkn##*/}..."
     kout="$(basename $vkn .dex | sed 's|classes|smali|')"
-    mkdir -p "$Tout/$kout" "$Tout/.cache"
+    mkdir -p "$Tout/$kout"
     API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
     eval "baksmali d --debug-info $hhhhfdr --bootclasspath $BOOTCLASSPATH --api $API \"$vkn\" -o \"$Tout/$kout\" "
     check_changes.py "$Tout/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
@@ -123,15 +124,15 @@ fi
 
 # check hash res
 if [ -d "$Tout/res" ];then
-    mkdir -p "$Tout/.cache"
     check_changes.py "$Tout/res" "$Tout/.cache/hash_res.json" >/dev/null
 fi
 
 # di chuyển xml
 [ -f "$Tout/original/AndroidManifest.xml" ] && mv "$Tout/original/AndroidManifest.xml" "$Tout/.cache/AndroidManifest.xml"
 
-# lưu đường dẫn
+# lưu đường dẫn & tên file
 echo "${INPUT%/*}" > "$Tout/.cache/save.log"
+echo "${ptpk##*/}" > "$Tout/.cache/ten_file.log"
 
 # lưu chữ ký
 apkeditor d -t sig -i "$ptpk" -sig "$Tout/signatures" &> "$Tout/.cache/sign.log"
