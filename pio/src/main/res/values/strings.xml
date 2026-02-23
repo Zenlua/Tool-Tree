@@ -67,5 +67,5 @@ If you agree, click the confirmation button to continue."</string>
     <string name="stop">Stop</string>
     <string name="turn_off_wakelock">Turn off WakeLock</string>
     <string name="turn_on_wakelock">Turn on WakeLock</string>
-
+    <string name="msg_folder_mode">Press and hold to select a folder</string>
 </resources>

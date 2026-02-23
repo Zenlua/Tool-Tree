@@ -52,4 +52,5 @@
     <string name="stop">停止</string>
     <string name="turn_off_wakelock">关闭 WakeLock</string>
     <string name="turn_on_wakelock">开启 WakeLock</string>
+    <string name="msg_folder_mode">按住即可选择文件夹。</string>
 </resources>

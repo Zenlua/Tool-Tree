@@ -52,4 +52,5 @@
     <string name="stop">Остановить</string>
     <string name="turn_off_wakelock">Выключить WakeLock</string>
     <string name="turn_on_wakelock">Включить WakeLock</string>
+    <string name="msg_folder_mode">Нажмите и удерживайте, чтобы выбрать папку</string>
 </resources>

@@ -995,7 +995,7 @@ checktime
 <param name="sstring" label="'$build_apk_text_1'" type="switch" value-sh="glog sstring 1"/>
 <param name="redivdd" label="'$decom_apk_text_14'" type="switch" value-sh="glog redivdd"/>
 <param name="copysign" label="'$decom_apk_text_13'" type="switch" value-sh="glog copysign"/>
-<param name="comlib" label="'$addlang_text_2'" desc="'$addlang_text_3'" value-sh="glog comlibs" option-sh="echo -e '"'manifest|$default_text\ntrue|$on_text\nfalse|$off_text'"'"/>
+<param name="comlib" label="'$addlang_text_2'" value-sh="glog comlibs" option-sh="echo -e '"'manifest|$default_text\ntrue|$on_text\nfalse|$off_text'"'"/>
 <param name="FOLDER" required="true" option-sh="findfile forapkt $APK/$PTAH" multiple="multiple" desc="'$builds_text_1'"/>
 <set>
 slog sign "$sign"

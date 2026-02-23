@@ -55,6 +55,7 @@ class ActivityFileSelector : AppCompatActivity() {
                 mode = getInt("mode")
                 if (mode == MODE_FOLDER) {
                     title = getString(R.string.title_activity_folder_selector)
+                    Toast.makeText(this@ActivityFileSelector, R.string.msg_folder_mode, Toast.LENGTH_SHORT).show()
                 }
             }
         }

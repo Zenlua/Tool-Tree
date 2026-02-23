@@ -52,4 +52,5 @@ Ha egyetért, a folytatáshoz nyomja meg a megerősítés gombot."</string>
     <string name="stop">Leállítás</string>
     <string name="turn_off_wakelock">WakeLock kikapcsolása</string>
     <string name="turn_on_wakelock">WakeLock bekapcsolása</string>
+    <string name="msg_folder_mode">Tartsa lenyomva a gombot egy mappa kiválasztásához</string>
 </resources>
