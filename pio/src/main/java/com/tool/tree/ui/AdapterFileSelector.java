@@ -191,7 +191,7 @@ public class AdapterFileSelector extends BaseAdapter {
                     view.setOnLongClickListener(new View.OnLongClickListener() {
                         @Override
                         public boolean onLongClick(View v) {
-                            DialogHelper.Companion.confirm(view.getContext(), "Select a directory?", file.getAbsolutePath(), new Runnable() {
+                            DialogHelper.Companion.confirm(view.getContext(), getString(R.string.dialog_title_select_directory), file.getAbsolutePath(), new Runnable() {
                                 @Override
                                 public void run() {
                                     if (!file.exists()) {
@@ -230,7 +230,7 @@ public class AdapterFileSelector extends BaseAdapter {
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        DialogHelper.Companion.confirm(view.getContext(), "Selected file?", file.getAbsolutePath(), new Runnable() {
+                        DialogHelper.Companion.confirm(view.getContext(), getString(R.string.dialog_title_select_file), file.getAbsolutePath(), new Runnable() {
                             @Override
                             public void run() {
                                 if (!file.exists()) {

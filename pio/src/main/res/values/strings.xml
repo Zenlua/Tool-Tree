@@ -68,4 +68,6 @@ If you agree, click the confirmation button to continue."</string>
     <string name="turn_off_wakelock">Turn off WakeLock</string>
     <string name="turn_on_wakelock">Turn on WakeLock</string>
     <string name="msg_folder_mode">Press and hold to select a folder</string>
+    <string name="dialog_title_select_directory">Do you want to select this folder?</string>
+    <string name="dialog_title_select_file">Do you want to select this file?</string>
 </resources>

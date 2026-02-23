@@ -53,4 +53,6 @@
     <string name="turn_off_wakelock">关闭 WakeLock</string>
     <string name="turn_on_wakelock">开启 WakeLock</string>
     <string name="msg_folder_mode">按住即可选择文件夹。</string>
+    <string name="dialog_title_select_directory">您要选择此文件夹吗？</string>
+    <string name="dialog_title_select_file">您要选择此文件吗？</string>
 </resources>

@@ -53,4 +53,6 @@
     <string name="turn_off_wakelock">Выключить WakeLock</string>
     <string name="turn_on_wakelock">Включить WakeLock</string>
     <string name="msg_folder_mode">Нажмите и удерживайте, чтобы выбрать папку</string>
+    <string name="dialog_title_select_directory">Вы хотите выбрать эту папку?</string>
+    <string name="dialog_title_select_file">Вы хотите выбрать этот файл?</string>
 </resources>
