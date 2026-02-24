@@ -30,7 +30,7 @@ show_help() {
   echo "  -d    delete folder after build: 1"
   echo "          0: false"
   echo "          1: true"
-  echo "  -p    Disable auto patching with fs_config and fs_contexts: 0"
+  echo "  -p    Patching with fs_config and fs_contexts: 0"
   echo "          0: false"
   echo "          1: true"
   echo "  -h    show help"
@@ -73,7 +73,7 @@ fi
 [[ -z "$AVBIMG" ]] && AVBIMG=0
 [[ -z "$CDELIMG" ]] && CDELIMG=1
 [[ -z "$CONVER" ]] && CONVER='raw'
-[[ -z "$DISATFS" ]] && DISATFS=0
+[[ -z "$DISATFS" ]] && DISATFS=1
 [ "$(glog build_time 0)" == 0 ] && time_build="1230768000" || time_build="$(glog build_time)"
 
 info="${INPUT%/*}/config/${INPUT##*/}_info"
@@ -157,7 +157,7 @@ progress -1/0
 }
 
 if [ "$partition" == "erofs" ];then
-  [ "$DISATFS" == 1 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
+  [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
   mkfs.erofs --quiet -T $time_build --workers=$threads -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" 2>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved"
   echo
 elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
@@ -250,7 +250,7 @@ elif [ "$partition" == "squashfs" ];then
     progress -1/0
     echo
 elif [ "$partition" == "f2fs" ];then
-  [ "$DISATFS" == 1 ] || patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
+  [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
   if [ -f "$info_size" ] && [ "$(cat $info)" == "f2fs" ] && [ "$TTBUILDI" == 0 ];then
   size_real=$(cat $info_size 2>/dev/null);
   size_real="$(echo "$SAINEN * 1024 * 1024 + $size_real" | bc)"
@@ -284,7 +284,7 @@ elif [ "$partition" == "f2fs" ];then
   [ -f "$INPUT/system/build.prop" ] && rm -f "$file_contexts" "$fs_config"
   echo
 elif [ "$partition" == "ext" ];then
-  [ "$DISATFS" == 1 ] || patch "$INPUT" "$fs_config" "$file_contexts" >/dev/null
+  [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
   size_real=$(cat $info_size 2>/dev/null);
   size_orig="$(du -sb "$INPUT" | awk '{ print $1 }')"
   if test "$size_orig" -le "52428800"; then

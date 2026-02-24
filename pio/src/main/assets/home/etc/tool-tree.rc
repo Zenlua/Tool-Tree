@@ -850,7 +850,7 @@ checktime
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
-<param name="off_fscontex" value-sh="glog off_fscontex" label="'$patch_text_fscontex'" type="switch" />
+<param name="offfscontex" value-sh="glog offfscontex 1" label="'$patch_text_fscontex'" type="switch" />
 <param name="vavb" label="'$builds_text_8'" desc="'$builds_text_9'" type="switch"/>
 <param name="build_size" label="Megabit" value-sh="glog build_size 0" type="number" desc="'$builds_text_7'" required="required" />
 <set>
@@ -860,9 +860,9 @@ slog vavbbgdf "$vavb"
 slog boolboxdjh "$boolbox"
 slog dinh_dang "$dinh_dang"
 slog build_size "$build_size"
-slog off_fscontex "$off_fscontex"
+slog offfscontex "$offfscontex"
 for vkl in $IMAGES; do
-repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD" -n "$dang_nen" -l $(glog muc_nen 8) -k $dinh_dang -s $build_size -d $boolbox -a $vavb -c $format_img -p "$off_fscontex"
+repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD" -n "$dang_nen" -l $(glog muc_nen 8) -k $dinh_dang -s $build_size -d $boolbox -a $vavb -c $format_img -p "$offfscontex"
 done
 echo "'$save_text' $PTSD/out"
 echo

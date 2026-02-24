@@ -292,7 +292,7 @@ build_time_text_1="ROM build ideje"
 build_time_text_2="Automatikus: 0, módosítható, például: 1766318047"
 xoaoat_text_1="Bejegyzések törlése oat és odex"
 open_activity_text="Mappa megnyitása:"
-patch_text_fscontex="Tiltsa le az fs_config és fs_contexts javításokat"
+patch_text_fscontex="Az fs_config és az fs_contexts fájlok javítása"
 config_text_1="Meglévő projekt átalakítása"
 config_text_2="Új projekt létrehozása vagy mappa kiválasztása"
 

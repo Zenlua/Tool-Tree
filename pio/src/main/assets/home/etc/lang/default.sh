@@ -290,7 +290,7 @@ apex_text_2="File support: apex, capex"
 # other
 xoaoat_text_1="Clean oat and odex entries"
 open_activity_text="Open folder:"
-patch_text_fscontex="Disable fs_config and fs_contexts patches"
+patch_text_fscontex="Patch fs_config and fs_contexts"
 build_time_text_1="ROM build time"
 build_time_text_2="Automatic: 0, can be changed, for example: 1766318047"
 config_text_1="Convert existing projects"
