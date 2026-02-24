@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.content.Context
+import android.content.Context;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.omarea.common.ui.DialogHelper;
