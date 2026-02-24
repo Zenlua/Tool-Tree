@@ -179,7 +179,7 @@ public class AdapterFileSelector extends BaseAdapter {
                     @Override
                     public void onClick(View v) {
                         if (!file.exists()) {
-                            Toast.makeText(view.getContext(), "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         File[] files = file.listFiles();
@@ -194,11 +194,11 @@ public class AdapterFileSelector extends BaseAdapter {
                     view.setOnLongClickListener(new View.OnLongClickListener() {
                         @Override
                         public boolean onLongClick(View v) {
-                            DialogHelper.Companion.confirm(view.getContext(), context.getString(R.string.dialog_title_select_directory), file.getAbsolutePath(), new Runnable() {
+                            DialogHelper.Companion.confirm(context, context.getString(R.string.dialog_title_select_directory), file.getAbsolutePath(), new Runnable() {
                                 @Override
                                 public void run() {
                                     if (!file.exists()) {
-                                        Toast.makeText(view.getContext(), "The selected directory has been deleted. Please select another one!", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(context, "The selected directory has been deleted. Please select another one!", Toast.LENGTH_SHORT).show();
                                         return;
                                     }
                                     selectedFile = file;
@@ -233,11 +233,11 @@ public class AdapterFileSelector extends BaseAdapter {
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        DialogHelper.Companion.confirm(view.getContext(), context.getString(R.string.dialog_title_select_file), file.getAbsolutePath(), new Runnable() {
+                        DialogHelper.Companion.confirm(context, context.getString(R.string.dialog_title_select_file), file.getAbsolutePath(), new Runnable() {
                             @Override
                             public void run() {
                                 if (!file.exists()) {
-                                    Toast.makeText(view.getContext(), "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(context, "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
                                     return;
                                 }
                                 selectedFile = file;
