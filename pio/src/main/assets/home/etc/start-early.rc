@@ -14,14 +14,16 @@ if checkonline; then
     sed -n "$text_num_1,$((text_num_2 - 1))p" $TEMP/Version.md | sed -e "s|\*\*||g" -e "s|+|•|g" | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/version.txt
     
     # Thông báo cập nhật
-    websum="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest | jq -r .assets[0].digest | cut -d: -f2)"
-    if [[ "$websum" != "$(checksum "$PATH_APK")" ]];then
+    websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
+    websum="$(echo "$websum" | jq -r .assets[0].digest | cut -d: -f2)"
+    tagname="$(echo "$websum" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
+    if [[ "$websum" == "$(checksum "$PATH_APK")" ]] || [[ ${PACKAGE_VERSION_NAME//./} -ge $tagname ]];then
+        [ -f $TEMP/update ] && rm -f $TEMP/update
+    else
         if [ ! -f $TEMP/update ] && [ -n "$websum" ];then
         notiservice --am --id $RANDOM --message "$update_text_6"
         echo "$websum" > $TEMP/update
         fi
-    else
-        [ -f $TEMP/update ] && rm -f $TEMP/update
     fi
 fi
 ) &
