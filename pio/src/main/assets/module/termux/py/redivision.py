@@ -8,7 +8,7 @@ import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 
 
-DEFAULT_LIMIT = 60000
+DEFAULT_LIMIT = 65000
 
 
 CLASS_DEF = re.compile(r'^\.class\s+[^\n]*?(L[^;]+;)')

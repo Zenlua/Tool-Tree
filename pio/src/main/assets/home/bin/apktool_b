@@ -124,7 +124,7 @@ fi
 tenapkkk="$(cat "$INPUT/.cache/ten_file.log")"
 
 # xây dựng apk
-eval "apktool b --copy-original -f \"$INPUT\" "
+apktool b --copy-original -f "$INPUT" || killtree "$replag_text_3"
 
 # tạo thư mục
 mkdir -p "$OUTPUT"

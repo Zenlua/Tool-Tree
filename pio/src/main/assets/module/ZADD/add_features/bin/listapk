@@ -1,7 +1,11 @@
 echo "none"
 ptsystem="$(ls -1d $SDH/$PTSH/*/system/build.prop 2>/dev/null | grep -m1 'system' | sed 's|\/build.prop||')"
+if [ "$ptsystem" ];then
 cd "${ptsystem}"
 find * -type f -name "*.apk" | awk -F/ '{print "/system/"$0 "|" $NF}'
+fi
 ptsys_ext="$(ls -1d $SDH/$PTSH/*tem_ex* 2>/dev/null | grep -m1 'system_ext')"
+if [ "$ptsys_ext" ];then
 cd "${ptsys_ext}"
 find * -type f -name "*.apk" | awk -F/ '{print "/system_ext/"$0 "|" $NF}'
+fi
