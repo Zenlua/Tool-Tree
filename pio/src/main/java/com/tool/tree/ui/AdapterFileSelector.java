@@ -6,7 +6,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.content.Context;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.omarea.common.ui.DialogHelper;
@@ -17,7 +16,6 @@ import java.io.File;
 import java.io.FileFilter;
 
 public class AdapterFileSelector extends BaseAdapter {
-    private final Context context;  // Thêm field này
     private File[] fileArray;
     private Runnable fileSelected;
     private File currentDir;
@@ -30,19 +28,18 @@ public class AdapterFileSelector extends BaseAdapter {
     private final boolean leaveRootDir = true; // 是否允许离开设定的rootDir到更父级的目录去
     private boolean folderChooserMode = false; // 是否是目录选择模式（目录选择模式下不显示文件，长按目录选中）
 
-    private AdapterFileSelector(Context context, File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog, String extension) {
-        this.context = context.getApplicationContext();
+    private AdapterFileSelector(File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog, String extension) {
         init(rootDir, fileSelected, progressBarDialog, extension);
     }
 
-    public static AdapterFileSelector FolderChooser(Context context, File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog) {
-        AdapterFileSelector adapterFileSelector = new AdapterFileSelector(context, rootDir, fileSelected, progressBarDialog, null);
+    public static AdapterFileSelector FolderChooser(File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog) {
+        AdapterFileSelector adapterFileSelector = new AdapterFileSelector(rootDir, fileSelected, progressBarDialog, null);
         adapterFileSelector.folderChooserMode = true;
         return adapterFileSelector;
     }
 
-    public static AdapterFileSelector FileChooser(Context context, File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog, String extension) {
-        AdapterFileSelector adapterFileSelector = new AdapterFileSelector(context, rootDir, fileSelected, progressBarDialog, extension);
+    public static AdapterFileSelector FileChooser(File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog, String extension) {
+        AdapterFileSelector adapterFileSelector = new AdapterFileSelector(rootDir, fileSelected, progressBarDialog, extension);
         adapterFileSelector.folderChooserMode = false;
         return adapterFileSelector;
     }
@@ -179,7 +176,7 @@ public class AdapterFileSelector extends BaseAdapter {
                     @Override
                     public void onClick(View v) {
                         if (!file.exists()) {
-                            Toast.makeText(context, "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(view.getContext(), "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         File[] files = file.listFiles();
@@ -194,11 +191,11 @@ public class AdapterFileSelector extends BaseAdapter {
                     view.setOnLongClickListener(new View.OnLongClickListener() {
                         @Override
                         public boolean onLongClick(View v) {
-                            DialogHelper.Companion.confirm(context, context.getString(R.string.dialog_title_select_directory), file.getAbsolutePath(), new Runnable() {
+                            DialogHelper.Companion.confirm(view.getContext(), view.getContext().getString(R.string.dialog_title_select_directory), file.getAbsolutePath(), new Runnable() {
                                 @Override
                                 public void run() {
                                     if (!file.exists()) {
-                                        Toast.makeText(context, "The selected directory has been deleted. Please select another one!", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(view.getContext(), "The selected directory has been deleted. Please select another one!", Toast.LENGTH_SHORT).show();
                                         return;
                                     }
                                     selectedFile = file;
@@ -233,11 +230,11 @@ public class AdapterFileSelector extends BaseAdapter {
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        DialogHelper.Companion.confirm(context, context.getString(R.string.dialog_title_select_file), file.getAbsolutePath(), new Runnable() {
+                        DialogHelper.Companion.confirm(view.getContext(), view.getContext().getString(R.string.dialog_title_select_file), file.getAbsolutePath(), new Runnable() {
                             @Override
                             public void run() {
                                 if (!file.exists()) {
-                                    Toast.makeText(context, "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(view.getContext(), "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
                                     return;
                                 }
                                 selectedFile = file;
