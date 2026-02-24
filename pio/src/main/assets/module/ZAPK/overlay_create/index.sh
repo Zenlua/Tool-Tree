@@ -6,7 +6,7 @@ home(){
 xml_print '<group title="'$trans_text'">
 
 <action title="'$home_text_1'" desc="'$home_text_2'">
-<param name="overlay_folder" type="folder" value-sh="glog overlay_folder" required="true" editable="true"/>
+<param desc="'$home_text_7'" name="overlay_folder" type="folder" value-sh="glog overlay_folder" required="true" editable="true"/>
 <set>
 slog overlay_folder "$overlay_folder"
 '$MPAT'/overlay.sh
@@ -14,7 +14,7 @@ slog overlay_folder "$overlay_folder"
 </action>
 
 <action title="'$home_text_3'" desc="'$home_text_4'">
-<param name="extract_folder_lang" type="folder" value-sh="glog extract_folder_lang" required="true" editable="true"/>
+<param desc="'$home_text_8'" name="extract_folder_lang" type="folder" value-sh="glog extract_folder_lang" required="true" editable="true"/>
 <param name="extract_folder_lang_text" label="'$home_text_5'" desc="'$home_text_6'" placeholder="values-vi,values-zh-rCN" type="text" value-sh="glog extract_folder_lang_text"/>
 <set>
 slog extract_folder_lang "$extract_folder_lang"
