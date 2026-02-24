@@ -13,9 +13,9 @@ slog overlay_folder "$overlay_folder"
 </set>
 </action>
 
-<action title="Trích xuất ngôn ngữ" desc="Lấy ngôn ngữ từ tệp apk">
+<action title="'$home_text_3'" desc="'$home_text_4'">
 <param name="extract_folder_lang" type="folder" value-sh="glog extract_folder_lang" required="true" editable="true"/>
-<param name="extract_folder_lang_text" label="Ngôn ngữ" desc="Chỉ lấy ngôn ngữ đã có sẵn, ví dụ: values-vi,values-zh-rCN" placeholder="values-vi,values-zh-rCN" type="text" value-sh="glog extract_folder_lang_text"/>
+<param name="extract_folder_lang_text" label="'$home_text_5'" desc="'$home_text_6'" placeholder="values-vi,values-zh-rCN" type="text" value-sh="glog extract_folder_lang_text"/>
 <set>
 slog extract_folder_lang "$extract_folder_lang"
 slog extract_folder_lang_text "$extract_folder_lang_text"
