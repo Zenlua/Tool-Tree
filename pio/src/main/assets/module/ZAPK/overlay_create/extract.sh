@@ -1,6 +1,5 @@
 # kakathic
 MPAT="${0%/*}"
-filter_xml="$MPAT/filter_xml.py"
 if [ -f $MPAT/auto.prop ] && [ "$(glog auto_trans_text_${MPAT##*/})" == 1 ];then
 source $MPAT/auto.prop
 else
@@ -81,7 +80,7 @@ fi
 echo "$demso: ${vv##*/}: $overlay_text_5"
 for vc in $(find ${vv%.*}/res -type f | sed "/\/values\//d"); do
 if [ "$(echo "$vc" | grep -c -e "values\-" -e "\.xml")" -ge 1 ];then
-python "$filter_xml" "$vc" &>"$extract_folder_lang/1out/1filterxml.log"
+filter_xml.py "$vc" &>"$extract_folder_lang/1out/1filterxml.log"
 update_id.py --use-file "${vv%.*}/res/values/public.xml" "$vc" &>>"$extract_folder_lang/1out/1filterxml.log"
 fi
 done
