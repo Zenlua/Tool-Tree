@@ -46,12 +46,12 @@ def _safe_parse(file_path):
 
 def get_names_from_file(file_path):
     if not os.path.isfile(file_path):
-        print(f"File không tồn tại: {file_path}")
+        print(f"The file does not exist: {file_path}")
         return set()
     try:
         tree = _safe_parse(file_path)
     except ET.ParseError as e:
-        print(f"Lỗi khi parse {file_path}: {e}")
+        print(f"Error when parsing {file_path}: {e}")
         return set()
 
     root = tree.getroot()
@@ -64,22 +64,22 @@ def get_names_from_file(file_path):
 
 def filter_file2(file1, file2):
     if not os.path.isfile(file1):
-        print(f"File không tồn tại: {file1}")
+        print(f"The file does not exist.: {file1}")
         return
 
     if not os.path.isfile(file2):
-        print(f"File không tồn tại: {file2}")
+        print(f"The file does not exist.: {file2}")
         return
 
     base_names = get_names_from_file(file1)
     if not base_names:
-        print(f"Không tìm thấy name nào trong {file1}, không lọc.")
+        print(f"No names found in {file1}, unfiltered.")
         return
 
     try:
         tree2 = _safe_parse(file2)
     except ET.ParseError as e:
-        print(f"Lỗi khi parse {file2}: {e}")
+        print(f"Error when parsing {file2}: {e}")
         return
 
     root2 = tree2.getroot()
@@ -94,7 +94,7 @@ def filter_file2(file1, file2):
         root2.remove(elem)
 
     tree2.write(file2, encoding="utf-8", xml_declaration=True)
-    print(f"Đã lọc {file2}: giữ lại {len(root2)} phần tử.")
+    print(f"Filtered {file2}: retain {len(root2)} element.")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

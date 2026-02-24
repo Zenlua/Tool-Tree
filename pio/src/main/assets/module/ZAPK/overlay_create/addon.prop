@@ -1,0 +1,25 @@
+# Add-on
+id=overlay_create
+name=Create overlay
+author=Kakathic
+description=Create overlay language
+version=1.0
+versionCode=100
+root=false
+
+# language
+google_text="Currently using google translate"
+
+home_text_1="Create overlay"
+home_text_2="Create an overlay from the language directory"
+
+overlay_text_1="Folder not found"
+overlay_text_2="Created overlay list. Please add the package to the list:"
+overlay_text_3="Folder is empty"
+overlay_text_4="Starting to create overlay..."
+overlay_text_5="Creating"
+overlay_text_6="Already exists"
+overlay_text_7="Skipped"
+overlay_text_8="Overlay build error, check log:"
+overlay_text_9="Saved at:"
+overlay_text_10="Decode APK errors, view logs:"

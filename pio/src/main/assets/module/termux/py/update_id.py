@@ -99,10 +99,6 @@ def main(public_path, resource_input, use_file):
             print(f"Error parsing input XML: {e}")
             sys.exit(1)
 
-    # Backup
-    backup_path = public_path + ".bak"
-    shutil.copyfile(public_path, backup_path)
-
     public_tree = ET.parse(public_path)
     public_root = public_tree.getroot()
 
