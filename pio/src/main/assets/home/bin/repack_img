@@ -277,7 +277,7 @@ elif [ "$partition" == "f2fs" ];then
   make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
   sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" -c "$saved" 2>&1 | tee $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
   else
-  make_f2fs -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+  make_f2fs -t 0 -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
   sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" "$saved" 2>&1 | tee $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
   fi
   [ "$(grep -cm1 'Done:' $TMP/sload_f2fs.log)" == 0 ] && killtree "Error build sload_f2fs, Suggestion: Increase free MB, log: $TMP/sload_f2fs.log" "$saved";

@@ -59,9 +59,14 @@ xacnhatpay="$(listpayload "$INPUT")"
 xoazip=1
     if [ -z "$xacnhatpay" ];then
     echo -e "$unpack_text_1 $PVUGBIN...\n"
-    tenpjag="$(echo "${PVUGBIN##*/}" | cut -d. -f1)"
-    unzip -qo "$INPUT" $PVUGBIN ${PVUGBIN%/*}/$tenpjag.transfer.list $tenpjag.transfer.list -d $TMP 2>/dev/null
+    tenpjag="$(echo "${PVUGBIN##*/}")"
+#    if [ "${tenpjag##*.}" == "zstd" ] || [ "${tenpjag##*.}" == "zst" ];then
+#    unzip -qop "$INPUT" $PVUGBIN | zstd -c -d > "$TMP/${tenpjag%%.*}.img"
+#    INPUT="$TMP/${tenpjag%%.*}.img";
+#    else
+    unzip -qo "$INPUT" $PVUGBIN ${PVUGBIN%/*}/${tenpjag%%.*}.transfer.list ${tenpjag%%.*}.transfer.list -d $TMP 2>/dev/null
     INPUT="$TMP/$PVUGBIN";
+#    fi
     dang_tep="$(checktype "$INPUT")"
         if [ "$dang_tep" == 'super' ];then
         echo -e "$unpack_text_7\n" >&2
@@ -75,6 +80,7 @@ if [ "$dang_tep" == 'zstd' ];then
   echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
   file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
   zstd -T$threads -f -d -k "$INPUT" -o "$file_img" &>/dev/null
+  rm -f "$INPUT"
 elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
   tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
   [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || killtree "$more_text_5 $tenpjanvung.transfer.list"
@@ -140,11 +146,11 @@ mkdir -p "$in_name" $OUTPUT/config
       extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
       if [ -f "$fs_config" ];then
       luu_contexts="$(sed -e "s|s0/|s0\n/|g" "$file_contexts" | sort)"
+      luu_config="$(cat "$fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
           if [ -f "$in_name/system/build.prop" ];then
-          luu_config="$(cat "$fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
           luu_contexts="$(echo "$luu_contexts" | sed -e "s|^/${namepv##*/} u|/${namepv##*/}/ u|")"
-          echo "$luu_config" > "$fs_config"
           fi
+      echo "$luu_config" > "$fs_config"
       echo "$luu_contexts" > "$file_contexts"
       fi
       echo "$(stat -c%s "$file_img")" > "$info_size"
