@@ -115,13 +115,13 @@ class MainActivity : AppCompatActivity() {
             WakeLockService.startService(applicationContext)
         }
 
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                startService(Intent(this@MainActivity, WakeLockService::class.java).apply { action = WakeLockService.ACTION_END_WAKELOCK })
-                isEnabled = false
-                onBackPressedDispatcher.onBackPressed()
-            }
-        })
+        onBackPressedDispatcher.addCallback(this) {
+            startService(Intent(this@MainActivity, WakeLockService::class.java).apply {
+                action = WakeLockService.ACTION_END_WAKELOCK
+            })
+            isEnabled = false
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {

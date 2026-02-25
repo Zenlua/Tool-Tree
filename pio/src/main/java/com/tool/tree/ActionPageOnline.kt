@@ -52,15 +52,10 @@ class ActionPageOnline : AppCompatActivity() {
             finish()
         }
 
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (binding.krOnlineWebview.canGoBack()) {
-                    binding.krOnlineWebview.goBack()
-                } else {
-                    finish()
-                }
-            }
-        })
+        onBackPressedDispatcher.addCallback(this) {
+            if (binding.krOnlineWebview.canGoBack()) binding.krOnlineWebview.goBack()
+            else finish()
+        }
 
         loadIntentData()
     }

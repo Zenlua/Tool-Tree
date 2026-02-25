@@ -3,9 +3,7 @@ package com.tool.tree
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
-import android.view.KeyEvent
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.omarea.common.ui.ProgressBarDialog
@@ -13,6 +11,7 @@ import com.tool.tree.databinding.ActivityFileSelectorBinding
 import com.tool.tree.ui.AdapterFileSelector
 import java.io.File
 import androidx.activity.OnBackPressedCallback
+import com.google.android.material.snackbar.Snackbar;
 
 class ActivityFileSelector : AppCompatActivity() {
     companion object {
@@ -31,26 +30,24 @@ class ActivityFileSelector : AppCompatActivity() {
         binding = ActivityFileSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
+        val toolbar = binding.toolbar
         setSupportActionBar(toolbar)
         // setTitle(R.string.app_name)
 
         // 显示返回按钮
-        supportActionBar!!.setHomeButtonEnabled(true)
-        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.apply {
+            setHomeButtonEnabled(true)
+            setDisplayHomeAsUpEnabled(true)
+        }
         toolbar.setNavigationOnClickListener { _ ->
             finish()
         }
 
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (adapterFileSelector != null && adapterFileSelector!!.goParent()) {
-                    return
-                }
-                setResult(RESULT_CANCELED, Intent())
-                finish()
-            }
-        })
+        onBackPressedDispatcher.addCallback(this) {
+            if (adapterFileSelector?.goParent() == true) return@addCallback
+            setResult(RESULT_CANCELED, Intent())
+            finish()
+        }
 
         intent.extras?.run {
             if (containsKey("extension")) {
@@ -66,7 +63,7 @@ class ActivityFileSelector : AppCompatActivity() {
                 mode = getInt("mode")
                 if (mode == MODE_FOLDER) {
                     title = getString(R.string.title_activity_folder_selector)
-                    Toast.makeText(this@ActivityFileSelector, R.string.msg_folder_mode, Toast.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, R.string.msg_folder_mode, Snackbar.LENGTH_SHORT).show()
                 }
             }
         }
@@ -78,15 +75,15 @@ class ActivityFileSelector : AppCompatActivity() {
     }
 
     private fun loadData() {
-        val sdcard = File(Environment.getExternalStorageDirectory().absolutePath)
+        val sdcard = Environment.getExternalStorageDirectory()
         if (sdcard.exists() && sdcard.isDirectory) {
             val list = sdcard.listFiles()
             if (list == null) {
-                Toast.makeText(applicationContext, "Failed to retrieve file list!", Toast.LENGTH_LONG).show()
+                Snackbar.make(binding.root, "Failed to retrieve file list!", Snackbar.LENGTH_LONG).show()
                 return
             }
             val onSelected =  Runnable {
-                val file: File? = adapterFileSelector!!.selectedFile
+                val file = adapterFileSelector?.selectedFile
                 if (file != null) {
                     this.setResult(RESULT_OK, Intent().putExtra("file", file.absolutePath))
                     this.finish()
@@ -100,7 +97,7 @@ class ActivityFileSelector : AppCompatActivity() {
 
             binding.fileSelectorList.adapter = adapterFileSelector
         } else {
-            Toast.makeText(applicationContext, "External storage not available!", Toast.LENGTH_LONG).show()
+            Snackbar.make(binding.root, "External storage not available!", Snackbar.LENGTH_LONG).show()
         }
     }
 }
