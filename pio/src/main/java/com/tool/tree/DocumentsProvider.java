@@ -118,23 +118,22 @@ public class DocumentsProvider extends DocumentsProvider {
 
     @Override
     public Cursor queryRoots(String[] projection) {
-        ApplicationInfo appInfo = getContext().getApplicationInfo();
-        String label = appInfo.loadLabel(getContext().getPackageManager()).toString();
-        MatrixCursor result = new MatrixCursor(projection != null ? projection : DEFAULT_ROOT_PROJECTION);
-        MatrixCursor.RowBuilder row = result.newRow();
+        final MatrixCursor result =
+                new MatrixCursor(DEFAULT_ROOT_PROJECTION);
+        final MatrixCursor.RowBuilder row = result.newRow();
         row.add(Root.COLUMN_ROOT_ID, packageName);
         row.add(Root.COLUMN_DOCUMENT_ID, packageName);
-        if (dataDir != null && dataDir.exists()) {
-            row.add(Root.COLUMN_AVAILABLE_BYTES,
-                    dataDir.getFreeSpace());
-        }
         row.add(Root.COLUMN_FLAGS,
-        Root.FLAG_SUPPORTS_CREATE |
-        Root.FLAG_SUPPORTS_IS_CHILD |
-        Root.FLAG_SUPPORTS_RECENTS);
-        row.add(Root.COLUMN_TITLE, label);
+                Root.FLAG_SUPPORTS_CREATE
+              | Root.FLAG_SUPPORTS_IS_CHILD
+              | Root.FLAG_SUPPORTS_RECENTS
+              | Root.FLAG_LOCAL_ONLY);
+        row.add(Root.COLUMN_TITLE,
+                getContext().getString(R.string.app_name));
         row.add(Root.COLUMN_MIME_TYPES, "*/*");
-        row.add(Root.COLUMN_ICON, appInfo.icon);
+        row.add(Root.COLUMN_AVAILABLE_BYTES,
+                dataDir != null ? dataDir.getFreeSpace() : 0);
+        row.add(Root.COLUMN_ICON, R.mipmap.ic_launcher);
         return result;
     }
 
