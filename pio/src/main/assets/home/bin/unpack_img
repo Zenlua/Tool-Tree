@@ -143,8 +143,8 @@ mkdir -p "$in_name" $OUTPUT/config
           if [ -f "$in_name/system/build.prop" ];then
           luu_config="$(cat "$fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
           luu_contexts="$(echo "$luu_contexts" | sed -e "s|^/${namepv##*/} u|/${namepv##*/}/ u|")"
+          echo "$luu_config" > "$fs_config"
           fi
-      echo "$luu_config" > "$fs_config"
       echo "$luu_contexts" > "$file_contexts"
       fi
       echo "$(stat -c%s "$file_img")" > "$info_size"

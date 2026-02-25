@@ -330,7 +330,8 @@ fi
 
 lvnen="$(glog nen_br 8)";
 if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
-    echo "$sizes_text: ${saved##*/} ($(wc -c <"$saved"))"
+    text_sizes=$(wc -c <"$saved")
+    echo "$sizes_text: ${saved##*/} $(coverbyte $text_sizes) ($text_sizes)"
     echo
     if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
     zstd -f -$lvnen -T$threads --format=$CONVER --compress "$saved" -o "${saved%.*}.img.$CONVER" &>/dev/null

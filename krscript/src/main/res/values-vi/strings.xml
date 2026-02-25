@@ -1,9 +1,9 @@
 <resources>
     <string name="shell_executor">Trình thực thi script</string>
     <string name="btn_skip">Bỏ qua</string>
-    <string name="btn_exit">Thoát</string>
+    <string name="btn_exit">Trở lại</string>
     <string name="btn_hide">Ẩn</string>
-    <string name="btn_cancel">Hủy</string>
+    <string name="btn_cancel">Hủy bỏ</string>
     <string name="btn_confirm">Xác nhận</string>
     <string name="btn_execute">Thực hiện</string>
     <string name="onloading">Đang tải dữ liệu…</string>
