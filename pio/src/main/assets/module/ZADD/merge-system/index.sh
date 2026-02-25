@@ -7,7 +7,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?><page>'
 source $MPAT/language.sh
 
 echo '<group>
-<action icon="'`icpng merge_system $ETC/icon`'" interruptible="false">
+<action interruptible="false">
 <title>'$name_text'</title>
 <set>
 slog silencekd "$silence"
