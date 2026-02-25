@@ -37,7 +37,6 @@ jobs:
 
       - name: Build APK
         run: |
-          [ "$UPTG" ] || UPTG=true
           chmod +x ./gradlew ./.github/modun.sh
           ./.github/modun.sh
           chmod +x ./gradlew
