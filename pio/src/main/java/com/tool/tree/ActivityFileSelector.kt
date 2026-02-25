@@ -63,7 +63,6 @@ class ActivityFileSelector : AppCompatActivity() {
                 mode = getInt("mode")
                 if (mode == MODE_FOLDER) {
                     title = getString(R.string.title_activity_folder_selector)
-                    Snackbar.make(binding.root, R.string.msg_folder_mode, Snackbar.LENGTH_SHORT).show()
                 }
             }
         }
@@ -72,6 +71,9 @@ class ActivityFileSelector : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loadData()
+        if (mode == MODE_FOLDER) {
+            Snackbar.make(binding.root, R.string.msg_folder_mode, Snackbar.LENGTH_SHORT).show()
+        }
     }
 
     private fun loadData() {
