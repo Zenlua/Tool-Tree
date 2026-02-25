@@ -157,9 +157,21 @@ progress -1/0
 }
 
 if [ "$partition" == "erofs" ];then
-  [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
-  mkfs.erofs --quiet -T $time_build --workers=$threads -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" 2>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved"
-  echo
+    [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
+    mkfs.erofs -T $time_build --workers=$threads -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" &>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved" &
+    PIDK=$!
+    while kill -0 $PIDK 2>/dev/null; do
+    if [ -f "$TMP/mkfs_erofs.log" ];then
+        num1="$(grep "^loaded .*. fs_config entries" $TMP/mkfs_erofs.log | awk '{print $2}')"
+        num2="$(echo "$(grep -c 'Processing' $TMP/mkfs_erofs.log) + 1" | bc)"
+        if [ "$num2" ];then
+        [ "${num2:-0}" == "${num4:-1}" ] || progress "$((num2 * 100 / num1))/100"
+        num4="$num2"
+        fi
+    fi
+    sleep 1
+    done
+    progress -1/0
 elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
     # xây dựng cpio
     for vch in $(cat "$INPUT/cache/cpio" 2>/dev/null); do
