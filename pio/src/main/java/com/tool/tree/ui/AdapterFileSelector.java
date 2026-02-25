@@ -183,7 +183,7 @@ public class AdapterFileSelector extends BaseAdapter {
                         if (files != null && files.length > 0) {
                             loadDir(file);
                         } else {
-                            Snackbar.make(view, "There are no files in this directory!", Snackbar.LENGTH_SHORT).show();
+                            Snackbar.make(view, getString(R.string.no_files_in_directory), Snackbar.LENGTH_SHORT).show();
                         }
                     }
                 });

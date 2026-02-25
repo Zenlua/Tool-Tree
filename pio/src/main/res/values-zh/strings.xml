@@ -55,4 +55,5 @@
     <string name="msg_folder_mode">按住即可选择文件夹。</string>
     <string name="dialog_title_select_directory">您要选择此文件夹吗？</string>
     <string name="dialog_title_select_file">您要选择此文件吗？</string>
+    <string name="no_files_in_directory">文件夹为空，不包含任何文件！</string>
 </resources>

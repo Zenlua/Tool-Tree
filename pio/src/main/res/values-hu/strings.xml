@@ -55,4 +55,5 @@ Ha egyetért, a folytatáshoz nyomja meg a megerősítés gombot."</string>
     <string name="msg_folder_mode">Tartsa lenyomva a gombot egy mappa kiválasztásához</string>
     <string name="dialog_title_select_directory">Ki szeretné választani ezt a mappát?</string>
     <string name="dialog_title_select_file">Ki szeretné jelölni ezt a fájlt?</string>
+    <string name="no_files_in_directory">A mappa üres és nem tartalmaz fájlokat!</string>
 </resources>

@@ -55,5 +55,5 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="msg_folder_mode">Nhấn giữ để chọn thư mục</string>
     <string name="dialog_title_select_directory">Bạn muốn chọn thư mục này?</string>
     <string name="dialog_title_select_file">Bạn muốn chọn tệp tin này?</string>
-
+    <string name="no_files_in_directory">Thư mục trống và không có tệp tin nào!</string>
 </resources>

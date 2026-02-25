@@ -70,4 +70,5 @@ If you agree, click the confirmation button to continue."</string>
     <string name="msg_folder_mode">Press and hold to select a folder</string>
     <string name="dialog_title_select_directory">Do you want to select this folder?</string>
     <string name="dialog_title_select_file">Do you want to select this file?</string>
+    <string name="no_files_in_directory">The folder is empty and contains no files!</string>
 </resources>
