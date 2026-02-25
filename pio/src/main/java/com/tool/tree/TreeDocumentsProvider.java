@@ -22,7 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
-public class DocumentsProvider extends DocumentsProvider {
+public class TreeDocumentsProvider extends DocumentsProvider {
 
     public static final String COLUMN_MT_EXTRAS = "mt_extras";
     public static final String COLUMN_MT_PATH = "mt_path";

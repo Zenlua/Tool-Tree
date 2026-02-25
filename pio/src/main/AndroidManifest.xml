@@ -93,7 +93,7 @@
             android:exported="false"
             />
         <provider
-            android:name=".DocumentsProvider"
+            android:name=".TreeDocumentsProvider"
             android:permission="android.permission.MANAGE_DOCUMENTS"
             android:exported="true"
             android:authorities="${applicationId}.documents"
