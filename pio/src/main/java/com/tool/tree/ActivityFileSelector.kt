@@ -10,7 +10,7 @@ import com.omarea.common.ui.ProgressBarDialog
 import com.tool.tree.databinding.ActivityFileSelectorBinding
 import com.tool.tree.ui.AdapterFileSelector
 import java.io.File
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 import com.google.android.material.snackbar.Snackbar;
 
 class ActivityFileSelector : AppCompatActivity() {
@@ -30,7 +30,7 @@ class ActivityFileSelector : AppCompatActivity() {
         binding = ActivityFileSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val toolbar = binding.toolbar
+        val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
         // setTitle(R.string.app_name)
 

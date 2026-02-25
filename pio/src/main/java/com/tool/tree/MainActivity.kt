@@ -35,7 +35,7 @@ import com.tool.tree.ui.TabIconHelper
 import androidx.core.view.isVisible
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 
 class MainActivity : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)

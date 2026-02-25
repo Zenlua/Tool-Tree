@@ -28,7 +28,7 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityActionPageOnlineBinding
 import java.util.*
 import androidx.core.net.toUri
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 
 class ActionPageOnline : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
