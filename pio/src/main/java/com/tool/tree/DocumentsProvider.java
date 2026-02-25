@@ -11,37 +11,15 @@ import android.provider.DocumentsContract.Document;
 import android.provider.DocumentsContract.Root;
 import android.webkit.MimeTypeMap;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.io.*;
+import java.util.*;
 
 public class DocumentsProvider extends android.provider.DocumentsProvider {
 
     private static final String ALL_MIME_TYPES = "*/*";
-    private static final int MAX_SEARCH_RESULTS = 50;
+    private static final int MAX_SEARCH_RESULTS = 100;
 
     private File baseDir;
-
-    private static final String[] DEFAULT_ROOT_PROJECTION = new String[]{
-            Root.COLUMN_ROOT_ID,
-            Root.COLUMN_MIME_TYPES,
-            Root.COLUMN_FLAGS,
-            Root.COLUMN_ICON,
-            Root.COLUMN_TITLE,
-            Root.COLUMN_DOCUMENT_ID,
-            Root.COLUMN_AVAILABLE_BYTES
-    };
-
-    private static final String[] DEFAULT_DOCUMENT_PROJECTION = new String[]{
-            Document.COLUMN_DOCUMENT_ID,
-            Document.COLUMN_MIME_TYPE,
-            Document.COLUMN_DISPLAY_NAME,
-            Document.COLUMN_LAST_MODIFIED,
-            Document.COLUMN_FLAGS,
-            Document.COLUMN_SIZE
-    };
 
     @Override
     public boolean onCreate() {
@@ -49,41 +27,49 @@ public class DocumentsProvider extends android.provider.DocumentsProvider {
         return true;
     }
 
-    // ---------------- ROOT ----------------
+    // ================= ROOT =================
 
     @Override
     public Cursor queryRoots(String[] projection) {
-    
+
         MatrixCursor result = new MatrixCursor(
-                projection != null ? projection : DEFAULT_ROOT_PROJECTION);
-    
+                projection != null ? projection :
+                        new String[]{
+                                Root.COLUMN_ROOT_ID,
+                                Root.COLUMN_DOCUMENT_ID,
+                                Root.COLUMN_TITLE,
+                                Root.COLUMN_FLAGS,
+                                Root.COLUMN_MIME_TYPES,
+                                Root.COLUMN_AVAILABLE_BYTES
+                        });
+
         String appName = getContext()
                 .getApplicationInfo()
                 .loadLabel(getContext().getPackageManager())
                 .toString();
-    
+
         MatrixCursor.RowBuilder row = result.newRow();
-        row.add(Root.COLUMN_ROOT_ID, getDocIdForFile(baseDir));
-        row.add(Root.COLUMN_DOCUMENT_ID, getDocIdForFile(baseDir));
+        row.add(Root.COLUMN_ROOT_ID, getDocId(baseDir));
+        row.add(Root.COLUMN_DOCUMENT_ID, getDocId(baseDir));
         row.add(Root.COLUMN_TITLE, appName);
         row.add(Root.COLUMN_FLAGS,
                 Root.FLAG_SUPPORTS_CREATE |
                 Root.FLAG_SUPPORTS_SEARCH |
                 Root.FLAG_SUPPORTS_IS_CHILD);
-        row.add(Root.COLUMN_MIME_TYPES, "*/*");
+        row.add(Root.COLUMN_MIME_TYPES, ALL_MIME_TYPES);
         row.add(Root.COLUMN_AVAILABLE_BYTES, baseDir.getFreeSpace());
-    
+
         return result;
     }
 
-    // ---------------- DOCUMENT ----------------
+    // ================= QUERY =================
 
     @Override
     public Cursor queryDocument(String documentId, String[] projection)
             throws FileNotFoundException {
 
         MatrixCursor result = new MatrixCursor(
-                projection != null ? projection : DEFAULT_DOCUMENT_PROJECTION);
+                projection != null ? projection : defaultDocProjection());
 
         includeFile(result, documentId, null);
         return result;
@@ -96,17 +82,22 @@ public class DocumentsProvider extends android.provider.DocumentsProvider {
             throws FileNotFoundException {
 
         MatrixCursor result = new MatrixCursor(
-                projection != null ? projection : DEFAULT_DOCUMENT_PROJECTION);
+                projection != null ? projection : defaultDocProjection());
 
-        File parent = getFileForDocId(parentDocumentId);
+        File parent = getFile(parentDocumentId);
         File[] files = parent.listFiles();
+
         if (files != null) {
-            for (File file : files) {
-                includeFile(result, null, file);
+            Arrays.sort(files, Comparator.comparing(File::getName));
+            for (File f : files) {
+                includeFile(result, null, f);
             }
         }
+
         return result;
     }
+
+    // ================= OPEN =================
 
     @Override
     public ParcelFileDescriptor openDocument(String documentId,
@@ -114,9 +105,10 @@ public class DocumentsProvider extends android.provider.DocumentsProvider {
                                              CancellationSignal signal)
             throws FileNotFoundException {
 
-        File file = getFileForDocId(documentId);
-        int accessMode = ParcelFileDescriptor.parseMode(mode);
-        return ParcelFileDescriptor.open(file, accessMode);
+        File file = getFile(documentId);
+        return ParcelFileDescriptor.open(
+                file,
+                ParcelFileDescriptor.parseMode(mode));
     }
 
     @Override
@@ -125,7 +117,7 @@ public class DocumentsProvider extends android.provider.DocumentsProvider {
                                                      CancellationSignal signal)
             throws FileNotFoundException {
 
-        File file = getFileForDocId(documentId);
+        File file = getFile(documentId);
         ParcelFileDescriptor pfd =
                 ParcelFileDescriptor.open(file,
                         ParcelFileDescriptor.MODE_READ_ONLY);
@@ -133,58 +125,147 @@ public class DocumentsProvider extends android.provider.DocumentsProvider {
         return new AssetFileDescriptor(pfd, 0, file.length());
     }
 
+    // ================= CREATE =================
+
     @Override
     public String createDocument(String parentDocumentId,
                                  String mimeType,
                                  String displayName)
             throws FileNotFoundException {
 
-        File parent = getFileForDocId(parentDocumentId);
-        File newFile = new File(parent, displayName);
-
-        int noConflictId = 2;
-        while (newFile.exists()) {
-            newFile = new File(parent,
-                    displayName + " (" + noConflictId++ + ")");
-        }
+        File parent = getFile(parentDocumentId);
+        File file = resolveNameConflict(new File(parent, displayName));
 
         try {
-            boolean success;
             if (Document.MIME_TYPE_DIR.equals(mimeType)) {
-                success = newFile.mkdir();
+                if (!file.mkdir())
+                    throw new IOException();
             } else {
-                success = newFile.createNewFile();
+                if (!file.createNewFile())
+                    throw new IOException();
             }
-
-            if (!success) {
-                throw new FileNotFoundException("Create failed");
-            }
-
         } catch (IOException e) {
             throw new FileNotFoundException("Create failed");
         }
 
-        return getDocIdForFile(newFile);
+        return getDocId(file);
     }
+
+    // ================= DELETE =================
 
     @Override
     public void deleteDocument(String documentId)
             throws FileNotFoundException {
 
-        File file = getFileForDocId(documentId);
-        if (!file.delete()) {
+        File file = getFile(documentId);
+        deleteRecursive(file);
+    }
+
+    private void deleteRecursive(File file)
+            throws FileNotFoundException {
+
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File c : children) {
+                    deleteRecursive(c);
+                }
+            }
+        }
+
+        if (!file.delete())
             throw new FileNotFoundException("Delete failed");
+    }
+
+    // ================= RENAME =================
+
+    @Override
+    public String renameDocument(String documentId,
+                                 String displayName)
+            throws FileNotFoundException {
+
+        File file = getFile(documentId);
+        File newFile = resolveNameConflict(
+                new File(file.getParentFile(), displayName));
+
+        if (!file.renameTo(newFile))
+            throw new FileNotFoundException("Rename failed");
+
+        return getDocId(newFile);
+    }
+
+    // ================= COPY =================
+
+    @Override
+    public String copyDocument(String sourceDocumentId,
+                               String targetParentDocumentId)
+            throws FileNotFoundException {
+
+        File source = getFile(sourceDocumentId);
+        File targetParent = getFile(targetParentDocumentId);
+
+        File target = resolveNameConflict(
+                new File(targetParent, source.getName()));
+
+        copyRecursive(source, target);
+
+        return getDocId(target);
+    }
+
+    private void copyRecursive(File source, File target)
+            throws FileNotFoundException {
+
+        try {
+            if (source.isDirectory()) {
+                if (!target.mkdir())
+                    throw new IOException();
+
+                File[] children = source.listFiles();
+                if (children != null) {
+                    for (File child : children) {
+                        copyRecursive(child,
+                                new File(target, child.getName()));
+                    }
+                }
+            } else {
+                try (InputStream in = new FileInputStream(source);
+                     OutputStream out = new FileOutputStream(target)) {
+
+                    byte[] buf = new byte[8192];
+                    int len;
+                    while ((len = in.read(buf)) > 0) {
+                        out.write(buf, 0, len);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new FileNotFoundException("Copy failed");
         }
     }
 
+    // ================= MOVE =================
+
     @Override
-    public String getDocumentType(String documentId)
+    public String moveDocument(String sourceDocumentId,
+                               String sourceParentDocumentId,
+                               String targetParentDocumentId)
             throws FileNotFoundException {
 
-        return getMimeType(getFileForDocId(documentId));
+        File source = getFile(sourceDocumentId);
+        File targetParent = getFile(targetParentDocumentId);
+
+        File target = resolveNameConflict(
+                new File(targetParent, source.getName()));
+
+        if (!source.renameTo(target)) {
+            copyRecursive(source, target);
+            deleteRecursive(source);
+        }
+
+        return getDocId(target);
     }
 
-    // ---------------- SEARCH ----------------
+    // ================= SEARCH =================
 
     @Override
     public Cursor querySearchDocuments(String rootId,
@@ -193,33 +274,24 @@ public class DocumentsProvider extends android.provider.DocumentsProvider {
             throws FileNotFoundException {
 
         MatrixCursor result = new MatrixCursor(
-                projection != null ? projection : DEFAULT_DOCUMENT_PROJECTION);
+                projection != null ? projection : defaultDocProjection());
 
-        File parent = getFileForDocId(rootId);
-        LinkedList<File> pending = new LinkedList<>();
-        pending.add(parent);
+        LinkedList<File> queue = new LinkedList<>();
+        queue.add(getFile(rootId));
 
-        while (!pending.isEmpty() &&
+        while (!queue.isEmpty() &&
                 result.getCount() < MAX_SEARCH_RESULTS) {
 
-            File file = pending.removeFirst();
-
-            try {
-                if (!file.getCanonicalPath()
-                        .startsWith(baseDir.getCanonicalPath())) {
-                    continue;
-                }
-            } catch (IOException ignored) {}
+            File file = queue.removeFirst();
 
             if (file.isDirectory()) {
                 File[] children = file.listFiles();
-                if (children != null) {
-                    Collections.addAll(pending, children);
-                }
-            } else if (file.getName()
-                    .toLowerCase()
-                    .contains(query.toLowerCase())) {
+                if (children != null)
+                    Collections.addAll(queue, children);
+            }
 
+            if (file.getName().toLowerCase()
+                    .contains(query.toLowerCase())) {
                 includeFile(result, null, file);
             }
         }
@@ -227,60 +299,77 @@ public class DocumentsProvider extends android.provider.DocumentsProvider {
         return result;
     }
 
-    @Override
-    public boolean isChildDocument(String parentDocumentId,
-                                   String documentId) {
-        try {
-            File parent = getFileForDocId(parentDocumentId);
-            File child = getFileForDocId(documentId);
+    // ================= UTILS =================
 
-            return child.getCanonicalPath()
-                    .startsWith(parent.getCanonicalPath());
-        } catch (Exception e) {
-            return false;
-        }
+    private String[] defaultDocProjection() {
+        return new String[]{
+                Document.COLUMN_DOCUMENT_ID,
+                Document.COLUMN_DISPLAY_NAME,
+                Document.COLUMN_SIZE,
+                Document.COLUMN_MIME_TYPE,
+                Document.COLUMN_LAST_MODIFIED,
+                Document.COLUMN_FLAGS
+        };
     }
 
-    // ---------------- UTILS ----------------
-
-    private String getDocIdForFile(File file) {
+    private String getDocId(File file) {
         return file.getAbsolutePath();
     }
 
-    private File getFileForDocId(String docId)
+    private File getFile(String docId)
             throws FileNotFoundException {
 
         File file = new File(docId);
 
-        if (!file.exists())
-            throw new FileNotFoundException(docId);
-
         try {
             if (!file.getCanonicalPath()
-                    .startsWith(baseDir.getCanonicalPath())) {
+                    .startsWith(baseDir.getCanonicalPath()))
                 throw new FileNotFoundException("Access denied");
-            }
         } catch (IOException e) {
             throw new FileNotFoundException("Path error");
+        }
+
+        if (!file.exists())
+            throw new FileNotFoundException("Not found");
+
+        return file;
+    }
+
+    private File resolveNameConflict(File file) {
+
+        if (!file.exists()) return file;
+
+        String name = file.getName();
+        String base = name;
+        String ext = "";
+
+        int dot = name.lastIndexOf('.');
+        if (dot > 0) {
+            base = name.substring(0, dot);
+            ext = name.substring(dot);
+        }
+
+        int i = 2;
+        while (file.exists()) {
+            file = new File(file.getParent(),
+                    base + " (" + i++ + ")" + ext);
         }
 
         return file;
     }
 
     private String getMimeType(File file) {
-        if (file.isDirectory()) {
+        if (file.isDirectory())
             return Document.MIME_TYPE_DIR;
-        }
 
         String name = file.getName();
-        int lastDot = name.lastIndexOf('.');
-        if (lastDot >= 0) {
-            String ext = name.substring(lastDot + 1).toLowerCase();
+        int dot = name.lastIndexOf('.');
+        if (dot >= 0) {
+            String ext = name.substring(dot + 1);
             String mime = MimeTypeMap.getSingleton()
                     .getMimeTypeFromExtension(ext);
             if (mime != null) return mime;
         }
-
         return "application/octet-stream";
     }
 
@@ -289,29 +378,24 @@ public class DocumentsProvider extends android.provider.DocumentsProvider {
                              File file)
             throws FileNotFoundException {
 
-        if (docId == null) {
-            docId = getDocIdForFile(file);
-        } else {
-            file = getFileForDocId(docId);
-        }
+        if (docId == null)
+            docId = getDocId(file);
+        else
+            file = getFile(docId);
 
-        int flags = 0;
+        int flags = Document.FLAG_SUPPORTS_DELETE |
+                    Document.FLAG_SUPPORTS_RENAME |
+                    Document.FLAG_SUPPORTS_COPY |
+                    Document.FLAG_SUPPORTS_MOVE;
 
-        if (file.isDirectory()) {
-            if (file.canWrite())
-                flags |= Document.FLAG_DIR_SUPPORTS_CREATE;
-        } else if (file.canWrite()) {
+        if (file.isDirectory())
+            flags |= Document.FLAG_DIR_SUPPORTS_CREATE;
+
+        if (file.canWrite())
             flags |= Document.FLAG_SUPPORTS_WRITE;
-        }
 
-        if (file.getParentFile() != null &&
-                file.getParentFile().canWrite()) {
-            flags |= Document.FLAG_SUPPORTS_DELETE;
-        }
-
-        if (getMimeType(file).startsWith("image/")) {
+        if (getMimeType(file).startsWith("image/"))
             flags |= Document.FLAG_SUPPORTS_THUMBNAIL;
-        }
 
         MatrixCursor.RowBuilder row = result.newRow();
         row.add(Document.COLUMN_DOCUMENT_ID, docId);
