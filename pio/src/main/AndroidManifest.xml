@@ -93,10 +93,10 @@
             android:exported="false"
             />
         <provider
-            android:name=".MTDataFilesProvider"
+            android:name=".DocumentsProvider"
             android:permission="android.permission.MANAGE_DOCUMENTS"
             android:exported="true"
-            android:authorities="${applicationId}.MTDataFilesProvider"
+            android:authorities="${applicationId}.documents"
             android:grantUriPermissions="true">
             <intent-filter>
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
