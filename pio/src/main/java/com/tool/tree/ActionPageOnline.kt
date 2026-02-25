@@ -28,6 +28,7 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityActionPageOnlineBinding
 import java.util.*
 import androidx.core.net.toUri
+import androidx.activity.OnBackPressedCallback
 
 class ActionPageOnline : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
@@ -50,6 +51,16 @@ class ActionPageOnline : AppCompatActivity() {
         toolbar.setNavigationOnClickListener {
             finish()
         }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (binding.krOnlineWebview.canGoBack()) {
+                    binding.krOnlineWebview.goBack()
+                } else {
+                    finish()
+                }
+            }
+        })
 
         loadIntentData()
     }
@@ -234,15 +245,6 @@ class ActionPageOnline : AppCompatActivity() {
             FilePathResolver().getPath(this, uri)
         } catch (_: java.lang.Exception) {
             null
-        }
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && binding.krOnlineWebview.canGoBack()) {
-            binding.krOnlineWebview.goBack()
-            return true
-        } else {
-            return super.onKeyDown(keyCode, event)
         }
     }
 

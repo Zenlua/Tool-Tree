@@ -1,5 +1,11 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.3.5 (25-2-2026)**
+
++ Fix f2fs configuration extraction errors
++ Fix code errors
++ Optimization
+
 **Version: 1.3.4 (23-2-2026)**
 
 + Automatically send release messages to Telegram

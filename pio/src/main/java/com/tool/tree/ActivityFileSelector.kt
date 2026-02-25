@@ -12,6 +12,7 @@ import com.omarea.common.ui.ProgressBarDialog
 import com.tool.tree.databinding.ActivityFileSelectorBinding
 import com.tool.tree.ui.AdapterFileSelector
 import java.io.File
+import androidx.activity.OnBackPressedCallback
 
 class ActivityFileSelector : AppCompatActivity() {
     companion object {
@@ -41,6 +42,16 @@ class ActivityFileSelector : AppCompatActivity() {
             finish()
         }
 
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (adapterFileSelector != null && adapterFileSelector!!.goParent()) {
+                    return
+                }
+                setResult(RESULT_CANCELED, Intent())
+                finish()
+            }
+        })
+
         intent.extras?.run {
             if (containsKey("extension")) {
                 extension = "" + intent.extras?.getString("extension")
@@ -59,15 +70,6 @@ class ActivityFileSelector : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && adapterFileSelector != null && adapterFileSelector!!.goParent()) {
-            return true
-        } else {
-            setResult(RESULT_CANCELED, Intent())
-        }
-        return super.onKeyDown(keyCode, event)
     }
 
     override fun onResume() {
