@@ -7,7 +7,7 @@ fi
 
 if [ "$1" == "-b" ] || [ "$1" == "--byte" ];then
     shift
-    payload_extract -p -i "$1" | awk '/^name:/{n=$2;s=$4;printf "%s|%s (%sB)\n",n,n,s}'
+    payload_extract -p -i "$1" | awk '/^name:/{n=$2;s=$4;printf "%s (%sB)\n",n,s}'
 else
-    payload_extract -p -i "$1" | awk '/^name:/{n=$2;s=$4;cmd="coverbyte "s;cmd|getline r;close(cmd);printf "%s|%s (%s)\n",n,n,r}'
+    payload_extract -p -i "$1" | awk '/^name:/{n=$2;s=$4;cmd="coverbyte "s;cmd|getline r;close(cmd);printf "%s (%s)\n",n,r}'
 fi

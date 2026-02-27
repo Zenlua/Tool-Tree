@@ -1,7 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
-
-threads=$(nproc)
+set -o pipefail
+#threads=$(nproc)
 show_help() {
   echo "Usage: unpack_img -i <input> -o <output> -p <partition> -n [0/1] -d [0/1]"
   echo
@@ -107,7 +107,8 @@ if [ "$dang_tep" == 'zstd' ];then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     size_zstd="$(zstd -lv "$INPUT" 2>/dev/null | awk -F'[()]' '/Decompressed Size/ {print $2}' | awk '{print $1}')"
-    zstd -T$threads --progress -vv -f -d -k "$INPUT" -o "$file_img" &>"$TMP/unzstd.log" & process_count "$size_zstd" "$TMP/unzstd.log"
+    zstd --progress -vv -f -d -k "$INPUT" -o "$file_img" &>"$TMP/unzstd.log" &
+    process_count "$size_zstd" "$TMP/unzstd.log"
 elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
     tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
     [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || killtree "$more_text_5 $tenpjanvung.transfer.list"
@@ -121,7 +122,8 @@ elif [ "$dang_tep" == 'sparse' ];then
     simg2img "$INPUT" "$file_img"
 elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
-    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$TMP" &>"$TMP/payload_extract.log" || killtree "Payload unpack error" & process_payload "$TMP/payload_extract.log"
+    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$TMP" &>"$TMP/payload_extract.log" || killtree "Payload unpack error" &
+    process_payload "$TMP/payload_extract.log"
     file_img="$TMP/$PVUGBIN.img"
 elif [ "$dang_tep" == 'super' ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
@@ -181,7 +183,7 @@ mkdir -p "$in_name" $OUTPUT/config
         echo "$dang_file" > "$info"
         fsck.f2fs "$file_img" &> "$fs_options"
     elif [ "$dang_file" == 'erofs' ];then
-        extract.erofs -T$threads -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$in_name" &
+        extract.erofs -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$in_name" &
         PIDK=$!
         while kill -0 $PIDK 2>/dev/null; do
         if [ -f $TMP/extract_erofs.log ];then

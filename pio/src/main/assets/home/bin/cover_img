@@ -1,7 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
-
+set -o pipefail
 source language
-threads=$(nproc)
+#threads=$(nproc)
 show_help() {
   echo
   echo "Usage: cover_img -i <input> -o <output> -c <conver> -l <level> -d <delete>"
@@ -48,16 +48,34 @@ logcv="$TMP/log_conver.txt"
 namerd="tmp_cv$RANDOM"
 namesv="$(echo "${INPUT##*/}" | sed 's/\..*$//')"
 
+process_count(){
+PIDK=$!
+num1="$1"; num2="$2";
+while kill -0 $PIDK 2>/dev/null; do
+if [ -f "$num2" ];then
+    num3=$(tr '\r' '\n' < "$num2" | awk '/ : /{v=$3} END{print v}')
+    if [ "$num3" ];then
+    [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
+    num4="$num3"
+    fi
+fi
+sleep 1
+done
+progress -1/0
+}
+
 if [[ "$dang_type" == "$CONVER" ]]; then
 killtree "The input file is: $namesv ($dang_type), and you want to convert to: ($CONVER) ???"
 fi
-rm -fr "$logcv"
+rm -f "$logcv"
 mkdir -p "$OUTPUT"
 
 # Xử lý các tệp nén
 if [ "$dang_type" == 'zstd' ];then
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
-zstd -T$threads -f -d -k "$INPUT" -o "$TMP/$namerd" &>>$logcv
+size_zstd="$(zstd -lv "$INPUT" 2>/dev/null | awk -F'[()]' '/Decompressed Size/ {print $2}' | awk '{print $1}')"
+zstd --progress -vv -f -d -k "$INPUT" -o "$TMP/$namerd" &>>$logcv &
+process_count "$size_zstd" "$logcv"
 elif [ "$dang_type" == 'br' ];then
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
 brotli -vf -d "$INPUT" -o "$TMP/$namerd" &>>$logcv
@@ -89,7 +107,19 @@ echo -e "$unpack_text_0 (${file_img##*/}) ➠ ($CONVER)...\n"
 
 # chuyển đổi
 if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
-zstd -f -$LEVEL -T$threads --format=$CONVER --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" &>>$logcv
+    zstd --progress -f -$LEVEL --format=$CONVER --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" &>>$logcv
+    PIDK=$!
+    while kill -0 $PIDK 2>/dev/null; do
+    if [ -f "$logcv" ];then
+        num2="$(tr '\r' '\n' < "$logcv" | awk '/Read:/{r=$2*($3=="GiB"?1024:1); t=$5*($6=="GiB"?1024:1)} END{print (t>0?int(r/t*100):0)}')"
+        if [ "$num2" ];then
+        [ "${num2:-0}" == "${num4:-1}" ] || progress "$num2/100"
+        num4="$num2"
+        fi
+    fi
+    sleep 1
+    done
+    progress -1/0
 elif [ "$CONVER" == 'dat' ];then
     if [ -f "$TMP/$namerd" ];then
     img2simg $file_img &>>$logcv

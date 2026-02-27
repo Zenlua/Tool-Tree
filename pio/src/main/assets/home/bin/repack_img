@@ -1,8 +1,9 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 shopt -s extglob
+set -o pipefail
 #set -x
 source language 2>/dev/null
-threads=$(nproc)
+#threads=$(nproc)
 show_help() {
   echo "Usage: repack_img -i <input> -o <output> <flags>"
   echo
@@ -166,7 +167,7 @@ progress -1/0
 
 if [ "$partition" == "erofs" ];then
     [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
-    mkfs.erofs -T $time_build --workers=$threads -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" &>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved" &
+    mkfs.erofs -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" &>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs, log: $TMP/mkfs_erofs.log" "$saved" &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
     if [ -f "$TMP/mkfs_erofs.log" ];then
@@ -318,7 +319,8 @@ elif [ "$partition" == "ext" ];then
         mke2fs -O ^has_journal -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
         e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved"
         else
-        make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" & process_count $size_real "$saved"
+        make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
+        process_count $size_real "$saved"
         echo
         fi
     else
@@ -327,7 +329,8 @@ elif [ "$partition" == "ext" ];then
         mke2fs -O ^has_journal -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
         e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_exts.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_exts.log" "$saved"
         else
-        make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" & process_count $size_orig "$saved"
+        make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
+        process_count $size_orig "$saved"
         echo
         fi
         resize2fs -M "$saved" 2>&1
@@ -357,7 +360,7 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
     echo
     fi
     if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
-    zstd --progress -f -$lvnen -T$threads --format=$CONVER --compress "$saved" -o "${out_saved%.*}.img.$CONVER" &>"$TMP/repzstd.log" &
+    zstd --progress -f -$lvnen --format=$CONVER --compress "$saved" -o "${out_saved%.*}.img.$CONVER" &>"$TMP/repzstd.log" &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
         if [ -f "$TMP/repzstd.log" ];then
