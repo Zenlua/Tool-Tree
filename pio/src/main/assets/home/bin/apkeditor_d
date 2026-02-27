@@ -92,7 +92,7 @@ Tmout="${INPUT%.*}"
 Tout="$OUTPUT/${Tmout##*/}"
 
 # bắt đầu giải mã
-echo "$replag_text_1"
+echo "$replag_text_1..."
 echo
 
 # apkeditor
