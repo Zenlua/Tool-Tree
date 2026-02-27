@@ -69,6 +69,22 @@ done
 progress -1/0
 }
 
+process_payload(){
+PIDK=$!
+num1="$1";
+while kill -0 $PIDK 2>/dev/null; do
+if [ -f "$num1" ];then
+    num3=$(tr '\r' '\n' < "$num1" | grep -o '[0-9]\+%' | tail -n1 | tr -d '%')
+    if [ "$num3" ];then
+    [ "${num3:-0}" == "${num4:-1}" ] || progress "$num3/100"
+    num4="$num3"
+    fi
+fi
+sleep 1
+done
+progress -1/0
+}
+
 # xử lý zip
 if [ "$dang_tep" == 'zip' ];then
 xacnhatpay="$(listpayload "$INPUT")"
@@ -105,7 +121,7 @@ elif [ "$dang_tep" == 'sparse' ];then
     simg2img "$INPUT" "$file_img"
 elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
-    payload_dumper --no-parallel --out "$TMP" --images "$PVUGBIN" "$INPUT" >/dev/null || killtree "Payload unpack error"
+    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$TMP" &>"$TMP/payload_extract.log" || killtree "Payload unpack error" & process_payload "$TMP/payload_extract.log"
     file_img="$TMP/$PVUGBIN.img"
 elif [ "$dang_tep" == 'super' ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"

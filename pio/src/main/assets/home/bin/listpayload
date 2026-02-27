@@ -1,9 +1,13 @@
 # kakathic
 
-if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ ! -f "$1" ];then
+if [ "$1" == "-h" ] || [ "$1" == "--help" ];then
 echo "listpayload path/payload.[bin/zip]"
 exit 1
 fi
-(
-payload_dumper --out $TMP --list "$1" | sed "1,/-----/d" | awk '{print $1" ("$2$3")"}'
-) 2>/dev/null
+
+if [ "$1" == "-b" ] || [ "$1" == "--byte" ];then
+    shift
+    payload_extract -p -i "$1" | awk '/^name:/{n=$2;s=$4;printf "%s|%s (%sB)\n",n,n,s}'
+else
+    payload_extract -p -i "$1" | awk '/^name:/{n=$2;s=$4;cmd="coverbyte "s;cmd|getline r;close(cmd);printf "%s|%s (%s)\n",n,n,r}'
+fi
