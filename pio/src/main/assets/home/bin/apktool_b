@@ -24,8 +24,8 @@ show_help() {
   echo "          1: on"
   echo "  -x    extractNativeLibs: manifest"
   echo "          manifest: read and apply from manifest"
-  echo "          false: set manifest attribute 'false' and store libraries un-compressed with 4096 alignment."
-  echo "          true: set manifest attribute 'true' and store"
+  echo "          false: uncompress libraries and set 4096"
+  echo "          true: default compression libraries"
   echo "  -h    show help"
   exit 1
 }
@@ -75,7 +75,6 @@ for vvv in $(check_changes.py "$INPUT/res" "$INPUT/.cache/2hash_res.json" | grep
 if [ "$(echo "$vvv" | grep -cm1 "values-.*/")" == 1 ];then
 ten_file="$(basename "$vvv" .xml)"
 text_filter.py "$INPUT/res/values/$ten_file.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/text_filter.log
-#xml_fix.py "$INPUT/res/$vvv" >>$INPUT/.cache/xml_fix.log
 fi
 if [ "$(echo "$vvv" | grep -cm1 "values/")" == 1 ];then
 [ "$vvv" == "values/public.xml" ] || update_id.py --use-file "$INPUT/res/values/public.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/public_log.log
@@ -86,7 +85,7 @@ echo "$apkb_text_3"
 echo
 fi
 
-echo "$replag_text_2"
+echo "$replag_text_2..."
 echo
 [ "$REDIVIS" == 1 ] && redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
 

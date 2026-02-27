@@ -83,7 +83,7 @@ echo "$apkb_text_3"
 echo
 fi
 
-echo "$replag_text_2"
+echo "$replag_text_2..."
 echo
 
 [ "$REDIVIS" == 1 ] && redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
@@ -107,6 +107,10 @@ for vkn in "$INPUT"/dex/classes*.dex; do
 done
 [ -d "$INPUT/smali" ] && mv "$INPUT/smali" "$INPUT/smali_bak"
 fi
+
+
+# xoá bak
+find "$INPUT" -type f -name "*.bak" -delete >/dev/null
 
 # extra lib
 [[ -z "$XTRALIB" ]] || XTRALIB="-extractNativeLibs $XTRALIB"

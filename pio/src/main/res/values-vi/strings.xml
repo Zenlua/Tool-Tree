@@ -1,7 +1,8 @@
 <resources>
     <string name="float_monitor_tips">Nhấn đúp vào cửa sổ nổi để đóng, hoặc nhấn giữ và kéo để điều chỉnh vị trí</string>
     <string name="permission_float">Vui lòng cấp quyền hiển thị cửa sổ nổi!</string>
-
+    <string name="processing">Đang xử lý...</string>
+    <string name="completed">Hoàn tất</string>
     <string name="please_wait">Vui lòng chờ</string>
     <string name="title_activity_action_page">Trang chức năng</string>
     <string name="about_title">Giới thiệu</string>
@@ -32,7 +33,6 @@
     <string name="text_power_fastboot">Fastboot</string>
     <string name="text_power_edl">9008 (EDL)</string>
     <string name="menu_power">Chọn hành động nguồn</string>
-    <string name="storage_available">khả dụng</string>
 
     <string name="permission_dialog_message">"Yêu cầu các quyền sau:
 

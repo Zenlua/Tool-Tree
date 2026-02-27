@@ -27,7 +27,7 @@ class NotiService : Service() {
         val id = intent?.getIntExtra("id", 1) ?: 1
 
         // Kiểm tra nếu muốn xóa thông báo
-        if ("true" == intent?.getStringExtra("delete")) {
+        if (intent?.getBooleanExtra("delete", false) == true) {
             deleteNotification(id)
             return START_NOT_STICKY
         } else if (message != null) {

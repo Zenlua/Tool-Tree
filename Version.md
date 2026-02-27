@@ -1,5 +1,11 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Dev**
+
++ Fix the auto-delete zstd during decoding
++ Correct the mv command.
++ Optimize progress bar
+
 **Version: 1.3.5 (25-2-2026)**
 
 + Fix f2fs configuration extraction errors

@@ -1,0 +1,69 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+
+show_help(){
+echo "Use: downloadservice -d|--delete false -ps|--progress 50 -max|--max 100 -t|--title 'Hello' -m|--message 'Xin chào' --path '/path/file.txt' "
+exit 0
+}
+
+if [[ $# -eq 0 || "$1" != -* ]]; then
+show_help
+fi
+
+DELETE=''; TITLE=''; MESSAGE=''; PATK=''; PROGRESS=''; MAX='';
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -d|--delete)
+      DELETE="$2"
+      shift 2
+      ;;
+    -t|--title)
+      TITLE="$2"
+      shift 2
+      ;;
+    -m|--message)
+      MESSAGE="$2"
+      shift 2
+      ;;
+    -p|--path)
+      PATK="$2"
+      shift 2
+      ;;
+    -max|--max)
+      MAX="$2"
+      shift 2
+      ;;
+    -ps|--progress)
+      PROGRESS="$2"
+      shift 2
+      ;;
+    -a|--am)
+      AMON=1
+      shift
+      ;;
+    -h|--help)
+      show_help
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
+# Mặc định
+CMDs="startservice -n com.tool.tree/com.tool.tree.DownloadService "
+[ "$DELETE" == "true" ] && CMDs+="--ez stop true "
+[ "$TITLE" ] && CMDs+="--es title \"$TITLE\" "
+[ "$MESSAGE" ] && CMDs+="--es text \"$MESSAGE\" "
+[ "$MAX" ] && CMDs+="--ei max $MAX "
+[ "$PROGRESS" ] && CMDs+="--ei progress $PROGRESS "
+if [ -n "$PATK" ]; then
+  [ -f "$PATK" ] || { echo "File not found: $PATK"; exit 1; }
+  CMDs+="--es path \"$PATK\" "
+fi
+
+if [ "$AMON" == 1 ] || [ -z "$shell_progres" ];then
+    eval "am $CMDs" &>/dev/null
+else
+    echo "am:[$CMDs]"
+fi

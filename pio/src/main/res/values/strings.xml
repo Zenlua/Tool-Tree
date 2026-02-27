@@ -9,6 +9,10 @@
     <string name="please_wait">Please wait</string>
     <string name="title_activity_action_page">Function Pages</string>
 
+    <string name="channel_name">Download</string>
+    <string name="processing">Processing...</string>
+    <string name="completed">Complete</string>
+
     <string name="author_name">Kakathic</string>
     <string name="about_title">About</string>
     <string name="appliction_desc">Lots of utilities on the phone</string>
@@ -40,7 +44,6 @@
     <string name="text_power_fastboot">Fastboot</string>
     <string name="text_power_edl">9008 (EDL)</string>
     <string name="menu_power">Select action power</string>
-    <string name="storage_available">available</string>
     
     <string name="power_emergency_cmd">sync; svc power reboot edl || reboot edl</string>
     <string name="power_fastboot_cmd">sync; svc power reboot bootloader || reboot bootloader</string>

@@ -43,13 +43,14 @@ while [ $# -gt 0 ]; do
 done
 
 # Mặc định
-[ "$DELETE" == "true" ] && DELETEs="--es delete true"
-[ "$ID" ] && IDs="--ei id $ID"
-[ "$TITLE" ] && TITLEs="--es title '$TITLE'"
-[ "$MESSAGE" ] && MESSAGEs="--es message '$MESSAGE'"
+CMDs="startservice -n com.tool.tree/com.tool.tree.NotiService "
+[ "$DELETE" == "true" ] && CMDs+="--ez delete true "
+[ "$ID" ] && CMDs+="--ei id $ID "
+[ "$TITLE" ] && CMDs+="--es title \"$TITLE\" "
+[ "$MESSAGE" ] && CMDs+="--es message \"$MESSAGE\" "
 
 if [ "$AMON" == 1 ] || [ -z "$shell_progres" ];then
-    eval "am startservice $DELETEs $IDs $TITLEs $MESSAGEs com.tool.tree/com.tool.tree.NotiService" &>/dev/null
+    eval "am $CMDs" &>/dev/null
 else
-    echo "am:[startservice -n com.tool.tree/com.tool.tree.NotiService $DELETEs $IDs $TITLEs $MESSAGEs]"
+    echo "am:[$CMDs]"
 fi
