@@ -1,5 +1,7 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree) ![GitHub Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=)
 
+<img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/tool-tree.jpg" alt="1" style="width:98%;">
+
 - Supports both `root` or `non-root` versions and is only for `arm64-bit`
 
 - Version history: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
