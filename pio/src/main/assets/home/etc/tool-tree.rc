@@ -217,8 +217,10 @@ xml_print '<group>
 <title>'$setting_text'</title>
 <desc>'$home_text_1'</desc>
 <option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
+<option type="default" id="v2" auto-off="true" interruptible="false" >'$permis_text_4'</option>
 <handler>
 [ "$menu_id" == "v1" ] && echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
+[ "$menu_id" == "v2" ] && echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
 </handler>
 </page>
 </group>'
@@ -402,7 +404,7 @@ $shella5"
 Update(){
 [ -f "$TEMP/update" ] && show_update=1
 xml_print '<group>
-<page icon="'`urlpng like`'" link="https://zenlua.github.io/Tool-Tree/website/Information.html" >
+<page icon="'`urlpng like`'" html="https://zenlua.github.io/Tool-Tree/website/Information.html" >
 <title>'$author_text'</title>
 </page>
 </group>
