@@ -122,31 +122,26 @@ private fun applyTheme() {
     }
 
     // =================== PERMISSION ===================
-    private fun hasAllFilesPermission(): Boolean =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-            Environment.isExternalStorageManager()
-        else ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                PackageManager.PERMISSION_GRANTED
-
-    private fun requestAllFilesPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                data = Uri.parse("package:$packageName")
-            })
-        } else {
-            // Legacy permission
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQUEST_CODE_PERMISSIONS
-            )
-        }
+    private fun hasReadPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    
+    private fun requestReadPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
+            REQUEST_CODE_PERMISSIONS
+        )
     }
 
     private fun requestAppPermissions() {
         saveAgreement()
-        if (!hasAllFilesPermission()) requestAllFilesPermission()
-        else {
+        if (!hasReadPermission()) {
+            requestReadPermission()
+        } else {
             started = true
             checkRootAndStart()
         }

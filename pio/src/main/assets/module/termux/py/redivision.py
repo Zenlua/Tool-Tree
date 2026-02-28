@@ -8,7 +8,7 @@ import multiprocessing
 import json
 from concurrent.futures import ProcessPoolExecutor
 
-DEFAULT_LIMIT = 50000
+DEFAULT_LIMIT = 45000
 
 CLASS_DEF = re.compile(r'^\.class\b.*?\s+(L[^;\s]+;)')
 METHOD_DEF = re.compile(r'^\.method\b.*?\s+([^\s(]+)\(([^)]*)\)(\S+)')
@@ -110,12 +110,7 @@ def parse_smali(path):
             for line in f:
                 line = line.strip()
                 
-                if (
-                    line
-                    and not line.startswith(".")
-                    and not line.startswith(":")
-                    and not line.startswith("#")
-                ):
+                if line and not line.startswith(('.', ':', '#')):
                     instruction_count += 1
 
                 if line.startswith("invoke-"):
@@ -128,12 +123,14 @@ def parse_smali(path):
                 if m:
                     current_class = m.group(1)
                     types.add(current_class)
+                    strings.add(current_class)
                     continue
 
                 m = FIELD_DEF.match(line)
                 if m and current_class:
                     name, ftype = m.groups()
                     fields.add(f"{current_class}->{name}:{ftype}")
+                    strings.add(name)
                     for t in extract_types(ftype):
                         types.add(t)
                     continue
@@ -145,6 +142,7 @@ def parse_smali(path):
 
                     methods.add(f"{current_class}->{name}{proto}")
                     protos.add(proto)
+                    strings.add(name)
 
                     for t in extract_types(params):
                         types.add(t)
@@ -152,20 +150,20 @@ def parse_smali(path):
                         types.add(t)
                     continue
 
-                for s in STRING_PATTERN.findall(line):
-                    strings.add(s)
+                if line.startswith("const-string"):
+                    m = STRING_PATTERN.search(line)
+                    if m:
+                        strings.add(m.group(1))
 
     except:
         pass
 
-    weight = (
-        len(methods) * 5 +
-        len(fields) * 2 +
-        len(types) +
-        len(protos) * 2 +
-        len(strings) * 2 +
-        instruction_count // 10 +
-        invoke_count * 2
+    weight = max(
+        len(methods),
+        len(fields),
+        len(types),
+        len(protos),
+        len(strings)
     )
 
     return path, methods, fields, types, protos, strings, weight
@@ -180,8 +178,8 @@ def collect_dex_data(base, mode):
     file_cache = {}
 
     index = 1
-    cpu = max(1, multiprocessing.cpu_count() - 1)
-
+    cpu = min(4, max(1, multiprocessing.cpu_count() - 1))
+    
     while True:
         dex_dir = get_dex_dir(base, mode, index)
         if not os.path.isdir(dex_dir):
@@ -342,7 +340,9 @@ def rebalance_overflow_only(base, mode, limit):
 
     for index in sorted(list(dex_data.keys())):
 
-        while get_count(dex_data[index]) > limit:
+        while any(len(dex_data[index][k]) > limit
+            for k in ["methods", "fields", "types", "protos", "strings"]
+        ):
 
             files_sorted = sorted(
                 dex_data[index]["files"],
