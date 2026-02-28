@@ -15,6 +15,7 @@ file.add
     ├── icon.png (256×256)   # is the icon of the add-on
     ├── menu.sh|menu.xml     # 3-dot menu button
     ├── index.sh|index.xml   # After entering the page, all content will be displayed. 
+    ├── firstly_start.sh       # This command only runs during data installation and application updates.
     ├── early_start.sh       # The first time the application starts, it will run the shell.
     ├── install.sh           # When the add-on is unzipped, it will run the shell. 
     ├── uninstall.sh         # remove add-on it will run shell
@@ -36,12 +37,12 @@ version=1.0
 versionCode=100
 
 # if set to "true" root is required for add-on to work
-root=false 
+root=false
 ```
 
 **Add-on icon**
 
-- The icon.png file is an image file that can be 100x100 ~ 500x500 in size
+- The icon.png file is an image file that can be 100x100 ~ 256x256 in size
 
 - Can also rename icon_true.png, icon_false.png, true is dark mode, false is light mode.
 

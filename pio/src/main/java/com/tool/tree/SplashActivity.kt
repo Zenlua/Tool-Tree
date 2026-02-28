@@ -122,29 +122,16 @@ private fun applyTheme() {
     }
 
     // =================== PERMISSION ===================
-    private fun hasReadPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            android.Manifest.permission.READ_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
+    private fun hasReadPermission() = ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
     
-    private fun requestReadPermission() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-            REQUEST_CODE_PERMISSIONS
-        )
-    }
+    private fun requestReadPermission() = ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE_PERMISSIONS)
 
     private fun requestAppPermissions() {
         saveAgreement()
-        if (!hasReadPermission()) {
-            requestReadPermission()
-        } else {
+        if (hasReadPermission()) {
             started = true
             checkRootAndStart()
-        }
+        } else requestReadPermission()
     }
 
     override fun onResume() {
