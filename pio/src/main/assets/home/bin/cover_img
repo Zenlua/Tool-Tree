@@ -39,7 +39,7 @@ echo "Incorrect input, output or conversion format, please check again" >&2
 show_help
 fi
 
-[[ -z "$LEVEL" ]] && LEVEL=8
+[[ -z "$LEVEL" ]] && LEVEL=4
 [[ -z "$DELETE" ]] && DELETE=0
 
 # kiểm tra dạng file đầu vào
@@ -71,7 +71,7 @@ rm -f "$logcv"
 mkdir -p "$OUTPUT"
 
 # Xử lý các tệp nén
-if [ "$dang_type" == 'zstd' ];then
+if [ "$dang_type" == 'zstd' ] || [ "$dang_type" == 'gz' ] || [ "$dang_type" == 'xz' ] || [ "$dang_type" == 'lz4' ] || [ "$dang_type" == 'lzma' ];then
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
 size_zstd="$(zstd -lv "$INPUT" 2>/dev/null | awk -F'[()]' '/Decompressed Size/ {print $2}' | awk '{print $1}')"
 zstd --progress -vv -f -d -k "$INPUT" -o "$TMP/$namerd" &>>$logcv || killtree "Error: $unpack_text_2 $logcv" &

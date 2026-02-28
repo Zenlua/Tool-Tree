@@ -65,7 +65,7 @@ xml_print '<group>
 <action icon="'`urlpng config`'">
 <title>'$config_text'</title>
 <param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" title="'$builds_text_5'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar"/>
-<param name="nen_br" required="true" value-sh="glog nen_br 8" label="'$builds_text_4'" type="seekbar" min="0" max="22" title="'$convert_text_1'" desc="'$convert_text_2'"/>
+<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" title="'$convert_text_1'" desc="'$convert_text_2'"/>
 <param name="build_time" label="'$time_text'" value-sh="glog build_time 0" type="number" title="'$build_time_text_1'" desc="'$build_time_text_2'" required="required" />
 <set>
 slog muc_nen "$muc_nen"
@@ -936,7 +936,7 @@ checktime
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
-<param name="nen_br" required="true" value-sh="glog nen_br 8" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'"/>
+<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'"/>
 <param name="IMAGES" desc="'$convert_text_3'" options-sh="findfile 1 $PTSD" multiple="true" required="true"/>
 <set>
 slog format_img "$format_img"

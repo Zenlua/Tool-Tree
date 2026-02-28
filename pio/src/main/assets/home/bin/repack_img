@@ -68,7 +68,7 @@ show_help
 fi
 
 [[ -z "$NENEROFS" ]] && NENEROFS='lz4hc'
-[[ -z "$LVLNEN" ]] && LVLNEN=8
+[[ -z "$LVLNEN" ]] && LVLNEN=4
 [[ -z "$SAINEN" ]] && SAINEN=0
 [[ -z "$TTBUILDI" ]] && TTBUILDI=0
 [[ -z "$AVBIMG" ]] && AVBIMG=0

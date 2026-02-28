@@ -103,7 +103,7 @@ xacnhatpay="$(listpayload "$INPUT")"
     fi
 fi
 
-if [ "$dang_tep" == 'zstd' ];then
+if [ "$dang_tep" == 'zstd' ] || [ "$dang_tep" == 'gz' ] || [ "$dang_tep" == 'xz' ] || [ "$dang_tep" == 'lz4' ] || [ "$dang_tep" == 'lzma' ];then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     size_zstd="$(zstd -lv "$INPUT" 2>/dev/null | awk -F'[()]' '/Decompressed Size/ {print $2}' | awk '{print $1}')"
