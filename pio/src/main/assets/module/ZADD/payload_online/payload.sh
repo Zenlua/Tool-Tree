@@ -7,7 +7,7 @@ PIDK=$!
 while kill -0 $PIDK 2>/dev/null; do
 if [ -f "$num1" ];then
     num3=$(tr '\r' '\n' < "$num1" | grep -o '[0-9]\+%' | tail -n1 | tr -d '%')
-    if [ "$num3" ];then
+    if [ "${num3:-0}" != 0 ];then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$num3/100"
     num4="$num3"
     fi
