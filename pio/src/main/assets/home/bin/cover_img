@@ -74,7 +74,7 @@ mkdir -p "$OUTPUT"
 if [ "$dang_type" == 'zstd' ];then
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
 size_zstd="$(zstd -lv "$INPUT" 2>/dev/null | awk -F'[()]' '/Decompressed Size/ {print $2}' | awk '{print $1}')"
-zstd --progress -vv -f -d -k "$INPUT" -o "$TMP/$namerd" &>>$logcv &
+zstd --progress -vv -f -d -k "$INPUT" -o "$TMP/$namerd" &>>$logcv || killtree "Error: $unpack_text_2 $logcv" &
 process_count "$size_zstd" "$logcv"
 elif [ "$dang_type" == 'br' ];then
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
@@ -107,7 +107,7 @@ echo -e "$unpack_text_0 (${file_img##*/}) ➠ ($CONVER)...\n"
 
 # chuyển đổi
 if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
-    zstd --progress -f -$LEVEL --format=$CONVER --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" &>>$logcv
+    zstd --progress -f -$LEVEL --format=$CONVER --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" &>>$logcv || killtree "Error: $unpack_text_2 $logcv" &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
     if [ -f "$logcv" ];then

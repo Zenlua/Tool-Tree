@@ -945,8 +945,6 @@ slog cboxksbhd "$cboxk"
 for vinput in $IMAGES; do
 cover_img -i "$PTSD/$vinput" -o "$PTSD/out" -c $format_img -l $nen_br -d $cboxk
 done
-echo "'$unpack_text_2' $TMP/log_conver.txt"
-echo
 echo "'$save_text' $PTSD/out"
 echo
 checktime

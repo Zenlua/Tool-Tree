@@ -24,6 +24,10 @@ echo
 for vv in $partition; do
 '$MPAT'/payload.sh $vv
 done
+echo
+echo "'$payload_text_4' $PTSD"
+echo
+checktime
 </set>
 </action>
 </group>' | sed -z -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g'
