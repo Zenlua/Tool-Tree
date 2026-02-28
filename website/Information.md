@@ -1,5 +1,3 @@
-# [Tool-Tree](https://zenlua.github.io/Tool-Tree)
-
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/tool-tree.jpg" alt="1" style="width:100%;">
 
 **Chat group**
