@@ -1,1 +1,2 @@
+# source https://github.com/REAndroid/APKEditor
 exec java -jar $HOME/etc/apkeditor.jar "$@"

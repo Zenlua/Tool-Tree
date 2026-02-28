@@ -1,5 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
+# source: https://github.com/snowwolf725/Payload_Repack_Tool
+
 source language
 show_help() {
   echo "Usage: payload_repack -i <input> <flags>"

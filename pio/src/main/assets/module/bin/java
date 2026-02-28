@@ -3,7 +3,7 @@
 exec $TERMUX/bin/java \
 -Dfile.encoding=UTF-8 \
 -Xms100m \
--Xmx$(glog ramoccupied 2048)m \
+-Xmx$(glog ramoccupied 4096)m \
 -Duser.home=$HOME \
 -Djava.home=$JAVA_HOME \
 -Djava.library.path=$LIB \

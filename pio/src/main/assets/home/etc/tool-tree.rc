@@ -507,7 +507,7 @@ slog shellc $state
 <group>
 <action icon="'`urlpng java`'" warning="'$project_text_9'" shell="hidden" >
 <title>'$project_text_10'</title>
-<param name="ramoccupied" label="'$option_text'" option-sh="echo -e '"'512\n1024\n2048\n3072\n4096\n5120\n6144\n7168\n8192'"' " value-sh="glog ramoccupied 2048" />
+<param name="ramoccupied" label="'$option_text'" option-sh="echo -e '"'512\n1024\n2048\n3072\n4096\n5120\n6144\n7168\n8192'"' " value-sh="glog ramoccupied 4096" />
 <set>
 slog ramoccupied "$ramoccupied"
 </set>
