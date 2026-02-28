@@ -59,7 +59,7 @@ num1="$1"; num2="$2";
 while kill -0 $PIDK 2>/dev/null; do
 if [ -f "$num2" ];then
     num3=$(tr '\r' '\n' < "$num2" | awk '/ : /{v=$3} END{print v}')
-    if [ "$num3" ];then
+    if [ "${num3:-0}" != 0 ];then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
     num4="$num3"
     fi
@@ -75,7 +75,7 @@ num1="$1";
 while kill -0 $PIDK 2>/dev/null; do
 if [ -f "$num1" ];then
     num3=$(tr '\r' '\n' < "$num1" | grep -o '[0-9]\+%' | tail -n1 | tr -d '%')
-    if [ "$num3" ];then
+    if [ "${num3:-0}" != 0 ];then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$num3/100"
     num4="$num3"
     fi
@@ -188,7 +188,7 @@ mkdir -p "$in_name" $OUTPUT/config
         while kill -0 $PIDK 2>/dev/null; do
         if [ -f $TMP/extract_erofs.log ];then
         number_kk="$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$TMP/extract_erofs.log" | grep -E 'Extract: \[[^]]+\]' | tail -n 1 | awk '{print $3}' | cut -d\. -f1)"
-            if [ "$number_kk" ];then
+            if [ "${number_kk:-0}" != 0 ];then
             [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
             save_num="$number_kk"
             fi
@@ -276,7 +276,7 @@ mkdir -p "$in_name" $OUTPUT/config
         while kill -0 $PIDK 2>/dev/null; do
         if [ -f $TMP/unsquashfs.log ];then
         number_kk="$(sed 's/[\r\t]/\n/g' $TMP/unsquashfs.log | sed -n 's/.* \([0-9]\+\)%$/\1/p' | tail -n 1)"
-            if [ "$number_kk" ];then
+            if [ "${number_kk:-0}" != 0 ];then
             [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
             save_num="$number_kk"
             fi

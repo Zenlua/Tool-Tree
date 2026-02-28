@@ -45,7 +45,7 @@ fi
 # kiểm tra dạng file đầu vào
 dang_type="$(checktype "$INPUT")"
 logcv="$TMP/log_conver.txt"
-namerd="tmp_cv$RANDOM"
+namerd="raw_tmp_$RANDOM.img"
 namesv="$(echo "${INPUT##*/}" | sed 's/\..*$//')"
 
 process_count(){
@@ -54,7 +54,7 @@ num1="$1"; num2="$2";
 while kill -0 $PIDK 2>/dev/null; do
 if [ -f "$num2" ];then
     num3=$(tr '\r' '\n' < "$num2" | awk '/ : /{v=$3} END{print v}')
-    if [ "$num3" ];then
+    if [ "${num3:-0}" != 0 ];then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
     num4="$num3"
     fi
@@ -111,8 +111,9 @@ if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || 
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
     if [ -f "$logcv" ];then
-        num2="$(tr '\r' '\n' < "$logcv" | awk '/Read:/{r=$2*($3=="GiB"?1024:1); t=$5*($6=="GiB"?1024:1)} END{print (t>0?int(r/t*100):0)}')"
-        if [ "$num2" ];then
+    num2="$(tr '\r' '\n' < "$logcv" | awk '/Read:/{r=$2*($3=="GiB"?1024:1); t=$5*($6=="GiB"?1024:1)} END{print (t>0?int(r/t*100):0)}')"
+    [ $num2 == 0 ] && num2="$(tr '\r' '\n' < "$logcv" | awk '/^Read/{r=$3; t=$5} END{print (t>0?int(r/t*100):0)}')"
+        if [ "${num2:-0}" != 0 ];then
         [ "${num2:-0}" == "${num4:-1}" ] || progress "$num2/100"
         num4="$num2"
         fi

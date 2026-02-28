@@ -155,7 +155,7 @@ num1="$1"; num2="$2";
 while kill -0 $PIDK 2>/dev/null; do
 if [ -f "$num2" ];then
     num3=$(wc -c <"$num2")
-    if [ "$num3" ];then
+    if [ "${num3:-0}" != 0 ];then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
     num4="$num3"
     fi
@@ -173,7 +173,7 @@ if [ "$partition" == "erofs" ];then
     if [ -f "$TMP/mkfs_erofs.log" ];then
         num1="$(grep "^loaded .*. fs_config entries" $TMP/mkfs_erofs.log | awk '{print $2}')"
         num2="$(echo "$(grep -c 'Processing' $TMP/mkfs_erofs.log) + 1" | bc)"
-        if [ "$num2" ];then
+        if [ "${num2:-0}" != 0 ];then
         [ "${num2:-0}" == "${num4:-1}" ] || progress "$((num2 * 100 / num1))/100"
         num4="$num2"
         fi
@@ -261,7 +261,7 @@ elif [ "$partition" == "squashfs" ];then
     while kill -0 $PIDK 2>/dev/null; do
     if [ -f $TMP/mksquashfs.log ];then
     number_kk="$(sed 's/[\r\t]/\n/g' $TMP/mksquashfs.log | sed -n 's/.* \([0-9]\+\)%$/\1/p' | tail -n 1)"
-      if [ "$number_kk" ];then
+      if [ "${number_kk:-0}" != 0 ];then
       [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
       save_num="$number_kk"
       fi
@@ -360,16 +360,17 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
     echo
     fi
     if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
-    zstd --progress -f -$lvnen --format=$CONVER --compress "$saved" -o "${out_saved%.*}.img.$CONVER" &>"$TMP/repzstd.log" &
+    zstd --progress -f -$lvnen --format=$CONVER --compress "$saved" -o "${out_saved%.*}.img.$CONVER" &>"$TMP/repzstd.log" || killtree "Cover zstd error" &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
-        if [ -f "$TMP/repzstd.log" ];then
-            num2="$(tr '\r' '\n' < "$TMP/repzstd.log" | awk '/Read:/{r=$2*($3=="GiB"?1024:1); t=$5*($6=="GiB"?1024:1)} END{print (t>0?int(r/t*100):0)}')"
-            if [ "$num2" ];then
-            [ "${num2:-0}" == "${num4:-1}" ] || progress "$num2/100"
-            num4="$num2"
-            fi
+    if [ -f "$TMP/repzstd.log" ];then
+    num2="$(tr '\r' '\n' < "$TMP/repzstd.log" | awk '/Read:/{r=$2*($3=="GiB"?1024:1); t=$5*($6=="GiB"?1024:1)} END{print (t>0?int(r/t*100):0)}')"
+    [ $num2 == 0 ] && num2="$(tr '\r' '\n' < "$TMP/repzstd.log" | awk '/^Read/{r=$3; t=$5} END{print (t>0?int(r/t*100):0)}')"
+        if [ "${num2:-0}" != 0 ];then
+        [ "${num2:-0}" == "${num4:-1}" ] || progress "$num2/100"
+        num4="$num2"
         fi
+    fi
     sleep 1
     done
     progress -1/0
