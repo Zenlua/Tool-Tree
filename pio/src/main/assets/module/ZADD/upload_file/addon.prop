@@ -1,6 +1,6 @@
 # Add-on
 id=upload_file
-name=Upload file
+name=Upload file online
 author=Kakathic
 description=Upload files to web
 version=1.0

@@ -26,7 +26,7 @@ slog framework_switch "$framework_switch"
 <title>Sign boot</title>
 <desc>Sign AVB 1.0 boot, vendor_boot</desc>
 <param name="NAME" label="'$name_text'" value-sh="glog name_boot_key boot" type="text" placeholder="boot"/>
-<param name="SIGN" value-sh="glog sign_boot_key testkey" label="'$sign_text'" options-sh="cd $ETC/key; ls *.pem | sed '"'s|.x509.pem||'"' "/>
+<param name="SIGN" value-sh="glog sign_boot_key testkey" label="'$sign_text'" options-sh="findfile file $ETC/key '"'*.x509.pem'"' | sed '"'s|.x509.pem||'"' "/>
 <param name="FILE" desc="'$input_text' .img, '$folder_text' '$PTSD'" options-sh="cd $PTSD; ls *.img | grep boot" label="'$select_text'" required="true"/>
 <set>
 slog name_boot_key "$NAME"
@@ -44,7 +44,7 @@ echo "'$save_text': $PTSD/out/$FILE"
 <title>Protoc</title>
 <desc>'$protoc_text'</desc>
 <param name="LIST" label="'$select_text'" options-sh="echo -e '"'Xml\nJson'"' "/>
-<param name="FILE" desc="'$input_text' .pb .json .xml, '$folder_text' '$PTSD'" multiple="true" options-sh="cd $PTSD; ls *.pb *.json *.xml" required="true"/>
+<param name="FILE" desc="'$input_text' .pb .json .xml, '$folder_text' '$PTSD'" multiple="true" options-sh="findfile file $PTSD '"'*.pb *.json *.xml'"' " required="true"/>
 <set>
 for vvc in $FILE; do
 if [ $(file $PTSD/$vvc | grep -cm1 "data") == 1 ];then
@@ -72,7 +72,7 @@ done
 <group><action>
 <title>Mi Thermal</title>
 <desc>'$mi_thermal_text'</desc>
-<param name="FILE" desc="'$input_text' .conf, .txt, '$folder_text' '$PTSD'" multiple="true" options-sh="cd $PTSD; ls *.conf *.txt" required="true"/>
+<param name="FILE" desc="'$input_text' .conf, .txt, '$folder_text' '$PTSD'" multiple="true" options-sh="findfile file $PTSD '"'*.conf *.txt'"' " required="true"/>
 <set>
     for vvc in $FILE; do
     if [ $(file $PTSD/$vvc | grep -cm1 "data") == 1 ];then
@@ -89,7 +89,7 @@ done
 <group><action>
 <title>Unpack splitapp</title>
 <desc>'$splitapp_desc_text'</desc>
-<param name="FILE" label="'$select_text'" desc="'$input_text' .APP, '$folder_text' '$PTSD'" options-sh="cd $PTSD; ls *.app *.APP" required="true"/>
+<param name="FILE" label="'$select_text'" desc="'$input_text' .APP, '$folder_text' '$PTSD'" options-sh="findfile file $PTSD '"'*.app *.APP'"' " required="true"/>
 <set>
 if [ -f "$FILE" ];then
 splitapp.py -f "$FILE" -o $PTSD/out
@@ -104,7 +104,7 @@ fi
 <action>
 <title>Unpack pac</title>
 <desc>'$pac_desc_text'</desc>
-<param name="FILE" label="'$select_text'" desc="'$input_text' .pac, '$folder_text' '$PTSD'" options-sh="cd $PTSD; ls *.pac" required="true"/>
+<param name="FILE" label="'$select_text'" desc="'$input_text' .pac, '$folder_text' '$PTSD'" options-sh="findfile file $PTSD '"'*.pac'"' " required="true"/>
 <set>
 if [ -f "$FILE" ];then
 unpac.py extract -d $PTSD/out "$FILE"

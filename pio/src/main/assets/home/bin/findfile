@@ -162,14 +162,14 @@ case "$1" in
     ;;
 
   file)
-    for f in $(ls -1d $1); do
+    for f in $(ls -1d $3); do
       [[ -s "$f" && -f "$f" ]] || continue
       echo "$f"
     done
     ;;
 
   files)
-    for f in $(ls -1d $1); do
+    for f in $(ls -1d $3); do
       [[ -s "$f" && -f "$f" ]] || continue
       info=$(checkapk "$f")
       echo "$f|$f ($info)"

@@ -12,7 +12,7 @@ xml_print '
 <action shell="hidden" reload="true">
 <title>'$clean_text_1'</title>
 <summary>'$clean_text_2' '"$path_clean"'</summary>
-<param name="project" label="'$select_text_1'" options-sh="cd $APK/$PTAH; ls -1d */apktool.yml */archive-info.json | sed -e '"'s|/apktool.yml||'"' -e '"'s|/archive-info.json||'"' " value-sh="glog project_apk_clean" required="true" />
+<param name="project" label="'$select_text_1'" options-sh="findfile file $APK/$PTAH '"'*/apktool.yml */archive-info.json'"' | sed -e '"'s|/apktool.yml||'"' -e '"'s|/archive-info.json||'"' " value-sh="glog project_apk_clean" required="true" />
 <set>slog project_apk_clean "$project"</set>
 </action>
 </group>
@@ -20,7 +20,7 @@ xml_print '
 <group>
 <action reload="true" visible="echo '$show_clean'">
 <title>'$clean_text_3'</title>
-<param name="LIST" desc="'$clean_text_4'" multiple="multiple" options-sh="cd $APK/$PTAH/'$path_clean'; ls -1d resources/package_1/res/values-*/strings.xml res/values-*/strings.xml | sed -e '"'s|resources/package_1/||'"' -e '"'s|res/||'"' -e '"'s|/strings.xml||'"' "/>
+<param name="LIST" desc="'$clean_text_4'" multiple="multiple" options-sh="findfile file $APK/$PTAH/'$path_clean' '"'resources/package_1/res/values-*/strings.xml res/values-*/strings.xml'"' | sed -e '"'s|resources/package_1/||'"' -e '"'s|res/||'"' -e '"'s|/strings.xml||'"' "/>
 <set>
 for vv in $LIST; do
 echo "'$clean_text_5' $vv"
