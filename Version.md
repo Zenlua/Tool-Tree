@@ -2,6 +2,7 @@
 
 **Dev**
 
++ Adjust the icon size
 + Fix the auto-delete zstd during decoding
 + Correct the mv command.
 + Optimize progress bar

@@ -32,7 +32,7 @@
     <string name="text_power_recovery">Recovery</string>
     <string name="text_power_fastboot">Fastboot</string>
     <string name="text_power_edl">9008 (EDL)</string>
-    <string name="menu_power">Chọn hành động nguồn</string>
+    <string name="menu_power">Chọn hành động nguồn (root)</string>
 
     <string name="permission_dialog_message">"Yêu cầu các quyền sau:
 

@@ -43,7 +43,7 @@
     <string name="text_power_recovery">Recovery</string>
     <string name="text_power_fastboot">Fastboot</string>
     <string name="text_power_edl">9008 (EDL)</string>
-    <string name="menu_power">Select action power</string>
+    <string name="menu_power">Select action power (root)</string>
     
     <string name="power_emergency_cmd">sync; svc power reboot edl || reboot edl</string>
     <string name="power_fastboot_cmd">sync; svc power reboot bootloader || reboot bootloader</string>

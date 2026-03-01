@@ -126,9 +126,15 @@ xml_print '<group>
 <desc>'$home_text_1'</desc>
 <option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
 <option type="default" id="v2" auto-off="true" interruptible="false" >'$permis_text_4'</option>
+<option type="default" id="v3" auto-off="true" interruptible="false" >'$setting_text_5'</option>
 <handler>
-[ "$menu_id" == "v1" ] && echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
-[ "$menu_id" == "v2" ] && echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
+if [ "$menu_id" == "v1" ];then
+echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
+elif [ "$menu_id" == "v2" ];then
+echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
+elif [ "$menu_id" == "v3" ];then
+echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
+fi
 </handler>
 </page>
 </group>
@@ -218,9 +224,15 @@ xml_print '<group>
 <desc>'$home_text_1'</desc>
 <option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
 <option type="default" id="v2" auto-off="true" interruptible="false" >'$permis_text_4'</option>
+<option type="default" id="v3" auto-off="true" interruptible="false" >'$setting_text_5'</option>
 <handler>
-[ "$menu_id" == "v1" ] && echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
-[ "$menu_id" == "v2" ] && echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
+if [ "$menu_id" == "v1" ];then
+echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
+elif [ "$menu_id" == "v2" ];then
+echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
+elif [ "$menu_id" == "v3" ];then
+echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
+fi
 </handler>
 </page>
 </group>'

@@ -31,8 +31,7 @@
     <string name="text_power_recovery">Recovery</string>
     <string name="text_power_fastboot">Fastboot</string>
     <string name="text_power_edl">9008 (EDL)</string>
-    <string name="menu_power">Выбор действия питания</string>
-    <string name="storage_available">доступно</string>
+    <string name="menu_power">Выбор действия питания (root)</string>
 
     <string name="permission_dialog_message">"Требуются следующие разрешения:
 

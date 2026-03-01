@@ -31,8 +31,7 @@
     <string name="text_power_recovery">Recovery</string>
     <string name="text_power_fastboot">Fastboot</string>
     <string name="text_power_edl">9008 (EDL)</string>
-    <string name="menu_power">Energiagazdálkodási művelet kiválasztása</string>
-    <string name="storage_available">elérhető</string>
+    <string name="menu_power">Energiagazdálkodási művelet kiválasztása (root)</string>
 
     <string name="permission_dialog_message">"A következő engedélyek szükségesek:
 
