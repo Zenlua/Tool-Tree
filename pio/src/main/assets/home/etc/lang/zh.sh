@@ -41,6 +41,7 @@ alignment_text="结盟"
 synthetic_text="合成的"
 config_text="配置"
 time_text="时间"
+pin_text="固定插件"
 
 # Home
 home_text_1="应用信息与功能"

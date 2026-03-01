@@ -9,10 +9,10 @@ fi
 
 iccpng(){
 if [ "$(glog Ticon)" != 1 ];then
-    if [ -f "${vadd%/*}/$1.png" ];then
-    echo "${vadd%/*}/$1.png"
-    elif [ -f "${vadd%/*}/$1_$DARK_MODE.png" ];then
-    echo "${vadd%/*}/$1_$DARK_MODE.png";
+    if [ -f "$dirvad/$1.png" ];then
+    echo "$dirvad/$1.png"
+    elif [ -f "$dirvad/$1_$DARK_MODE.png" ];then
+    echo "$dirvad/$1_$DARK_MODE.png";
     else
     echo "$ETC/icon/icon.png"
     fi
@@ -1269,8 +1269,8 @@ Features(){
 xml_print '<group><switch icon="'`iccpng icon`'" shell="hidden" warn="'$addon_textxx'">
 <title>'$(gprop name $vadd)'</title>
 <desc>'$(gprop version $vadd)', '$(gprop author $vadd)' | '$(gprop description $vadd)'</desc>
-<get>cat '${vadd%/*}'/'$1'</get>
-<set>echo "$state" > '${vadd%/*}'/'$1'</set>
+<get>cat '$dirvad'/'$1'</get>
+<set>echo "$state" > '$dirvad'/'$1'</set>
 </switch>
 </group>'
 }
@@ -1280,19 +1280,18 @@ Homeadd(){
 unset pagesh code_menu farooot
 
 # Load index
-if [ -f "${vadd%/*}/index.sh" ];then
-pagesh='config-sh="'${vadd%/*}'/index.sh home"'
-elif [ -f "${vadd%/*}/index.xml" ];then
-pagesh='config="'${vadd%/*}'/index.xml"'
+if [ -f "$dirvad/index.sh" ];then
+pagesh='config-sh="'$dirvad'/index.sh home"'
+elif [ -f "$dirvad/index.xml" ];then
+pagesh='config="'$dirvad'/index.xml"'
 else
 pagesh='config="'$ETC'/error.xml"'
 fi
 
 # Load menu
-if [ -f "${vadd%/*}/menu.sh" ];then
-code_menu="$(${vadd%/*}/menu.sh 2>/dev/null)"
-elif [ -f "${vadd%/*}/menu.xml" ];then
-code_menu="$(cat ${vadd%/*}/menu.xml 2>/dev/null)"
+if [ -f "$dirvad/menu.sh" ];then
+code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
+code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
 fi
 
 # Phát hiện root
@@ -1312,32 +1311,63 @@ fi
 
 # Load trang
 if [ -n "$(gprop name $vadd)" ];then
+# Xác nhận có google dịch
+if [ "$(grep -cm1 trans_add "$dirvad/index.sh")" == 1 ];then
+google_trankk='<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
+google_tran_shellkk='elif [ "$menu_id" == "v1" ];then
+[ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
+fi
 xml_print '<group>
 <page icon="'`iccpng icon`'" '$pagesh'>
 <title>'$(gprop name $vadd)'</title>
 <desc>'$desc_tec'</desc>
 '$summss'
 '$farooot'
-'"$code_menu"'
+<option type="default" id="v2" auto-off="true" interruptible="false">'$pin_text'</option>
+'"$google_trankk"'
+<option type="refresh">'$refresh_text'</option>
+'"$code_option"'
+<handler>
+if [ "$menu_id" == "v2" ];then
+[ -f "'$dirvad'" ] && rm -f "'$dirvad'/pin" || echo > "'$dirvad'/pin"
+'"$google_tran_shellkk"'
+fi
+'"$code_shell"'
+</handler>
 </page>
 </group>'
 fi
 }
 
-# Load trang add-on
-for vadd in $(ls -1d $PATHADD/*/addon.prop 2>/dev/null); do
-unset index_adds
+Vips(){
+index_adds=""; # Bỏ giá trị cũ tránh lưu
 [ "$PATHADD" == "$AON" ] && index_adds="$(glog settadd)" || index_adds="$(glog settadd2)"
-    if [ "$(cat ${vadd%/*}/delete 2>/dev/null)" == 1 ];then
-    [ -f "${vadd%/*}/uninstall.sh" ] && ${vadd%/*}/uninstall.sh
-    rm -rf "${vadd%/*}"
+if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ];then
+    [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
+    rm -rf "$dirvad"
     elif [ "$index_adds" == 1 ];then
     Features status
     elif [ "$index_adds" == 2 ];then
     Features delete
     else
-    [ "$(cat ${vadd%/*}/status 2>/dev/null)" == 1 ] || Homeadd
-    fi
+    [ "$(cat $dirvad/status 2>/dev/null)" == 1 ] || Homeadd
+fi
+}
+
+# Load trang add-on có pin trước 
+for vadd in $PATHADD/*/addon.prop; do
+    [ -f "$vadd" ] || continue
+    dirvad="${vadd%/*}"
+    [ -f "$dirvad/pin" ] || continue
+    Vips
+done
+
+# load trang không có pin
+for vadd in $PATHADD/*/addon.prop; do
+    [ -f "$vadd" ] || continue
+    dirvad="${vadd%/*}"
+    [ -f "$dirvad/pin" ] && continue
+    Vips
 done
 }
 

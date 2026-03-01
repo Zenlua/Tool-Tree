@@ -13,13 +13,20 @@ file.add
 └── (in file.add)
     ├── addon.prop           # add-on information 
     ├── icon.png (256×256)   # is the icon of the add-on
-    ├── menu.sh|menu.xml     # 3-dot menu button
+    ├── menu.sh            # 3-dot menu button
     ├── index.sh|index.xml   # After entering the page, all content will be displayed. 
     ├── firstly_start.sh       # This command only runs during data installation and application updates.
     ├── early_start.sh       # The first time the application starts, it will run the shell.
-    ├── install.sh           # When the add-on is unzipped, it will run the shell. 
+    ├── install.sh           # When the add-on is unzipped, it will run the shell.
     ├── uninstall.sh         # remove add-on it will run shell
     └── language.sh          # subfile of index.sh to add language 
+```
+
+**Menu.sh**
+```
+MPAT="${0%/*}"
+[ "$1" == "code_option" ] && echo '<option type="default" id="kk1" auto-off="true" reload="true" interruptible="false" >test</option>'
+[ "$1" == "code_shell" ] && echo '[ "$menu_id" == "kk1" ] && echo "path addon: '$MPAT' " '
 ```
 
 **Contents of addon.prop file**

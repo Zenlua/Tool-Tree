@@ -2,6 +2,7 @@
 
 **Dev**
 
++ Change the add-on menu structure
 + Fix addon error creating dex2oat
 + Adjust the icon size
 + Fix the auto-delete zstd during decoding

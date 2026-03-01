@@ -41,6 +41,7 @@ alignment_text="Căn chỉnh"
 synthetic_text="Tổng hợp phân vùng"
 config_text="Cấu hình"
 time_text="Thời gian"
+pin_text="Ghim add-on"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"

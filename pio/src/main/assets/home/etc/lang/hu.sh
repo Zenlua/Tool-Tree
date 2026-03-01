@@ -41,6 +41,7 @@ alignment_text="Igazítás"
 synthetic_text="Szintetikus"
 config_text="Konfiguráció"
 time_text="Idő"
+pin_text="Bővítmény rögzítése"
 
 # Home
 home_text_1="Alkalmazásinformációk és funkciók"

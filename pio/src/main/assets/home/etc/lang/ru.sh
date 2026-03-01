@@ -41,6 +41,7 @@ alignment_text="Выравнивание"
 synthetic_text="Синтетический"
 config_text="Конфигурация"
 time_text="Время"
+pin_text="Закрепить дополнение"
 
 # Home
 home_text_1="Информация и функции приложения"

@@ -41,6 +41,7 @@ alignment_text="Alignment"
 synthetic_text="Synthetic"
 config_text="Configuration"
 time_text="Time"
+pin_text="Pin add-on"
 
 # Home
 home_text_1="App information and features"
