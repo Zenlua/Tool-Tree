@@ -38,7 +38,7 @@ case "$1" in
           ;;
         zip)
           [ -n "$(listpayload "$vv")" ] && listpayload "$vv" | awk -v f="$vv" '{print $1"="f"|Payload - "$1" "$2}' && continue
-          Listzipne="$(unzip -ql "$vv" 2>/dev/null | awk '/\.(img|dat|br|zstd|zst)$/{cmd="coverbyte "$1;cmd|getline s;close(cmd);n=$4;o=n;if(index(n,"/")){sub(/^.*\//,"",n);n=".../"n} if(s!="0B")printf "%s=%s|Zip - %s (%s)\n",o,"'"$vv"'",n,s}')"
+          Listzipne="$(unzip -ql "$vv" 2>/dev/null | awk '/\.(img|dat|br|zstd|zst|gz|xz|lz4|lzma)$/{cmd="coverbyte "$1;cmd|getline s;close(cmd);n=$4;o=n;if(index(n,"/")){sub(/^.*\//,"",n);n=".../"n} if(s!="0B")printf "%s=%s|Zip - %s (%s)\n",o,"'"$vv"'",n,s}')"
           [ -n "$Listzipne" ] && echo "$Listzipne"
           ;;
         *)
@@ -159,6 +159,21 @@ case "$1" in
 
   forapex)
     ls -1d */apex_infor.ini | sed 's|/apex_infor.ini||g'
+    ;;
+
+  file)
+    for f in $(ls -1d $1); do
+      [[ -s "$f" && -f "$f" ]] || continue
+      echo "$f"
+    done
+    ;;
+
+  files)
+    for f in $(ls -1d $1); do
+      [[ -s "$f" && -f "$f" ]] || continue
+      info=$(checkapk "$f")
+      echo "$f|$f ($info)"
+    done
     ;;
 
   *)

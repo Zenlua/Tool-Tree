@@ -1301,10 +1301,13 @@ farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
 desc_tec="$(gprop version $vadd), $(gprop author $vadd) | $root_warning_text_1"
-text_desxxfc="summary"
 else
 desc_tec="$(gprop version $vadd), $(gprop author $vadd) | $(gprop description $vadd)"
-text_desxxfc="desc"
+fi
+
+# phát hiện tag
+if [ "$(gprop summary $vadd)" ];then
+summss='<desc>'"$(gprop summary $vadd)"'</desc>'
 fi
 
 # Load trang
@@ -1312,7 +1315,8 @@ if [ -n "$(gprop name $vadd)" ];then
 xml_print '<group>
 <page icon="'`iccpng icon`'" '$pagesh'>
 <title>'$(gprop name $vadd)'</title>
-<'$text_desxxfc'>'$desc_tec'</'$text_desxxfc'>
+<desc>'$desc_tec'</desc>
+'$summss'
 '$farooot'
 '"$code_menu"'
 </page>

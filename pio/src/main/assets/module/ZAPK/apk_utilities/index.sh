@@ -37,7 +37,7 @@ done
 
 # home
 home(){
-xml_print '<group title="'$trans_text'">
+xml_print '<group title="'$google_text'">
 <page title="'$home_text_1'" config-sh="'$MPAT'/index.sh clean"/>
 </group>'
 }
@@ -45,27 +45,10 @@ xml_print '<group title="'$trans_text'">
 # Thư mục hiện tại
 MPAT="${0%/*}"
 
-# Ngôn ngữ mặc định
-eval "$(sed '1,/root=/d' $MPAT/addon.prop)"
-
-# Tự động dịch
-if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
-sum_md5="$(sha256sum $MPAT/addon.prop | awk '{print $1}')"
-if [[ "$sum_md5" != "$(glog "sum_md5_${MPAT##*/}")" ]] || [[ ! -f $MPAT/auto.prop ]] || [[ "$(grep -cm1 '=\"\"' $MPAT/auto.prop)" == 1 ]];then
-[ -f $MPAT/auto.prop ] && rm -fr $MPAT/auto.prop
-for vc in $(grep -e '="' $MPAT/addon.prop | cut -d= -f1); do
-echo -e "${vc}=\"$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY | awk '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\" #${!vc}" >>$MPAT/auto.prop &
-done
-    wait
-    if [[ "$(grep -cm1 '=\"\"' $MPAT/auto.prop)" == 1 ]];then
-    sed -i '/=\"\"/d' $MPAT/auto.prop
-    else
-    slog "sum_md5_${MPAT##*/}" "$sum_md5"
-    fi
-fi
-[[ -f $MPAT/auto.prop ]] && source $MPAT/auto.prop
-trans_text="$google_text"
-fi
+# Google dịch
+eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
+[ "$(glog "auto_trans_text_${1##*/}")" == 1 ] && trans_add "$MPAT"
+[ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
 
 # index
 echo '<?xml version="1.0" encoding="UTF-8" ?>

@@ -1,0 +1,17 @@
+# kakathic
+
+[ -f "$1/addon.prop" ] || exit
+
+sum_md5="$(sha256sum "$1/addon.prop" | awk '{print $1}')"
+if [ "$sum_md5" != "$(glog "sum_md5_${1##*/}")" ] || [ ! -f "$1/auto.sh" ] || [ "$(grep -cm1 '=\"\"' "$1/auto.sh")" == 1 ];then
+[ -f "$1/auto.sh" ] && rm -fr "$1/auto.sh"
+for vc in $(grep -e '="' $1/addon.prop | cut -d= -f1); do
+echo -e "${vc}=\"$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY | awk '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\" # ${!vc}" >>"$1/auto.sh" &
+done
+wait
+
+if [ "$(grep -cm1 '=\"\"' "$1/auto.sh")" == 1 ];then
+sed -i '/=\"\"/d' "$1/auto.sh"
+else
+slog "sum_md5_${1##*/}" "$sum_md5"
+fi

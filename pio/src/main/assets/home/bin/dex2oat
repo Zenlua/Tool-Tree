@@ -1,11 +1,11 @@
 # Kakathic
 
-[ "$IS32BIT" == "true" ] && index_dex2oat='dex2oat32' || index_dex2oat='dex2oat64'
-
-if [ -f /apex/com.android.art/bin/$index_dex2oat ];then
-exec /apex/com.android.art/bin/$index_dex2oat "$@"
-elif [ -f /system/bin/$index_dex2oat ];then
-exec /system/bin/$index_dex2oat "$@"
+if [ -f /apex/com.android.art/bin/dex2oat64 ];then
+exec /apex/com.android.art/bin/dex2oat64 "$@"
+elif [ -f /apex/com.android.art/bin/dex2oat ];then
+exec /apex/com.android.art/bin/dex2oat "$@"
+elif [ -f /system/bin/dex2oat64 ];then
+exec /system/bin/dex2oat64 "$@"
 elif [ -f /system/bin/dex2oat ];then
 exec /system/bin/dex2oat "$@"
 fi
