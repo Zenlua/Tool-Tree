@@ -1277,8 +1277,7 @@ xml_print '<group><switch icon="'`iccpng icon`'" shell="hidden" warn="'$addon_te
 
 Homeadd(){
 # Hủy bỏ biến
-unset pagesh code_menu farooot
-
+unset pagesh code_menu farooot google_trankk google_tran_shellkk code_shell code_option summss
 # Load index
 if [ -f "$dirvad/index.sh" ];then
 pagesh='config-sh="'$dirvad'/index.sh home"'
@@ -1323,7 +1322,7 @@ xml_print '<group>
 <desc>'$desc_tec'</desc>
 '$summss'
 '$farooot'
-<option type="default" id="v2" auto-off="true" interruptible="false">'$pin_text'</option>
+<option type="default" id="v2" auto-finish="true" auto-off="true" interruptible="false">'$pin_text'</option>
 '"$google_trankk"'
 <option type="refresh">'$refresh_text'</option>
 '"$code_option"'
