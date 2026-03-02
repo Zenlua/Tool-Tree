@@ -64,9 +64,9 @@ i1=$(echo "$i" | sed 's/.img//g')
 i2=$(echo "$i" | sed -e 's/_a.img//g' -e 's/_b.img//g' -e 's/.img//g')
 info=$(checktype "$INPUT/$i1.img")
 [ $info == "sparse" ] && simg2img "$INPUT/$i1.img"
-[ $TYPEIMG = "A" ] && argvs+="--partition ${i2}:readonly:$(wc -c <"$INPUT/$i1.img"):${SUPGRUP} --image ${i2}=$i1.img "
+[ $TYPEIMG = "A" ] && argvs+="--partition ${i2}:readonly:$(stat -c %s "$INPUT/$i1.img"):${SUPGRUP} --image ${i2}=$i1.img "
 if [ $TYPEIMG == "AB" ] || [ $TYPEIMG == "VAB" ];then
-ml1+="--partition ${i2}_a:readonly:$(wc -c <"$INPUT/$i1.img"):${SUPGRUP}_a --image ${i2}_a=$i1.img "
+ml1+="--partition ${i2}_a:readonly:$(stat -c %s "$INPUT/$i1.img"):${SUPGRUP}_a --image ${i2}_a=$i1.img "
 ml2+="--partition ${i2}_b:readonly:0:${SUPGRUP}_b "
 fi
 done

@@ -98,8 +98,8 @@ fi
 [ -f "$saved" ] && rm -fr "$saved"
 
 if [ "$CONVER" != "raw" ];then
-saved="$TMP/${saved##*/}"
 out_saved="$saved"
+saved="$TMP/${saved##*/}"
 fi
 
 # Chọn định dạng tệp phân vùng
@@ -154,7 +154,7 @@ PIDK=$!
 num1="$1"; num2="$2";
 while kill -0 $PIDK 2>/dev/null; do
 if [ -f "$num2" ];then
-    num3=$(wc -c <"$num2")
+    num3=$(stat -c %s "$num2")
     if [ "${num3:-0}" != 0 ];then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
     num4="$num3"
@@ -341,18 +341,16 @@ elif [ "$partition" == "ext" ];then
     fi
 fi
 
-if [[ -f $OUTPUT/dynamic_partitions_op_list ]] && [[ "$partition" =~ ^(ext|f2fs|erofs)$ ]];then
-    if [ ! -f $OUTPUT/out/dynamic_partitions_op_list ];then
-    cp -f $OUTPUT/dynamic_partitions_op_list $OUTPUT/out/dynamic_partitions_op_list
-    fi
+if [[ -f $PTSD/dynamic_partitions_op_list ]] && [[ "$partition" =~ ^(ext|f2fs|erofs)$ ]];then
+    cp -f $PTSD/dynamic_partitions_op_list $OUTPUT/out/dynamic_partitions_op_list
     if [ -f "$saved" ];then
-    img_size=$(wc -c <"$saved")
+    img_size=$(stat -c %s "$saved")
     sed -i "s/resize ${INPUT##*/} [^*]*/resize ${INPUT##*/} $img_size/" $OUTPUT/out/dynamic_partitions_op_list
     fi
 fi
 
 if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
-    text_sizes=$(wc -c <"$saved")
+    [ "$img_size" ] && text_sizes="$img_size" || text_sizes=$(stat -c %s "$saved")
     echo "$sizes_text: ${saved##*/} $(coverbyte $text_sizes) ($text_sizes)"
     echo
     if [ "$CONVER" != "raw" ];then
@@ -387,7 +385,7 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
     elif [ "$CONVER" == 'sparse' ];then
     img2simg "$saved" "$out_saved" >/dev/null
     fi
-    [ "$CONVER" != "raw" ] && rm -f "$saved"
+    [ "$CONVER" == "raw" ] && mv "$saved" "$out_saved" || rm -f "$saved"
 fi
 
 if [ "$CDELIMG" == 1 ];then

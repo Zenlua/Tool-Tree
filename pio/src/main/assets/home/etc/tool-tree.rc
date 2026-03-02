@@ -1328,7 +1328,7 @@ xml_print '<group>
 '"$code_option"'
 <handler>
 if [ "$menu_id" == "v2" ];then
-[ -f "'$dirvad'" ] && rm -f "'$dirvad'/pin" || echo > "'$dirvad'/pin"
+[ -f "'$dirvad'/pin" ] && rm -f "'$dirvad'/pin" || echo > "'$dirvad'/pin"
 '"$google_tran_shellkk"'
 fi
 '"$code_shell"'

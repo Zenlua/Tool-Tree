@@ -34,7 +34,7 @@ if [ "$?" == 0 ];then
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
     if [ -f "$taive_path_file" ];then
-        num3=$(wc -c <"$taive_path_file")
+        num3=$(stat -c %s "$taive_path_file")
         if [ "$num3" ] && [ "${taive_byte:-0}" != 0 ];then
         [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / taive_byte))/100"
         num4="$num3"

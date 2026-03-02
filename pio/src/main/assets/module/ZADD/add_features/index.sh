@@ -121,10 +121,13 @@ fi
 # Thư mục hiện tại
 MPAT="${0%/*}"
 
-# Google dịch
+# Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
-[ "$(glog "auto_trans_text_${1##*/}")" == 1 ] && trans_add "$MPAT"
+# Google dịch
+if [ "$(glog "auto_trans_text_${1##*/}")" == 1 ];then
+trans_add "$MPAT"
 [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
+fi
 
 # index
 echo '<?xml version="1.0" encoding="UTF-8" ?>
