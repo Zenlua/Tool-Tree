@@ -295,10 +295,10 @@ elif [ "$partition" == "f2fs" ];then
     [ "$(cat "$fs_options" 2>/dev/null | grep 'superblock features' | grep -cm1 ro)" == 1 ] && f2fsrw=0 || f2fsrw=1
     fi
     if [ "$f2fsrw" == 1 ];then
-    make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+    make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
     sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" -c "$saved" 2>&1 | tee $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
     else
-    make_f2fs -t 0 -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, Suggestion: Increase free MB" "$saved"
+    make_f2fs -t 0 -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
     sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" "$saved" 2>&1 | tee $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
     fi
     [ "$(grep -cm1 'Done:' $TMP/sload_f2fs.log)" == 0 ] && killtree "Error build sload_f2fs, Suggestion: Increase free MB, log: $TMP/sload_f2fs.log" "$saved";
@@ -354,7 +354,7 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
     echo "$sizes_text: ${saved##*/} $(coverbyte $text_sizes) ($text_sizes)"
     echo
     if [ "$CONVER" != "raw" ];then
-    echo -e "$unpack_text_0 ${INPUT##*/} ($partition) ➠ ($CONVER)..."
+    echo -e "$unpack_text_0 ${INPUT##*/} (raw) ➠ ($CONVER)..."
     echo
     fi
     if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then

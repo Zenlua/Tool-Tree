@@ -2,6 +2,8 @@
 
 **Dev**
 
++ The dex2oat addon supports older devices
++ Speed up the build
 + Change the add-on menu structure
 + Fix addon error creating dex2oat
 + Adjust the icon size
