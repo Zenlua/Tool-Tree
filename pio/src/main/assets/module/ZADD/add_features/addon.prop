@@ -8,6 +8,8 @@ versionCode=102
 root=false
 
 # language
+config_text_1="Convert existing projects"
+setting_text_3="Projects"
 input_text="Input file"
 folder_text="Folder containing:"
 error_text="Error file:"
