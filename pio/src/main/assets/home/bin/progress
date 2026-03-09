@@ -2,7 +2,6 @@
 
 if [ -n "$shell_progres" ];then
     if [ "$2" ];then
-    bodem=0
     while true; do
         bodem=$((bodem + 1))
         echo "progress:[$bodem/$2]"

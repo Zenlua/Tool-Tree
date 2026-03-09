@@ -7,7 +7,7 @@ IFS=$'\n'
 case "$1" in
   0)
     for vv in $(ls -1d *); do
-      [[ "$vv" == *config* || "$vv" == *raw* || ! -e "config/${vv}_info" ]] && continue
+      [[ "$vv" == *config* || "$vv" == *raw* ]] && continue
       info=$(head -n1 "config/${vv}_info")
       [[ -z "$info" ]] && continue
       echo "$vv|$vv ($info)"
@@ -15,35 +15,31 @@ case "$1" in
     ;;
 
   1)
-    for vv in $(ls -1d *.*); do
-      # *.img *.dat *.zstd *.zst *.br
-      [[ -s "$vv" && -f "$vv" ]] || continue
-      type=$(checktype "$vv")
-      echo "$vv|$vv ($type)"
-      # | grep -E '\(super\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(br\)'
+    for vv in $(checktype); do
+      file="${vv%%:*}"; type="${vv##*:}"
+      [[ -s "$file" && -f "$file" && ! "$type" =~ ^(zip|payload)$ ]] || continue
+      echo "$file|$file ($type)"
     done
     ;;
 
   2)
-    for vv in $(ls -1d *.*); do
-      # *.img *.zstd *.zst *.br *.dat *.bin *.zip
-      [[ -s "$vv" && -f "$vv" ]] || continue
-      type=$(checktype "$vv")
+    for vv in $(checktype); do
+      file="${vv%%:*}"; type="${vv##*:}"
+      [[ -s "$file" && -f "$file" ]] || continue
       case "$type" in
         payload)
-          listpayload "$vv" | awk -v f="$vv" '{print $1"="f"|Payload - "$1" "$2}'
+          listpayload "$file" | awk -v f="$file" '{print $1"="f"|Payload - "$1" "$2}'
           ;;
         super)
-          listsuper "$vv" | awk -v f="$vv" '{print $1"="f"|Super - "$1" "$2}'
+          listsuper "$file" | awk -v f="$file" '{print $1"="f"|Super - "$1" "$2}'
           ;;
         zip)
-          [ -n "$(listpayload "$vv")" ] && listpayload "$vv" | awk -v f="$vv" '{print $1"="f"|Payload - "$1" "$2}' && continue
-          Listzipne="$(unzip -ql "$vv" 2>/dev/null | awk '/\.(img|dat|br|zstd|zst|gz|xz|lz4|lzma)$/{cmd="coverbyte "$1;cmd|getline s;close(cmd);n=$4;o=n;if(index(n,"/")){sub(/^.*\//,"",n);n=".../"n} if(s!="0B")printf "%s=%s|Zip - %s (%s)\n",o,"'"$vv"'",n,s}')"
+          [ -n "$(listpayload "$file")" ] && listpayload "$file" | awk -v f="$file" '{print $1"="f"|Payload - "$1" "$2}' && continue
+          Listzipne="$(unzip -ql "$file" 2>/dev/null | awk '/\.(img|dat|br|zstd|zst|gz|xz|lz4|lzma)$/{cmd="coverbyte "$1;cmd|getline s;close(cmd);n=$4;o=n;if(index(n,"/")){sub(/^.*\//,"",n);n=".../"n} if(s!="0B")printf "%s=%s|Zip - %s (%s)\n",o,"'"$file"'",n,s}')"
           [ -n "$Listzipne" ] && echo "$Listzipne"
           ;;
         *)
-          echo "$vv|$vv ($type)"
-          # | grep -E '\(squashfs\)|\(amlogic\)|\(ext\)|\(f2fs\)|\(sparse\)|\(erofs\)|\(dat\)|\(zstd\)|\(zst\)|\(dtbo\)|\(super\)|\(br\)|\(boot\)|\(logo\)|\(vendor_boot\)|\(vbmeta(_system)?\)'
+          echo "$file|$file ($type)"
           ;;
       esac
     done
@@ -67,7 +63,7 @@ case "$1" in
     ;;
 
   5)
-    for vv in $(ls -1d super.img.*); do
+    for vv in $(ls -1d *.*); do
       [[ -e "$vv" ]] && echo "$2/$vv|$vv"
     done
     ;;

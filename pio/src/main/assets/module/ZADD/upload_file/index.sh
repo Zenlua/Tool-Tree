@@ -10,7 +10,7 @@ home(){ xml_print '<group title="'$google_text'">
 set -o pipefail
 if [ -f "$FILE" ];then
 urls="$(xem https://api.gofile.io/servers | jq -r .data.servers[0].name)"
-[ -z "$urls" ] && urls="upload-ap-sgp.gofile.io" || urls="$urls.gofile.io"
+[ -z "$urls" ] && urls="upload.gofile.io" || urls="$urls.gofile.io"
 echo "'$gofile_text_1' $urls"
 echo
 curl -L -H "$WEBS" -F "file=@$FILE" "https://$urls/contents/uploadfile" | jq | tee "$TMP/Upload.log" || killtree "'$gofile_text_2'"

@@ -2,6 +2,7 @@
 
 import os
 import sys
+import multiprocessing as mp
 
 formats = ([b'PK', "zip"], [b'\x10\x20\xF5\xF2', 'f2fs', 1024],
            [b'\x53\xef', 'ext', 1080], [b'\x3a\xff\x26\xed', "sparse"],
@@ -27,38 +28,55 @@ formats = ([b'PK', "zip"], [b'\x10\x20\xF5\xF2', 'f2fs', 1024],
 def get_max_offset():
     return max((entry[2] if len(entry) == 3 else 0) + len(entry[0]) for entry in formats)
 
-def gettype(file: str) -> str:
+MAX_OFFSET = get_max_offset()
+def gettype(file):
     if not os.path.exists(file):
-        return "fne"
+        return file, "fne"
     if os.path.getsize(file) == 0:
-        return "empty"
+        return file, "empty"
     ext = os.path.splitext(file)[1].lower().lstrip(".")
     if ext in ("dat", "br"):
-        return ext
+        return file, ext
 
-    max_offset = get_max_offset()
     try:
         with open(file, 'rb') as f:
-            data = f.read(max_offset)
-    except Exception:
-        return "err"
+            data = f.read(MAX_OFFSET)
+    except:
+        return file, "err"
 
     for f_ in formats:
         sig = f_[0]
         if len(f_) == 2:
             if data.startswith(sig):
-                return f_[1]
+                return file, f_[1]
         elif len(f_) == 3:
             offset = f_[2]
             if len(data) >= offset + len(sig) and data[offset:offset + len(sig)] == sig:
-                return f_[1]
-    # ext = os.path.splitext(file)[1].lower().lstrip(".")
-    # if ext:
-        # return ext
-    return "unknown"
+                return file, f_[1]
+    return file, "unknown"
+
+def collect_files(path):
+    if os.path.isfile(path):
+        return [path]
+    files = []
+    for root, _, names in os.walk(path):
+        for n in names:
+            files.append(os.path.join(root, n))
+    return files
+
+def main(path):
+    if os.path.isfile(path):
+        _, typ = gettype(path)
+        print(typ)
+        return
+    files = collect_files(path)
+    cpu = min(mp.cpu_count(), 4)
+    with mp.Pool(cpu) as pool:
+        for file, typ in pool.imap_unordered(gettype, files):
+            print(f"{os.path.basename(file)}:{typ}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python gettype.py <filepath>")
-    else:
-        print(gettype(sys.argv[1]))
+        print("Usage: gettype.py <file_or_directory>")
+        sys.exit(1)
+    main(sys.argv[1])

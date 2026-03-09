@@ -1,9 +1,9 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 
-if [ "$#" -ne 1 ] || [ -z "$1" ]; then
-    echo "Usage: $0 <file>"
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+    echo "Usage: $0 <file|folder>"
     exit 1
 fi
 
-gettype.py "$(realpath "$1")"
+[ "$1" ] && gettype.py "$(realpath "$1")" || gettype.py "$(pwd)"

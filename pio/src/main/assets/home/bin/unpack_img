@@ -1,5 +1,9 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
+
+# lôgic khi giải mã có lưu kích thước ext4 và f2fs không 
+
+
 set -o pipefail
 #threads=$(nproc)
 show_help() {
@@ -42,8 +46,10 @@ while getopts ":i:o:n:d:p:r:h" opt; do
 done
 
 if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
-echo "Lack of value" >&2
-show_help
+echo "Lack of value:
+-i $INPUT
+-o $OUTPUT" >&2
+exit 1
 fi
 
 [[ -z "$XOAIMG" ]] && XOAIMG=0
@@ -127,8 +133,9 @@ elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
     file_img="$TMP/$PVUGBIN.img"
 elif [ "$dang_tep" == 'super' ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
-    lpunpack -p "$PVUGBIN" "$INPUT" "$TMP" >/dev/null
-    file_img="$TMP/$(echo $PVUGBIN).img"
+    lpunpack -p "$PVUGBIN" "$INPUT" "$TMP" || killtree "Extract $PVUGBIN super error"
+    [ "$TMP/$(echo $PVUGBIN).img" == "$TMP/$(echo ${PVUGBIN/_a/}).img" ] || mv "$TMP/$(echo $PVUGBIN).img" "$TMP/$(echo ${PVUGBIN/_a/}).img"
+    file_img="$TMP/$(echo ${PVUGBIN/_a/}).img"
 elif [ "$dang_tep" == 'amlogic' ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ (unpack)...\n"
     ten_paion="$(echo "${INPUT##*/}" | cut -d. -f1)"
@@ -181,7 +188,7 @@ mkdir -p "$in_name" $OUTPUT/config
         fi
         echo "$(stat -c%s "$file_img")" > "$info_size"
         echo "$dang_file" > "$info"
-        fsck.f2fs "$file_img" &> "$fs_options"
+        fsck.f2fs -a "$file_img" &> "$fs_options"
     elif [ "$dang_file" == 'erofs' ];then
         extract.erofs -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$in_name" &
         PIDK=$!

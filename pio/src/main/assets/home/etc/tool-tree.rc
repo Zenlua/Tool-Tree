@@ -1277,7 +1277,9 @@ xml_print '<group><switch icon="'`iccpng icon`'" shell="hidden" warn="'$addon_te
 
 Homeadd(){
 # Hủy bỏ biến
-unset pagesh code_menu farooot google_trankk google_tran_shellkk code_shell code_option summss
+pagesh=''; code_menu=''; farooot=''; google_trankk='';
+google_tran_shellkk=''; code_shell=''; code_option=''; summss='';
+
 # Load index
 if [ -f "$dirvad/index.sh" ];then
 pagesh='config-sh="'$dirvad'/index.sh home"'
@@ -1289,8 +1291,10 @@ fi
 
 # Load menu
 if [ -f "$dirvad/menu.sh" ];then
-code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
-code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
+    if [ "$(grep -cm1 code_option "$dirvad/menu.sh")" == 1 ];then
+    code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
+    code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
+    fi
 fi
 
 # Phát hiện root

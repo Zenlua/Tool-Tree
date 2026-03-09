@@ -59,8 +59,11 @@ while getopts ":i:o:s:p:a:c:d:k:f:h" opt; do
 done
 
 if [[ -z "$INPUT" || -z "$OUTPUT" || -z "$SELECT" ]]; then
-echo "Lack of value" >&2
-show_help
+echo "Lack of value:
+-i $INPUT
+-o $OUTPUT
+-s $SELECT" >&2
+exit 1
 fi
 
 # mặc định có sẵn

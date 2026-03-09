@@ -63,8 +63,10 @@ while getopts ":i:o:n:l:c:s:k:d:a:p:h" opt; do
 done
 
 if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
-echo "Lack of value" >&2
-show_help
+echo "Lack of value:
+-i $INPUT
+-o $OUTPUT" >&2
+exit 1
 fi
 
 [[ -z "$NENEROFS" ]] && NENEROFS='lz4hc'
@@ -131,7 +133,7 @@ echo -e "$replag_text_2: ${INPUT##*/} ($partition) ➠ (raw)...\n"
 # patch fstab
 if [ "$AVBIMG" == 1 ];then
 rm -fr $INPUT/bin/install-recovery.sh $INPUT/etc/init/vendor_flash_recovery.rc $INPUT/recovery-from-boot.p $INPUT/verity_key
-listfab="$(find "$INPUT" -type f -name "fstab*" 2>/dev/null)"
+listfab="$(find "$INPUT" -type f -name "fstab.*" 2>/dev/null)"
 for fstab in $listfab; do
    if [ -f "$fstab" ];then
        if [ "$2" == 1 ];then
@@ -317,7 +319,7 @@ elif [ "$partition" == "ext" ];then
         if [ "$e2fsdroid" == 1 ];then
         size="$(echo "$size_real / 4096" | bc)";
         mke2fs -O ^has_journal -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
-        e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_ext.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_ext.log" "$saved"
+        e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
         else
         make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
         process_count $size_real "$saved"
@@ -327,7 +329,7 @@ elif [ "$partition" == "ext" ];then
         if [ "$e2fsdroid" == 1 ];then
         size="$(echo "$size_orig / 4096" | bc)";
         mke2fs -O ^has_journal -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
-        e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" 2>$TMP/e2fsdroid_exts.log || killtree "Error build process e2fsdroid, log: $TMP/e2fsdroid_exts.log" "$saved"
+        e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
         else
         make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
         process_count $size_orig "$saved"

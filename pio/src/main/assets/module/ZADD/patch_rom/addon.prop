@@ -1,0 +1,12 @@
+# Add-on
+
+id=patch_rom
+name=Patch ROM Xiaomi
+author=Kakathic
+description=Quick ROM patch
+version=1.0
+versionCode=100
+root=false
+
+# language
+google_text="Currently using google translate"

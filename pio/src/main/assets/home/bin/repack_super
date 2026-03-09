@@ -78,11 +78,11 @@ fi
 [ $DANGIMG = "sparse" ] && argvs+="--sparse "
 
 mkdir -p out
-echo "lpmake ${argvs}-F --output out/super.img" | sed -z 's| --|\n--|g'
+echo "lpmake ${argvs}-F --output $INPUT/out/super.img" | sed -z 's| --|\n--|g'
 lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.log
 
 if [ $? == 1 ];then
-killtree "\n$supers_text_1"
+killtree "\n$supers_text_1" "$INPUT/out/super.img"
 else
 echo -e "\n$supers_text_2"
 fi

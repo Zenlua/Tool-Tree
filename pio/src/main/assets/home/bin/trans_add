@@ -1,7 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
 
-[ -f "$1/addon.prop" ] && eval "$(grep '="' "$1/addon.prop")" || exit
+[ -f "$1/addon.prop" ] && eval "$(grep '="' "$1/addon.prop")" || exit 1
 sum_md5="$(sha256sum "$1/addon.prop" | awk '{print $1}')"
 if [ "$sum_md5" != "$(glog "sum_md5_${1##*/}")" ] || [ ! -f "$1/auto.sh" ] || [ "$(grep -cm1 '=""' "$1/auto.sh")" == 1 ];then
 [ -f "$1/auto.sh" ] && rm -fr "$1/auto.sh"

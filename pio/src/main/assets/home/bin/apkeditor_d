@@ -43,8 +43,10 @@ while getopts ":i:o:t:d:b:h" opt; do
 done
 
 if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
-echo "Lack of value" >&2
-show_help
+echo "Lack of value:
+-i $INPUT
+-o $OUTPUT" >&2
+exit 1
 fi
 
 [[ -z "$TYPEAPK" ]] && TYPEAPK='xml'

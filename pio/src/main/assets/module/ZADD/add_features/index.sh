@@ -11,7 +11,7 @@ home(){ xml_print '
 <param name="framework_switch" value-sh="glog framework_switch 1" label="'$oat_text_5'" type="switch" />
 <param name="services_switch" value-sh="glog services_switch 1" label="'$oat_text_6'" type="switch" />
 <param name="features_oat" value-sh="glog features_oat default" label="'$oat_text_7'" placeholder="default" type="text"/>
-<param name="apps_apk_oat" label="'$oat_text_8'" value-sh="glog apps_apk_oat none" options-sh="'$MPAT'/bin/listapk" type="text"/>
+<param name="apps_apk_oat" label="'$oat_text_8'" value-sh="glog apps_apk_oat" options-sh="'$MPAT'/bin/listapk" multiple="multiple" />
 <param name="secontex" desc="'$oat_text_9'" value-sh="glog secontex" placeholder="PCL[]" type="text"/>
 <set>
 slog features_oat "$features_oat"
