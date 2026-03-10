@@ -42,6 +42,7 @@ synthetic_text="Tổng hợp phân vùng"
 config_text="Cấu hình"
 time_text="Thời gian"
 pin_text="Ghim add-on"
+tool_unpack_text="Công cụ giải mã"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"
@@ -290,7 +291,7 @@ apex_text_2="Danh sách hỗ trợ tệp: apex, capex"
 
 # other
 build_time_text_1="Thời gian xây dựng rom"
-build_time_text_2="Tự động: 0, có thể thay đổi ví dụ: 1766318047"
+build_time_text_2="Hiện tại:"
 xoaoat_text_1="Dọn dẹp mục oat và odex"
 open_activity_text="Mở thư mục:"
 patch_text_fscontex="Vá fs_config và fs_contexts"

@@ -42,6 +42,7 @@ synthetic_text="Синтетический"
 config_text="Конфигурация"
 time_text="Время"
 pin_text="Закрепить дополнение"
+tool_unpack_text="Инструмент декодирования"
 
 # Home
 home_text_1="Информация и функции приложения"
@@ -289,7 +290,7 @@ apex_text_2="Поддержка файлов: apex, capex"
 
 # other
 build_time_text_1="Время сборки ROM"
-build_time_text_2="Автоматически: 0, можно изменить, например: 1766318047"
+build_time_text_2="Подарок:"
 xoaoat_text_1="Очистить элементы oat и odex"
 open_activity_text="Открыть папку:"
 patch_text_fscontex="Внесите изменения в fs_config и fs_contexts."

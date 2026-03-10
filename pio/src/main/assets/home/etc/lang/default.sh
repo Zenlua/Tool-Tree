@@ -42,6 +42,7 @@ synthetic_text="Synthetic"
 config_text="Configuration"
 time_text="Time"
 pin_text="Pin add-on"
+tool_unpack_text="Decoding tool"
 
 # Home
 home_text_1="App information and features"
@@ -293,7 +294,7 @@ xoaoat_text_1="Clean oat and odex entries"
 open_activity_text="Open folder:"
 patch_text_fscontex="Patch fs_config and fs_contexts"
 build_time_text_1="ROM build time"
-build_time_text_2="Automatic: 0, can be changed, for example: 1766318047"
+build_time_text_2="Present:"
 config_text_1="Convert existing projects"
 config_text_2="Create a new project or select a folder"
 

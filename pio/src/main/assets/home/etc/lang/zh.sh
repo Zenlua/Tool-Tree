@@ -42,6 +42,7 @@ synthetic_text="合成的"
 config_text="配置"
 time_text="时间"
 pin_text="固定插件"
+tool_unpack_text="解码工具"
 
 # Home
 home_text_1="应用信息与功能"
@@ -288,7 +289,7 @@ apex_text_2="支持的文件：apex、capex"
 
 # other
 build_time_text_1="ROM 构建时间"
-build_time_text_2="自动：0，可更改，例如：1766318047"
+build_time_text_2="展示:"
 xoaoat_text_1="清理 oat 和 odex 项"
 open_activity_text="打开文件夹:"
 patch_text_fscontex="修补 fs_config 和 fs_contexts"

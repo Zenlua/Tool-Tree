@@ -12,6 +12,9 @@ show_help() {
   echo "  -i    input file"
   echo "  -o    output folder"
   echo "  -p    extract partition for payload, super, path in zip file"
+  echo "  -a    if you want to patch avb to value 1: 0"
+  echo "          0: false"
+  echo "          1: true"
   echo "  -n    img decode not: 0"
   echo "            0: false"
   echo "            1: true"
@@ -30,11 +33,12 @@ show_help
 fi
 
 INPUT=''; OUTPUT=''; NODECO=''; XOAIMG=''; PVUGBIN='';
-show_help=''; XOAOAT='';
-while getopts ":i:o:n:d:p:r:h" opt; do
+show_help=''; XOAOAT=''; AVBIMG='';
+while getopts ":i:o:a:n:d:p:r:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
     o) OUTPUT="$OPTARG" ;;
+    a) AVBIMG="$OPTARG" ;;
     n) NODECO="$OPTARG" ;;
     d) XOAIMG="$OPTARG" ;;
     r) XOAOAT="$OPTARG" ;;
@@ -55,6 +59,7 @@ fi
 [[ -z "$XOAIMG" ]] && XOAIMG=0
 [[ -z "$NODECO" ]] && NODECO=0
 [[ -z "$XOAOAT" ]] && XOAOAT=0
+[[ -z "$AVBIMG" ]] && AVBIMG=0
 
 source language 2>/dev/null
 dang_tep="$(checktype "$INPUT")"
@@ -268,6 +273,7 @@ mkdir -p "$in_name" $OUTPUT/config
         echo
     elif [ "$dang_file" == 'vbmeta' ] || [ "$dang_file" == 'vbmeta_system' ];then
         cp -f "$file_img" "$in_name"
+        [ "$AVBIMG" == 1 ] && magiskboot hexpatch "$in_name" 0000000000000000617662746F6F6C20 0000000200000000617662746F6F6C20
         echo "$dang_file" > $info
     elif [ "$dang_file" == 'boot' ] || [ "$dang_file" == 'vendor_boot' ];then
         cd "$in_name"
@@ -277,6 +283,17 @@ mkdir -p "$in_name" $OUTPUT/config
             rm -rf "$in_name"
             killtree "$unpack_text_3"
         else
+        if [ "$AVBIMG" == 1 ];then
+        for dt in dtb kernel_dtb extra; do
+          if [ -f $dt ]; then
+            if magiskboot dtb $dt test; then
+              if magiskboot dtb $dt patch; then
+                echo "- Patch dtb in boot image $dt"
+              fi
+            fi
+          fi
+        done
+        fi
         # unpack dtb, dtbo
         for unp in $(ls -1d * 2>/dev/null | sort -n -t . -k 2); do
         type_unp="$(checktype $unp)"
@@ -291,24 +308,24 @@ mkdir -p "$in_name" $OUTPUT/config
         fi
         done
         for unsl in $(ls -1 *.[0-9]* 2>/dev/null | sort -n -t . -k 2); do
-        echo "Decode: $unsl > dts_$unsl"
-        dtc -q -@ -I dtb -O dts -o dts_$unsl $unsl
-        [ "$?" != 0 ] && killtree "$unpack_text_5 $unsl"
-        mv $unsl cache/$unsl
-        checksum dts_$unsl > cache/md5_$unsl
+            echo "Decode: $unsl > dts_$unsl"
+            dtc -q -@ -I dtb -O dts -o dts_$unsl $unsl
+            [ "$?" != 0 ] && killtree "$unpack_text_5 $unsl"
+            mv $unsl cache/$unsl
+            checksum dts_$unsl > cache/md5_$unsl
         done
         # unpack cpio
         for vch in $(ls -1d *.cpio vendor_ramdisk/*.cpio 2>/dev/null); do
-        mkdir -p "${vch%.*}" "cache"
-        echo "$vch" >> cache/cpio
-        cd "${vch%.*}"
-        EXTRACT_UNSAFE_SYMLINKS=1 cpio -d -F "$in_name/$vch" -i 2>&1
-        if [ "$?" != 0 -o ! "$(ls)" ];then
-        killtree "$unpack_text_4"
-        else
-        rm -f "$in_name/$vch"
-        fi
-        cd "$in_name"
+            mkdir -p "${vch%.*}" "cache"
+            echo "$vch" >> cache/cpio
+            cd "${vch%.*}"
+            EXTRACT_UNSAFE_SYMLINKS=1 cpio -d -F "$in_name/$vch" -i 2>&1
+            if [ "$?" != 0 -o ! "$(ls)" ];then
+            killtree "$unpack_text_4"
+            else
+            rm -f "$in_name/$vch"
+            fi
+            cd "$in_name"
         done
         echo "$dang_file" > $info
         echo
@@ -318,13 +335,13 @@ mkdir -p "$in_name" $OUTPUT/config
         cd "$in_name"
         dtbo dump "$file_img" -b dtb &>$TMP/dtbo.log
         mkdir -p cache
-            for dtbo in $(ls -t dtb.* | sort -n -t . -k 2);do
+        for dtbo in $(ls -t dtb.* | sort -n -t . -k 2);do
             echo "Decode: $dtbo"
             dtc -q -@ -I dtb -O dts -o dts.${dtbo##*.} $dtbo
             [ "$?" != 0 ] && killtree "$unpack_text_5 $dtbo"
             mv $dtbo cache/$dtbo
             checksum dts.${dtbo##*.} > cache/md5_dts.${dtbo##*.}
-            done
+        done
         echo
     elif [ "$dang_file" == 'squashfs' ];then
         [ "$ROT" == 0 ] && killtree "Error Unpack: squashfs, $root_warning_text"
@@ -352,6 +369,28 @@ else
     echo -e "$save_text $PTSD/out\n"
     mv "$file_img" "$PTSD/out/${file_img##*/}"
     fi
+fi
+
+# patch fstab
+if [ "$AVBIMG" == 1 ];then
+for rec in $in_name/bin/install-recovery.sh $in_name/etc/init/vendor_flash_recovery.rc $in_name/recovery-from-boot.p $in_name/verity_key; do
+    if [ -f "$rec" ];then
+    echo "Delete file: $rec"
+    rm -fr "$rec"
+    fi
+done
+for fstab in $(find "$in_name" -type f -name "fstab.*" 2>/dev/null); do
+   if [ -f "$fstab" ];then
+       if grep -Eqi 'avb=|avb_keys=|avb,|,avb' "$fstab"; then
+       sed -i "s/,avb=[^,]*//g; s/,avb_keys=[^,]*//g; s/avb,//g; s/,avb//g; s/,,/,/g" "$fstab"
+       echo "Deleted avb in fstab: ${fstab##*/}"
+       fi
+       if grep -Eqi 'fileencryption|keydirectory|metadata_encryption' "$fstab"; then
+       sed -i 's/fileencryption=[^,]*,//g; s/,fileencryption=[^,]*//g; s/keydirectory=[^,]*,//g; s/,keydirectory=[^,]*//g; s/metadata_encryption=[^,]*,//g; s/,metadata_encryption=[^,]*//g; s/fileencryption/encryptable/g; s/,,/,/g' "$fstab"
+       echo "Decrypted data: ${fstab##*/}"
+       fi
+   fi
+done
 fi
 
 if [ "$XOAOAT" == 1 ];then

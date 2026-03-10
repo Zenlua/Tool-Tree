@@ -42,6 +42,7 @@ synthetic_text="Szintetikus"
 config_text="Konfiguráció"
 time_text="Idő"
 pin_text="Bővítmény rögzítése"
+tool_unpack_text="Dekódoló eszköz"
 
 # Home
 home_text_1="Alkalmazásinformációk és funkciók"
@@ -290,7 +291,7 @@ apex_text_2="Fájltámogatás: apex, capex"
 
 # other
 build_time_text_1="ROM build ideje"
-build_time_text_2="Automatikus: 0, módosítható, például: 1766318047"
+build_time_text_2="Jelenlegi:"
 xoaoat_text_1="Bejegyzések törlése oat és odex"
 open_activity_text="Mappa megnyitása:"
 patch_text_fscontex="Az fs_config és az fs_contexts fájlok javítása"
