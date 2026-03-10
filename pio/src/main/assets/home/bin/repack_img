@@ -27,6 +27,7 @@ show_help() {
   echo "          5: rw-f2fs, (make_f2fs)"
   echo "          6: ro-erofs, (imgkit_scuti)"
   echo "          7: rw-ext4, (imgkit_scuti)"
+  echo "          8: ro-erofs, (mkfs.erofs.old)"
   echo "  -d    delete folder after build: 1"
   echo "          0: false"
   echo "          1: true"
@@ -102,7 +103,7 @@ saved="$TMP/${saved##*/}"
 fi
 
 # Chọn định dạng tệp phân vùng
-if [ "$TTBUILDI" == 1 ] || [ "$TTBUILDI" == 6 ];then
+if [ "$TTBUILDI" == 1 ] || [ "$TTBUILDI" == 6 ] || [ "$TTBUILDI" == 8 ];then
 partition='erofs'
 elif [ "$TTBUILDI" == 2 ] || [ "$TTBUILDI" == 3 ] || [ "$TTBUILDI" == 7 ];then
 partition='ext'
@@ -192,6 +193,9 @@ if [ "$partition" == "erofs" ];then
     [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
     if [ "$TTBUILDI" == 6 ];then
     imgkit_scuti pack --type erofs -s "$INPUT" -o "$saved" --compress $NENEROFS --compress-level ${zlsize/,/} --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" || killtree "Error build process imgkit_scuti" "$saved"
+    elif [ "$TTBUILDI" == 8 ];then
+    $TERMUX/lib/theft/mkfs.erofs -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" &>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs:\n\n$(cat $TMP/mkfs_erofs.log)" "$saved" &
+    process_erofss $TMP/mkfs_erofs.log
     else
     mkfs.erofs -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" &>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs:\n\n$(cat $TMP/mkfs_erofs.log)" "$saved" &
     process_erofss $TMP/mkfs_erofs.log
