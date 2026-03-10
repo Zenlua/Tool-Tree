@@ -471,6 +471,7 @@ $oi/smali/classes*/com/android/server/am/BroadcastQueueModernStubImpl.smali"
 fi
 
 if [ "$fix_global" == 1 ] && [ "$(check_props fix_global)" != 1 ];then
+Thayvc 1 '.method public static isCTS()Z' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
 Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' "$oi/smali/classes/com/android/server/ForceDarkAppListManager.smali"
 fi
 # End patch smali
