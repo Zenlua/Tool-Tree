@@ -447,7 +447,7 @@ apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree 
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 
 if [ "$fix_apksign" == 1 ] && [ "$(check_props fix_apksign)" != 1 ];then
-[ "$API" -ge 35 ] && Thayvc -v '.method private verifyIsolationViolation(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;Lcom/android/server/pm/InstallSource;)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
+[ "$(gprop "ro.system.build.version.sdk" "$psystem/build.prop")" -ge 35 ] && Thayvc -v '.method private verifyIsolationViolation(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;Lcom/android/server/pm/InstallSource;)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
 Thayvc -v '.method public canBeUpdate(Ljava/lang/String;)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
 fi
 
@@ -758,13 +758,13 @@ urlsmali="$(find $3 -type f 2>/dev/null)"
 if [ "$(grep -cm1 "${2//\[/\\[}" "$urlsmali")" == 1 ];then
 if [ "$1" == "-v" ];then
 Thayme "$(grep -m1 "${2//\[/\\[}" "$urlsmali")
-    .locals 0
+    .locals 1
     return-void
 .end method" "$urlsmali"
 else
 [ $1 -ge 8 ] && ui=16 || ui=4
 Thayme "$(grep -m1 "${2//\[/\\[}" "$urlsmali")
-    .locals 0
+    .locals 1
     const/$ui v0, 0x$1
     return v0
 .end method" "$urlsmali"
@@ -778,7 +778,6 @@ tao_oat(){
 export features_oat="-a53,-crc,-lse,-fp16,-dotprod,-sve"
 export PTSH="${PTROM##*/}"
 if [ "$oat_fw_at" == 1 ];then
-echo $PTSH
 echo -e "Đang tạo oat framework, service...\n"
 export services_switch=1
 export framework_switch=1
@@ -787,7 +786,7 @@ fi
 if [ "$list_oat_tex" ];then
 export services_switch=0
 export framework_switch=0
-echo -e "\nĐang tạo oat app...\n"
+echo -e "Đang tạo oat app...\n"
 for vv in $list_oat_tex; do
 if [ "${vv##*/}" == 'MiuiSystemUI.apk' ];then
 export secontex="PCL[]{PCL[/system_ext/framework/extphonelib.jar]#PCL[/system_ext/app/miuisystem/miuisystem.apk]}"

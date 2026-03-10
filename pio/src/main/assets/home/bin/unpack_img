@@ -91,6 +91,52 @@ done
 progress -1/0
 }
 
+process_imgkit(){
+PIDK=$!
+while kill -0 $PIDK 2>/dev/null; do
+if [ -f "$1" ];then
+    number_kk="$(sed -E 's/[\r\t]/\n/g; s/.*\[([0-9]+\/[0-9]+)\].*/\1/p; d' "$1" | tail -n1)"
+    if [ "$number_kk" ];then
+    [ "${number_kk:-0}" == "${save_num:-1}" ] || progress "$number_kk"
+    save_num="$number_kk"
+    fi
+fi
+sleep 1
+done
+progress -1/0
+}
+
+process_unsquashfs(){
+PIDK=$!
+while kill -0 $PIDK 2>/dev/null; do
+if [ -f $1 ];then
+number_kk="$(sed 's/[\r\t]/\n/g' $1 | sed -n 's/.* \([0-9]\+\)%$/\1/p' | tail -n 1)"
+    if [ "${number_kk:-0}" != 0 ];then
+    [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
+    save_num="$number_kk"
+    fi
+fi
+sleep 1
+done
+progress -1/0
+}
+
+process_unerrofs(){
+PIDK=$!
+while kill -0 $PIDK 2>/dev/null; do
+if [ -f $1 ];then
+    number_kk="$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$1" | grep -E 'Extract: \[[^]]+\]' | tail -n 1 | awk '{print $3}' | cut -d\. -f1)"
+    if [ "${number_kk:-0}" != 0 ];then
+    [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
+    save_num="$number_kk"
+    fi
+fi
+sleep 1
+done
+progress -1/0
+[ -f $1 ] && sed -i 's/\x1b\[[^m]*m//g' $1
+}
+
 # xử lý zip
 if [ "$dang_tep" == 'zip' ];then
 xacnhatpay="$(listpayload "$INPUT")"
@@ -173,43 +219,48 @@ echo -e "$decompile_text: ${file_img##*/} ($dang_file)...\n"
 mkdir -p "$in_name" $OUTPUT/config
 
     if [ "$dang_file" == 'ext' ];then
+        if [ "$(glog un_tool_ext4)" == 1 ];then
+        imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
+        process_imgkit "$TMP/imgkit_scuti.log"
+        else
         imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
+        fi
         echo "$dang_file" > "$info"
     elif [ "$dang_file" == 'f2fs' ];then
-        extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
-        if [ -f "$fs_config" ];then
-        luu_contexts="$(sed -e "s|s0/|s0\n/|g" "$file_contexts" | sort)"
-        luu_config="$(cat "$fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
-        if [ -f "$in_name/system/build.prop" ];then
-        luu_contexts="$(echo "$luu_contexts" | sed -e "s|^/${namepv##*/} u|/${namepv##*/}/ u|")"
-        fi
-        echo "$luu_config" > "$fs_config"
-        echo "$luu_contexts" > "$file_contexts"
+        if [ "$(glog un_tool_f2fs)" == 1 ];then
+            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
+            process_imgkit "$TMP/imgkit_scuti.log"
+        else
+            extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
+            if [ -f "$fs_config" ];then
+            luu_contexts="$(sed -e "s|s0/|s0\n/|g" "$file_contexts" | sort)"
+            luu_config="$(cat "$fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
+            if [ -f "$in_name/system/build.prop" ];then
+            luu_contexts="$(echo "$luu_contexts" | sed -e "s|^/${namepv##*/} u|/${namepv##*/}/ u|")"
+            fi
+            echo "$luu_config" > "$fs_config"
+            echo "$luu_contexts" > "$file_contexts"
+            fi
         fi
         echo "$(stat -c%s "$file_img")" > "$info_size"
         echo "$dang_file" > "$info"
         fsck.f2fs -a "$file_img" &> "$fs_options"
     elif [ "$dang_file" == 'erofs' ];then
-        extract.erofs -x -i "$file_img" -o "$OUTPUT" >$TMP/extract_erofs.log || killtree "\nextract.erofs error: ${namepv##*/}" "$in_name" &
-        PIDK=$!
-        while kill -0 $PIDK 2>/dev/null; do
-        if [ -f $TMP/extract_erofs.log ];then
-        number_kk="$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$TMP/extract_erofs.log" | grep -E 'Extract: \[[^]]+\]' | tail -n 1 | awk '{print $3}' | cut -d\. -f1)"
-            if [ "${number_kk:-0}" != 0 ];then
-            [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
-            save_num="$number_kk"
-            fi
+        if [ "$(glog un_tool_erofs)" == 1 ];then
+            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
+            process_imgkit "$TMP/imgkit_scuti.log"
+        elif [ "$(glog un_tool_erofs)" == 2 ];then
+            $TERMUX/lib/theft/extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
+            process_unerrofs "$TMP/extract_erofs.log"
+        else
+            extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
+            process_unerrofs "$TMP/extract_erofs.log"
         fi
-        sleep 1
-        done
-        progress -1/0
-        [ -f $TMP/extract_erofs.log ] && sed -i 's/\x1b\[[^m]*m//g' $TMP/extract_erofs.log
-        echo "$dang_file" > "$info"
         if [ -f $OUTPUT/config/exception.log ];then
-        rm -fr "$in_name"
         cat $OUTPUT/config/exception.log >&2
         killtree "\nIncomplete file error please check hash" $OUTPUT/config/exception.log
         fi
+        echo "$dang_file" > "$info"
     elif [ "$dang_file" == 'logo' ];then
         logo_dumper.py --out "$in_name" "$file_img" unpack
         echo "$dang_file" > "$info"
@@ -277,21 +328,10 @@ mkdir -p "$in_name" $OUTPUT/config
         echo
     elif [ "$dang_file" == 'squashfs' ];then
         [ "$ROT" == 0 ] && killtree "Error Unpack: squashfs, $root_warning_text"
-        unsquashfs -s "$file_img" &> "$fs_options"
         unsquashfs -f -d "$in_name" "$file_img" >$TMP/unsquashfs.log || killtree "\nunsquashfs error: ${namepv##*/}" "$in_name" &
-        PIDK=$!
-        while kill -0 $PIDK 2>/dev/null; do
-        if [ -f $TMP/unsquashfs.log ];then
-        number_kk="$(sed 's/[\r\t]/\n/g' $TMP/unsquashfs.log | sed -n 's/.* \([0-9]\+\)%$/\1/p' | tail -n 1)"
-            if [ "${number_kk:-0}" != 0 ];then
-            [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
-            save_num="$number_kk"
-            fi
-        fi
-        sleep 1
-        done
-        progress -1/0
+        process_unsquashfs $TMP/unsquashfs.log
         echo "$dang_file" > $info
+        unsquashfs -s "$file_img" &> "$fs_options"
     else
     rm -fr "$in_name"
     echo -e "$unpack_text_8 ${file_img##*/} ($dang_file)\n" >&2

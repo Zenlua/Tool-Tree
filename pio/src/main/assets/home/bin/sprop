@@ -5,7 +5,7 @@ if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ] || [ -z "$2" ] || [ -
     echo "Error: $1-$2-$3" >&2
     fi
     echo "Use: sprop ro.vip 1 /path/file" >&2
-    exit
+    exit 1
 fi
 
 if [ "$(grep -cm1 "^$1=" "$3")" == 1 ];then

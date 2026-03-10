@@ -61,8 +61,7 @@ fi
 }
 
 show_config(){
-xml_print '<group>
-<action icon="'`urlpng config`'">
+xml_print '<action icon="'`urlpng config`'">
 <title>'$config_text'</title>
 <param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" title="'$builds_text_5'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar"/>
 <param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" title="'$convert_text_1'" desc="'$convert_text_2'"/>
@@ -72,8 +71,7 @@ slog muc_nen "$muc_nen"
 slog nen_br "$nen_br"
 slog build_time "$build_time"
 </set>
-</action>
-</group>'
+</action>'
 }
 
 # Tạo ngôn ngữ tự động
@@ -373,9 +371,9 @@ sum_md5_kk="$(checksum $ETC/lang/vi.sh)"
   ) &
   done
   wait
-  if [ "$(grep -cm1 \"\" $ETC/lang/auto.sh)" == 1 ];then
+  if [ "$(grep -cm1 '""' $ETC/lang/auto.sh)" == 1 ];then
   error_txxt_bug="$(echo "Translation error detected:" | trans -b $LANGUAGE-$COUNTRY)"
-  killtree "\n$error_txxt_bug $(grep -c \"\" $ETC/lang/auto.sh)" >&2
+  killtree "\n$error_txxt_bug $(grep -c '""' $ETC/lang/auto.sh)" >&2
   slog language ""
   else
   slog sum_md5_kk "$sum_md5_kk"
@@ -484,7 +482,9 @@ done
 </action>
 </group>'
 
+echo "<group>"
 show_config
+echo "</group>"
 }
 
 Feature(){
@@ -829,20 +829,34 @@ else
     desc_rom1="$projects_text: $PTSH"
 fi
 
-[ "$(glog hide_show_config 0)" == 1 ] && show_config
+if [ "$(glog hide_show_config 1)" == 1 ];then
+echo "<group>"
+show_config
+echo "</group>"
+fi
+
 xml_print '<group>
 <action icon="'`urlpng decom`'" desc="'$desc_rom'">
 <title>'$decompile_text'</title>
 <param name="cboxk" value-sh="glog dkhdh" label="'$deleted_file_text'" type="checkbox" />
-<param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" />
+
+<param name="un_tool_ext4" value-sh="glog un_tool_ext4 0" label="'$option_text'" desc="Công cụ giải mã ext4" options-sh="echo -e '"'0|imgextractor\n1|imgkit_scuti'"' "/>
+<param name="un_tool_erofs" value-sh="glog un_tool_erofs 0" label="'$option_text'" desc="Công cụ giải mã erofs" options-sh="echo -e '"'0|extract.erofs\n1|imgkit_scuti\n2|extract.erofs (old)'"' "/>
+<param name="un_tool_f2fs" value-sh="glog un_tool_f2fs 0" label="'$option_text'" desc="Công cụ giải mã f2fs" options-sh="echo -e '"'0|extract.f2fs\n1|imgkit_scuti'"' "/>
+
 <param name="nounpak" value-sh="glog dkjdj" label="'$decode_text_1'" desc="'$decode_text_2'" type="switch" />
+<param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" />
+
 <param name="IMAGES" desc="'$decode_text_3'" multiple="true" options-sh="findfile 2 $PTSD" required="true"/>
 <set>
+slog un_tool_ext4 "$un_tool_ext4"
+slog un_tool_erofs "$un_tool_erofs"
+slog un_tool_f2fs "$un_tool_f2fs"
 slog dkjdj "$nounpak"
 slog dkhdh "$cboxk"
 for vkl in $IMAGES; do
-tppq1="$(echo "$vkl" | grep = | cut -d= -f1)"
-tppq2="$(echo "$vkl" | grep = | cut -d= -f2)"
+tppq1="${vkl%%=*}"
+tppq2="${vkl#*=}"
 if [ -f "$PTSD/$tppq2" ];then
 unpack_img -i "$PTSD/$tppq2" -p "$tppq1" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot
 else

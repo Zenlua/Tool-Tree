@@ -17,7 +17,7 @@ show_help() {
   echo "          zstd: 0-22"
   echo "  -l    default: 8, 0-22"
   echo "  -c    list convert: raw, dat, br, zstd, sparse, default: raw"
-  echo "  -s    default: 0, free size calculated by mb for example 100mb free only works in ext, f2fs"
+  echo "  -s    default: 0, free size calculated by mb for example 100mb free only works in ext4, f2fs"
   echo "  -a    if you want to patch avb to value 1: 0"
   echo "          0: false"
   echo "          1: true"
@@ -132,18 +132,21 @@ echo -e "$replag_text_2: ${INPUT##*/} ($partition) ➠ (raw)...\n"
 
 # patch fstab
 if [ "$AVBIMG" == 1 ];then
-rm -fr $INPUT/bin/install-recovery.sh $INPUT/etc/init/vendor_flash_recovery.rc $INPUT/recovery-from-boot.p $INPUT/verity_key
-listfab="$(find "$INPUT" -type f -name "fstab.*" 2>/dev/null)"
-for fstab in $listfab; do
+for rec in $INPUT/bin/install-recovery.sh $INPUT/etc/init/vendor_flash_recovery.rc $INPUT/recovery-from-boot.p $INPUT/verity_key; do
+    if [ -f "$rec" ];then
+    echo "Delete file: $rec"
+    rm -fr "$rec"
+    fi
+done
+for fstab in $(find "$INPUT" -type f -name "fstab.*" 2>/dev/null); do
    if [ -f "$fstab" ];then
        if [ "$2" == 1 ];then
-           if [[ -n $(cat "$fstab" | grep -v "avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey" | grep -i "avb") ]]; then
-           sed -i "s/avb,//g; s/,avb=.*system//g; s/,avb=.*vendor//g; s/,avb=.*vbmeta//g; s/,avb_keys.*key//g; s/,avb=vbmeta//g; s/,avb//g; s/,,/,/g" "$fstab"
+           if grep -Eqi 'avb=|avb_keys=|avb,|,avb' "$fstab"; then
+           sed -i "s/,avb=[^,]*//g; s/,avb_keys=[^,]*//g; s/avb,//g; s/,avb//g; s/,,/,/g" "$fstab"
            echo "Deleted avb in fstab: ${fstab##*/}"
            fi
-           if [[ -n $(cat "$fstab" | egrep -i "fileencryption|keydirectory|metadata_encryption") ]]; then
-           sed -i -e 's/fileencryption=[^,]*,//' -e 's/keydirectory=[^,]*,//' -e 's/metadata_encryption=[^,]*,//' "$fstab"
-           sed -i "s/,fileencryption=.*_v0//g; s/,fileencryption=.*v2//g; s/,metadata_encryption=.*_v0//g; s/,metadata_encryption=.*xts//g; s/,fileencryption=.*xts//g; s/,fileencryption=ice//g; s/fileencryption/encryptable/g" "$fstab"
+           if grep -Eqi 'fileencryption|keydirectory|metadata_encryption' "$fstab"; then
+           sed -i 's/fileencryption=[^,]*,//g; s/,fileencryption=[^,]*//g; s/keydirectory=[^,]*,//g; s/,keydirectory=[^,]*//g; s/metadata_encryption=[^,]*,//g; s/,metadata_encryption=[^,]*//g; s/fileencryption/encryptable/g; s/,,/,/g' "$fstab"
            echo "Decrypted data: ${fstab##*/}"
            fi
        fi
@@ -274,7 +277,7 @@ elif [ "$partition" == "squashfs" ];then
     echo
 elif [ "$partition" == "f2fs" ];then
     [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
-    if [ -f "$info_size" ] && [ "$info_type" == "f2fs" ] && [ "$TTBUILDI" == 0 ];then
+    if [ -f "$info_size" ] && [ "$info_type" == "f2fs" ];then
     size_real=$(cat $info_size 2>/dev/null);
     size_real="$(echo "$SAINEN * 1024 * 1024 + $size_real" | bc)"
     else
@@ -315,7 +318,7 @@ elif [ "$partition" == "ext" ];then
     else
     size_orig="$(echo "$size_orig * 1.1" | bc | cut -d. -f1)"
     fi
-    if [ "$SAINEN" == 0 ] && [ "$info_type" == "ext" ] && [ "$TTBUILDI" == 0 ];then
+    if [ "$SAINEN" == 0 ] && [ "$info_type" == "ext" ] && [ -f "$info_size" ];then
         if [ "$e2fsdroid" == 1 ];then
         size="$(echo "$size_real / 4096" | bc)";
         mke2fs -O ^has_journal -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
