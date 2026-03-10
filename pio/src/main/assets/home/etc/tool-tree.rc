@@ -61,7 +61,7 @@ fi
 }
 
 show_config(){
-xml_print '<action icon="'`urlpng config`'" reload="true">
+xml_print '<action icon="'`urlpng config`'" shell="hidden" reload="true">
 <title>'$config_text'</title>
 <param name="un_tool_ext4" value-sh="glog un_tool_ext4 0" label="'$option_text'" title="'$tool_unpack_text' ext4" options-sh="echo -e '"'0|imgextractor\n1|imgkit_scuti'"' "/>
 <param name="un_tool_erofs" value-sh="glog un_tool_erofs 0" label="'$option_text'" title="'$tool_unpack_text' erofs" options-sh="echo -e '"'0|extract.erofs\n1|imgkit_scuti\n2|extract.erofs (old)'"' "/>
@@ -847,7 +847,7 @@ xml_print '<group>
 <param name="cboxk" value-sh="glog dkhdh" label="'$deleted_file_text'" type="checkbox" />
 <param name="nounpak" value-sh="glog dkjdj" label="'$decode_text_1'" type="switch" />
 <param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" />
-<param name="vavb" label="'$builds_text_8'" desc="'$builds_text_9'" type="switch"/>
+<param name="vavb" label="'$builds_text_8'" type="switch"/>
 <param name="IMAGES" desc="'$decode_text_3'" multiple="true" options-sh="findfile 2 $PTSD" required="true"/>
 <set>
 slog vavbbgdf "$vavb"
@@ -933,6 +933,8 @@ checktime
 
 <action icon="'`urlpng super_merge`'">
 <title>'$super_merge_text_1'</title>
+<param name="silence" value-sh="glog silence 1" label="'$deleted_file_text'" type="checkbox" />
+<param name="MERGE" desc="'$super_merge_text_3'" options-sh="findfile 5 $PTSD | sort -n -t . -k 3" required="true" multiple="true"/>
 <set>
 slog silence $silence
 echo "'$super_merge_text_2'..."
@@ -943,8 +945,6 @@ echo "'$save_text' $PTSD/super.img"
 echo
 checktime
 </set>
-<param name="silence" value-sh="glog silence 1" label="'$deleted_file_text'" type="checkbox" />
-<param name="MERGE" desc="'$super_merge_text_3'" options-sh="findfile 5 $PTSD | sort -n -t . -k 3" required="true" multiple="true"/>
 </action>
 </group>
 

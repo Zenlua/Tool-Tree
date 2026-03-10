@@ -447,7 +447,7 @@ apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree 
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 
 if [ "$fix_apksign" == 1 ] && [ "$(check_props fix_apksign)" != 1 ];then
-[ "$(gprop "ro.system.build.version.sdk" "$psystem/build.prop")" -ge 35 ] && Thayvc -v '.method private verifyIsolationViolation(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;Lcom/android/server/pm/InstallSource;)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
+[ "$APIs" -ge 35 ] && Thayvc -v '.method private verifyIsolationViolation(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;Lcom/android/server/pm/InstallSource;)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
 Thayvc -v '.method public canBeUpdate(Ljava/lang/String;)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
 fi
 
@@ -573,6 +573,15 @@ sed -i 's/iput \([vp][0-9]\+\), .*PackageParser\$PackageParserException;->error:
 fi
 
 if [ "$fix_fwko" == 1 ] && [ "$(check_props fix_fwko)" != 1 ];then
+
+if ! ls "$oi"/smali/classes*/com/android/internal/util/kaorios &>/dev/null; then
+mkdir -p "$psystem/priv-app/KaoriosToolbox"
+cp -rf "$MPAT/mod/KaoriosToolbox.apk" "$psystem/priv-app/KaoriosToolbox"
+cp -rf "$MPAT/mod/com.kousei.kaorios.xml" "$psystem/etc/permissions"
+kkklast=$(ls -d "$oi"/smali/classes* 2>/dev/null | sort -V | tail -n1)
+cp -rf "$MPAT/mod/classes.dex" "$oi/dex/classes$(( ${kkklast##*classes} + 1 )).dex"
+fi
+
 path_smali_4="$(find $oi/smali/classes*/android/security/KeyStore2.smali -type f)"
 [ -f "$path_smali_4" ] && sed -i '/\.method public .*getKeyEntry/,/\.end method/ s/check-cast \([vp][0-9][0-9]*\), Landroid\/system\/keystore2\/KeyEntryResponse;/check-cast \1, Landroid\/system\/keystore2\/KeyEntryResponse;\
 invoke-static {\1}, Lcom\/android\/internal\/util\/kaorios\/KaoriKeyboxHooks;->KaoriGetKeyEntry(Landroid\/system\/keystore2\/KeyEntryResponse;)Landroid\/system\/keystore2\/KeyEntryResponse;\
@@ -819,6 +828,9 @@ pmi_ext="$(ls -1d $PTROM/*i_ex*/etc/build.prop 2>/dev/null | grep -m1 'mi_ext' |
 [ -d "$psystem" ] || killtree "Không tìm thấy system"
 [ -d "$psystem_ext" ] || killtree "Không tìm thấy system_ext"
 [ -d "$pproduct" ] || killtree "Không tìm thấy product"
+
+# Lấy api sdk
+APIs="$(gprop "ro.system.build.version.sdk" "$psystem/build.prop")"
 
 # index
 if [ "$(type -t "$1")" = "function" ];then

@@ -62,7 +62,7 @@ slog ime_dimen "$ime_dimen"
 <param name="fix_global" label="Tính năng global rom CN" type="switch" value-sh="'$patch_mi' check_prop fix_global" />
 <param name="fix_show_error" label="Xoá hộp thoại lỗi vân tay khi khởi động" type="switch" value-sh="'$patch_mi' check_prop fix_show_error" />
 <param name="fix_ime" label="Bàn phím nâng cao" type="switch" value-sh="'$patch_mi' check_prop fix_ime" />
-<param name="fix_fwko" label="Thêm Kaorios Toolbox" type="switch" value-sh="'$patch_mi' check_prop fix_fwko" />
+<param name="fix_fwko" label="Thêm Kaorios Toolbox '$(cat $MPAT/mod/version 2>/dev/null)'" type="switch" value-sh="'$patch_mi' check_prop fix_fwko" />
 <param name="fix_screen" label="Mở khóa giới hạn chụp ảnh màn hình" type="switch" value-sh="'$patch_mi' check_prop fix_screen" />
 <param name="fix_apksign" label="Bỏ qua xác minh chữ ký" type="switch" value-sh="'$patch_mi' check_prop fix_apksign" />
 <param name="fix_appvault" label="Bẻ khóa giao dịch Appvault" type="switch" value-sh="'$patch_mi' check_prop fix_appvault" />
@@ -152,6 +152,24 @@ if [ "$(glog "auto_trans_text_${1##*/}")" == 1 ];then
 trans_add "$MPAT"
 [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
 fi
+
+if [ -f "$MPAT/mod/version" ];then
+if checkonline; then
+linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
+echo "$(echo "$linkurrl" | jq -r '.tag_name')" > $MPAT/mod/version
+fi
+fi
+
+(
+if [ ! -f "$MPAT/mod/classes.dex" ];then
+if checkonline; then
+[ "$linkurrl" ] || linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
+downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'KaoriosToolbox.*\.apk')" "$MPAT/mod/KaoriosToolbox.apk"
+downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'com.kousei.kaorios.xml')" "$MPAT/mod/com.kousei.kaorios.xml"
+downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'classes.*\.dex')" "$MPAT/mod/classes.dex"
+fi
+fi
+) &>/dev/null &
 
 # index
 case "$1" in

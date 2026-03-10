@@ -2,13 +2,14 @@
 
 **Dev**
 
++ Add decoding and building tools
 + The dex2oat addon supports older devices
 + Speed up the build
 + Change the add-on menu structure
 + Fix addon error creating dex2oat
 + Adjust the icon size
 + Fix the auto-delete zstd during decoding
-+ Correct the mv command.
++ Correct the mv command
 + Optimize progress bar
 
 **Version: 1.3.5 (25-2-2026)**
