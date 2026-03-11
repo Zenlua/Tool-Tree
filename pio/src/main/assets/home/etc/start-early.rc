@@ -20,8 +20,10 @@ if checkonline; then
         [ -f $TEMP/update ] && rm -f $TEMP/update
     else
         if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
-        notiservice --am --id $RANDOM --message "$update_text_6"
+        notiservice --am --id 12345 --message "$update_text_6"
         echo "$tagname" > $TEMP/update
+        sleep 5
+        notiservice --am --id 12345 -d true
         fi
     fi
 fi
