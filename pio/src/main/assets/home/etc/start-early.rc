@@ -15,9 +15,19 @@ if checkonline; then
     
     # Thông báo cập nhật
     websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
+    websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
     tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
     if [[ ${PACKAGE_VERSION_NAME//./} -gt $tagname ]];then
         [ -f $TEMP/update ] && rm -f $TEMP/update
+    elif [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]];then
+        if [[ "$websum" != "$(checksum "$PATH_APK")" ]] && [[ -n $websum ]];then
+            if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
+            notiservice --am --id 12345 --message "$update_text_6"
+            echo "$tagname" > $TEMP/update
+            sleep 5
+            notiservice --am --id 12345 -d true
+            fi
+        fi
     else
         if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
         notiservice --am --id 12345 --message "$update_text_6"
