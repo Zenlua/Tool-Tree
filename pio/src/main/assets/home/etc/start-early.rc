@@ -15,8 +15,8 @@ if checkonline; then
     
     # Thông báo cập nhật
     websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
-    websum="$(echo "$websum" | jq -r .assets[0].digest | cut -d: -f2)"
-    tagname="$(echo "$websum" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
+    websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
+    tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
     if [[ "$websum" == "$(checksum "$PATH_APK")" ]] || [[ ${PACKAGE_VERSION_NAME//./} -ge $tagname ]];then
         [ -f $TEMP/update ] && rm -f $TEMP/update
     else
