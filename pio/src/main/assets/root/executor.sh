@@ -79,12 +79,12 @@ fi
 
 # Giới hạn cpu
 if command -v taskset &>/dev/null; then
-    max_cpu="$(nproc --all)"
-    use_cpu="$(slog use_cpu $max_cpu)"
-    if [ -n "$use_cpu" ] && [ "$use_cpu" -lt $max_cpu ];then
-    mask=$(( (1 << use_cpu) - 1 ))
-    mask_hex="$(printf "%x" "$mask")"
-    taskset -p "$mask_hex" $$ &>/dev/null
+    max_cpukkk="$(nproc --all)"
+    use_cpukkk="$(glog use_cpu $max_cpukkk)"
+    if [ -n "$use_cpukkk" ] && [ "$use_cpukkk" -lt $max_cpukkk ];then
+    maskkkk=$(( (1 << use_cpukkk) - 1 ))
+    mask_hexkkkk="$(printf "%x" "$maskkkk")"
+    taskset -p "$mask_hexkkkk" $$ &>/dev/null
     fi
 fi
 
