@@ -8,5 +8,5 @@ fi
 if [ -f "$2" ];then
     grep "^$1=" $2 | cut -d= -f2
 else
-    [ "$1" ] && grep "^$1=" /dev/stdin | cut -d= -f2
+    [ ! -t 0 ] && grep -F "^$1=" | cut -d= -f2
 fi
