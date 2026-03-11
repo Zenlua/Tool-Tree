@@ -150,11 +150,8 @@ glog list_oat_tex "/system_ext/priv-app/Settings/Settings.apk
 fi
 
 # Ngôn ngữ mặc định
-if [ -f "$MPAT/language.sh" ];then
-source "$MPAT/language.sh"
-else
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
-fi
+[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
 
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
