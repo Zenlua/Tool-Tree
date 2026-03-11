@@ -7,7 +7,7 @@ echo
 echo "Options:"
 echo "  -o, --owner USER:GROUP   Set owner (default: $APP_UID:$APP_UID)"
 echo "  -m, --mode MODE          Set permission (default: 0755)"
-echo "  -c, --context CONTEXT    Set SELinux context (default: $APP_CONTEXT)"
+echo "  -c, --context CONTEXT    Set SELinux context (default: $context)"
 echo "  -R, --recursive          Apply recursively"
 echo "  -v, --verbose            Show operations"
 echo "  -f, --force              Show errors (do not suppress)"
@@ -19,6 +19,7 @@ echo "  set_permis -R dir"
 echo "  set_permis -v -o system:system bin/tool"
 }
 
+context="$(ls -Zd $HOME | awk '{print $1}')"
 while [ $# -gt 0 ]; do
     case "$1" in
         -o|--owner)
@@ -67,7 +68,6 @@ done
 [ $# -eq 0 ] && { show_help; exit 0; }
 [ -z "$owner" ] && owner="$APP_UID:$APP_UID"
 [ -z "$perm" ] && perm="0755"
-[ -z "$context" ] && context="$APP_CONTEXT"
 
 for path in "$@"; do
     [ -e "$path" ] || continue
