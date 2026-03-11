@@ -16,8 +16,8 @@ mv "${ii%/*}" "$pproduct/app"
 ii="$(find $pproduct -type f -name "MIUIGallery.apk" -print -quit)"
 fi
 oi="$MPAT/apk/$(basename "$ii" .apk)"
-[ "$(check_props MIUIGallery)" == "fix_mapcn×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props MIUIGallery)" == "fix_mapcn×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
@@ -35,8 +35,8 @@ sprop "#MIUIGallery" "fix_mapcn×$fix_mapcn" "$psystem/build.prop"
 Joyose(){
 ii="$(find $pproduct/app $psystem/app $pproduct/pangu -type f -name "Joyose.apk" -print -quit)"
 oi="$MPAT/apk/$(basename "$ii" .apk)"
-[ "$(check_props Joyose)" == "fix_joyose×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props Joyose)" == "fix_joyose×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 
@@ -59,8 +59,8 @@ mv "${ii%/*}" "$pproduct/app"
 ii="$(find $pproduct -type f -name "*Weather.apk" -print -quit)"
 fi
 oi="$MPAT/apk/$(basename "$ii" .apk)"
-[ "$(check_props Weather)" == "fix_thoit×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props Weather)" == "fix_thoit×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
@@ -82,8 +82,8 @@ ThemeManager(){
 IFS=$'\n'
 ii="$(find $pproduct/app -type f -name "*ThemeManager.apk" -print -quit)"
 oi="$MPAT/apk/$(basename "$ii" .apk)"
-[ "$(check_props ThemeManager)" == "fix_themes×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props ThemeManager)" == "fix_themes×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 
@@ -129,8 +129,8 @@ sprop "#ThemeManager" "fix_themes×$fix_themes" "$psystem/build.prop"
 PersonalAssistant(){
 ii="$(find $pproduct/priv-app -type f -name "*PersonalAssistant*.apk" -print -quit)"
 oi="$MPAT/apk/$(basename "$ii" .apk)"
-[ "$(check_props PersonalAssistant)" == "fix_appvault×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props PersonalAssistant)" == "fix_appvault×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 
@@ -155,8 +155,8 @@ Settings(){
 IFS=$'\n'
 ii="$psystem_ext/priv-app/Settings/Settings.apk"
 oi="$MPAT/apk/Settings"
-[ "$(check_props Settings)" == "fix_global×1 fix_ime×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props Settings)" == "fix_global×1 fix_ime×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t reso &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
@@ -337,8 +337,8 @@ sprop "#Settings" "fix_global×$fix_global fix_ime×$fix_ime" "$psystem/build.pr
 MiuiSystemUI(){
 ii="$psystem_ext/priv-app/MiuiSystemUI/MiuiSystemUI.apk"
 oi="$MPAT/apk/MiuiSystemUI"
-[ "$(check_props MiuiSystemUI)" == "fix_noti×1 fix_ime×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props MiuiSystemUI)" == "fix_noti×1 fix_ime×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
@@ -365,8 +365,8 @@ sprop "#MiuiSystemUI" "fix_noti×$fix_noti fix_ime×$fix_ime" "$psystem/build.pr
 services(){
 ii="$psystem/framework/services.jar"
 oi="$MPAT/apk/services"
-[ "$(check_props services)" == "fix_apksign×1 fix_show_error×1 fix_screen×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props services)" == "fix_apksign×1 fix_show_error×1 fix_screen×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 
@@ -407,8 +407,8 @@ sprop "#services" "fix_apksign×$fix_apksign fix_show_error×$fix_show_error fix
 miui-framework(){
 ii="$psystem_ext/framework/miui-framework.jar"
 oi="$MPAT/apk/miui-framework"
-[ "$(check_props miui-framework)" == "fix_global×1 fix_reset_theme×1 fix_ime×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props miui-framework)" == "fix_global×1 fix_reset_theme×1 fix_ime×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
@@ -440,8 +440,8 @@ sprop "#miui-framework" "fix_global×$fix_global fix_reset_theme×$fix_reset_the
 miui-services(){
 ii="$psystem_ext/framework/miui-services.jar"
 oi="$MPAT/apk/miui-services"
-[ "$(check_props miui-services)" == "fix_global×1 fix_noti×1 fix_window×1 fix_ime×1 fix_screen×1 fix_apksign×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props miui-services)" == "fix_global×1 fix_noti×1 fix_window×1 fix_ime×1 fix_screen×1 fix_apksign×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
@@ -482,8 +482,8 @@ sprop "#miui-services" "fix_global×$fix_global fix_noti×$fix_noti fix_window×
 PowerKeeper(){
 ii="$psystem/app/PowerKeeper/PowerKeeper.apk"
 oi="$MPAT/apk/PowerKeeper"
-[ "$(check_props PowerKeeper)" == "fix_noti×1 fix_fps×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props PowerKeeper)" == "fix_noti×1 fix_fps×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
@@ -512,8 +512,8 @@ sprop "#PowerKeeper" "fix_noti×$fix_noti fix_fps×$fix_fps" "$psystem/build.pro
 FrequentPhrase(){
 ii="$(find $pproduct/app -type f -name "*FrequentPhrase.apk" -print -quit)"
 oi="$MPAT/apk/$(basename "$ii" .apk)"
-[ "$(check_props FrequentPhrase)" == "fix_ime×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props FrequentPhrase)" == "fix_ime×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t reso &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 
@@ -535,8 +535,8 @@ sprop "#FrequentPhrase" "fix_ime×$fix_ime" "$psystem/build.prop"
 framework(){
 ii="$psystem/framework/framework.jar"
 oi="$MPAT/apk/framework"
-[ "$(check_props framework)" == "fix_fwko×1 fix_apksign×1" ] && { echo "Đã vá ${ii##*/} ✓"; exit; }
-echo -e "Đang vá ${ii##*/}..."
+[ "$(check_props framework)" == "fix_fwko×1 fix_apksign×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
+echo -e "$patch_text1 ${ii##*/}..."
 apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
 # Patch smali
 
@@ -576,10 +576,11 @@ fi
 if [ "$fix_fwko" == 1 ] && [ "$(check_props fix_fwko)" != 1 ];then
 
 if ! ls "$oi"/smali/classes*/com/android/internal/util/kaorios &>/dev/null; then
-mkdir -p "$psystem/priv-app/KaoriosToolbox"
+mkdir -p "$psystem/priv-app/KaoriosToolbox/lib/arm64"
 cp -rf "$MPAT/mod/KaoriosToolbox.apk" "$psystem/priv-app/KaoriosToolbox"
+unzip -qj "$MPAT/mod/KaoriosToolbox.apk" lib/arm64-v8a/* -d "$psystem/priv-app/KaoriosToolbox/lib/arm64"
 cp -rf "$MPAT/mod/com.kousei.kaorios.xml" "$psystem/etc/permissions"
-kkklast=$(ls -d "$oi"/smali/classes* 2>/dev/null | sort -V | tail -n1)
+kkklast=$(ls -1d "$oi"/smali/classes* 2>/dev/null | sort | tail -n1)
 cp -rf "$MPAT/mod/classes.dex" "$oi/dex/classes$(( ${kkklast##*classes} + 1 )).dex"
 fi
 
@@ -638,8 +639,20 @@ apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 &>$TMP/apk_patch_ximi.log || killtree "E
 sprop "#framework" "fix_fwko×$fix_fwko fix_apksign×$fix_apksign" "$psystem/build.prop"
 }
 
+home_poco(){
+if [ "$vlua" == "check" ];then
+[ -f "$psystem/build.prop" ] && grep -cm1 'ro.miui.product.home=com.miui.home' "$psystem/build.prop"
+exit
+fi
+file_ext_ss="$psystem_ext/etc/init/init.miui.ext.rc"
+if [ -f "$file_ext_ss" ];then
+sed -i "s|com.mi.android.globallauncher|com.miui.home|g" "$file_ext_ss"
+fi
+sprop "ro.miui.product.home" "com.miui.home" "$psystem/build.prop"
+}
+
 del_app(){
-echo "Đang tìm kiếm và xoá..."
+echo "$SEARCHING_AND_DELETING"
 echo
 for vv in $del_app; do
 find $psystem $pproduct $psystem_ext -type d -name "$vv" -print -exec rm -rf {} +
@@ -647,14 +660,15 @@ done
 }
 
 rw_rom(){
-[ -d "$pvendor" ] || killtree "Không tìm thấy vendor"
-[ -d "$pvendor_boot" ] || echo "Cảnh báo: Không tìm thấy vendor_boot, nếu nó đã được vá rw có thể bỏ qua !" >&2
-[ -d "$pmi_ext" ] || echo "Cảnh báo: Không tìm thấy mi_ext, không copy được file có thể lỗi tính năng, nếu đã được copy có thể bỏ qua !" >&2
+[ -d "$pvendor" ] || killtree "$NOT_FOUND_TEXT vendor"
+[ -d "$pvendor_boot" ] || echo "$RW_ROM_TEXT_1" >&2
+[ -d "$pmi_ext" ] || echo "$RW_ROM_TEXT_2" >&2
 for vv in $pvendor/etc/fstab.* $pvendor_boot/ramdisk/first_stage_ramdisk/fstab.*; do
 if [ -f "$vv" ];then
-[ "$(grep '/system .*.discard' "$vv" | grep -cm1 ext4)" == 1 ] || echo "Cảnh báo: Không tìm thấy phân vùng chứa ext4 cần phải thêm thủ công vào: $vv" >&2
+[ "$(grep '/system .*.discard' "$vv" | grep -cm1 ext4)" == 1 ] || echo "$RW_ROM_TEXT_3 $vv" >&2
 sed -i '/camera/!s/^\(overlay.*\)/#\1/' "$vv"
 fi
+
 done
 # di chuyển pangu và dọn dẹp
 if [ -d $pproduct/pangu/system ];then
@@ -696,7 +710,7 @@ if [ "$vlua" == "check" ];then
 [ -f "$psystem/build.prop" ] && gprop ro.control_privapp_permissions "$psystem/build.prop"
 exit
 fi
-[ -d "$pvendor" ] || killtree "Không tìm thấy vendor"
+[ -d "$pvendor" ] || killtree "$NOT_FOUND_TEXT vendor"
 for vv in $pvendor/build.prop $psystem_ext/etc/build.prop $pproduct/etc/build.prop; do
 [ -f "$vv" ] && sed -i "/ro.control_privapp_permissions/d" "$vv"
 done
@@ -788,7 +802,7 @@ tao_oat(){
 export features_oat="-a53,-crc,-lse,-fp16,-dotprod,-sve"
 export PTSH="${PTROM##*/}"
 if [ "$oat_fw_at" == 1 ];then
-echo -e "Đang tạo oat framework, service...\n"
+echo -e "$CREATING_OAT_TEXT framework, service...\n"
 export services_switch=1
 export framework_switch=1
 $AON/add_features/bin/dex2oat
@@ -796,20 +810,31 @@ fi
 if [ "$list_oat_tex" ];then
 export services_switch=0
 export framework_switch=0
-echo -e "Đang tạo oat app...\n"
+echo -e "$CREATING_OAT_TEXT app...\n"
 for vv in $list_oat_tex; do
 if [ "${vv##*/}" == 'MiuiSystemUI.apk' ];then
 export secontex="PCL[]{PCL[/system_ext/framework/extphonelib.jar]#PCL[/system_ext/app/miuisystem/miuisystem.apk]}"
 elif [ "${vv##*/}" == 'Settings.apk' ];then
 export secontex="PCL[]{PCL[/system/framework/org.apache.http.legacy.jar]#PCL[/system_ext/framework/com.xiaomi.slalib.jar]#PCL[/system_ext/priv-app/RtMiCloudSDK/RtMiCloudSDK.apk]{PCL[/system_ext/app/miuisystem/miuisystem.apk]}#PCL[/system_ext/framework/gson.jar]#PCL[/system_ext/framework/MiuiSettingsSearchLib.jar]#PCL[/system_ext/app/miuisystem/miuisystem.apk]#PCL[/system/system_ext/framework/com.xiaomi.nfc.jar]}"
 else
-export secontex=''
+    if [ "$mi_secontex" ];then
+    export secontex="$mi_secontex"
+    else
+    export secontex=''
+    fi
 fi
 export apps_apk_oat="$vv"
 $AON/add_features/bin/dex2oat
 done
 fi
 }
+
+# Ngôn ngữ mặc định
+eval "$(grep '="' "$MPAT/addon.prop")"
+# Google dịch
+if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
+[ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
+fi
 
 # Tìm path
 PTROM="$(glog patch_rom_path)"
@@ -826,9 +851,9 @@ pvendor_boot="$(ls -1d $PTROM/*/vendor_boot.img 2>/dev/null | grep -m1 'vendor_b
 pmi_ext="$(ls -1d $PTROM/*i_ex*/etc/build.prop 2>/dev/null | grep -m1 'mi_ext' | sed 's|\/etc/build.prop||')"
 
 # check
-[ -d "$psystem" ] || killtree "Không tìm thấy system"
-[ -d "$psystem_ext" ] || killtree "Không tìm thấy system_ext"
-[ -d "$pproduct" ] || killtree "Không tìm thấy product"
+[ -d "$psystem" ] || killtree "$NOT_FOUND_TEXT system"
+[ -d "$psystem_ext" ] || killtree "$NOT_FOUND_TEXT system_ext"
+[ -d "$pproduct" ] || killtree "$NOT_FOUND_TEXT product"
 
 # Lấy api sdk
 APIs="$(gprop "ro.system.build.version.sdk" "$psystem/build.prop")"
@@ -837,5 +862,6 @@ APIs="$(gprop "ro.system.build.version.sdk" "$psystem/build.prop")"
 if [ "$(type -t "$1")" = "function" ];then
 "$@"
 else
-killtree "Không có giá trị nào !"
+killtree "$NO_VALUE_TEXT"
 fi
+

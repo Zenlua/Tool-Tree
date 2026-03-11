@@ -32,7 +32,7 @@ MPAT="${0%/*}"
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
 # Google dịch
-if [ "$(glog "auto_trans_text_${1##*/}")" == 1 ];then
+if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
 trans_add "$MPAT"
 [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
 fi

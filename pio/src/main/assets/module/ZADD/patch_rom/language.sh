@@ -1,16 +1,6 @@
-# Add-on
+# Kakathic
 
-id=patch_rom
-name=Patch ROM Xiaomi
-author=Kakathic
-description=Quick ROM patch
-version=1.0
-versionCode=100
-root=false
-
-# language
-google_text="Currently using google translate"
-
+if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ];then
 # Group / title
 TITLE_CHANGE_PROJECT="Thay đổi dự án"
 SUMMARY_CURRENT="Hiện tại"
@@ -75,4 +65,4 @@ RW_ROM_TEXT_2="Cảnh báo: Không tìm thấy mi_ext, không copy được file
 RW_ROM_TEXT_3="Cảnh báo: Không tìm thấy phân vùng chứa ext4 cần phải thêm thủ công vào:"
 patch_text="Đã vá"
 patch_text1="Đang vá"
-
+fi
