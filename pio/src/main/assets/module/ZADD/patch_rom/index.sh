@@ -141,8 +141,8 @@ glog ime_dimen '<dimen name="input_method_seek_bar_margin">6.5999756dp</dimen>
 <dimen name="input_bottom_button_height">28.5dp</dimen>
 <dimen name="input_bottom_button_margin_top">2.5dp</dimen>' >/dev/null
 glog ime_app com.google.android.inputmethod.latin >/dev/null
-glog ime_color '\#f0f3f8' >/dev/null
-glog ime_color_dark '\#1e1f21' >/dev/null
+glog ime_color '#f0f3f8' >/dev/null
+glog ime_color_dark '#1e1f21' >/dev/null
 glog list_oat_tex "/system_ext/priv-app/Settings/Settings.apk
 /system_ext/priv-app/MiuiSystemUI/MiuiSystemUI.apk
 /product/app/MIUIFrequentPhrase/MIUIFrequentPhrase.apk
