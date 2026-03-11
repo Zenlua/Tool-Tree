@@ -548,7 +548,7 @@ slog show_infor_text_2 "$show_infor_text_2"
 <group>
 <action icon="'`urlpng cpu`'" warning="'$project_text_13'" shell="hidden" >
 <title>'$project_text_12'</title>
-<param name="use_cpu" label="'$option_text'" option-sh="seq 1 $(nproc --all)" value-sh="glog use_cpu $(nproc --all)" />
+<param name="use_cpu" label="'$option_text'" option-sh="seq 1 $(nproc --all)" value-sh="glog use_cpu" />
 <set>slog use_cpu "$use_cpu"</set>
 </action>
 </group>'
