@@ -830,7 +830,11 @@ fi
 }
 
 # Ngôn ngữ mặc định
+if [ -f "$MPAT/language.sh" ];then
+source "$MPAT/language.sh"
+else
 eval "$(grep '="' "$MPAT/addon.prop")"
+fi
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
 [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
