@@ -59,9 +59,10 @@ def collect_files(path):
     if os.path.isfile(path):
         return [path]
     files = []
-    for root, _, names in os.walk(path):
-        for n in names:
-            files.append(os.path.join(root, n))
+    for n in os.listdir(path):
+        full = os.path.join(path, n)
+        if os.path.isfile(full):
+            files.append(full)
     return files
 
 def main(path):
