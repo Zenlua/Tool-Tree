@@ -160,7 +160,7 @@ trans_add "$MPAT"
 fi
 
 # lấy phiên bản
-if [ -f "$MPAT/mod/version" ];then
+if [ ! -f "$MPAT/mod/version" ];then
 if checkonline; then
 linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
 echo "$(echo "$linkurrl" | jq -r '.tag_name')" > $MPAT/mod/version
