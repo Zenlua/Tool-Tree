@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Dev**
+**Version: 1.3.6 (11-3-2026)**
 
++ Add CPU limiting feature
 + Add decoding and building tools
 + The dex2oat addon supports older devices
 + Speed up the build
