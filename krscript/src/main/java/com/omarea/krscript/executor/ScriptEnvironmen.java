@@ -30,7 +30,7 @@ import java.util.TimeZone;;
 import java.lang.Runtime;
 import java.nio.file.Paths;
 import android.widget.Toast;
-
+import android.os.SELinux;
 
 public class ScriptEnvironmen {
     private static final String ASSETS_FILE = "file:///android_asset/";
@@ -254,7 +254,7 @@ public class ScriptEnvironmen {
         params.put("PACKAGE_NAME", context.getPackageName());
         params.put("PACKAGE_VERSION_NAME", packageInfo.versionName);
         params.put("PATH_APK", context.getApplicationInfo().sourceDir);
-        params.put("APP_CONTEXT", android.os.SELinux.getFileContext(context.getFilesDir().getAbsolutePath()));
+        params.put("APP_CONTEXT", SELinux.getFileContext(context.getFilesDir().getAbsolutePath()));
         params.put("APP_UID", String.valueOf(android.os.Process.myUid()));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 params.put("PACKAGE_VERSION_CODE", String.valueOf(packageInfo.getLongVersionCode()));
