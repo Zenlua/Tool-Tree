@@ -5,8 +5,11 @@ if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
     exit 1
 fi
 
-if [ -f "$2" ];then
-    grep "^$1=" $2 | cut -d= -f2
-else
-    [ ! -t 0 ] && grep -F "^$1=" | cut -d= -f2
+if [ -f "$2" ]; then
+    awk -F= -v k="$1" '$1==k{print $2}' "$2"
+elif [ ! -t 0 ]; then
+    dataksks="$(cat /dev/stdin)"
+    if echo "$dataksks" | grep -qm1 "^$1="; then
+        echo "$dataksks" | awk -F= -v k="$1" '$1==k{print $2}'
+    fi
 fi
