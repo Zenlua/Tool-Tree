@@ -6,6 +6,7 @@ echo "installadd file.add folder"
 exit
 fi
 
+gprop(){ awk -F= -v k="$1" '$1==k{print $2; exit}'; }
 source language
 echo "${more_text_4} $1"
 echo

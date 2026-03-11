@@ -1,15 +1,10 @@
 # Kakathic
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-    echo "Use: gprop ro.vip /path/file or echo 'ro.vip=1' | gprop ro.vip" >&2
+    echo "Use: gprop ro.vip /path/file" >&2
     exit 1
 fi
 
 if [ -f "$2" ]; then
     awk -F= -v k="$1" '$1==k{print $2}' "$2"
-elif [ ! -t 0 ]; then
-    dataksks="$(cat /dev/stdin)"
-    if echo "$dataksks" | grep -qm1 "^$1="; then
-        echo "$dataksks" | awk -F= -v k="$1" '$1==k{print $2}'
-    fi
 fi
