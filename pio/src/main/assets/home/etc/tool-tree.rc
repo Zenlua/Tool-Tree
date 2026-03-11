@@ -7,7 +7,7 @@ if [ "$(glog Ticon)" != 1 ];then
 fi
 }
 
-iccpng(){
+urladd(){
 if [ "$(glog Ticon)" != 1 ];then
     if [ -f "$dirvad/$1.png" ];then
     echo "$dirvad/$1.png"
@@ -542,6 +542,14 @@ slog ramoccupied "$ramoccupied"
 slog show_infor_text_1 "$show_infor_text_1"
 slog show_infor_text_2 "$show_infor_text_2"
 </set>
+</action>
+</group>
+
+<group>
+<action icon="'`urlpng cpu`'" warning="'$project_text_13'" shell="hidden" >
+<title>'$project_text_12'</title>
+<param name="use_cpu" label="'$option_text'" option-sh="seq 1 $(nproc --all)" value-sh="glog use_cpu" />
+<set>slog use_cpu "$use_cpu"</set>
 </action>
 </group>'
 }
@@ -1277,7 +1285,7 @@ Addon(){
 # Tính năng
 Features(){
 [ "$1" == "status" ] && addon_textxx="$addon_text_10" || addon_textxx="$addon_text_2"
-xml_print '<group><switch icon="'`iccpng icon`'" shell="hidden" warn="'$addon_textxx'">
+xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_textxx'">
 <title>'$(gprop name $vadd)'</title>
 <desc>'$(gprop version $vadd)', '$(gprop author $vadd)' | '$(gprop description $vadd)'</desc>
 <get>cat '$dirvad'/'$1'</get>
@@ -1332,7 +1340,7 @@ google_tran_shellkk='elif [ "$menu_id" == "v1" ];then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
 fi
 xml_print '<group>
-<page icon="'`iccpng icon`'" '$pagesh'>
+<page icon="'`urladd icon`'" '$pagesh'>
 <title>'$(gprop name $vadd)'</title>
 <desc>'$desc_tec'</desc>
 '$summss'

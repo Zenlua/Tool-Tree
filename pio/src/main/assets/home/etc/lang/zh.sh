@@ -94,6 +94,8 @@ project_text_8="通知"
 project_text_9="这是分配给 Java 的最大内存，1024m。仅在构建大型文件且设备有足够内存时开启，以避免过载卡顿。"
 project_text_10="为 Java 分配内存"
 project_text_11="运行命令时保持屏幕常亮"
+project_text_12="CPU限制"
+project_text_13="选择后，CPU将被限制为所选的数量"
 
 # mount img
 mount_text_1="挂载 IMG"

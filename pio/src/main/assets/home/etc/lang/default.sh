@@ -94,6 +94,8 @@ project_text_8="Notifications"
 project_text_9="This is the maximum memory allocated for Java, e.g., 1024m. Only increase it for large builds and when the device has enough RAM to avoid heavy lag."
 project_text_10="Allocate RAM for Java"
 project_text_11="Keep screen on while running commands"
+project_text_12="CPU Limit"
+project_text_13="After selection, the CPU will be limited to the chosen number"
 
 # mount img
 mount_text_1="Mount IMG"

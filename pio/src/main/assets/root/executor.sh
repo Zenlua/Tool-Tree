@@ -77,6 +77,16 @@ else
 export ARCH=arm64
 fi
 
+# Giới hạn cpu
+if command -v taskset &>/dev/null; then
+    use_cpu="$(slog use_cpu)"
+    if [ -n "$use_cpu" ] && [ "$use_cpu" -lt $(nproc --all) ];then
+    mask=$(( (1 << use_cpu) - 1 ))
+    mask_hex=$(printf "%x" "$mask")
+    taskset -p "$mask_hex" $$ &>/dev/null
+    fi
+fi
+
 if [ -f "$1" ]; then
 chmod 755 "$1" 2>/dev/null
 export shell_progres="$2";
