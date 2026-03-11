@@ -641,7 +641,7 @@ sprop "#framework" "fix_fwko×$fix_fwko fix_apksign×$fix_apksign" "$psystem/bui
 
 home_poco(){
 if [ "$vlua" == "check" ];then
-[ -f "$psystem/build.prop" ] && grep -cm1 'ro.miui.product.home=com.miui.home' "$psystem/build.prop"
+grep -cm1 'ro.miui.product.home=com.miui.home' "$psystem/build.prop"
 exit
 fi
 file_ext_ss="$psystem_ext/etc/init/init.miui.ext.rc"
@@ -687,10 +687,10 @@ sprop "#rw_rom" 1 "$psystem/build.prop"
 
 crypto_prop(){
 if [ "$vlua" == "check" ];then
-[ -f "$psystem/build.prop" ] && grep -cm1 'ro.crypto.state=encrypted' "$psystem/build.prop"
+grep -cm1 'ro.crypto.state=encrypted' "$psystem/build.prop"
 exit
 fi
-[ -f "$psystem/build.prop" ] && sprop ro.crypto.state encrypted "$psystem/build.prop"
+sprop ro.crypto.state encrypted "$psystem/build.prop"
 }
 
 device_features(){
@@ -707,20 +707,20 @@ done
 patch_prop(){
 # Check ro.control_privapp_permissions
 if [ "$vlua" == "check" ];then
-[ -f "$psystem/build.prop" ] && gprop ro.control_privapp_permissions "$psystem/build.prop"
+gprop ro.control_privapp_permissions "$psystem/build.prop"
 exit
 fi
 [ -d "$pvendor" ] || killtree "$NOT_FOUND_TEXT vendor"
 for vv in $pvendor/build.prop $psystem_ext/etc/build.prop $pproduct/etc/build.prop; do
 [ -f "$vv" ] && sed -i "/ro.control_privapp_permissions/d" "$vv"
 done
-[ -f "$psystem/build.prop" ] && sprop ro.control_privapp_permissions $patch_prop "$psystem/build.prop"
+sprop ro.control_privapp_permissions $patch_prop "$psystem/build.prop"
 }
 
-check_prop(){ [ -f "$psystem/build.prop" ] && gprop "#$vlua" "$psystem/build.prop"; }
-set_prop(){ [ -f "$psystem/build.prop" ] && sprop "#$vlua" 1 "$psystem/build.prop"; }
-check_props(){ [ -f "$psystem/build.prop" ] && gprop "#$1" "$psystem/build.prop"; }
-check_nums(){ [ -f "$psystem/build.prop" ] && grep -c "$vlua×1" "$psystem/build.prop"; }
+check_prop(){ gprop "#$vlua" "$psystem/build.prop"; }
+set_prop(){ sprop "#$vlua" 1 "$psystem/build.prop"; }
+check_props(){ gprop "#$1" "$psystem/build.prop"; }
+check_nums(){ grep -c "$vlua×1" "$psystem/build.prop"; }
 
 Timkiem(){ grep -rl --include="*.*" "$1" $2; }
 about(){ echo -e "$1" >&2; }
