@@ -1,0 +1,84 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# kakathic
+
+show_help() {
+echo "Usage: set_permis [options] <file|dir>..."
+echo
+echo "Options:"
+echo "  -o, --owner USER:GROUP   Set owner (default: $APP_UID:$APP_UID)"
+echo "  -m, --mode MODE          Set permission (default: 0755)"
+echo "  -c, --context CONTEXT    Set SELinux context (default: $APP_CONTEXT)"
+echo "  -R, --recursive          Apply recursively"
+echo "  -v, --verbose            Show operations"
+echo "  -f, --force              Show errors (do not suppress)"
+echo "  -h, --help               Show this help"
+echo
+echo "Example:"
+echo "  set_permis -m 0644 file1 file2"
+echo "  set_permis -R dir"
+echo "  set_permis -v -o system:system bin/tool"
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -o|--owner)
+            owner="$2"
+            shift 2
+        ;;
+        -m|--mode)
+            perm="$2"
+            shift 2
+        ;;
+        -c|--context)
+            context="$2"
+            shift 2
+        ;;
+        -R|--recursive)
+            recursive=1
+            shift
+        ;;
+        -v|--verbose)
+            verbose=1
+            shift
+        ;;
+        -f|--force)
+            force=1
+            shift
+        ;;
+        -h|--help)
+            show_help
+            exit 0
+        ;;
+        --)
+            shift
+            break
+        ;;
+        -*)
+            echo "Unknown flag: $1"
+            exit 1
+        ;;
+        *)
+            break
+        ;;
+    esac
+done
+
+# nếu không có file
+[ $# -eq 0 ] && { show_help; exit 0; }
+[ -z "$owner" ] && owner="$APP_UID:$APP_UID"
+[ -z "$perm" ] && perm="0755"
+[ -z "$context" ] && context="$APP_CONTEXT"
+
+for path in "$@"; do
+    [ -e "$path" ] || continue
+    [ "${verbose:-0}" = 1 ] && echo "$path $perm $owner ${context:-none}"
+    if [ "${recursive-0}" = 1 ] && [ -d "$path" ]; then
+        chmod -R "$perm" "$path"
+        [ -n "$owner" ] && chown -R "$owner" "$path"
+        [ -n "$context" ] && chcon -R "$context" "$path"
+    else
+        chmod "$perm" "$path"
+        [ -n "$owner" ] && chown "$owner" "$path"
+        [ -n "$context" ] && chcon "$context" "$path"
+    fi
+done
