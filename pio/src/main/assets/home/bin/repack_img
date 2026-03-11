@@ -192,7 +192,7 @@ progress -1/0
 if [ "$partition" == "erofs" ];then
     [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
     if [ "$TTBUILDI" == 6 ];then
-    imgkit_scuti pack --type erofs -s "$INPUT" -o "$saved" --compress $NENEROFS --compress-level ${zlsize/,/} --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" &>$TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti" "$saved"
+    imgkit_scuti pack --type erofs -s "$INPUT" -o "$saved" --compress $NENEROFS --compress-level ${zlsize/,/} --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" &>$TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti:\n\n$(cat $TMP/imgkit_repack.log)" "$saved"
     elif [ "$TTBUILDI" == 8 ];then
     $TERMUX/lib/theft/mkfs.erofs -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" &>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs:\n\n$(cat $TMP/mkfs_erofs.log)" "$saved" &
     process_erofss $TMP/mkfs_erofs.log
@@ -312,7 +312,7 @@ elif [ "$partition" == "ext" ];then
         mke2fs -O ^has_journal -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
         e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
         elif [ "$TTBUILDI" == 7 ];then
-        imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z $size_real --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" || killtree "Error build process imgkit_scuti" "$saved"
+        imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z $size_real --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" &>$TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti:\n\n$(cat $TMP/imgkit_repack.log)" "$saved"
         else
         make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
         process_count $size_real "$saved"
@@ -324,7 +324,7 @@ elif [ "$partition" == "ext" ];then
         mke2fs -O ^has_journal -t ext4 -m 0 -b 4096 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
         e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
         elif [ "$TTBUILDI" == 7 ];then
-        imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z $size_orig --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" || killtree "Error build process imgkit_scuti" "$saved"
+        imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z $size_orig --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" &>$TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti:\n\n$(cat $TMP/imgkit_repack.log)" "$saved"
         else
         make_ext4fs -J -T $time_build -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
         process_count $size_orig "$saved"
