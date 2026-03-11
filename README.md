@@ -49,6 +49,3 @@
 
 - **[Kr-Script](https://github.com/helloklf/kr-scripts), [Termux](https://github.com/termux/termux-app)**
 
-- **[ColdWindScholar](https://github.com/ColdWindScholar)**
-
-

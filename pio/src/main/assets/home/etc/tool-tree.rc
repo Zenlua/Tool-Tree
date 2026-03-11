@@ -878,7 +878,7 @@ checktime
 <title>'$build_text'</title>
 <param name="boolbox" value-sh="glog boolboxdjh" label="'$deleted_project_text'" type="checkbox" />
 <param name="IMAGES" desc="'$builds_text_1'" multiple="true" options-sh="findfile 0 $SDH/$PTSH" required="true"/>
-<param name="dinh_dang" value-sh="glog dinh_dang 0" label="'$option_text'" desc="'$builds_text_2'" options-sh="echo -e '"'0|$default_text\n1|RO (erofs, mkfs.erofs)\n6|RO (erofs, imgkit_scuti)\n8|RO (erofs, mkfs.erofs) old\n2|RW (ext4, make_ext4fs)\n3|RW (ext4, e2fsdroid)\n7|RW (ext4, imgkit_scuti)\n4|RO (f2fs, make_f2fs)\n5|RW (f2fs, make_f2fs)'"'"/>
+<param name="dinh_dang" value-sh="glog dinh_dang 0" label="'$option_text'" desc="'$builds_text_2'" options-sh="echo -e '"'0|$default_text\n1|RO (erofs, mkfs.erofs)\n6|RO (erofs, imgkit_scuti)\n8|RO (erofs, mkfs.old)\n2|RW (ext4, make_ext4fs)\n3|RW (ext4, e2fsdroid)\n7|RW (ext4, imgkit_scuti)\n4|RO (f2fs, make_f2fs)\n5|RW (f2fs, make_f2fs)'"'"/>
 <param name="dang_nen" value-sh="glog dang_nen lz4hc" label="'$option_text'" desc="'$builds_text_3'" options-sh="echo -e '"'lz4hc\nlz4\nlzma\ndeflate\nzstd'"'"/>
 <param name="format_img" value-sh="glog format_imgs raw" label="'$convert_text'" >
 <option value="raw">File.img (raw)</option>
