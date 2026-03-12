@@ -36,6 +36,8 @@ import androidx.core.view.isVisible
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
+import android.app.AlarmManager
+import android.app.PendingIntent
 
 class MainActivity : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
@@ -172,6 +174,27 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
+    private fun restartApp() {
+        val intent = packageManager.getLaunchIntentForPackage(packageName) ?: return
+    
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            12345,
+            intent,
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        alarmManager.set(
+            AlarmManager.RTC,
+            System.currentTimeMillis() + 300,
+            pendingIntent
+        )
+    
+        finishAffinity()
+        android.os.Process.killProcess(android.os.Process.myPid())
+    }
+
     private fun getKrScriptActionHandler(pageNode: PageNode, isFavoritesTab: Boolean): KrScriptActionHandler {
         return object : KrScriptActionHandler {
             override fun onActionCompleted(runnableNode: RunnableNode) {
@@ -184,11 +207,7 @@ class MainActivity : AppCompatActivity() {
                         reloadMoreTab()
                     }
                 } else if (runnableNode.autoRestart) {
-                    val intent = packageManager.getLaunchIntentForPackage(packageName)
-                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(intent)
-                    finishAffinity()
-                    Runtime.getRuntime().exit(0)
+                    restartApp()
                 } else if (runnableNode.autoKill) {
                     startService(Intent(this@MainActivity, WakeLockService::class.java).apply { action = WakeLockService.ACTION_END_WAKELOCK })
                     finishAffinity()

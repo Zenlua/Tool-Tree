@@ -29,6 +29,8 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.omarea.krscript.ui.PageMenuLoader
 import com.tool.tree.databinding.ActivityActionPageBinding
 import android.os.Looper
+import android.app.AlarmManager
+import android.app.PendingIntent
 
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
@@ -263,11 +265,24 @@ class ActionPage : AppCompatActivity() {
     }
 
     private fun restartApp() {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)
-        intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(intent)
+        val intent = packageManager.getLaunchIntentForPackage(packageName) ?: return
+    
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            12345,
+            intent,
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        alarmManager.set(
+            AlarmManager.RTC,
+            System.currentTimeMillis() + 300,
+            pendingIntent
+        )
+    
         finishAffinity()
-        Runtime.getRuntime().exit(0)
+        android.os.Process.killProcess(android.os.Process.myPid())
     }
 
     private fun killApp() {
