@@ -28,6 +28,7 @@ import com.omarea.krscript.ui.DialogLogFragment
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.omarea.krscript.ui.PageMenuLoader
 import com.tool.tree.databinding.ActivityActionPageBinding
+import android.os.Looper
 
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
