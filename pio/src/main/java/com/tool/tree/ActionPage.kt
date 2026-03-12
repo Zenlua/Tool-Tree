@@ -241,6 +241,7 @@ class ActionPage : AppCompatActivity() {
     private fun onMenuItemClick(menuOption: PageMenuOption) {
         when(menuOption.type) {
             "refresh", "reload" -> {
+                menuOptions = null
                 recreate()
             }
             "restart" -> {
@@ -282,6 +283,7 @@ class ActionPage : AppCompatActivity() {
             if (menuOption.autoFinish) {
                 finish()
             } else if (menuOption.reloadPage) {
+                menuOptions = null
                 recreate()
             } else if (menuOption.autoKill) {
                 killApp()
