@@ -1,0 +1,4 @@
+Version: 1.1
+
++ Fix the PowerKeeper.apk file path error.
++ Transparent APK and JAR patching process
