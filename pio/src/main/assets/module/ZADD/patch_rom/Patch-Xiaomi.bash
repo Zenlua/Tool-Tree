@@ -17,8 +17,7 @@ ii="$(find $pproduct -type f -name "MIUIGallery.apk" -print -quit)"
 fi
 oi="$MPAT/apk/$(basename "$ii" .apk)"
 [ "$(check_props MIUIGallery)" == "fix_mapcn×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 
@@ -28,7 +27,8 @@ Thaythe 'Lcom/miui/gallery/util/BuildUtil;->isGlobal()Z' 'Lmiuix/os/xBuild;->isO
 fi
 
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false
 sprop "#MIUIGallery" "fix_mapcn×$fix_mapcn" "$psystem/build.prop"
 }
 
@@ -36,8 +36,7 @@ Joyose(){
 ii="$(find $pproduct/app $psystem/app $pproduct/pangu -type f -name "Joyose.apk" -print -quit)"
 oi="$MPAT/apk/$(basename "$ii" .apk)"
 [ "$(check_props Joyose)" == "fix_joyose×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 
 if [ "$fix_joyose" == 1 ] && [ "$(check_props fix_joyose)" != 1 ];then
@@ -48,7 +47,8 @@ Thayvc -v 'method public run()V' $(Timkiem "job exist, sync local" $oi/smali/cla
 fi
 
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false
 sprop "#Joyose" "fix_joyose×$fix_joyose" "$psystem/build.prop"
 }
 
@@ -60,8 +60,7 @@ ii="$(find $pproduct -type f -name "*Weather.apk" -print -quit)"
 fi
 oi="$MPAT/apk/$(basename "$ii" .apk)"
 [ "$(check_props Weather)" == "fix_thoit×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 
@@ -74,7 +73,8 @@ $(Timkiem 'https://weatherapi.market.xiaomi.com/' $oi/smali)"
 fi
 
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false
 sprop "#Weather" "fix_thoit×$fix_thoit" "$psystem/build.prop"
 }
 
@@ -83,8 +83,7 @@ IFS=$'\n'
 ii="$(find $pproduct/app -type f -name "*ThemeManager.apk" -print -quit)"
 oi="$MPAT/apk/$(basename "$ii" .apk)"
 [ "$(check_props ThemeManager)" == "fix_themes×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 
 if [ "$fix_themes" == 1 ] && [ "$(check_props fix_themes)" != 1 ];then
@@ -122,7 +121,8 @@ Thayvc 0 '.method public static final themeManagerSupportPaidWidget(Landroid/con
 Thaythe '>DRM_ERROR_UNKNOWN' '>DRM_SUCCESS' "$(Timkiem DRM_ERROR_UNKNOWN $oi/smali)"
 fi
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false
 sprop "#ThemeManager" "fix_themes×$fix_themes" "$psystem/build.prop"
 }
 
@@ -130,8 +130,7 @@ PersonalAssistant(){
 ii="$(find $pproduct/priv-app -type f -name "*PersonalAssistant*.apk" -print -quit)"
 oi="$MPAT/apk/$(basename "$ii" .apk)"
 [ "$(check_props PersonalAssistant)" == "fix_appvault×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 
 if [ "$fix_appvault" == 1 ] && [ "$(check_props fix_appvault)" != 1 ];then
@@ -147,7 +146,8 @@ Thaythe 'MM:dd' 'dd:MM' "$(Timkiem '"MM:dd"' $oi/smali)"
 fi
 
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 -x false
 sprop "#PersonalAssistant" "fix_appvault×$fix_appvault" "$psystem/build.prop"
 }
 
@@ -156,8 +156,7 @@ IFS=$'\n'
 ii="$psystem_ext/priv-app/Settings/Settings.apk"
 oi="$MPAT/apk/Settings"
 [ "$(check_props Settings)" == "fix_global×1 fix_ime×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t reso &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t reso
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 
@@ -330,7 +329,8 @@ Thayme '.method public static getItemTitle(Landroid/content/Context;Lorg/json/JS
     fi
 fi
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1
 sprop "#Settings" "fix_global×$fix_global fix_ime×$fix_ime" "$psystem/build.prop"
 }
 
@@ -338,8 +338,7 @@ MiuiSystemUI(){
 ii="$psystem_ext/priv-app/MiuiSystemUI/MiuiSystemUI.apk"
 oi="$MPAT/apk/MiuiSystemUI"
 [ "$(check_props MiuiSystemUI)" == "fix_noti×1 fix_ime×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 
@@ -358,7 +357,8 @@ $oi/smali/classes*/com/android/systemui/assist/PhoneStateMonitor.smali"
 fi
 
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1
 sprop "#MiuiSystemUI" "fix_noti×$fix_noti fix_ime×$fix_ime" "$psystem/build.prop"
 }
 
@@ -366,8 +366,7 @@ services(){
 ii="$psystem/framework/services.jar"
 oi="$MPAT/apk/services"
 [ "$(check_props services)" == "fix_apksign×1 fix_show_error×1 fix_screen×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 
 if [ "$fix_screen" == 1 ] && [ "$(check_props fix_screen)" != 1 ];then
@@ -400,7 +399,8 @@ Thayvc 0 '.method public shouldCheckUpgradeKeySetLocked(Lcom/android/server/pm/p
 fi
 
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1
 sprop "#services" "fix_apksign×$fix_apksign fix_show_error×$fix_show_error fix_screen×$fix_screen" "$psystem/build.prop"
 }
 
@@ -408,8 +408,7 @@ miui-framework(){
 ii="$psystem_ext/framework/miui-framework.jar"
 oi="$MPAT/apk/miui-framework"
 [ "$(check_props miui-framework)" == "fix_global×1 fix_reset_theme×1 fix_ime×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 
@@ -433,7 +432,8 @@ $oi/smali/classes*/miui/util/font/SymlinkUtils.smali
 $oi/smali/classes*/android/app/AppOpsManagerInjector.smali"
 fi
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1
 sprop "#miui-framework" "fix_global×$fix_global fix_reset_theme×$fix_reset_theme fix_ime×$fix_ime" "$psystem/build.prop"
 }
 
@@ -441,8 +441,7 @@ miui-services(){
 ii="$psystem_ext/framework/miui-services.jar"
 oi="$MPAT/apk/miui-services"
 [ "$(check_props miui-services)" == "fix_global×1 fix_noti×1 fix_window×1 fix_ime×1 fix_screen×1 fix_apksign×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 
@@ -475,16 +474,16 @@ Thayvc 1 '.method public static isCTS()Z' $oi/smali/classes*/com/android/server/
 Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' "$oi/smali/classes/com/android/server/ForceDarkAppListManager.smali"
 fi
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1
 sprop "#miui-services" "fix_global×$fix_global fix_noti×$fix_noti fix_window×$fix_window fix_ime×$fix_ime fix_screen×$fix_screen fix_apksign×$fix_apksign" "$psystem/build.prop"
 }
 
 PowerKeeper(){
-ii="$psystem/app/PowerKeeper/PowerKeeper.apk"
+ii="$(find $psystem/app $psystem_ext/app -type f -name "PowerKeeper.apk" -print -quit)"
 oi="$MPAT/apk/PowerKeeper"
 [ "$(check_props PowerKeeper)" == "fix_noti×1 fix_fps×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 
@@ -505,7 +504,8 @@ $oi/smali/classes*/com/miui/powerkeeper/statemachine/PadSleepModeController.smal
 fi
 
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1
 sprop "#PowerKeeper" "fix_noti×$fix_noti fix_fps×$fix_fps" "$psystem/build.prop"
 }
 
@@ -513,8 +513,7 @@ FrequentPhrase(){
 ii="$(find $pproduct/app -type f -name "*FrequentPhrase.apk" -print -quit)"
 oi="$MPAT/apk/$(basename "$ii" .apk)"
 [ "$(check_props FrequentPhrase)" == "fix_ime×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t reso &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t reso
 # Patch smali
 
 if [ "$fix_ime" == 1 ] && [ "$(check_props fix_ime)" != 1 ];then
@@ -528,7 +527,8 @@ Thaythe "</resources>" ''"$(glog ime_dimen)"'
 fi
 
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1
 sprop "#FrequentPhrase" "fix_ime×$fix_ime" "$psystem/build.prop"
 }
 
@@ -536,8 +536,7 @@ framework(){
 ii="$psystem/framework/framework.jar"
 oi="$MPAT/apk/framework"
 [ "$(check_props framework)" == "fix_fwko×1 fix_apksign×1" ] && { echo "$patch_text ${ii##*/} ✓"; exit; }
-echo -e "$patch_text1 ${ii##*/}..."
-apkeditor_d -i "$ii" -o "${oi%/*}" -t raw &>$TMP/apk_patch_ximi.log || killtree "Error decompile $ii\n\n$(cat $TMP/apk_patch_ximi.log)"
+apkeditor_d -i "$ii" -o "${oi%/*}" -t raw
 # Patch smali
 
 if [ "$fix_apksign" == 1 ] && [ "$(check_props fix_apksign)" != 1 ];then
@@ -635,7 +634,8 @@ invoke-static {p0}, Lcom/android/internal/util/kaorios/KaoriPropsUtils;->KaoriPr
 fi
 
 # End patch smali
-apkeditor_b -i "$oi" -o "${ii%/*}" -d 1 &>$TMP/apk_patch_ximi.log || killtree "Error build ${ii%/*}\n\n$(cat $TMP/apk_patch_ximi.log)"
+echo
+apkeditor_b -i "$oi" -o "${ii%/*}" -d 1
 sprop "#framework" "fix_fwko×$fix_fwko fix_apksign×$fix_apksign" "$psystem/build.prop"
 }
 

@@ -162,7 +162,7 @@ slog ime_dimen "$ime_dimen"
 [ "$('$patch_mi' check_nums fix_show_error)" == 1 ] && '$patch_mi' set_prop fix_show_error
 [ "$('$patch_mi' check_nums fix_ime)" == 5 ] && '$patch_mi' set_prop fix_ime
 [ "$('$patch_mi' check_nums fix_fwko)" == 1 ] && '$patch_mi' set_prop fix_fwko
-[ "$('$patch_mi' check_nums fix_screen)" == 1 ] && '$patch_mi' set_prop fix_screen
+[ "$('$patch_mi' check_nums fix_screen)" == 2 ] && '$patch_mi' set_prop fix_screen
 [ "$('$patch_mi' check_nums fix_apksign)" == 3 ] && '$patch_mi' set_prop fix_apksign
 
 rm -fr "'$MPAT'/apk" 2>/dev/null

@@ -4,8 +4,8 @@ id=patch_rom
 name=Patch ROM Xiaomi
 author=Kakathic
 description=Quick ROM patch
-version=1.0
-versionCode=100
+version=1.1
+versionCode=110
 root=false
 
 # language
