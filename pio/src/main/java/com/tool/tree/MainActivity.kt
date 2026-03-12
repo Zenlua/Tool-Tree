@@ -183,6 +183,12 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         reloadMoreTab()
                     }
+                } else if (runnableNode.autoRestart) {
+                    val intent = packageManager.getLaunchIntentForPackage(packageName)
+                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    finishAffinity()
+                    Runtime.getRuntime().exit(0)
                 } else if (runnableNode.autoKill) {
                     startService(Intent(this@MainActivity, WakeLockService::class.java).apply { action = WakeLockService.ACTION_END_WAKELOCK })
                     finishAffinity()

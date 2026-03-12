@@ -233,7 +233,6 @@ class ActionPage : AppCompatActivity() {
         }
 
         onMenuItemClick(menuOptions!![item.itemId])
-
         return true
     }
 
@@ -241,6 +240,9 @@ class ActionPage : AppCompatActivity() {
         when(menuOption.type) {
             "refresh", "reload" -> {
                 recreate()
+            }
+            "restart" -> {
+                restartApp()
             }
             "exit", "finish", "close" -> {
                 finish()
@@ -260,6 +262,14 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
+    private fun restartApp() {
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
+        finishAffinity()
+        Runtime.getRuntime().exit(0)
+    }
+
     private fun killApp() {
         startService(Intent(this@ActionPage, WakeLockService::class.java).apply { action = WakeLockService.ACTION_END_WAKELOCK })
         finishAffinity()
@@ -274,6 +284,8 @@ class ActionPage : AppCompatActivity() {
                 recreate()
             } else if (menuOption.autoKill) {
                 killApp()
+            } else if (menuOption.autoRestart) {
+                restartApp()
             } else if (menuOption.updateBlocks != null) {
                 // TODO rootGroup.triggerUpdateByKey(item.updateBlocks!!)
             }
@@ -394,7 +406,9 @@ class ActionPage : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        loadPageConfig()
+        if (!actionsLoaded) {
+            loadPageConfig()
+        }
     }
 
     private fun loadPageConfig() {

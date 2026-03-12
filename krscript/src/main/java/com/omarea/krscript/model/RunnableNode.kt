@@ -17,6 +17,7 @@ open class RunnableNode(currentConfigXml: String) : ClickableNode(currentConfigX
     // 执行完成后是否自动关闭页面
     var autoFinish = false
     var autoKill = false
+    var autoRestart = false
 
     // 交互界面（default、bg-task、hidden）
     var shell = shellModeDefault
