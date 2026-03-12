@@ -44,6 +44,7 @@ jobs:
 
       - name: Build APK
         run: |
+          echo "UPAPK=false" >> $GITHUB_ENV
           chmod +x ./gradlew ./.github/modun.sh
           ./.github/modun.sh
           chmod +x ./gradlew
@@ -76,12 +77,14 @@ jobs:
           name: "Tool-Tree ${{ env.VER }}"
           tag_name: "V${{ env.VER }}"
           files: Up/*
+          prerelease: false
           body_path: "change.txt"
 
-      - name: BETA APK
+      - name: Beta APK
+      if: ${{ github.event_name == 'workflow_dispatch' && env.UPAPK == false }}
         uses: softprops/action-gh-release@v2
         with:
-          name: "Tool-Tree ${{ env.VER }} BETA"
+          name: "Tool-Tree ${{ env.VER }} Beta"
           tag_name: "V${{ env.VER }}"
           files: Up/*
           prerelease: true
