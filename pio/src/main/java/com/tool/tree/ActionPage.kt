@@ -241,7 +241,6 @@ class ActionPage : AppCompatActivity() {
     private fun onMenuItemClick(menuOption: PageMenuOption) {
         when(menuOption.type) {
             "refresh", "reload" -> {
-                menuOptions = null
                 recreate()
             }
             "restart" -> {
@@ -266,7 +265,7 @@ class ActionPage : AppCompatActivity() {
     }
 
     private fun restartApp() {
-        val intent = Intent(this, SplashActivity::class.java)
+        val intent = Intent(this@ActionPage, SplashActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)
         finish()
@@ -283,7 +282,6 @@ class ActionPage : AppCompatActivity() {
             if (menuOption.autoFinish) {
                 finish()
             } else if (menuOption.reloadPage) {
-                menuOptions = null
                 recreate()
             } else if (menuOption.autoKill) {
                 killApp()
