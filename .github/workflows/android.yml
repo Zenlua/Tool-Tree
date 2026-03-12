@@ -69,12 +69,6 @@ jobs:
           --data-urlencode text="$chat_tg"
           fi
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-apk
-          path: pio/build/outputs/apk/*/*.apk
-
       - name: Release APK
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.UPAPK == true }}
         uses: softprops/action-gh-release@v2
@@ -84,10 +78,10 @@ jobs:
           files: Up/*
           body_path: "change.txt"
 
-      - name: DEV APK
+      - name: BETA APK
         uses: softprops/action-gh-release@v2
         with:
-          name: "Tool-Tree ${{ env.VER }} DEV"
+          name: "Tool-Tree ${{ env.VER }} BETA"
           tag_name: "V${{ env.VER }}"
           files: Up/*
           prerelease: true
