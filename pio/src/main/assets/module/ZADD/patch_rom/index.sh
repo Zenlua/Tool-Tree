@@ -4,7 +4,7 @@
 update(){
 if checkonline; then
 cd "$MPAT"
-for kvv in addon.prop Patch-Xiaomi.bash language.sh index.sh menu.sh mod.7z early_start.sh; do
+for kvv in addon.prop Patch-Xiaomi.bash language.sh index.sh menu.sh mod.7z early_start.sh changelog.txt; do
 downloadb "https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/pio/src/main/assets/module/ZADD/patch_rom/$kvv" $kvv
 done
     if [ -f $MPAT/mod.7z ];then
@@ -12,7 +12,8 @@ done
     7z x -t7z -y $MPAT/mod.7z -o$MPAT
     rm -f $MPAT/mod.7z
     fi
-rm -f update
+[ -f update ] && rm -f update
+[ -f changelog.txt ] && cat changelog.txt
 fi
 }
 
