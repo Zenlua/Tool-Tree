@@ -80,7 +80,7 @@ jobs:
           body_path: "change.txt"
 
       - name: Beta APK
-        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.UPAPK }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.UPAPK != true }}
         uses: softprops/action-gh-release@v2
         with:
           name: "Tool-Tree ${{ env.VER }} Beta"
