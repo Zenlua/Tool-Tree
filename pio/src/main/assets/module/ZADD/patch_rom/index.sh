@@ -38,6 +38,8 @@ number_ver2="$(gprop versionCode "$MPAT/addon.prop")"
     notiservice --am --id $id_random --title "Patch ROM Xiaomi" --message "$addon_noti"
     sleep 10
     notiservice --am --id $id_random -d true
+    else
+    [ -f $MPAT/update ] && rm -f $MPAT/update
     fi
 fi
 ) &
