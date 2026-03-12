@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+Beta:
+
++ Fix the findfile error caused by the file not being found
+
 **Version: 1.3.6 (12-3-2026)**
 
 + Fix string English add-on errors

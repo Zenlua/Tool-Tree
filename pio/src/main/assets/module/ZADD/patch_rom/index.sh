@@ -21,12 +21,28 @@ home(){
 
 # lấy phiên bản
 if [ ! -f "$MPAT/mod/version" ];then
-if checkonline; then
-linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
-echo "$(echo "$linkurrl" | jq -r '.tag_name')" > $MPAT/mod/version
-fi
+    if checkonline; then
+    linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
+    echo "$(echo "$linkurrl" | jq -r '.tag_name')" > $MPAT/mod/version
+    fi
 fi
 
+(
+# check update add-on
+if [ ! -f $MPAT/update ];then
+number_ver="$(xem https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/pio/src/main/assets/module/ZADD/patch_rom/addon.prop 2>/dev/null | grep -m1 "versionCode=" | cut -d= -f2)"
+number_ver2="$(gprop versionCode "$MPAT/addon.prop")"
+    if [[ ${number_ver:-0} -gt $number_ver2 ]];then
+    echo 1 >$MPAT/update
+    id_random="$RANDOM"
+    notiservice --am --id $id_random --title "Patch ROM Xiaomi" --message "$addon_noti"
+    sleep 10
+    notiservice --am --id $id_random -d true
+    fi
+fi
+) &
+
+# điền dữ liệu mặc định
 if [ -z "$(glog list_oat_tex)" ];then
 glog ime_dimen '<dimen name="input_method_seek_bar_margin">6.5999756dp</dimen>
 <dimen name="input_bottom_height">45.599976dp</dimen>

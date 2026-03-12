@@ -5,7 +5,7 @@ name=Patch ROM Xiaomi
 author=Kakathic
 description=Quick ROM patch
 version=1.1
-versionCode=110
+versionCode=111
 root=false
 
 # language
@@ -76,4 +76,5 @@ RW_ROM_TEXT_3="Warning: ext4 partition not found. You must add it manually to:"
 patch_text="Patched"
 patch_text1="Patching"
 update_text="Requires mobile data or WiFi to update add-on?"
-update_text1="New version"
+update_text1="Update new version"
+addon_noti="Notification of a new version, refresh this add-on to receive update notifications."
