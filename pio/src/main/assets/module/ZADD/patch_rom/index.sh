@@ -1,9 +1,64 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 
-# làm cho mọi thứ ra ngoài to ra không phải ở 1 group 
+update(){
+if checkonline; then
+cd "$MPAT"
+for kvv in addon.prop Patch-Xiaomi.bash language.sh index.sh menu.sh mod.7z early_start.sh; do
+downloadb "https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/pio/src/main/assets/module/ZADD/patch_rom/$kvv" $kvv
+done
+if [ -f $MPAT/mod.7z ];then
+echo "7z mod extract..."
+7z x -t7z -y $MPAT/mod.7z -o$MPAT
+rm -f $MPAT/mod.7z
+fi
+fi
+}
+
 home(){
+
+# lấy phiên bản
+if [ ! -f "$MPAT/mod/version" ];then
+if checkonline; then
+linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
+echo "$(echo "$linkurrl" | jq -r '.tag_name')" > $MPAT/mod/version
+fi
+fi
+
+if [ -z "$(glog list_oat_tex)" ];then
+glog ime_dimen '<dimen name="input_method_seek_bar_margin">6.5999756dp</dimen>
+<dimen name="input_bottom_height">45.599976dp</dimen>
+<dimen name="input_bottom_button_height">28.5dp</dimen>
+<dimen name="input_bottom_button_margin_top">2.5dp</dimen>' >/dev/null
+glog ime_app com.google.android.inputmethod.latin >/dev/null
+glog ime_color '#f0f3f8' >/dev/null
+glog ime_color_dark '#1e1f21' >/dev/null
+glog list_oat_tex "/system_ext/priv-app/Settings/Settings.apk
+/system_ext/priv-app/MiuiSystemUI/MiuiSystemUI.apk
+/product/app/MIUIFrequentPhrase/MIUIFrequentPhrase.apk
+/system/app/PowerKeeper/PowerKeeper.apk" >/dev/null
+fi
+
+# tải xuống nền mới nhất lần đầu
+(
+if [ ! -f "$MPAT/mod/classes.dex" ];then
+if checkonline; then
+[ "$linkurrl" ] || linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
+downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'classes.*\.dex')" "$MPAT/mod/classes.dex"
+downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'KaoriosToolbox.*\.apk')" "$MPAT/mod/KaoriosToolbox.apk"
+downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'com.kousei.kaorios.xml')" "$MPAT/mod/com.kousei.kaorios.xml"
+fi
+fi
+) &>/dev/null &
+
 echo '<?xml version="1.0" encoding="UTF-8" ?><group>
+
+<group>
+<action auto-off="true" reload="true" visible="cat '$MPAT'/update 2>/dev/null" warn="'$update_text'">
+<title>'$update_text1'</title>
+<set>'$MPAT'/index.sh update</set>
+</action>
+</group>
 
 <group title="'$google_text'">
 <action shell="hidden" reload="true">
@@ -135,20 +190,6 @@ MPAT="${0%/*}"
 patch_rom_path="$(glog patch_rom_path "$SDH/$PTSH")"
 patch_mi="$MPAT/Patch-Xiaomi.bash"
 
-if [ -z "$(glog list_oat_tex)" ];then
-glog ime_dimen '<dimen name="input_method_seek_bar_margin">6.5999756dp</dimen>
-<dimen name="input_bottom_height">45.599976dp</dimen>
-<dimen name="input_bottom_button_height">28.5dp</dimen>
-<dimen name="input_bottom_button_margin_top">2.5dp</dimen>' >/dev/null
-glog ime_app com.google.android.inputmethod.latin >/dev/null
-glog ime_color '#f0f3f8' >/dev/null
-glog ime_color_dark '#1e1f21' >/dev/null
-glog list_oat_tex "/system_ext/priv-app/Settings/Settings.apk
-/system_ext/priv-app/MiuiSystemUI/MiuiSystemUI.apk
-/product/app/MIUIFrequentPhrase/MIUIFrequentPhrase.apk
-/system/app/PowerKeeper/PowerKeeper.apk" >/dev/null
-fi
-
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
 [ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
@@ -159,29 +200,9 @@ trans_add "$MPAT"
 [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
 fi
 
-# lấy phiên bản
-if [ ! -f "$MPAT/mod/version" ];then
-if checkonline; then
-linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
-echo "$(echo "$linkurrl" | jq -r '.tag_name')" > $MPAT/mod/version
-fi
-fi
-
-# tải xuống nền mới nhất lần đầu
-(
-if [ ! -f "$MPAT/mod/classes.dex" ];then
-if checkonline; then
-[ "$linkurrl" ] || linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
-downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'classes.*\.dex')" "$MPAT/mod/classes.dex"
-downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'KaoriosToolbox.*\.apk')" "$MPAT/mod/KaoriosToolbox.apk"
-downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'com.kousei.kaorios.xml')" "$MPAT/mod/com.kousei.kaorios.xml"
-fi
-fi
-) &>/dev/null &
-
 # index
 case "$1" in
-    home)
+    home|update)
         "$1"
         ;;
     *)

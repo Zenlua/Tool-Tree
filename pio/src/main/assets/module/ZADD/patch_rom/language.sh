@@ -65,4 +65,6 @@ RW_ROM_TEXT_2="Cảnh báo: Không tìm thấy mi_ext, không copy được file
 RW_ROM_TEXT_3="Cảnh báo: Không tìm thấy phân vùng chứa ext4 cần phải thêm thủ công vào:"
 patch_text="Đã vá"
 patch_text1="Đang vá"
+update_text="Yêu cầu cần sử dụng mạng dữ liệu, WIFI để cập nhật add-on ?"
+update_text1="Phiên bản mới"
 fi
