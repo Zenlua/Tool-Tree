@@ -409,7 +409,6 @@ class ActionPage : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        supportInvalidateOptionsMenu()
         if (!actionsLoaded) {
             loadPageConfig()
         }
