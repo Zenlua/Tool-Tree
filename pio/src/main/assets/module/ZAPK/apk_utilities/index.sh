@@ -12,7 +12,7 @@ xml_print '
 <action shell="hidden" reload="true">
 <title>'$clean_text_1'</title>
 <summary>'$clean_text_2' '"$path_clean"'</summary>
-<param name="project" label="'$select_text_1'" options-sh="findfile file $APK/$PTAH '"'*/apktool.yml */archive-info.json'"' | sed -e '"'s|/apktool.yml||'"' -e '"'s|/archive-info.json||'"' " value-sh="glog project_apk_clean" required="true" />
+<param name="project" label="'$select_text_1'" options-sh="findfile file $APK/$PTAH '"'/apktool.yml|/archive-info.json'"' | sed -e '"'s|/apktool.yml||'"' -e '"'s|/archive-info.json||'"' " value-sh="glog project_apk_clean" required="true" />
 <set>slog project_apk_clean "$project"</set>
 </action>
 </group>

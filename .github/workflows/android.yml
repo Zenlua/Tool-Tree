@@ -48,7 +48,6 @@ jobs:
           ./.github/modun.sh
           chmod +x ./gradlew
           ./gradlew assembleRelease --daemon -x lint -x test
-          if [ "$UPAPK" == 'true' ];then
           VER=$(grep -m1 'versionName ' pio/build.gradle | cut -d'"' -f2)
           echo "Tool-Tree $VER"
           echo "VER=$VER" >> $GITHUB_ENV
@@ -69,7 +68,6 @@ jobs:
           -d chat_id="$CHAT_ID" -d parse_mode="HTML" \
           --data-urlencode text="$chat_tg"
           fi
-          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -84,6 +82,15 @@ jobs:
           name: "Tool-Tree ${{ env.VER }}"
           tag_name: "V${{ env.VER }}"
           files: Up/*
+          body_path: "change.txt"
+
+      - name: DEV APK
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Tool-Tree ${{ env.VER }} DEV"
+          tag_name: "V${{ env.VER }}"
+          files: Up/*
+          prerelease: true
           body_path: "change.txt"
 
   build-debug:
