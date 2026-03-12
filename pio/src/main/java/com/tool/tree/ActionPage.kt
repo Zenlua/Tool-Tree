@@ -32,7 +32,7 @@ import com.tool.tree.databinding.ActivityActionPageBinding
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
     private var actionsLoaded = false
-    private var handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private lateinit var currentPageConfig: PageNode
     private var autoRunItemId = ""
     private lateinit var binding: ActivityActionPageBinding
@@ -393,10 +393,7 @@ class ActionPage : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
-        if (!actionsLoaded) {
-            loadPageConfig()
-        }
+        loadPageConfig()
     }
 
     private fun loadPageConfig() {
