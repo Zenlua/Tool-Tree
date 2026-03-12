@@ -282,6 +282,7 @@ class ActionPage : AppCompatActivity() {
     private fun menuItemExecute(menuOption: PageMenuOption, params: HashMap<String, String>) {
         val onDismiss = Runnable {
             if (menuOption.autoFinish) {
+                setResult(RESULT_OK)
                 finish()
             } else if (menuOption.reloadPage) {
                 recreate()
