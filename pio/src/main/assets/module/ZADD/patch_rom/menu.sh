@@ -1,7 +1,8 @@
+# Kakathic
+source language
 MPAT="${0%/*}"
-
 if [ "$1" == "code_option" ];then
-echo '<option type="default" id="vip1" auto-off="true" reload="true" interruptible="false">Update Kaorios Toolbox</option>'
+echo '<option type="default" id="vip1" auto-off="true" reload="true" interruptible="false">'$update_text' Kaorios Toolbox</option>'
 elif [ "$1" == "code_shell" ];then
 echo '
 if [ "$menu_id" == "vip1" ];then

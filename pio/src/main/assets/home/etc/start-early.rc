@@ -24,15 +24,17 @@ if checkonline; then
             if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
             notiservice --am --id 12345 --message "$update_text_6"
             echo "$tagname" > $TEMP/update
-            sleep 5
+            sleep 10
             notiservice --am --id 12345 -d true
             fi
+        else
+            [ -f $TEMP/update ] && rm -f $TEMP/update
         fi
     else
         if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
         notiservice --am --id 12345 --message "$update_text_6"
         echo "$tagname" > $TEMP/update
-        sleep 5
+        sleep 10
         notiservice --am --id 12345 -d true
         fi
     fi
