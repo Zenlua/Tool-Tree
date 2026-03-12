@@ -1,8 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.3.6 (11-3-2026)**
+**Version: 1.3.6 (12-3-2026)**
 
-+ Fix string add-on errors
++ Fix string English add-on errors
 + Add the Xiaomi Patch ROM add-on
 + Add CPU limiting feature
 + Add decoding and building tools
