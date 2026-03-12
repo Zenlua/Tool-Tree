@@ -44,7 +44,6 @@ jobs:
 
       - name: Build APK
         run: |
-          [ "$UPAPK" == 'true' ] || echo "UPAPK=false" >> $GITHUB_ENV
           chmod +x ./gradlew ./.github/modun.sh
           ./.github/modun.sh
           chmod +x ./gradlew
@@ -62,7 +61,7 @@ jobs:
           
           🎉 Release new version Tool-Tree
           
-          • Notes: <a href=\"https://zenlua.github.io/Tool-Tree/Version.html\">changelog</a>
+          • Notes: <a href=\"https://zenlua.github.io/Tool-Tree/Version.html\">Changelog</a>
           • Version: $VER"
           # tooltree
           curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
@@ -81,7 +80,7 @@ jobs:
           body_path: "change.txt"
 
       - name: Beta APK
-        if: ${{ github.event_name == 'workflow_dispatch' && env.UPAPK == false }}
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.UPAPK }}
         uses: softprops/action-gh-release@v2
         with:
           name: "Tool-Tree ${{ env.VER }} Beta"
