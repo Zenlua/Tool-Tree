@@ -175,10 +175,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun restartApp() {
-        val intent = Intent(this@MainActivity, SplashActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(intent)
-        finish()
+        val intent = packageManager.getLaunchIntentForPackage(packageName) ?: return
+    
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            12345,
+            intent,
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        alarmManager.set(
+            AlarmManager.RTC,
+            System.currentTimeMillis() + 300,
+            pendingIntent
+        )
+    
+        finishAffinity()
+        android.os.Process.killProcess(android.os.Process.myPid())
     }
 
     private fun getKrScriptActionHandler(pageNode: PageNode, isFavoritesTab: Boolean): KrScriptActionHandler {
