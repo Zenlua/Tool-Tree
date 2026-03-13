@@ -416,7 +416,9 @@ class ActionPage : AppCompatActivity() {
     
     override fun onRestart() {
         super.onRestart()
+        if (actionsLoaded) {
         loadPageConfig()
+        }
     }
 
     private fun loadPageConfig() {
