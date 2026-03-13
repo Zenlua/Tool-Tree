@@ -37,6 +37,7 @@ class ActionPage : AppCompatActivity() {
     private lateinit var currentPageConfig: PageNode
     private var autoRunItemId = ""
     private lateinit var binding: ActivityActionPageBinding
+    private var firstResume = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,6 +119,7 @@ class ActionPage : AppCompatActivity() {
     private var actionShortClickHandler = object : KrScriptActionHandler {
         override fun onActionCompleted(runnableNode: RunnableNode) {
             if (runnableNode.autoFinish) {
+                setResult(1)
                 finishAndRemoveTask()
             } else if (runnableNode.reloadPage) {
                 loadPageConfig()
@@ -407,6 +409,13 @@ class ActionPage : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (!actionsLoaded) {
+            loadPageConfig()
+        }
+    }
+    
+    override fun onRestart() {
+        super.onRestart()
         loadPageConfig()
     }
 
