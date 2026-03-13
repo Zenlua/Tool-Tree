@@ -29,8 +29,6 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.omarea.krscript.ui.PageMenuLoader
 import com.tool.tree.databinding.ActivityActionPageBinding
 import android.os.Looper
-import android.app.AlarmManager
-import android.app.PendingIntent
 
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
@@ -122,7 +120,7 @@ class ActionPage : AppCompatActivity() {
             if (runnableNode.autoFinish) {
                 finishAndRemoveTask()
             } else if (runnableNode.reloadPage) {
-                loadPageConfig()
+                recreate()
             } else if (runnableNode.autoKill) {
                 killApp()
             } else if (runnableNode.autoRestart) {
@@ -282,7 +280,6 @@ class ActionPage : AppCompatActivity() {
     private fun menuItemExecute(menuOption: PageMenuOption, params: HashMap<String, String>) {
         val onDismiss = Runnable {
             if (menuOption.autoFinish) {
-                setResult(RESULT_OK)
                 finish()
             } else if (menuOption.reloadPage) {
                 recreate()

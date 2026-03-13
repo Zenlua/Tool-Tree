@@ -38,10 +38,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.os.Looper
 
 class MainActivity : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
-    private var handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private var krScriptConfig = KrScriptConfig()
     private val hasRoot by lazy { KeepShellPublic.checkRoot() }
     private lateinit var binding: ActivityMainBinding
