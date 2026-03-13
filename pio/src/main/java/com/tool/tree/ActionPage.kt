@@ -120,7 +120,9 @@ class ActionPage : AppCompatActivity() {
             if (runnableNode.autoFinish) {
                 finishAndRemoveTask()
             } else if (runnableNode.reloadPage) {
-                recreate()
+                loadPageConfig()
+                menuOptions = null
+                invalidateOptionsMenu()
             } else if (runnableNode.autoKill) {
                 killApp()
             } else if (runnableNode.autoRestart) {
@@ -188,6 +190,7 @@ class ActionPage : AppCompatActivity() {
 
     // 右上角菜单的创建
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menu?.clear()
         if (menuOptions == null) {
             menuOptions = PageMenuLoader(applicationContext, currentPageConfig).load()
         }
