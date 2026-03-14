@@ -424,20 +424,10 @@ class DialogHelper {
                     try {
                         val bg = getWindowBackground(activity)
                         if (bg == Color.TRANSPARENT) {
-                            if (isFloating) {
-                                val d = bg.toDrawable()
-                                setBackgroundDrawable(d)
-                                setDimAmount(0.9f)
-                                return
-                            } else {
-                                if (wallpaperMode || isNightMode(context)) {
-                                    val d = bg.toDrawable()
-                                    setBackgroundDrawable(d)
-                                } else {
-                                    val d = bg.toDrawable()
-                                    setBackgroundDrawable(d)
-                                }
-                            }
+                            val d = bg.toDrawable()
+                            setBackgroundDrawable(d)
+                            setDimAmount(0.9f)
+                            return
                         } else {
                             val d = bg.toDrawable()
                             setBackgroundDrawable(d)
