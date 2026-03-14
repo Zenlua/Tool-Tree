@@ -432,7 +432,7 @@ class ActionPage : AppCompatActivity() {
                 }
 
                 if (showLoading) {
-                    showDialog(getString(R.string.kr_page_loading))
+                    showDialog(getString(com.omarea.krscript.R.string.kr_page_loading))
                 }
                 var items: ArrayList<NodeInfoBase>? = null
 
