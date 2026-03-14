@@ -431,10 +431,10 @@ class DialogHelper {
                                 return
                             } else {
                                 if (wallpaperMode || isNightMode(context)) {
-                                    val d = Color.argb(100, 18, 18, 18).toDrawable()
+                                    val d = bg.toDrawable()
                                     setBackgroundDrawable(d)
                                 } else {
-                                    val d = Color.argb(100, 245, 245, 245).toDrawable()
+                                    val d = bg.toDrawable()
                                     setBackgroundDrawable(d)
                                 }
                             }
