@@ -406,12 +406,12 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // override fun onResume() {
-        // super.onResume()
-        // if (!actionsLoaded) {
-            // loadPageConfig()
-        // }
-    // }
+    override fun onResume() {
+        super.onResume()
+        if (!actionsLoaded) {
+            loadPageConfig()
+        }
+    }
     
     override fun onRestart() {
         super.onRestart()

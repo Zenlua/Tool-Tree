@@ -431,13 +431,11 @@ class DialogHelper {
                                 return
                             } else {
                                 if (wallpaperMode || isNightMode(context)) {
-                                    val d = bg.toDrawable()
+                                    val d = Color.argb(255, 18, 18, 18).toDrawable()
                                     setBackgroundDrawable(d)
-                                    return
                                 } else {
-                                    val d = bg.toDrawable()
+                                    val d = Color.argb(255, 245, 245, 245).toDrawable()
                                     setBackgroundDrawable(d)
-                                    return
                                 }
                             }
                         } else {
