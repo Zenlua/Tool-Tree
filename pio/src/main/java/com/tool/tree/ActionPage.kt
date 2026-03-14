@@ -121,7 +121,7 @@ class ActionPage : AppCompatActivity() {
             if (runnableNode.autoFinish) {
                 finishAndRemoveTask()
             } else if (runnableNode.reloadPage) {
-                loadPageConfig()
+                loadPageConfig(true)
             } else if (runnableNode.autoKill) {
                 killApp()
             } else if (runnableNode.autoRestart) {
@@ -409,7 +409,7 @@ class ActionPage : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (!actionsLoaded) {
-            loadPageConfig()
+            loadPageConfig(true)
         }
     }
     
@@ -417,11 +417,11 @@ class ActionPage : AppCompatActivity() {
         super.onRestart()
         if (openedSubPage && actionsLoaded) {
             openedSubPage = false
-            loadPageConfig()
+            loadPageConfig(false)
         }
     }
 
-    private fun loadPageConfig() {
+    private fun loadPageConfig(showLoading: Boolean = true) {
         val activity = this
 
         Thread {
@@ -431,8 +431,8 @@ class ActionPage : AppCompatActivity() {
                     ScriptEnvironmen.executeResultRoot(activity, beforeRead, this)
                 }
 
-                if (!openedSubPage) {
-                    showDialog(getString(com.omarea.krscript.R.string.kr_page_loading))
+                if (showLoading) {
+                    showDialog(getString(R.string.kr_page_loading))
                 }
                 var items: ArrayList<NodeInfoBase>? = null
 
