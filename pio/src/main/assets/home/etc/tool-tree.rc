@@ -1287,7 +1287,7 @@ Features(){
 [ "$1" == "status" ] && addon_textxx="$addon_text_10" || addon_textxx="$addon_text_2"
 xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_textxx'">
 <title>'$(gprop name $vadd)'</title>
-<desc>'$(gprop version $vadd)', '$(gprop author $vadd)' | '$(gprop description $vadd)'</desc>
+<desc>'$(gprop version $vadd)' '$(gprop author $vadd)' | '$(gprop description $vadd)'</desc>
 <get>cat '$dirvad'/'$1'</get>
 <set>echo "$state" > '$dirvad'/'$1'</set>
 </switch>

@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private var krScriptConfig = KrScriptConfig()
     private val hasRoot by lazy { KeepShellPublic.checkRoot() }
     private lateinit var binding: ActivityMainBinding
+    private var openedSubPage = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -301,6 +302,7 @@ private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSe
     }
 
     fun _openPage(pageNode: PageNode) {
+        openedSubPage = true
         OpenPageHelper(this).openPage(pageNode)
     }
 
@@ -314,6 +316,18 @@ private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSe
         menuInflater.inflate(R.menu.main, menu)
         menu.findItem(R.id.action_graph).isVisible = (binding.mainTabhostCpu.isVisible)
         return true
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+    
+        if (!openedSubPage) return
+        openedSubPage = false
+    
+        when (binding.mainTabhost.currentTab) {
+            1 -> reloadFavoritesTab()
+            2 -> reloadMoreTab()
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
