@@ -318,10 +318,8 @@ private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSe
 
     override fun onRestart() {
         super.onRestart()
-        when (binding.mainTabhost.currentTab) {
-            1 -> reloadFavoritesTab()
-            2 -> reloadMoreTab()
-        }
+        reloadFavoritesTab()
+        reloadMoreTab()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
