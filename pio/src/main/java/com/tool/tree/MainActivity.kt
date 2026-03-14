@@ -323,11 +323,10 @@ private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSe
     
         if (!openedSubPage) return
         openedSubPage = false
+        reloadFavoritesTab()
+        reloadMoreTab()
     
-        when (binding.mainTabhost.currentTab) {
-            1 -> reloadFavoritesTab()
-            2 -> reloadMoreTab()
-        }
+        
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

@@ -37,7 +37,7 @@ public class CrashLogActivity extends AppCompatActivity {
 
         // ===== TITLE =====
         TextView title = new TextView(this);
-        title.setText("ERROR");
+        title.setText("Tool Tree Crash");
         title.setTextSize(25); // chữ to
         title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         title.setPadding(14, 0, 0, 16);
