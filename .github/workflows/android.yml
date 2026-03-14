@@ -74,10 +74,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: "Tool-Tree ${{ env.VER }} Beta"
-          tag_name: "V${{ env.VER }}"
+          tag_name: "beta"
           files: Up/*
           prerelease: true
-          body_path: "change.txt"
 
       - name: Release APK
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.UPAPK == true }}
