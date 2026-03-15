@@ -495,32 +495,26 @@ echo "</group>"
 
 Feature(){
 xml_print '<group>
-<switch icon="'`urlpng set_home`'" shell="hidden" warning="'$permis_text_3'" auto-restart="true">
+<switch icon="'`urlpng set_home`'" shell="hidden">
 <title>'$project_text_5'</title>
 <get>glog Tset</get>
-<set>
-slog Tset $state
-</set>
+<set>slog Tset $state</set>
 </switch>
 </group>
 
 <group>
-<switch icon="'`urlpng icon_off`'" shell="hidden" warning="'$permis_text_3'" auto-restart="true">
+<switch icon="'`urlpng icon_off`'" shell="hidden" reload="true">
 <title>'$project_text_7'</title>
 <get>glog Ticon</get>
-<set>
-slog Ticon $state
-</set>
+<set>slog Ticon $state</set>
 </switch>
 </group>
 
 <group>
-<switch icon="'`urlpng shell_off`'" shell="hidden" warning="'$permis_text_3'" auto-restart="true">
+<switch icon="'`urlpng shell_off`'" shell="hidden">
 <title>'$project_text_6'</title>
 <get>glog shellc</get>
-<set>
-slog shellc $state
-</set>
+<set>slog shellc $state</set>
 </switch>
 </group>
 
@@ -535,7 +529,7 @@ slog ramoccupied "$ramoccupied"
 </group>
 
 <group>
-<action icon="'`urlpng icon_info`'" title="'$infor_text'" warning="'$permis_text_3'" shell="hidden" auto-restart="true">
+<action icon="'`urlpng icon_info`'" title="'$infor_text'" shell="hidden">
 <param name="show_infor_text_1" title="Text 1" value-sh="glog show_infor_text_1" type="text" />
 <param name="show_infor_text_2" title="Text 2" value-sh="glog show_infor_text_2" type="text" />
 <set>
