@@ -430,14 +430,11 @@ class DialogHelper {
                                 setDimAmount(0.9f)
                                 return
                             } else {
-                                if (wallpaperMode || isNightMode(context)) {
-                                    val d = bg.toDrawable()
-                                    setBackgroundDrawable(d)
-                                    
+                                val blurBitmap = FastBlurUtility.getBlurBackgroundDrawer(activity)
+                                if (blurBitmap != null) {
+                                    setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
                                 } else {
-                                    val d = bg.toDrawable()
-                                    setBackgroundDrawable(d)
-                                    
+                                    setBackgroundDrawable(bg.toDrawable())
                                 }
                             }
                         } else {

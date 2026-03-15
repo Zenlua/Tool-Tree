@@ -16,8 +16,7 @@ import android.widget.ImageView
 import androidx.core.graphics.scale
 import android.animation.ValueAnimator
 
-class BlurBackground(private val activity: Activity) {
-    private var dialogBg: ImageView? = null
+class BlurBackground(private val activity: Activity, private val dialogBg: ImageView) {
     private var originalW = 0
     private var originalH = 0
     
