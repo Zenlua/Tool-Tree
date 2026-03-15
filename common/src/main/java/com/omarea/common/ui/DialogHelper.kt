@@ -427,15 +427,17 @@ class DialogHelper {
                             if (isFloating) {
                                 val d = bg.toDrawable()
                                 setBackgroundDrawable(d)
-                                setDimAmount(0.9f)
+                                setDimAmount(0.8f)
                                 return
                             } else {
                                 if (wallpaperMode || isNightMode(context)) {
-                                    val d = Color.argb(255, 18, 18, 18).toDrawable()
-                                    setBackgroundDrawable(d)
+                                val d = bg.toDrawable()
+                                setBackgroundDrawable(d)
+                                setDimAmount(0.8f)
                                 } else {
-                                    val d = Color.argb(255, 245, 245, 245).toDrawable()
-                                    setBackgroundDrawable(d)
+                                val d = bg.toDrawable()
+                                setBackgroundDrawable(d)
+                                setDimAmount(0.8f)
                                 }
                             }
                         } else {
