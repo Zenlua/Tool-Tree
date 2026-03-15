@@ -14,6 +14,9 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.ImageView
 import androidx.core.graphics.scale
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
 
 class BlurBackground(private val activity: Activity) {
     private var dialogBg: ImageView? = null
@@ -98,17 +101,34 @@ class BlurBackground(private val activity: Activity) {
         return output
     }
 
+    private fun blurA12() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            dialogBg?.setRenderEffect(
+                RenderEffect.createBlurEffect(
+                    40f,
+                    40f,
+                    Shader.TileMode.CLAMP
+                )
+            )
+        }
+    }
+
     private fun handleBlur() {
         dialogBg?.run {
-            var bp: Bitmap? = captureScreen(activity)
-
-            bp = blur(bp) //对屏幕截图模糊处理
-            //将模糊处理后的图恢复到原图尺寸并显示出来
-            bp = bp?.scale(originalW, originalH, false)
-            setImageBitmap(bp)
-            visibility = View.VISIBLE
-            //防止UI线程阻塞，在子线程中让背景实现淡入效果
-            asyncRefresh(true)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // Android 12+ dùng RenderEffect
+                blurA12()
+                visibility = View.VISIBLE
+                asyncRefresh(true)
+            } else {
+                // Android 11 trở xuống dùng RenderScript
+                var bp: Bitmap? = captureScreen(activity)
+                bp = blur(bp)
+                bp = bp?.scale(originalW, originalH, false)
+                setImageBitmap(bp)
+                visibility = View.VISIBLE
+                asyncRefresh(true)
+            }
         }
     }
 
@@ -117,7 +137,7 @@ class BlurBackground(private val activity: Activity) {
         val lp: WindowManager.LayoutParams
         if (window != null) {
             lp = window.attributes
-            lp.dimAmount = 0.6f
+            lp.dimAmount = 0.5f
             window.attributes = lp
         }
         handleBlur()

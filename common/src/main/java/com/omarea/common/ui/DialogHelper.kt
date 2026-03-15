@@ -70,7 +70,7 @@ class DialogHelper {
 
     companion object {
         // 是否禁用模糊背景
-        var disableBlurBg = false
+        var disableBlurBg = true
 
         fun animDialog(dialog: AlertDialog?): DialogWrap? {
             if (dialog != null && !dialog.isShowing) {
@@ -427,7 +427,7 @@ class DialogHelper {
                             if (isFloating) {
                                 val d = bg.toDrawable()
                                 setBackgroundDrawable(d)
-                                
+                                setDimAmount(0.9f)
                                 return
                             } else {
                                 if (wallpaperMode || isNightMode(context)) {

@@ -106,7 +106,7 @@ public class FastBlurUtility {
         paint.setAntiAlias(true);
         ColorMatrix cm = new ColorMatrix();
         // cm.setSaturation(0);
-        float contrast = 0.95f;
+        float contrast = 0.9f;
         cm.set(new float[]{
                 contrast, 0, 0, 0, 0,
                 0, contrast, 0, 0, 0,
