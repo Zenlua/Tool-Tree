@@ -446,9 +446,7 @@ class DialogHelper {
                             setDimAmount(0.8f)
                         }
                     } catch (_: java.lang.Exception) {
-                        val d = bg.toDrawable()
-                        setBackgroundDrawable(d)
-                        setDimAmount(0.8f)
+                        setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
                     }
                 }
             }
