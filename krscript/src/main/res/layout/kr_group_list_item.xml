@@ -13,26 +13,12 @@
         android:layout_marginStart="6dp"
         style="@style/textSmall" />
 
-    <FrameLayout
+    <LinearLayout
+        android:id="@android:id/content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <!-- Background của card -->
-        <View
-            android:id="@+id/card_bg"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/krscript_item_ripple_inactive" />
-
-        <!-- Nội dung -->
-        <LinearLayout
-            android:id="@android:id/content"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:clickable="false"
-            android:focusable="false" />
-
-    </FrameLayout>
-
+        android:layout_height="wrap_content"
+        android:background="@drawable/krscript_item_ripple_inactive"
+        android:clickable="false"
+        android:focusable="false"
+        android:orientation="vertical" />
 </LinearLayout>

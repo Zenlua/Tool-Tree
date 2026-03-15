@@ -117,7 +117,7 @@ class BlurBackground(private val activity: Activity) {
         val lp: WindowManager.LayoutParams
         if (window != null) {
             lp = window.attributes
-            lp.dimAmount = 0.5f
+            lp.dimAmount = 0.6f
             window.attributes = lp
         }
         handleBlur()
