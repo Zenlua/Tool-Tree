@@ -74,7 +74,7 @@ class BlurBackground(private val activity: Activity) {
 
             var bp = captureScreen(activity) ?: return
 
-            bp = blur(bp)
+            bp = blur(bp) ?: return
             bp = bp?.scale(originalW, originalH, false)
 
             setImageBitmap(bp)
