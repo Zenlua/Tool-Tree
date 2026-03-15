@@ -18,11 +18,7 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
         private val dialogs = LinkedHashMap<String, DialogHelper.DialogWrap>()
     }
 
-    init {
-        hideDialog()
-    }
-
-    class DefaultHandler(private var alertDialog: DialogHelper.DialogWrap?) : Handler(Looper.myLooper()!!) {
+    class DefaultHandler(private var alertDialog: DialogHelper.DialogWrap?) : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
 
@@ -31,19 +27,17 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
                     return
                 }
                 if (msg.what == 10) {
-                    alertDialog!!.dismiss()
-                    alertDialog!!.hide()
+                    alertDialog?.dismiss()
                     if (msg.obj == true) {
-                        Toast.makeText(alertDialog!!.context, R.string.execute_success, Toast.LENGTH_SHORT).show()
+                        alertDialog?.context?.let {Toast.makeText(it, R.string.execute_success, Toast.LENGTH_SHORT).show()}
                     } else {
-                        Toast.makeText(alertDialog!!.context, R.string.execute_fail, Toast.LENGTH_LONG).show()
+                        alertDialog?.context?.let {Toast.makeText(it, R.string.execute_fail, Toast.LENGTH_LONG).show()}
                     }
                 } else if (msg.what == -1) {
-                    Toast.makeText(alertDialog!!.context, R.string.execute_fail, Toast.LENGTH_LONG).show()
+                    alertDialog?.context?.let {Toast.makeText(it, R.string.execute_fail, Toast.LENGTH_LONG).show()}
                 } else if (msg.what == 0 && msg.obj == false) {
-                    alertDialog!!.dismiss()
-                    alertDialog!!.hide()
-                    Toast.makeText(alertDialog!!.context, R.string.execute_fail, Toast.LENGTH_LONG).show()
+                    alertDialog?.dismiss()
+                    alertDialog?.context?.let {Toast.makeText(it, R.string.execute_fail, Toast.LENGTH_LONG).show()}
                 }
             } catch (_: Exception) {
             }
@@ -51,7 +45,6 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
     }
 
     fun execShell(cmd: String, handler: Handler? = null) {
-        hideDialog()
         val layoutInflater = LayoutInflater.from(context)
         val dialog = layoutInflater.inflate(R.layout.dialog_loading, null)
         val textView: TextView = (dialog.findViewById(R.id.dialog_text))
@@ -70,19 +63,18 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
     }
 
     fun isDialogShow(): Boolean {
-        return this.alert != null
+        return alert?.isShowing == true
     }
 
     fun hideDialog() {
         try {
             if (alert != null) {
-                alert!!.dismiss()
-                alert!!.hide()
+                alert?.dismiss()
                 alert = null
             }
         } catch (_: Exception) {
         }
-
+    
         uniqueId?.run {
             if (dialogs.containsKey(this)) {
                 dialogs.remove(this)
@@ -92,26 +84,22 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
 
     fun showDialog(text: String = "Loading, please wait..."): ProgressBarDialog {
         if (textView != null && alert != null) {
-            textView!!.text = text
+            textView?.text = text
         } else {
-            hideDialog()
             val layoutInflater = LayoutInflater.from(context)
             val dialog = layoutInflater.inflate(R.layout.dialog_loading, null)
-            textView = (dialog.findViewById(R.id.dialog_text)!!)
-            textView!!.text = text
+    
+            textView = dialog.findViewById(R.id.dialog_text)
+            textView?.text = text
+    
             alert = DialogHelper.customDialog(context, dialog, false)
-            // AlertDialog.Builder(context).setView(dialog).setCancelable(false).create()
         }
-
+    
         uniqueId?.run {
-            if (dialogs.containsKey(this)) {
-                dialogs.remove(this)
-            }
-            if (alert != null) {
-                dialogs[this] = alert!!
-            }
+            dialogs.remove(this)
+            alert?.let { dialogs[this] = it }
         }
-
+    
         return this
     }
 }
