@@ -7,6 +7,10 @@ import android.widget.TextView
 import com.omarea.krscript.R
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.NodeInfoBase
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
+import com.tool.tree.ThemeConfig
 
 open class ListItemView(private val context: Context,
                         layoutId: Int,
@@ -87,5 +91,19 @@ open class ListItemView(private val context: Context,
         title = config.title
         desc = config.desc
         summary = config.summary
+    
+        val content = layout.findViewById<View>(android.R.id.content)
+    
+        val useWallpaper = ThemeConfig(context).getAllowTransparentUI()
+    
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && useWallpaper) {
+            content?.setRenderEffect(
+                RenderEffect.createBlurEffect(
+                    25f,
+                    25f,
+                    Shader.TileMode.CLAMP
+                )
+            )
+        }
     }
 }
