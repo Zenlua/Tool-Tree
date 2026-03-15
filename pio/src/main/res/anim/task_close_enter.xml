@@ -4,11 +4,11 @@
     android:zAdjustment="top">
     <translate
         android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-        android:duration="17694721"
+        android:duration="301"
         android:fromXDelta="-100%p"
         android:toXDelta="0%p" />
     <alpha
-        android:duration="17694721"
+        android:duration="301"
         android:fromAlpha="0.0"
         android:toAlpha="1.0" />
 </set>

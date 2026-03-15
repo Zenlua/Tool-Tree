@@ -4,7 +4,7 @@
     android:zAdjustment="top">
     <alpha
         android:interpolator="@android:anim/linear_interpolator"
-        android:duration="17694721"
+        android:duration="301"
         android:fromAlpha="1.0"
         android:toAlpha="0.0" />
 </set>

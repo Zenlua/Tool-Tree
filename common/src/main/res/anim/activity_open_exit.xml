@@ -4,11 +4,11 @@
     android:zAdjustment="bottom">
     <translate
         android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-        android:duration="17694721"
+        android:duration="301"
         android:fromXDelta="0%p"
         android:toXDelta="-100%p" />
     <scale
-        android:duration="17694721"
+        android:duration="301"
         android:pivotX="0%"
         android:pivotY="50%"
         android:fromXScale="1.0"
@@ -16,7 +16,7 @@
         android:fromYScale="1.0"
         android:toYScale="0.5" />
     <alpha
-        android:duration="17694722"
+        android:duration="302"
         android:fromAlpha="1.0"
         android:toAlpha="0.0" />
 </set>
