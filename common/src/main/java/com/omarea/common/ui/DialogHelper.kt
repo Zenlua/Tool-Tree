@@ -425,7 +425,7 @@ class DialogHelper {
                         val bg = getWindowBackground(activity)
                         if (bg == Color.TRANSPARENT) {
                             setBackgroundDrawable(bg.toDrawable())
-                            setDimAmount(0.9f)
+                            setDimAmount(0.5f)
                         } else {
                             setBackgroundDrawable(bg.toDrawable())
                         }
