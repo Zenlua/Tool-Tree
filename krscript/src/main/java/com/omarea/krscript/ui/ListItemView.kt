@@ -10,6 +10,7 @@ import com.omarea.krscript.model.NodeInfoBase
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
+import android.app.WallpaperManager
 // import com.tool.tree.ThemeConfig
 
 open class ListItemView(private val context: Context,
@@ -94,9 +95,9 @@ open class ListItemView(private val context: Context,
     
         val content = layout.findViewById<View>(android.R.id.content)
     
-        val useWallpaper = ThemeConfig(context).getAllowTransparentUI()
+        val wallpaper = WallpaperManager.getInstance(context).drawable
     
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && useWallpaper) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && wallpaper != null) {
             content?.setRenderEffect(
                 RenderEffect.createBlurEffect(
                     25f,
