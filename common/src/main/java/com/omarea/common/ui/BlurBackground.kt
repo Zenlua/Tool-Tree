@@ -101,36 +101,32 @@ class BlurBackground(private val activity: Activity) {
         return output
     }
 
-    private fun blurA12() {
+private fun handleBlur() {
+    dialogBg?.run {
+        var bp: Bitmap? = captureScreen(activity)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            dialogBg?.setRenderEffect(
+            // Android 12+ blur bằng GPU
+            bp = bp?.scale(originalW, originalH, false)
+            setImageBitmap(bp)
+
+            setRenderEffect(
                 RenderEffect.createBlurEffect(
                     40f,
                     40f,
                     Shader.TileMode.CLAMP
                 )
             )
-        }
-    }
 
-    private fun handleBlur() {
-        dialogBg?.run {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                // Android 12+ dùng RenderEffect
-                blurA12()
-                visibility = View.VISIBLE
-                asyncRefresh(true)
-            } else {
-                // Android 11 trở xuống dùng RenderScript
-                var bp: Bitmap? = captureScreen(activity)
-                bp = blur(bp)
-                bp = bp?.scale(originalW, originalH, false)
-                setImageBitmap(bp)
-                visibility = View.VISIBLE
-                asyncRefresh(true)
-            }
+        } else {
+            // Android 11 trở xuống
+            bp = blur(bp)
+            bp = bp?.scale(originalW, originalH, false)
+            setImageBitmap(bp)
         }
+        visibility = View.VISIBLE
+        asyncRefresh(true)
     }
+}
 
     fun setScreenBgLight(dialog: Dialog) {
         val window: Window? = dialog.window
