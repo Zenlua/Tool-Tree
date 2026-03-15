@@ -8,11 +8,6 @@ import com.omarea.krscript.R
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.NodeInfoBase
 
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import android.graphics.drawable.Drawable
-import android.os.Build
-
 open class ListItemView(private val context: Context,
                         layoutId: Int,
                         private val config: NodeInfoBase) {
@@ -89,18 +84,6 @@ open class ListItemView(private val context: Context,
     }
 
     init {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val bg = layout.background
-            if (bg != null) {
-                bg.setRenderEffect(
-                    RenderEffect.createBlurEffect(
-                        20f,
-                        20f,
-                        Shader.TileMode.CLAMP
-                    )
-                )
-            }
-        }
         title = config.title
         desc = config.desc
         summary = config.summary
