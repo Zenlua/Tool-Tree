@@ -10,7 +10,7 @@ import com.omarea.krscript.model.NodeInfoBase
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
-import com.tool.tree.ThemeConfig
+// import com.tool.tree.ThemeConfig
 
 open class ListItemView(private val context: Context,
                         layoutId: Int,
