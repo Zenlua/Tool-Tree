@@ -14,13 +14,13 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.ImageView
 import androidx.core.graphics.scale
+import android.animation.ValueAnimator
 
 class BlurBackground(private val activity: Activity) {
     private var dialogBg: ImageView? = null
     private var originalW = 0
     private var originalH = 0
-    private var mHandler: Handler = Handler(Looper.getMainLooper())
-
+    
     private fun captureScreen(activity: Activity): Bitmap {
         activity.window.decorView.destroyDrawingCache() //先清理屏幕绘制缓存(重要)
         activity.window.decorView.isDrawingCacheEnabled = true
@@ -33,45 +33,18 @@ class BlurBackground(private val activity: Activity) {
         return bmp
     }
 
-    private fun asyncRefresh(`in`: Boolean) {
-        //淡出淡入效果的实现
-        if (`in`) {    //淡入效果
-            Thread {
-                var i = 0
-                while (i < 256) {
-                    refreshUI(i) //在UI线程刷新视图
-                    try {
-                        Thread.sleep(4)
-                    } catch (e: InterruptedException) {
-                        e.printStackTrace()
-                    }
-                    i += 5
-                }
-            }.start()
-        } else {    //淡出效果
-            Thread {
-                var i = 255
-                while (i >= 0) {
-                    refreshUI(i) //在UI线程刷新视图
-                    try {
-                        Thread.sleep(4)
-                    } catch (e: InterruptedException) {
-                        e.printStackTrace()
-                    }
-                    i -= 5
-                }
-                //当淡出效果完毕后发送消息给mHandler把对话框背景设为不可见
-                mHandler.sendEmptyMessage(0)
-            }.start()
+    private fun asyncRefresh(isIn: Boolean) {
+        val start = if (isIn) 0 else 255
+        val end = if (isIn) 255 else 0
+    
+        ValueAnimator.ofInt(start, end).apply {
+            duration = 200
+            addUpdateListener {
+                val alpha = it.animatedValue as Int
+                dialogBg?.imageAlpha = alpha
+            }
+            start()
         }
-    }
-
-    private fun runOnUiThread(runnable: Runnable) {
-        mHandler.post(runnable)
-    }
-
-    private fun refreshUI(i: Int) {
-        runOnUiThread { dialogBg?.imageAlpha = i }
     }
 
     private fun hideBlur() {

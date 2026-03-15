@@ -70,7 +70,7 @@ class DialogHelper {
 
     companion object {
         // 是否禁用模糊背景
-        var disableBlurBg = true
+        var disableBlurBg = false
 
         fun animDialog(dialog: AlertDialog?): DialogWrap? {
             if (dialog != null && !dialog.isShowing) {
