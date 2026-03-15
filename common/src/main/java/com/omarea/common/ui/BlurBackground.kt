@@ -1,9 +1,10 @@
 package com.omarea.common.ui
 
-import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.Dialog
 import android.graphics.Bitmap
+import android.os.Handler
+import android.os.Looper
 import android.renderscript.Allocation
 import android.renderscript.Element
 import android.renderscript.RenderScript
@@ -13,87 +14,85 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.ImageView
 import androidx.core.graphics.scale
+import android.animation.ValueAnimator
 
 class BlurBackground(private val activity: Activity) {
-
-    var dialogBg: ImageView? = null
-
+    private var dialogBg: ImageView? = null
     private var originalW = 0
     private var originalH = 0
-
-    private fun captureScreen(activity: Activity): Bitmap? {
-        val decorView = activity.window.decorView
-        decorView.destroyDrawingCache()
-        decorView.isDrawingCacheEnabled = true
-
-        val bmp = decorView.drawingCache ?: return null
-
+    
+    private fun captureScreen(activity: Activity): Bitmap {
+        activity.window.decorView.destroyDrawingCache() //先清理屏幕绘制缓存(重要)
+        activity.window.decorView.isDrawingCacheEnabled = true
+        var bmp: Bitmap = activity.window.decorView.drawingCache
+        //获取原图尺寸
         originalW = bmp.width
         originalH = bmp.height
-
-        return bmp.scale(originalW / 4, originalH / 4, false)
+        //对原图进行缩小，提高下一步高斯模糊的效率
+        bmp = bmp.scale(originalW / 4, originalH / 4, false)
+        return bmp
     }
 
     private fun asyncRefresh(isIn: Boolean) {
         val start = if (isIn) 0 else 255
         val end = if (isIn) 255 else 0
-
+    
         ValueAnimator.ofInt(start, end).apply {
             duration = 200
             addUpdateListener {
-                dialogBg?.imageAlpha = it.animatedValue as Int
+                val alpha = it.animatedValue as Int
+                dialogBg?.imageAlpha = alpha
             }
             start()
         }
     }
 
+    private fun hideBlur() {
+        //把对话框背景隐藏
+        asyncRefresh(false)
+    }
+
     private fun blur(bitmap: Bitmap?): Bitmap? {
-        bitmap ?: return null
-
-        val output = Bitmap.createBitmap(bitmap)
-        val rs = RenderScript.create(activity)
-
-        val blur = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs))
-
-        val allIn = Allocation.createFromBitmap(rs, bitmap)
-        val allOut = Allocation.createFromBitmap(rs, output)
-
-        blur.setRadius(10f)
-        blur.setInput(allIn)
-        blur.forEach(allOut)
-
-        allOut.copyTo(output)
-
+        //使用RenderScript对图片进行高斯模糊处理
+        val output = bitmap?.let { Bitmap.createBitmap(it) } // 创建输出图片
+        val rs: RenderScript = RenderScript.create(activity) // 构建一个RenderScript对象
+        val gaussianBlue: ScriptIntrinsicBlur = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs)) //
+        // 创建高斯模糊脚本
+        val allIn: Allocation = Allocation.createFromBitmap(rs, bitmap) // 开辟输入内存
+        val allOut: Allocation = Allocation.createFromBitmap(rs, output) // 开辟输出内存
+        val radius = 10f //设置模糊半径
+        gaussianBlue.setRadius(radius) // 设置模糊半径，范围0f<radius<=25f
+        gaussianBlue.setInput(allIn) // 设置输入内存
+        gaussianBlue.forEach(allOut) // 模糊编码，并将内存填入输出内存
+        allOut.copyTo(output) // 将输出内存编码为Bitmap，图片大小必须注意
         rs.destroy()
-
+        //rs.releaseAllContexts(); // 关闭RenderScript对象，API>=23则使用rs.releaseAllContexts()
         return output
     }
 
     private fun handleBlur() {
         dialogBg?.run {
+            var bp: Bitmap? = captureScreen(activity)
 
-            var bp = captureScreen(activity) ?: return
-
-            bp = blur(bp) ?: return
-            bp = bp.scale(originalW, originalH, false)
-
+            bp = blur(bp) //对屏幕截图模糊处理
+            //将模糊处理后的图恢复到原图尺寸并显示出来
+            bp = bp?.scale(originalW, originalH, false)
             setImageBitmap(bp)
-
             visibility = View.VISIBLE
-
+            //防止UI线程阻塞，在子线程中让背景实现淡入效果
             asyncRefresh(true)
         }
     }
 
     fun setScreenBgLight(dialog: Dialog) {
         val window: Window? = dialog.window
-
-        window?.let {
-            val lp = it.attributes
+        val lp: WindowManager.LayoutParams
+        if (window != null) {
+            lp = window.attributes
             lp.dimAmount = 0.5f
-            it.attributes = lp
+            window.attributes = lp
         }
-
         handleBlur()
     }
+
 }
