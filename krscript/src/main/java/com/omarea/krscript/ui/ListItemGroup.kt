@@ -8,6 +8,7 @@ import com.omarea.krscript.model.GroupNode
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
+import android.view.View
 
 class ListItemGroup(context: Context,
                     var isRootGroup: Boolean,
@@ -78,10 +79,10 @@ class ListItemGroup(context: Context,
     init {
         title = config.title
     
-        val blurBg = layout.findViewById<View>(R.id.card_bg)
+        val blurBg = layout.findViewById<View?>(R.id.card_bg)
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            blurBg.setRenderEffect(
+            blurBg?.setRenderEffect(
                 RenderEffect.createBlurEffect(
                     18f,
                     18f,
