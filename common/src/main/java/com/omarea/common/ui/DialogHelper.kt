@@ -424,23 +424,10 @@ class DialogHelper {
                     try {
                         val bg = getWindowBackground(activity)
                         if (bg == Color.TRANSPARENT) {
-                            if (isFloating) {
-                                val d = bg.toDrawable()
-                                setBackgroundDrawable(d)
-                                setDimAmount(0.9f)
-                                return
-                            } else {
-                                val blurBitmap = FastBlurUtility.getBlurBackgroundDrawer(activity)
-                                if (blurBitmap != null) {
-                                    setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
-                                } else {
-                                    setBackgroundDrawable(bg.toDrawable())
-                                }
-                            }
+                            setBackgroundDrawable(bg.toDrawable())
+                            setDimAmount(0.9f)
                         } else {
-                            val d = bg.toDrawable()
-                            setBackgroundDrawable(d)
-                            
+                            setBackgroundDrawable(bg.toDrawable())
                         }
                     } catch (_: java.lang.Exception) {
                         setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
