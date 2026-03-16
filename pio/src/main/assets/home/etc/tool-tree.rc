@@ -853,6 +853,7 @@ xml_print '<group>
 <param name="IMAGES" desc="'$decode_text_3'" multiple="true" options-sh="findfile 2 $PTSD" required="true"/>
 <set>
 slog vavbbgdf "$vavb"
+slog xoa_oat_boot "$xoa_oat_boot"
 slog dkjdj "$nounpak"
 slog dkhdh "$cboxk"
 for vkl in $IMAGES; do
