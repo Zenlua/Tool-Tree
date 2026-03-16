@@ -14,6 +14,20 @@ done
     fi
 [ -f update ] && rm -f update
 [ -f changelog.txt ] && cat changelog.txt
+else
+    killtree "$network_text"
+fi
+}
+
+toolsbox(){
+if checkonline; then
+    linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
+    echo "$(echo "$linkurrl" | jq -r ".tag_name")" > $MPAT/mod/version
+    downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "KaoriosToolbox.*\.apk")" "$MPAT/mod/KaoriosToolbox.apk" 2>&1
+    downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "com.kousei.kaorios.xml")" "$MPAT/mod/com.kousei.kaorios.xml" 2>&1
+    downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "classes.*\.dex")" "$MPAT/mod/classes.dex" 2>&1
+else
+    killtree "$network_text"
 fi
 }
 
@@ -30,8 +44,8 @@ fi
 (
 # check update add-on
 if [ ! -f $MPAT/update ];then
-number_ver="$(xem https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/pio/src/main/assets/module/ZADD/patch_rom/addon.prop 2>/dev/null | grep -m1 "versionCode=" | cut -d= -f2)"
-number_ver2="$(gprop versionCode "$MPAT/addon.prop")"
+    number_ver="$(xem https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/pio/src/main/assets/module/ZADD/patch_rom/addon.prop 2>/dev/null | grep -m1 "versionCode=" | cut -d= -f2)"
+    number_ver2="$(gprop versionCode "$MPAT/addon.prop")"
     if [[ ${number_ver:-0} -gt $number_ver2 ]];then
     echo 1 >$MPAT/update
     id_random="$RANDOM"
@@ -62,30 +76,18 @@ fi
 # tải xuống nền mới nhất lần đầu
 (
 if [ ! -f "$MPAT/mod/classes.dex" ];then
-if checkonline; then
-[ "$linkurrl" ] || linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
-downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'classes.*\.dex')" "$MPAT/mod/classes.dex"
-downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'KaoriosToolbox.*\.apk')" "$MPAT/mod/KaoriosToolbox.apk"
-downloadb "$(echo "$linkurrl" | jq -r '.assets[].browser_download_url' | grep 'com.kousei.kaorios.xml')" "$MPAT/mod/com.kousei.kaorios.xml"
-fi
+toolsbox
 fi
 ) &>/dev/null &
 
 echo '<?xml version="1.0" encoding="UTF-8" ?><group>
 
-<group>
-<action auto-off="true" reload="true" visible="cat '$MPAT'/update 2>/dev/null" warn="'$update_text'">
-<title>'$update_text1'</title>
-<set>'$MPAT'/index.sh update</set>
-</action>
-</group>
-
 <group title="'$google_text'">
 <action shell="hidden" reload="true">
 <title>'$TITLE_CHANGE_PROJECT'</title>
 <summary>'$SUMMARY_CURRENT': '${patch_rom_path##*/}'</summary>
-<param name="NAME" label="'$LABEL_SELECT'" option-sh="findfile for $SDH" value-sh="glog patch_rom_path"/>
-<set>slog patch_rom_path "$NAME"</set>
+<param name="NAME" label="'$LABEL_SELECT'" option-sh="findfile for $SDH" value-sh="echo '${patch_rom_path##*/}'"/>
+<set>slog patch_rom_path "$SDH/$NAME"</set>
 </action>
 <text desc="'$NOTE_PATCH'" />
 </group>
@@ -221,11 +223,8 @@ trans_add "$MPAT"
 fi
 
 # index
-case "$1" in
-    home|update)
-        "$1"
-        ;;
-    *)
-        cat "$ETC/error.xml"
-        ;;
-esac
+if [ "$(type -t "$1")" = "function" ];then
+"$@"
+else
+cat "$ETC/error.xml"
+fi
