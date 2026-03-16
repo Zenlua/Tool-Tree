@@ -398,11 +398,11 @@ if [ "$XOAOAT" == 1 ];then
 find "$in_name" -type d -name "oat" -print -exec rm -rf {} +
 find "$in_name/system/framework" -type d -name "arm64" -print -exec rm -rf {} +
 find "$in_name/system/framework" -type d -name "arm" -print -exec rm -rf {} +
-find "$in_name" -type f -name "*.fsv_meta" -delete
-find "$in_name" -type f -name "*.bprof" -delete
-find "$in_name" -type f -name "*.prof" -delete
-find "$in_name" -type f -name "*.vdex" -delete
-find "$in_name" -type f -name "*.odex" -delete
+find "$in_name" -type f -name "*.fsv_meta" -delete -print
+find "$in_name" -type f -name "*.bprof" -delete -print
+find "$in_name" -type f -name "*.prof" -delete -print
+find "$in_name" -type f -name "*.vdex" -delete -print
+find "$in_name" -type f -name "*.odex" -delete -print
 } &>$TMP/delete_oat.log
 fi
 
