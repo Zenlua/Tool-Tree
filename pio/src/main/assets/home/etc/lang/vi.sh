@@ -94,8 +94,8 @@ project_text_8="Thông báo"
 project_text_9="Đây là kích thước được cấp cho java sử dụng tối đa, 1024m, chỉ bật cao khi build file nặng và thiết bị phải có nhiều ram để tránh bị lag quá tải"
 project_text_10="Cấp RAM cho Java"
 project_text_11="Luôn sáng MH ở chạy lệnh"
-project_text_12="Giới hạn CPU"
-project_text_13="Sau khi lựa chọn cpu sẽ bị giới hạn xuống số đã lựa chọn"
+project_text_12="Giới hạn số CPU"
+project_text_13="Sau khi thiết lập, các tiến trình chỉ có thể sử dụng tối đa số CPU đã chọn"
 
 # mount img
 mount_text_1="Mount IMG"

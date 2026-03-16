@@ -94,8 +94,8 @@ project_text_8="Értesítések"
 project_text_9="Ez a Java számára lefoglalt maximális memória, pl. 1024 m. Csak nagyméretű buildek esetén növeld, és ha az eszközön elegendő RAM van a nagy késleltetés elkerülése érdekében."
 project_text_10="RAM lefoglalása a Java számára"
 project_text_11="Képernyő bekapcsolva tartása parancsok futtatása közben"
-project_text_12="CPU korlátozás"
-project_text_13="A kiválasztás után a CPU a megadott számra lesz korlátozva"
+project_text_12="CPU-k számának korlátozása"
+project_text_13="Beállítás után a folyamatok legfeljebb a kiválasztott számú CPU-t használhatják"
 
 # mount img
 mount_text_1="IMG csatlakoztatás"

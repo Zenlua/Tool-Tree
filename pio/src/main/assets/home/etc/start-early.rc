@@ -50,6 +50,8 @@ if [ "$ROT" == 1 ];then
     [ -e /data/local/TREE ] || ln -sf $SDH /data/local/TREE
     # Thêm không giới hạn tiết kiệm pin
     dumpsys deviceidle whitelist +$PACKAGE_NAME &>/dev/null
+    am set-inactive $PACKAGE_NAME false
+    cmd appops set $PACKAGE_NAME WAKE_LOCK allow
     # Cấp quyền ở miui, hyper
     # Danh sách các ứng dụng đã cài đặt
     cmd appops set $PACKAGE_NAME 10022 allow
