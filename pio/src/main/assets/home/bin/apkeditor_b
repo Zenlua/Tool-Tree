@@ -94,9 +94,11 @@ echo
 if [ -f "$INPUT/dex/classes.dex" ] && [ -d "$INPUT/smali" ];then
 for vkn in "$INPUT"/dex/classes*.dex; do
     kout="$(basename $vkn .dex)"
+    if [ -f "$INPUT/.cache/hash_$kout.json" ];then
     cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
     dkfjff="$(check_changes.py "$INPUT/smali/$kout" "$INPUT/.cache/2hash_$kout.json")"
     rm -fr "$INPUT/.cache/2hash_$kout.json"
+    fi
     if [ -n "$dkfjff" ];then
     API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
     smali a --api $API -o "$INPUT/smali/$kout.dex" $(echo "$dkfjff" | grep -e "new:" -e "fixed:" | awk '{print "'$INPUT/smali/$kout'/"$2}')
