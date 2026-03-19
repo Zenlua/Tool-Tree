@@ -1342,7 +1342,6 @@ xml_print '<group>
 '$farooot'
 <option type="default" id="v2" auto-finish="true" auto-off="true" interruptible="false">'$pin_text'</option>
 '"$google_trankk"'
-<option type="refresh">'$refresh_text'</option>
 '"$code_option"'
 <handler>
 if [ "$menu_id" == "v2" ];then

@@ -1,6 +1,9 @@
 # Kakathic
 MPAT="${0%/*}"
 
+# dọn dẹp
+[ -d "$MPAT/apk" ] && rm -fr "$MPAT/apk"
+
 # extract
 if [ -f $MPAT/mod.7z ];then
 echo "7z mod extract..."

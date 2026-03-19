@@ -1,79 +1,53 @@
 # Add-on
 
 id=patch_rom
-name=Patch ROM Xiaomi
+name=Patch ROM
 author=Kakathic
 description=Quick ROM patch
-version=1.2
-versionCode=112
+version=1.3
+versionCode=113
 root=false
 
 # language
 google_text="Currently using google translate"
 
-TITLE_CHANGE_PROJECT="Change project"
-SUMMARY_CURRENT="Current"
-NOTE_PATCH="Note: After applying, enabled features will be applied to the project and cannot be disabled later. You must decrypt the entire partition again if you want to change other features."
-
-# Action titles
-TITLE_FAST_PATCH="Basic quick patch"
-TITLE_REMOVE_APP="Remove bloatware"
-TITLE_KEYBOARD="Keyboard customization"
-TITLE_SYSTEM_PATCH="System patches"
-TITLE_DEX2OAT="Dex2oat all"
-
-# Labels
-LABEL_SELECT="Select"
-LABEL_DELETE_APP="Remove bloatware"
-
-# Prop
-TITLE_PROP="Change ro.control_privapp_permissions"
-DESC_PROP="enforce: missing permissions may cause bootloop, log: log errors to logcat and do not grant permission, disable: automatically grant missing permissions to apps"
-
-# Basic patch labels
-LABEL_DISABLE_OTA="Disable OTA updates"
-LABEL_CRYPTO="Add ro.crypto.state=encrypted"
-LABEL_RW_ROM="Patch RW ROM erofs"
-LABEL_HOME_POCO="Change HOME poco"
-DESC_HOME_POCO="Note: only changes com.mi.android.globallauncher to com.miui.home in prop, APK must be modified manually"
-
-# Keyboard
-DESC_IME_APP="Keyboard application"
-DESC_COLOR_LIGHT="Light background color code"
-DESC_COLOR_DARK="Dark background color code"
-DESC_DIMEN="Adjust width dimension"
-
-# System patch
-LABEL_FIX_NOTI="Fix delayed notification on CN"
-LABEL_FIX_FPS="Unlock max FPS"
-LABEL_FIX_WINDOW="Maximum 6 floating windows"
-LABEL_FIX_THEME="Fix theme reset issue"
-LABEL_FIX_GLOBAL="Enable global features on CN ROM"
-LABEL_FIX_ERROR="Remove fingerprint error dialog on boot"
-LABEL_FIX_IME="Advanced keyboard"
-LABEL_FIX_FWKO="Add Kaorios Toolbox"
-LABEL_FIX_SCREEN="Unlock screenshot restriction"
-LABEL_FIX_APKSIGN="Bypass signature verification"
-LABEL_FIX_APPVAULT="Unlock Appvault transactions"
-LABEL_FIX_THEMES="Unlock Theme transactions"
-LABEL_FIX_WEATHER="Show AQI in CN weather"
-LABEL_FIX_JOYOSE="Mod Joyose application"
-LABEL_FIX_MAP="Remove China map from CN libraries"
-
-# Dex2oat
-LABEL_OAT_FW="Create oat for framework, service"
-DESC_SECONTEXT="Enter the classpath for the application. Some apps require a classpath; you can check the old odex file to see the classpath"
-
-# Shell
-NOT_FOUND_TEXT="Not found"
-NO_VALUE_TEXT="No value!"
-CREATING_OAT_TEXT="Creating oat"
-SEARCHING_AND_DELETING="Searching and deleting..."
-RW_ROM_TEXT_1="Warning: vendor_boot not found. If it has already been patched RW you can ignore this!"
-RW_ROM_TEXT_2="Warning: mi_ext not found. Unable to copy file may cause feature errors. If it has already been copied you can ignore this!"
-RW_ROM_TEXT_3="Warning: ext4 partition not found. You must add it manually to:"
-
-patch_text="Patched"
-patch_text1="Patching"
-network_text="Data connection error."
-addon_noti="The add-on has received a new update. Tap the three-dot menu in the upper right corner to update the add-on."
+# home
+string_text_1="Import files at project"
+select_text="Options"
+network_text="Please connect to the internet !"
+addon_noti="A new version is available; press the three dots to update the add-on."
+desc_ime_app="Keyboard application"
+desc_color_light="Light background color code"
+desc_color_dark="Dark background color code"
+desc_dimen="Adjust width dimension"
+required_files_text="Required files"
+title_quick="Quick customization"
+desc_patch_prop="Modify ro.control_privapp_permissions"
+desc_patch_prop_long="enforce: may cause bootloop if permissions are missing, log: log errors without fixing, disable: automatically fix missing permissions"
+label_device_features="Disable Xiaomi OTA updates"
+label_rw_rom="Modify fstab to support RW-ROM"
+desc_rw_rom="Remove overlay entries in fstab, requires building to ext4 to complete RW"
+label_delete_gms="Remove Xiaomi CN GMS update"
+desc_delete_gms="Delete cn.google.services.xml file"
+label_home_poco="Change POCO Launcher package name"
+desc_home_poco="Note: only change com.mi.android.globallauncher to com.miui.home in prop, APK must be modified manually"
+title_delete="Batch delete apps and files"
+title_framework_patch="Framework patch"
+label_fix_toolbox="Kaorios Toolbox patch"
+label_fix_apksign="Bypass signature verification"
+title_cn_global="CN ➠ Global patch"
+label_fix_noti="Fix delayed notifications"
+label_fix_global="Enable some global features"
+title_ime="Unlock advanced keyboard"
+title_many_patch="Multiple other patches"
+label_fix_screen="Unlock screenshot restrictions"
+label_fix_fps="Unlock FPS limit"
+label_fix_window="Unlock floating window restrictions"
+label_fix_reset_theme="Fix theme reset issue"
+label_fix_show_error="Fix error dialog on lock screen"
+title_app_patch="Application patches"
+label_fix_themes="Unlock Theme Store purchases"
+label_fix_appvault="Unlock PersonalAssistant purchases"
+label_fix_thoit="Enable AQI Weather CN"
+label_fix_joyose="Modify Joyose"
+label_fix_mapcn="Hide CN Map in Gallery"

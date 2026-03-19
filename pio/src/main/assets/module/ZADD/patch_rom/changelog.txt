@@ -1,4 +1,3 @@
-Version: 1.1
+Version: 1.3
 
-+ Fix the PowerKeeper.apk file path error.
-+ Transparent APK and JAR patching process
++ Revise all add-on tools.
