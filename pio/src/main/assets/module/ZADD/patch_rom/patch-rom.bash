@@ -1,7 +1,6 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 set -o pipefail
-IFS=$'\n'
 
 fixapps(){
 for vv in $@; do
@@ -37,6 +36,7 @@ elif [ "${vv##*/}" == "MIUIWeather.apk" ];then
     fi
 elif [[ "${vv##*/}" == *ThemeManager* ]];then
     if [ "$fix_themes" == 1 ];then
+    IFS=$'\n'
     Tmtong="$(Timkiem '$onlineThemeDetail' $oi/smali)"
     if [ "$Tmtong" ]; then
     for vqq1 in $(grep 'Lcom/android/thememanager/detail/theme/model/OnlineResourceDetail;->bought:Z' $Tmtong); do
@@ -85,6 +85,12 @@ elif [[ "${vv##*/}" == *PersonalAssistant* ]];then
 fi
 # End patch smali
 apkeditor_b -i "$oi" -o "${vv%/*}" -d 1 -x false
+# di chuyển vào product app
+if [ "$(echo "$vv" | grep -cm1 "/data-app/")" == 1 ];then
+pproduct="$(ls -1d $SDH/$PTSH/*roduc*/etc/build.prop 2>/dev/null | grep -m1 'product' | sed 's|\/etc/build.prop||')"
+[ -z "$pproduct" ] && pproduct="$(ls -1d $SDH/$PTSH/*/*roduc*/etc/build.prop 2>/dev/null | grep -m1 'product' | sed 's|\/etc/build.prop||')"
+mv "${vv%/*}" "$pproduct/app"
+fi
 echo
 done
 }
@@ -306,6 +312,7 @@ elif [ "${vv##*/}" == "Settings.apk" ];then
     if [ "$(grep -cm1 device_description_cpu "$oi/resources/package_1/res/values/strings.xml")" != 1 ];then
     smurl1="$(find $oi/smali/classes*/com/android/settings/device/DeviceParamsInitHelper.smali -type f)"
     if [ -f "$smurl1" ];then
+    IFS=$'\n'
     for vnl in $(grep -B 2 -n "langType" "$smurl1" | tac | grep 'move-result-object'); do
     sed -i "$(echo "$vnl" | cut -d- -f1)a\ const-string $(echo "$vnl" | awk '{print $3}'), \"enUS\"" "$smurl1"
     done
