@@ -453,32 +453,31 @@ if [ "$fix_apksign" == 1 ];then
         Thayvc 1 '.method private checkSysAppCrack()Z' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
         } &>$TMP/log_miui_sv_method_a12.log
     fi
-
 fi
 
 if [ "$fix_toolbox" == 1 ];then
-    # kiểm tra mạng và tải xuống
-    if checkonline; then
-        echo "Check version KaoriosToolbox..."
-        echo
-        linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
-        pbver="$(echo "$linkurrl" | jq -r ".tag_name")"
-        [ -z "$pbver" ] && killtree "Version not found error !"
-        if [ ! -f "$MPAT/mod/version" ] || [ "$pbver" != "$(cat "$MPAT/mod/version" 2>/dev/null)" ];then
-        echo "Updating: $pbver"
-        echo "$pbver" > "$MPAT/mod/version"
-        downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "KaoriosToolbox.*\.apk")" "$MPAT/mod/KaoriosToolbox.apk" &>/dev/null
-        downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "com.kousei.kaorios.xml")" "$MPAT/mod/com.kousei.kaorios.xml" &>/dev/null
-        downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "classes.*\.dex")" "$MPAT/mod/classes.dex" &>/dev/null
-        else
-        echo "Latest version: $pbver"
-        fi
-    else
-        [ -f $MPAT/mod/version ] || killtree "$network_text"
-    fi
-    # bắt đầu trích xuất
-    echo
     if [ "${vv##*/}" == "framework.jar" ];then
+    # kiểm tra mạng và tải xuống
+        if checkonline; then
+            echo "Check version KaoriosToolbox..."
+            echo
+            linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
+            pbver="$(echo "$linkurrl" | jq -r ".tag_name")"
+            [ -z "$pbver" ] && killtree "Version not found error !"
+            if [ ! -f "$MPAT/mod/version" ] || [ "$pbver" != "$(cat "$MPAT/mod/version" 2>/dev/null)" ];then
+            echo "Updating: $pbver"
+            echo "$pbver" > "$MPAT/mod/version"
+            downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "KaoriosToolbox.*\.apk")" "$MPAT/mod/KaoriosToolbox.apk" &>/dev/null
+            downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "com.kousei.kaorios.xml")" "$MPAT/mod/com.kousei.kaorios.xml" &>/dev/null
+            downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "classes.*\.dex")" "$MPAT/mod/classes.dex" &>/dev/null
+            else
+            echo "Latest version: $pbver"
+            fi
+        else
+            [ -f $MPAT/mod/version ] || killtree "$network_text"
+        fi
+        # bắt đầu trích xuất
+        echo
         # Patch smali
         if ! ls "$oi"/smali/classes*/com/android/internal/util/kaorios &>/dev/null; then
             kkklast=$(ls -1d "$oi"/smali/classes* 2>/dev/null | sort | tail -n1)
