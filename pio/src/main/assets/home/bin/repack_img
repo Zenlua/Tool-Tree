@@ -75,7 +75,14 @@ fi
 [[ -z "$CDELIMG" ]] && CDELIMG=1
 [[ -z "$CONVER" ]] && CONVER='raw'
 [[ -z "$DISATFS" ]] && DISATFS=1
-[[ -z "$(glog build_times)" ]] && time_build="1230768000" || time_build="$(glog build_times)"
+
+[ -f $ETC/mke2fs.conf ] && export MKE2FS_CONFIG="$ETC/mke2fs.conf"
+# Thời gian build
+time_build="$(glog build_times_new)"
+[ -z "$time_build" ] && time_build="1230768000 Asia/Shanghai"
+time_build_tz="$(echo "$time_build" | awk '{print $1}')"
+time_tz="$(echo "$time_build" | awk '{print $2}')"
+[ -z "$time_tz" ] || export TZ="$time_tz"
 
 info="${INPUT%/*}/config/${INPUT##*/}_info"
 fs_config="${INPUT%/*}/config/${INPUT##*/}_fs_config"
@@ -87,7 +94,6 @@ kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
 dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
 lvnen="$(glog nen_br 8)"
 info_type="$(cat "$info" 2>/dev/null)"
-export MKE2FS_CONFIG="$ETC/mke2fs.conf"
 
 # Ép build mặc định đối với định dạng sau
 if [[ "$info_type" =~ ^(vendor_boot|logo|squashfs|boot|vbmeta|vbmeta_system|dtbo)$ ]];then
