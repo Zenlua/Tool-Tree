@@ -39,9 +39,9 @@ elif [[ "${vv##*/}" == *ThemeManager* ]];then
     if [ "$fix_themes" == 1 ];then
     Tmtong="$(Timkiem '$onlineThemeDetail' $oi/smali)"
     if [ "$Tmtong" ]; then
-    for vv in $(grep 'Lcom/android/thememanager/detail/theme/model/OnlineResourceDetail;->bought:Z' $Tmtong); do
-    luv="$(echo "$vv" | awk '{print $2}')"
-    Thaythe "$vv" "$vv \n const/4 $luv 0x1" $Tmtong
+    for vqq1 in $(grep 'Lcom/android/thememanager/detail/theme/model/OnlineResourceDetail;->bought:Z' $Tmtong); do
+    luv="$(echo "$vqq1" | awk '{print $2}')"
+    Thaythe "$vqq1" "$vqq1 \n const/4 $luv 0x1" $Tmtong
     done
     fi
     Tmtong2="$(Timkiem 'OnlineResourceDetailPresenter_code_changed' $oi/smali)"
