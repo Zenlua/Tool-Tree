@@ -530,17 +530,15 @@ if [ "$fix_toolbox" == 1 ];then
             :try_end\
             .catchall {:try_start .. :try_end} :after_appinj\
             :after_appinj' "$path_smali_2" || about "Error method iput-object mLoadedApk"
-        else
-            killtree "KaoriosToolbox has already been patched and cannot be patched again !" "$oi"
+            # xử lý còn lại
+            mkdir -p "$psystem/priv-app/KaoriosToolbox/lib/arm64"
+            cp -rf "$MPAT/mod/KaoriosToolbox.apk" "$psystem/priv-app/KaoriosToolbox"
+            unzip -qoj "$MPAT/mod/KaoriosToolbox.apk" lib/arm64-v8a/* -d "$psystem/priv-app/KaoriosToolbox/lib/arm64"
+            cp -rf "$MPAT/mod/com.kousei.kaorios.xml" "$psystem/etc/permissions"
+            sprop persist.sys.kaorios kousei "$psystem/build.prop"
+            echo "Auto added to the project: persist.sys.kaorios=kousei, com.kousei.kaorios.xml, KaoriosToolbox.apk"
+            echo
         fi
-        # xử lý còn lại
-        mkdir -p "$psystem/priv-app/KaoriosToolbox/lib/arm64"
-        cp -rf "$MPAT/mod/KaoriosToolbox.apk" "$psystem/priv-app/KaoriosToolbox"
-        unzip -qoj "$MPAT/mod/KaoriosToolbox.apk" lib/arm64-v8a/* -d "$psystem/priv-app/KaoriosToolbox/lib/arm64"
-        cp -rf "$MPAT/mod/com.kousei.kaorios.xml" "$psystem/etc/permissions"
-        sprop persist.sys.kaorios kousei "$psystem/build.prop"
-        echo "Auto added to the project: persist.sys.kaorios=kousei, com.kousei.kaorios.xml, KaoriosToolbox.apk"
-        echo
     fi
 fi
 
