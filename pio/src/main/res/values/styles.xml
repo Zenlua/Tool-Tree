@@ -20,7 +20,9 @@
         <item name="android:checkboxStyle">@style/SceneCheckBox</item>
         <item name="android:radioButtonStyle">@style/SceneRadioBox</item>
     </style>
-
+    <style name="PopupMenu" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@color/window_bg_dark</item>
+    </style>
     <style name="AppThemeDark" parent="Theme.AppCompat">
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowTranslucentStatus">false</item>
