@@ -1,5 +1,0 @@
-<resources>
-    <style name="PopupMenu" parent="Widget.AppCompat.PopupMenu">
-        <item name="android:popupBackground">@color/window_bg_light</item>
-    </style>
-</resources>
