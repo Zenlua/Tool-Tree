@@ -399,6 +399,7 @@ APIs="$(gprop "ro.system.build.version.sdk" "$psystem/build.prop")"
 
 if [ "$fix_apksign" == 1 ];then
     if [ "${vv##*/}" == "framework.jar" ];then
+        patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
         Thayivo 1 'invoke-static.*Ljava/security/MessageDigest;->isEqual([B[B)Z' $oi/smali/classes*/android/util/apk/ApkSignatureSchemeV2Verifier.smali
         Thayivo 1 'invoke-virtual.*Ljava/security/Signature;->verify([B)Z' $oi/smali/classes*/android/util/apk/ApkSignatureSchemeV2Verifier.smali
         Thayivo 1 'invoke-static.*Ljava/security/MessageDigest;->isEqual([B[B)Z' $oi/smali/classes*/android/util/apk/ApkSignatureSchemeV3Verifier.smali
