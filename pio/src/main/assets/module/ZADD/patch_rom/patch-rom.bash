@@ -625,8 +625,8 @@ fi
 }
 
 del_app(){
-for vv in $@; do
-[ -n "$vv" ] && find $SDH/$PTSH -name "$vv" -print -exec rm -rf {} +
+for vcdel in $@; do
+[ -n "$vcdel" ] && find $SDH/$PTSH -name "$vcdel" -print -exec rm -rf {} +
 done
 }
 
@@ -677,18 +677,18 @@ vcv="$(echo "$1" | head -n1 | sed 's|/|\\/|g')"
 
 Thayme(){
 urlsmali="$(find $2 -type f 2>/dev/null)"
-for vv in $urlsmali; do
-if [ -f "$vv" ];then
+for vcc2 in $urlsmali; do
+if [ -f "$vcc2" ];then
 vcv="$(echo "$1" | head -n1 | sed -e 's|/|\\/|g' -e 's|\[|\\[|g')"
-sed -i "/$vcv/,/.end method/d" "$vv" && echo "$1" >> "$vv" || about "Error: $vv"
+sed -i "/$vcv/,/.end method/d" "$vcc2" && echo "$1" >> "$vcc2" || about "Error: $vcc2"
 fi
 done
 }
 
 Thaythe(){
 if [ "$3" ];then
-for vv in $(find $3 -type f 2>/dev/null); do
-[ -f "$vv" ] && toybox sed -i "s!$1!$2!" "$vv" || about "Error: $vv"
+for vcc1 in $(find $3 -type f 2>/dev/null); do
+[ -f "$vcc1" ] && toybox sed -i "s!$1!$2!" "$vcc1" || about "Error: $vcc1"
 done
 fi
 }
