@@ -67,9 +67,9 @@ time_build="$(glog build_times_new "1230768000 Asia/Shanghai")"
 time_build_tz="$(echo "$time_build" | awk '{print $1}')"
 time_tz="$(echo "$time_build" | awk '{print $2}')"
 if [ -z "$time_tz" ];then
-time_riviu="$(date -d @${time_build_tz:-1230768000})"
-elsse
-time_riviu="$(TZ=$time_tz date -d @$time_build_tz)"
+time_riviu="$(date -d "@${time_build_tz:-1230768000}")"
+else
+time_riviu="$(TZ="$time_tz" date -d "@$time_build_tz")"
 fi
 
 xml_print '<action icon="'`urlpng config`'" shell="hidden" reload="true">
