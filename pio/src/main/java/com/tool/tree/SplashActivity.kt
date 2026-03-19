@@ -32,6 +32,7 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
+import android.util.TypedValue
 
 class SplashActivity : AppCompatActivity() {
 
@@ -82,22 +83,33 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-private fun applyTheme() {
-    val bgColor = ContextCompat.getColor(this, R.color.splash_bg_color)
-
-    window.statusBarColor = bgColor
-    window.navigationBarColor = bgColor
-
-    val controller = WindowCompat.getInsetsController(window, window.decorView)
-
-    val isDark =
-        (resources.configuration.uiMode and
-                Configuration.UI_MODE_NIGHT_MASK) ==
-                Configuration.UI_MODE_NIGHT_YES
-
-    controller?.isAppearanceLightStatusBars = !isDark
-    controller?.isAppearanceLightNavigationBars = !isDark
-}
+    private fun getThemeColor(attr: Int): Int {
+        val typedValue = TypedValue()
+        theme.resolveAttribute(attr, typedValue, true)
+    
+        return if (typedValue.resourceId != 0) {
+            getColor(typedValue.resourceId)
+        } else {
+            typedValue.data
+        }
+    }
+    
+    private fun applyTheme() {
+        val bgColor = getThemeColor(android.R.attr.windowBackground)
+    
+        window.statusBarColor = bgColor
+        window.navigationBarColor = bgColor
+    
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+    
+        val isDark =
+            (resources.configuration.uiMode and
+                    Configuration.UI_MODE_NIGHT_MASK) ==
+                    Configuration.UI_MODE_NIGHT_YES
+    
+        controller?.isAppearanceLightStatusBars = !isDark
+        controller?.isAppearanceLightNavigationBars = !isDark
+    }
 
     // =================== AGREEMENT ===================
     private fun showAgreementDialog() {
