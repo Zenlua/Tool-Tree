@@ -149,8 +149,10 @@ elif [[ "${vv##*/}" == *FrequentPhrase* ]]; then
     </resources>' "$oi/resources/package_1/res/values/dimens.xml"
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
     Thaythe com.iflytek.inputmethod.miui "$(glog ime_app)" "$(Timkiem com.iflytek.inputmethod.miui "$oi/smali")"
-    [ "$(gprop ro.miui.support_miui_ime_bottom "$psystem/build.prop")" == 1 ] || sprop "ro.miui.support_miui_ime_bottom" 1 "$psystem/build.prop"
+    if [ "$(gprop ro.miui.support_miui_ime_bottom "$psystem/build.prop")" != 1 ];then
+    sprop "ro.miui.support_miui_ime_bottom" 1 "$psystem/build.prop"
     cp -rf "$MPAT/mod/GestureLineOverlay.apk" "$pproduct/overlay"
+    fi
 elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
     patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
     Thaythe 'Lmiuix/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isZero:Z' $oi/smali/classes*/com/android/systemui/navigationbar/NavigationBar.smali
