@@ -1,6 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 set -o pipefail
+IFS=$'\n'
 
 fixapps(){
 for vv in $@; do
@@ -300,10 +301,11 @@ elif [ "${vv##*/}" == "Settings.apk" ];then
     .end method' $oi/smali/classes*/com/android/settings/device/MiuiGuaranteeCard.smali
 
     # thông tin
-    if [ "$(grep -cm1 device_description_cpu "$oi/resources/package_1/res/values/strings.xml")" == 0 ];then
+    if [ "$(grep -cm1 device_description_cpu "$oi/resources/package_1/res/values/strings.xml")" != 1 ];then
     smurl1="$(find $oi/smali/classes*/com/android/settings/device/DeviceParamsInitHelper.smali -type f)"
     if [ -f "$smurl1" ];then
     for vnl in $(grep -B 2 -n "langType" "$smurl1" | tac | grep 'move-result-object'); do
+    echo "$vnl"
     sed -i "$(echo "$vnl" | cut -d- -f1)a\ const-string $(echo "$vnl" | awk '{print $3}'), \"enUS\"" "$smurl1"
     done
     fi
