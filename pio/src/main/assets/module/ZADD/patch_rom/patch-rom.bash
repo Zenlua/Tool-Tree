@@ -153,7 +153,7 @@ elif [ "${vv##*/}" == "miui-framework.jar" ];then
     cp -rf "$MPAT/mod/GestureLineOverlay.apk" "$pproduct/overlay"
 elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
     patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
-    Thaythe 'Lmiuix/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isZero()Z' "$oi/smali/classes*/com/android/systemui/navigationbar/NavigationBar.smali"
+    Thaythe 'Lmiuix/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isZero:Z' $oi/smali/classes*/com/android/systemui/navigationbar/NavigationBar.smali
 elif [ "${vv##*/}" == "Settings.apk" ];then
     Thaythe com.iflytek.inputmethod.miui "$(glog ime_app)" "$(Timkiem com.iflytek.inputmethod.miui "$oi/smali" | sed '/MecBoardInputController/d')"
     Thayvc 1 '.method public static isMiuiImeBottomSupport()Z' $oi/smali/classes*/com/android/settings/inputmethod/InputMethodFunctionSelectUtils.smali
