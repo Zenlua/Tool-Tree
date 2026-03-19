@@ -541,6 +541,7 @@ if [ "$fix_toolbox" == 1 ];then
         cp -rf "$MPAT/mod/com.kousei.kaorios.xml" "$psystem/etc/permissions"
         sprop persist.sys.kaorios kousei "$psystem/build.prop"
         echo "Auto added to the project: persist.sys.kaorios=kousei, com.kousei.kaorios.xml, KaoriosToolbox.apk"
+        echo
     fi
 fi
 
@@ -721,7 +722,7 @@ Thayivo(){
 urlsmali="$(find $3 -type f -print -quit 2>/dev/null)"
 if [ "$1" == 1 ];then
 textvbs='invoke-static {}, Lmiuix/os/xBuild;->isOne()Z'
-elsse
+else
 textvbs='invoke-static {}, Lmiuix/os/xBuild;->isZero()Z'
 fi
 [ -f "$urlsmali" ] && sed -i "s|${2//\[/\\[}|$textvbs|g" "$urlsmali" || about "Error: $urlsmali"
