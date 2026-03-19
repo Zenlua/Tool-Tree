@@ -459,7 +459,7 @@ fi
 if [ "$fix_toolbox" == 1 ];then
     # kiểm tra mạng và tải xuống
     if checkonline; then
-        echo "Kiểm tra phiên bản..."
+        echo "Check version..."
         echo
         linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
         pbver="$(echo "$linkurrl" | jq -r ".tag_name")"
@@ -471,7 +471,7 @@ if [ "$fix_toolbox" == 1 ];then
         downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "com.kousei.kaorios.xml")" "$MPAT/mod/com.kousei.kaorios.xml" &>/dev/null
         downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "classes.*\.dex")" "$MPAT/mod/classes.dex" &>/dev/null
         else
-        echo "Là phiên bản mới nhất: $pbver"
+        echo "This is the latest version.: $pbver"
         fi
     else
         [ -f $MPAT/mod/version ] || killtree "$network_text"
@@ -532,7 +532,7 @@ if [ "$fix_toolbox" == 1 ];then
             .catchall {:try_start .. :try_end} :after_appinj\
             :after_appinj' "$path_smali_2" || about "Error method iput-object mLoadedApk"
         else
-            killtree "Đã vá KaoriosToolbox rồi không thể vá lại !" "$oi"
+            killtree "KaoriosToolbox has already been patched and cannot be patched again !" "$oi"
         fi
         echo
         # xử lý còn lại
@@ -541,9 +541,9 @@ if [ "$fix_toolbox" == 1 ];then
         unzip -qoj "$MPAT/mod/KaoriosToolbox.apk" lib/arm64-v8a/* -d "$psystem/priv-app/KaoriosToolbox/lib/arm64"
         cp -rf "$MPAT/mod/com.kousei.kaorios.xml" "$psystem/etc/permissions"
         sprop persist.sys.kaorios kousei "$psystem/build.prop"
-        echo "Lưu ở: $outfw"
+        echo "Save at: $outfw"
         echo
-        echo "Đã tự động thêm vào project: persist.sys.kaorios=kousei, com.kousei.kaorios.xml, KaoriosToolbox.apk"
+        echo "Auto added to the project: persist.sys.kaorios=kousei, com.kousei.kaorios.xml, KaoriosToolbox.apk"
     fi
 fi
 
