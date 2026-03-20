@@ -493,6 +493,7 @@ if [ "$fix_toolbox" == 1 ];then
         if ! ls "$oi"/smali/classes*/com/android/internal/util/kaorios &>/dev/null; then
             kkklast=$(ls -1d "$oi"/smali/classes* 2>/dev/null | sort | tail -n1)
             cp -rf "$MPAT/mod/classes.dex" "$oi/dex/classes$(( ${kkklast##*classes} + 1 )).dex"
+            sed -i '/"resources\.arsc"/i\    "'$(( ${kkklast##*classes} + 1 ))'.dex",' $oi/uncompressed-files.json
             path_smali_4="$(find $oi/smali/classes*/android/security/KeyStore2.smali -type f)"
             [ -f "$path_smali_4" ] && sed -i '/\.method public .*getKeyEntry/,/\.end method/ s/check-cast \([vp][0-9][0-9]*\), Landroid\/system\/keystore2\/KeyEntryResponse;/check-cast \1, Landroid\/system\/keystore2\/KeyEntryResponse;\
             invoke-static {\1}, Lcom\/android\/internal\/util\/kaorios\/KaoriKeyboxHooks;->KaoriGetKeyEntry(Landroid\/system\/keystore2\/KeyEntryResponse;)Landroid\/system\/keystore2\/KeyEntryResponse;\
@@ -733,7 +734,7 @@ textvbs='invoke-static {}, Lmiuix/os/xBuild;->isOne()Z'
 else
 textvbs='invoke-static {}, Lmiuix/os/xBuild;->isZero()Z'
 fi
-[ -f "$urlsmali" ] && sed -i "s|${2//\[/\\[}|$textvbs|g" "$urlsmali" || about "Error: $urlsmali"
+[ -f "$urlsmali" ] && sed -i "/$(echo "$2" | sed -e 's|/|\\/|g' -e 's|\[|\\[|g')/a $textvbs" "$urlsmali" || about "Error: $urlsmali"
 }
 
 # hiện tại
