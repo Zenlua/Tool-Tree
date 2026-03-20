@@ -61,17 +61,8 @@ fi
 }
 
 show_config(){
-
 # thời gian build rom
-time_build="$(glog build_times_new "1230768000 Asia/Shanghai")"
-time_build_tz="$(echo "$time_build" | awk '{print $1}')"
-time_tz="$(echo "$time_build" | awk '{print $2}')"
-if [ -z "$time_tz" ];then
-time_riviu="$(date -d "@${time_build_tz:-1230768000}")"
-else
-time_riviu="$(TZ="$time_tz" date -d "@$time_build_tz")"
-fi
-
+time_riviu="$(date -d "@`glog build_times 1230768000`")"
 xml_print '<action icon="'`urlpng config`'" shell="hidden" reload="true">
 <title>'$config_text'</title>
 <param name="un_tool_ext4" value-sh="glog un_tool_ext4 0" label="'$option_text'" title="'$tool_unpack_text' ext4" options-sh="echo -e '"'0|imgextractor\n1|imgkit_scuti'"' "/>
@@ -79,14 +70,14 @@ xml_print '<action icon="'`urlpng config`'" shell="hidden" reload="true">
 <param name="un_tool_f2fs" value-sh="glog un_tool_f2fs 0" label="'$option_text'" title="'$tool_unpack_text' f2fs" options-sh="echo -e '"'0|extract.f2fs\n1|imgkit_scuti'"' "/>
 <param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" title="'$builds_text_5'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar"/>
 <param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" title="'$convert_text_1'" desc="'$convert_text_2'"/>
-<param name="build_times_new" label="'$time_text'" value-sh="glog build_times_new" type="number" title="'$build_time_text_1'" desc="'$build_time_text_2' '$time_riviu'" required="required" />
+<param name="build_times" label="'$time_text'" value-sh="glog build_times" type="number" title="'$build_time_text_1'" desc="'$build_time_text_2' '$time_riviu'" required="required" />
 <set>
 slog un_tool_ext4 "$un_tool_ext4"
 slog un_tool_erofs "$un_tool_erofs"
 slog un_tool_f2fs "$un_tool_f2fs"
 slog muc_nen "$muc_nen"
 slog nen_br "$nen_br"
-slog build_times_new "$build_times_new"
+slog build_times "$build_times"
 </set>
 </action>'
 }

@@ -78,12 +78,8 @@ fi
 
 [ -f $ETC/mke2fs.conf ] && export MKE2FS_CONFIG="$ETC/mke2fs.conf"
 # Thời gian build
-time_build_tz="$(glog build_times_new)"
-[ -z "$time_build_tz" ] && time_build_tz="1230768000 Asia/Shanghai"
-time_build="$(echo "$time_build_tz" | awk '{print $1}')"
-time_tz="$(echo "$time_build_tz" | awk '{print $2}')"
-[ -z "$time_tz" ] || export TZ="$time_tz"
-
+time_build="$(glog build_times)"
+[ -z "$time_build" ] && time_build="1230768000"
 info="${INPUT%/*}/config/${INPUT##*/}_info"
 fs_config="${INPUT%/*}/config/${INPUT##*/}_fs_config"
 file_contexts="${INPUT%/*}/config/${INPUT##*/}_file_contexts"
