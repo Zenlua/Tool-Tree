@@ -16,7 +16,7 @@ if [ "${vv##*/}" == "MIUIGallery.apk" ];then
     if [ "$fix_mapcn" == 1 ];then
     patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
     Thayvc 0 'method public static checkMapAvailable()Z' $oi/smali/classes*/com/miui/gallery/map/utils/MapInitializerImpl.smali
-    Thaythe 'Lcom/miui/gallery/util/BuildUtil;->isGlobal()Z' 'Lmiuix/os/xBuild;->isOne()Z' $oi/smali/classes*/com/miui/gallery/ui/featured/type/ItemTypeSortManager.smali
+    Thaythe 'Lcom/miui/gallery/util/BuildUtil;->isGlobal()Z' 'Lmiui/xBuild;->isOne()Z' $oi/smali/classes*/com/miui/gallery/ui/featured/type/ItemTypeSortManager.smali
     fi
 elif [ "${vv##*/}" == "Joyose.apk" ];then
     if [ "$fix_joyose" == 1 ];then
@@ -28,7 +28,7 @@ elif [ "${vv##*/}" == "Joyose.apk" ];then
 elif [ "${vv##*/}" == "MIUIWeather.apk" ];then
     if [ "$fix_thoit" == 1 ];then
     patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
-    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' "$oi/smali/classes*/com/miui/weather2/view/onOnePage/DailyForecastTable.smali
+    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiui/xBuild;->isTrue:Z' "$oi/smali/classes*/com/miui/weather2/view/onOnePage/DailyForecastTable.smali
     $oi/smali/classes*/com/miui/weather2/structures/AQIData.smali
     $oi/smali/classes*/com/miui/weather2/view/onOnePage/RealTimeDetailCard.smali
     $oi/smali/classes*/com/miui/weather2/view/WeatherScrollView.smali
@@ -161,7 +161,7 @@ elif [ "${vv##*/}" == "miui-framework.jar" ];then
     fi
 elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
     patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
-    Thaythe 'Lmiuix/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isZero:Z' $oi/smali/classes*/com/android/systemui/navigationbar/NavigationBar.smali
+    Thaythe 'Lmiuix/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiui/xBuild;->isFalse:Z' $oi/smali/classes*/com/android/systemui/navigationbar/NavigationBar.smali
 elif [ "${vv##*/}" == "Settings.apk" ];then
     Thaythe com.iflytek.inputmethod.miui "$(glog ime_app)" "$(Timkiem com.iflytek.inputmethod.miui "$oi/smali" | sed '/MecBoardInputController/d')"
     Thayvc 1 '.method public static isMiuiImeBottomSupport()Z' $oi/smali/classes*/com/android/settings/inputmethod/InputMethodFunctionSelectUtils.smali
@@ -186,44 +186,44 @@ echo
 patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
 # patch method
 if [ "${vv##*/}" == "miui-services.jar" ];then
-    [ "$fix_noti" == 1 ] && Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' "$oi/smali/classes*/com/android/server/notification/NotificationManagerServiceImpl.smali
+    [ "$fix_noti" == 1 ] && Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiui/xBuild;->isTrue:Z' "$oi/smali/classes*/com/android/server/notification/NotificationManagerServiceImpl.smali
     $oi/smali/classes*/com/android/server/am/ProcessSceneCleaner.smali
     $oi/smali/classes*/com/android/server/am/ProcessManagerService.smali
     $oi/smali/classes*/com/android/server/am/BroadcastQueueModernStubImpl.smali"
     if [ "$fix_global" == 1 ];then
     Thayvc 1 '.method public static isCTS()Z' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
-    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' "$oi/smali/classes/com/android/server/ForceDarkAppListManager.smali"
+    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiui/xBuild;->isTrue:Z' "$oi/smali/classes/com/android/server/ForceDarkAppListManager.smali"
     fi
 elif [ "${vv##*/}" == "PowerKeeper.apk" ];then
-    [ "$fix_noti" == 1 ] && Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' "$oi/smali/classes*/com/miui/powerkeeper/statemachine/PhoneSleepModeController\$SleepHandler.smali
+    [ "$fix_noti" == 1 ] && Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiui/xBuild;->isTrue:Z' "$oi/smali/classes*/com/miui/powerkeeper/statemachine/PhoneSleepModeController\$SleepHandler.smali
     $oi/smali/classes*/com/miui/powerkeeper/statemachine/PhoneSleepModeController.smali
     $oi/smali/classes*/com/miui/powerkeeper/statemachine/PadSleepModeController\$SleepHandler.smali
     $oi/smali/classes*/com/miui/powerkeeper/statemachine/PadSleepModeController.smali"
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
-    [ "$fix_noti" == 1 ] && Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' "$oi/smali/classes*/com/android/internal/app/ChooserActivityStubImpl.smali
+    [ "$fix_noti" == 1 ] && Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiui/xBuild;->isTrue:Z' "$oi/smali/classes*/com/android/internal/app/ChooserActivityStubImpl.smali
     $oi/smali/classes*/android/app/AppOpsManagerInjector.smali"
     if [ "$fix_global" == 1 ];then
     cp -rf "$MPAT/mod/eu" "$oi/smali/classes"
-    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' "$oi/smali/classes*/miui/util/font/MultiLangHelper.smali
+    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiui/xBuild;->isTrue:Z' "$oi/smali/classes*/miui/util/font/MultiLangHelper.smali
     $oi/smali/classes*/com/android/internal/app/ChooserActivityStubImpl.smali
     $oi/smali/classes*/miui/util/font/SymlinkUtils.smali
     $oi/smali/classes*/android/app/AppOpsManagerInjector.smali"
     fi
 elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
     if [ "$fix_noti" == 1 ];then
-    Thaythe 'Lcom/miui/utils/configs/MiuiConfigs;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' \
+    Thaythe 'Lcom/miui/utils/configs/MiuiConfigs;->IS_INTERNATIONAL_BUILD:Z' 'Lmiui/xBuild;->isTrue:Z' \
     "$oi/smali/classes*/com/android/systemui/statusbar/notification/utils/NotificationUtil.smali
     $oi/smali/classes*/com/miui/systemui/notification/MiuiBaseNotifUtil.smali
     $oi/smali/classes*/com/miui/systemui/notification/NotificationSettingsManager.smali
     $oi/smali/classes*/com/android/systemui/statusbar/notification/interruption/MiuiNotificationInterruptStateProviderImpl.smali"
-    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiuix/os/xBuild;->isOne:Z' "$oi/smali/classes*/com/miui/keyguard/biometrics/fod/MiuiGxzwQuickOpenUtil.smali
+    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lmiui/xBuild;->isTrue:Z' "$oi/smali/classes*/com/miui/keyguard/biometrics/fod/MiuiGxzwQuickOpenUtil.smali
     $oi/smali/classes*/com/android/systemui/assist/PhoneStateMonitor.smali"
     fi
 elif [ "${vv##*/}" == "Settings.apk" ];then
     if [ "$fix_global" == 1 ];then
     Thaycn '.method public static isNeedRemoveKidSpaceInternal(Landroid/content/Context;)Z' 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' \
-    'Lmiuix/os/xBuild;->isOne:Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
-    Thaythe 'sget-boolean v0, Lmiui/os/Build;->IS_GLOBAL_BUILD:Z' 'sget-boolean v0, Lmiuix/os/xBuild;->isOne:Z' $oi/smali/classes*/com/android/settings/MiuiSettings.smali
+    'Lmiui/xBuild;->isTrue:Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
+    Thaythe 'sget-boolean v0, Lmiui/os/Build;->IS_GLOBAL_BUILD:Z' 'sget-boolean v0, Lmiui/xBuild;->isTrue:Z' $oi/smali/classes*/com/android/settings/MiuiSettings.smali
     Thayvc 1 '.method public static isLocationNeeded(Landroid/content/Context;)Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
     Thayvc 1 '.method public static isPrivacyNeeded(Landroid/content/Context;)Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
     
@@ -419,13 +419,14 @@ if [ "$fix_apksign" == 1 ];then
         Thayivo 1 'invoke-static.*Ljava/security/MessageDigest;->isEqual([B[B)Z' $oi/smali/classes*/android/util/apk/ApkSigningBlockUtils.smali
         Thayivo 1 'invoke-virtual.*Ljava/security/Signature;->verify([B)Z' $oi/smali/classes*/android/util/apk/ApkSigningBlockUtils.smali
         Thayvc 1 '.method private static.*.verifyMessageDigest([B[B)Z' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali
+        Thayvc 1 '.method.*.-$$Nest$smverifyMessageDigest([B[B)Z' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali
         Thayvc 0 '.method public.*.containsAllocatedTable()Z' $oi/smali/classes*/android/content/res/AssetManager.smali
         Thayvc 1 '.method public.*.checkCapability(Landroid/content/pm/SigningDetails;I)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
         Thayvc 1 '.method public.*.hasCommonAncestor(Landroid/content/pm/SigningDetails;)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
         Thayvc 1 '.method public.*.signaturesMatchExactly(Landroid/content/pm/SigningDetails;)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
         Thayvc 1 '.method public.*.checkCapability(Ljava/lang/String;I)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
         Thayvc 1 '.method public.*.checkCapabilityRecover(Landroid/content/pm/SigningDetails;I)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
-        Thayvc 1 '.method public.*.hasAncestorOrSelf(Landroid/content/pm/SigningDetails;)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
+        #Thayvc 1 '.method public.*.hasAncestorOrSelf(Landroid/content/pm/SigningDetails;)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
         Thayvc 1 '.method public.*.checkCapability(Landroid/content/pm/PackageParser$SigningDetails;I)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
         Thayvc 1 '.method public.*.signaturesMatchExactly(Landroid/content/pm/PackageParser$SigningDetails;)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
         Thayvc 1 '.method public.*.hasCommonAncestor(Landroid/content/pm/PackageParser$SigningDetails;)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
@@ -493,7 +494,7 @@ if [ "$fix_toolbox" == 1 ];then
         if ! ls "$oi"/smali/classes*/com/android/internal/util/kaorios &>/dev/null; then
             kkklast=$(ls -1d "$oi"/smali/classes* 2>/dev/null | sort | tail -n1)
             cp -rf "$MPAT/mod/classes.dex" "$oi/dex/classes$(( ${kkklast##*classes} + 1 )).dex"
-            sed -i '/"resources\.arsc"/i\    "'$(( ${kkklast##*classes} + 1 ))'.dex",' $oi/uncompressed-files.json
+            sed -i '/"resources\.arsc"/i\    "classes'$(( ${kkklast##*classes} + 1 ))'.dex",' $oi/uncompressed-files.json
             path_smali_4="$(find $oi/smali/classes*/android/security/KeyStore2.smali -type f)"
             [ -f "$path_smali_4" ] && sed -i '/\.method public .*getKeyEntry/,/\.end method/ s/check-cast \([vp][0-9][0-9]*\), Landroid\/system\/keystore2\/KeyEntryResponse;/check-cast \1, Landroid\/system\/keystore2\/KeyEntryResponse;\
             invoke-static {\1}, Lcom\/android\/internal\/util\/kaorios\/KaoriKeyboxHooks;->KaoriGetKeyEntry(Landroid\/system\/keystore2\/KeyEntryResponse;)Landroid\/system\/keystore2\/KeyEntryResponse;\
@@ -656,14 +657,14 @@ about(){ echo -e "$1" >&2; }
 patch_smali(){
 if [ ! -f "$1" ];then
 mkdir -p "${1%/*}"
-echo '.class public Lmiuix/os/xBuild;
+echo '.class public Lmiui/xBuild;
 .super Ljava/lang/Object;
 
 # static fields
-.field public static final isOne:Z = true
-.field public static final isZero:Z
+.field public static final isTrue:Z = true
+.field public static final isFalse:Z
 
-# invoke-static {}, Lmiuix/os/xBuild;->isOne()Z
+# invoke-static {}, Lmiui/xBuild;->isOne()Z
 # move-result v0
 .method public static isOne()Z
     .registers 1
@@ -671,7 +672,7 @@ echo '.class public Lmiuix/os/xBuild;
     return v0
 .end method
 
-# invoke-static {}, Lmiuix/os/xBuild;->isZero()Z
+# invoke-static {}, Lmiui/xBuild;->isZero()Z
 # move-result v0
 .method public static isZero()Z
     .registers 1
@@ -714,6 +715,20 @@ Thayme "$(grep -m1 "${2//\[/\\[}" "$urlsmali")
     .locals 1
     return-void
 .end method" "$urlsmali"
+elif [ "$1" == 0 ];then
+Thayme "$(grep -m1 "${2//\[/\\[}" "$urlsmali")
+    .locals 1
+    invoke-static {}, Lmiui/xBuild;->isZero()Z
+    move-result v0
+    return v0
+.end method" "$urlsmali"
+elif [ "$1" == 1 ];then
+Thayme "$(grep -m1 "${2//\[/\\[}" "$urlsmali")
+    .locals 1
+    invoke-static {}, Lmiui/xBuild;->isOne()Z
+    move-result v0
+    return v0
+.end method" "$urlsmali"
 else
 [ $1 -ge 8 ] && ui=16 || ui=4
 Thayme "$(grep -m1 "${2//\[/\\[}" "$urlsmali")
@@ -730,9 +745,9 @@ fi
 Thayivo(){
 urlsmali="$(find $3 -type f -print -quit 2>/dev/null)"
 if [ "$1" == 1 ];then
-textvbs='invoke-static {}, Lmiuix/os/xBuild;->isOne()Z'
+textvbs='invoke-static {}, Lmiui/xBuild;->isOne()Z'
 else
-textvbs='invoke-static {}, Lmiuix/os/xBuild;->isZero()Z'
+textvbs='invoke-static {}, Lmiui/xBuild;->isZero()Z'
 fi
 [ -f "$urlsmali" ] && sed -i "/$(echo "$2" | sed -e 's|/|\\/|g' -e 's|\[|\\[|g')/a $textvbs" "$urlsmali" || about "Error: $urlsmali"
 }
