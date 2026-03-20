@@ -418,7 +418,6 @@ if [ "$fix_apksign" == 1 ];then
         Thayvc 1 '.method public static.*.getMinimumSignatureSchemeVersionForTargetSdk(I)I' $oi/smali/classes*/android/util/apk/ApkSignatureVerifier.smali
         Thayivo 1 'invoke-static.*Ljava/security/MessageDigest;->isEqual([B[B)Z' $oi/smali/classes*/android/util/apk/ApkSigningBlockUtils.smali
         Thayivo 1 'invoke-virtual.*Ljava/security/Signature;->verify([B)Z' $oi/smali/classes*/android/util/apk/ApkSigningBlockUtils.smali
-        Thayivo 1 'invoke-virtual.*Landroid/util/jar/StrictJarFile;->findEntry(Ljava/lang/String;)Ljava/util/zip/ZipEntry;' $oi/smali/classes*/android/util/jar/StrictJarFile.smali
         Thayvc 1 '.method private static.*.verifyMessageDigest([B[B)Z' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali
         Thayvc 0 '.method public.*.containsAllocatedTable()Z' $oi/smali/classes*/android/content/res/AssetManager.smali
         Thayvc 1 '.method public.*.checkCapability(Landroid/content/pm/SigningDetails;I)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
@@ -432,7 +431,8 @@ if [ "$fix_apksign" == 1 ];then
         Thayvc 1 '.method public.*.hasCommonAncestor(Landroid/content/pm/PackageParser$SigningDetails;)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
         Thayvc 1 '.method public.*.checkCapability(Ljava/lang/String;I)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
         Thayvc 1 '.method public.*.checkCapabilityRecover(Landroid/content/pm/PackageParser$SigningDetails;I)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
-        sed -i -E 's|iget-boolean[[:space:]]+([vp][0-9]+),[[:space:]]+[vp][0-9]+,[[:space:]]+Landroid/util/jar/StrictJarVerifier;->signatureSchemeRollbackProtectionsEnforced:Z|const/4 \1, 0x0|g' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali || about "Error: signatureSchemeRollbackProtectionsEnforced"
+        sed -Ei '/StrictJarFile;->findEntry/,/move-result-object ([vp][0-9]+)/s/(move-result-object ([vp][0-9]+))/\1\nconst\/4 \2, 0x1/' $oi/smali/classes*/android/util/jar/StrictJarFile.smali || about "Error: StrictJarFile;->findEntry"
+        sed -i -E 's/(iput-boolean ([vp][0-9]+), ([vp][0-9]+), .*RollbackProtectionsEnforced:Z)/const\/4 \2, 0x0\n    \1/' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali || about "Error: signatureSchemeRollbackProtectionsEnforced"
     elif [ "${vv##*/}" == "core-oj.jar" ];then
         Thayvc 1 '.method public static isEqual([B[B)Z' $oi/smali/classes*/java/security/MessageDigest.smali
         Thayvc 1 '.method public final verify([B)Z' $oi/smali/classes*/java/security/Signature.smali
