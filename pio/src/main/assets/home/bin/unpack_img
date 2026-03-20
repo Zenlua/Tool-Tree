@@ -163,7 +163,7 @@ fi
 if [ "$dang_tep" == 'zstd' ] || [ "$dang_tep" == 'gz' ] || [ "$dang_tep" == 'xz' ] || [ "$dang_tep" == 'lz4' ] || [ "$dang_tep" == 'lzma' ];then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
-    zstd --progress -f -d -k "$INPUT" -o "$file_img" &>"$TMP/unzstd.log"
+    zstd --progress -f -d -k "$INPUT" -o "$file_img" &>"$TMP/unzstd.log" || killtree "File extraction error: $INPUT"
     #process_count "$size_zstd" "$TMP/unzstd.log"
 elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
     tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
@@ -171,11 +171,11 @@ elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     [ "${INPUT##*.}" == 'br' ] && brotli -f -d "$INPUT" -o "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" &>/dev/null
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
-    sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" &>/dev/null
+    sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" &>$TMP/sdat2img_extra.log || killtree "File extraction error: $INPUT"
 elif [ "$dang_tep" == 'sparse' ];then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
-    simg2img "$INPUT" "$file_img"
+    simg2img "$INPUT" "$file_img" || killtree "File conversion error: $INPUT"
 elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
     payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$TMP" &>"$TMP/payload_extract.log" || killtree "Payload unpack error" &

@@ -97,12 +97,14 @@ TTBUILDI=0
 CONVER='raw'
 fi
 
-[ -f "$saved" ] && rm -fr "$saved"
-
+# Đổi biến
 if [ "$CONVER" != "raw" ];then
 out_saved="$saved"
 saved="$TMP/${saved##*/}"
 fi
+
+# Xoá file cũ nếu tồn tại
+[ -f "$saved" ] && rm -fr "$saved"
 
 # Chọn định dạng tệp phân vùng
 if [ "$TTBUILDI" == 1 ] || [ "$TTBUILDI" == 6 ] || [ "$TTBUILDI" == 8 ];then
