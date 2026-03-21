@@ -4,8 +4,6 @@
 
 - Supports both `root` or `non-root` versions and is only for `arm64-bit`
 
-- Version history: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
-
 - Download: **[Release](https://github.com/Zenlua/Tool-Tree/releases/latest)** or **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
 
 ### See details
@@ -17,6 +15,8 @@
 - If the application has root privileges, it will run faster you can copy the path directly from the log to access it directly.
 
 - Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)** or **[Telegram](https://t.me/tooltree)**
+
+- Version history: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
 ### Download add-ons:
 
