@@ -4,8 +4,8 @@ id=patch_rom
 name=Patch ROM
 author=Kakathic
 description=Quick ROM patch
-version=1.3
-versionCode=113
+version=1.4
+versionCode=114
 root=false
 
 # language

@@ -585,7 +585,7 @@ if [ "$rw_rom" == 1 ];then
     for vv in $pvendor/etc/fstab.* $pvendor_boot/ramdisk/first_stage_ramdisk/fstab.*; do
     if [ -f "$vv" ];then
     [ "$(grep '/system .*.discard' "$vv" | grep -cm1 ext4)" == 1 ] || echo "Warning: No partition containing ext4 was found; it needs to be added manually: $vv" >&2
-    sed -i '/camera/!s/^\(overlay.*\)/#\1/' "$vv"
+    sed -i '/camera\|audio\|sensor/!s/^\(overlay.*\)/#\1/' "$vv"
     fi
     done
     # di chuyển pangu và dọn dẹp

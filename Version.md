@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-Beta:
+**Version: 1.3.7 (21-3-2026)**
 
++ Revise the UI interface
 + Fix the findfile error caused by the file not being found
 
 **Version: 1.3.6 (12-3-2026)**

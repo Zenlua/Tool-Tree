@@ -47,16 +47,15 @@ class SplashActivity : AppCompatActivity() {
         applyAppLanguage()
         super.onCreate(savedInstanceState)
         ThemeModeState.switchTheme(this)
-
+        binding = ActivitySplashBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
         if (ScriptEnvironmen.isInited() && isTaskRoot) {
             gotoHome()
             return
         }
 
         if (!hasAgreed()) showAgreementDialog()
-
-        binding = ActivitySplashBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
         binding.startLogoXml.postDelayed({
             binding.startLogoXml.startAnimation(AnimationUtils.loadAnimation(this, R.anim.blink))
