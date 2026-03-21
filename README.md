@@ -6,7 +6,7 @@
 
 - Version history: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
-- Download: **[release](https://github.com/Zenlua/Tool-Tree/releases/latest)** - **[beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
+- Download: **[Release](https://github.com/Zenlua/Tool-Tree/releases/latest)** or **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
 
 ### See details
 
