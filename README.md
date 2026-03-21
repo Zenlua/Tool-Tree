@@ -6,9 +6,7 @@
 
 - Version history: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
-- [![Stars](https://img.shields.io/github/stars/Zenlua/Tool-Tree?label=Stars)](https://github.com/Zenlua)
-
-- Download: [![Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=Release&logo=github)](https://github.com/Zenlua/Tool-Tree/releases/latest) or [![Beta](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=Release&logo=github)](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)
+- Download: **[Release](https://github.com/Zenlua/Tool-Tree/releases/latest)** or **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
 
 ### See details
 
@@ -18,7 +16,7 @@
 
 - If the application has root privileges, it will run faster you can copy the path directly from the log to access it directly.
 
-- Report: [![Issues](https://img.shields.io/badge/github-repo-blue?logo=telegram)](https://t.me/tooltree) or [![Group](https://img.shields.io/badge/Telegram-Channel-blue.svg?logo=telegram)](https://t.me/tooltree)
+- Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)** or **[Telegram](https://t.me/tooltree)**
 
 ### Download add-ons:
 
