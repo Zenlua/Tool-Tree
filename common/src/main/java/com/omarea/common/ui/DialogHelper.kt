@@ -427,12 +427,13 @@ class DialogHelper {
                             setBackgroundDrawable(bg.toDrawable())
                             setDimAmount(0.5f)
                         } else {
-                        if (wallpaperMode || isNightMode(context)) {
-                            val d = Color.argb(255, 18, 18, 18).toDrawable()
-                            setBackgroundDrawable(d)
-                        } else {
-                            val d = Color.argb(255, 245, 245, 245).toDrawable()
-                            setBackgroundDrawable(d)
+                            if (wallpaperMode || isNightMode(context)) {
+                                val d = Color.argb(255, 18, 18, 18).toDrawable()
+                                setBackgroundDrawable(d)
+                            } else {
+                                val d = Color.argb(255, 245, 245, 245).toDrawable()
+                                setBackgroundDrawable(d)
+                            }
                         }
                     } catch (_: java.lang.Exception) {
                         setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
