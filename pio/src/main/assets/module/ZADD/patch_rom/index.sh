@@ -16,7 +16,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>
 </action>
 
 <action title="'"$title_delete"'" >
-<param name="del_app_patch" type="text" value-sh="glog del_app_patch" placeholder="VoiceAssist Sogou"/>
+<param name="del_app_patch" type="text" value-sh="glog del_app_patch" required="true" placeholder="VoiceAssist Sogou"/>
 <set>
 slog del_app_patch "$del_app_patch"
 '$pathsh' del_app "$del_app_patch"
@@ -26,7 +26,7 @@ slog del_app_patch "$del_app_patch"
 
 <group>
 <action title="'"$title_framework_patch"'" summary="Android 9+">
-<param name="FILE" option-sh="'$pathsh' search framework.jar services.jar miui-services.jar core-oj.jar" multiple="true" value-sh="glog kaorios_toolbox_patch_os" desc="'$string_text_1': '$PTSH'/***"/>
+<param name="FILE" option-sh="'$pathsh' search framework.jar services.jar miui-services.jar core-oj.jar" multiple="true" value-sh="glog kaorios_toolbox_patch_os" required="true" desc="'$string_text_1': '$PTSH'/***" />
 <param name="fix_toolbox" label="'"$label_fix_toolbox"'" desc="'$required_files_text': framework.jar (android 12+)" type="bool" />
 <param name="fix_apksign" label="'"$label_fix_apksign"'" desc="'$required_files_text': framework.jar, services.jar, (Xiaomi: miui-services.jar), (Android 11↓: core-oj.jar)" type="bool" />
 <set>
