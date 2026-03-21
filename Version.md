@@ -2,6 +2,7 @@
 
 **Version: 1.3.7 (21-3-2026)**
 
++ Fix the add-on patch ROM
 + Revise the UI interface
 + Fix the findfile error caused by the file not being found
 
