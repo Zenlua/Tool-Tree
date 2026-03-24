@@ -52,8 +52,9 @@ jobs:
           VER=$(grep -m1 'versionName ' pio/build.gradle | cut -d'"' -f2)
           echo "Tool-Tree $VER"
           echo "VER=$VER" >> $GITHUB_ENV
-          mkdir -p Up
+          mkdir -p Up Beta
           cp -rf pio/build/outputs/apk/*/*.apk "Up/Tool-Tree.$VER.apk"
+          cp -rf pio/build/outputs/apk/*/*.apk "Beta/Tool-Tree.apk"
           ls Up
           echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
           if [ "$UPTG" == "true" ];then
@@ -75,7 +76,7 @@ jobs:
         with:
           name: "Tool-Tree ${{ env.VER }} Beta"
           tag_name: "beta"
-          files: Up/*
+          files: Beta/*
           prerelease: true
 
       - name: Release APK

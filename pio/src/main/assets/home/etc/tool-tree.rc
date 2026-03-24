@@ -479,11 +479,12 @@ show_apkset
 echo "</group>"
 
 xml_print '<group>
-<action icon="'`urlpng cleanup`'" warning="'$project_text_4'" shell="hidden" >
+<action icon="'`urlpng cleanup`'" warning="'$project_text_4'" auto-off="true" >
 <title>'$project_text_3'</title>
 <param name="dels" label="'$option_text'" option-sh="findfile folders $SDH/$PTSH; findfile folders $APK/$PTAH" multiple="multiple"/>
 <set>
 for vl in $dels; do
+echo "Deleting the folder: $vl"
 rm -fr "$vl"
 done
 </set>

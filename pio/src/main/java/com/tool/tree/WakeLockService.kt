@@ -112,19 +112,47 @@ class WakeLockService : Service() {
             manager?.createNotificationChannel(channel)
         }
     }
-
+    
     private fun buildNotification(): Notification {
-        val wakelockActionText = if (isWakeLockActive) getString(R.string.turn_off_wakelock) else getString(R.string.turn_on_wakelock)
-        val action = if (isWakeLockActive) ACTION_DISABLE_WAKELOCK else ACTION_ENABLE_WAKELOCK
-
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        val wakelockActionText =
+            if (isWakeLockActive) getString(R.string.turn_off_wakelock)
+            else getString(R.string.turn_on_wakelock)
+    
+        val action =
+            if (isWakeLockActive) ACTION_DISABLE_WAKELOCK
+            else ACTION_ENABLE_WAKELOCK
+    
+        // 🔥 Intent mở lại đúng task trước đó
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+        }
+    
+        val contentPendingIntent = launchIntent?.let {
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            PendingIntent.getActivity(this, 0, it, flags)
+        }
+    
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(getString(R.string.service_active_with_wakelock))
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .addAction(R.mipmap.ic_launcher, getString(R.string.stop), createPendingIntent(ACTION_STOP_SERVICE))
             .addAction(R.mipmap.ic_launcher, wakelockActionText, createPendingIntent(action))
-            .build()
+    
+        // 🔥 Gắn click mở app (đúng màn hình trước đó)
+        contentPendingIntent?.let {
+            builder.setContentIntent(it)
+        }
+    
+        return builder.build()
     }
 
     private fun createPendingIntent(action: String): PendingIntent {
