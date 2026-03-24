@@ -128,7 +128,7 @@ else
 fi
 
 [ -e "$OUTPUT/out" ] || mkdir -p "$OUTPUT/out"
-echo -e "$replag_text_2: ${INPUT##*/} ($partition) ➠ (raw)...\n"
+echo -e "$replag_text_2: ${INPUT##*/} ($partition) ➠ ($CONVER)...\n"
 
 process_count(){
 PIDK=$!

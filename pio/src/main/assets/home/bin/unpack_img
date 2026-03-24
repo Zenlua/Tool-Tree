@@ -395,8 +395,10 @@ fi
 if [ "$XOAOAT" == 1 ];then
 {
 find "$in_name" -type d -name "oat" -print -exec rm -rf {} +
-find "$in_name/system/framework" -type d -name "arm64" -print -exec rm -rf {} +
-find "$in_name/system/framework" -type d -name "arm" -print -exec rm -rf {} +
+    if [ -d "$in_name/system/framework" ]; then
+    find "$in_name/system/framework" -type d -name "arm64" -print -exec rm -rf {} +
+    find "$in_name/system/framework" -type d -name "arm" -print -exec rm -rf {} +
+    fi
 find "$in_name" -type f -name "*.fsv_meta" -delete -print
 find "$in_name" -type f -name "*.bprof" -delete -print
 find "$in_name" -type f -name "*.prof" -delete -print

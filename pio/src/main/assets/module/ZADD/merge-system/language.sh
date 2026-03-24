@@ -10,6 +10,8 @@ delete_text="Delete the original file after completion"
 merge_partition_1="File save format"
 merge_partition_3="Select system to merge other partitions"
 merge_partition_5="Select partitions to merge into system"
+pack_img_text="Not packaged"
+merge_partition_4="Merger completed"
 }
 
 langVi(){
@@ -21,6 +23,8 @@ delete_text="Xoá tệp tin gốc sau khi hoàn thành"
 merge_partition_1="Định dạng lưu file"
 merge_partition_3="Chọn system để các phân vùng khác gộp vào"
 merge_partition_5="Chọn các phân vùng để gộp vào system"
+pack_img_text="Không đóng gói"
+merge_partition_4="Hợp nhất xong"
 }
 
 case "$LANGUAGE" in
