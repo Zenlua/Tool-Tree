@@ -16,7 +16,9 @@
 
 - Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)** or **[Telegram](https://t.me/tooltree)**
 
-- Version history: **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
+### Change log
+
+- **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
 ### Download add-ons:
 
@@ -33,6 +35,8 @@
 - **[See details](https://zenlua.github.io/Tool-Tree/website/Information.html)**
 
 ### Language translation
+
+- Help me translate your language
 
 - **[Pio](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/res), [Krscript](https://github.com/Zenlua/Tool-Tree/tree/main/krscript/src/main/res), [Common](https://github.com/Zenlua/Tool-Tree/tree/main/common/src/main/res), [Shell](https://github.com/Zenlua/Tool-Tree/tree/main/pio/src/main/assets/home/etc/lang)**
 
