@@ -20,7 +20,7 @@
 
 - **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
-### Download add-ons:
+### Download add-ons
 
 - **[Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html)**: The section for ROM editor
 
