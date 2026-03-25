@@ -4,14 +4,15 @@ id=patch_rom
 name=Patch ROM
 author=Kakathic
 description=Quick ROM patch
-version=1.4
-versionCode=114
+version=1.5
+versionCode=115
 root=false
 
 # language
 google_text="Currently using google translate"
 
 # home
+project_text="Project"
 string_text_1="Import files at project"
 select_text="Options"
 network_text="Please connect to the internet !"
@@ -21,7 +22,7 @@ desc_color_light="Light background color code"
 desc_color_dark="Dark background color code"
 desc_dimen="Adjust width dimension"
 required_files_text="Required files"
-title_quick="Quick customization"
+title_quick="Customize directly"
 desc_patch_prop="Modify ro.control_privapp_permissions"
 desc_patch_prop_long="enforce: may cause bootloop if permissions are missing, log: log errors without fixing, disable: automatically fix missing permissions"
 label_device_features="Disable Xiaomi OTA updates"

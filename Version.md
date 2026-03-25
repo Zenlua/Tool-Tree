@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Beta**
+
++ Tap the notification to open the app
+
 **Version: 1.3.7 (21-3-2026)**
 
 + Fix the add-on patch ROM

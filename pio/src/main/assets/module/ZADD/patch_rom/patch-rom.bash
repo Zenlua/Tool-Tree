@@ -4,10 +4,7 @@ set -o pipefail
 
 fixapps(){
 for vv in $@; do
-if [ ! -e "$vv" ];then
-about "Item not found: $vv"
-continue
-fi
+[ ! -e "$vv" ] && { about "Item not found: $vv"; continue; }
 tmpl="${vv##*/}"; oi="$MPAT/apk/${tmpl%.*}"
 apkeditor_d -i "$vv" -o "${oi%/*}" -t raw
 echo
@@ -15,7 +12,7 @@ echo
 if [ "${vv##*/}" == "MIUIGallery.apk" ];then
     if [ "$fix_mapcn" == 1 ];then
     patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
-    Thayvc 0 'method public static checkMapAvailable()Z' $oi/smali/classes*/com/miui/gallery/map/utils/MapInitializerImpl.smali
+    Thayvc 0 'method .*. checkMapAvailable()Z' $oi/smali/classes*/com/miui/gallery/map/utils/MapInitializerImpl.smali
     Thaythe 'Lcom/miui/gallery/util/BuildUtil;->isGlobal()Z' 'Lcom/xBuild;->isOne()Z' $oi/smali/classes*/com/miui/gallery/ui/featured/type/ItemTypeSortManager.smali
     fi
 elif [ "${vv##*/}" == "Joyose.apk" ];then
@@ -64,26 +61,27 @@ elif [[ "${vv##*/}" == *ThemeManager* ]];then
     sed -i "/$vv4/d" $pathanhk || about "Error: pathanhk"
     done
     fi
-    Thayvc 0 '.method public isVideoAd()Z' $oi/smali/classes*/com/android/thememanager/basemodule/ad/model/AdInfo.smali
-    Thayvc 0 '.method private static isAdValid(Lcom/android/thememanager/basemodule/ad/model/AdInfo;)Z' $oi/smali/classes*/com/android/thememanager/basemodule/ad/model/AdInfoResponse.smali
-    Thayvc 0 '.method public isAuthorizedResource()Z' $oi/smali/classes*/com/android/thememanager/basemodule/resource/model/Resource.smali
-    Thayvc 0 '.method public static final themeManagerSupportPaidWidget(Landroid/content/Context;)Z' $oi/smali/classes*/com/miui/maml/widget/edit/MamlutilKt.smali
+    Thayvc 0 '.method .*. isVideoAd()Z' $oi/smali/classes*/com/android/thememanager/basemodule/ad/model/AdInfo.smali
+    Thayvc 0 '.method .*. isAdValid(Lcom/android/thememanager/basemodule/ad/model/AdInfo;)Z' $oi/smali/classes*/com/android/thememanager/basemodule/ad/model/AdInfoResponse.smali
+    Thayvc 0 '.method .*. isAuthorizedResource()Z' $oi/smali/classes*/com/android/thememanager/basemodule/resource/model/Resource.smali
+    Thayvc 0 '.method .*. themeManagerSupportPaidWidget(Landroid/content/Context;)Z' $oi/smali/classes*/com/miui/maml/widget/edit/MamlutilKt.smali
     Thaythe '>DRM_ERROR_UNKNOWN' '>DRM_SUCCESS' "$(Timkiem DRM_ERROR_UNKNOWN $oi/smali)"
     fi
 elif [[ "${vv##*/}" == *PersonalAssistant* ]];then
     if [ "$fix_appvault" == 1 ];then
-    Thayvc 0 '.method public static final themeManagerSupportPaidWidget(Landroid/content/Context;)Z' $oi/smali/classes*/com/miui/maml/widget/edit/MamlutilKt.smali
-    Thayvc 0 '.method public final isPay()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/bean/PickerDetailResponse.smali
-    Thayvc 1 '.method public final isBought()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/bean/PickerDetailResponse.smali
-    Thayvc 0 '.method public final isPay()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/bean/PickerDetailResponseWrapper.smali
-    Thayvc 1 '.method public final isBought()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/bean/PickerDetailResponseWrapper.smali
-    Thayvc 1 '.method private final isCanDownload(Lcom/miui/personalassistant/picker/business/detail/bean/PickerDetailResponse;)Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/utils/PickerDetailDownloadManager\$Companion.smali
-    Thayvc 1 '.method public static final isCanAutoDownloadMaMl()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/utils/PickerDetailUtil.smali
-    Thayvc 0 '.method private final isTargetPositionMamlPayAndDownloading(I)Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/PickerDetailViewModel.smali
+    Thayvc 0 '.method .*. themeManagerSupportPaidWidget(Landroid' $oi/smali/classes*/com/miui/maml/widget/edit/MamlutilKt.smali
+    Thayvc 0 '.method .*. isPay()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/bean/PickerDetailResponse.smali
+    Thayvc 1 '.method .*. isBought()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/bean/PickerDetailResponse.smali
+    Thayvc 0 '.method .*. isPay()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/bean/PickerDetailResponseWrapper.smali
+    Thayvc 1 '.method .*. isBought()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/bean/PickerDetailResponseWrapper.smali
+    Thayvc 1 '.method .*. isCanDownload(Lcom' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/utils/PickerDetailDownloadManager\$Companion.smali
+    Thayvc 1 '.method .*. isCanAutoDownloadMaMl()Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/utils/PickerDetailUtil.smali
+    Thayvc 0 '.method .*. isTargetPositionMamlPayAndDownloading(I)Z' $oi/smali/classes*/com/miui/personalassistant/picker/business/detail/PickerDetailViewModel.smali
     Thaythe 'MM:dd' 'dd:MM' "$(Timkiem '"MM:dd"' $oi/smali)"
     fi
 fi
 # End patch smali
+echo
 apkeditor_b -i "$oi" -o "${vv%/*}" -d 1 -x false
 # di chuyển vào product app
 if [ "$(echo "$vv" | grep -cm1 "/data-app/")" == 1 ];then
@@ -97,32 +95,30 @@ done
 
 fixmultiple(){
 for vv in $@; do
-if [ ! -e "$vv" ];then
-about "Item not found: $vv"
-continue
-fi
+[ ! -e "$vv" ] && { about "Item not found: $vv"; continue; }
 tmpl="${vv##*/}"; oi="$MPAT/apk/${tmpl%.*}"
 apkeditor_d -i "$vv" -o "${oi%/*}" -t raw
 echo
 # patch method
 if [ "${vv##*/}" == "miui-services.jar" ];then
-    [ "$fix_screen" == 1 ] && Thayvc 0 '.method public notAllowCaptureDisplay(Lcom/android/server/wm/RootWindowContainer;I)Z' $oi/smali/classes*/com/android/server/wm/WindowManagerServiceImpl.smali
-    [ "$fix_window" == 1 ] && Thayvc 6 '.method public getMaxMiuiFreeFormStackCount(Ljava/lang/String;Lcom/android/server/wm/MiuiFreeFormActivityStack;)I' $oi/smali/classes*/com/android/server/wm/MiuiFreeFormStackDisplayStrategy.smali
+    [ "$fix_screen" == 1 ] && Thayvc 0 '.method .*. notAllowCaptureDisplay(Lcom' $oi/smali/classes*/com/android/server/wm/WindowManagerServiceImpl.smali
+    [ "$fix_window" == 1 ] && Thayvc 6 '.method .*. getMaxMiuiFreeFormStackCount(Ljava' $oi/smali/classes*/com/android/server/wm/MiuiFreeFormStackDisplayStrategy.smali
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
-    [ "$fix_reset_theme" == 1 ] && Thayvc -v '.method private.*.validateTheme(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V' $oi/smali/classes/miui/drm/ThemeReceiver.smali
+    [ "$fix_reset_theme" == 1 ] && Thayvc -v '.method .*. validateTheme(Landroid' $oi/smali/classes/miui/drm/ThemeReceiver.smali
 elif [ "${vv##*/}" == "services.jar" ];then
     [ "$fix_screen" == 1 ] && Thayvc 0 '.method isSecureLocked()Z' $oi/smali/classes*/com/android/server/wm/WindowState.smali
-    [ "$fix_show_error" == 1 ] && Thayvc -v '.method public showSystemReadyErrorDialogsIfNeeded()V' $oi/smali/classes*/com/android/server/wm/ActivityTaskManagerService\$LocalService.smali
+    [ "$fix_show_error" == 1 ] && Thayvc -v '.method .*. showSystemReadyErrorDialogsIfNeeded()V' $oi/smali/classes*/com/android/server/wm/ActivityTaskManagerService\$LocalService.smali
 elif [ "${vv##*/}" == "PowerKeeper.apk" ];then
     if [ "$fix_fps" == 1 ];then
-    Thayvc 0 '.method public getDisplayCtrlCode()I' $oi/smali/classes*/com/miui/powerkeeper/feedbackcontrol/ThermalManager.smali
-    Thayvc -v '.method public displayControl(I)V' $oi/smali/classes*/com/miui/powerkeeper/feedbackcontrol/ThermalManager.smali
-    Thayvc -v '.method public setScreenEffect(II)V' $oi/smali/classes*/com/miui/powerkeeper/statemachine/DisplayFrameSetting.smali
-    Thayvc -v '.method private setScreenEffectInternal(IILjava/lang/String;)V' $oi/smali/classes*/com/miui/powerkeeper/statemachine/DisplayFrameSetting.smali
-    Thayvc -v '.method private setScreenEffect(Ljava/lang/String;II)V' $oi/smali/classes*/com/miui/powerkeeper/statemachine/DisplayFrameSetting.smali
+    Thayvc 0 '.method .*. getDisplayCtrlCode()I' $oi/smali/classes*/com/miui/powerkeeper/feedbackcontrol/ThermalManager.smali
+    Thayvc -v '.method .*. displayControl(I)V' $oi/smali/classes*/com/miui/powerkeeper/feedbackcontrol/ThermalManager.smali
+    Thayvc -v '.method .*. setScreenEffect(II)V' $oi/smali/classes*/com/miui/powerkeeper/statemachine/DisplayFrameSetting.smali
+    Thayvc -v '.method .*. setScreenEffectInternal(IILjava/lang/String;)V' $oi/smali/classes*/com/miui/powerkeeper/statemachine/DisplayFrameSetting.smali
+    Thayvc -v '.method .*. setScreenEffect(Ljava/lang/String;II)V' $oi/smali/classes*/com/miui/powerkeeper/statemachine/DisplayFrameSetting.smali
     fi
 fi
 # End patch smali
+echo
 apkeditor_b -i "$oi" -o "${vv%/*}" -d 1
 echo
 done
@@ -130,10 +126,7 @@ done
 
 fixkey(){
 for vv in $@; do
-if [ ! -e "$vv" ];then
-about "Item not found: $vv"
-continue
-fi
+[ ! -e "$vv" ] && { about "Item not found: $vv"; continue; }
 tmpl="${vv##*/}"; oi="$MPAT/apk/${tmpl%.*}"
 [[ "${vv##*/}" == *FrequentPhrase* ]] && tres=reso || tres=raw
 apkeditor_d -i "$vv" -o "${oi%/*}" -t $tres
@@ -164,9 +157,10 @@ elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
     Thaythe 'Lmiuix/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isFalse:Z' $oi/smali/classes*/com/android/systemui/navigationbar/NavigationBar.smali
 elif [ "${vv##*/}" == "Settings.apk" ];then
     Thaythe com.iflytek.inputmethod.miui "$(glog ime_app)" "$(Timkiem com.iflytek.inputmethod.miui "$oi/smali" | sed '/MecBoardInputController/d')"
-    Thayvc 1 '.method public static isMiuiImeBottomSupport()Z' $oi/smali/classes*/com/android/settings/inputmethod/InputMethodFunctionSelectUtils.smali
+    Thayvc 1 '.method .*. isMiuiImeBottomSupport()Z' $oi/smali/classes*/com/android/settings/inputmethod
 fi
 # End patch smali
+echo
 apkeditor_b -i "$oi" -o "${vv%/*}" -d 1
 echo
 done
@@ -174,10 +168,7 @@ done
 
 fixnoti(){
 for vv in $@; do
-if [ ! -e "$vv" ];then
-about "Item not found: $vv"
-continue
-fi
+[ ! -e "$vv" ] && { about "Item not found: $vv"; continue; }
 tmpl="${vv##*/}"; oi="$MPAT/apk/${tmpl%.*}"
 [ "${vv##*/}" == "Settings.apk" ] && tres=reso || tres=raw
 apkeditor_d -i "$vv" -o "${oi%/*}" -t $tres
@@ -197,7 +188,12 @@ elif [ "${vv##*/}" == "PowerKeeper.apk" ];then
     [ "$fix_noti" == 1 ] && Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isTrue:Z' "$oi/smali/classes*/com/miui/powerkeeper/statemachine/PhoneSleepModeController\$SleepHandler.smali
     $oi/smali/classes*/com/miui/powerkeeper/statemachine/PhoneSleepModeController.smali
     $oi/smali/classes*/com/miui/powerkeeper/statemachine/PadSleepModeController\$SleepHandler.smali
-    $oi/smali/classes*/com/miui/powerkeeper/statemachine/PadSleepModeController.smali"
+    $oi/smali/classes*/com/miui/powerkeeper/statemachine/PadSleepModeController.smali
+    $oi/smali/classes*/com/miui/powerkeeper/millet/MilletConfig.smali
+    $oi/smali/classes*/com/miui/powerkeeper/statemachine/SleepModeControllerNew.smali
+    $oi/smali/classes*/com/miui/powerkeeper/statemachine/SleepModeControllerNew\$SleepHandler.smali
+    $oi/smali/classes*/com/miui/powerkeeper/customerpower/CustomerPowerCheck.smali
+    "
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
     [ "$fix_noti" == 1 ] && Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isTrue:Z' "$oi/smali/classes*/com/android/internal/app/ChooserActivityStubImpl.smali
     $oi/smali/classes*/android/app/AppOpsManagerInjector.smali"
@@ -220,170 +216,167 @@ elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
     fi
 elif [ "${vv##*/}" == "Settings.apk" ];then
     if [ "$fix_global" == 1 ];then
-    Thaycn '.method public static isNeedRemoveKidSpaceInternal(Landroid/content/Context;)Z' 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' \
-    'Lcom/xBuild;->isTrue:Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
-    Thaythe 'sget-boolean v0, Lmiui/os/Build;->IS_GLOBAL_BUILD:Z' 'sget-boolean v0, Lcom/xBuild;->isTrue:Z' $oi/smali/classes*/com/android/settings/MiuiSettings.smali
-    Thayvc 1 '.method public static isLocationNeeded(Landroid/content/Context;)Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
-    Thayvc 1 '.method public static isPrivacyNeeded(Landroid/content/Context;)Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
+        Thaycn '.method public static isNeedRemoveKidSpaceInternal(Landroid/content/Context;)Z' 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' \
+        'Lcom/xBuild;->isTrue:Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
+        Thaythe 'sget-boolean v0, Lmiui/os/Build;->IS_GLOBAL_BUILD:Z' 'sget-boolean v0, Lcom/xBuild;->isTrue:Z' $oi/smali/classes*/com/android/settings/MiuiSettings.smali
+        Thayvc 1 '.method .*. isLocationNeeded(Landroid/content/Context;)Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
+        Thayvc 1 '.method .*. isPrivacyNeeded(Landroid/content/Context;)Z' $oi/smali/classes*/com/android/settings/utils/SettingsFeatures.smali
+        # Thêm gr telegram
+        Thayvc 1 '.method .*. isVisible(Landroid/content/Context;)Z' $oi/smali/classes*/com/android/settings/device/MiuiGuaranteeCard.smali
+        Thayme '.method public onClick(Landroid/view/View;)V
+        .registers 5
+        invoke-virtual {p0}, Lcom/android/settings/device/MiuiGuaranteeCard;->getContext()Landroid/content/Context;
+        move-result-object v0
+        if-eqz v0, :cond_0
+        :try_start_0
+        new-instance v1, Landroid/content/Intent;
+        const-string v2, "android.intent.action.VIEW"
+        invoke-direct {v1, v2}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
+        const-string v2, "tg://resolve?domain=tooltree"
+        invoke-static {v2}, Landroid/net/Uri;->parse(Ljava/lang/String;)Landroid/net/Uri;
+        move-result-object v2
+        invoke-virtual {v1, v2}, Landroid/content/Intent;->setData(Landroid/net/Uri;)Landroid/content/Intent;
+        const/high16 v2, 0x10000000
+        invoke-virtual {v1, v2}, Landroid/content/Intent;->setFlags(I)Landroid/content/Intent;
+        invoke-virtual {v0, v1}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
+        goto :goto_0
+        :try_end_0
+        .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
+        :catch_0
+        move-exception v1
+        invoke-virtual {v1}, Ljava/lang/Exception;->printStackTrace()V
+        :cond_0
+        :goto_0
+        return-void
+        .end method' $oi/smali/classes*/com/android/settings/device/MiuiGuaranteeCard.smali
+        Thayme '.method private initView()V
+        .registers 4
+        iget-object v0, p0, Landroid/widget/FrameLayout;->mContext:Landroid/content/Context;
+        invoke-static {v0}, Lcom/android/settings/device/MiuiGuaranteeCard;->isVisible(Landroid/content/Context;)Z
+        move-result v0
+        if-nez v0, :cond_e
+        const/16 v0, 0x8
+        invoke-virtual {p0, v0}, Landroid/widget/FrameLayout;->setVisibility(I)V
+        return-void
+        :cond_e
+        iget-object v0, p0, Landroid/widget/FrameLayout;->mContext:Landroid/content/Context;
+        const-string/jumbo v1, "micare_expiry_time"
+        invoke-static {v0, v1}, Lcom/android/settings/device/MiCareUtils;->getMiCareInfoWithPrefKey(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
+        move-result-object v0
+        iput-object v0, p0, Lcom/android/settings/device/MiuiGuaranteeCard;->mMiCareExpiryTime:Ljava/lang/String;
+        iget-object v0, p0, Landroid/widget/FrameLayout;->mContext:Landroid/content/Context;
+        const-string/jumbo v1, "micare_link"
+        invoke-static {v0, v1}, Lcom/android/settings/device/MiCareUtils;->getMiCareInfoWithPrefKey(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
+        move-result-object v0
+        iput-object v0, p0, Lcom/android/settings/device/MiuiGuaranteeCard;->mMiCareLink:Ljava/lang/String;
+        iget-object v0, p0, Landroid/widget/FrameLayout;->mContext:Landroid/content/Context;
+        invoke-static {v0}, Landroid/view/LayoutInflater;->from(Landroid/content/Context;)Landroid/view/LayoutInflater;
+        move-result-object v0
+        sget v1, Lcom/android/settings/R$layout;->my_device_info_item:I
+        const/4 v2, 0x1
+        invoke-virtual {v0, v1, p0, v2}, Landroid/view/LayoutInflater;->inflate(ILandroid/view/ViewGroup;Z)Landroid/view/View;
+        invoke-virtual {p0, p0}, Landroid/widget/FrameLayout;->setOnClickListener(Landroid/view/View$OnClickListener;)V
+        sget v0, Lcom/android/settings/R$id;->title:I
+        invoke-virtual {p0, v0}, Landroid/widget/FrameLayout;->findViewById(I)Landroid/view/View;
+        move-result-object v0
+        check-cast v0, Landroid/widget/TextView;
+        new-instance v1, Ljava/lang/StringBuilder;
+        invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+        const-string/jumbo v2, "Kakathic"
+        invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+        move-result-object v1
+        invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+        sget v0, Lcom/android/settings/R$id;->summary:I
+        invoke-virtual {p0, v0}, Landroid/widget/FrameLayout;->findViewById(I)Landroid/view/View;
+        move-result-object v0
+        check-cast v0, Landroid/widget/TextView;
+        new-instance v1, Ljava/lang/StringBuilder;
+        invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+        const-string/jumbo v2, "@tooltree"
+        invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+        move-result-object p0
+        invoke-virtual {v0, p0}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+        return-void
+        .end method' $oi/smali/classes*/com/android/settings/device/MiuiGuaranteeCard.smali
     
-    # Thêm gr telegram
-    Thayvc 1 '.method public static isVisible(Landroid/content/Context;)Z' $oi/smali/classes*/com/android/settings/device/MiuiGuaranteeCard.smali
-    Thayme '.method public onClick(Landroid/view/View;)V
-    .registers 5
-    invoke-virtual {p0}, Lcom/android/settings/device/MiuiGuaranteeCard;->getContext()Landroid/content/Context;
-    move-result-object v0
-    if-eqz v0, :cond_0
-    :try_start_0
-    new-instance v1, Landroid/content/Intent;
-    const-string v2, "android.intent.action.VIEW"
-    invoke-direct {v1, v2}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
-    const-string v2, "tg://resolve?domain=tooltree"
-    invoke-static {v2}, Landroid/net/Uri;->parse(Ljava/lang/String;)Landroid/net/Uri;
-    move-result-object v2
-    invoke-virtual {v1, v2}, Landroid/content/Intent;->setData(Landroid/net/Uri;)Landroid/content/Intent;
-    const/high16 v2, 0x10000000
-    invoke-virtual {v1, v2}, Landroid/content/Intent;->setFlags(I)Landroid/content/Intent;
-    invoke-virtual {v0, v1}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
-    goto :goto_0
-    :try_end_0
-    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
-    :catch_0
-    move-exception v1
-    invoke-virtual {v1}, Ljava/lang/Exception;->printStackTrace()V
-    :cond_0
-    :goto_0
-    return-void
-    .end method' $oi/smali/classes*/com/android/settings/device/MiuiGuaranteeCard.smali
-
-    Thayme '.method private initView()V
-    .registers 4
-    iget-object v0, p0, Landroid/widget/FrameLayout;->mContext:Landroid/content/Context;
-    invoke-static {v0}, Lcom/android/settings/device/MiuiGuaranteeCard;->isVisible(Landroid/content/Context;)Z
-    move-result v0
-    if-nez v0, :cond_e
-    const/16 v0, 0x8
-    invoke-virtual {p0, v0}, Landroid/widget/FrameLayout;->setVisibility(I)V
-    return-void
-    :cond_e
-    iget-object v0, p0, Landroid/widget/FrameLayout;->mContext:Landroid/content/Context;
-    const-string/jumbo v1, "micare_expiry_time"
-    invoke-static {v0, v1}, Lcom/android/settings/device/MiCareUtils;->getMiCareInfoWithPrefKey(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
-    move-result-object v0
-    iput-object v0, p0, Lcom/android/settings/device/MiuiGuaranteeCard;->mMiCareExpiryTime:Ljava/lang/String;
-    iget-object v0, p0, Landroid/widget/FrameLayout;->mContext:Landroid/content/Context;
-    const-string/jumbo v1, "micare_link"
-    invoke-static {v0, v1}, Lcom/android/settings/device/MiCareUtils;->getMiCareInfoWithPrefKey(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
-    move-result-object v0
-    iput-object v0, p0, Lcom/android/settings/device/MiuiGuaranteeCard;->mMiCareLink:Ljava/lang/String;
-    iget-object v0, p0, Landroid/widget/FrameLayout;->mContext:Landroid/content/Context;
-    invoke-static {v0}, Landroid/view/LayoutInflater;->from(Landroid/content/Context;)Landroid/view/LayoutInflater;
-    move-result-object v0
-    sget v1, Lcom/android/settings/R$layout;->my_device_info_item:I
-    const/4 v2, 0x1
-    invoke-virtual {v0, v1, p0, v2}, Landroid/view/LayoutInflater;->inflate(ILandroid/view/ViewGroup;Z)Landroid/view/View;
-    invoke-virtual {p0, p0}, Landroid/widget/FrameLayout;->setOnClickListener(Landroid/view/View$OnClickListener;)V
-    sget v0, Lcom/android/settings/R$id;->title:I
-    invoke-virtual {p0, v0}, Landroid/widget/FrameLayout;->findViewById(I)Landroid/view/View;
-    move-result-object v0
-    check-cast v0, Landroid/widget/TextView;
-    new-instance v1, Ljava/lang/StringBuilder;
-    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
-    const-string/jumbo v2, "Kakathic"
-    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-    move-result-object v1
-    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-    sget v0, Lcom/android/settings/R$id;->summary:I
-    invoke-virtual {p0, v0}, Landroid/widget/FrameLayout;->findViewById(I)Landroid/view/View;
-    move-result-object v0
-    check-cast v0, Landroid/widget/TextView;
-    new-instance v1, Ljava/lang/StringBuilder;
-    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
-    const-string/jumbo v2, "@tooltree"
-    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-    move-result-object p0
-    invoke-virtual {v0, p0}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-    return-void
-    .end method' $oi/smali/classes*/com/android/settings/device/MiuiGuaranteeCard.smali
-
-    # thông tin
-    if [ "$(grep -cm1 device_description_cpu "$oi/resources/package_1/res/values/strings.xml")" != 1 ];then
-    smurl1="$(find $oi/smali/classes*/com/android/settings/device/DeviceParamsInitHelper.smali -type f)"
-    if [ -f "$smurl1" ];then
-    IFS=$'\n'
-    for vnl in $(grep -B 2 -n "langType" "$smurl1" | tac | grep 'move-result-object'); do
-    sed -i "$(echo "$vnl" | cut -d- -f1)a\ const-string $(echo "$vnl" | awk '{print $3}'), \"enUS\"" "$smurl1"
-    done
-    fi
-    Timueelnd="$(find $oi/smali/classes*/com/android/settings/device/DeviceBasicInfoPresenter.smali -type f)"
-    if [ -f "$Timueelnd" ];then
-    thdbdbi1="$(grep -A 2 'Lcom/android/settings/device/ParseMiShopDataUtils;->getItemTitle(Lorg/json/JSONObject;)Ljava/lang/String;' "$Timueelnd" | grep move-result-object | awk '{print $2}')"
-    thdbdbi2="$(grep 'Lcom/android/settings/device/ParseMiShopDataUtils;->getItemTitle(Lorg/json/JSONObject;)Ljava/lang/String;' "$Timueelnd" | awk '{print $2}' | sed "s|{|{$thdbdbi1, |")"
-    if [ "$thdbdbi1" ];then
-    Thaythe "$(grep 'Lcom/android/settings/device/ParseMiShopDataUtils;->getItemTitle(Lorg/json/JSONObject;)Ljava/lang/String;' "$Timueelnd")" "
-    iget-object $thdbdbi1, p0, Lcom/android/settings/device/DeviceBasicInfoPresenter;->mContext:Landroid/content/Context;
-    invoke-static $thdbdbi2 Lcom/android/settings/device/ParseMiShopDataUtils;->getItemTitle(Landroid/content/Context;Lorg/json/JSONObject;)Ljava/lang/String;" "$Timueelnd"
-    fi
-    idkfjf1="$(grep -nA 20 'sget .*., Lcom/android/settings/R$string;->camera_front:I' "$Timueelnd" | grep 'const-string .*., ""')"
-    if [ "$idkfjf1" ];then
-    sed -i "$(echo "$idkfjf1" | cut -d- -f1)c\ const-string $(echo "$idkfjf1" | awk '{print $3}') \" \"" "$Timueelnd"
-    fi
-    fi
-
-    Thayme '.method public static getItemTitle(Landroid/content/Context;Lorg/json/JSONObject;)Ljava/lang/String;
-    .registers 4
-    invoke-static {p1}, Lcom/android/settings/device/ParseMiShopDataUtils;->getItemIndex(Lorg/json/JSONObject;)I
-    move-result v0
-    const/4 v1, 0x0
-    if-eq v0, v1, :cond_17
-    const/4 v1, 0x1
-    if-eq v0, v1, :cond_22
-    const/4 v1, 0x3
-    if-eq v0, v1, :cond_2d
-    const/4 v1, 0x4
-    if-eq v0, v1, :cond_38
-    const-string v1, "Title"
-    invoke-static {p1, v1}, Lcom/android/settings/device/JSONUtils;->getString(Lorg/json/JSONObject;Ljava/lang/String;)Ljava/lang/String;
-    move-result-object v0
-    return-object v0
-    :cond_17
-    invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
-    move-result-object v1
-    sget p0, Lcom/android/settings/R$string;->device_description_cpu:I
-    invoke-virtual {v1, p0}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
-    move-result-object v0
-    return-object v0
-    :cond_22
-    invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
-    move-result-object v1
-    sget p0, Lcom/android/settings/R$string;->device_description_battery:I
-    invoke-virtual {v1, p0}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
-    move-result-object v0
-    return-object v0
-    :cond_2d
-    invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
-    move-result-object v1
-    sget p0, Lcom/android/settings/R$string;->device_description_screen:I
-    invoke-virtual {v1, p0}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
-    move-result-object v0
-    return-object v0
-    :cond_38
-    invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
-    move-result-object v1
-    sget p0, Lcom/android/settings/R$string;->device_description_resolution:I
-    invoke-virtual {v1, p0}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
-    move-result-object v0
-    return-object v0
-    .end method' $oi/smali/classes*/com/android/settings/device/ParseMiShopDataUtils.smali
-    Thaythe '</resources>' '    <string name="device_description_cpu" public="false">CPU</string>
-    <string name="device_description_resolution" public="false">Resolution</string>
-    <string name="device_description_screen" public="false">Display</string>
-    </resources>' "$oi/resources/package_1/res/values/strings.xml"
-    fi
+        # thông tin
+        if [ "$(grep -cm1 device_description_cpu "$oi/resources/package_1/res/values/strings.xml")" != 1 ];then
+            smurl1="$(find $oi/smali/classes*/com/android/settings/device/DeviceParamsInitHelper.smali -type f)"
+            if [ -f "$smurl1" ];then
+                IFS=$'\n'
+                for vnl in $(grep -B 2 -n "langType" "$smurl1" | tac | grep 'move-result-object'); do
+                sed -i "$(echo "$vnl" | cut -d- -f1)a\ const-string $(echo "$vnl" | awk '{print $3}'), \"enUS\"" "$smurl1"
+                done
+            fi
+            Timueelnd="$(find $oi/smali/classes*/com/android/settings/device/DeviceBasicInfoPresenter.smali -type f)"
+            if [ -f "$Timueelnd" ];then
+                thdbdbi1="$(grep -A 2 'Lcom/android/settings/device/ParseMiShopDataUtils;->getItemTitle(Lorg/json/JSONObject;)Ljava/lang/String;' "$Timueelnd" | grep move-result-object | awk '{print $2}')"
+                thdbdbi2="$(grep 'Lcom/android/settings/device/ParseMiShopDataUtils;->getItemTitle(Lorg/json/JSONObject;)Ljava/lang/String;' "$Timueelnd" | awk '{print $2}' | sed "s|{|{$thdbdbi1, |")"
+                if [ "$thdbdbi1" ];then
+                Thaythe "$(grep 'Lcom/android/settings/device/ParseMiShopDataUtils;->getItemTitle(Lorg/json/JSONObject;)Ljava/lang/String;' "$Timueelnd")" \
+                "iget-object $thdbdbi1, p0, Lcom/android/settings/device/DeviceBasicInfoPresenter;->mContext:Landroid/content/Context;
+                invoke-static $thdbdbi2 Lcom/android/settings/device/ParseMiShopDataUtils;->getItemTitle(Landroid/content/Context;Lorg/json/JSONObject;)Ljava/lang/String;" "$Timueelnd"
+                fi
+                idkfjf1="$(grep -nA 20 'sget .*., Lcom/android/settings/R$string;->camera_front:I' "$Timueelnd" | grep 'const-string .*., ""')"
+                [ "$idkfjf1" ] && sed -i "$(echo "$idkfjf1" | cut -d- -f1)c\ const-string $(echo "$idkfjf1" | awk '{print $3}') \" \"" "$Timueelnd"
+            fi
+    
+            Thayme '.method public static getItemTitle(Landroid/content/Context;Lorg/json/JSONObject;)Ljava/lang/String;
+            .registers 4
+            invoke-static {p1}, Lcom/android/settings/device/ParseMiShopDataUtils;->getItemIndex(Lorg/json/JSONObject;)I
+            move-result v0
+            const/4 v1, 0x0
+            if-eq v0, v1, :cond_17
+            const/4 v1, 0x1
+            if-eq v0, v1, :cond_22
+            const/4 v1, 0x3
+            if-eq v0, v1, :cond_2d
+            const/4 v1, 0x4
+            if-eq v0, v1, :cond_38
+            const-string v1, "Title"
+            invoke-static {p1, v1}, Lcom/android/settings/device/JSONUtils;->getString(Lorg/json/JSONObject;Ljava/lang/String;)Ljava/lang/String;
+            move-result-object v0
+            return-object v0
+            :cond_17
+            invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+            move-result-object v1
+            sget p0, Lcom/android/settings/R$string;->device_description_cpu:I
+            invoke-virtual {v1, p0}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
+            move-result-object v0
+            return-object v0
+            :cond_22
+            invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+            move-result-object v1
+            sget p0, Lcom/android/settings/R$string;->device_description_battery:I
+            invoke-virtual {v1, p0}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
+            move-result-object v0
+            return-object v0
+            :cond_2d
+            invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+            move-result-object v1
+            sget p0, Lcom/android/settings/R$string;->device_description_screen:I
+            invoke-virtual {v1, p0}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
+            move-result-object v0
+            return-object v0
+            :cond_38
+            invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+            move-result-object v1
+            sget p0, Lcom/android/settings/R$string;->device_description_resolution:I
+            invoke-virtual {v1, p0}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
+            move-result-object v0
+            return-object v0
+            .end method' $oi/smali/classes*/com/android/settings/device/ParseMiShopDataUtils.smali
+            Thaythe '</resources>' '    <string name="device_description_cpu" public="false">CPU</string>
+            <string name="device_description_resolution" public="false">Resolution</string>
+            <string name="device_description_screen" public="false">Display</string>
+            </resources>' "$oi/resources/package_1/res/values/strings.xml"
+        fi
     fi
 fi
 # End patch smali
+echo
 apkeditor_b -i "$oi" -o "${vv%/*}" -d 1
 echo
 done
@@ -391,81 +384,63 @@ done
 
 toolbox(){
 for vv in $@; do
-if [ ! -e "$vv" ];then
-about "Item not found: $vv"
-continue
-fi
+[ ! -e "$vv" ] && { about "Item not found: $vv"; continue; }
 tmpl="${vv##*/}"; oi="$MPAT/apk/${tmpl%.*}"
 apkeditor_d -i "$vv" -o "${oi%/*}" -t raw
 echo
-
-# system
-psystem="$(ls -1d $SDH/$PTSH/*/system/build.prop 2>/dev/null | grep -m1 'system' | sed 's|\/build.prop||')"
-[ -d "$psystem" ] || killtree "Partition not found system"
-
-# Lấy api sdk
-APIs="$(gprop "ro.system.build.version.sdk" "$psystem/build.prop")"
-
 if [ "$fix_apksign" == 1 ];then
     if [ "${vv##*/}" == "framework.jar" ];then
         patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
-        Thayivo 1 'invoke-static.*Ljava/security/MessageDigest;->isEqual([B[B)Z' $oi/smali/classes*/android/util/apk/ApkSignatureSchemeV2Verifier.smali
-        Thayivo 1 'invoke-virtual.*Ljava/security/Signature;->verify([B)Z' $oi/smali/classes*/android/util/apk/ApkSignatureSchemeV2Verifier.smali
-        Thayivo 1 'invoke-static.*Ljava/security/MessageDigest;->isEqual([B[B)Z' $oi/smali/classes*/android/util/apk/ApkSignatureSchemeV3Verifier.smali
-        Thayivo 1 'invoke-virtual.*Ljava/security/Signature;->verify([B)Z' $oi/smali/classes*/android/util/apk/ApkSignatureSchemeV3Verifier.smali
-        Thayivo 1 'invoke-virtual.*Ljava/security/Signature;->verify([B)Z' $oi/smali/classes*/android/util/apk/ApkSignatureSchemeV4Verifier.smali
-        Thayvc 1 '.method public static.*.getMinimumSignatureSchemeVersionForTargetSdk(I)I' $oi/smali/classes*/android/util/apk/ApkSignatureVerifier.smali
-        Thayivo 1 'invoke-static.*Ljava/security/MessageDigest;->isEqual([B[B)Z' $oi/smali/classes*/android/util/apk/ApkSigningBlockUtils.smali
-        Thayivo 1 'invoke-virtual.*Ljava/security/Signature;->verify([B)Z' $oi/smali/classes*/android/util/apk/ApkSigningBlockUtils.smali
-        Thayvc 1 '.method private static.*.verifyMessageDigest([B[B)Z' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali
-        #Thayvc 1 '.method.*.-$$Nest$smverifyMessageDigest([B[B)Z' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali
-        Thayvc 0 '.method public.*.containsAllocatedTable()Z' $oi/smali/classes*/android/content/res/AssetManager.smali
-        Thayvc 1 '.method public.*.checkCapability(Landroid/content/pm/SigningDetails;I)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
-        Thayvc 1 '.method public.*.hasCommonAncestor(Landroid/content/pm/SigningDetails;)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
-        Thayvc 1 '.method public.*.signaturesMatchExactly(Landroid/content/pm/SigningDetails;)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
-        Thayvc 1 '.method public.*.checkCapability(Ljava/lang/String;I)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
-        Thayvc 1 '.method public.*.checkCapabilityRecover(Landroid/content/pm/SigningDetails;I)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
-        #Thayvc 1 '.method public.*.hasAncestorOrSelf(Landroid/content/pm/SigningDetails;)Z' $oi/smali/classes*/android/content/pm/SigningDetails.smali
-        Thayvc 1 '.method public.*.checkCapability(Landroid/content/pm/PackageParser$SigningDetails;I)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
-        Thayvc 1 '.method public.*.signaturesMatchExactly(Landroid/content/pm/PackageParser$SigningDetails;)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
-        Thayvc 1 '.method public.*.hasCommonAncestor(Landroid/content/pm/PackageParser$SigningDetails;)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
-        Thayvc 1 '.method public.*.checkCapability(Ljava/lang/String;I)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
-        Thayvc 1 '.method public.*.checkCapabilityRecover(Landroid/content/pm/PackageParser$SigningDetails;I)Z' $oi/smali/classes*/android/content/pm/PackageParser\$SigningDetails.smali
-        sed -i -E '/StrictJarFile;->findEntry/,/move-result-object ([vp][0-9]+)/s/(move-result-object ([vp][0-9]+))/\1\nconst\/4 \2, 0x1/' $oi/smali/classes*/android/util/jar/StrictJarFile.smali || about "Error: StrictJarFile;->findEntry"
-        sed -i -E 's/(iput-boolean ([vp][0-9]+), ([vp][0-9]+), .*RollbackProtectionsEnforced:Z)/const\/4 \2, 0x0\n    \1/' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali || about "Error: signatureSchemeRollbackProtectionsEnforced"
+        for kssc in ApkSignatureSchemeV2Verifier.smali ApkSignatureSchemeV3Verifier.smali ApkSignatureSchemeV4Verifier.smali ApkSigningBlockUtils.smali; do
+            Thayivo 1 'invoke-static.*Ljava/security/MessageDigest;->isEqual([B[B)Z' $oi/smali/classes*/android/util/apk/$kssc
+            Thayivo 1 'invoke-virtual.*Ljava/security/Signature;->verify([B)Z' $oi/smali/classes*/android/util/apk/$kssc
+        done
+        Thayvc 1 '.method .*. getMinimumSignatureSchemeVersionForTargetSdk(I)I' $oi/smali/classes*/android/util/apk/ApkSignatureVerifier.smali
+        Thayvc 1 '.method .*. verifyMessageDigest([B[B)Z' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali
+        Thayvc 0 '.method .*. containsAllocatedTable()Z' $oi/smali/classes*/android/content/res/AssetManager.smali
+        Thayvc 1 '.method .*. checkCapability(Landroid' $oi/smali/classes*/android/content/pm
+        Thayvc 1 '.method .*. signaturesMatchExactly(Landroid' $oi/smali/classes*/android/content/pm
+        Thayvc 1 '.method .*. hasCommonAncestor(Landroid' $oi/smali/classes*/android/content/pm
+        Thayvc 1 '.method .*. checkCapability(Ljava' $oi/smali/classes*/android/content/pm
+        Thayvc 1 '.method .*. checkCapabilityRecover(Landroid' $oi/smali/classes*/android/content/pm
+        if [ "$(grep -A 6 "StrictJarFile;->findEntry" $oi/smali/classes*/android/util/jar/StrictJarFile.smali 2>/dev/null | grep -cm1 "const/4 .*. 0x1")" != 1 ]; then
+           sed -i -E '/StrictJarFile;->findEntry/,/move-result-object ([vp][0-9]+)/s/(move-result-object ([vp][0-9]+))/\1\nconst\/4 \2, 0x1/' $oi/smali/classes*/android/util/jar/StrictJarFile.smali || about "Error: StrictJarFile;->findEntry"
+        fi
+        if [ "$(grep -B 4 "iput-boolean .*RollbackProtectionsEnforced:Z" $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali 2>/dev/null | grep -cm1 "const/4 .*. 0x0")" != 1 ]; then
+            sed -i -E 's/(iput-boolean ([vp][0-9]+), ([vp][0-9]+), .*RollbackProtectionsEnforced:Z)/const\/4 \2, 0x0\n    \1/' $oi/smali/classes*/android/util/jar/StrictJarVerifier.smali || about "Error: signatureSchemeRollbackProtectionsEnforced"
+        fi
     elif [ "${vv##*/}" == "core-oj.jar" ];then
-        Thayvc 1 '.method public static isEqual([B[B)Z' $oi/smali/classes*/java/security/MessageDigest.smali
-        Thayvc 1 '.method public final verify([B)Z' $oi/smali/classes*/java/security/Signature.smali
-        Thayvc 1 '.method public final verify([BII)Z' $oi/smali/classes*/java/security/Signature.smali
-        Thayvc 1 '.method private verifyManifestHash(Ljava/util/jar/Manifest;Lsun/security/util/ManifestDigester;Ljava/util/List;)Z' $oi/smali/classes*/java/security/Signature.smali
+        Thayvc 1 '.method .*. isEqual([B[B)Z' $oi/smali/classes*/java/security/MessageDigest.smali
+        Thayvc 1 '.method .*. verify([B)Z' $oi/smali/classes*/java/security/Signature.smali
+        Thayvc 1 '.method .*. verify([BII)Z' $oi/smali/classes*/java/security/Signature.smali
+        Thayvc 1 '.method .*. verifyManifestHash(Ljava' $oi/smali
     elif [ "${vv##*/}" == "services.jar" ];then
-        Thayvc -v '.method public static checkDowngrade(Lcom/android/server/pm/pkg/AndroidPackage;Landroid/content/pm/PackageInfoLite;)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
-        Thayvc 0 '.method public static verifySignatures(Lcom/android/server/pm/PackageSetting;Lcom/android/server/pm/SharedUserSetting;Lcom/android/server/pm/PackageSetting;Landroid/content/pm/SigningDetails;ZZZ)Z' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
-        Thayvc 0 '.method private static matchSignaturesCompat(Ljava/lang/String;Lcom/android/server/pm/PackageSignatures;Landroid/content/pm/SigningDetails;)Z' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
-        Thayvc 0 '.method private static matchSignatureInSystem(Ljava/lang/String;Landroid/content/pm/SigningDetails;Lcom/android/server/pm/PackageSetting;)Z' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
-        Thayvc 0 '.method private static matchSignaturesRecover(Ljava/lang/String;Landroid/content/pm/SigningDetails;Landroid/content/pm/SigningDetails;I)Z' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
-        #Thayvc 0 '.method public static compareSignatures([Landroid/content/pm/Signature;[Landroid/content/pm/Signature;)I' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
-        Thayvc 0 '.method public shouldCheckUpgradeKeySetLocked(Lcom/android/server/pm/pkg/PackageStateInternal;Lcom/android/server/pm/pkg/SharedUserApi;I)Z' $oi/smali/classes*/com/android/server/pm/KeySetManagerService.smali
-        Thayvc 0 '.method private isVerificationEnabled(Landroid/content/pm/PackageInfoLite;ILjava/util/List;)Z' $oi/smali/classes*/com/android/server/pm/VerifyingSession.smali
-        Thayvc 1 '.method public checkUpgradeKeySetLocked(Lcom/android/server/pm/pkg/PackageStateInternal;Lcom/android/server/pm/pkg/AndroidPackage;)Z' $oi/smali/classes*/com/android/server/pm/KeySetManagerService.smali
-        # a11
-        {
-        Thayvc 1 '.method private checkAppSignature([Landroid/content/pm/Signature;Ljava/lang/String;Z)Z' $oi/smali/classes*/com/miui/server/SecurityManagerService.smali
-        Thayvc -v '.method private static checkDowngrade(Landroid/content/pm/PackageParser$Package;Landroid/content/pm/PackageInfoLite;)V' $oi/smali/classes*/com/miui/server/SecurityManagerService.smali
-        Thayvc -v '.method private checkSystemSelfProtection(Z)V' $oi/smali/classes*/com/miui/server/SecurityManagerService.smali
-        Thayvc 1 '.method private checkSysAppCrack()Z' $oi/smali/classes*/com/miui/server/SecurityManagerService.smali
-        } &>$TMP/log_sv_method_a12.log
+        Thayme '.method static constructor <clinit>()V
+            .locals 1
+            const/4 v0, 0x1
+            sput-boolean v0, Lcom/android/server/pm/ReconcilePackageUtils;->ALLOW_NON_PRELOADS_SYSTEM_SHAREDUIDS:Z
+            return-void
+        .end method' $oi/smali/classes*/com/android/server/pm/ReconcilePackageUtils.smali
+        Thayvc -v '.method .*. checkDowngrade(Lcom/android/server/pm/parsing/pkg/AndroidPackage' $oi/smali/classes*/com/android/server/pm
+        Thayvc 0 '.method .*. matchSignaturesRecover(Ljava' $oi/smali/classes*/com/android/server/pm
+        Thayvc 0 '.method .*. matchSignatureInSystem(Lcom' $oi/smali/classes*/com/android/server/pm
+        Thayvc 0 '.method .*. matchSignaturesCompat(Ljava' $oi/smali/classes*/com/android/server/pm
+        Thayvc 0 '.method .*. verifySignatures(Lcom' $oi/smali/classes*/com/android/server/pm
+        Thayvc 0 '.method .*. shouldCheckUpgradeKeySetLocked(Lcom' $oi/smali/classes*/com/android/server/pm
+        Thayvc 1 '.method .*. checkUpgradeKeySetLocked(Lcom' $oi/smali/classes*/com/android/server/pm
+        Thayvc 0 '.method .*. isVerificationEnabled(Landroid' $oi/smali/classes*/com/android/server/pm
+        Thayvc 1 '.method .*. checkAppSignature([Landroid' $oi/smali/classes*/com/miui/server
+        Thayvc -v '.method .*. checkDowngrade(Landroid/content/pm/PackageParser$Package' $oi/smali/classes*/com/miui/server
+        Thayvc -v '.method .*. checkSystemSelfProtection(Z)V' $oi/smali/classes*/com/miui/server
+        Thayvc 1 '.method .*. checkSysAppCrack()Z' $oi/smali/classes*/com/miui/server
     elif [ "${vv##*/}" == "miui-services.jar" ];then
-        [ "$APIs" -ge 35 ] && Thayvc -v '.method private verifyIsolationViolation(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;Lcom/android/server/pm/InstallSource;)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
-        Thayvc -v '.method public canBeUpdate(Ljava/lang/String;)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceImpl.smali
-        {
-        Thayvc 1 '.method private checkAppSignature([Landroid/content/pm/Signature;Ljava/lang/String;Z)Z' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
-        Thayvc -v '.method private checkSystemSelfProtection(Z)V' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
-        Thayvc 1 '.method private checkSysAppCrack()Z' $oi/smali/classes*/com/android/server/pm/PackageManagerServiceUtils.smali
-        } &>$TMP/log_miui_sv_method_a12.log
+        Thayvc -v '.method .*. verifyIsolationViolation(Lcom' $oi/smali/classes*/com/android/server/pm
+        Thayvc -v '.method .*. canBeUpdate(Ljava' $oi/smali/classes*/com/android/server/pm
+        Thayvc 1 '.method .*. checkAppSignature([Landroid' $oi/smali/classes*/com/miui/server
+        Thayvc -v '.method .*. checkSystemSelfProtection(Z)V' $oi/smali/classes*/com/miui/server
+        Thayvc 1 '.method .*. checkSysAppCrack()Z' $oi/smali/classes*/com/miui/server
     fi
 fi
-
 if [ "$fix_toolbox" == 1 ];then
     if [ "${vv##*/}" == "framework.jar" ];then
     # kiểm tra mạng và tải xuống
@@ -487,7 +462,6 @@ if [ "$fix_toolbox" == 1 ];then
         else
             [ -f $MPAT/mod/version ] || killtree "$network_text"
         fi
-        # bắt đầu trích xuất
         echo
         # Patch smali
         if ! ls "$oi"/smali/classes*/com/android/internal/util/kaorios &>/dev/null; then
@@ -549,12 +523,11 @@ if [ "$fix_toolbox" == 1 ];then
             cp -rf "$MPAT/mod/com.kousei.kaorios.xml" "$psystem/etc/permissions"
             sprop persist.sys.kaorios kousei "$psystem/build.prop"
             echo "Auto added to the project: persist.sys.kaorios=kousei, com.kousei.kaorios.xml, KaoriosToolbox.apk"
-            echo
         fi
     fi
 fi
-
 # End patch smali
+echo
 apkeditor_b -i "$oi" -o "${vv%/*}" -d 1
 echo
 done
@@ -650,7 +623,7 @@ seproject="$(find $SDH/$PTSH -name "$vc" -type f -print -quit 2>/dev/null)"
 done
 }
 
-Timkiem(){ grep -rl --include="*.*" "$1" $2; }
+Timkiem(){ grep -rl --include="*.*" "$1" $2 2>/dev/null; }
 about(){ echo -e "$1" >&2; }
 
 patch_smali(){
@@ -684,7 +657,7 @@ fi
 Thaycn(){
 urlsmali="$(find $4 -type f -print -quit 2>/dev/null)"
 vcv="$(echo "$1" | head -n1 | sed 's|/|\\/|g')"
-[ -f "$urlsmali" ] && sed -i "/$vcv/,/\.end method/ s|sget-boolean \(.*\), $2|sget-boolean \1, $3|" "$urlsmali" || about "Error: $urlsmali"
+[ -f "$urlsmali" ] && sed -i "/$vcv/,/\.end method/ s|sget-boolean \(.*\), $2|sget-boolean \1, $3|" "$urlsmali" && echo "Patch: ${urlsmali##*/}" || about "Error: $urlsmali"
 }
 
 Thayme(){
@@ -692,39 +665,45 @@ urlsmali="$(find $2 -type f 2>/dev/null)"
 for vcc2 in $urlsmali; do
 if [ -f "$vcc2" ];then
 vcv="$(echo "$1" | head -n1 | sed -e 's|/|\\/|g' -e 's|\[|\\[|g')"
-sed -i "/$vcv/,/.end method/d" "$vcc2" && echo "$1" >> "$vcc2" || about "Error: $vcc2"
+sed -i "/$vcv/,/.end method/d" "$vcc2" && echo "$1" >> "$vcc2" && echo "Patch: ${vcc2##*/}" || about "Error: $vcv - $vcc2"
 fi
 done
+}
+
+Themme(){
+urlsmali="$(find $2 -type f -print -quit 2>/dev/null)"
+[ -f "$urlsmali" ] && echo "$1" >> "$urlsmali" && echo "Patch: ${vcc1##*/}" || about "Error: $urlsmali"
 }
 
 Thaythe(){
 if [ "$3" ];then
 for vcc1 in $(find $3 -type f 2>/dev/null); do
-[ -f "$vcc1" ] && toybox sed -i "s!$1!$2!" "$vcc1" || about "Error: $vcc1"
+if [ -f "$vcc1" ]; then
+toybox sed -i "s!$1!$2!" "$vcc1" && echo "Patch: ${vcc1##*/}" || about "Error: $vcc1"
+fi
 done
 fi
 }
 
 Thayvc(){
-urlsmali="$(find $3 -type f 2>/dev/null)"
-[ -f "$urlsmali" ] || about "File not found: $3"
-if [ "$(grep -cm1 "${2//\[/\\[}" "$urlsmali")" == 1 ];then
-if [ "$1" == "-v" ];then
-Thayme "$(grep -m1 "${2//\[/\\[}" "$urlsmali")
-    .locals 1
-    return-void
-.end method" "$urlsmali"
-else
-[ $1 -ge 8 ] && ui=16 || ui=4
-Thayme "$(grep -m1 "${2//\[/\\[}" "$urlsmali")
-    .locals 1
-    const/$ui v0, 0x$1
-    return v0
-.end method" "$urlsmali"
+urlsmali="$(Timkiem "${2//\[/\\[}" $3)"
+for vcx in $urlsmali; do
+if [ -f "$vcx" ];then
+    if [ "$1" == "-v" ];then
+    Thayme "$(grep -m1 "${2//\[/\\[}" "$vcx")
+        .locals 1
+        return-void
+    .end method" "$vcx"
+    else
+    [ $1 -ge 8 ] && ui=16 || ui=4
+    Thayme "$(grep -m1 "${2//\[/\\[}" "$vcx")
+        .locals 1
+        const/$ui v0, 0x$1
+        return v0
+    .end method" "$vcx"
+    fi
 fi
-else
-about "Error not found: $2 - $urlsmali"
-fi
+done
 }
 
 Thayivo(){
@@ -734,7 +713,7 @@ textvbs='invoke-static {}, Lcom/xBuild;->isOne()Z'
 else
 textvbs='invoke-static {}, Lcom/xBuild;->isZero()Z'
 fi
-[ -f "$urlsmali" ] && sed -i "/$(echo "$2" | sed -e 's|/|\\/|g' -e 's|\[|\\[|g')/a $textvbs" "$urlsmali" || about "Error: $urlsmali"
+[ -f "$urlsmali" ] && sed -i "s|${2//\[/\\[}|$textvbs|" "$urlsmali" && echo "Patch: ${urlsmali##*/}" || about "Error: $urlsmali"
 }
 
 # hiện tại

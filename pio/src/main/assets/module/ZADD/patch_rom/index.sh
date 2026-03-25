@@ -7,6 +7,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>
 
 <group title="'$google_text'">
 <action title="'"$title_quick"'" auto-off="true">
+<summary>'$project_text: $PTSH'</summary>
 <param name="patch_prop" options-sh="echo -e '"'none\nenforce\nlog\ndisable'"'" title="'"$desc_patch_prop"'" desc="'"$desc_patch_prop_long"'" label="'$select_text'"/>
 <param name="device_features" label="'"$label_device_features"'" type="bool" />
 <param name="rw_rom" label="'"$label_rw_rom"'" desc="'"$desc_rw_rom"'" type="bool" />

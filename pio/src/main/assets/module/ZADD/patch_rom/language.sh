@@ -1,6 +1,7 @@
 # Kakathic
 
 if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ];then
+project_text="Dự án"
 string_text_1="Tệp đầu vào ở dự án"
 select_text="Lựa chọn"
 network_text="Vui lòng kết nối mạng !"
@@ -10,7 +11,7 @@ desc_color_light="Mã màu nền sáng"
 desc_color_dark="Mã màu nền tối"
 desc_dimen="Điều chỉnh dimen chiều rộng"
 required_files_text="Tệp cần thiết"
-title_quick="Tùy chỉnh nhanh"
+title_quick="Tùy chỉnh trực tiếp"
 desc_patch_prop="Sửa lại ro.control_privapp_permissions"
 desc_patch_prop_long="enforce: nếu thiếu quyền có thể bị bootloop, log: ghi lỗi vào log không tự sửa lỗi, disable: tự sửa lỗi nếu thiếu quyền"
 label_device_features="Tắt cập nhật ota Xiaomi"
