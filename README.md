@@ -16,7 +16,7 @@
 
 - Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)** or **[Telegram](https://t.me/tooltree)**
 
-### Change log
+### Version changelog
 
 - **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
 
