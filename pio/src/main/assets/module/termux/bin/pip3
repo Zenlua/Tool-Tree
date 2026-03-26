@@ -1,8 +1,7 @@
-#!/data/data/com.tool.tree/files/home/termux/bin/python3.12
-# -*- coding: utf-8 -*-
-import re
+#!/data/data/com.tool.tree/files/home/termux/bin/python3.13
 import sys
 from pip._internal.cli.main import main
 if __name__ == '__main__':
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    if sys.argv[0].endswith('.exe'):
+        sys.argv[0] = sys.argv[0][:-4]
     sys.exit(main())

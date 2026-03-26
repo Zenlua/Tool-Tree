@@ -2,6 +2,7 @@
 
 **Beta**
 
++ Update apkeditor to 1.4.8
 + Tap the notification to open the app
 
 **Version: 1.3.7 (21-3-2026)**
