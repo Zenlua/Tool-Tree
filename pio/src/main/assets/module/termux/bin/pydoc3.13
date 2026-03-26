@@ -1,0 +1,5 @@
+#!/data/data/com.tool.tree/files/home/termux/bin/python3.13
+
+import pydoc
+if __name__ == '__main__':
+    pydoc.cli()
