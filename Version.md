@@ -2,7 +2,6 @@
 
 **Beta**
 
-+ Add support for permissions 2000 and 1000
 + Update Python to version 3.13
 + Update apkeditor to 1.4.8
 + Tap the notification to open the app
