@@ -50,23 +50,11 @@ class KeepShell(private var rootMode: Boolean = true) {
     private val LOCK_TIMEOUT = 10000L
     private var enterLockTime = 0L
 
-
-
     fun checkRoot(): Boolean {
-        val uid = doCmdSync("id -u")
-            .trim()
-            .toIntOrNull() ?: return false.also {
-                if (rootMode) tryExit()
-            }
-    
-        if (uid != 0 && uid != 1000 && uid != 2000) {
-            if (rootMode) tryExit()
-            return false
-        }
-    
-        return true
+        val isRoot = doCmdSync("id -u").trim() == "0"
+        if (!isRoot && rootMode) tryExit()
+        return isRoot
     }
-
 
     private fun getRuntimeShell() {
         if (p != null) return
