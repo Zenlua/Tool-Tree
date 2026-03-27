@@ -56,12 +56,10 @@ fi
 # index
 echo '<?xml version="1.0" encoding="UTF-8" ?>
 <group>'
-case "$1" in
-    home)
-        "$1"
-        ;;
-    *)
-        cat "$ETC/error.xml"
-        ;;
-esac
+# index
+if [ "$(type -t "$1")" = "function" ];then
+"$@"
+else
+cat "$ETC/error.xml"
+fi
 echo '</group>'

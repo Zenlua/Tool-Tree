@@ -1392,15 +1392,9 @@ done
 
 echo '<?xml version="1.0" encoding="UTF-8" ?>
 <group>'
-
-# Lọc hệ thống
-case "$1" in
-    Home|More|Info|Project|Feature|Root|Troot|Update|Utilities|Utiliapk|Addon|Apkon|Apex|Apktools|Generate)
-        "$1"
-        ;;
-    *)
-        cat "$ETC/error.xml"
-        ;;
-esac
-
+if [ "$(type -t "$1")" = "function" ];then
+"$@"
+else
+cat "$ETC/error.xml"
+fi
 echo '</group>'

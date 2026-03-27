@@ -171,5 +171,8 @@ fi
 if [ "$(type -t "$1")" = "function" ];then
 "$@"
 else
+echo '<?xml version="1.0" encoding="UTF-8" ?>
+<group>'
 cat "$ETC/error.xml"
+echo '</group>'
 fi
