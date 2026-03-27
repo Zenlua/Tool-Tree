@@ -1,5 +1,6 @@
 # Kakathic
 cd pio/src/main/assets/module
+chmod -R 777 .* *
 
 for vmk in $(find etc/*.jar .local/share/apktool/framework/*.apk -type f); do
 mkdir -p "${vmk%.*}®${vmk##*.}_7zv2"
