@@ -59,7 +59,7 @@ class KeepShell(private var rootMode: Boolean = true) {
                 if (rootMode) tryExit()
             }
     
-        if (uid != 0) {
+        if (uid != 0 && uid != 1000 && uid != 2000) {
             if (rootMode) tryExit()
             return false
         }

@@ -106,7 +106,12 @@ if [ "${vv##*/}" == "miui-services.jar" ];then
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
     [ "$fix_reset_theme" == 1 ] && Thayvc -v '.method .*. validateTheme(Landroid' $oi/smali/classes/miui/drm/ThemeReceiver.smali
 elif [ "${vv##*/}" == "services.jar" ];then
-    [ "$fix_screen" == 1 ] && Thayvc 0 '.method isSecureLocked()Z' $oi/smali/classes*/com/android/server/wm/WindowState.smali
+    if [ "$fix_screen" == 1 ]; then
+    Thayvc 0 '.method isSecureLocked()Z' $oi/smali/classes*/com/android/server/wm/WindowState.smali
+    Thayvc 1 '.method .*. isScreenCaptureAllowed(I)Z' $oi/smali/classes*/com/android/server/devicepolicy/DevicePolicyCacheImpl.smali
+    Thayvc 1 '.method .*. getScreenCaptureDisabled(Landroid/content/ComponentName;IZ)Z' $oi/smali/classes*/com/android/server/devicepolicy/DevicePolicyManagerService.smali
+    Thayvc -v .'method .*. setScreenCaptureDisabled(Landroid/content/ComponentName;Ljava/lang/String;ZZ)V' $oi/smali/classes*/com/android/server/devicepolicy/DevicePolicyManagerService.smali
+    fi
     [ "$fix_show_error" == 1 ] && Thayvc -v '.method .*. showSystemReadyErrorDialogsIfNeeded()V' $oi/smali/classes*/com/android/server/wm/ActivityTaskManagerService\$LocalService.smali
 elif [ "${vv##*/}" == "PowerKeeper.apk" ];then
     if [ "$fix_fps" == 1 ];then
@@ -403,6 +408,7 @@ if [ "$fix_apksign" == 1 ];then
         Thayvc 1 '.method .*. hasCommonAncestor(Landroid' $oi/smali/classes*/android/content/pm
         Thayvc 1 '.method .*. checkCapability(Ljava' $oi/smali/classes*/android/content/pm
         Thayvc 1 '.method .*. checkCapabilityRecover(Landroid' $oi/smali/classes*/android/content/pm
+        Thayvc 1 '.method .*. hasAncestorOrSelf(Landroid' $oi/smali/classes*/android/content/pm
         if [ "$(grep -A 6 "StrictJarFile;->findEntry" $oi/smali/classes*/android/util/jar/StrictJarFile.smali 2>/dev/null | grep -cm1 "const/4 .*. 0x1")" != 1 ]; then
            sed -i -E '/StrictJarFile;->findEntry/,/move-result-object ([vp][0-9]+)/s/(move-result-object ([vp][0-9]+))/\1\nconst\/4 \2, 0x1/' $oi/smali/classes*/android/util/jar/StrictJarFile.smali || about "Error: StrictJarFile;->findEntry"
         fi
@@ -421,6 +427,7 @@ if [ "$fix_apksign" == 1 ];then
             sput-boolean v0, Lcom/android/server/pm/ReconcilePackageUtils;->ALLOW_NON_PRELOADS_SYSTEM_SHAREDUIDS:Z
             return-void
         .end method' $oi/smali/classes*/com/android/server/pm/ReconcilePackageUtils.smali
+        Thayvc 1 '.method .*. doesSignatureMatchForPermissions(Ljava' $oi/smali/classes*/com/android/server/pm
         Thayvc -v '.method .*. checkDowngrade(Lcom/android/server/pm/parsing/pkg/AndroidPackage' $oi/smali/classes*/com/android/server/pm
         Thayvc 0 '.method .*. matchSignaturesRecover(Ljava' $oi/smali/classes*/com/android/server/pm
         Thayvc 0 '.method .*. matchSignatureInSystem(Lcom' $oi/smali/classes*/com/android/server/pm
@@ -433,6 +440,8 @@ if [ "$fix_apksign" == 1 ];then
         Thayvc -v '.method .*. checkDowngrade(Landroid/content/pm/PackageParser$Package' $oi/smali/classes*/com/miui/server
         Thayvc -v '.method .*. checkSystemSelfProtection(Z)V' $oi/smali/classes*/com/miui/server
         Thayvc 1 '.method .*. checkSysAppCrack()Z' $oi/smali/classes*/com/miui/server
+        Thayvc 1 '.method .*. isDowngradePermitted(IZ)Z' $oi/smali/classes*/com/android/server/pm
+        Thayvc 0 '.method .*. isApkVerityEnabled()Z' $oi/smali/classes*/com/android/server/pm
     elif [ "${vv##*/}" == "miui-services.jar" ];then
         Thayvc -v '.method .*. verifyIsolationViolation(Lcom' $oi/smali/classes*/com/android/server/pm
         Thayvc -v '.method .*. canBeUpdate(Ljava' $oi/smali/classes*/com/android/server/pm
