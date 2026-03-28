@@ -78,7 +78,6 @@
     <string name="kr_shell_finish_error">Выполнение завершено, но произошла ошибка</string>
     <string name="script_losted">Отсутствуют ресурсы скрипта\n</string>
     <string name="btn_copy_output">Копировать</string>
-    <string name="copy_success">Выходной лог скопирован в буфер обмена</string>
     <string name="copy_fail">Копирование не удалось</string>
     <string name="do_not_empty">Не может быть пустым</string>
     <string name="kr_param_load">"Получение состояния "</string>
