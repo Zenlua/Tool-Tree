@@ -4,8 +4,8 @@ apply plugin: 'kotlin-android'
 android {
     compileSdkVersion 36
     namespace "com.tool.tree"
-    viewBinding {
-        enabled = true
+    buildFeatures {
+        viewBinding = true
     }
     kotlin {
         jvmToolchain(17)
