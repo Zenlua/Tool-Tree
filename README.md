@@ -2,7 +2,7 @@
 
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/tool-tree.jpg" alt="1" style="width:100%;">
 
-- Supports both `root` or `non-root` versions and is only for `arm64-bit`
+- Supports both `root` or `no-root` versions and is only for `arm64-bit`
 
 - Download: **[Release](https://github.com/Zenlua/Tool-Tree/releases/latest)** or **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
 
