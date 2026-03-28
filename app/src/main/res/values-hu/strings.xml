@@ -33,16 +33,22 @@
     <string name="text_power_edl">9008 (EDL)</string>
     <string name="menu_power">Energiagazdálkodási művelet kiválasztása (root)</string>
 
-    <string name="permission_dialog_message">"A következő engedélyek szükségesek:
+    <string name="permission_dialog_message">"Felhasználói figyelmeztetés:
 
-• Értesítések
-• Teljes fájlhozzáférés
-• Alkalmazáslista
-• Root (ha engedélyezett)
-• Parancsikonok létrehozása
-• Hálózati adat-hozzáférés
+• Legyen óvatos a ROM módosításakor
+• Ne használjon nem megbízható forrásból származó kiegészítőket
+• Ne módosítsa a ROM-ot, ha nincs tapasztalata
 
-Ha egyetért, a folytatáshoz nyomja meg a megerősítés gombot."</string>
+Szükséges engedélyek:
+
+• Értesítések (az alkalmazás háttérben tartásához)
+• Fájlhozzáférés
+• Alkalmazáslista hozzáférés
+• Root jogosultság (ha engedélyezve van)
+• Kezdőképernyő parancsikonok létrehozása
+• Hálózati hozzáférés
+
+Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz."</string>
     <string name="permission_dialog_title">Az alkalmazás használati feltételei</string>
 
     <string name="notification_ui">"Értesítés "</string>
@@ -84,7 +90,7 @@ Ha egyetért, a folytatáshoz nyomja meg a megerősítés gombot."</string>
     <string name="kr_param_options_load">"Lista betöltése "</string>
     <string name="kr_params_render">Felület felépítése…</string>
     <string name="kr_please_choose_folder">Kérjük, válasszon mappát</string>
-    <string name="kr_please_choose_file">Kérjük, válasszon fájlt</string>
+    <string name="kr_please_choose_file">"Kérjük, válasszon fájlt "</string>
     <string name="kr_please_choose_app">Kérjük, válasszon alkalmazást</string>
     <string name="kr_please_input_color">Kérjük, adja meg a színt</string>
     <string name="kr_please_select">Kérjük, válasszon</string>

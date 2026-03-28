@@ -33,14 +33,20 @@
     <string name="text_power_edl">9008（EDL）</string>
     <string name="menu_power">选择电源操作 (root)</string>
 
-    <string name="permission_dialog_message">"需要以下权限：
+    <string name="permission_dialog_message">"用户警告：
 
-• 通知
-• 访问所有文件
-• 应用列表
-• Root（如允许）
-• 创建快捷方式
-• 访问网络数据
+• 修改 ROM 时请小心
+• 不要使用来自不可信来源的附加组件
+• 如果没有经验，请勿修改 ROM
+
+所需权限：
+
+• 通知（用于保持应用在后台运行）
+• 文件访问权限
+• 应用列表访问权限
+• Root 权限（如果已授予）
+• 创建主屏幕快捷方式
+• 网络访问
 
 如果同意，请点击确认按钮继续。"</string>
     <string name="permission_dialog_title">应用使用条款</string>
@@ -84,7 +90,7 @@
     <string name="kr_param_options_load">"正在加载列表 "</string>
     <string name="kr_params_render">正在构建界面…</string>
     <string name="kr_please_choose_folder">请选择文件夹</string>
-    <string name="kr_please_choose_file">请选择文件</string>
+    <string name="kr_please_choose_file">"请选择文件 "</string>
     <string name="kr_please_choose_app">请选择应用</string>
     <string name="kr_please_input_color">请输入颜色</string>
     <string name="kr_please_select">请选择</string>

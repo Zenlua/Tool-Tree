@@ -34,13 +34,19 @@
     <string name="text_power_edl">9008 (EDL)</string>
     <string name="menu_power">Chọn hành động nguồn (root)</string>
 
-    <string name="permission_dialog_message">"Yêu cầu các quyền sau:
+    <string name="permission_dialog_message">"Cảnh báo người dùng:
 
-• Thông báo
-• Truy cập toàn bộ tệp tin
+• Hãy cẩn thận khi chỉnh sửa ROM
+• Không sử dụng add-on từ nguồn không đáng tin cậy
+• Không chỉnh sửa ROM nếu bạn không có kinh nghiệm 
+
+Yêu cầu các quyền sau:
+
+• Thông báo (giữ ứng dụng chạy nền)
+• Truy cập tệp tin
 • Danh sách ứng dụng
-• Root (nếu được cho phép)
-• Tạo phím tắt
+• Root (nếu được cấp quyền)
+• Tạo phím tắt màn hình chính
 • Truy cập mạng dữ liệu
 
 Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
@@ -85,7 +91,7 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_param_options_load">"Đang tải danh sách "</string>
     <string name="kr_params_render">Đang dựng giao diện…</string>
     <string name="kr_please_choose_folder">Vui lòng chọn thư mục</string>
-    <string name="kr_please_choose_file">Vui lòng chọn tệp</string>
+    <string name="kr_please_choose_file">"Vui lòng chọn tệp "</string>
     <string name="kr_please_choose_app">Vui lòng chọn ứng dụng</string>
     <string name="kr_please_input_color">Vui lòng nhập màu</string>
     <string name="kr_please_select">Vui lòng chọn</string>

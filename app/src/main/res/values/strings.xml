@@ -52,16 +52,22 @@
     <string name="power_recovery_cmd">input keyevent 26; svc power reboot recovery || reboot recovery</string>
     <string name="power_shutdown_cmd">input keyevent 26; svc power shutdown || reboot -p</string>
 
-    <string name="permission_dialog_message">"Request the following permissions:
+    <string name="permission_dialog_message">"User Warning:
 
-• Notification
-• Access all files
-• List of applications
-• Root (if permitted)
-• Create shortcut
-• Data network access
+• Be careful when modifying the ROM
+• Do not use add-ons from untrusted sources
+• Do not modify the ROM if you are inexperienced
 
-If you agree, click the confirmation button to continue."</string>
+Required Permissions:
+
+• Notifications (to keep the app running in the background)
+• File access
+• App list access
+• Root (if granted)
+• Create home screen shortcuts
+• Network access
+
+If you agree, press the confirm button to continue."</string>
     <string name="permission_dialog_title">Application Terms of Use</string>
 
     <string name="notification_ui">"Notification "</string>
@@ -103,7 +109,7 @@ If you agree, click the confirmation button to continue."</string>
     <string name="kr_param_options_load">Loading candidate list\u0020</string>
     <string name="kr_params_render">Rendering UI…</string>
     <string name="kr_please_choose_folder">Please select a folder</string>
-    <string name="kr_please_choose_file">Please select a file</string>
+    <string name="kr_please_choose_file">"Please select a file "</string>
     <string name="kr_please_choose_app">Please select an app</string>
     <string name="kr_please_input_color">Please enter a color</string>
     <string name="kr_please_select">Please select</string>
