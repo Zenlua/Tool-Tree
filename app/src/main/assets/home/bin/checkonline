@@ -1,15 +1,3 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-urls="
-https://clients3.google.com/generate_204
-https://cp.cloudflare.com/generate_204
-https://www.baidu.com
-"
-
-for url in $urls; do
-  if curl -s --connect-timeout 2 --max-time 3 "$url" >/dev/null; then
-    exit 0
-  fi
-done
-
-exit 1
+ping -c 1 google.com >/dev/null && exit 0 || exit 1
