@@ -79,7 +79,6 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_shell_finish_error">Thực thi đã kết thúc nhưng có lỗi xảy ra</string>
     <string name="script_losted">Thiếu tài nguyên script\n</string>
     <string name="btn_copy_output">Sao chép</string>
-    <string name="copy_success">Log đầu ra đã được sao chép vào bộ nhớ tạm</string>
     <string name="copy_fail">Sao chép thất bại</string>
     <string name="do_not_empty">Không được để trống</string>
     <string name="kr_param_load">"Lấy trạng thái "</string>
