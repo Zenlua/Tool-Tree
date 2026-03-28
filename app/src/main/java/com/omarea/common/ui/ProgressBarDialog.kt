@@ -7,7 +7,7 @@ import android.os.Message
 import android.view.LayoutInflater
 import android.widget.TextView
 import android.widget.Toast
-import com.omarea.common.R
+import com.tool.tree.R
 import com.omarea.common.shell.AsynSuShellUnit
 
 open class ProgressBarDialog(private var context: Activity, private var uniqueId: String? = null) {

@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import com.omarea.krscript.R
+import com.tool.tree.R
 import com.omarea.krscript.model.ActionParamInfo
 
 class ParamsFileChooserRender(

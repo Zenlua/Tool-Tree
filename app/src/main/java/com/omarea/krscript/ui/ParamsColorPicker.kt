@@ -9,7 +9,7 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import com.omarea.common.ui.DialogHelper
-import com.omarea.krscript.R
+import com.tool.tree.R
 import com.omarea.krscript.model.ActionParamInfo
 import androidx.core.graphics.toColorInt
 import androidx.core.graphics.drawable.toDrawable

@@ -29,6 +29,7 @@ import com.tool.tree.databinding.ActivityActionPageOnlineBinding
 import java.util.*
 import androidx.core.net.toUri
 import androidx.activity.addCallback
+import com.tool.tree.R
 
 class ActionPageOnline : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
@@ -139,7 +140,7 @@ class ActionPageOnline : AppCompatActivity() {
                 DialogHelper.animDialog(
                         AlertDialog.Builder(this@ActionPageOnline)
                                 .setMessage(message)
-                                .setPositiveButton(com.omarea.krscript.R.string.btn_confirm) { _, _ -> }
+                                .setPositiveButton(R.string.btn_confirm) { _, _ -> }
                             .setOnDismissListener {
                                     result?.confirm()
                                 }
@@ -152,10 +153,10 @@ class ActionPageOnline : AppCompatActivity() {
                 DialogHelper.animDialog(
                         AlertDialog.Builder(this@ActionPageOnline)
                                 .setMessage(message)
-                                .setPositiveButton(com.omarea.krscript.R.string.btn_confirm) { _, _ ->
+                                .setPositiveButton(R.string.btn_confirm) { _, _ ->
                                     result?.confirm()
                                 }
-                                .setNeutralButton(com.omarea.krscript.R.string.btn_cancel) { _, _ ->
+                                .setNeutralButton(R.string.btn_cancel) { _, _ ->
                                     result?.cancel()
                                 }
                                 .create()
@@ -309,7 +310,7 @@ class ActionPageOnline : AppCompatActivity() {
                         binding.krDownloadName.text = fileName
                         binding.krDownloadProgress.progress = ratio
                         binding.krDownloadProgress.isIndeterminate = false
-                        setTitle(com.omarea.krscript.R.string.kr_download_downloading)
+                        setTitle(R.string.kr_download_downloading)
                         downloader.saveTaskStatus(taskAliasId, ratio)
                     }
 
@@ -318,7 +319,7 @@ class ActionPageOnline : AppCompatActivity() {
                         downloader.saveTaskCompleted(downloadId, absPath)
 
                         handler.post {
-                            setTitle(com.omarea.krscript.R.string.kr_download_completed)
+                            setTitle(R.string.kr_download_completed)
                             binding.krDownloadProgress.visibility = View.GONE
                             stopWatchDownloadProgress()
 

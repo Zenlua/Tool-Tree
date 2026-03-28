@@ -11,7 +11,7 @@ import android.widget.Toast;
 
 import com.omarea.common.shared.FilePathResolver;
 import com.omarea.common.ui.DialogHelper;
-import com.omarea.krscript.R;
+import com.tool.tree.R;
 
 public class DownloaderReceiver extends BroadcastReceiver {
     private static DownloaderReceiver downloaderReceiver;

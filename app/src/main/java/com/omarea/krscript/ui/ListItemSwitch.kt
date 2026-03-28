@@ -2,7 +2,7 @@ package com.omarea.krscript.ui
 
 import android.content.Context
 import android.widget.Switch
-import com.omarea.krscript.R
+import com.tool.tree.R
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.SwitchNode
 import java.util.Locale.getDefault
