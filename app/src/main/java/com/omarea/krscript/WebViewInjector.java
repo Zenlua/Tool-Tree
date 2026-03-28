@@ -34,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
+import com.tool.tree.R;
 
 public class WebViewInjector {
     private final WebView webView;

@@ -36,11 +36,11 @@ export MPAT='$MPAT'
 </group>
 
 <group>
-<page html="https://zenlua.github.io/Tool-Tree/add-on/web/terminal.html" title="Web Terminal" />
+<page html="https://zenlua.github.io/Tool-Tree/website/web/terminal.html" title="Web Terminal" />
 </group>
 
 <group>
-<page html="https://zenlua.github.io/Tool-Tree/add-on/web/manager.html" title="Web Manager" />
+<page html="https://zenlua.github.io/Tool-Tree/website/web/manager.html" title="Web Manager" />
 </group>'
 }
 

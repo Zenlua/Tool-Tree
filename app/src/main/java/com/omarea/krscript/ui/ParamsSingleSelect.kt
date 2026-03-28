@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import com.omarea.common.model.SelectItem
 import com.omarea.common.ui.DialogItemChooser
-import com.omarea.krscript.R
+import com.tool.tree.R
 import com.omarea.krscript.model.ActionParamInfo
 
 class ParamsSingleSelect(

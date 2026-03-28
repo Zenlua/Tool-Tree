@@ -14,7 +14,7 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import com.omarea.common.ui.DialogHelper
-import com.omarea.krscript.R
+import com.tool.tree.R
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.TextNode

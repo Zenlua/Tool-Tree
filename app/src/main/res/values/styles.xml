@@ -104,17 +104,6 @@
         <item name="android:layout_marginRight">8dp</item>
     </style>
     
-    <style name="activityAnim">
-        <item name="android:activityOpenEnterAnimation">@anim/activity_open_enter</item>
-        <item name="android:activityOpenExitAnimation">@anim/activity_open_exit</item>
-        <item name="android:activityCloseEnterAnimation">@anim/activity_close_enter</item>
-        <item name="android:activityCloseExitAnimation">@anim/activity_close_exit</item>
-        <item name="android:taskOpenEnterAnimation">@anim/task_open_enter</item>
-        <item name="android:taskOpenExitAnimation">@anim/task_open_exit</item>
-        <item name="android:taskCloseEnterAnimation">@anim/task_close_enter</item>
-        <item name="android:taskCloseExitAnimation">@anim/task_close_exit</item>
-    </style>
-
     <style name="windowAnim">
         <item name="android:windowExitAnimation">@anim/dialog_exit</item>
         <item name="android:windowEnterAnimation">@anim/dialog_enter</item>
@@ -230,13 +219,6 @@
         <item name="android:stateListAnimator">@null</item>
     </style>
 
-    <style name="textTitle" parent="@style/TextAppearance.AppCompat.Title">
-        <item name="android:textColor">?android:attr/textColorPrimary</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">14dp</item>
-        <item name="android:alpha">0.8</item>
-    </style>
-
     <style name="textSmallTitle" parent="textTitle">
         <item name="android:textSize">11dp</item>
     </style>
@@ -246,11 +228,6 @@
         <item name="android:textStyle">normal</item>
         <item name="android:textSize">14dp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-    </style>
-
-    <style name="textSmall">
-        <item name="android:textColor">?android:attr/textColorSecondary</item>
-        <item name="android:textSize">11dp</item>
     </style>
 
     <style name="textSecondary">

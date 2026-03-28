@@ -78,7 +78,6 @@
     <string name="kr_shell_finish_error">执行已结束，但发生错误</string>
     <string name="script_losted">缺少脚本资源\n</string>
     <string name="btn_copy_output">复制</string>
-    <string name="copy_success">输出日志已复制到剪贴板</string>
     <string name="copy_fail">复制失败</string>
     <string name="do_not_empty">不能为空</string>
     <string name="kr_param_load">"获取状态 "</string>

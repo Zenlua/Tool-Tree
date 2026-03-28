@@ -97,7 +97,6 @@ If you agree, click the confirmation button to continue."</string>
     <string name="kr_shell_finish_error">Execution finished, but errors occurred</string>
     <string name="script_losted">Script resources are missing\n</string>
     <string name="btn_copy_output">Copy</string>
-    <string name="copy_success">Output log has been copied to the clipboard</string>
     <string name="copy_fail">Copy failed</string>
     <string name="do_not_empty">Cannot be empty</string>
     <string name="kr_param_load">Get status\u0020</string>

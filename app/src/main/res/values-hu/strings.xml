@@ -78,7 +78,6 @@ Ha egyetért, a folytatáshoz nyomja meg a megerősítés gombot."</string>
     <string name="kr_shell_finish_error">A végrehajtás befejeződött, de hiba történt</string>
     <string name="script_losted">Hiányzó szkript erőforrás\n</string>
     <string name="btn_copy_output">Másolás</string>
-    <string name="copy_success">A kimeneti napló a vágólapra másolva</string>
     <string name="copy_fail">Sikertelen másolás</string>
     <string name="do_not_empty">Nem lehet üres</string>
     <string name="kr_param_load">"Állapot lekérése "</string>

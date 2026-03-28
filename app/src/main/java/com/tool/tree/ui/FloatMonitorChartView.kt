@@ -45,7 +45,7 @@ class FloatMonitorChartView : View {
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         @SuppressLint("CustomViewStyleable") val array = context.obtainStyledAttributes(attrs, R.styleable.RamInfo)
-        val total = array.getInteger(R.styleable.RamInfo_total, 1)
+        val total = array.getInteger(R.styleable.RamInfo_totalram, 1)
         val fee = array.getInteger(R.styleable.RamInfo_free, 1)
         val feeRatio = (fee * 100.0 / total).toInt()
         ratio = 100 - feeRatio
@@ -55,7 +55,7 @@ class FloatMonitorChartView : View {
 
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
         @SuppressLint("CustomViewStyleable") val array = context.obtainStyledAttributes(attrs, R.styleable.RamInfo)
-        val total = array.getInteger(R.styleable.RamInfo_total, 1)
+        val total = array.getInteger(R.styleable.RamInfo_totalram, 1)
         val fee = array.getInteger(R.styleable.RamInfo_free, 1)
         val feeRatio = (fee * 100.0 / total).toInt()
         ratio = feeRatio

@@ -4,8 +4,6 @@ import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.os.PowerManager
-import android.content.DialogInterface
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
@@ -18,17 +16,20 @@ import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import android.view.WindowManager
+import androidx.fragment.app.DialogFragment
 import com.omarea.common.ui.DialogHelper
-import com.omarea.krscript.R
-import com.omarea.krscript.databinding.KrDialogLogBinding
+import com.tool.tree.databinding.KrDialogLogBinding
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
-import android.view.WindowManager
+import android.content.DialogInterface
+import com.tool.tree.R
 
-class DialogLogFragment : androidx.fragment.app.DialogFragment() {
+class DialogLogFragment : DialogFragment() {
 
-    private var binding: KrDialogLogBinding? = null
+    private var _binding: KrDialogLogBinding? = null
+    private val binding get() = _binding!!
     private var running = false
     private var canceled = false
     private var uiVisible = true
@@ -43,9 +44,9 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        binding = KrDialogLogBinding.inflate(layoutInflater, container, false)
-        return binding?.root
+    ): View {
+        _binding = KrDialogLogBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -54,18 +55,18 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-    
+
         dialog?.window?.let { window ->
             DialogHelper.setWindowBlurBg(window, requireActivity())
         }
-    
+
         nodeInfo?.let { node ->
             if (node.reloadPage) {
-                binding?.btnHide?.visibility = View.GONE
+                binding.btnHide.visibility = View.GONE
             }
-    
+
             val shellHandler = openExecutor(node)
-    
+
             ShellExecutor().execute(
                 requireContext().applicationContext,
                 node,
@@ -82,30 +83,30 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         canceled = false
         uiVisible = true
 
-        binding?.btnHide?.setOnClickListener {
+        binding.btnHide.setOnClickListener {
             uiVisible = false
             offScreen()
             closeView()
         }
 
-        binding?.btnCancel?.setOnClickListener {
+        binding.btnCancel.setOnClickListener {
             if (running && !canceled) {
                 canceled = true
                 forceStopRunnable?.run()
-                binding?.btnExit?.visibility = View.VISIBLE
-                binding?.btnCancel?.visibility = View.GONE
+                binding.btnExit.visibility = View.VISIBLE
+                binding.btnCancel.visibility = View.GONE
             }
         }
 
-        binding?.btnExit?.setOnClickListener {
+        binding.btnExit.setOnClickListener {
             isCancelable = true
             closeView()
         }
 
-        binding?.btnCopy?.setOnClickListener {
+        binding.btnCopy.setOnClickListener {
             try {
                 val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("text", binding?.shellOutput?.text.toString())
+                val clip = ClipData.newPlainText("text", binding.shellOutput.text.toString())
                 clipboard.setPrimaryClip(clip)
                 Toast.makeText(requireContext(), getString(R.string.copy_success), Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
@@ -114,43 +115,41 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         }
 
         if (nodeInfo.interruptable) {
-            binding?.btnHide?.visibility = View.VISIBLE
-            binding?.btnCancel?.visibility = View.VISIBLE
+            binding.btnHide.visibility = View.VISIBLE
+            binding.btnCancel.visibility = View.VISIBLE
         } else {
-            binding?.btnHide?.visibility = View.GONE
-            binding?.btnCancel?.visibility = View.GONE
+            binding.btnHide.visibility = View.GONE
+            binding.btnCancel.visibility = View.GONE
         }
 
         if (nodeInfo.title.isNotEmpty()) {
-            binding?.title?.text = nodeInfo.title
+            binding.title.text = nodeInfo.title
         } else {
-            binding?.title?.visibility = View.GONE
+            binding.title.visibility = View.GONE
         }
 
         if (nodeInfo.desc.isNotEmpty()) {
-            binding?.desc?.text = nodeInfo.desc
+            binding.desc.text = nodeInfo.desc
         } else {
-            binding?.desc?.visibility = View.GONE
+            binding.desc.visibility = View.GONE
         }
 
-        binding?.actionProgress?.isIndeterminate = true
+        binding.actionProgress.isIndeterminate = true
 
         return MyShellHandler(requireContext().applicationContext, object : IActionEventHandler {
             override fun onCompleted() {
                 running = false
                 onExit.run()
                 offScreen()
-                binding?.btnHide?.visibility = View.GONE
-                binding?.btnCancel?.visibility = View.GONE
-                binding?.btnExit?.visibility = View.VISIBLE
-                binding?.actionProgress?.visibility = View.GONE
+                binding.btnHide.visibility = View.GONE
+                binding.btnCancel.visibility = View.GONE
+                binding.btnExit.visibility = View.VISIBLE
+                binding.actionProgress.visibility = View.GONE
                 isCancelable = true
             }
 
             override fun onSuccess() {
-                if (nodeInfo.autoOff) {
-                    closeView()
-                }
+                if (nodeInfo.autoOff) closeView()
             }
 
             override fun onStart(forceStop: Runnable?) {
@@ -161,14 +160,13 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
                 dialog?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
                 if (nodeInfo.interruptable && forceStop != null) {
-                    binding?.btnCancel?.visibility = View.VISIBLE
-                    binding?.btnExit?.visibility = View.GONE
+                    binding.btnCancel.visibility = View.VISIBLE
+                    binding.btnExit.visibility = View.GONE
                 } else {
-                    binding?.btnCancel?.visibility = View.GONE
+                    binding.btnCancel.visibility = View.GONE
                 }
             }
-
-        }, binding?.shellOutput, binding?.actionProgress)
+        }, binding.shellOutput, binding.actionProgress)
     }
 
     @FunctionalInterface
@@ -192,11 +190,10 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         private var hasError = false
 
         private fun getColor(resId: Int): Int {
-            val ctx = context
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                ctx.getColor(resId)
+                context.getColor(resId)
             } else {
-                ctx.resources.getColor(resId)
+                context.resources.getColor(resId)
             }
         }
 
@@ -236,7 +233,6 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
                 }
             }
         }
-       
 
         override fun onStart(msg: Any?) {
             logView?.text = ""
@@ -271,16 +267,13 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     }
 
     private fun offScreen() {
-        dialog?.window?.let { window ->
-            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        }
+        dialog?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     private fun closeView() {
         try {
             dismissAllowingStateLoss()
-        } catch (ex: Exception) {
-        }
+        } catch (ex: Exception) {}
     }
 
     override fun onDismiss(dialog: DialogInterface) {
@@ -288,10 +281,10 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         onDismissRunnable?.run()
         onDismissRunnable = null
     }
-    
+
     override fun onDestroyView() {
         super.onDestroyView()
-        binding = null
+        _binding = null
     }
 
     override fun onDestroy() {

@@ -11,8 +11,10 @@
 
 - Where to store decrypted roms and apk: `TREE` `TOOL`
 
-> `/storage/xxxx-xxxx/data/files/home`
-> `/data/data/com.tool.tree/files/home`
+> no-root: `/storage/xxxx-xxxx/data/files/home`
+> root: `/data/data/com.tool.tree/files/home`
+> ROM: `/data/local/TREE`
+> APK: `/data/local/TOOL`
 
 - More discover it yourself
 
@@ -21,18 +23,9 @@
 - Use in MT Manager
 
 ```shell
-#!/data/data/com.tool.tree/files/home/bin/bash
 . /data/data/com.tool.tree/files/root/executor.sh
-
 java -version
 echo
-apkeditor_d
-echo
-apkeditor_b
-echo
-unpack_img
-echo
-repack_img
 ```
 
 **Suggestions for non-rooted devices**

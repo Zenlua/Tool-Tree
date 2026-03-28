@@ -6,11 +6,11 @@ on:
       UPAPK:
         description: 'Release APK'
         type: boolean
-        default: true
+        default: false
       UPTG:
         description: 'Send Telegram'
         type: boolean
-        default: true
+        default: false
   push:
     branches: [ "main" ]
   pull_request:
@@ -46,14 +46,14 @@ jobs:
       - name: Build APK
         run: |
           chmod +x ./gradlew ./.github/modun.sh
-          sudo ./.github/modun.sh
+          ./.github/modun.sh
           ./gradlew assembleRelease --daemon -x lint -x test
-          VER=$(grep -m1 'versionName ' pio/build.gradle | cut -d'"' -f2)
+          VER=$(grep -m1 'versionName ' app/build.gradle | cut -d'"' -f2)
           echo "Tool-Tree $VER"
           echo "VER=$VER" >> $GITHUB_ENV
           mkdir -p Up Beta
-          cp -rf pio/build/outputs/apk/*/*.apk "Up/Tool-Tree.$VER.apk"
-          cp -rf pio/build/outputs/apk/*/*.apk "Beta/Tool-Tree-beta.apk"
+          cp -rf app/build/outputs/apk/*/*.apk "Up/Tool-Tree.$VER.apk"
+          cp -rf app/build/outputs/apk/*/*.apk "Beta/Tool-Tree-beta.apk"
           ls Up
           echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
           if [ "$UPTG" == "true" ];then
@@ -109,12 +109,12 @@ jobs:
       - name: Build APK
         run: |
           chmod +x ./gradlew ./.github/modun.sh
-          sudo ./.github/modun.sh
+          ./.github/modun.sh
           ./gradlew assembleDebug --no-daemon -x lint -x test
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
-          path: pio/build/outputs/apk/*/*.apk
+          path: app/build/outputs/apk/*/*.apk
 
