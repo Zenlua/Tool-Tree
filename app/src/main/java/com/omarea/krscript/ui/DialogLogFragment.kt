@@ -23,6 +23,7 @@ import com.omarea.krscript.databinding.KrDialogLogBinding
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
+import android.content.DialogInterface
 import com.tool.tree.R
 
 class DialogLogFragment : DialogFragment() {
