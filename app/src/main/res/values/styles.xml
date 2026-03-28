@@ -58,10 +58,7 @@
         <item name="android:foregroundTintMode">screen</item>
     </style>
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat">
-        <item name="android:textColor">?android:textColorPrimary</item>
-        <item name="android:colorBackground">?android:colorBackground</item>
-    </style>
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat"/>
 
     <style name="textTitle">
         <item name="android:textColor">?android:attr/textColorPrimary</item>
