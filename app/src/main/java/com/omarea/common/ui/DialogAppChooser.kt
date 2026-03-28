@@ -10,7 +10,7 @@ import android.widget.AbsListView
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.Filterable
-import com.omarea.common.R
+import com.tool.tree.R
 
 class DialogAppChooser(
     private val darkMode: Boolean,

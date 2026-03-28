@@ -6,7 +6,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.*
-import com.omarea.common.R
+import com.tool.tree.R
 import com.omarea.common.model.SelectItem
 
 class DialogItemChooser2(

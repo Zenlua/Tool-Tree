@@ -29,6 +29,7 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.omarea.krscript.ui.PageMenuLoader
 import com.tool.tree.databinding.ActivityActionPageBinding
 import android.os.Looper
+import com.tool.tree.R
 
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
@@ -215,16 +216,16 @@ class ActionPage : AppCompatActivity() {
             }
 
             if (menuOption.type == "file" && menuOption.iconPath.isEmpty()) {
-                setImageDrawable(ContextCompat.getDrawable(context, com.omarea.krscript.R.drawable.kr_folder))
+                setImageDrawable(ContextCompat.getDrawable(context, R.drawable.kr_folder))
             } else if (menuOption.iconPath.isNotEmpty()) {
                 val icon = IconPathAnalysis().loadLogo(context, menuOption, false)
                 if (icon != null) {
                     setImageDrawable(icon)
                 } else {
-                    setImageDrawable(ContextCompat.getDrawable(context, com.omarea.krscript.R.drawable.kr_fab))
+                    setImageDrawable(ContextCompat.getDrawable(context, R.drawable.kr_fab))
                 }
             } else {
-                setImageDrawable(ContextCompat.getDrawable(context, com.omarea.krscript.R.drawable.kr_fab))
+                setImageDrawable(ContextCompat.getDrawable(context, R.drawable.kr_fab))
             }
         }
     }
@@ -427,12 +428,12 @@ class ActionPage : AppCompatActivity() {
         Thread {
             currentPageConfig.run {
                 if (beforeRead.isNotEmpty()) {
-                    showDialog(getString(com.omarea.krscript.R.string.kr_page_before_load))
+                    showDialog(getString(R.string.kr_page_before_load))
                     ScriptEnvironmen.executeResultRoot(activity, beforeRead, this)
                 }
 
                 if (showLoading) {
-                    showDialog(getString(com.omarea.krscript.R.string.kr_page_loading))
+                    showDialog(getString(R.string.kr_page_loading))
                 }
                 var items: ArrayList<NodeInfoBase>? = null
 
@@ -448,13 +449,13 @@ class ActionPage : AppCompatActivity() {
                 }
 
                 if (afterRead.isNotEmpty()) {
-                    showDialog(getString(com.omarea.krscript.R.string.kr_page_after_load))
+                    showDialog(getString(R.string.kr_page_after_load))
                     ScriptEnvironmen.executeResultRoot(activity, afterRead, this)
                 }
 
                 if (items != null && items.isNotEmpty()) {
                     if (loadSuccess.isNotEmpty()) {
-                        showDialog(getString(com.omarea.krscript.R.string.kr_page_load_success))
+                        showDialog(getString(R.string.kr_page_load_success))
                         ScriptEnvironmen.executeResultRoot(activity, loadSuccess, this)
                     }
 
@@ -465,7 +466,7 @@ class ActionPage : AppCompatActivity() {
                                 if (result != true) {
                                     Toast.makeText(
                                         this@ActionPage,
-                                        getString(com.omarea.krscript.R.string.kr_auto_run_item_losted),
+                                        getString(R.string.kr_auto_run_item_losted),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
@@ -485,7 +486,7 @@ class ActionPage : AppCompatActivity() {
                     }
                 } else {
                     if (loadFail.isNotEmpty()) {
-                        showDialog(getString(com.omarea.krscript.R.string.kr_page_load_fail))
+                        showDialog(getString(R.string.kr_page_load_fail))
                         ScriptEnvironmen.executeResultRoot(activity, loadFail, this)
                         hideDialog()
                     }
@@ -493,7 +494,7 @@ class ActionPage : AppCompatActivity() {
                     handler.post {
                         Toast.makeText(
                             this@ActionPage,
-                            getString(com.omarea.krscript.R.string.kr_page_load_fail),
+                            getString(R.string.kr_page_load_fail),
                             Toast.LENGTH_SHORT
                         ).show()
                     }

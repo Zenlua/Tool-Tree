@@ -16,7 +16,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
-import com.omarea.common.R
+import com.tool.tree.R
 import androidx.core.graphics.drawable.toDrawable
 
 class DialogHelper {

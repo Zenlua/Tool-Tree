@@ -4,7 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.CheckBox
-import com.omarea.krscript.R
+import com.tool.tree.R
 import com.omarea.krscript.model.ActionParamInfo
 import java.util.Locale.getDefault
 

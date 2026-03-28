@@ -9,7 +9,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.DecelerateInterpolator
-import com.omarea.common.R
+import com.tool.tree.R
 import androidx.core.content.withStyledAttributes
 
 class ProgressCircle : View {
