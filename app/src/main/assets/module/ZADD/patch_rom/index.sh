@@ -133,7 +133,7 @@ fi
 (
 # check update add-on
 if checkonline; then
-    number_ver="$(xem https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/pio/src/main/assets/module/ZADD/patch_rom/addon.prop 2>/dev/null | grep -m1 "versionCode=" | cut -d= -f2)"
+    number_ver="$(xem https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/app/src/main/assets/module/ZADD/patch_rom/addon.prop 2>/dev/null | grep -m1 "versionCode=" | cut -d= -f2)"
     number_ver2="$(gprop versionCode "$MPAT/addon.prop")"
     if [[ ${number_ver:-0} -gt $number_ver2 ]];then
         if [ -f $MPAT/update ];then
@@ -153,7 +153,7 @@ update(){
 if checkonline; then
 cd "$MPAT"
 for kvv in addon.prop patch-rom.bash language.sh index.sh menu.sh mod.7z early_start.sh changelog.txt; do
-downloadb "https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/pio/src/main/assets/module/ZADD/patch_rom/$kvv" $kvv
+downloadb "https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/app/src/main/assets/module/ZADD/patch_rom/$kvv" $kvv
 done
     if [ -f $MPAT/mod.7z ];then
     echo "7z mod extract..."
