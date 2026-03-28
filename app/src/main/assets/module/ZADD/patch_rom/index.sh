@@ -159,6 +159,7 @@ done
     echo "7z mod extract..."
     7z x -t7z -y $MPAT/mod.7z -o$MPAT
     rm -f $MPAT/mod.7z
+    chmod -R 755 $MPAT
     fi
 [ -f update ] && rm -f update
 [ -f changelog.txt ] && cat changelog.txt
