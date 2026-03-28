@@ -1,0 +1,151 @@
+<resources>
+
+    <string name="kr_script_config">kr-script.conf</string>
+    <bool name="force_root">false</bool>
+    <string name="app_name">Tool-Tree</string>
+
+    <string name="float_monitor_tips">Double-tap the floating window to close it, or press and drag to adjust its position</string>
+    <string name="permission_float">Please grant permission to display floating windows!</string>
+    <string name="please_wait">Please wait</string>
+    <string name="title_activity_action_page">Function Pages</string>
+
+    <string name="channel_name">Download</string>
+    <string name="processing">Processing...</string>
+    <string name="completed">Complete</string>
+
+    <string name="author_name">Kakathic</string>
+    <string name="about_title">About</string>
+    <string name="appliction_desc">Lots of utilities on the phone</string>
+    <string name="appliction_name">[•-•]</string>
+    <string name="appliction_author">Great tools</string>
+    <string name="engine_version_name">Developing this project</string>
+
+    <string name="tab_home">Home</string>
+    <string name="tab_favorites">Favorites</string>
+    <string name="tab_pages">Utilities</string>
+
+    <string name="monitor_laod">Load: %d%%</string>
+    <string name="monitor_core_count">%d Cores</string>
+    <string name="monitor_cache_cleared">Cached RAM has been reclaimed</string>
+    <string name="monitor_ram_cleared">RAM fragments have been defragmented</string>
+
+    <string name="copy_success">Copy successful</string>
+    <string name="pio_starting">~•-•~</string>
+    <string name="pop_before_start">Preparing to start the application…</string>
+    <string name="pop_started">Start application</string>
+    <string name="transparent_ui">Transparent UI</string>
+    <string name="title_activity_file_selector">Please select a file</string>
+    <string name="title_activity_folder_selector">Please select a directory</string>
+
+    <string name="text_power_shutdown">Shutdown</string>
+    <string name="text_power_reboot">Restart</string>
+    <string name="text_power_dowload">Download</string>
+    <string name="text_power_recovery">Recovery</string>
+    <string name="text_power_fastboot">Fastboot</string>
+    <string name="text_power_edl">9008 (EDL)</string>
+    <string name="menu_power">Select action power (root)</string>
+    
+    <string name="power_emergency_cmd">input keyevent 26; svc power reboot edl || reboot edl</string>
+    <string name="power_fastboot_cmd">input keyevent 26; svc power reboot bootloader || reboot bootloader</string>
+    <string name="power_download_cmd">input keyevent 26; svc power reboot download || reboot download</string>
+    <string name="power_reboot_cmd">input keyevent 26; svc power reboot || reboot;</string>
+    <string name="power_recovery_cmd">input keyevent 26; svc power reboot recovery || reboot recovery</string>
+    <string name="power_shutdown_cmd">input keyevent 26; svc power shutdown || reboot -p</string>
+
+    <string name="permission_dialog_message">"Request the following permissions:
+
+• Notification
+• Access all files
+• List of applications
+• Root (if permitted)
+• Create shortcut
+• Data network access
+
+If you agree, click the confirmation button to continue."</string>
+    <string name="permission_dialog_title">Application Terms of Use</string>
+
+    <string name="notification_ui">"Notification "</string>
+    <string name="wakelock_service_running">WakeLock Service Running</string>
+    <string name="service_active_with_wakelock">Running in the background</string>
+    <string name="stop">Stop</string>
+    <string name="turn_off_wakelock">Turn off WakeLock</string>
+    <string name="turn_on_wakelock">Turn on WakeLock</string>
+    <string name="msg_folder_mode">Press and hold to select a folder</string>
+    <string name="dialog_title_select_directory">Do you want to select this folder?</string>
+    <string name="dialog_title_select_file">Do you want to select this file?</string>
+    <string name="no_files_in_directory">The folder is empty and contains no files!</string>
+    
+    <string name="execute_success">Execution successful</string>
+    <string name="execute_fail">Execution failed</string>
+    <string name="execute_wait">Executing, please wait...</string>
+    <string name="app_chooser_search_hint">Enter application name/package name to search</string>
+    <string name="item_chooser_search_hint">Search options</string>
+    <string name="select_all">"Select All "</string>
+    <string name="help_title">Instructions</string>
+    <string name="confirm_message">Reminder message</string>
+    <string name="confirm_title">Reminder title</string>
+
+    <string name="shell_executor">Script Executor</string>
+    <string name="btn_skip">Skip</string>
+    <string name="btn_exit">Exit</string>
+    <string name="btn_hide">Hide</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_confirm">Confirm</string>
+    <string name="btn_execute">Execute</string>
+    <string name="onloading">Loading data…</string>
+    <string name="kr_shell_completed">\nScript execution completed</string>
+    <string name="kr_shell_finish_error">Execution finished, but errors occurred</string>
+    <string name="script_losted">Script resources are missing\n</string>
+    <string name="btn_copy_output">Copy</string>
+    <string name="copy_success">Output log has been copied to the clipboard</string>
+    <string name="copy_fail">Copy failed</string>
+    <string name="do_not_empty">Cannot be empty</string>
+    <string name="kr_param_load">Get status\u0020</string>
+    <string name="kr_param_options_load">Loading candidate list\u0020</string>
+    <string name="kr_params_render">Rendering UI…</string>
+    <string name="kr_please_choose_folder">Please select a folder</string>
+    <string name="kr_please_choose_file">Please select a file</string>
+    <string name="kr_please_choose_app">Please select an app</string>
+    <string name="kr_please_input_color">Please enter a color</string>
+    <string name="kr_please_select">Please select</string>
+    <string name="kr_write_external_storage">Read/write external storage permission is required!</string>
+    <string name="kr_download_create_fail">Failed to create download task</string>
+    <string name="kr_download_create_success">File download started</string>
+    <string name="kr_download_confirm">Download the file?</string>
+    <string name="kr_download_completed">File downloaded successfully</string>
+    <string name="kr_download_downloading">Downloading file</string>
+    <string name="kr_color_picker">Select a color</string>
+    <string name="kr_invalid_color">Invalid color value. Only formats like #ff88aa00 are supported</string>
+
+    <string name="kr_shortcut_create_fail">Failed to create shortcut</string>
+    <string name="kr_shortcut_create_success">Shortcut creation request has been sent</string>
+    <string name="kr_shortcut_create">Add shortcut</string>
+    <string formatted="false" name="kr_shortcut_create_desc">Do you want to add “%s” to the home screen for quick access?</string>
+    <string name="kr_ushortcut_nsupported">This feature does not support adding shortcuts</string>
+    <string name="kr_script_task_notification">Background task notification</string>
+    <string name="kr_bg_task_start">Background task started</string>
+    <string name="kr_script_task_running">Execution started</string>
+    <string name="kr_script_task_has_error">An error occurred</string>
+    <string name="kr_script_task_finished">Task finished</string>
+    <string name="kr_bg_task_start_desc">You can view the task progress and logs through the system notification center</string>
+    <string name="kr_slice_script_result">Script output</string>
+    <string name="kr_slice_activity_fail">Unable to open activity~</string>
+
+    <string name="kr_page_before_load">Preparing to parse configuration</string>
+    <string name="kr_page_loading">Parsing configuration</string>
+    <string name="kr_page_after_load">Configuration parsing completed</string>
+    <string name="kr_page_sh_invalid">Invalid page configuration output</string>
+    <string name="kr_page_sh_file_permission">The specified configuration file does not exist or lacks read permission</string>
+    <string name="kr_page_load_fail">Failed to load page</string>
+    <string name="kr_page_load_success">Page loaded successfully</string>
+    <string name="kr_auto_run_item_losted">Specified item is missing</string>
+    <string name="kr_hidden_task_running">Too fast! The previous operation has not finished yet</string>
+    <string name="kr_lock_message">This feature is locked</string>
+    <string name="kr_sdk_too_low">System version is too low</string>
+    <string name="kr_sdk_overtop">System version is too high</string>
+    <string formatted="false" name="kr_sdk_message">This feature only runs on systems with SDK %d to %d</string>
+    <string name="kr_sdk_discrepancy">System version mismatch</string>
+    <string formatted="false" name="kr_sdk_discrepancy_message">This feature only runs on systems with SDK %d</string>
+    <string name="picker_not_item">No available options</string>
+    <string name="picker_select_none">No item selected</string>
+</resources>

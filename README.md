@@ -22,9 +22,9 @@
 
 ### Download add-ons
 
-- **[Addon](https://zenlua.github.io/Tool-Tree/add-on/Addon.html)**: The section for ROM editor
+- **[Addon](https://zenlua.github.io/Tool-Tree/website/Addon.html)**: The section for ROM editor
 
-- **[Apkon](https://zenlua.github.io/Tool-Tree/add-on/Apkon.html)**: The section for APK editor
+- **[Apkon](https://zenlua.github.io/Tool-Tree/website/Apkon.html)**: The section for APK editor
 
 ### Instructions add-on
 

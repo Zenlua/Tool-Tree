@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.ActionBar">textTitle</style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="titleTextColor">?android:textColorPrimary</item>
+        <item name="subtitleTextColor">?android:textColorSecondary</item>
+        <item name="colorControlNormal">?android:textColorPrimary</item>
+        <item name="android:foregroundTint">?android:textColorSecondary</item>
+        <item name="android:foregroundTintMode">screen</item>
+        <item name="android:drawableTint">?android:textColorPrimary</item>
+    </style>
+
+    <style name="AppThemeWallpaperLight" parent="AppTheme">
+        <item name="android:navigationBarColor">#c0ffffff</item>
+        <item name="android:statusBarColor">#c0ffffff</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:colorForegroundInverse">#c0ffffff</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="cardBg">@color/cardBgLightTransparent</item>
+    </style>
+
+    <style name="AppThemeWallpaper" parent="AppThemeDark">
+        <item name="android:navigationBarColor">#a0000000</item>
+        <item name="android:statusBarColor">#a0000000</item>
+        <item name="colorPrimary">@color/colorAccent</item>
+        <item name="colorPrimaryDark">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:colorForegroundInverse">#a0000000</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="cardBg">@color/cardBgDarkTransparent</item>
+    </style>
+    
+    <style name="dialog_full_screen">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:fitsSystemWindows">false</item>
+        <!-- 浮于Activity之上 -->
+        <item name="android:windowIsFloating">false</item>
+        <!-- 边框 -->
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowCloseOnTouchOutside">false</item>
+    </style>
+
+    <style name="dialog_full_screen_light" parent="@style/dialog_full_screen">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="dialog_full_screen_dark" parent="@style/dialog_full_screen">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="textTitle" parent="@style/TextAppearance.AppCompat.Title">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">14dp</item>
+        <item name="android:alpha">0.8</item>
+        <item name="android:breakStrategy">simple</item>
+    </style>
+
+    <style name="textSmall">
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:textSize">11dp</item>
+        <item name="android:breakStrategy">simple</item>
+    </style>
+
+    <style name="dialogTitle" parent="@style/textTitle">
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:breakStrategy">simple</item>
+    </style>
+
+    <style name="dialogDesc" parent="@style/textSmall">
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:breakStrategy">simple</item>
+    </style>
+
+    <style name="dialogWarn" parent="@style/textSmall">
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:background">@drawable/in_card_item_inactive</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:breakStrategy">simple</item>
+    </style>
+    
+    <style name="kr_full_screen_dialog">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:fitsSystemWindows">false</item>
+        <!-- 浮于Activity之上 -->
+        <item name="android:windowIsFloating">false</item>
+        <!-- 边框 -->
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowCloseOnTouchOutside">false</item>
+    </style>
+
+    <style name="kr_full_screen_dialog_light" parent="@style/kr_full_screen_dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!--
+        <item name="android:windowBackground">@android:color/background_light</item>
+        <item name="android:statusBarColor">@android:color/background_light</item>
+        -->
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="kr_full_screen_dialog_dark" parent="@style/kr_full_screen_dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!--
+        <item name="android:windowBackground">@android:color/background_dark</item>
+        <item name="android:statusBarColor">@android:color/background_dark</item>
+        -->
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>
