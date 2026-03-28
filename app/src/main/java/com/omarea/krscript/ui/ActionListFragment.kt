@@ -27,7 +27,6 @@ import com.omarea.krscript.model.*
 import com.omarea.krscript.shortcut.ActionShortcutManager
 import androidx.core.net.toUri
 import android.content.res.Configuration
-import com.tool.tree.R
 
 class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.OnItemClickListener {
     companion object {
