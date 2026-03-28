@@ -1,5 +1,5 @@
 # Kakathic
-cd pio/src/main/assets/module
+cd app/src/main/assets/module
 
 for vmk in $(find etc/*.jar .local/share/apktool/framework/*.apk -type f); do
 mkdir -p "${vmk%.*}®${vmk##*.}_7zv2"
