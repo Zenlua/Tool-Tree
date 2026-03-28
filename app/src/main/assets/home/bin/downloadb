@@ -51,10 +51,8 @@ if [ "$?" == 0 ];then
         else
         [ "$cheks" == 1 ] || notiservice --id $ranid --title "Error: ${taive_path_file##*/}" --message "($checkdone) $load_text_2"
         fi
-    {
     sleep 5
     [ "$cheks" == 1 ] || notiservice --delete true --id $ranid
-    } &
 else
     [ "$cheks" == 1 ] || notiservice --delete true --id $ranid
     echo "$load_text_2" >&2
