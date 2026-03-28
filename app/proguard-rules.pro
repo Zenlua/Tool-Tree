@@ -16,9 +16,6 @@
 #   public *;
 #}
 
--keep class * extends android.app.Activity
--keep class * extends android.view.View
-
 -keep class com.omarea.common.ui.**{*;}
 -keep class com.omarea.common.shell.**{*;}
 -keep class com.omarea.common.shared.**{*;}
