@@ -6,11 +6,11 @@ on:
       UPAPK:
         description: 'Release APK'
         type: boolean
-        default: true
+        default: false
       UPTG:
         description: 'Send Telegram'
         type: boolean
-        default: true
+        default: false
   push:
     branches: [ "main" ]
   pull_request:
