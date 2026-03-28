@@ -7,6 +7,7 @@ import android.widget.Toast
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
+import com.tool.tree.R
 
 class HiddenTaskThread(private var process: Process) : Thread() {
     override fun run() {
