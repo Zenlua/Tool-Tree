@@ -2,6 +2,7 @@
 
 **Beta**
 
++ Optimize the source code
 + Update Python to version 3.13
 + Update apkeditor to 1.4.8
 + Tap the notification to open the app

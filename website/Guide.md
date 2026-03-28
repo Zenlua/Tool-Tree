@@ -11,10 +11,10 @@
 
 - Where to store decrypted roms and apk: `TREE` `TOOL`
 
-> no-root: `/storage/xxxx-xxxx/data/files/home`
-> root: `/data/data/com.tool.tree/files/home`
-> ROM: `/data/local/TREE`
-> APK: `/data/local/TOOL`
+- No-Root: `/storage/xxxx-xxxx/data/files/home`
+- Root: `/data/data/com.tool.tree/files/home`
+- ROM: `/data/local/TREE`
+- APK: `/data/local/TOOL`
 
 - More discover it yourself
 
@@ -23,14 +23,13 @@
 - Use in MT Manager
 
 ```shell
-. /data/data/com.tool.tree/files/root/executor.sh
-java -version
-echo
+source /data/data/com.tool.tree/files/root/executor.sh
+apktool
 ```
 
-**Suggestions for non-rooted devices**
+**Suggestions for no-root devices**
 
-- The following images are for non-root users only, to be able to access data in the tool-tree application
+- The following images are for no-root users only, to be able to access data in the tool-tree application
 
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img1.jpg" alt="1" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img2.jpg" alt="2" style="width:49%;">
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img3.jpg" alt="3" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img4.jpg" alt="4" style="width:49%;">
