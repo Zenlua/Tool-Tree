@@ -23,7 +23,7 @@
     <string name="pop_before_start">Đang khởi động ứng dụng…</string>
     <string name="pop_started">Khởi động ứng dụng</string>
     <string name="transparent_ui">Ui trong suốt</string>
-    <string name="title_activity_file_selector">Vui lòng chọn tệp</string>
+    <string name="title_activity_file_selector">"Vui lòng chọn tệp "</string>
     <string name="title_activity_folder_selector">Vui lòng chọn thư mục</string>
 
     <string name="text_power_shutdown">Tắt nguồn</string>
@@ -54,7 +54,7 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
 
     <string name="notification_ui">"Thông báo "</string>
     <string name="wakelock_service_running">Dịch vụ WakeLock đang chạy</string>
-    <string name="service_active_with_wakelock">Đang hoạt động trong nền</string>
+    <string name="service_active_with_wakelock">Đang chạy trong nền</string>
     <string name="stop">Dừng</string>
     <string name="turn_off_wakelock">Tắt WakeLock</string>
     <string name="turn_on_wakelock">Bật WakeLock</string>
@@ -91,7 +91,7 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_param_options_load">"Đang tải danh sách "</string>
     <string name="kr_params_render">Đang dựng giao diện…</string>
     <string name="kr_please_choose_folder">Vui lòng chọn thư mục</string>
-    <string name="kr_please_choose_file">"Vui lòng chọn tệp "</string>
+    <string name="kr_please_choose_file">Vui lòng chọn tệp</string>
     <string name="kr_please_choose_app">Vui lòng chọn ứng dụng</string>
     <string name="kr_please_input_color">Vui lòng nhập màu</string>
     <string name="kr_please_select">Vui lòng chọn</string>

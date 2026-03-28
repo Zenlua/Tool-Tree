@@ -22,7 +22,7 @@
     <string name="pop_before_start">Запуск приложения…</string>
     <string name="pop_started">Приложение запущено</string>
     <string name="transparent_ui">Прозрачный UI</string>
-    <string name="title_activity_file_selector">Пожалуйста, выберите файл</string>
+    <string name="title_activity_file_selector">"Пожалуйста, выберите файл "</string>
     <string name="title_activity_folder_selector">Пожалуйста, выберите папку</string>
 
     <string name="text_power_shutdown">Выключение</string>
@@ -90,7 +90,7 @@
     <string name="kr_param_options_load">"Загрузка списка "</string>
     <string name="kr_params_render">Построение интерфейса…</string>
     <string name="kr_please_choose_folder">Пожалуйста, выберите папку</string>
-    <string name="kr_please_choose_file">"Пожалуйста, выберите файл "</string>
+    <string name="kr_please_choose_file">Пожалуйста, выберите файл</string>
     <string name="kr_please_choose_app">Пожалуйста, выберите приложение</string>
     <string name="kr_please_input_color">Пожалуйста, введите цвет</string>
     <string name="kr_please_select">Пожалуйста, выберите</string>
