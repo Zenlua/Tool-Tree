@@ -59,7 +59,7 @@ public class AdapterFileSelector extends BaseAdapter {
     }
 
     private void loadDir(final File dir) {
-        progressBarDialog.showDialog("Loading...");
+        // progressBarDialog.showDialog("Loading...");
         new Thread(() -> {
             File parent = dir.getParentFile();
             if (parent != null) {
