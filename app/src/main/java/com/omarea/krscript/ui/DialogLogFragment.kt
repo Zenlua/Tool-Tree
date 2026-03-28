@@ -19,7 +19,7 @@ import android.widget.Toast
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
 import com.omarea.common.ui.DialogHelper
-import com.omarea.krscript.databinding.KrDialogLogBinding
+import com.tool.tree.databinding.KrDialogLogBinding
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
