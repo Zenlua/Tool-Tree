@@ -46,7 +46,7 @@ jobs:
       - name: Build APK
         run: |
           chmod +x ./gradlew ./.github/modun.sh
-          sudo ./.github/modun.sh
+          ./.github/modun.sh
           ./gradlew assembleRelease --daemon -x lint -x test
           VER=$(grep -m1 'versionName ' app/build.gradle | cut -d'"' -f2)
           echo "Tool-Tree $VER"
@@ -109,7 +109,7 @@ jobs:
       - name: Build APK
         run: |
           chmod +x ./gradlew ./.github/modun.sh
-          sudo ./.github/modun.sh
+          ./.github/modun.sh
           ./gradlew assembleDebug --no-daemon -x lint -x test
 
       - name: Upload APK
