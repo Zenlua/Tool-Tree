@@ -38,7 +38,7 @@
             style="@style/dialogDesc" />
     </LinearLayout>
 
-    <com.omarea.common.ui.OverScrollView
+    <ScrollView
         android:layout_marginTop="16dp"
         android:background="@drawable/krscript_item_ripple_inactive"
         android:layout_width="match_parent"
@@ -55,7 +55,7 @@
             android:fontFamily="monospace"
             android:textSize="12sp"
             android:padding="12dp" />
-    </com.omarea.common.ui.OverScrollView>
+    </ScrollView>
 
     <LinearLayout
         android:id="@+id/bottom_actions"
