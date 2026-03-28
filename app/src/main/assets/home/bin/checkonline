@@ -1,3 +1,9 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-ping -c 1 google.com >/dev/null && exit 0 || exit 1
+if ping -c 1 google.com >/dev/null; then
+exit 0
+elif ping -c 1 baidu.com >/dev/null; then
+exit 0
+else
+exit 1
+fi
