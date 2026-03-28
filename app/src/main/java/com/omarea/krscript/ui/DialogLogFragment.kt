@@ -163,6 +163,7 @@ class DialogLogFragment : DialogFragment() {
                     binding.btnCancel.visibility = View.VISIBLE
                     binding.btnExit.visibility = View.GONE
                 } else {
+                    binding.btnExit.visibility = View.GONE
                     binding.btnCancel.visibility = View.GONE
                 }
             }
