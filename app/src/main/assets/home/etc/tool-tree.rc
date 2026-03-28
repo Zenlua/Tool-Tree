@@ -944,7 +944,7 @@ checktime
 <set>
 slog silence $silence
 echo "'$super_merge_text_2'..."
-simg2img $MERGE "$PTSD/super.img"
+simg2img $MERGE "$PTSD/super.img" || killtree "Error" "$PTSD/super.img"
 [ "$silence" == 0 ] || rm -fr $MERGE
 echo
 echo "'$save_text' $PTSD/super.img"
@@ -1338,7 +1338,7 @@ google_tran_shellkk='elif [ "$menu_id" == "v1" ];then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
 fi
 xml_print '<group>
-<page icon="'`urladd icon`'" '$pagesh'>
+<page id="'${dirvad##*/}'" icon="'`urladd icon`'" '$pagesh'>
 <title>'$(gprop name $vadd)'</title>
 <desc>'$desc_tec'</desc>
 '$summss'
