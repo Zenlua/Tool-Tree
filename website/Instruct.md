@@ -34,16 +34,12 @@ MPAT="${0%/*}"
 
 ```
 # is a shell script file
-
 id=test
 name=Test add-on
-
 author=Kakathic
 description=Short description
-
 version=1.0
 versionCode=100
-
 # if set to "true" root is required for add-on to work
 root=false
 ```
