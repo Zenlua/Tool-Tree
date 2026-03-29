@@ -22,7 +22,7 @@
     <color name="warning">#FFB300</color>
     
     <color name="kr_params_view_bg">#11000000</color>
-    <color name="kr_shortcut_color">#CCCCCC</color>
+    <color name="kr_shortcut_color">#A7A7A7</color>
     <color name="kr_shell_log_error">#cf4e4c</color>
     <color name="kr_shell_log_basic">#576B7F</color>
     <color name="kr_shell_log_script">#808080</color>
