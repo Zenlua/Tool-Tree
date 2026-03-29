@@ -48,7 +48,7 @@ class WakeLockService : Service() {
         if (!isWakeLockActive) {
             wakeLock?.acquire()
             isWakeLockActive = true
-            startForeground(1, buildNotification())
+            updateNotification()
         }
     }
     
@@ -56,7 +56,7 @@ class WakeLockService : Service() {
         if (isWakeLockActive) {
             wakeLock?.release()
             isWakeLockActive = false
-            startForeground(1, buildNotification())
+            updateNotification()
         }
     }
 
@@ -76,11 +76,20 @@ class WakeLockService : Service() {
         appTasks.forEach { task ->
             task.finishAndRemoveTask()
         }
-        System.exit(0)
+        // System.exit(0)
+    }
+
+    private fun updateNotification() {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(1, buildNotification())
     }
 
     override fun onCreate() {
         super.onCreate()
+        
+        if (isServiceRunning) return
+        isServiceRunning = true
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
         }
@@ -160,12 +169,13 @@ class WakeLockService : Service() {
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         } else PendingIntent.FLAG_UPDATE_CURRENT
-        return PendingIntent.getService(this, 0, intent, flags)
+        return PendingIntent.getService(this, action.hashCode(), intent, flags)
     }
 
     override fun onDestroy() {
         wakeLock?.release()
         wakeLock = null
+        isServiceRunning = false
         super.onDestroy()
     }
 
@@ -187,6 +197,7 @@ class WakeLockService : Service() {
         const val ACTION_DISABLE_WAKELOCK = "com.tool.tree.action.DISABLE_WAKELOCK"
         const val ACTION_END_WAKELOCK = "com.tool.tree.action.END_WAKELOCK"
         const val ACTION_STOP_SERVICE = "com.tool.tree.action.STOP_SERVICE"
+        private var isServiceRunning = false
 
         fun startService(context: Context) {
             val intent = Intent(context, WakeLockService::class.java)

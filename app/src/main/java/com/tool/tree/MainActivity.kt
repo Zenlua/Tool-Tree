@@ -199,7 +199,7 @@ class MainActivity : AppCompatActivity() {
                 } else if (runnableNode.autoKill) {
                     startService(Intent(this@MainActivity, WakeLockService::class.java).apply { action = WakeLockService.ACTION_END_WAKELOCK })
                     finishAffinity()
-                    System.exit(0)
+                    // System.exit(0)
                 }
             }
 
