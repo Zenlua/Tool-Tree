@@ -118,10 +118,10 @@ fi
 find "$INPUT" -type f -name "*.bak" -delete >/dev/null
 
 # Nén lib.so
-if [ "$(grep -cm1 '\- so' "$INPUT/apktool.yml")" == 1 ];then
-[ "$XTRALIB" == "true" ] && sed -i "/\- so/d" "$INPUT/apktool.yml"
+if [ "$(grep -cm1 '\- so$' "$INPUT/apktool.yml")" == 1 ];then
+[ "$XTRALIB" == "true" ] && sed -i "/- so$/d" "$INPUT/apktool.yml"
 else
-[ "$XTRALIB" == "false" ] && echo "- so" >> "$INPUT/apktool.yml"
+[ "$XTRALIB" == "false" ] && sed -i "/^doNotCompress/a\- so" "$INPUT/apktool.yml"
 fi
 
 # tên file
