@@ -1390,11 +1390,8 @@ for vadd in $PATHADD/*/addon.prop; do
 done
 }
 
+# index
 echo '<?xml version="1.0" encoding="UTF-8" ?>
 <group>'
-if [ "$(type -t "$1")" = "function" ];then
 "$@"
-else
-cat "$ETC/error.xml"
-fi
 echo '</group>'
