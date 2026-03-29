@@ -2,6 +2,7 @@
 
 **Beta**
 
++ Fixes errors when changing app language
 + Update add-on patch ROM
 + Redesign the interface to be more user-friendly
 + Optimize the source code
