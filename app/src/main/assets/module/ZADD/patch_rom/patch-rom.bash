@@ -460,7 +460,7 @@ if [ "$fix_toolbox" == 1 ];then
         if checkonline; then
             echo "Check version KaoriosToolbox..."
             echo
-            linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/latest 2>/dev/null)"
+            linkurrl="$(xem https://api.github.com/repos/Wuang26/Kaorios-Toolbox/releases/tags/V1.0.9 2>/dev/null)"
             pbver="$(echo "$linkurrl" | jq -r ".tag_name")"
             [ -z "$pbver" ] && killtree "Version not found error !"
             if [ ! -f "$MPAT/mod/version" ] || [ "$pbver" != "$(cat "$MPAT/mod/version" 2>/dev/null)" ];then
