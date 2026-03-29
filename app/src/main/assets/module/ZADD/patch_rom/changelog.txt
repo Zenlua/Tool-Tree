@@ -1,4 +1,4 @@
 
-Version: 1.5
+Version: 1.6
 
-+ support more android versions
++ Fix some code
