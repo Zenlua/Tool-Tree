@@ -47,7 +47,7 @@ jobs:
         run: |
           chmod +x ./gradlew ./.github/modun.sh
           ./.github/modun.sh
-          ./gradlew assembleRelease --daemon -x lint -x test
+          ./gradlew assembleRelease --parallel --max-workers=4 --no-daemon -x lint -x test
           VER=$(grep -m1 'versionName ' app/build.gradle | cut -d'"' -f2)
           echo "Tool-Tree $VER"
           echo "VER=$VER" >> $GITHUB_ENV
@@ -110,7 +110,7 @@ jobs:
         run: |
           chmod +x ./gradlew ./.github/modun.sh
           ./.github/modun.sh
-          ./gradlew assembleDebug --no-daemon -x lint -x test
+          ./gradlew assembleDebug --parallel --max-workers=4 --no-daemon -x lint -x test
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
