@@ -9,7 +9,7 @@
         android:id="@+id/kr_param_switch"
         android:textStyle="normal"
         android:textColor="?android:textColorPrimary"
-        android:alpha="0.8"
+        android:alpha="0.9"
         android:textSize="14sp"
         android:text=""
         android:layout_width="match_parent"

@@ -7,7 +7,7 @@
     <color name="cardBgDark">#222222</color>
     <color name="cardBgDarkTransparent">#a0000000</color>
     <color name="cardBgLight">#ffffff</color>
-    <color name="cardBgLightTransparent">#c0ffffff</color>
+    <color name="cardBgLightTransparent">#a0ffffff</color>
 
     <color name="color_load_low">#02d98d</color>
     <color name="color_load_mid">#87cb00</color>

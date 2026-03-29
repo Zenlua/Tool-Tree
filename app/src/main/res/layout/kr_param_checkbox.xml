@@ -10,7 +10,7 @@
         android:text=""
         android:textStyle="normal"
         android:textColor="?android:textColorPrimary"
-        android:alpha="0.8"
+        android:alpha="0.9"
         android:textSize="14sp"
         style="@style/SceneCheckBox"
         android:paddingStart="4dp"
