@@ -114,7 +114,7 @@ if [ "$DECODEX" == "smali" ];then
     kout="$(basename $vkn .dex)"
     mkdir -p "$Tout/smali/$kout"
     API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
-    eval 'baksmali d '$hhhhfdr' --bootclasspath '"$BOOTCLASSPATH"' --api '$API' '"$vkn"' -o '"$Tout/$kout"' '
+    eval 'baksmali d '$hhhhfdr' --bootclasspath '"$BOOTCLASSPATH"' --api '$API' '"$vkn"' -o '"$Tout/smali/$kout"' '
     check_changes.py "$Tout/smali/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
     done
 fi
