@@ -674,8 +674,7 @@ vcv="$(echo "$1" | head -n1 | sed 's|/|\\/|g')"
 }
 
 Thayme(){
-urlsmali="$(find $2 -type f 2>/dev/null)"
-for vcc2 in $urlsmali; do
+for vcc2 in $2; do
 if [ -f "$vcc2" ];then
 vcv="$(echo "$1" | head -n1 | sed -e 's|/|\\/|g' -e 's|\[|\\[|g')"
 sed -i "/$vcv/,/.end method/d" "$vcc2" && echo "$1" >> "$vcc2" && echo "Patch: ${vcc2##*/}" || about "Error: $vcv - $vcc2"
@@ -685,22 +684,19 @@ done
 
 Themme(){
 urlsmali="$(find $2 -type f -print -quit 2>/dev/null)"
-[ -f "$urlsmali" ] && echo "$1" >> "$urlsmali" && echo "Patch: ${vcc1##*/}" || about "Error: $urlsmali"
+[ -f "$urlsmali" ] && echo "$1" >> "$urlsmali" && echo "Patch: ${urlsmali##*/}" || about "Error: $urlsmali"
 }
 
 Thaythe(){
-if [ "$3" ];then
-for vcc1 in $(find $3 -type f 2>/dev/null); do
+for vcc1 in $3; do
 if [ -f "$vcc1" ]; then
-toybox sed -i "s!$1!$2!" "$vcc1" && echo "Patch: ${vcc1##*/}" || about "Error: $vcc1"
+toybox sed -i "s|$1|$2|g" "$vcc1" && echo "Patch: ${vcc1##*/}" || about "Error: $vcc1"
 fi
 done
-fi
 }
 
 Thayvc(){
-urlsmali="$(Timkiem "${2//\[/\\[}" $3)"
-for vcx in $urlsmali; do
+for vcx in $(Timkiem "${2//\[/\\[}" $3); do
 if [ -f "$vcx" ];then
     if [ "$1" == "-v" ];then
     Thayme "$(grep -m1 "${2//\[/\\[}" "$vcx")

@@ -53,7 +53,7 @@ fi
 IFS=$'\n'
 
 # xác định tệp
-echo "$more_text_4 ${INPUT##*/}"
+echo "$more_text_4 $INPUT"
 echo
 
 # chuyển đổi apk

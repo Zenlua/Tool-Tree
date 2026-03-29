@@ -54,7 +54,7 @@ fi
 [[ -z "$DEBUGA" ]] && DEBUGA=1
 IFS=$'\n'
 
-echo "$more_text_4 ${INPUT##*/}"
+echo "$more_text_4 $INPUT"
 echo
 
 # chuyển đổi tệp tin
