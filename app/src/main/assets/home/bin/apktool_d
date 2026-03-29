@@ -106,21 +106,20 @@ ktfw="-t $api2"
 fi
 
 # apktool
-eval "apktool d --match-original $ktfw -f $rdex -o \"$Tout\" \"$ptpk\" "
+eval 'apktool d --match-original '$ktfw' -f '$rdex' -o '"$Tout"' '"$ptpk"' || killtree '"$apke_text_1"' '
 mkdir -p "$Tout/.cache"
 
 # giải mã smali
 if [ "$DECODEX" == 2 ];then
-    [ "$DEBUGA" == 1 ] && hhhhfdr="false -l" || hhhhfdr='true'
+    [ "$DEBUGA" == 1 ] && hhhhfdr="--debug-info false -l" || hhhhfdr="--debug-info true"
     for vkn in "$Tout"/classes*.dex; do
-    if [ -f "$vkn" ];then
+    [ -f "$vkn" ] || continue
     echo "I: Baksmali ${vkn##*/}..."
     kout="$(basename $vkn .dex | sed 's|classes|smali|')"
     mkdir -p "$Tout/$kout"
     API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
-    eval "baksmali d --debug-info $hhhhfdr --bootclasspath $BOOTCLASSPATH --api $API \"$vkn\" -o \"$Tout/$kout\" "
+    eval 'baksmali d '$hhhhfdr' --bootclasspath '"$BOOTCLASSPATH"' --api '$API' '"$vkn"' -o '"$Tout/$kout"' '
     check_changes.py "$Tout/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
-    fi
     done
 fi
 

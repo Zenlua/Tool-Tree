@@ -36,9 +36,7 @@ slog kaorios_toolbox_patch_os "$FILE"
 checktime
 </set>
 </action>
-</group>
 
-<group>
 <action title="'"$title_cn_global"'" summary="Xiaomi, Android 12+">
 <param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar PowerKeeper.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_noti_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
 <param name="fix_noti" label="'"$label_fix_noti"'" desc="'$required_files_text': miui-framework.jar, miui-services.jar, PowerKeeper.apk, MiuiSystemUI.apk" type="bool" />
@@ -84,9 +82,7 @@ slog fix_manyo_patch_os "$FILE"
 checktime
 </set>
 </action>
-</group>
 
-<group>
 <action title="'"$title_app_patch"'" summary="Xiaomi">
 <param name="FILE" option-sh="'$pathsh' search *ThemeManager.apk *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk MIUIGallery.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
 <param name="fix_themes" label="'"$label_fix_themes"'" desc="'$required_files_text': ThemeManager.apk" type="bool" />

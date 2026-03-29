@@ -93,6 +93,7 @@ echo
 # xây dựng smali
 if [ -f "$INPUT/dex/classes.dex" ] && [ -d "$INPUT/smali" ];then
 for vkn in "$INPUT"/dex/classes*.dex; do
+    [ -f "$vkn" ] || continue
     kout="$(basename $vkn .dex)"
     if [ -f "$INPUT/.cache/hash_$kout.json" ];then
     cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
@@ -123,8 +124,13 @@ find "$INPUT" -type f -name "*.bak" -delete >/dev/null
 tenapkkk="$(cat "$INPUT/.cache/ten_file.log")"
 
 # xây dựng apk
-eval "apkeditor b -f $XTRALIB -i \"$INPUT\" -o \"$INPUT/dist/$tenapkkk\" 2>&1" | sed -e '1,/__/d' -e '/Delete:/d' -e '/Saved to:/d' -e 's|I: \[BUILD\] ||'
-
+eval 'apkeditor b -f '$XTRALIB' -i '"$INPUT"' -o '"$INPUT/dist/$tenapkkk"' ' 2>&1 | sed -E \
+    -e '1,/__/d' \
+    -e '/Delete:/d' \
+    -e '/Saved to:/d' \
+    -e 's|I: \[BUILD\] ||' \
+    -e 's/^[0-9]+\.[0-9]+[[:space:]]+/I: /'
+    
 # khôi phục thư mục
 [ -e "$INPUT/smali_bak" ] && mv "$INPUT/smali_bak" "$INPUT/smali"
 

@@ -93,6 +93,7 @@ echo
 
 if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ];then
 for vkn in "$INPUT"/classes*.dex; do
+    [ -f "$vkn" ] || continue
     kout="$(basename $vkn .dex | sed 's|classes|smali|')"
     if [ -f "$INPUT/.cache/hash_$kout.json" ];then
     cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
