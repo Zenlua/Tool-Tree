@@ -153,7 +153,7 @@ update(){
 if checkonline; then
 cd "$MPAT"
 for kvv in addon.prop patch-rom.bash language.sh index.sh menu.sh mod.7z early_start.sh changelog.txt; do
-downloadb "https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/app/src/main/assets/module/ZADD/patch_rom/$kvv" $kvv
+downloadb "https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/app/src/main/assets/module/ZADD/patch_rom/$kvv" $kvv 2>&1
 done
     if [ -f $MPAT/mod.7z ];then
     echo "7z mod extract..."
