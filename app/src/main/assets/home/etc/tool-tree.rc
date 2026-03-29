@@ -19,7 +19,6 @@ if [ "$(glog Ticon)" != 1 ];then
 fi
 }
 
-
 show_sett(){
 xml_print '
 <action icon="'`urlpng folder_rom`'" shell="hidden" reload="true">

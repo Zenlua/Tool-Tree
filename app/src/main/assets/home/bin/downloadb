@@ -9,11 +9,7 @@ fi
 source language
 ranid="$RANDOM"
 
-if ! checkonline; then
-    echo "$load_text_2" >&2
-    exit 1
-fi
-
+checkonline || { echo "$load_text_2" >&2; exit 1; }
 echo "$@" | grep -q false && cheks=1 || cheks=0
 [ "$cheks" == 1 ] || notiservice --id $ranid --title "$download_text" --message "$load_text_1"
 taive_index="$(curl -sIL "$1")"

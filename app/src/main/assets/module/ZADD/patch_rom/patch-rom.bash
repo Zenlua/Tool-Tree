@@ -20,7 +20,7 @@ elif [ "${vv##*/}" == "Joyose.apk" ];then
     patgpu="$(Timkiem GPUTUNER_SWITCH $oi/smali/classes)"
     sed -i "`grep -nA2 GPUTUNER_SWITCH $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: GPUTUNER_SWITCH"
     sed -i "`grep -nA2 SUPPORT_UGD $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: SUPPORT_UGD"
-    Thayvc -v 'method public run()V' $(Timkiem "job exist, sync local" $oi/smali/classes)
+    Thayvc -v 'method public run()V' $(Timkiem "job exist, sync local" $oi/smali)
     fi
 elif [ "${vv##*/}" == "MIUIWeather.apk" ];then
     if [ "$fix_thoit" == 1 ];then
@@ -151,15 +151,17 @@ elif [[ "${vv##*/}" == *FrequentPhrase* ]]; then
     </resources>' "$oi/resources/package_1/res/values/colors.xml"
     Thaythe "</resources>" ''"$(glog ime_dimen)"'
     </resources>' "$oi/resources/package_1/res/values/dimens.xml"
+elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
+    if [ "$(gprop ro.miui.support_miui_ime_bottom "$psystem/build.prop")" != 1 ];then
+    patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
+    Thaythe 'Lmiuix/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isFalse:Z' $oi/smali/classes*/com/android/systemui/navigationbar/NavigationBar.smali
+    fi
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
     Thaythe com.iflytek.inputmethod.miui "$(glog ime_app)" "$(Timkiem com.iflytek.inputmethod.miui "$oi/smali")"
     if [ "$(gprop ro.miui.support_miui_ime_bottom "$psystem/build.prop")" != 1 ];then
     sprop "ro.miui.support_miui_ime_bottom" 1 "$psystem/build.prop"
     cp -rf "$MPAT/mod/GestureLineOverlay.apk" "$pproduct/overlay"
     fi
-elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
-    patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
-    Thaythe 'Lmiuix/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isFalse:Z' $oi/smali/classes*/com/android/systemui/navigationbar/NavigationBar.smali
 elif [ "${vv##*/}" == "Settings.apk" ];then
     Thaythe com.iflytek.inputmethod.miui "$(glog ime_app)" "$(Timkiem com.iflytek.inputmethod.miui "$oi/smali" | sed '/MecBoardInputController/d')"
     Thayvc 1 '.method .*. isMiuiImeBottomSupport()Z' $oi/smali/classes*/com/android/settings/inputmethod

@@ -2,6 +2,8 @@
 
 **Beta**
 
++ Cập nhật add-on patch rom
++ Sửa lại giao diện dễ nhìn hơn
 + Optimize the source code
 + Update Python to version 3.13
 + Update apkeditor to 1.4.8

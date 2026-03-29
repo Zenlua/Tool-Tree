@@ -1,14 +1,19 @@
 # kakathic
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-    echo -e "Use: slog key 1" >&2
+    echo "Use: slog key 1" >&2
+    echo "Delete: slog -d key" >&2
     exit 1
 fi
 
-mkdir -p "$LOG"
+[ -d "$LOG" ] || mkdir -p "$LOG"
 
 if [ "$2" ];then
+    if [ "$1" == "-d" ] || [ "$1" == "--delete" ]; then
+    [ -f "$LOG/$2" ] && rm -f "$LOG/$2"
+    else
     echo "$2" > "$LOG/$1"
+    fi
 else
     [ "$2" ] || echo -n > "$LOG/$1"
 fi
