@@ -114,10 +114,11 @@ if [ "$DECODEX" == 2 ];then
     [ "$DEBUGA" == 1 ] && hhhhfdr="--debug-info false -l" || hhhhfdr="--debug-info true"
     for vkn in "$Tout"/classes*.dex; do
     [ -f "$vkn" ] || continue
-    echo "I: Baksmali ${vkn##*/}..."
+    Dex=$(dexupdater -g "$vkn" -printApi | awk '/Dex/ {print $2}')
+    echo "I: Baksmali: V$Dex ${vkn##*/}..."
     kout="$(basename $vkn .dex | sed 's|classes|smali|')"
     mkdir -p "$Tout/$kout"
-    API="$(dexupdater -g "$vkn" -printApi | grep API | awk '{print $2}')"
+    API=$(dexupdater -g "$vkn" -printApi | awk '/API/ {print $2}')
     eval 'baksmali d '$hhhhfdr' --bootclasspath '"$BOOTCLASSPATH"' --api '$API' '"$vkn"' -o '"$Tout/$kout"' '
     check_changes.py "$Tout/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
     done
