@@ -229,7 +229,6 @@ public class ScriptEnvironmen {
         params.put("ANDROID_ID", Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID));
         params.put("CPU_ABI", Build.CPU_ABI);
         params.put("ANDROID_SDK", String.valueOf(Build.VERSION.SDK_INT));
-        params.put("TOTAL_MEMORY", String.valueOf(Runtime.getRuntime().totalMemory()));
         params.put("KERNEL_VERSION", System.getProperty("os.version"));
 
         FileOwner fileOwner = new FileOwner(context);
