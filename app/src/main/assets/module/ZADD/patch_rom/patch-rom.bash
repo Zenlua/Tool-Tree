@@ -628,12 +628,43 @@ for vcdel in $@; do
 done
 }
 
-search(){
-for vc in $@; do
-# project
-seproject="$(find $SDH/$PTSH -name "$vc" -type f -print -quit 2>/dev/null)"
-[ -f "$seproject" ] && echo "$seproject|${seproject##*/}" || echo "ERROR_$RANDOM|File not found: $vc"
+cover_app(){
+pproduct="$(ls -1d $SDH/$PTSH/*roduc*/etc/build.prop 2>/dev/null | grep -m1 'product' | sed 's|\/etc/build.prop||')"
+[ -z "$pproduct" ] && pproduct="$(ls -1d $SDH/$PTSH/*/*roduc*/etc/build.prop 2>/dev/null | grep -m1 'product' | sed 's|\/etc/build.prop||')"
+for vcapp in $@; do
+tmpl="${vcapp##*/}"; oi="$TMP/apk/${tmpl%.*}"
+if zipalign -c -v 4 "$vcapp" | grep -q 'lib/.*.(OK)'; then
+mv "${vcapp%/*}" "$pproduct/app"
+else
+if unzip -ql "$vcapp" | grep -q 'lib/'; then
+apktool_d -i "$vcapp" -o "${oi%/*}" -d 0 -r 0
+echo
+apktool_b -i "$oi" -o "${vcapp%/*}" -d 1 -x false
+echo
+fi
+mv "${vcapp%/*}" "$pproduct/app"
+fi
+echo "Save at: $pproduct/app/${tmpl%.*}/$tmpl"
+echo
 done
+}
+
+search(){
+for vcs in $@; do
+seprojects="$(find $SDH/$PTSH -type d \( -name "app" -o -name "priv-app" -o -name "framework" -o -name "data-app" -o -name "overlay" -o -name "apex" \) -exec find {} -type f -name "$vcs" -print -quit \; 2>/dev/null)"
+[ -f "$seprojects" ] && echo "$seprojects|${seprojects##*/}" || echo "ERROR_$RANDOM|File not found: $vcs"
+done
+}
+
+search_apk(){
+pproduct="$(ls -1d $SDH/$PTSH/*roduc*/etc/build.prop 2>/dev/null | grep -m1 'product' | sed 's|\/etc/build.prop||')"
+[ -z "$pproduct" ] && pproduct="$(ls -1d $SDH/$PTSH/*/*roduc*/etc/build.prop 2>/dev/null | grep -m1 'product' | sed 's|\/etc/build.prop||')"
+if [ -d "$pproduct" ]; then
+projectpro="$(find $pproduct/data-app -type f -name "*.apk" 2>/dev/null)"
+for vcxz in $projectpro; do
+[ -f "$vcxz" ] && echo "$vcxz|${vcxz##*/}"
+done
+fi
 }
 
 Timkiem(){ grep -rl --include="*.*" "$1" $2 2>/dev/null; }

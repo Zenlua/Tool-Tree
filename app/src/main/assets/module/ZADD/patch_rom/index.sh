@@ -15,6 +15,16 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>
 <param name="home_poco" label="'"$label_home_poco"'" desc="'"$desc_home_poco"'" type="bool" />
 <set>'$pathsh' custom_patch</set>
 </action>
+</group>
+
+<group>
+<action title="'$cover_app_text_1'" warn="'$cover_app_text_2'">
+<param name="cover_data_app" type="text" option-sh="'$pathsh' search_apk | sort" required="true" multiple="true"/>
+<set>
+'$pathsh' cover_app "$cover_data_app"
+checktime
+</set>
+</action>
 
 <action title="'"$title_delete"'" >
 <param name="del_app_patch" type="text" value-sh="glog del_app_patch" required="true" placeholder="VoiceAssist Sogou"/>
