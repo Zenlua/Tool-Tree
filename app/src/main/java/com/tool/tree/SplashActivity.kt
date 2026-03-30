@@ -50,7 +50,8 @@ class SplashActivity : AppCompatActivity() {
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        if (ScriptEnvironmen.isInited() && isTaskRoot) {
+        if (ScriptEnvironmen.isInited() && isTaskRoot &&
+            !intent.getBooleanExtra("force_reset", false)) {
             gotoHome()
             return
         }

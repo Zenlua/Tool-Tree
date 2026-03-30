@@ -179,6 +179,7 @@ class MainActivity : AppCompatActivity() {
     private fun restartApp() {
         val intent = Intent(this@MainActivity, SplashActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        intent.putExtra("force_reset", true)
         startActivity(intent)
         finish()
     }
