@@ -1,8 +1,8 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-if ping -c 1 google.com >/dev/null; then
+if nc -z google.com 80 &>/dev/null; then
 exit 0
-elif ping -c 1 baidu.com >/dev/null; then
+elif nc -z baidu.com 80 &>/dev/null; then
 exit 0
 else
 exit 1

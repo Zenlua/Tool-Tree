@@ -137,14 +137,17 @@ class DialogLogFragment : DialogFragment() {
         binding.actionProgress.isIndeterminate = true
 
         return MyShellHandler(requireContext().applicationContext, object : IActionEventHandler {
+            // Thay chỗ này trong openExecutor -> onCompleted()
             override fun onCompleted() {
                 running = false
                 onExit.run()
                 offScreen()
-                binding.btnHide.visibility = View.GONE
-                binding.btnCancel.visibility = View.GONE
-                binding.btnExit.visibility = View.VISIBLE
-                binding.actionProgress.visibility = View.GONE
+                _binding?.let { b ->
+                    b.btnHide.visibility = View.GONE
+                    b.btnCancel.visibility = View.GONE
+                    b.btnExit.visibility = View.VISIBLE
+                    b.actionProgress.visibility = View.GONE
+                }
                 isCancelable = true
             }
 
