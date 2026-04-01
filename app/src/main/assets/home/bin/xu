@@ -8,8 +8,8 @@ export PATH="$PATH"
 
 ADGS="proot -0 -H -r $(pwd) -w / -b $TMP:/tmp"
 
-if [ "$ISLITE" == 'true' ];then
-LIST_XU="system data storage apex proc property_contexts linkerconfig/ld.config.txt"
+if [ "$ISLITE" == 'true' ] || [ "$LIST_XU" ]; then
+LIST_XU="system data storage apex proc property_contexts linkerconfig/ld.config.txt $LIST_XU"
 else
 LIST_XU="system data mnt root sbin sys plat_property_contexts property_contexts linkerconfig/ld.config.txt storage apex vendor proc dev"
 fi

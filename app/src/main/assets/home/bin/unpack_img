@@ -1,9 +1,6 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
 
-# lôgic khi giải mã có lưu kích thước ext4 và f2fs không 
-
-
 set -o pipefail
 #threads=$(nproc)
 show_help() {
@@ -162,7 +159,11 @@ fi
 
 if [ "$dang_tep" == 'zstd' ] || [ "$dang_tep" == 'gz' ] || [ "$dang_tep" == 'xz' ] || [ "$dang_tep" == 'lz4' ] || [ "$dang_tep" == 'lzma' ];then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
+    if [ "$NODECO" == 1 ]; then
+    file_img="$PTSD/out/$(echo "${INPUT##*/}" | cut -d. -f1).img"
+    else
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
+    fi
     zstd --progress -f -d -k "$INPUT" -o "$file_img" &>"$TMP/unzstd.log" || killtree "File extraction error: $INPUT"
     #process_count "$size_zstd" "$TMP/unzstd.log"
 elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
@@ -170,22 +171,40 @@ elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
     [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || killtree "$more_text_5 $tenpjanvung.transfer.list"
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     [ "${INPUT##*.}" == 'br' ] && brotli -f -d "$INPUT" -o "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" &>/dev/null
+    if [ "$NODECO" == 1 ]; then
+    file_img="$PTSD/out/$(echo "${INPUT##*/}" | cut -d. -f1).img"
+    else
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
+    fi
     sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" &>$TMP/sdat2img_extra.log || killtree "File extraction error: $INPUT"
 elif [ "$dang_tep" == 'sparse' ];then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
+    if [ "$NODECO" == 1 ]; then
+    file_img="$PTSD/out/$(echo "${INPUT##*/}" | cut -d. -f1).img"
+    else
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
+    fi
     simg2img "$INPUT" "$file_img" || killtree "File conversion error: $INPUT"
 elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
-    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$TMP" &>"$TMP/payload_extract.log" || killtree "Payload unpack error" &
+    if [ "$NODECO" == 1 ]; then
+    file_img_tmp="$PTSD/out"
+    else
+    file_img_tmp="$TMP"
+    fi
+    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" &>"$TMP/payload_extract.log" || killtree "Payload unpack error" &
     process_payload "$TMP/payload_extract.log"
-    file_img="$TMP/$PVUGBIN.img"
+    file_img="$file_img_tmp/$PVUGBIN.img"
 elif [ "$dang_tep" == 'super' ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
-    lpunpack -p "$PVUGBIN" "$INPUT" "$TMP" || killtree "Extract $PVUGBIN super error"
-    [ "$TMP/$(echo $PVUGBIN).img" == "$TMP/$(echo ${PVUGBIN/_a/}).img" ] || mv "$TMP/$(echo $PVUGBIN).img" "$TMP/$(echo ${PVUGBIN/_a/}).img"
-    file_img="$TMP/$(echo ${PVUGBIN/_a/}).img"
+    if [ "$NODECO" == 1 ]; then
+    file_img_tmp="$PTSD/out"
+    else
+    file_img_tmp="$TMP"
+    fi
+    lpunpack -p "$PVUGBIN" "$INPUT" "$file_img_tmp" || killtree "Extract $PVUGBIN super error"
+    [[ $PVUGBIN == *_a ]] && mv "$file_img_tmp/$PVUGBIN.img" "$file_img_tmp/${PVUGBIN%_a}.img"
+    file_img="$file_img_tmp/${PVUGBIN%_a}.img"
 elif [ "$dang_tep" == 'amlogic' ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ (unpack)...\n"
     ten_paion="$(echo "${INPUT##*/}" | cut -d. -f1)"
@@ -365,13 +384,13 @@ else
     fi
     echo -e "$unpack_text_6 ${file_img##*/} ($dang_file)\n"
     if [ "$NODECO" == 1 ];then
+    [ "$file_img" == "$PTSD/out/${file_img##*/}" ] || mv "$file_img" "$PTSD/out/${file_img##*/}"
     echo -e "$save_text $PTSD/out\n"
-    mv "$file_img" "$PTSD/out/${file_img##*/}"
     fi
 fi
 
 # patch fstab
-if [ "$AVBIMG" == 1 ];then
+if [ "$AVBIMG" == 1 ] && [ "$NODECO" != 1 ]; then
 for rec in $in_name/bin/install-recovery.sh $in_name/etc/init/vendor_flash_recovery.rc $in_name/recovery-from-boot.p $in_name/verity_key; do
     if [ -f "$rec" ];then
     echo "Delete file: $rec"
@@ -392,7 +411,7 @@ for fstab in $(find "$in_name" -type f -name "fstab.*" 2>/dev/null); do
 done
 fi
 
-if [ "$XOAOAT" == 1 ];then
+if [ "$XOAOAT" == 1 ] && [ "$NODECO" != 1 ]; then
 {
 find "$in_name" -type d -name "oat" -print -exec rm -rf {} +
     if [ -d "$in_name/system/framework" ]; then

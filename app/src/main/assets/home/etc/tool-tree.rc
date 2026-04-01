@@ -158,11 +158,9 @@ if [ "$menu_id" == "v1" ];then
 elif [ "$menu_id" == "v4" ];then
 [ "$(glog hide_show_config)" == 1 ] && slog hide_show_config 0 || slog hide_show_config 1
 elif [ "$menu_id" == "v2" ];then
-[ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
-echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTSD#$SDCARD_PATH}']"
+echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTSD#$SDCARD_PATH}']"
 elif [ "$menu_id" == "v3" ];then
-[ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
-echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$SDH'/'$PTSH']"
+echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$SDH'/'$PTSH']"
 fi
 </handler>
 </page>
