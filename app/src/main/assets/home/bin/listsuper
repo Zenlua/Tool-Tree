@@ -5,16 +5,31 @@ echo "listsuper path/super.img"
 exit 1
 fi
 
-if [[ "$(lpdump "$1" | grep -m1 'Header flags:' | awk '{print $3}')" == 'virtual_ab_device' ]];then
-slog typeheh 'VAB'
+# config
+config_super="$(lpdump "$1")"
+
+(
+# data
+slog first_sector_super "$(awk '/First sector:/ { print ($3 * 512); exit }' <<< "$config_super")"
+
+slog first_sector_size_super "$(awk '/First sector:/ { print ($3 * 1024); exit }' <<< "$config_super")"
+
+slog typeheh "$(awk '/Header flags:/ && $3=="virtual_ab_device"{print "VAB"; exit} /Group:/ && $2~/_b$/{b=1} END{print b?"AB":"A"}' <<< "$config_super")"
+
+slog super_sizedj "$(awk '/Size:/ { print $2/(1024*1024*1024) }' <<< "$config_super")"
+
+super_size_a="$(awk '/Group table:/ {f=1; next} f && /Maximum size:/ {if (++c==2) {print $3*2; exit}}' <<< "$config_super")"
+
+if [ "$super_size_a" -gt "$(glog super_sizedj)" ]; then
+slog check_super_type_ab 0
 else
-[[ "$(lpdump "$1" | grep 'Group:' | grep -c '_b$')" == 0 ]] && slog typeheh 'A' || slog typeheh 'AB'
+slog check_super_type_ab 1
 fi
 
-slog super_sizedj `echo "scale=1; $(lpdump "$1" | grep -A 5 'Block device table:' | grep 'Size:' | awk '{print $2}') / (1024*1024*1024)" | bc -l`
-slog super_group "$(lpdump "$1" | grep -m1 'Group:' | awk '{print $2}' | sed -e 's|_a||' -e 's|_b||')"
+slog super_group "$(awk '/Group:/ {sub(/_[ab]$/,"",$2); print $2; exit}' <<< "$config_super")"
+) &
 
-lpdump "$1" | awk '/super:/ {
+echo "$config_super" | awk '/super:/ {
     start = $2
     gsub(":", "", $4)
     end = $4

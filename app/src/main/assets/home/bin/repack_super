@@ -1,6 +1,8 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 #kakathic
 
+source language
+
 show_help() {
   echo "Usage: repack_super -i <input> -m ''file1 file2'' -g <group> -s <size-gb> -f [raw, sparse] -t [A, AB, VAB]"
   echo
@@ -18,7 +20,7 @@ show_help() {
 }
 
 INPUT=""; MIMGPA=""; SUPGRUP=""; SAIZESUP="";
-DANGIMG=""; TYPEIMG="";
+DANGIMG=""; TYPEIMG=""; ml1=""; ml2="";
 if [[ $# -eq 0 || "$1" != -* ]]; then
 show_help
 fi
@@ -38,8 +40,9 @@ while getopts ":i:m:g:s:f:t:h" opt; do
 done
 
 if [[ -z "$INPUT" || -z "$MIMGPA" ]]; then
-echo "Lack of value" >&2
-show_help
+echo "Lack of value:
+-i ${INPUT:-???}
+-m ${MIMGPA:-???}" >&2
 fi
 
 [[ -z "$SUPGRUP" ]] && SUPGRUP='qti_dynamic_partitions'
@@ -47,7 +50,9 @@ fi
 [[ -z "$DANGIMG" ]] && DANGIMG='raw'
 [[ -z "$TYPEIMG" ]] && TYPEIMG='A'
 
-source language
+first_sector_size="$(glog first_sector_size_super 2097152)"
+first_sector="$(glog first_sector_super 1048576)"
+
 super_sizek="$(echo "$SAIZESUP * 1024 * 1024 * 1024" | bc -l | cut -d. -f1)"
 echo "${sizes_text}: ${SAIZESUP} GB ➠ ${super_sizek} bytes"
 echo
@@ -55,35 +60,41 @@ echo
 argvs="--super-name super --metadata-size 65536 "
 cd "$INPUT"
 
-if [ $TYPEIMG = "A" ];then
-argvs+="--metadata-slots 2 --block-size 4096 --device super:${super_sizek} --group ${SUPGRUP}:${super_sizek} "
+if [ "$TYPEIMG" == "A" ]; then
+argvs+="--metadata-slots 2 --device super:${super_sizek}:$first_sector --group ${SUPGRUP}:${super_sizek} "
 fi
 
 for i in $MIMGPA; do
-ml1=''; ml2='';
-i1=$(echo "$i" | sed 's/.img//g')
-i2=$(echo "$i" | sed -e 's/_a.img//g' -e 's/_b.img//g' -e 's/.img//g')
+echo "$i" | grep -q "-cow" && continue
+i1=$(echo "$i" | sed 's/.img$//')
+i2=$(echo "$i" | sed -e 's/_a.img$//' -e 's/_b.img$//' -e 's/.img$//')
 info=$(checktype "$INPUT/$i1.img")
 p_size=$(stat -c %s "$INPUT/$i1.img")
-[ $info == "sparse" ] && simg2img "$INPUT/$i1.img"
-[ $TYPEIMG = "A" ] && argvs+="--partition ${i2}:readonly:$p_size:${SUPGRUP} --image ${i2}=$i1.img "
-if [ $TYPEIMG == "AB" ] || [ $TYPEIMG == "VAB" ];then
+#p_size=$(( ($(stat -c %s "$INPUT/$i1.img") + 4095) / 4096 * 4096 ))
+[ "$info" == "sparse" ] && simg2img "$INPUT/$i1.img"
+[ "$TYPEIMG" == "A" ] && argvs+="--partition ${i2}:readonly:$p_size:${SUPGRUP} --image ${i2}=$i1.img "
+if [ "$TYPEIMG" == "AB" ] || [ "$TYPEIMG" == "VAB" ]; then
 ml1+="--partition ${i2}_a:none:$p_size:${SUPGRUP}_a --image ${i2}_a=$i1.img "
 ml2+="--partition ${i2}_b:none:0:${SUPGRUP}_b "
 fi
 done
 
-if [ $TYPEIMG = "AB" ] || [ $TYPEIMG = "VAB" ];then
-argvs+="--metadata-slots 3 --device super:${super_sizek} --group ${SUPGRUP}_a:${super_sizek} ${ml1} --group ${SUPGRUP}_b:${super_sizek} ${ml2} "
+if [ "$TYPEIMG" == "AB" ] || [ "$TYPEIMG" == "VAB" ]; then
+    if [ "$TYPEIMG" == "AB" ] && [ "$(glog check_super_type_ab)" == 1 ]; then
+        half_size=$((super_sizek / 2 - first_sector_size * 2))
+    else
+        half_size=$((super_sizek - first_sector_size))
+    fi
+argvs+="--metadata-slots 3 --device super:${super_sizek}:$first_sector --group ${SUPGRUP}_a:${half_size} ${ml1} --group ${SUPGRUP}_b:${half_size} ${ml2} "
 fi
-[ $TYPEIMG = "VAB" ] && argvs+="--virtual-ab "
-[ $DANGIMG = "sparse" ] && argvs+="--sparse "
+[ "$TYPEIMG" == "VAB" ] && argvs+="--virtual-ab "
+[ "$DANGIMG" == "sparse" ] && argvs+="--sparse "
 
 mkdir -p out
 echo "lpmake ${argvs}-F --output $INPUT/out/super.img" | sed -z 's| --|\n--|g'
 lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.log
 
-if [ $? == 1 ];then
+if [ $? == 1 ]; then
 killtree "\n$supers_text_1" "$INPUT/out/super.img"
 else
 echo -e "\n$supers_text_2"
