@@ -56,10 +56,11 @@ argvs="--super-name super --metadata-size 65536 "
 cd "$INPUT"
 
 if [ $TYPEIMG = "A" ];then
-argvs+="--metadata-slots 2 --device super:${super_sizek} --group ${SUPGRUP}:${super_sizek} "
+argvs+="--metadata-slots 2 --block-size 4096 --device super:${super_sizek} --group ${SUPGRUP}:${super_sizek} "
 fi
 
 for i in $MIMGPA; do
+ml1=''; ml2='';
 i1=$(echo "$i" | sed 's/.img//g')
 i2=$(echo "$i" | sed -e 's/_a.img//g' -e 's/_b.img//g' -e 's/.img//g')
 info=$(checktype "$INPUT/$i1.img")
