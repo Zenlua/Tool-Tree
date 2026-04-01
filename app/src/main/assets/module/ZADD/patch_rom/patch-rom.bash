@@ -649,6 +649,54 @@ echo
 done
 }
 
+rezetprop_patch(){
+psystem="$(ls -1d $SDH/$PTSH/*/system/build.prop 2>/dev/null | grep -m1 'system' | sed 's|\/build.prop||')"
+[ -d "$psystem" ] || about "Partition not found system"
+if ! grep -q "rezetprop" "$psystem/etc/selinux/plat_sepolicy.cil" 2>/dev/null; then
+sed -i \
+-e "/^(allow init init_exec\b/ s/)))/ execute_no_trans)))/" \
+-e "/^(typeattributeset exec_type\b/ s/))/rezetprop_exec ))/" \
+-e "/^(typeattributeset file_type\b/ s/))/rezetprop_exec ))/" \
+-e "/^(typeattributeset system_file_type\b/ s/))/rezetprop_exec ))/" \
+-e "/^(typeattributeset domain\b/ s/))/rezetprop ))/" \
+"$psystem/etc/selinux/plat_sepolicy.cil"
+echo '
+; types
+(type rezetprop)
+(roletype object_r rezetprop)
+(type rezetprop_exec)
+(roletype object_r rezetprop_exec)
+; init -> rezetprop_exec -> rezetprop
+(typetransition init rezetprop_exec process rezetprop)
+(allow init rezetprop (process (transition)))
+(allow init rezetprop (process (noatsecure rlimitinh siginh)))
+(allow init rezetprop (fd (use)))
+; rezetprop -> init_exec -> init
+(typetransition rezetprop init_exec process init)
+(allow rezetprop init (process (transition)))
+(allow rezetprop init (process (noatsecure rlimitinh siginh)))
+; block access
+(allow rezetprop block_device (blk_file (read open getattr ioctl)))
+(allow rezetprop emmcblk_device (blk_file (read open getattr ioctl)))
+; allow calling init_exec by escalating when needed
+(allow init rezetprop_exec (file (read open execute getattr map)))
+(allow rezetprop init_exec (file (read open execute getattr map)))
+; allow calling system binaries without domain change
+(allow rezetprop shell_exec (file (read open execute getattr map execute_no_trans)))
+(allow rezetprop system_file (file (read open execute getattr map execute_no_trans)))
+(allow rezetprop toolbox_exec (file (read open execute getattr map execute_no_trans)))
+(allow rezetprop rezetprop_exec (file (entrypoint read open execute getattr map)))' >> "$psystem/etc/selinux/plat_sepolicy.cil"
+fi
+echo '/system/bin/rezetprop\.sh u:object_r:rezetprop_exec:s0
+/system/bin/rezetprop u:object_r:init_exec:s0
+/system/etc/init/rezetprop\.rc u:object_r:system_file:s0' >> $SDH/$PTSH/config/system_file_contexts
+echo 'system/bin/rezetprop.sh 0 2000 755
+system/bin/rezetprop 0 2000 755
+system/etc/init/rezetprop.rc 0 0 644' >> $SDH/$PTSH/config/system_fs_config
+cp -rf "$MPAT/mod/rezetprop" "$psystem"
+echo "Save at: $psystem/etc/init/rezetprop.rc, $psystem/bin/rezetprop.sh"
+}
+
 search(){
 for vcs in $@; do
 seprojects="$(find $SDH/$PTSH -type d \( -name "app" -o -name "priv-app" -o -name "framework" -o -name "data-app" -o -name "overlay" -o -name "apex" \) -exec find {} -type f -name "$vcs" -print -quit \; 2>/dev/null)"

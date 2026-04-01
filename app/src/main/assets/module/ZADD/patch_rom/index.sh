@@ -6,14 +6,16 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>
 <group>
 
 <group title="'$google_text'">
-<action title="'"$title_quick"'" auto-off="true">
-<summary>'$project_text: $PTSH'</summary>
-<param name="patch_prop" options-sh="echo -e '"'none\nenforce\nlog\ndisable'"'" title="'"$desc_patch_prop"'" desc="'"$desc_patch_prop_long"'" label="'$select_text'"/>
-<param name="device_features" label="'"$label_device_features"'" type="bool" />
-<param name="rw_rom" label="'"$label_rw_rom"'" desc="'"$desc_rw_rom"'" type="bool" />
-<param name="delete_gms" label="'"$label_delete_gms"'" desc="'"$desc_delete_gms"'" type="bool" />
-<param name="home_poco" label="'"$label_home_poco"'" desc="'"$desc_home_poco"'" type="bool" />
+<action title="'$title_quick'" auto-off="true">
+<summary>'"$project_text: $PTSH"'</summary>
+<param name="patch_prop" options-sh="echo -e '"'none\nenforce\nlog\ndisable'"'" title="'$desc_patch_prop'" desc="'$desc_patch_prop_long'" label="'$select_text'"/>
+<param name="device_features" label="'$label_device_features'" type="bool" />
+<param name="rw_rom" label="'$label_rw_rom'" desc="'$desc_rw_rom'" type="bool" />
+<param name="delete_gms" label="'$label_delete_gms'" desc="'$desc_delete_gms'" type="bool" />
+<param name="home_poco" label="'$label_home_poco'" desc="'$desc_home_poco'" type="bool" />
 <set>'$pathsh' custom_patch</set>
+<param name="rezetprop_patch" label="'$label_reset_prop'" desc="'$desc_reset_prop'" type="bool" />
+<set>'$pathsh' rezetprop_patch</set>
 </action>
 </group>
 
@@ -26,7 +28,7 @@ checktime
 </set>
 </action>
 
-<action title="'"$title_delete"'" >
+<action title="'$title_delete'" >
 <param name="del_app_patch" type="text" value-sh="glog del_app_patch" required="true" placeholder="VoiceAssist Sogou"/>
 <set>
 slog del_app_patch "$del_app_patch"
@@ -36,10 +38,10 @@ slog del_app_patch "$del_app_patch"
 </group>
 
 <group>
-<action title="'"$title_framework_patch"'" summary="Android 9+">
+<action title="'$title_framework_patch'" summary="Android 9+">
 <param name="FILE" option-sh="'$pathsh' search framework.jar services.jar miui-services.jar core-oj.jar" multiple="true" value-sh="glog kaorios_toolbox_patch_os" required="true" desc="'$string_text_1': '$PTSH'/***" />
-<param name="fix_toolbox" label="'"$label_fix_toolbox"'" desc="'$required_files_text': framework.jar (android 12+)" type="bool" />
-<param name="fix_apksign" label="'"$label_fix_apksign"'" desc="'$required_files_text': framework.jar, services.jar, (Xiaomi: miui-services.jar), (Android 11↓: core-oj.jar)" type="bool" />
+<param name="fix_toolbox" label="'$label_fix_toolbox'" desc="'$required_files_text': framework.jar (android 12+)" type="bool" />
+<param name="fix_apksign" label="'$label_fix_apksign'" desc="'$required_files_text': framework.jar, services.jar, (Xiaomi: miui-services.jar), (Android 11↓: core-oj.jar)" type="bool" />
 <set>
 slog kaorios_toolbox_patch_os "$FILE"
 '$pathsh' toolbox "$FILE"
@@ -47,10 +49,10 @@ checktime
 </set>
 </action>
 
-<action title="'"$title_cn_global"'" summary="Xiaomi, Android 12+">
+<action title="'$title_cn_global'" summary="Xiaomi, Android 12+">
 <param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar PowerKeeper.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_noti_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
-<param name="fix_noti" label="'"$label_fix_noti"'" desc="'$required_files_text': miui-framework.jar, miui-services.jar, PowerKeeper.apk, MiuiSystemUI.apk" type="bool" />
-<param name="fix_global" label="'"$label_fix_global"'" desc="'$required_files_text': miui-framework.jar, miui-services.jar, Settings.apk" type="bool" />
+<param name="fix_noti" label="'$label_fix_noti'" desc="'$required_files_text': miui-framework.jar, miui-services.jar, PowerKeeper.apk, MiuiSystemUI.apk" type="bool" />
+<param name="fix_global" label="'$label_fix_global'" desc="'$required_files_text': miui-framework.jar, miui-services.jar, Settings.apk" type="bool" />
 <set>
 slog fix_noti_patch_os "$FILE"
 '$pathsh' fixnoti "$FILE"
@@ -60,7 +62,7 @@ checktime
 </group>
 
 <group>
-<action title="'"$title_ime"'" summary="Xiaomi">
+<action title="'$title_ime'" summary="Xiaomi">
 <param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_key_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
 <param name="ime_app" placeholder="com.google.android.inputmethod.latin" desc="'$desc_ime_app'" type="text" value-sh="glog ime_app" required="true"/>
 <param name="ime_color" placeholder="#f0f3f8" desc="'$desc_color_light'" type="text" value-sh="glog ime_color" required="true"/>
@@ -79,13 +81,13 @@ checktime
 </group>
 
 <group>
-<action title="'"$title_many_patch"'" summary="Xiaomi, Android 12+">
+<action title="'$title_many_patch'" summary="Xiaomi, Android 12+">
 <param name="FILE" option-sh="'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
-<param name="fix_screen" label="'"$label_fix_screen"'" desc="'$required_files_text': miui-services.jar, services.jar" type="bool" />
-<param name="fix_fps" label="'"$label_fix_fps"'" desc="'$required_files_text': PowerKeeper.apk" type="bool" />
-<param name="fix_window" label="'"$label_fix_window"'" desc="'$required_files_text': miui-services.jar" type="bool" />
-<param name="fix_reset_theme" label="'"$label_fix_reset_theme"'" desc="'$required_files_text': miui-framework.jar" type="bool" />
-<param name="fix_show_error" label="'"$label_fix_show_error"'" desc="'$required_files_text': services.jar" type="bool" />
+<param name="fix_screen" label="'$label_fix_screen'" desc="'$required_files_text': miui-services.jar, services.jar" type="bool" />
+<param name="fix_fps" label="'$label_fix_fps'" desc="'$required_files_text': PowerKeeper.apk" type="bool" />
+<param name="fix_window" label="'$label_fix_window'" desc="'$required_files_text': miui-services.jar" type="bool" />
+<param name="fix_reset_theme" label="'$label_fix_reset_theme'" desc="'$required_files_text': miui-framework.jar" type="bool" />
+<param name="fix_show_error" label="'$label_fix_show_error'" desc="'$required_files_text': services.jar" type="bool" />
 <set>
 slog fix_manyo_patch_os "$FILE"
 '$pathsh' fixmultiple "$FILE"
@@ -93,13 +95,13 @@ checktime
 </set>
 </action>
 
-<action title="'"$title_app_patch"'" summary="Xiaomi">
+<action title="'$title_app_patch'" summary="Xiaomi">
 <param name="FILE" option-sh="'$pathsh' search *ThemeManager.apk *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk MIUIGallery.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
-<param name="fix_themes" label="'"$label_fix_themes"'" desc="'$required_files_text': ThemeManager.apk" type="bool" />
-<param name="fix_appvault" label="'"$label_fix_appvault"'" desc="'$required_files_text': PersonalAssistant.apk" type="bool" />
-<param name="fix_thoit" label="'"$label_fix_thoit"'" desc="'$required_files_text': MIUIWeather.apk" type="bool" />
-<param name="fix_joyose" label="'"$label_fix_joyose"'" desc="'$required_files_text': Joyose.apk" type="bool" />
-<param name="fix_mapcn" label="'"$label_fix_mapcn"'" desc="'$required_files_text': MIUIGallery.apk" type="bool" />
+<param name="fix_themes" label="'$label_fix_themes'" desc="'$required_files_text': ThemeManager.apk" type="bool" />
+<param name="fix_appvault" label="'$label_fix_appvault'" desc="'$required_files_text': PersonalAssistant.apk" type="bool" />
+<param name="fix_thoit" label="'$label_fix_thoit'" desc="'$required_files_text': MIUIWeather.apk" type="bool" />
+<param name="fix_joyose" label="'$label_fix_joyose'" desc="'$required_files_text': Joyose.apk" type="bool" />
+<param name="fix_mapcn" label="'$label_fix_mapcn'" desc="'$required_files_text': MIUIGallery.apk" type="bool" />
 <set>
 slog fix_manyo_patch_os "$FILE"
 '$pathsh' fixapps "$FILE"
