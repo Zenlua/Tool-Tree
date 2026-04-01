@@ -693,7 +693,7 @@ echo '/system/bin/rezetprop\.sh u:object_r:rezetprop_exec:s0
 echo 'system/bin/rezetprop.sh 0 2000 755
 system/bin/rezetprop 0 2000 755
 system/etc/init/rezetprop.rc 0 0 644' >> $SDH/$PTSH/config/system_fs_config
-cp -rf "$MPAT/mod/rezetprop" "$psystem"
+cp -rf "$MPAT"/mod/rezetprop/* "$psystem"
 echo "Save at: $psystem/etc/init/rezetprop.rc, $psystem/bin/rezetprop.sh"
 }
 
