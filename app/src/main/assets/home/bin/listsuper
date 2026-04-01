@@ -14,6 +14,8 @@ slog first_sector_super "$(awk '/First sector:/ { print ($3 * 512); exit }' <<< 
 
 slog first_sector_size_super "$(awk '/First sector:/ { print ($3 * 1024); exit }' <<< "$config_super")"
 
+slog meta_size_super "$(awk '/Metadata max size:/ { print $4 }' <<< "$config_super")"
+
 slog typeheh "$(awk '/Header flags:/ && $3=="virtual_ab_device"{print "VAB"; exit} /Group:/ && $2~/_b$/{b=1} END{print b?"AB":"A"}' <<< "$config_super")"
 
 slog super_sizedj "$(awk '/Size:/ { print $2/(1024*1024*1024) }' <<< "$config_super")"

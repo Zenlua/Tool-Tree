@@ -52,12 +52,13 @@ fi
 
 first_sector_size="$(glog first_sector_size_super 2097152)"
 first_sector="$(glog first_sector_super 1048576)"
+meta_size="$(glog meta_size_super 65536)"
 
 super_sizek="$(echo "$SAIZESUP * 1024 * 1024 * 1024" | bc -l | cut -d. -f1)"
 echo "${sizes_text}: ${SAIZESUP} GB ➠ ${super_sizek} bytes"
 echo
 
-argvs="--super-name super --metadata-size 65536 "
+argvs="--super-name super --metadata-size $meta_size "
 cd "$INPUT"
 
 if [ "$TYPEIMG" == "A" ]; then

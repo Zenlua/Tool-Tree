@@ -2,6 +2,7 @@
 
 **Beta**
 
++ Fixed build super
 + Fixed check online
 + Fixed errors when changing app language
 + Update add-on patch ROM
