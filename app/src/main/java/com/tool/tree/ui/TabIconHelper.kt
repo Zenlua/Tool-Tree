@@ -6,7 +6,7 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.graphics.ColorUtils
+import com.google.android.material.tabs.TabLayout
 import com.tool.tree.R
 
 class TabIconHelper(
@@ -30,34 +30,17 @@ class TabIconHelper(
         imageView.layoutParams.width = size
         imageView.layoutParams.height = size
 
-        // 👉 set alpha và background giống TabHost
-        val selected = isFirst
-        layout.alpha = if (selected) 1f else 0.7f
-        layout.setBackgroundColor(getTabBackgroundColor(selected))
+        // 👉 alpha giống code cũ
+        layout.alpha = if (isFirst) 1f else 0.3f
 
         views.add(layout)
+
         return layout
     }
 
     fun updateHighlight(position: Int) {
         for (i in views.indices) {
-            val selected = i == position
-            views[i].alpha = if (selected) 1f else 0.7f
-            views[i].setBackgroundColor(getTabBackgroundColor(selected))
-        }
-    }
-
-    private fun getTabBackgroundColor(isSelected: Boolean): Int {
-        // Lấy màu nền navigationBarColor từ theme
-        val typedValue = TypedValue()
-        activity.theme.resolveAttribute(android.R.attr.navigationBarColor, typedValue, true)
-        val baseColor = typedValue.data
-
-        return if (isSelected) {
-            baseColor // tab chọn full màu
-        } else {
-            // tab chưa chọn, làm mờ 30%
-            ColorUtils.setAlphaComponent(baseColor, 80) // 0..255
+            views[i].alpha = if (i == position) 1f else 0.3f
         }
     }
 }
