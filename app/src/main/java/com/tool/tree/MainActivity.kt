@@ -29,6 +29,7 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.omarea.vtools.FloatMonitor
 import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.MainPagerAdapter
+import com.tool.tree.ui.TabIconHelper
 
 class MainActivity : AppCompatActivity() {
 
