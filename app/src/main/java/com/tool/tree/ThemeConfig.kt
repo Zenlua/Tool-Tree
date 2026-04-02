@@ -7,31 +7,23 @@ import androidx.core.content.edit
 class ThemeConfig(private val context: Context) {
     private val config = context.getSharedPreferences("kr-script-config", Context.MODE_PRIVATE)
 
-    fun getAllowTransparentUI(): Boolean {
-        return config.getBoolean("TransparentUI", false)
-    }
+    fun getAllowTransparentUI(): Boolean = config.getBoolean("TransparentUI", false)
 
     fun setAllowTransparentUI(allow: Boolean) {
         config.edit { putBoolean("TransparentUI", allow) }
-        if (context is Activity) {
-            context.recreate()
-        }
+        // Không recreate Activity
     }
 
-    fun getAllowNotificationUI(): Boolean {
-        return config.getBoolean("NotificationUI", true)
-    }
+    fun getAllowNotificationUI(): Boolean = config.getBoolean("NotificationUI", true)
 
     fun setAllowNotificationUI(allow: Boolean) {
         config.edit { putBoolean("NotificationUI", allow) }
-        if (context is Activity) {
-            context.recreate()
-        }
         val appContext = context.applicationContext
         if (allow) {
             WakeLockService.startService(appContext)
         } else {
             WakeLockService.stopService(appContext)
         }
+        // Không recreate Activity
     }
 }
