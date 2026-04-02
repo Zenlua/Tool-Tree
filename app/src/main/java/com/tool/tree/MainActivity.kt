@@ -155,7 +155,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ========================
-    fun reloadTabs() {
+    private fun reloadTabs() {
         val title = if (isFavoritesTab) {
             getString(R.string.tab_favorites)
         } else {
@@ -191,6 +191,22 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra("force_reset", true)
         startActivity(intent)
         finish()
+    }
+
+    // Thêm vào MainActivity
+    // ========================
+    // RECREATE WITHOUT DATA LOSS
+    // ========================
+
+    fun refreshUIWithRecreate() {
+        val currentTabIndex = binding.tabLayout.selectedTabPosition
+        recreate()
+        handler.post {
+            reloadTabs()
+            binding.viewPager.post {
+                binding.viewPager.setCurrentItem(currentTabIndex, false)
+            }
+        }
     }
 
     private fun getKrScriptActionHandler(pageNode: PageNode, isFavoritesTab: Boolean): KrScriptActionHandler {
