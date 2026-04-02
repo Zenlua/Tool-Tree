@@ -15,8 +15,8 @@
     <color name="color_load_veryhight">#f9592f</color>
 
     <color name="colorAccent">#00c7a8</color>
-    <color name="colorPrimary">#80B4DD</color>
-    <color name="colorPrimaryDark">#3D9AE6</color>
+    <color name="colorPrimary">#80DDC9</color>
+    <color name="colorPrimaryDark">#3DE6D3</color>
     <color name="splash_bg_color">#f4f4f4</color>
     
     <color name="warning">#FFB300</color>

@@ -1,66 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
+    <!-- Toolbar -->
     <include
         layout="@layout/app_bar_main"
+        android:id="@+id/appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <TabHost
-        android:id="@+id/main_tabhost"
+    <!-- TabLayout -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_below="@id/appbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="?android:actionBarSize"
-        android:background="@android:color/transparent">
+        android:layout_height="wrap_content"
+        app:tabIndicatorFullWidth="true" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+    <!-- ViewPager2 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_below="@id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-            <FrameLayout
-                android:id="@android:id/tabcontent"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1">
-
-                <FrameLayout
-                    android:id="@+id/main_tabhost_cpu"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-                <FrameLayout
-                    android:id="@+id/main_tabhost_2"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <FrameLayout
-                        android:id="@+id/list_favorites"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </FrameLayout>
-
-                <FrameLayout
-                    android:id="@+id/main_tabhost_3"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
-
-                    <FrameLayout
-                        android:id="@+id/list_pages"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </FrameLayout>
-            </FrameLayout>
-
-            <TabWidget
-                android:id="@android:id/tabs"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?android:navigationBarColor" />
-        </LinearLayout>
-    </TabHost>
 </RelativeLayout>
