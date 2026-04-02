@@ -155,7 +155,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ========================
-    private fun reloadTabs() {
+    fun reloadTabs() {
         val title = if (isFavoritesTab) {
             getString(R.string.tab_favorites)
         } else {
