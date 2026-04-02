@@ -12,19 +12,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <!-- TabLayout -->
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout"
-        android:layout_below="@id/appbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:tabIndicatorFullWidth="true" />
-
     <!-- ViewPager2 -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
-        android:layout_below="@id/tabLayout"
+        android:layout_below="@id/appbar"
+        android:layout_above="@id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <!-- TabLayout (DƯỚI CÙNG) -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabIndicatorFullWidth="true" />
 
 </RelativeLayout>
