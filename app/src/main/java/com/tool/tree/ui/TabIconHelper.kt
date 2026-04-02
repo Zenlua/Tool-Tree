@@ -26,6 +26,7 @@ class TabIconHelper(
 
         // 👉 resize icon nhỏ giống TabHost
         val size = (20 * activity.resources.displayMetrics.density).toInt()
+        drawable.setBounds(0, 0, size, size)
         imageView.layoutParams.width = size
         imageView.layoutParams.height = size
 
