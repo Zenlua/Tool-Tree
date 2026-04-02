@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.shell.KeepShellPublic
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     private val hasRoot by lazy { KeepShellPublic.checkRoot() }
 
     private var openedSubPage = false
+    private var isFavoritesTab = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +76,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ========================
-    // LOAD TABS (THAY TABHOST)
+    // LOAD TABS
     // ========================
     private fun loadTabs() {
         Thread {
@@ -118,23 +120,30 @@ class MainActivity : AppCompatActivity() {
 
                 binding.viewPager.adapter = adapter
 
-                // TAB + SWIPE
                 TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-                    tab.text = adapter.getTitle(position)
+                    val title = adapter.getTitle(position)
+                    tab.text = title
 
-                    // icon giống code cũ
-                    when (position) {
-                        0 -> tab.setIcon(R.drawable.tab_home)
-                        1 -> tab.setIcon(R.drawable.tab_favorites)
-                        2 -> tab.setIcon(R.drawable.tab_pages)
+                    when (title) {
+                        getString(R.string.tab_home) -> tab.setIcon(R.drawable.tab_home)
+                        getString(R.string.tab_favorites) -> tab.setIcon(R.drawable.tab_favorites)
+                        getString(R.string.tab_pages) -> tab.setIcon(R.drawable.tab_pages)
                     }
                 }.attach()
+
+                // detect tab hiện tại
+                binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+                    override fun onTabSelected(tab: TabLayout.Tab) {
+                        isFavoritesTab = tab.text == getString(R.string.tab_favorites)
+                    }
+
+                    override fun onTabUnselected(tab: TabLayout.Tab) {}
+                    override fun onTabReselected(tab: TabLayout.Tab) {}
+                })
             }
         }.start()
     }
 
-    // ========================
-    // GIỮ NGUYÊN LOGIC CŨ
     // ========================
     private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {
         var items: ArrayList<NodeInfoBase>? = null
@@ -149,20 +158,27 @@ class MainActivity : AppCompatActivity() {
         return items
     }
 
+    // ========================
+    // RELOAD KHÔNG NHÁY
+    // ========================
     private fun reloadTabs() {
         val position = if (isFavoritesTab) {
             adapter.getTitleIndex(getString(R.string.tab_favorites))
         } else {
             adapter.getTitleIndex(getString(R.string.tab_pages))
         }
+
         if (position == -1) return
+
         val pageNode = if (isFavoritesTab) {
             krScriptConfig.favoriteConfig
         } else {
             krScriptConfig.pageListConfig
         }
+
         Thread {
             val items = getItems(pageNode)
+
             items?.let {
                 handler.post {
                     val fragment = adapter.getFragment(position) as? ActionListFragment
@@ -225,11 +241,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ========================
-    // FILE PICKER (GIỮ NGUYÊN)
+    // FILE PICKER
     // ========================
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
     private val ACTION_FILE_PATH_CHOOSER = 65400
-    private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         return try {
@@ -256,8 +271,6 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    // ========================
-    // MENU
     // ========================
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
