@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Beta**
+**Version: 1.3.8 (2-4-2026)**
 
++ Code optimization
 + Fixed build super
 + Fixed check online
 + Fixed errors when changing app language

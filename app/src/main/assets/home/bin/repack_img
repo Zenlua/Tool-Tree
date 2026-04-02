@@ -292,7 +292,7 @@ elif [ "$partition" == "f2fs" ];then
     [ "$(cat "$fs_options" 2>/dev/null | grep 'superblock features' | grep -cm1 ro)" == 1 ] && TTBUILDI=4 || TTBUILDI=5
     fi
     if [ "$TTBUILDI" == 5 ];then
-    make_f2fs -g android -O compression -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
+    make_f2fs -g android -O compression,extra_attr -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
     sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" -c "$saved" 2>&1 | tee $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
     else
     make_f2fs -t 0 -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
