@@ -78,11 +78,8 @@ class MainActivity : AppCompatActivity() {
     // ========================
     private fun loadTabs() {
         Thread {
-            val page2Config = krScriptConfig.pageListConfig
-            val favoritesConfig = krScriptConfig.favoriteConfig
-    
-            val pages = getItems(page2Config)
-            val favorites = getItems(favoritesConfig)
+            val pages = getItems(krScriptConfig.pageListConfig)
+            val favorites = getItems(krScriptConfig.favoriteConfig)
     
             handler.post {
                 progressBarDialog.hideDialog()
@@ -93,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                     adapter.addFragment(
                         ActionListFragment.create(
                             favorites,
-                            getKrScriptActionHandler(favoritesConfig, true),
+                            getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
                             null,
                             ThemeModeState.getThemeMode()
                         ),
@@ -105,7 +102,7 @@ class MainActivity : AppCompatActivity() {
                     adapter.addFragment(
                         ActionListFragment.create(
                             pages,
-                            getKrScriptActionHandler(page2Config, false),
+                            getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
                             null,
                             ThemeModeState.getThemeMode()
                         ),
@@ -191,22 +188,6 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra("force_reset", true)
         startActivity(intent)
         finish()
-    }
-
-    // Thêm vào MainActivity
-    // ========================
-    // RECREATE WITHOUT DATA LOSS
-    // ========================
-
-    fun refreshUIWithRecreate() {
-        val currentTabIndex = binding.tabLayout.selectedTabPosition
-        recreate()
-        handler.post {
-            reloadTabs()
-            binding.viewPager.post {
-                binding.viewPager.setCurrentItem(currentTabIndex, false)
-            }
-        }
     }
 
     private fun getKrScriptActionHandler(pageNode: PageNode, isFavoritesTab: Boolean): KrScriptActionHandler {
