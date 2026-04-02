@@ -10,6 +10,8 @@
 
 - Instruct: **[Root & No-Root](https://zenlua.github.io/Tool-Tree/website/Guide.html)**
 
+- Input directory: `/sdcard/TREE` Contains `ROM` `APK`
+
 - Root path: `/data/local/TOOL` and `/data/local/TREE`
 
 - If the application has root privileges, it will run faster you can copy the path directly from the log to access it directly.

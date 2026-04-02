@@ -43,6 +43,19 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     private var actionInfos: ArrayList<NodeInfoBase>? = null
 
+    fun updateData(newItems: ArrayList<NodeInfoBase>) {
+        this.actionInfos = newItems
+        // render lại UI giống onViewCreated
+        if (this.view != null) {
+            rootGroup = ListItemGroup(this.requireContext(), true, GroupNode(""))
+            PageLayoutRender(this.requireContext(), newItems, this, rootGroup)
+            val layout = rootGroup.getView()
+            val rootView = this.view?.findViewById<ScrollView>(R.id.kr_content)
+            rootView?.removeAllViews()
+            rootView?.addView(layout)
+        }
+    }
+
     private lateinit var progressBarDialog: ProgressBarDialog
     private var krScriptActionHandler: KrScriptActionHandler? = null
     private var autoRunTask: AutoRunTask? = null

@@ -150,7 +150,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun reloadTabs() {
-        loadTabs()
+        val position = if (isFavoritesTab) {
+            adapter.getTitleIndex(getString(R.string.tab_favorites))
+        } else {
+            adapter.getTitleIndex(getString(R.string.tab_pages))
+        }
+        if (position == -1) return
+        val pageNode = if (isFavoritesTab) {
+            krScriptConfig.favoriteConfig
+        } else {
+            krScriptConfig.pageListConfig
+        }
+        Thread {
+            val items = getItems(pageNode)
+            items?.let {
+                handler.post {
+                    val fragment = adapter.getFragment(position) as? ActionListFragment
+                    fragment?.updateData(it)
+                }
+            }
+        }.start()
     }
 
     private fun restartApp() {

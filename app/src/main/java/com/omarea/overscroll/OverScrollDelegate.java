@@ -108,7 +108,7 @@ public class OverScrollDelegate {
 
 	static final String LOG_TAG = "OverScrollDelegate";
 
-	public static final int OS_NONE = 0;// OS = "OverScroll"
+	public static final int OS_NONE = 0; // OS = "OverScroll"
 	public static final int OS_DRAG_TOP = 1;
 	public static final int OS_DRAG_BOTTOM = 2;
 	public static final int OS_SPRING_BACK = 3;
@@ -131,7 +131,7 @@ public class OverScrollDelegate {
 
 	private final View mView;
 	private final OverScrollable mOverScrollable;
-	private boolean mEnableDragOverScroll = true;
+	private boolean mEnableDragOverScroll = false;
 	private boolean mEnableFlingOverScroll = true;
 	private OverScrollStyle mStyle;
 

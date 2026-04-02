@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Beta**
+
++ Supports swiping to switch tabs
+
 **Version: 1.3.8 (2-4-2026)**
 
 + Code optimization
