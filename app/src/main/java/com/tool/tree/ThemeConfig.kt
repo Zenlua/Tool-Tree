@@ -1,5 +1,6 @@
 package com.tool.tree
 
+import android.app.Activity
 import android.content.Context
 import androidx.core.content.edit
 
@@ -12,7 +13,7 @@ class ThemeConfig(private val context: Context) {
 
     fun setAllowTransparentUI(allow: Boolean) {
         config.edit { putBoolean("TransparentUI", allow) }
-        (context as? MainActivity)?.refreshUIWithRecreate()
+        (context as? Activity)?.recreate()
     }
 
     fun getAllowNotificationUI(): Boolean {
