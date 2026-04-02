@@ -1,6 +1,5 @@
 package com.tool.tree
 
-import android.app.Activity
 import android.content.Context
 import androidx.core.content.edit
 
@@ -13,9 +12,7 @@ class ThemeConfig(private val context: Context) {
 
     fun setAllowTransparentUI(allow: Boolean) {
         config.edit { putBoolean("TransparentUI", allow) }
-        if (context is Activity) {
-            context.recreate()
-        }
+        (context as? MainActivity)?.reloadTabs()
     }
 
     fun getAllowNotificationUI(): Boolean {
@@ -24,9 +21,7 @@ class ThemeConfig(private val context: Context) {
 
     fun setAllowNotificationUI(allow: Boolean) {
         config.edit { putBoolean("NotificationUI", allow) }
-        if (context is Activity) {
-            context.recreate()
-        }
+        (context as? MainActivity)?.reloadTabs()
         val appContext = context.applicationContext
         if (allow) {
             WakeLockService.startService(appContext)
