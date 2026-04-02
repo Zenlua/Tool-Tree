@@ -125,18 +125,14 @@ class MainActivity : AppCompatActivity() {
                         R.drawable.tab_pages
                     tab.customView = TabIconHelper(this).createTabView(title, getDrawable(iconRes)!!, position == 0)
                 }.attach()
-                // ✅ trạng thái tab ban đầu
                 isFavoritesTab = binding.tabLayout.getTabAt(binding.tabLayout.selectedTabPosition)?.text ==
                         getString(R.string.tab_favorites)
-    
                 binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
                     override fun onTabSelected(tab: TabLayout.Tab) {
                         isFavoritesTab = adapter.getTitle(tab.position) == getString(R.string.tab_favorites)
-    
-                        tabHelper.updateHighlight(tab.position)
+                        tabHelper.updateHighlight(binding.tabLayout, tab.position)
                         invalidateOptionsMenu()
                     }
-    
                     override fun onTabUnselected(tab: TabLayout.Tab) {}
                     override fun onTabReselected(tab: TabLayout.Tab) {}
                 })

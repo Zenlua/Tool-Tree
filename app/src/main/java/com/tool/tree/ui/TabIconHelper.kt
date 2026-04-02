@@ -38,9 +38,9 @@ class TabIconHelper(
         return layout
     }
 
-    fun updateHighlight(position: Int) {
-        for (i in views.indices) {
-            views[i].alpha = if (i == position) 1f else 0.3f
+    fun updateHighlight(tabLayout: TabLayout, position: Int) {
+        for (i in 0 until tabLayout.tabCount) {
+            tabLayout.getTabAt(i)?.customView?.alpha = if (i == position) 1f else 0.3f
         }
     }
 }
