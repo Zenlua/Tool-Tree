@@ -5,57 +5,41 @@ import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import android.view.View
 import android.widget.ImageView
-import android.widget.TabHost
 import android.widget.TextView
+import com.google.android.material.tabs.TabLayout
 import com.tool.tree.R
 
-@Suppress("DEPRECATION")
-class TabIconHelper(private var tabHost: TabHost, private var activity: Activity) {
-    private var views = ArrayList<View>()
+class TabIconHelper(
+    private val activity: Activity
+) {
 
-    fun newTabSpec(drawable: Drawable, content: Int): String {
-        return newTabSpec("", drawable, content)
-    }
+    private val views = ArrayList<View>()
 
-    fun newTabSpec(text: String, drawable: Drawable, content: Int): String {
+    fun createTabView(text: String, drawable: Drawable, isFirst: Boolean): View {
         val layout = View.inflate(activity, R.layout.list_item_tab, null)
+
         val imageView = layout.findViewById<ImageView>(R.id.ItemIcon)
         val textView = layout.findViewById<TextView>(R.id.ItemTitle)
-        val tabId = "tab_" + views.size
 
         textView.text = text
-
-        // val tintIcon = DrawableCompat.wrap(view.drawable)
-        // val csl = getResources().getColorStateList(R.color.colorAccent)
-        // DrawableCompat.setTintList(tintIcon, csl)
-        // imageView.setImageDrawable(tintIcon)
-        // imageView.setColorFilter(getColorAccent())
-
-        if (views.isNotEmpty()) {
-            layout.alpha = 0.3f
-        }
         imageView.setImageDrawable(drawable)
+
+        // 👉 resize icon nhỏ giống TabHost
+        val size = (20 * activity.resources.displayMetrics.density).toInt()
+        imageView.layoutParams.width = size
+        imageView.layoutParams.height = size
+
+        // 👉 alpha giống code cũ
+        layout.alpha = if (isFirst) 1f else 0.3f
+
         views.add(layout)
-        // imageView.setBackgroundResource(R.drawable.tab_background)
-        tabHost.addTab(tabHost.newTabSpec(tabId).setContent(content).setIndicator(layout))
 
-        return tabId
+        return layout
     }
 
-    fun getColorAccent(): Int {
-        val typedValue = TypedValue()
-        this.activity.theme.resolveAttribute(androidx.appcompat.R.attr.colorAccent, typedValue, true)
-        return typedValue.data
-    }
-
-    fun updateHighlight() {
-        for (i in 0 until tabHost.tabWidget.tabCount) {
-            val tab = tabHost.tabWidget.getChildAt(i)
-            if (i == tabHost.currentTab) {
-                tab.alpha = 1f
-            } else {
-                tab.alpha = 0.3f
-            }
+    fun updateHighlight(position: Int) {
+        for (i in views.indices) {
+            views[i].alpha = if (i == position) 1f else 0.3f
         }
     }
 }

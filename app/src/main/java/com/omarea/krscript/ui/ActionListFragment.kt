@@ -45,14 +45,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     fun updateData(newItems: ArrayList<NodeInfoBase>) {
         this.actionInfos = newItems
-        // render lại UI giống onViewCreated
-        if (this.view != null) {
-            rootGroup = ListItemGroup(this.requireContext(), true, GroupNode(""))
-            PageLayoutRender(this.requireContext(), newItems, this, rootGroup)
-            val layout = rootGroup.getView()
-            val rootView = this.view?.findViewById<ScrollView>(R.id.kr_content)
+        view?.let {
+            val rootView = it.findViewById<ScrollView>(R.id.kr_content)
             rootView?.removeAllViews()
-            rootView?.addView(layout)
+            rootGroup = ListItemGroup(requireContext(), true, GroupNode(""))
+            PageLayoutRender(requireContext(), newItems, this, rootGroup)
+            rootView?.addView(rootGroup.getView())
         }
     }
 
