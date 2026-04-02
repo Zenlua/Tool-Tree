@@ -26,7 +26,6 @@ import com.omarea.krscript.config.PageConfigSh
 import com.omarea.krscript.model.*
 import com.omarea.krscript.ui.ActionListFragment
 import com.omarea.krscript.ui.ParamsFileChooserRender
-import com.omarea.vtools.FloatMonitor
 import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.MainPagerAdapter
 import com.tool.tree.ui.TabIconHelper
@@ -90,10 +89,6 @@ class MainActivity : AppCompatActivity() {
     
                 adapter = MainPagerAdapter(this)
     
-                if (hasRoot && krScriptConfig.allowHomePage) {
-                    adapter.addFragment(FragmentHome(), getString(R.string.tab_home))
-                }
-    
                 if (!favorites.isNullOrEmpty()) {
                     adapter.addFragment(
                         ActionListFragment.create(
@@ -124,16 +119,12 @@ class MainActivity : AppCompatActivity() {
                 val tabHelper = TabIconHelper(this)
                 TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
                     val title = adapter.getTitle(position)
-                    val icon = when (title) {
-                        getString(R.string.tab_home) -> getDrawable(R.drawable.tab_home)
-                        getString(R.string.tab_favorites) -> getDrawable(R.drawable.tab_favorites)
-                        else -> getDrawable(R.drawable.tab_pages)
-                    }
-                    icon?.let {
-                        tab.customView = tabHelper.createTabView(title, it, position == 0)
-                    }
+                    val iconRes = if (title == getString(R.string.tab_favorites))
+                        R.drawable.tab_favorites
+                    else
+                        R.drawable.tab_pages
+                    tab.customView = TabIconHelper(this).createTabView(title, getDrawable(iconRes)!!, position == 0)
                 }.attach()
-    
                 // ✅ trạng thái tab ban đầu
                 isFavoritesTab = binding.tabLayout.getTabAt(binding.tabLayout.selectedTabPosition)?.text ==
                         getString(R.string.tab_favorites)
@@ -284,9 +275,6 @@ class MainActivity : AppCompatActivity() {
     // ========================
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
-        val currentTabPosition = binding.tabLayout.selectedTabPosition
-        val currentTitle = adapter.getTitle(currentTabPosition)
-        menu.findItem(R.id.action_graph).isVisible = currentTitle == getString(R.string.tab_home)
         return true
     }
 
@@ -299,42 +287,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
+        return when (item.itemId) {
             R.id.option_menu_info -> {
-                val layout = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
-                val themeConfig = ThemeConfig(this)
-
-                val transparentUi = layout.findViewById<CompoundButton>(R.id.transparent_ui)
-                transparentUi.isChecked = themeConfig.getAllowTransparentUI()
-                transparentUi.setOnCheckedChangeListener { _, isChecked ->
-                    themeConfig.setAllowTransparentUI(isChecked)
-                }
-
-                val notificationUi = layout.findViewById<CompoundButton>(R.id.notification_ui)
-                notificationUi.isChecked = themeConfig.getAllowNotificationUI()
-                notificationUi.setOnCheckedChangeListener { _, isChecked ->
-                    themeConfig.setAllowNotificationUI(isChecked)
-                }
-
-                DialogHelper.customDialog(this, layout)
+                showSettingsDialog()
+                true
             }
-
             R.id.option_menu_reboot -> {
                 DialogPower(this).showPowerMenu()
+                true
             }
-
-            R.id.action_graph -> {
-                if (FloatMonitor.isShown == true) {
-                    FloatMonitor(this).hidePopupWindow()
-                } else if (Settings.canDrawOverlays(this)) {
-                    FloatMonitor(this).showPopupWindow()
-                } else {
-                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", packageName, null)
-                    })
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    
+    private fun showSettingsDialog() {
+        val layout = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
+        val themeConfig = ThemeConfig(this)
+    
+        listOf(
+            layout.findViewById<CompoundButton>(R.id.transparent_ui) to themeConfig.getAllowTransparentUI(),
+            layout.findViewById<CompoundButton>(R.id.notification_ui) to themeConfig.getAllowNotificationUI()
+        ).forEach { (button, checked) ->
+            button.isChecked = checked
+            button.setOnCheckedChangeListener { _, isChecked ->
+                when (button.id) {
+                    R.id.transparent_ui -> themeConfig.setAllowTransparentUI(isChecked)
+                    R.id.notification_ui -> themeConfig.setAllowNotificationUI(isChecked)
                 }
             }
         }
-        return super.onOptionsItemSelected(item)
+    
+        DialogHelper.customDialog(this, layout)
     }
 }
