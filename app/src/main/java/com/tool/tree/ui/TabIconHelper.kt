@@ -14,27 +14,33 @@ class TabIconHelper(
 ) {
 
     private val views = ArrayList<View>()
-
     fun createTabView(text: String, drawable: Drawable, isFirst: Boolean): View {
         val layout = View.inflate(activity, R.layout.list_item_tab, null)
-
+    
         val imageView = layout.findViewById<ImageView>(R.id.ItemIcon)
         val textView = layout.findViewById<TextView>(R.id.ItemTitle)
-
+    
         textView.text = text
         imageView.setImageDrawable(drawable)
-
+    
         // 👉 resize icon nhỏ giống TabHost
         val size = (20 * activity.resources.displayMetrics.density).toInt()
-        drawable.setBounds(0, 0, size, size)
         imageView.layoutParams.width = size
         imageView.layoutParams.height = size
-
+        imageView.requestLayout()
+    
+        // 👉 dãn tab đều chiều ngang
+        val rootParams = layout.layoutParams
+        if (rootParams is TabLayout.LayoutParams) {
+            rootParams.width = 0
+            rootParams.weight = 1f
+            layout.layoutParams = rootParams
+        }
+    
         // 👉 alpha giống code cũ
         layout.alpha = if (isFirst) 1f else 0.3f
-
+    
         views.add(layout)
-
         return layout
     }
 
