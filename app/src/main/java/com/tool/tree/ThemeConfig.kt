@@ -2,7 +2,6 @@ package com.tool.tree
 
 import android.content.Context
 import androidx.core.content.edit
-import com.tool.tree.MainActivity
 
 class ThemeConfig(private val context: Context) {
     private val config = context.getSharedPreferences("kr-script-config", Context.MODE_PRIVATE)
