@@ -284,8 +284,9 @@ class MainActivity : AppCompatActivity() {
     // ========================
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
-        // tương tự code cũ: dựa vào biến
-        menu.findItem(R.id.action_graph).isVisible = isHomeTab
+        val currentTabPosition = binding.tabLayout.selectedTabPosition
+        val currentTitle = adapter.getTitle(currentTabPosition)
+        menu.findItem(R.id.action_graph).isVisible = currentTitle == getString(R.string.tab_home)
         return true
     }
 
