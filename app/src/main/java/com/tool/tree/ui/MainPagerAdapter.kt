@@ -3,6 +3,7 @@ package com.tool.tree.ui
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.omarea.krscript.ui.ActionListFragment
 
 class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
 
@@ -15,8 +16,8 @@ class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activ
         notifyDataSetChanged()
     }
 
-    fun updateFragment(position: Int, fragment: ActionListFragment) {
-        if (position < fragmentList.size) {
+    fun replaceFragment(position: Int, fragment: ActionListFragment) {
+        if (position in 0 until fragmentList.size) {
             fragmentList[position] = fragment
             notifyItemChanged(position)
         }
@@ -29,6 +30,7 @@ class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activ
         fragmentTitles.getOrElse(position) { "" }
 
     override fun getItemCount(): Int = fragmentList.size
-    override fun createFragment(position: Int): androidx.fragment.app.Fragment =
+
+    override fun createFragment(position: Int): Fragment =
         fragmentList[position]
 }

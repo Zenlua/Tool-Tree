@@ -30,18 +30,12 @@ import android.content.res.Configuration
 
 class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.OnItemClickListener {
     companion object {
-        private const val ARG_ACTION_INFOS = "arg_action_infos"
-    
         fun create(
-            actionInfos: ArrayList<NodeInfoBase>?,
-            krScriptActionHandler: KrScriptActionHandler? = null,
-            autoRunTask: AutoRunTask? = null,
-            themeMode: ThemeMode? = null
-        ): ActionListFragment {
+                actionInfos: ArrayList<NodeInfoBase>?,
+                krScriptActionHandler: KrScriptActionHandler? = null,
+                autoRunTask: AutoRunTask? = null,
+                themeMode: ThemeMode? = null): ActionListFragment {
             val fragment = ActionListFragment()
-            fragment.arguments = Bundle().apply {
-                putParcelableArrayList(ARG_ACTION_INFOS, actionInfos)
-            }
             fragment.setListData(actionInfos, krScriptActionHandler, autoRunTask, themeMode)
             return fragment
         }
@@ -49,17 +43,10 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     private var actionInfos: ArrayList<NodeInfoBase>? = null
 
-    fun updateData(newItems: ArrayList<NodeInfoBase>, newHandler: KrScriptActionHandler?) {
-        this.actionInfos = newItems
-        if (newHandler != null) this.krScriptActionHandler = newHandler
-        if (isAdded) renderContent()
-    }
-
     private lateinit var progressBarDialog: ProgressBarDialog
     private var krScriptActionHandler: KrScriptActionHandler? = null
     private var autoRunTask: AutoRunTask? = null
     private var themeMode: ThemeMode? = null
-    private lateinit var rootGroup: ListItemGroup
 
     private fun setListData(
             actionInfos: ArrayList<NodeInfoBase>?,
@@ -74,34 +61,26 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        actionInfos = savedInstanceState?.getParcelableArrayList(ARG_ACTION_INFOS)
-            ?: arguments?.getParcelableArrayList(ARG_ACTION_INFOS)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
+        return inflater.inflate(R.layout.kr_action_list_fragment, container, false)
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putParcelableArrayList(ARG_ACTION_INFOS, actionInfos)
-    }
 
+    private lateinit var rootGroup: ListItemGroup
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        progressBarDialog = ProgressBarDialog(requireActivity())
-        renderContent()
-    }
-    
-    private fun renderContent() {
-        if (!::rootGroup.isInitialized) {
-            rootGroup = ListItemGroup(requireContext(), true, GroupNode(""))
-        }
-    
-        actionInfos?.let { items ->
-            PageLayoutRender(requireContext(), items, this, rootGroup)
-            view?.findViewById<ScrollView>(R.id.kr_content)?.apply {
-                removeAllViews()
-                addView(rootGroup.getView())
-            }
+        this.progressBarDialog = ProgressBarDialog(this.requireActivity())
+
+        rootGroup = ListItemGroup(this.requireContext(), true, GroupNode(""))
+
+        if (actionInfos != null) {
+            PageLayoutRender(this.requireContext(), actionInfos!!, this, rootGroup)
+            val layout = rootGroup.getView()
+
+            val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
+            rootView?.removeAllViews()
+            rootView?.addView(layout)
             triggerAction(autoRunTask)
         }
     }
@@ -518,6 +497,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private fun executeScriptGetResult(shellScript: String, nodeInfoBase: NodeInfoBase): String {
         return ScriptEnvironmen.executeResultRoot(this.requireContext(), shellScript, nodeInfoBase)
     }
+
 
     // 标识是否有隐藏任务在运行中
     var hiddenTaskRunning = false

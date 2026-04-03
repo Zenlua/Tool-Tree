@@ -87,6 +87,7 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
     
+                // Khởi tạo adapter nếu chưa có
                 if (!::adapter.isInitialized) {
                     adapter = MainPagerAdapter(this@MainActivity)
                     binding.viewPager.adapter = adapter
@@ -95,20 +96,35 @@ class MainActivity : AppCompatActivity() {
     
                 // Tab Favorites
                 favorites?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = adapter.getFragment(0)
-                        ?: ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), null, ThemeModeState.getThemeMode())
-                    fragment.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true))
-                    if (adapter.getFragment(0) == null) adapter.addFragment(fragment, getString(R.string.tab_favorites))
+                    val fragment = ActionListFragment.create(
+                        it,
+                        getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
+                        null,
+                        ThemeModeState.getThemeMode()
+                    )
+                    if (adapter.getFragment(0) == null) {
+                        adapter.addFragment(fragment, getString(R.string.tab_favorites))
+                    } else {
+                        adapter.replaceFragment(0, fragment)
+                    }
                 }
     
                 // Tab Pages
                 pages?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = adapter.getFragment(1)
-                        ?: ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), null, ThemeModeState.getThemeMode())
-                    fragment.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false))
-                    if (adapter.getFragment(1) == null) adapter.addFragment(fragment, getString(R.string.tab_pages))
+                    val fragment = ActionListFragment.create(
+                        it,
+                        getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
+                        null,
+                        ThemeModeState.getThemeMode()
+                    )
+                    if (adapter.getFragment(1) == null) {
+                        adapter.addFragment(fragment, getString(R.string.tab_pages))
+                    } else {
+                        adapter.replaceFragment(1, fragment)
+                    }
                 }
     
+                // Thiết lập tab layout
                 setupTabs()
             }
         }
@@ -120,16 +136,26 @@ class MainActivity : AppCompatActivity() {
             val pages = getItems(krScriptConfig.pageListConfig)
     
             withContext(Dispatchers.Main) {
-                // Cập nhật Favorites
+                // Reload Favorites
                 favorites?.takeIf { it.isNotEmpty() }?.let {
-                    val favFragment = adapter.getFragment(0)
-                    favFragment?.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true))
+                    val fragment = ActionListFragment.create(
+                        it,
+                        getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
+                        null,
+                        ThemeModeState.getThemeMode()
+                    )
+                    adapter.replaceFragment(0, fragment)
                 }
     
-                // Cập nhật Pages
+                // Reload Pages
                 pages?.takeIf { it.isNotEmpty() }?.let {
-                    val pageFragment = adapter.getFragment(1)
-                    pageFragment?.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false))
+                    val fragment = ActionListFragment.create(
+                        it,
+                        getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
+                        null,
+                        ThemeModeState.getThemeMode()
+                    )
+                    adapter.replaceFragment(1, fragment)
                 }
             }
         }
