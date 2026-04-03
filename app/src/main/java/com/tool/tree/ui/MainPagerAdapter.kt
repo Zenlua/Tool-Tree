@@ -6,29 +6,29 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 
 class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
 
-    private val fragments = ArrayList<Fragment>()
-    private val titles = ArrayList<String>()
+    private val fragmentList = ArrayList<ActionListFragment>()
+    private val fragmentTitles = ArrayList<String>()
 
-    override fun getItemCount(): Int = fragments.size
-
-    override fun createFragment(position: Int): Fragment = fragments[position]
-
-    fun addFragment(fragment: Fragment, title: String) {
-        fragments.add(fragment)
-        titles.add(title)
-        notifyItemInserted(fragments.size - 1)
+    fun addFragment(fragment: ActionListFragment, title: String) {
+        fragmentList.add(fragment)
+        fragmentTitles.add(title)
+        notifyDataSetChanged()
     }
 
-    fun updateFragment(position: Int, fragment: Fragment) {
-        if (position in fragments.indices) {
-            fragments[position] = fragment
+    fun updateFragment(position: Int, fragment: ActionListFragment) {
+        if (position < fragmentList.size) {
+            fragmentList[position] = fragment
             notifyItemChanged(position)
         }
     }
 
-    fun getFragment(position: Int): Fragment? {
-        return fragments.getOrNull(position)
-    }
+    fun getFragment(position: Int): ActionListFragment? =
+        fragmentList.getOrNull(position)
 
-    fun getTitle(position: Int): String = titles.getOrElse(position) { "" }
+    fun getTitle(position: Int): String =
+        fragmentTitles.getOrElse(position) { "" }
+
+    override fun getItemCount(): Int = fragmentList.size
+    override fun createFragment(position: Int): androidx.fragment.app.Fragment =
+        fragmentList[position]
 }
