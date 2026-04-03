@@ -4,21 +4,30 @@
 
 - If you don't have root, you can see the following image so that **[MT Manager](https://mt2.cn/download)** can access the tool memory above.
 
-- Can copy rom, and apk to following folder for decryption: `ROM` `APK`
+**Input directory**
 
 > `/sdcard/TREE`
-> `/storage/emulated/0/TREE`
 
-- Where to store decrypted roms and apk: `TREE` `TOOL`
+- Place the input file in the following folder: `ROM` `APK`
+
+**Output directory**
 
 - No-Root: `/storage/xxxx-xxxx/data/files/home`
 - Root: `/data/data/com.tool.tree/files/home`
-- ROM: `/data/local/TREE`
-- APK: `/data/local/TOOL`
 
-- More discover it yourself
+- The home directory contains the TOOL and TREE folders
 
-**Features after root**
++ TOOL: Contains the decoded APK project
++ TREE: Contains the decoded ROM project
+
+**Save folder**
+
+- APK: `/sdcard/TREE/APK/out`
+- ROM: `/sdcard/TREE/ROM/out`
+
++ Some special processes are stored elsewhere, so pay attention to the logs on the screen.
+
+**Command in Terminal (root)**
 
 - Use in MT Manager
 
@@ -27,7 +36,7 @@ source /data/data/com.tool.tree/files/root/executor.sh
 apktool
 ```
 
-**Suggestions for no-root devices**
+**Instructions for granting file access permissions in No-Root mode**
 
 - The following images are for no-root users only, to be able to access data in the tool-tree application
 
