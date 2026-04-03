@@ -137,25 +137,23 @@ class MainActivity : AppCompatActivity() {
     
             withContext(Dispatchers.Main) {
                 // Reload Favorites
-                favorites?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(
-                        it,
+                if (!favorites.isNullOrEmpty()) {
+                    val favoriteFragment = adapter.getFragment(0) as? ActionListFragment
+                    favoriteFragment?.updateData(
+                        favorites,
                         getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
-                        null,
                         ThemeModeState.getThemeMode()
                     )
-                    adapter.replaceFragment(0, fragment)
                 }
     
                 // Reload Pages
-                pages?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(
-                        it,
+                if (!pages.isNullOrEmpty()) {
+                    val pagesFragment = adapter.getFragment(1) as? ActionListFragment
+                    pagesFragment?.updateData(
+                        pages,
                         getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
-                        null,
                         ThemeModeState.getThemeMode()
                     )
-                    adapter.replaceFragment(1, fragment)
                 }
             }
         }

@@ -13,7 +13,6 @@ class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activ
     fun addFragment(fragment: ActionListFragment, title: String) {
         fragmentList.add(fragment)
         fragmentTitles.add(title)
-        notifyDataSetChanged()
     }
 
     fun replaceFragment(position: Int, fragment: ActionListFragment) {

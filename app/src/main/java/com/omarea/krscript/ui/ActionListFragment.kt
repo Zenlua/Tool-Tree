@@ -66,7 +66,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         return inflater.inflate(R.layout.kr_action_list_fragment, container, false)
     }
 
-
     private lateinit var rootGroup: ListItemGroup
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -83,6 +82,23 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             rootView?.addView(layout)
             triggerAction(autoRunTask)
         }
+    }
+    
+    fun updateData(
+        newItems: List<NodeInfoBase>,
+        actionHandler: KrScriptActionHandler?,
+        themeMode: ThemeMode?
+    ) {
+        // Cập nhật dữ liệu nội bộ
+        this.items = newItems
+        this.krScriptActionHandler = actionHandler
+        this.themeMode = themeMode
+    
+        // Cập nhật hiển thị nếu PageLayoutRender có phương thức refresh
+        pageLayoutRender.updateData(newItems)
+    
+        // Nếu có cần cập nhật giao diện khác như header, footer
+        headerView?.let { it.visibility = if (newItems.isEmpty()) View.GONE else View.VISIBLE }
     }
 
     private fun triggerAction(autoRunTask: AutoRunTask?) {
