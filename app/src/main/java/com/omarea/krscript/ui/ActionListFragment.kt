@@ -47,18 +47,18 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private var krScriptActionHandler: KrScriptActionHandler? = null
     private var autoRunTask: AutoRunTask? = null
     private var themeMode: ThemeMode? = null
+    private var pageLayoutRender: PageLayoutRender? = null
+    private lateinit var rootGroup: ListItemGroup
 
     private fun setListData(
             actionInfos: ArrayList<NodeInfoBase>?,
             krScriptActionHandler: KrScriptActionHandler? = null,
             autoRunTask: AutoRunTask? = null,
             themeMode: ThemeMode? = null) {
-        if (actionInfos != null) {
-            this.actionInfos = actionInfos
-            this.krScriptActionHandler = krScriptActionHandler
-            this.autoRunTask = autoRunTask
-            this.themeMode = themeMode
-        }
+        this.actionInfos = actionInfos
+        this.krScriptActionHandler = krScriptActionHandler
+        this.autoRunTask = autoRunTask
+        this.themeMode = themeMode
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -66,22 +66,25 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         return inflater.inflate(R.layout.kr_action_list_fragment, container, false)
     }
 
-    private lateinit var rootGroup: ListItemGroup
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         this.progressBarDialog = ProgressBarDialog(this.requireActivity())
+        renderInterface()
+    }
 
-        rootGroup = ListItemGroup(this.requireContext(), true, GroupNode(""))
+    private fun renderInterface() {
+        val context = context ?: return
+        val currentActionInfos = actionInfos ?: return
 
-        if (actionInfos != null) {
-            PageLayoutRender(this.requireContext(), actionInfos!!, this, rootGroup)
-            val layout = rootGroup.getView()
-
-            val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
-            rootView?.removeAllViews()
-            rootView?.addView(layout)
-            triggerAction(autoRunTask)
-        }
+        rootGroup = ListItemGroup(context, true, GroupNode(""))
+        pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
+        
+        val layout = rootGroup.getView()
+        val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
+        rootView?.removeAllViews()
+        rootView?.addView(layout)
+        
+        triggerAction(autoRunTask)
     }
     
     fun updateData(
@@ -89,16 +92,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         actionHandler: KrScriptActionHandler?,
         themeMode: ThemeMode?
     ) {
-        // Cập nhật dữ liệu nội bộ
-        this.items = newItems
+        this.actionInfos = ArrayList(newItems)
         this.krScriptActionHandler = actionHandler
         this.themeMode = themeMode
-    
-        // Cập nhật hiển thị nếu PageLayoutRender có phương thức refresh
-        pageLayoutRender.updateData(newItems)
-    
-        // Nếu có cần cập nhật giao diện khác như header, footer
-        headerView?.let { it.visibility = if (newItems.isEmpty()) View.GONE else View.VISIBLE }
+        if (isAdded && view != null) {
+            renderInterface()
+        }
     }
 
     private fun triggerAction(autoRunTask: AutoRunTask?) {
