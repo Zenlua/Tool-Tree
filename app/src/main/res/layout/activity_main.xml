@@ -27,7 +27,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:navigationBarColor"
+        app:tabGravity="fill"
+        app:tabMode="fixed"
         app:tabIndicatorHeight="0dp"
+        app:tabMaxWidth="0dp"
         app:tabIndicatorFullWidth="false" />
 
 </RelativeLayout>
