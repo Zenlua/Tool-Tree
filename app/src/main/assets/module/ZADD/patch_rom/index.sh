@@ -170,7 +170,12 @@ done
     chmod -R 755 $MPAT
     fi
 [ -f update ] && rm -f update
-[ -f changelog.txt ] && cat changelog.txt
+if [ -f changelog.txt ]; then
+id_random="$RANDOM"
+notiservice --am --id $id_random --title "$(gprop name "$MPAT/addon.prop")" --message "$(cat changelog.txt)"
+sleep 10
+notiservice --am --id $id_random -d true
+fi
 else
     killtree "$network_text"
 fi
