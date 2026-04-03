@@ -24,23 +24,11 @@ class TabIconHelper(
         textView.text = text
         imageView.setImageDrawable(drawable)
     
-        // resize icon
-        val size = (20 * activity.resources.displayMetrics.density).toInt()
-        imageView.layoutParams.width = size
-        imageView.layoutParams.height = size
-        imageView.requestLayout()
+        // XÓA ĐOẠN NÀY:
+        // val size = (20 * activity.resources.displayMetrics.density).toInt()
+        // imageView.layoutParams.width = size ...
     
-        // dãn tab đều chiều ngang
-        val rootParams = layout.layoutParams
-        if (rootParams is LinearLayout.LayoutParams) {
-            rootParams.width = 0
-            rootParams.weight = 1f
-            layout.layoutParams = rootParams
-        }
-    
-        // alpha
         layout.alpha = if (isFirst) 1f else 0.3f
-    
         views.add(layout)
         return layout
     }
