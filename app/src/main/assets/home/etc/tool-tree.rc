@@ -1340,7 +1340,7 @@ xml_print '<group>
 <desc>'$desc_tec'</desc>
 '$summss'
 '$farooot'
-<option type="default" id="v2" auto-finish="true" auto-off="true" interruptible="false">'$pin_text'</option>
+<option type="default" id="v2" auto-finish="true" auto-off="true" interruptible="false">'$pin_text_add'</option>
 '"$google_trankk"'
 '"$code_option"'
 <handler>
@@ -1370,10 +1370,11 @@ if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ];then
 fi
 }
 
-# Load trang add-on có pin trước 
+# Load trang add-on có pin trước
 for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
+    pin_text_add="$unpin_text"
     [ -f "$dirvad/pin" ] || continue
     Vips
 done
@@ -1382,6 +1383,7 @@ done
 for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
+    pin_text_add="$pin_text"
     [ -f "$dirvad/pin" ] && continue
     Vips
 done

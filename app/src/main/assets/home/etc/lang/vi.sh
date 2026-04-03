@@ -42,6 +42,7 @@ synthetic_text="Tổng hợp phân vùng"
 config_text="Cấu hình"
 time_text="Thời gian"
 pin_text="Ghim add-on"
+unpin_text="Bỏ ghim"
 tool_unpack_text="Công cụ giải mã"
 
 # Home

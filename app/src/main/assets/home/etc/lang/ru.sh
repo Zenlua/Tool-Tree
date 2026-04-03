@@ -41,7 +41,8 @@ alignment_text="Выравнивание"
 synthetic_text="Синтетический"
 config_text="Конфигурация"
 time_text="Время"
-pin_text="Закрепить дополнение"
+pin_text="Закрепить"
+unpin_text="Открепить"
 tool_unpack_text="Инструмент декодирования"
 
 # Home

@@ -41,7 +41,6 @@ alignment_text="Igazítás"
 synthetic_text="Szintetikus"
 config_text="Konfiguráció"
 time_text="Idő"
-pin_text="Bővítmény rögzítése"
 tool_unpack_text="Dekódoló eszköz"
 
 # Home
