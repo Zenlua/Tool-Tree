@@ -19,9 +19,9 @@ class TabIconHelper(
         val layout = View.inflate(activity, R.layout.list_item_tab, null)
         
         layout.layoutParams = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT
-    )
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
     
         val imageView = layout.findViewById<ImageView>(R.id.ItemIcon)
         val textView = layout.findViewById<TextView>(R.id.ItemTitle)
