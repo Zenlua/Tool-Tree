@@ -6,7 +6,10 @@
 
 **Input directory**
 
++ All the folders here are the original folders; if you change them, they will be in a different location.
+
 > `/sdcard/TREE`
+> `/storage/emulated/0/TREE`
 
 - Place the input file in the following folder: `ROM` `APK`
 
@@ -14,6 +17,11 @@
 
 - No-Root: `/storage/xxxx-xxxx/data/files/home`
 - Root: `/data/data/com.tool.tree/files/home`
+
+- Quick links:
+
+    + `/data/local/TOOL`
+    + `/data/local/TREE`
 
 - The home directory contains the TOOL and TREE folders
 
@@ -38,7 +46,7 @@ apktool
 
 **Instructions for granting file access permissions in No-Root mode**
 
-- The following images are for no-root users only, to be able to access data in the tool-tree application
+- The following images are for no-root users only, to be able to access data in the Tool-Tree application
 
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img1.jpg" alt="1" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img2.jpg" alt="2" style="width:49%;">
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img3.jpg" alt="3" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/img4.jpg" alt="4" style="width:49%;">
