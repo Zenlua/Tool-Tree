@@ -43,14 +43,22 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     private var actionInfos: ArrayList<NodeInfoBase>? = null
 
-    fun updateData(newItems: ArrayList<NodeInfoBase>) {
+    fun updateData(
+        newItems: ArrayList<NodeInfoBase>,
+        newHandler: KrScriptActionHandler?
+    ) {
+        // Cập nhật dữ liệu
         this.actionInfos = newItems
-        view?.let {
-            val rootView = it.findViewById<ScrollView>(R.id.kr_content)
-            rootView?.removeAllViews()
+        if (newHandler != null) this.krScriptActionHandler = newHandler
+    
+        // Xóa layout cũ và render lại
+        view?.findViewById<ScrollView>(R.id.kr_content)?.let { rootView ->
+            rootView.removeAllViews()
             rootGroup = ListItemGroup(requireContext(), true, GroupNode(""))
-            PageLayoutRender(requireContext(), newItems, this, rootGroup)
-            rootView?.addView(rootGroup.getView())
+            if (actionInfos != null) {
+                PageLayoutRender(requireContext(), actionInfos!!, this, rootGroup)
+                rootView.addView(rootGroup.getView())
+            }
         }
     }
 

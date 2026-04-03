@@ -135,27 +135,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ========================
-    // RELOAD TAB
-    // ========================
     private fun reloadTabs() {
         lifecycleScope.launch(Dispatchers.IO) {
             val favorites = getItems(krScriptConfig.favoriteConfig)
             val pages = getItems(krScriptConfig.pageListConfig)
-
+    
             withContext(Dispatchers.Main) {
-                favorites?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = adapter.getFragment(0) as? ActionListFragment
-                        ?: ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), null, ThemeModeState.getThemeMode())
-                    fragment.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true))
-                    adapter.updateFragment(0, fragment)
+                // Cập nhật tab Favorites
+                if (!favorites.isNullOrEmpty()) {
+                    val favFragment = adapter.getFragment(0) as? ActionListFragment
+                    if (favFragment != null) {
+                        // Nếu fragment đã tồn tại thì update dữ liệu
+                        favFragment.updateData(favorites, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true))
+                    } else {
+                        // Nếu chưa tồn tại thì tạo mới
+                        val newFragment = ActionListFragment.create(
+                            favorites,
+                            getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
+                            null,
+                            ThemeModeState.getThemeMode()
+                        )
+                        adapter.updateFragment(0, newFragment)
+                    }
                 }
-
-                pages?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = adapter.getFragment(1) as? ActionListFragment
-                        ?: ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), null, ThemeModeState.getThemeMode())
-                    fragment.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false))
-                    adapter.updateFragment(1, fragment)
+    
+                // Cập nhật tab Pages
+                if (!pages.isNullOrEmpty()) {
+                    val pageFragment = adapter.getFragment(1) as? ActionListFragment
+                    if (pageFragment != null) {
+                        pageFragment.updateData(pages, getKrScriptActionHandler(krScriptConfig.pageListConfig, false))
+                    } else {
+                        val newFragment = ActionListFragment.create(
+                            pages,
+                            getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
+                            null,
+                            ThemeModeState.getThemeMode()
+                        )
+                        adapter.updateFragment(1, newFragment)
+                    }
                 }
             }
         }
