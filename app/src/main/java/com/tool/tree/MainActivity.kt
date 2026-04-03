@@ -29,6 +29,10 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.MainPagerAdapter
 import com.tool.tree.ui.TabIconHelper
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
