@@ -20,7 +20,7 @@ No-Root: /storage/xxxx-xxxx/data/files/home
 Root: /data/data/com.tool.tree/files/home
 ```
 
-- Quick links:
+- Quick links (root):
 
     + `/data/local/TOOL`
     + `/data/local/TREE`
