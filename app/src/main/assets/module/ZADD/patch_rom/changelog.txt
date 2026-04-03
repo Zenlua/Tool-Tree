@@ -1,4 +1,4 @@
 
-Update log: 1.6
+Update log: 1.7
 
-+ Fix some code
++ Fix incorrect directory decoding error
