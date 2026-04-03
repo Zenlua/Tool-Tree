@@ -172,23 +172,54 @@ class MainActivity : AppCompatActivity() {
 
     // ========================
     private fun reloadTabs() {
-        val title = if (isFavoritesTab) getString(R.string.tab_favorites) else getString(R.string.tab_pages)
-        val position = adapter.getTitleIndex(title)
-        if (position == -1) return
-    
-        val pageNode = if (isFavoritesTab) krScriptConfig.favoriteConfig else krScriptConfig.pageListConfig
-    
-        lifecycleScope.launch(Dispatchers.IO) {
-            val items = getItems(pageNode)
-            items?.let {
-                withContext(Dispatchers.Main) {
-                    val fragment = adapter.getFragment(position)
-                    if (fragment is ActionListFragment) {
-                        fragment.updateData(it)
+        if (isFavoritesTab) {
+            val favoritesConfig = krScriptConfig.favoriteConfig
+            Thread {
+                val items = getItems(favoritesConfig)
+                items?.let {
+                    handler.post {
+                        updateFavoritesTab(it, favoritesConfig)
                     }
                 }
-            }
+            }.start()
+        } else {
+            val pagesConfig = krScriptConfig.pageListConfig
+            Thread {
+                val items = getItems(pagesConfig)
+                items?.let {
+                    handler.post {
+                        updateMoreTab(it, pagesConfig)
+                    }
+                }
+            }.start()
         }
+    }
+    
+    // ========================
+    // Tạo Fragment mới mỗi lần
+    // ========================
+    private fun updateFavoritesTab(items: ArrayList<NodeInfoBase>, pageNode: PageNode) {
+        val favoritesFragment = ActionListFragment.create(
+            items,
+            getKrScriptActionHandler(pageNode, true),
+            null,
+            ThemeModeState.getThemeMode()
+        )
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.list_favorites, favoritesFragment)
+            .commitAllowingStateLoss()
+    }
+    
+    private fun updateMoreTab(items: ArrayList<NodeInfoBase>, pageNode: PageNode) {
+        val pagesFragment = ActionListFragment.create(
+            items,
+            getKrScriptActionHandler(pageNode, false),
+            null,
+            ThemeModeState.getThemeMode()
+        )
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.list_pages, pagesFragment)
+            .commitAllowingStateLoss()
     }
 
     private fun restartApp() {
