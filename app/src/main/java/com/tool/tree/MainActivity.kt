@@ -15,6 +15,7 @@ import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.omarea.common.shared.FilePathResolver
@@ -50,7 +51,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         ThemeModeState.switchTheme(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         setTitle(R.string.app_name)
 
         progressBarDialog.showDialog(getString(R.string.please_wait))
-        loadTabs()  // Load 2 tab ngay khi vào
+        loadTabs()  // Load tabs ngay khi vào
 
         val themeConfig = ThemeConfig(applicationContext)
         if (themeConfig.getAllowNotificationUI()) {
@@ -81,79 +81,81 @@ class MainActivity : AppCompatActivity() {
     // ========================
     private fun loadTabs() {
         lifecycleScope.launch(Dispatchers.IO) {
-            val favorites = getItems(krScriptConfig.favoriteConfig)
             val pages = getItems(krScriptConfig.pageListConfig)
-    
+            val favorites = getItems(krScriptConfig.favoriteConfig)
+
             withContext(Dispatchers.Main) {
+                progressBarDialog.hideDialog()
+
                 adapter = MainPagerAdapter(this@MainActivity)
-    
+
                 if (!favorites.isNullOrEmpty()) {
-                    adapter.addFragment(
-                        ActionListFragment.create(
-                            favorites,
-                            getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
-                            null,
-                            ThemeModeState.getThemeMode()
-                        ),
-                        getString(R.string.tab_favorites)
+                    val favFragment = ActionListFragment.create(
+                        favorites,
+                        getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
+                        null,
+                        ThemeModeState.getThemeMode()
                     )
+                    adapter.addFragment(favFragment, getString(R.string.tab_favorites))
                 }
-    
+
                 if (!pages.isNullOrEmpty()) {
-                    adapter.addFragment(
-                        ActionListFragment.create(
-                            pages,
-                            getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
-                            null,
-                            ThemeModeState.getThemeMode()
-                        ),
-                        getString(R.string.tab_pages)
+                    val pagesFragment = ActionListFragment.create(
+                        pages,
+                        getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
+                        null,
+                        ThemeModeState.getThemeMode()
                     )
+                    adapter.addFragment(pagesFragment, getString(R.string.tab_pages))
                 }
-    
+
                 binding.viewPager.adapter = adapter
-    
+                binding.viewPager.offscreenPageLimit = adapter.itemCount
+
                 val tabHelper = TabIconHelper(this@MainActivity)
                 TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
                     val title = adapter.getTitle(position)
-                    val iconRes = if (title == getString(R.string.tab_favorites)) R.drawable.tab_favorites else R.drawable.tab_pages
-                    getDrawable(iconRes)?.let {
-                        tab.customView = tabHelper.createTabView(title, it, position == 0)
-                    } ?: run { tab.text = title }
+                    val iconRes = if (title == getString(R.string.tab_favorites))
+                        R.drawable.tab_favorites else R.drawable.tab_pages
+                    tab.customView = tabHelper.createTabView(title, getDrawable(iconRes)!!, position == 0)
                 }.attach()
-    
-                // luôn đặt tab mặc định
-                binding.tabLayout.getTabAt(0)?.select()
-    
+
+                isFavoritesTab = binding.viewPager.currentItem == 0
                 binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
                     override fun onTabSelected(tab: TabLayout.Tab) {
-                        isFavoritesTab = adapter.getTitle(tab.position) == getString(R.string.tab_favorites)
+                        isFavoritesTab = tab.position == 0
                         tabHelper.updateHighlight(binding.tabLayout, tab.position)
                         invalidateOptionsMenu()
                     }
+
                     override fun onTabUnselected(tab: TabLayout.Tab) {}
                     override fun onTabReselected(tab: TabLayout.Tab) {}
                 })
             }
         }
     }
-    
-    // reloadTabs vẫn như cũ, tạo fragment mới mỗi lần
+
+    // ========================
+    // RELOAD TAB
+    // ========================
     private fun reloadTabs() {
-        val position = if (isFavoritesTab) 0 else 1
-        val pageNode = if (isFavoritesTab) krScriptConfig.favoriteConfig else krScriptConfig.pageListConfig
-    
         lifecycleScope.launch(Dispatchers.IO) {
-            val items = getItems(pageNode)
-            items?.let {
-                withContext(Dispatchers.Main) {
-                    val newFragment = ActionListFragment.create(
-                        it,
-                        getKrScriptActionHandler(pageNode, isFavoritesTab),
-                        null,
-                        ThemeModeState.getThemeMode()
-                    )
-                    adapter.updateFragment(position, newFragment)
+            val favorites = getItems(krScriptConfig.favoriteConfig)
+            val pages = getItems(krScriptConfig.pageListConfig)
+
+            withContext(Dispatchers.Main) {
+                favorites?.takeIf { it.isNotEmpty() }?.let {
+                    val fragment = adapter.getFragment(0) as? ActionListFragment
+                        ?: ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), null, ThemeModeState.getThemeMode())
+                    fragment.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true))
+                    adapter.updateFragment(0, fragment)
+                }
+
+                pages?.takeIf { it.isNotEmpty() }?.let {
+                    val fragment = adapter.getFragment(1) as? ActionListFragment
+                        ?: ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), null, ThemeModeState.getThemeMode())
+                    fragment.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false))
+                    adapter.updateFragment(1, fragment)
                 }
             }
         }
@@ -168,7 +170,6 @@ class MainActivity : AppCompatActivity() {
         return items
     }
 
-    // ========================
     private fun restartApp() {
         val intent = Intent(this, SplashActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -242,9 +243,6 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    // ========================
-    // MENU
-    // ========================
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
         return true
