@@ -147,9 +147,9 @@ if checkonline; then
         if [ ! -f $MPAT/update ];then
         echo 1 >$MPAT/update
         id_random="$RANDOM"
-        notiservice --am --id $id_random --title "$(gprop name "$MPAT/addon.prop")" --message "$addon_noti"
+        notiservice --am --id 106632 --title "$(gprop name "$MPAT/addon.prop")" --message "$addon_noti"
         sleep 10
-        notiservice --am --id $id_random -d true
+        notiservice --am --id 106632 -d true
         fi
     else
     [ -f $MPAT/update ] && rm -f $MPAT/update
@@ -171,10 +171,8 @@ done
     fi
 [ -f update ] && rm -f update
 if [ -f changelog.txt ]; then
-id_random="$RANDOM"
-notiservice --am --id $id_random --title "$(gprop name "$MPAT/addon.prop")" --message "$(cat changelog.txt)"
-sleep 10
-notiservice --am --id $id_random -d true
+cat changelog.txt
+sleep 8
 fi
 else
     killtree "$network_text"
