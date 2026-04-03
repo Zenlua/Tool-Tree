@@ -4,8 +4,8 @@ id=patch_rom
 name=Patch ROM
 author=Kakathic
 description=Quick ROM patch
-version=1.6
-versionCode=116
+version=1.7
+versionCode=117
 root=false
 
 # language

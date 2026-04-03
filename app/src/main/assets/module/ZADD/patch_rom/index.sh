@@ -165,7 +165,7 @@ downloadb "https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/ap
 done
     if [ -f $MPAT/mod.7z ];then
     echo "7z mod extract..."
-    7z x -t7z -y $MPAT/mod.7z -o$MPAT >/dev/null
+    7z x -t7z -y $MPAT/mod.7z -o$MPAT/mod >/dev/null
     rm -f $MPAT/mod.7z
     chmod -R 755 $MPAT
     fi
