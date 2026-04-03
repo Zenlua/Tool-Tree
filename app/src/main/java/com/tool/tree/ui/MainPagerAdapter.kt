@@ -18,7 +18,19 @@ class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activ
     fun addFragment(fragment: Fragment, title: String) {
         fragments.add(fragment)
         titles.add(title)
-        ids.add(nextId++) // đảm bảo ID không trùng
+        ids.add(nextId++)
+        notifyDataSetChanged()
+    }
+
+    /**
+     * Cập nhật fragment tại vị trí, tạo fragment mới (reload)
+     */
+    fun updateFragment(position: Int, fragment: Fragment) {
+        if (position in fragments.indices) {
+            fragments[position] = fragment
+            // giữ ID cũ để ViewPager2 không recreate fragment sai
+            notifyItemChanged(position)
+        }
     }
 
     /**
@@ -36,37 +48,27 @@ class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activ
     /**
      * Lấy title tab
      */
-    fun getTitle(position: Int): String {
-        return titles[position]
-    }
+    fun getTitle(position: Int): String = titles[position]
 
     /**
      * Lấy fragment hiện tại (để updateData)
      */
-    fun getFragment(position: Int): Fragment {
-        return fragments[position]
-    }
+    fun getFragment(position: Int): Fragment = fragments[position]
 
     /**
      * Tìm vị trí tab theo title
      */
-    fun getTitleIndex(title: String): Int {
-        return titles.indexOf(title)
-    }
+    fun getTitleIndex(title: String): Int = titles.indexOf(title)
 
     /**
      * ID ổn định cho ViewPager2 (tránh recreate fragment)
      */
-    override fun getItemId(position: Int): Long {
-        return ids[position]
-    }
+    override fun getItemId(position: Int): Long = ids[position]
 
     /**
      * Kiểm tra fragment còn tồn tại
      */
-    override fun containsItem(itemId: Long): Boolean {
-        return ids.contains(itemId)
-    }
+    override fun containsItem(itemId: Long): Boolean = ids.contains(itemId)
 
     /**
      * Xoá toàn bộ tab (nếu cần reload lại toàn bộ)
@@ -76,5 +78,6 @@ class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activ
         titles.clear()
         ids.clear()
         nextId = 0L
+        notifyDataSetChanged()
     }
 }

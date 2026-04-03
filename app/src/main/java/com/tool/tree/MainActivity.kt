@@ -172,27 +172,27 @@ class MainActivity : AppCompatActivity() {
 
     // ========================
     private fun reloadTabs() {
-        if (isFavoritesTab) {
-            val favoritesConfig = krScriptConfig.favoriteConfig
-            Thread {
-                val items = getItems(favoritesConfig)
-                items?.let {
-                    handler.post {
-                        updateFavoritesTab(it, favoritesConfig)
-                    }
+        // Xác định tab đang mở
+        val position = if (isFavoritesTab) 0 else 1
+        val pageNode = if (isFavoritesTab) krScriptConfig.favoriteConfig else krScriptConfig.pageListConfig
+    
+        // Chạy background thread để load items
+        Thread {
+            val items = getItems(pageNode) // lấy dữ liệu từ config
+            items?.let {
+                // Chuyển lên UI thread để cập nhật fragment
+                handler.post {
+                    val newFragment = ActionListFragment.create(
+                        it,
+                        getKrScriptActionHandler(pageNode, isFavoritesTab),
+                        null,
+                        ThemeModeState.getThemeMode()
+                    )
+                    // Cập nhật fragment mới vào adapter
+                    adapter.updateFragment(position, newFragment)
                 }
-            }.start()
-        } else {
-            val pagesConfig = krScriptConfig.pageListConfig
-            Thread {
-                val items = getItems(pagesConfig)
-                items?.let {
-                    handler.post {
-                        updateMoreTab(it, pagesConfig)
-                    }
-                }
-            }.start()
-        }
+            }
+        }.start()
     }
     
     // ========================
