@@ -172,54 +172,26 @@ class MainActivity : AppCompatActivity() {
 
     // ========================
     private fun reloadTabs() {
-        // Xác định tab đang mở
         val position = if (isFavoritesTab) 0 else 1
         val pageNode = if (isFavoritesTab) krScriptConfig.favoriteConfig else krScriptConfig.pageListConfig
     
-        // Chạy background thread để load items
-        Thread {
-            val items = getItems(pageNode) // lấy dữ liệu từ config
+        // Coroutine chạy trên background (IO) thread
+        lifecycleScope.launch(Dispatchers.IO) {
+            val items = getItems(pageNode) // đọc dữ liệu
+    
             items?.let {
-                // Chuyển lên UI thread để cập nhật fragment
-                handler.post {
+                // Chuyển lên Main thread để cập nhật fragment
+                withContext(Dispatchers.Main) {
                     val newFragment = ActionListFragment.create(
                         it,
                         getKrScriptActionHandler(pageNode, isFavoritesTab),
                         null,
                         ThemeModeState.getThemeMode()
                     )
-                    // Cập nhật fragment mới vào adapter
                     adapter.updateFragment(position, newFragment)
                 }
             }
-        }.start()
-    }
-    
-    // ========================
-    // Tạo Fragment mới mỗi lần
-    // ========================
-    private fun updateFavoritesTab(items: ArrayList<NodeInfoBase>, pageNode: PageNode) {
-        val favoritesFragment = ActionListFragment.create(
-            items,
-            getKrScriptActionHandler(pageNode, true),
-            null,
-            ThemeModeState.getThemeMode()
-        )
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.list_favorites, favoritesFragment)
-            .commitAllowingStateLoss()
-    }
-    
-    private fun updateMoreTab(items: ArrayList<NodeInfoBase>, pageNode: PageNode) {
-        val pagesFragment = ActionListFragment.create(
-            items,
-            getKrScriptActionHandler(pageNode, false),
-            null,
-            ThemeModeState.getThemeMode()
-        )
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.list_pages, pagesFragment)
-            .commitAllowingStateLoss()
+        }
     }
 
     private fun restartApp() {
