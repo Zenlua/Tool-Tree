@@ -77,15 +77,17 @@ class MainActivity : AppCompatActivity() {
     // LOAD TABS
     // ========================
     private fun loadTabs() {
-        Thread {
+        // Sử dụng Coroutine thay cho Thread
+        lifecycleScope.launch(Dispatchers.IO) {
             val pages = getItems(krScriptConfig.pageListConfig)
             val favorites = getItems(krScriptConfig.favoriteConfig)
     
-            handler.post {
+            withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
     
-                adapter = MainPagerAdapter(this)
+                adapter = MainPagerAdapter(this@MainActivity)
     
+                // Thêm tab Favorites nếu có dữ liệu
                 if (!favorites.isNullOrEmpty()) {
                     adapter.addFragment(
                         ActionListFragment.create(
@@ -98,6 +100,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
     
+                // Thêm tab Pages nếu có dữ liệu
                 if (!pages.isNullOrEmpty()) {
                     adapter.addFragment(
                         ActionListFragment.create(
@@ -110,31 +113,43 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
     
+                // Gán adapter
                 binding.viewPager.adapter = adapter
     
-                // 🔥 TabIconHelper
-                val tabHelper = TabIconHelper(this)
+                // TabIconHelper chỉ tạo 1 instance
+                val tabHelper = TabIconHelper(this@MainActivity)
+    
                 TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
                     val title = adapter.getTitle(position)
                     val iconRes = if (title == getString(R.string.tab_favorites))
                         R.drawable.tab_favorites
                     else
                         R.drawable.tab_pages
-                    tab.customView = TabIconHelper(this).createTabView(title, getDrawable(iconRes)!!, position == 0)
+    
+                    getDrawable(iconRes)?.let { drawable ->
+                        tab.customView = tabHelper.createTabView(title, drawable, position == 0)
+                    } ?: run {
+                        tab.text = title // fallback nếu drawable null
+                    }
                 }.attach()
+    
+                // Xác định tab hiện tại
                 isFavoritesTab = binding.tabLayout.getTabAt(binding.tabLayout.selectedTabPosition)?.text ==
                         getString(R.string.tab_favorites)
+    
+                // Listener update highlight khi đổi tab
                 binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
                     override fun onTabSelected(tab: TabLayout.Tab) {
                         isFavoritesTab = adapter.getTitle(tab.position) == getString(R.string.tab_favorites)
                         tabHelper.updateHighlight(binding.tabLayout, tab.position)
                         invalidateOptionsMenu()
                     }
+    
                     override fun onTabUnselected(tab: TabLayout.Tab) {}
                     override fun onTabReselected(tab: TabLayout.Tab) {}
                 })
             }
-        }.start()
+        }
     }
 
     // ========================
@@ -153,33 +168,23 @@ class MainActivity : AppCompatActivity() {
 
     // ========================
     private fun reloadTabs() {
-        val title = if (isFavoritesTab) {
-            getString(R.string.tab_favorites)
-        } else {
-            getString(R.string.tab_pages)
-        }
-
+        val title = if (isFavoritesTab) getString(R.string.tab_favorites) else getString(R.string.tab_pages)
         val position = adapter.getTitleIndex(title)
         if (position == -1) return
-
-        val pageNode = if (isFavoritesTab) {
-            krScriptConfig.favoriteConfig
-        } else {
-            krScriptConfig.pageListConfig
-        }
-
-        Thread {
+    
+        val pageNode = if (isFavoritesTab) krScriptConfig.favoriteConfig else krScriptConfig.pageListConfig
+    
+        lifecycleScope.launch(Dispatchers.IO) {
             val items = getItems(pageNode)
-
             items?.let {
-                handler.post {
+                withContext(Dispatchers.Main) {
                     val fragment = adapter.getFragment(position)
                     if (fragment is ActionListFragment) {
                         fragment.updateData(it)
                     }
                 }
             }
-        }.start()
+        }
     }
 
     private fun restartApp() {
