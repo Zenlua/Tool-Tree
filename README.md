@@ -12,9 +12,10 @@
 
 - Input directory: `/sdcard/TREE` Contains `ROM` `APK`
 
-- Root path: `/data/local/TOOL` and `/data/local/TREE`
+- Root path:
 
-- If the application has root privileges, it will run faster you can copy the path directly from the log to access it directly.
+    + APK: `/data/local/TOOL`
+    + ROM: `/data/local/TREE`
 
 - Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)** or **[Telegram](https://t.me/tooltree)**
 
