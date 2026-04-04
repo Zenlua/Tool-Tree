@@ -17,9 +17,7 @@ class ListItemGroup(context: Context,
     fun addView(item: ListItemView): ListItemGroup {
         val content = layout.findViewById<ViewGroup>(android.R.id.content)
         content.addView(item.getView())
-
         children.add(item)
-
         return this
     }
 

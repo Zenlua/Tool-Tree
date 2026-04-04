@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/krscript_item_ripple_inactive"
-        android:clickable="true"
+        android:clickable="false"
         android:focusable="false"
         android:orientation="vertical" />
 </LinearLayout>
