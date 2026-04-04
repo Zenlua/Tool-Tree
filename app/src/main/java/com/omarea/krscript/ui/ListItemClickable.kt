@@ -58,9 +58,11 @@ open class ListItemClickable(context: Context,
                 }
             }
         }
-        if (config.backgroundPath.isNotEmpty()) {
-            IconPathAnalysis().loadBackground(context, config)?.let { drawable ->
-                layout.background = drawable
+        val bg = layout.background
+        if (bg is android.graphics.drawable.RippleDrawable && config.backgroundPath.isNotEmpty()) {
+            val drawable = IconPathAnalysis().loadBackground(context, config)
+            drawable?.let {
+                bg.setDrawableByLayerId(android.R.id.background, it)
             }
         }
         if (extraIconView != null) {
