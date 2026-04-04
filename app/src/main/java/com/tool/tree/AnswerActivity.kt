@@ -34,24 +34,34 @@ class AnswerActivity : Activity() {
         val textColor = if (isDarkMode) Color.parseColor("#FFFFFF") else Color.parseColor("#000000")
         val hintColor = if (isDarkMode) Color.parseColor("#AAAAAA") else Color.parseColor("#555555")
 
-        // EditText với background bo góc, gạch ngang màu chữ, cao hơn, rộng hơn
+        // EditText với background bo góc 15px (tương đương 5dp), padding 48px (16dp)
         val etAnswer = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             imeOptions = EditorInfo.IME_ACTION_SEND
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER
                         else android.text.InputType.TYPE_CLASS_TEXT
-            setTextColor(textColor)       // chữ nhập theo sáng/tối
-            setHintTextColor(hintColor)   // hint theo sáng/tối
-            backgroundTintList = ColorStateList.valueOf(textColor)
-            // background để mặc định → gạch dưới vẫn như cũ
+            setTextColor(textColor)
+            setHintTextColor(hintColor)
+            background = GradientDrawable().apply {
+                setColor(backgroundColor)
+                cornerRadius = 15f // bo góc 5dp → 15px
+            }
+            setPadding(48, 48, 48, 48) // padding 16dp → 48px
         }
 
         // Nút gửi
         val btnSend = Button(this).apply { text = getString(R.string.btn_send) }
 
-        // Layout ngang: EditText + Button
+        // Layout ngang: EditText + Button, margin 48px 2 bên và dưới
         val inputLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(48, 0, 48, 48) // 16dp → 48px
+            }
+
             addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(btnSend)
         }
@@ -59,7 +69,6 @@ class AnswerActivity : Activity() {
         // Root layout nửa dưới
         val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(20, 20, 20, 20)
             setBackgroundColor(backgroundColor)
             ViewCompat.setFitsSystemWindows(this, true)
             addView(inputLayout)
@@ -67,12 +76,12 @@ class AnswerActivity : Activity() {
 
         setContentView(rootLayout)
 
-        // Window overlay nửa dưới, tăng chiều cao trục Y
-        val params = window.attributes
-        params.gravity = Gravity.BOTTOM
-        params.height = WindowManager.LayoutParams.WRAP_CONTENT
-        params.width = WindowManager.LayoutParams.MATCH_PARENT
-        window.attributes = params
+        // Window overlay nửa dưới
+        window.attributes = window.attributes.apply {
+            gravity = Gravity.BOTTOM
+            height = WindowManager.LayoutParams.WRAP_CONTENT
+            width = WindowManager.LayoutParams.MATCH_PARENT
+        }
 
         window.setFlags(
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
@@ -81,6 +90,10 @@ class AnswerActivity : Activity() {
         window.setFlags(
             WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
             WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+        )
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM.inv(),
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
         )
 
         // Hàm gửi đáp án
@@ -109,11 +122,6 @@ class AnswerActivity : Activity() {
             finish()
         }
 
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM.inv(),
-            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
-        )
-        
         // Focus và bật bàn phím
         etAnswer.requestFocus()
         val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
@@ -127,6 +135,5 @@ class AnswerActivity : Activity() {
                 true
             } else false
         }
-
     }
 }
