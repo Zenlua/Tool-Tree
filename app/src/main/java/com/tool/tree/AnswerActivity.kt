@@ -3,6 +3,7 @@ package com.tool.tree
 import android.app.Activity
 import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.WindowManager
@@ -20,29 +21,34 @@ class AnswerActivity : Activity() {
         val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         val isDarkMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
 
-        // Tạo folder home/tmp trong cache
+        // File lưu đáp án
         val answerFile = File(cacheDir, "answer")
         if (answerFile.exists()) answerFile.delete()
 
-        // Min luôn là 0, max lấy từ intent (có thể null)
         val min = 0
         val max = intent.getStringExtra("max")?.toIntOrNull()
 
-        // Chọn màu theo chế độ
+        // Màu theo chế độ
         val backgroundColor = if (isDarkMode) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5")
         val textColor = if (isDarkMode) Color.parseColor("#FFFFFF") else Color.parseColor("#000000")
         val hintColor = if (isDarkMode) Color.parseColor("#AAAAAA") else Color.parseColor("#555555")
 
-        // EditText
+        // EditText với background bo góc, gạch ngang màu chữ, cao hơn, rộng hơn
         val etAnswer = EditText(this).apply {
             hint = "Nhập đáp án..."
             imeOptions = EditorInfo.IME_ACTION_SEND
             setTextColor(textColor)
             setHintTextColor(hintColor)
-            inputType = if (max != null) {
-                android.text.InputType.TYPE_CLASS_NUMBER
-            } else {
-                android.text.InputType.TYPE_CLASS_TEXT
+            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
+
+            minHeight = 120
+            setPadding(24, 20, 24, 20)
+
+            // Background bo góc, stroke màu giống chữ
+            background = GradientDrawable().apply {
+                cornerRadius = 16f
+                setColor(if(isDarkMode) Color.parseColor("#3A3A3A") else Color.parseColor("#FFFFFF"))
+                setStroke(2, textColor)
             }
         }
 
@@ -55,14 +61,17 @@ class AnswerActivity : Activity() {
         // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            addView(btnSend)
+            addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 3f)) // weight lớn hơn → rộng hơn
+            addView(btnSend, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ))
         }
 
-        // Root layout nửa màn hình dưới
+        // Root layout nửa dưới
         val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(16, 18, 16, 18)
+            setPadding(20, 20, 20, 20)
             setBackgroundColor(backgroundColor)
             ViewCompat.setFitsSystemWindows(this, true)
             addView(inputLayout)
@@ -70,10 +79,10 @@ class AnswerActivity : Activity() {
 
         setContentView(rootLayout)
 
-        // Window overlay kiểu chat head nửa dưới
+        // Window overlay nửa dưới, tăng chiều cao trục Y
         val params = window.attributes
         params.gravity = Gravity.BOTTOM
-        params.height = WindowManager.LayoutParams.WRAP_CONTENT
+        params.height = (resources.displayMetrics.heightPixels * 0.5).toInt() // 50% màn hình
         params.width = WindowManager.LayoutParams.MATCH_PARENT
         window.attributes = params
 
@@ -112,7 +121,7 @@ class AnswerActivity : Activity() {
             finish()
         }
 
-        // Sự kiện click & gửi khi nhấn IME
+        // Sự kiện click & IME
         btnSend.setOnClickListener { sendAnswer() }
         etAnswer.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
@@ -121,8 +130,9 @@ class AnswerActivity : Activity() {
             } else false
         }
 
+        // Focus và bật bàn phím
         etAnswer.requestFocus()
         val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-imm.showSoftInput(etAnswer, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        imm.showSoftInput(etAnswer, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
     }
 }
