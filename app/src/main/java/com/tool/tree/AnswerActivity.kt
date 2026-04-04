@@ -24,6 +24,7 @@ class AnswerActivity : Activity() {
         val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         val isDarkMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
         val answerFile = File(cacheDir, "answer")
+        if (answerFile.exists()) answerFile.delete()
         val min = 0
         val max = intent.getStringExtra("max")?.toIntOrNull()
 
@@ -40,7 +41,7 @@ class AnswerActivity : Activity() {
             setTextColor(textColor)
             setHintTextColor(hintColor)
             background = null // Để hiện nền của rootLayout
-            setPadding(30, 30, 30, 30)
+            setPadding(40, 40, 20, 40)
         }
 
         // 2. Nút gửi (Giữ nguyên văn bản cũ)
@@ -71,7 +72,7 @@ class AnswerActivity : Activity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            lp.setMargins(40, 0, 40, 45) 
+            lp.setMargins(35, 0, 35, 40)
             layoutParams = lp
             
             addView(inputLayout)
@@ -86,22 +87,25 @@ class AnswerActivity : Activity() {
 
         setContentView(container)
 
-        // 6. Cấu hình Window (Sửa lỗi focus và tràn màn hình)
+        // --- Window Layout: Sửa lỗi Focus và tự động hiện bàn phím ---
         window.apply {
-            // Làm nền Activity trong suốt để thấy app phía sau
+            // 1. Làm nền Activity trong suốt hoàn toàn
             setBackgroundDrawableResource(android.R.color.transparent)
             setGravity(Gravity.BOTTOM)
-            
-            // Cấu hình attributes để tránh lỗi Unresolved reference
+        
+            // 2. Xóa bỏ triệt để các flag gây chặn bàn phím từ code cũ
+            clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+            clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+        
+            // 3. Cấu hình Attributes
             val lp = attributes
             lp.width = WindowManager.LayoutParams.MATCH_PARENT
             lp.height = WindowManager.LayoutParams.WRAP_CONTENT
-            lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or 
-                               WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+            
+            // Yêu cầu bàn phím HIỆN NGAY khi Activity mở (ALWAYS_VISIBLE)
+            lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE or 
+                               WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
             attributes = lp
-
-            // Xóa các flag gây lỗi không nhập được văn bản
-            clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
         }
 
         // --- Giữ nguyên toàn bộ logic sendAnswer() và các Toast cũ của bạn ---
@@ -132,5 +136,15 @@ class AnswerActivity : Activity() {
 
         // Tự động focus
         etAnswer.requestFocus()
+        
+        // Đặt đoạn này ở cuối hàm onCreate, sau khi đã setContentView
+        etAnswer.postDelayed({
+            etAnswer.requestFocus()
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            // Sử dụng flag SHOW_IMPLICIT hoặc 0 để bắt buộc hiện bàn phím
+            imm.showSoftInput(etAnswer, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        }, 200) // Delay khoảng 200ms để layout ổn định
+
+        
     }
 }
