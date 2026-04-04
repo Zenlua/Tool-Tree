@@ -11,6 +11,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.*
 import java.io.File
 import androidx.core.view.ViewCompat
+import android.content.res.ColorStateList
 
 class AnswerActivity : Activity() {
 
@@ -41,14 +42,12 @@ class AnswerActivity : Activity() {
                         else android.text.InputType.TYPE_CLASS_TEXT
             setTextColor(textColor)       // chữ nhập theo sáng/tối
             setHintTextColor(hintColor)   // hint theo sáng/tối
+            backgroundTintList = ColorStateList.valueOf(textColor)
             // background để mặc định → gạch dưới vẫn như cũ
         }
 
         // Nút gửi
-        val btnSend = Button(this).apply {
-            text = "Xong"
-            setTextColor(textColor)
-        }
+        val btnSend = Button(this).apply { text = "Xong" }
 
         // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this).apply {
