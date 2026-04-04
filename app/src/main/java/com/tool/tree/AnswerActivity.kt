@@ -52,7 +52,7 @@ class AnswerActivity : Activity() {
         // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setMargins(48, 0, 48, 0) } // 48px 2 bên
+            setMargins(48, 0, 48, 0) // 48px 2 bên
             addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(btnSend)
         }
