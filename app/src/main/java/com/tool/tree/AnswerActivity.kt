@@ -122,5 +122,9 @@ class AnswerActivity : Activity() {
         etAnswer.requestFocus()
         val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
         imm.showSoftInput(etAnswer, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM.inv(),
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
+        )
     }
 }
