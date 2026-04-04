@@ -55,10 +55,13 @@ class AnswerActivity : Activity() {
 
         setContentView(rootLayout)
 
-        // Overlay dưới màn hình
+        // Window overlay kiểu chat head nửa dưới
         val params = window.attributes
         params.gravity = Gravity.BOTTOM
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT // chỉ chiếm đủ nội dung
+        params.width = WindowManager.LayoutParams.MATCH_PARENT
         window.attributes = params
+
         window.setFlags(
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
