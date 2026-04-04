@@ -18,10 +18,8 @@ class AnswerActivity : Activity() {
         overridePendingTransition(R.anim.input_method_enter, R.anim.fade_out)
 
         // Tạo folder home/tmp trong cache
-        val tmpDir = File(cacheDir, "home/tmp")
-        if (!tmpDir.exists()) tmpDir.mkdirs()
-        
-        val answerFile = File(tmpDir, "answer.txt")
+
+        val answerFile = File(filesDir, "home/tmp/answer")
         if (answerFile.exists()) answerFile.delete()
 
         // Min luôn là 0, max lấy từ intent (có thể null)
