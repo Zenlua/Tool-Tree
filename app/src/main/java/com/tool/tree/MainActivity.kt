@@ -251,13 +251,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == ACTION_FILE_PATH_CHOOSER) {
-            val uri = data?.data
-            val path = uri?.let { FilePathResolver().getPath(this, it) }
-            fileSelectedInterface?.onFileSelected(path)
-            fileSelectedInterface = null
+        if (fileSelectedInterface == null) {
+            super.onActivityResult(requestCode, resultCode, data)
+            return
         }
+        when (requestCode) {
+            ACTION_FILE_PATH_CHOOSER -> {
+                val path = if (resultCode == RESULT_OK) {
+                    data?.data?.let { FilePathResolver().getPath(this, it) }
+                } else null
+                fileSelectedInterface?.onFileSelected(path)
+            }
+            ACTION_FILE_PATH_CHOOSER_INNER -> {
+                val path = if (resultCode == RESULT_OK) {
+                    data?.getStringExtra("file")
+                } else null
+                fileSelectedInterface?.onFileSelected(path)
+            }
+        }
+        fileSelectedInterface = null
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    private fun getPath(uri: Uri): String? {
+        return try {
+            FilePathResolver().getPath(this, uri)
+        } catch (ex: Exception) {
+            null
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
