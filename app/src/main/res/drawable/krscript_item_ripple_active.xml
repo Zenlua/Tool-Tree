@@ -1,19 +1,33 @@
-<?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?android:colorAccent">
 
-    <!-- background mặc định -->
+    <!-- background -->
     <item android:id="@android:id/background">
-        <shape android:shape="rectangle">
-            <solid android:color="?attr/cardBg" />
-            <corners android:radius="5dp" />
-        </shape>
+        <layer-list>
+
+            <!-- ảnh (sẽ replace bằng code) -->
+            <item android:id="@+id/bg_image">
+                <shape>
+                    <corners android:radius="5dp"/>
+                    <solid android:color="?attr/cardBg"/>
+                </shape>
+            </item>
+
+            <!-- overlay mờ -->
+            <item>
+                <shape>
+                    <corners android:radius="5dp"/>
+                    <solid android:color="#33000000"/>
+                </shape>
+            </item>
+
+        </layer-list>
     </item>
 
-    <!-- mask để ripple bo góc -->
+    <!-- mask -->
     <item android:id="@android:id/mask">
-        <shape android:shape="rectangle">
-            <corners android:radius="5dp" />
+        <shape>
+            <corners android:radius="5dp"/>
             <solid android:color="#FFFFFFFF"/>
         </shape>
     </item>

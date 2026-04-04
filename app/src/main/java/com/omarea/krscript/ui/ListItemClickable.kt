@@ -40,6 +40,14 @@ open class ListItemClickable(context: Context,
         this.layout.setOnClickListener {
             this.mOnClickListener?.onClick(this)
         }
+        val bg = layout.background
+        if (bg is RippleDrawable && config.backgroundPath.isNotEmpty()) {
+            val drawable = IconPathAnalysis().loadBackground(context, config)
+            val layer = bg.findDrawableByLayerId(android.R.id.background)
+            if (layer is LayerDrawable && drawable != null) {
+                layer.setDrawableByLayerId(R.id.bg_image, drawable)
+            }
+        }
         if (this.key.isNotEmpty() && config.allowShortcut != false) {
             this.layout.setOnLongClickListener {
                 this.mOnLongClickListener?.onLongClick(this)
@@ -56,13 +64,6 @@ open class ListItemClickable(context: Context,
                     iconView?.setImageDrawable(this)
                     iconView?.visibility = View.VISIBLE
                 }
-            }
-        }
-        val bg = layout.background
-        if (bg is android.graphics.drawable.RippleDrawable && config.backgroundPath.isNotEmpty()) {
-            val drawable = IconPathAnalysis().loadBackground(context, config)
-            drawable?.let {
-                bg.setDrawableByLayerId(android.R.id.background, it)
             }
         }
         if (extraIconView != null) {
