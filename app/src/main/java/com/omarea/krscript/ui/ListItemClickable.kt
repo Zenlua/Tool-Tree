@@ -6,6 +6,8 @@ import android.widget.ImageView
 import com.tool.tree.R
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.model.ClickableNode
+import android.graphics.drawable.RippleDrawable
+import android.graphics.drawable.LayerDrawable
 
 open class ListItemClickable(context: Context,
                              layoutId: Int,
@@ -43,9 +45,11 @@ open class ListItemClickable(context: Context,
         val bg = layout.background
         if (bg is RippleDrawable && config.backgroundPath.isNotEmpty()) {
             val drawable = IconPathAnalysis().loadBackground(context, config)
-            val layer = bg.findDrawableByLayerId(android.R.id.background)
-            if (layer is LayerDrawable && drawable != null) {
-                layer.setDrawableByLayerId(R.id.bg_image, drawable)
+            drawable?.let {
+                val layer = bg.getDrawable(0)
+                if (layer is LayerDrawable) {
+                    layer.setDrawableByLayerId(R.id.bg_image, it)
+                }
             }
         }
         if (this.key.isNotEmpty() && config.allowShortcut != false) {
