@@ -13,10 +13,10 @@ class AnswerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Tạo folder home/tmp nếu chưa có
-        val tmpDir = File(filesDir, "home/tmp")
+        // Tạo folder home/tmp trong cache
+        val tmpDir = File(cacheDir, "home/tmp")
         if (!tmpDir.exists()) tmpDir.mkdirs()
-
+        
         val answerFile = File(tmpDir, "answer.txt")
         if (answerFile.exists()) answerFile.delete()
 
@@ -51,6 +51,7 @@ class AnswerActivity : Activity() {
         rootLayout.orientation = LinearLayout.VERTICAL
         rootLayout.setPadding(16, 16, 16, 16)
         rootLayout.setBackgroundColor(0xCCFFFFFF.toInt())
+        fitsSystemWindows = true
         rootLayout.addView(inputLayout)
 
         setContentView(rootLayout)
@@ -70,7 +71,6 @@ class AnswerActivity : Activity() {
             WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
             WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
         )
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
 
         fun sendAnswer() {
             val text = etAnswer.text.toString().trim()
@@ -92,7 +92,7 @@ class AnswerActivity : Activity() {
                 answerFile.writeText(num.toString())
             } else {
                 // Không có max → cho phép nhập chữ hoặc số ≥0
-                answerFile.writeText(text)
+                .writeText(text)
             }
 
             finish()
