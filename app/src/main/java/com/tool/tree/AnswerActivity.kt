@@ -87,13 +87,16 @@ class AnswerActivity : Activity() {
 
         setContentView(container)
 
-        // --- Window Layout: Sửa lỗi không focus/không nhập được chữ ---
+        // --- Window Layout: Sửa lỗi Unresolved reference và lỗi không nhập được chữ ---
         window.apply {
             setGravity(Gravity.BOTTOM)
             setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
+            // Sửa lỗi: Truy cập softInputMode thông qua attributes
+            val params = attributes
+            params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            attributes = params
             // Xóa bỏ các flag gây xung đột bàn phím của code cũ
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
             setBackgroundDrawableResource(android.R.color.transparent)
         }
 
