@@ -34,49 +34,50 @@ class AnswerActivity : Activity() {
         val textColor = if (isDarkMode) Color.parseColor("#FFFFFF") else Color.parseColor("#000000")
         val hintColor = if (isDarkMode) Color.parseColor("#AAAAAA") else Color.parseColor("#555555")
 
-        // EditText với background bo góc 15px (tương đương 5dp), padding 48px (16dp)
+        // EditText với background bo góc, gạch ngang màu chữ, cao hơn, rộng hơn
         val etAnswer = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             imeOptions = EditorInfo.IME_ACTION_SEND
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER
                         else android.text.InputType.TYPE_CLASS_TEXT
-            setTextColor(textColor)
-            setHintTextColor(hintColor)
-            background = GradientDrawable().apply {
-                setColor(backgroundColor)
-                cornerRadius = 15f // bo góc 5dp → 15px
-            }
-            setPadding(48, 48, 48, 48) // padding 16dp → 48px
+            setTextColor(textColor)       // chữ nhập theo sáng/tối
+            setHintTextColor(hintColor)   // hint theo sáng/tối
+            backgroundTintList = ColorStateList.valueOf(textColor)
+            // background để mặc định → gạch dưới vẫn như cũ
         }
 
         // Nút gửi
         val btnSend = Button(this).apply { text = getString(R.string.btn_send) }
 
-        // Layout ngang: EditText + Button, margin 48px 2 bên và dưới
+        // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(48, 0, 48, 48) // 16dp → 48px
-            }
-
+            setMargins(48, 0, 48, 0) } // 48px 2 bên
             addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(btnSend)
+        }
+
+        // Spacer dưới để cách bàn phím
+        val spacer = Space(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                48 // cách bàn phím 16dp → 48px
+            )
         }
 
         // Root layout nửa dưới
         val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+            setPadding(20, 20, 20, 20)
             setBackgroundColor(backgroundColor)
             ViewCompat.setFitsSystemWindows(this, true)
             addView(inputLayout)
+            addView(spacer)
         }
 
         setContentView(rootLayout)
 
-        // Window overlay nửa dưới
+        // Window overlay nửa dưới, tăng chiều cao trục Y
         window.attributes = window.attributes.apply {
             gravity = Gravity.BOTTOM
             height = WindowManager.LayoutParams.WRAP_CONTENT
@@ -135,5 +136,6 @@ class AnswerActivity : Activity() {
                 true
             } else false
         }
+
     }
 }
