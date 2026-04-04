@@ -8,6 +8,7 @@ import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.model.ClickableNode
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.LayerDrawable
+import android.view.ViewOutlineProvider
 
 open class ListItemClickable(context: Context,
                              layoutId: Int,
@@ -38,6 +39,8 @@ open class ListItemClickable(context: Context,
         title = config.title
         desc = config.desc
         summary = config.summary
+        layout.clipToOutline = true
+        layout.outlineProvider = ViewOutlineProvider.BACKGROUND
 
         this.layout.setOnClickListener {
             this.mOnClickListener?.onClick(this)
