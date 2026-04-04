@@ -109,6 +109,16 @@ class AnswerActivity : Activity() {
             finish()
         }
 
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM.inv(),
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
+        )
+        
+        // Focus và bật bàn phím
+        etAnswer.requestFocus()
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.showSoftInput(etAnswer, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+
         // Sự kiện click & IME
         btnSend.setOnClickListener { sendAnswer() }
         etAnswer.setOnEditorActionListener { _, actionId, _ ->
@@ -118,13 +128,5 @@ class AnswerActivity : Activity() {
             } else false
         }
 
-        // Focus và bật bàn phím
-        etAnswer.requestFocus()
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-        imm.showSoftInput(etAnswer, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM.inv(),
-            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
-        )
     }
 }
