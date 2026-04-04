@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
     private val ACTION_FILE_PATH_CHOOSER = 65400
+    private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
