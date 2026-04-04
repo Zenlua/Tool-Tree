@@ -15,7 +15,7 @@ class AnswerActivity : Activity() {
         super.onCreate(savedInstanceState)
         
         // Tạo folder home/tmp trong cache
-        val answerFile = File(filesDir, "home/tmp/answer")
+        val answerFile = File(cacheDir, "answer")
         if (answerFile.exists()) answerFile.delete()
 
         // Min luôn là 0, max lấy từ intent (có thể null)
@@ -48,10 +48,9 @@ class AnswerActivity : Activity() {
         val rootLayout = LinearLayout(this)
         rootLayout.orientation = LinearLayout.VERTICAL
         rootLayout.setPadding(16, 16, 16, 16)
-        rootLayout.setBackgroundColor(0xCCFFFFFF.toInt())
+        rootLayout.setBackgroundColor(0xCC888888.toInt())
         ViewCompat.setFitsSystemWindows(rootLayout, true)
         rootLayout.addView(inputLayout)
-
         setContentView(rootLayout)
 
         // Window overlay kiểu chat head nửa dưới
