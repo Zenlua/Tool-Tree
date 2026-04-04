@@ -15,10 +15,7 @@ class AnswerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        overridePendingTransition(R.anim.input_method_enter, R.anim.fade_out)
-
         // Tạo folder home/tmp trong cache
-
         val answerFile = File(filesDir, "home/tmp/answer")
         if (answerFile.exists()) answerFile.delete()
 
@@ -98,7 +95,6 @@ class AnswerActivity : Activity() {
             }
 
             finish()
-            overridePendingTransition(0, R.anim.input_method_exit)
         }
 
         btnSend.setOnClickListener { sendAnswer() }
