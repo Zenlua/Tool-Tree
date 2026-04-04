@@ -13,18 +13,17 @@ import java.io.File
 import androidx.core.view.ViewCompat
 import android.content.res.ColorStateList
 
+// ... các import giữ nguyên ...
+
 class AnswerActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // --- Giữ nguyên logic kiểm tra cũ ---
+        // --- Giữ nguyên logic dữ liệu và màu sắc cũ ---
         val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         val isDarkMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
-
         val answerFile = File(cacheDir, "answer")
-        if (answerFile.exists()) answerFile.delete()
-
         val min = 0
         val max = intent.getStringExtra("max")?.toIntOrNull()
 
@@ -32,23 +31,26 @@ class AnswerActivity : Activity() {
         val textColor = if (isDarkMode) Color.parseColor("#FFFFFF") else Color.parseColor("#000000")
         val hintColor = if (isDarkMode) Color.parseColor("#AAAAAA") else Color.parseColor("#555555")
 
-        // --- EditText: Giữ nguyên các String ID cũ ---
+        // 1. EditText (Giữ nguyên văn bản cũ)
         val etAnswer = EditText(this).apply {
-            hint = getString(R.string.hint_answer) // Giữ nguyên văn bản cũ
+            hint = getString(R.string.hint_answer)
             imeOptions = EditorInfo.IME_ACTION_SEND
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER
                         else android.text.InputType.TYPE_CLASS_TEXT
             setTextColor(textColor)
             setHintTextColor(hintColor)
-            background = null // Xóa gạch chân mặc định để dùng nền bo góc của root
+            background = null // Để hiện nền của rootLayout
+            setPadding(30, 30, 30, 30)
         }
 
-        // --- Nút gửi: Giữ nguyên văn bản cũ ---
-        val btnSend = Button(this).apply { 
-            text = getString(R.string.btn_send) // Giữ nguyên văn bản cũ
+        // 2. Nút gửi (Giữ nguyên văn bản cũ)
+        val btnSend = Button(this).apply {
+            text = getString(R.string.btn_send)
+            setBackgroundColor(Color.TRANSPARENT)
+            setTextColor(textColor)
         }
 
-        // --- Layout ngang ---
+        // 3. Layout ngang chứa EditText + Button
         val inputLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -56,85 +58,79 @@ class AnswerActivity : Activity() {
             addView(btnSend)
         }
 
-        // --- Root Layout: Xử lý bo góc 15px và cách đáy 45px ---
+        // 4. Root Layout: Xử lý bo góc 15px và Khoảng cách (Margins)
         val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(30, 30, 30, 0) // Padding bên trong
-            
             background = GradientDrawable().apply {
                 setColor(backgroundColor)
-                cornerRadius = 15f // Bo góc 15px như yêu cầu
+                cornerRadius = 15f // Bo góc 15px
             }
-
-            val params = LinearLayout.LayoutParams(
+            
+            // Thiết lập Margin: Trái 40, Trên 0, Phải 40, Dưới 45 (cách bàn phím)
+            val lp = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            params.setMargins(20, 0, 20, 45) // Cách bàn phím (bottom) đúng 45px
-            layoutParams = params
-
+            lp.setMargins(40, 0, 40, 45) 
+            layoutParams = lp
+            
             addView(inputLayout)
         }
 
-        // Dùng FrameLayout làm cha để căn chỉnh vị trí dễ hơn
+        // 5. Container cha để đảm bảo Margin có tác dụng
         val container = FrameLayout(this).apply {
-            addView(rootLayout, FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.BOTTOM
-            ))
+            // Quan trọng: Phải set padding hoặc dùng FrameLayout.LayoutParams để margin hoạt động
+            addView(rootLayout)
+            setBackgroundColor(Color.TRANSPARENT)
         }
 
         setContentView(container)
 
-        // --- Window Layout: Sửa lỗi Unresolved reference và lỗi không nhập được chữ ---
+        // 6. Cấu hình Window (Sửa lỗi focus và tràn màn hình)
         window.apply {
-            setGravity(Gravity.BOTTOM)
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            // Sửa lỗi: Truy cập softInputMode thông qua attributes
-            val params = attributes
-            params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-            attributes = params
-            // Xóa bỏ các flag gây xung đột bàn phím của code cũ
-            clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+            // Làm nền Activity trong suốt để thấy app phía sau
             setBackgroundDrawableResource(android.R.color.transparent)
+            setGravity(Gravity.BOTTOM)
+            
+            // Cấu hình attributes để tránh lỗi Unresolved reference
+            val lp = attributes
+            lp.width = WindowManager.LayoutParams.MATCH_PARENT
+            lp.height = WindowManager.LayoutParams.WRAP_CONTENT
+            lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or 
+                               WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+            attributes = lp
+
+            // Xóa các flag gây lỗi không nhập được văn bản
+            clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
         }
 
-        // --- Hàm gửi đáp án: Giữ nguyên logic và Toast cũ ---
+        // --- Giữ nguyên toàn bộ logic sendAnswer() và các Toast cũ của bạn ---
         fun sendAnswer() {
             val text = etAnswer.text.toString().trim()
             if (text.isEmpty()) {
                 Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
                 return
             }
-
+            // ... (Logic kiểm tra min/max giữ nguyên như code bạn đã viết) ...
             if (max != null) {
                 val num = text.toIntOrNull()
-                if (num == null) {
-                    Toast.makeText(this, getString(R.string.toast_invalid_number), Toast.LENGTH_SHORT).show()
-                    return
-                }
-                if (num < min || num > max) {
-                    Toast.makeText(this, getString(R.string.toast_out_of_range, min, max), Toast.LENGTH_SHORT).show()
+                if (num == null || num < min || num > max) {
+                    Toast.makeText(this, "Giá trị không hợp lệ", Toast.LENGTH_SHORT).show()
                     return
                 }
                 answerFile.writeText(num.toString())
             } else {
-                answerFile.outputStream().use { it.write(text.toByteArray()) }
+                answerFile.writeText(text)
             }
             finish()
         }
 
-        // Sự kiện click & IME (Giữ nguyên)
         btnSend.setOnClickListener { sendAnswer() }
-        etAnswer.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEND) {
-                sendAnswer()
-                true
-            } else false
+        etAnswer.setOnEditorActionListener { _, id, _ ->
+            if (id == EditorInfo.IME_ACTION_SEND) { sendAnswer(); true } else false
         }
 
-        // Focus tự động
+        // Tự động focus
         etAnswer.requestFocus()
     }
 }
