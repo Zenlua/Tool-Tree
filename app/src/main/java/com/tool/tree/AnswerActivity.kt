@@ -7,11 +7,15 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import java.io.File
+import androidx.core.view.ViewCompat
+import kotlin.io.path.writeText
 
 class AnswerActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        overridePendingTransition(R.anim.input_method_enter, R.anim.fade_out)
 
         // Tạo folder home/tmp trong cache
         val tmpDir = File(cacheDir, "home/tmp")
@@ -38,7 +42,7 @@ class AnswerActivity : Activity() {
         }
 
         // Nút gửi
-        val btnSend = Button(this).apply { text = "➠" }
+        val btnSend = Button(this).apply { text = "Xong" }
 
         // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this)
@@ -51,7 +55,7 @@ class AnswerActivity : Activity() {
         rootLayout.orientation = LinearLayout.VERTICAL
         rootLayout.setPadding(16, 16, 16, 16)
         rootLayout.setBackgroundColor(0xCCFFFFFF.toInt())
-        fitsSystemWindows = true
+        ViewCompat.setFitsSystemWindows(rootLayout, true)
         rootLayout.addView(inputLayout)
 
         setContentView(rootLayout)
@@ -96,6 +100,7 @@ class AnswerActivity : Activity() {
             }
 
             finish()
+            overridePendingTransition(0, R.anim.input_method_exit)
         }
 
         btnSend.setOnClickListener { sendAnswer() }
