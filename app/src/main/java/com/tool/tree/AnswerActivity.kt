@@ -37,19 +37,11 @@ class AnswerActivity : Activity() {
         val etAnswer = EditText(this).apply {
             hint = "Nhập đáp án..."
             imeOptions = EditorInfo.IME_ACTION_SEND
-            setTextColor(textColor)
-            setHintTextColor(hintColor)
-            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
-
-            minHeight = 120
-            setPadding(24, 20, 24, 20)
-
-            // Background bo góc, stroke màu giống chữ
-            background = GradientDrawable().apply {
-                cornerRadius = 16f
-                setColor(if(isDarkMode) Color.parseColor("#3A3A3A") else Color.parseColor("#FFFFFF"))
-                setStroke(2, textColor)
-            }
+            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER
+                        else android.text.InputType.TYPE_CLASS_TEXT
+            setTextColor(textColor)       // chữ nhập theo sáng/tối
+            setHintTextColor(hintColor)   // hint theo sáng/tối
+            // background để mặc định → gạch dưới vẫn như cũ
         }
 
         // Nút gửi
@@ -61,11 +53,8 @@ class AnswerActivity : Activity() {
         // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 3f)) // weight lớn hơn → rộng hơn
-            addView(btnSend, LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ))
+            addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            addView(btnSend)
         }
 
         // Root layout nửa dưới
@@ -82,7 +71,7 @@ class AnswerActivity : Activity() {
         // Window overlay nửa dưới, tăng chiều cao trục Y
         val params = window.attributes
         params.gravity = Gravity.BOTTOM
-        params.height = (resources.displayMetrics.heightPixels * 0.5).toInt() // 50% màn hình
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT
         params.width = WindowManager.LayoutParams.MATCH_PARENT
         window.attributes = params
 
