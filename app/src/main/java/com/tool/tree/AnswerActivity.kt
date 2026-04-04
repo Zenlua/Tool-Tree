@@ -36,7 +36,7 @@ class AnswerActivity : Activity() {
 
         // EditText với background bo góc, gạch ngang màu chữ, cao hơn, rộng hơn
         val etAnswer = EditText(this).apply {
-            hint = "Nhập đáp án..."
+            hint = getString(R.string.hint_answer)
             imeOptions = EditorInfo.IME_ACTION_SEND
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER
                         else android.text.InputType.TYPE_CLASS_TEXT
@@ -47,7 +47,7 @@ class AnswerActivity : Activity() {
         }
 
         // Nút gửi
-        val btnSend = Button(this).apply { text = "Xong" }
+        val btnSend = Button(this).apply { text = getString(R.string.btn_send) }
 
         // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this).apply {
@@ -87,18 +87,18 @@ class AnswerActivity : Activity() {
         fun sendAnswer() {
             val text = etAnswer.text.toString().trim()
             if (text.isEmpty()) {
-                Toast.makeText(this, "Không được để trống", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
                 return
             }
 
             if (max != null) {
                 val num = text.toIntOrNull()
                 if (num == null) {
-                    Toast.makeText(this, "Vui lòng nhập số", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.toast_invalid_number), Toast.LENGTH_SHORT).show()
                     return
                 }
                 if (num < min || num > max) {
-                    Toast.makeText(this, "Số phải trong khoảng $min đến $max", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.toast_out_of_range, min, max), Toast.LENGTH_SHORT).show()
                     return
                 }
                 answerFile.writeText(num.toString())

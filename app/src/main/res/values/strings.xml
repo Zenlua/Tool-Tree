@@ -91,6 +91,11 @@ If you agree, press the confirm button to continue."</string>
     <string name="confirm_message">Reminder message</string>
     <string name="confirm_title">Reminder title</string>
 
+    <string name="hint_answer">Please enter the value...</string>
+    <string name="btn_send">Done</string>
+    <string name="toast_invalid_number">Please enter the number</string>
+    <string name="toast_out_of_range">The number must be between %1$d and %2$d</string>
+
     <string name="shell_executor">Script Executor</string>
     <string name="btn_skip">Skip</string>
     <string name="btn_exit">Exit</string>

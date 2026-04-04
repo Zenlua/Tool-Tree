@@ -25,6 +25,11 @@
     <string name="title_activity_file_selector">"Kérjük, válasszon fájlt "</string>
     <string name="title_activity_folder_selector">Kérjük, válasszon mappát</string>
 
+    <string name="hint_answer">Kérjük, adja meg az értéket...</string>
+    <string name="btn_send">Kész</string>
+    <string name="toast_invalid_number">Kérjük, adjon meg egy számot</string>
+    <string name="toast_out_of_range">A számnak %1$d és %2$d között kell lennie</string>
+
     <string name="text_power_shutdown">Kikapcsolás</string>
     <string name="text_power_reboot">Újraindítás</string>
     <string name="text_power_dowload">Letöltés</string>

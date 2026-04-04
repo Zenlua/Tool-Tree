@@ -18,6 +18,12 @@
     <string name="monitor_cache_cleared">Кэш RAM освобождён</string>
     <string name="monitor_ram_cleared">Фрагментация RAM очищена</string>
 
+
+    <string name="hint_answer">Пожалуйста, введите значение...</string>
+    <string name="btn_send">Готово</string>
+    <string name="toast_invalid_number">Пожалуйста, введите число</string>
+    <string name="toast_out_of_range">Число должно быть в диапазоне от %1$d до %2$d</string>
+
     <string name="copy_success">Копирование выполнено успешно</string>
     <string name="pop_before_start">Запуск приложения…</string>
     <string name="pop_started">Приложение запущено</string>

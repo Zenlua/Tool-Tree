@@ -13,6 +13,11 @@
     <string name="tab_favorites">收藏</string>
     <string name="tab_pages">工具</string>
 
+    <string name="hint_answer">请输入数值...</string>
+    <string name="btn_send">完成</string>
+    <string name="toast_invalid_number">请输入数字</string>
+    <string name="toast_out_of_range">数字必须在 %1$d 到 %2$d 之间</string>
+
     <string name="monitor_laod">负载：%d%%</string>
     <string name="monitor_core_count">%d 核心</string>
     <string name="monitor_cache_cleared">RAM 缓存已释放</string>

@@ -90,6 +90,10 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_param_load">"Lấy trạng thái "</string>
     <string name="kr_param_options_load">"Đang tải danh sách "</string>
     <string name="kr_params_render">Đang dựng giao diện…</string>
+    <string name="hint_answer">Vui lòng nhập giá trị...</string>
+    <string name="btn_send">Xong</string>
+    <string name="toast_invalid_number">Vui lòng nhập số</string>
+    <string name="toast_out_of_range">Số phải trong khoảng %1$d đến %2$d</string>
     <string name="kr_please_choose_folder">Vui lòng chọn thư mục</string>
     <string name="kr_please_choose_file">Vui lòng chọn tệp</string>
     <string name="kr_please_choose_app">Vui lòng chọn ứng dụng</string>
