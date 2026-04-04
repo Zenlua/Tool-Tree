@@ -42,8 +42,7 @@ class AnswerActivity : Activity() {
                         else android.text.InputType.TYPE_CLASS_TEXT
             setTextColor(textColor)       // chữ nhập theo sáng/tối
             setHintTextColor(hintColor)   // hint theo sáng/tối
-            backgroundTintList = ColorStateList.valueOf(textColor)
-            // background để mặc định → gạch dưới vẫn như cũ
+            backgroundTintList = ColorStateList.valueOf(textColor) // background để mặc định → gạch dưới vẫn như cũ
         }
 
         // Nút gửi
@@ -52,7 +51,12 @@ class AnswerActivity : Activity() {
         // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setMargins(48, 0, 48, 0) // 48px 2 bên
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(48, 0, 48, 0) // 48px hai bên
+            }
             addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(btnSend)
         }
