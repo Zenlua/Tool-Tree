@@ -8,7 +8,6 @@ import android.view.inputmethod.EditorInfo
 import android.widget.*
 import java.io.File
 import androidx.core.view.ViewCompat
-import kotlin.io.path.writeText
 
 class AnswerActivity : Activity() {
 
@@ -91,7 +90,7 @@ class AnswerActivity : Activity() {
                 answerFile.writeText(num.toString())
             } else {
                 // Không có max → cho phép nhập chữ hoặc số ≥0
-                .writeText(text)
+                answerFile.outputStream().use { it.write(text.toByteArray()) }
             }
 
             finish()
