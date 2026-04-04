@@ -416,6 +416,7 @@ class PageConfigReader {
                     "target-sdk", "sdk-target" -> targetSdkVersion = attrValue.trim().toInt()
                     "icon", "icon-path" -> iconPath = attrValue.trim()
                     "logo", "logo-path" -> logoPath = attrValue.trim()
+                    "background", "background-path" -> backgroundPath = attrValue.trim()
                     "allow-shortcut" -> allowShortcut = attrValue == "allow" || attrValue == "allow-shortcut" || attrValue == "true" || attrValue == "1"
                 }
             }

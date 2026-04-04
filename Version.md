@@ -2,6 +2,7 @@
 
 **Beta**
 
++ Fixes the issue where add-on patch ROM update notifications are not appearing
 + Supports swiping to switch tabs
 
 **Version: 1.3.8 (2-4-2026)**

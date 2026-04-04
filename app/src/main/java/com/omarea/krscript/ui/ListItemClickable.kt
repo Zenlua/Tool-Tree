@@ -14,6 +14,7 @@ open class ListItemClickable(context: Context,
     protected var mOnLongClickListener: OnLongClickListener? = null
     protected var shortcutIconView = layout.findViewById<View?>(R.id.kr_shortcut_icon)
     protected var iconView = layout.findViewById<ImageView?>(R.id.kr_icon)
+    protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon)
 
     fun setOnClickListener(onClickListener: OnClickListener): ListItemClickable {
         this.mOnClickListener = onClickListener
@@ -54,6 +55,15 @@ open class ListItemClickable(context: Context,
                 IconPathAnalysis().loadIcon(context, config)?.run {
                     iconView?.setImageDrawable(this)
                     iconView?.visibility = View.VISIBLE
+                }
+            }
+        }
+        if (extraIconView != null) {
+            extraIconView?.visibility = View.GONE
+            if (config.backgroundPath.isNotEmpty()) {
+                IconPathAnalysis().loadBackground(context, config)?.run {
+                    extraIconView?.setImageDrawable(this)
+                    extraIconView?.visibility = View.VISIBLE
                 }
             }
         }

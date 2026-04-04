@@ -42,6 +42,16 @@ class IconPathAnalysis {
         return null
     }
 
+    fun loadBackground(context: Context, clickableNode: ClickableNode, useDefault: Boolean = false): Drawable? {
+        if (!clickableNode.backgroundPath.isEmpty()) {
+            val inputStream = PathAnalysis(context, clickableNode.pageConfigDir).parsePath(clickableNode.backgroundPath)
+            inputStream?.run {
+                return bitmap2Drawable(BitmapFactory.decodeStream(this))
+            }
+        }
+        return null
+    }
+
     // Bitmap转换成Drawable
     fun bitmap2Drawable(bitmap: Bitmap): Drawable {
         return BitmapDrawable(bitmap)
