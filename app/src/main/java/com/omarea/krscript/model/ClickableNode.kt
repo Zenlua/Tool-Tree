@@ -6,7 +6,6 @@ open class ClickableNode(currentPageConfigPath: String) : NodeInfoBase(currentPa
 
     // 功能图标路径（桌面快捷）
     var logoPath = ""
-    var backgroundPath = ""
     var photoPath = ""
 
     // 是否允许添加快捷方式（非false，且具有key则默认允许）

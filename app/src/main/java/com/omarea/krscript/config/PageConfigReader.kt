@@ -417,7 +417,6 @@ class PageConfigReader {
                     "icon", "icon-path" -> iconPath = attrValue.trim()
                     "logo", "logo-path" -> logoPath = attrValue.trim()
                     "photo", "photo-path" -> photoPath = attrValue.trim()
-                    "background", "background-path" -> backgroundPath = attrValue.trim()
                     "allow-shortcut" -> allowShortcut = attrValue == "allow" || attrValue == "allow-shortcut" || attrValue == "true" || attrValue == "1"
                 }
             }
