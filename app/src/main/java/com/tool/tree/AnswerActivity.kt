@@ -72,7 +72,7 @@ class AnswerActivity : Activity() {
         // Root layout nửa dưới
         val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(20, 20, 20, 20)
+            // setPadding(20, 20, 20, 20)
             setBackgroundColor(backgroundColor)
             ViewCompat.setFitsSystemWindows(this, true)
             addView(inputLayout)
