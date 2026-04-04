@@ -13,138 +13,117 @@ import java.io.File
 import androidx.core.view.ViewCompat
 import android.content.res.ColorStateList
 
-// ... các import giữ nguyên ...
-
 class AnswerActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // --- Giữ nguyên logic dữ liệu và màu sắc cũ ---
+        // Kiểm tra chế độ tối/sáng
         val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         val isDarkMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
+
+        // File lưu đáp án
         val answerFile = File(cacheDir, "answer")
         if (answerFile.exists()) answerFile.delete()
+
         val min = 0
         val max = intent.getStringExtra("max")?.toIntOrNull()
 
+        // Màu theo chế độ
         val backgroundColor = if (isDarkMode) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5")
         val textColor = if (isDarkMode) Color.parseColor("#FFFFFF") else Color.parseColor("#000000")
         val hintColor = if (isDarkMode) Color.parseColor("#AAAAAA") else Color.parseColor("#555555")
 
-        // 1. EditText (Giữ nguyên văn bản cũ)
+        // EditText với background bo góc, gạch ngang màu chữ, cao hơn, rộng hơn
         val etAnswer = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             imeOptions = EditorInfo.IME_ACTION_SEND
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER
                         else android.text.InputType.TYPE_CLASS_TEXT
-            setTextColor(textColor)
-            setHintTextColor(hintColor)
-            background = null // Để hiện nền của rootLayout
-            setPadding(40, 40, 20, 40)
+            setTextColor(textColor)       // chữ nhập theo sáng/tối
+            setHintTextColor(hintColor)   // hint theo sáng/tối
+            backgroundTintList = ColorStateList.valueOf(textColor) // background để mặc định → gạch dưới vẫn như cũ
         }
 
-        // 2. Nút gửi (Giữ nguyên văn bản cũ)
-        val btnSend = Button(this).apply {
-            text = getString(R.string.btn_send)
-            setBackgroundColor(Color.TRANSPARENT)
-            setTextColor(textColor)
-        }
+        // Nút gửi
+        val btnSend = Button(this).apply { text = getString(R.string.btn_send) }
 
-        // 3. Layout ngang chứa EditText + Button
+        // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
             addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(btnSend)
         }
 
-        // 4. Root Layout: Xử lý bo góc 15px và Khoảng cách (Margins)
+        // Root layout nửa dưới
         val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = GradientDrawable().apply {
-                setColor(backgroundColor)
-                cornerRadius = 15f // Bo góc 15px
-            }
-            
-            // Thiết lập Margin: Trái 40, Trên 0, Phải 40, Dưới 45 (cách bàn phím)
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            lp.setMargins(35, 0, 35, 40)
-            layoutParams = lp
-            
+            setPadding(20, 20, 20, 20)
+            setBackgroundColor(backgroundColor)
+            ViewCompat.setFitsSystemWindows(this, true)
             addView(inputLayout)
         }
 
-        // 5. Container cha để đảm bảo Margin có tác dụng
-        val container = FrameLayout(this).apply {
-            // Quan trọng: Phải set padding hoặc dùng FrameLayout.LayoutParams để margin hoạt động
-            addView(rootLayout)
-            setBackgroundColor(Color.TRANSPARENT)
+        setContentView(rootLayout)
+
+        // Window overlay nửa dưới, tăng chiều cao trục Y
+        window.attributes = window.attributes.apply {
+            gravity = Gravity.BOTTOM
+            height = WindowManager.LayoutParams.WRAP_CONTENT
+            width = WindowManager.LayoutParams.MATCH_PARENT
         }
 
-        setContentView(container)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+        )
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+        )
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM.inv(),
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
+        )
 
-        // --- Window Layout: Sửa lỗi Focus và tự động hiện bàn phím ---
-        window.apply {
-            // 1. Làm nền Activity trong suốt hoàn toàn
-            setBackgroundDrawableResource(android.R.color.transparent)
-            setGravity(Gravity.BOTTOM)
-        
-            // 2. Xóa bỏ triệt để các flag gây chặn bàn phím từ code cũ
-            clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-        
-            // 3. Cấu hình Attributes
-            val lp = attributes
-            lp.width = WindowManager.LayoutParams.MATCH_PARENT
-            lp.height = WindowManager.LayoutParams.WRAP_CONTENT
-            
-            // Yêu cầu bàn phím HIỆN NGAY khi Activity mở (ALWAYS_VISIBLE)
-            lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE or 
-                               WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-            attributes = lp
-        }
-
-        // --- Giữ nguyên toàn bộ logic sendAnswer() và các Toast cũ của bạn ---
+        // Hàm gửi đáp án
         fun sendAnswer() {
             val text = etAnswer.text.toString().trim()
             if (text.isEmpty()) {
                 Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
                 return
             }
-            // ... (Logic kiểm tra min/max giữ nguyên như code bạn đã viết) ...
+
             if (max != null) {
                 val num = text.toIntOrNull()
-                if (num == null || num < min || num > max) {
-                    Toast.makeText(this, "Giá trị không hợp lệ", Toast.LENGTH_SHORT).show()
+                if (num == null) {
+                    Toast.makeText(this, getString(R.string.toast_invalid_number), Toast.LENGTH_SHORT).show()
+                    return
+                }
+                if (num < min || num > max) {
+                    Toast.makeText(this, getString(R.string.toast_out_of_range, min, max), Toast.LENGTH_SHORT).show()
                     return
                 }
                 answerFile.writeText(num.toString())
             } else {
-                answerFile.writeText(text)
+                answerFile.outputStream().use { it.write(text.toByteArray()) }
             }
+
             finish()
         }
 
-        btnSend.setOnClickListener { sendAnswer() }
-        etAnswer.setOnEditorActionListener { _, id, _ ->
-            if (id == EditorInfo.IME_ACTION_SEND) { sendAnswer(); true } else false
-        }
-
-        // Tự động focus
+        // Focus và bật bàn phím
         etAnswer.requestFocus()
-        
-        // Đặt đoạn này ở cuối hàm onCreate, sau khi đã setContentView
-        etAnswer.postDelayed({
-            etAnswer.requestFocus()
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-            // Sử dụng flag SHOW_IMPLICIT hoặc 0 để bắt buộc hiện bàn phím
-            imm.showSoftInput(etAnswer, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
-        }, 200) // Delay khoảng 200ms để layout ổn định
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.showSoftInput(etAnswer, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
 
-        
+        // Sự kiện click & IME
+        btnSend.setOnClickListener { sendAnswer() }
+        etAnswer.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                sendAnswer()
+                true
+            } else false
+        }
     }
 }
