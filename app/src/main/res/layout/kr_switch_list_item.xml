@@ -64,7 +64,7 @@
 
             <ImageView
                 android:id="@+id/kr_extra_icon"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:adjustViewBounds="true"
@@ -78,8 +78,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:layout_marginTop="10dp"
+        android:layout_centerVertical="false"
+        android:layout_marginTop="18dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="10dp"
         android:textOff=""

@@ -58,10 +58,15 @@ open class ListItemClickable(context: Context,
                 }
             }
         }
+        if (config.backgroundPath.isNotEmpty()) {
+            IconPathAnalysis().loadBackground(context, config)?.let { drawable ->
+                layout.background = drawable
+            }
+        }
         if (extraIconView != null) {
             extraIconView?.visibility = View.GONE
-            if (config.backgroundPath.isNotEmpty()) {
-                IconPathAnalysis().loadBackground(context, config)?.run {
+            if (config.photoPath.isNotEmpty()) {
+                IconPathAnalysis().loadPhoto(context, config)?.run {
                     extraIconView?.setImageDrawable(this)
                     extraIconView?.visibility = View.VISIBLE
                 }
