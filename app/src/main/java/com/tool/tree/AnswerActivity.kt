@@ -72,8 +72,13 @@ class AnswerActivity : Activity() {
         // Root layout nửa dưới
         val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            // setPadding(20, 20, 20, 20)
-            setBackgroundColor(backgroundColor)
+            setPadding(20, 20, 20, 20)
+            // setBackgroundColor(backgroundColor)
+            background = GradientDrawable().apply {
+                setColor(backgroundColor)  // màu nền theo sáng/tối
+                cornerRadius = 15f          // bo 5px toàn bộ
+            }
+            rootLayout.background = rootBg
             ViewCompat.setFitsSystemWindows(this, true)
             addView(inputLayout)
             addView(spacer)
