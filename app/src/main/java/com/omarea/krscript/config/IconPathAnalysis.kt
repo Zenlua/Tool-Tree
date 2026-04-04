@@ -42,7 +42,7 @@ class IconPathAnalysis {
         return null
     }
 
-    fun loadBackground(context: Context, clickableNode: ClickableNode, useDefault: Boolean = false): Drawable? {
+    fun loadBackground(context: Context, clickableNode: ClickableNode): Drawable? {
         if (!clickableNode.backgroundPath.isEmpty()) {
             val inputStream = PathAnalysis(context, clickableNode.pageConfigDir).parsePath(clickableNode.backgroundPath)
             inputStream?.run {
