@@ -66,25 +66,16 @@ class AnswerActivity : Activity() {
 
         setContentView(rootLayout)
 
-        // Window overlay nửa dưới, tăng chiều cao trục Y
-        window.attributes = window.attributes.apply {
+        window.attributes.apply {
             gravity = Gravity.BOTTOM
             height = WindowManager.LayoutParams.WRAP_CONTENT
             width = WindowManager.LayoutParams.MATCH_PARENT
         }
 
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-        )
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
-            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
-        )
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM.inv(),
-            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
-        )
+        window.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+        window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
+        window.addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
         // Hàm gửi đáp án
         fun sendAnswer() {
@@ -112,10 +103,13 @@ class AnswerActivity : Activity() {
             finish()
         }
 
-        // Focus và bật bàn phím
-        etAnswer.requestFocus()
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-        imm.showSoftInput(etAnswer, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        // --- MỤC ĐÃ SỬA: Focus và gọi bàn phím ---
+        etAnswer.post {
+            etAnswer.isFocusableInTouchMode = true
+            etAnswer.requestFocus()
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.showSoftInput(etAnswer, 0)
+        }
 
         // Sự kiện click & IME
         btnSend.setOnClickListener { sendAnswer() }

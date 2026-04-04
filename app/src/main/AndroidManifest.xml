@@ -92,7 +92,7 @@
             android:theme="@style/AppTheme.AnswerOverlay"
             android:launchMode="singleTop"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize|stateVisible"/>
+            android:windowSoftInputMode="stateVisible|adjustResize"/>
         <activity
             android:theme="@style/AppThemeDark"
             android:name=".CrashLogActivity"
