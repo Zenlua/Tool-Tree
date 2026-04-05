@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -24,7 +25,6 @@ class AnswerActivity : ComponentActivity() {
     private lateinit var root: LinearLayout
     private var isProcessed = false
     
-    // Handler quản lý đếm ngược
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private val timeoutRunnable = Runnable { sendNullAndFinish() }
 
@@ -34,15 +34,12 @@ class AnswerActivity : ComponentActivity() {
         if (answerFile.exists()) { answerFile.delete() }
         setupWindow()
 
-        // Xử lý phím Back (Gesture hoặc Button) chắc chắn trả về null
         onBackPressedDispatcher.addCallback(this) {
             sendNullAndFinish()
         }
 
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
-
-        // Mặc định 20s, nếu có flag --es time thì lấy giá trị đó
         val timeoutStr = intent.getStringExtra("time")
         val timeoutSeconds = timeoutStr?.toLongOrNull() ?: 20L
 
@@ -67,9 +64,9 @@ class AnswerActivity : ComponentActivity() {
 
         setContentView(root)
 
-        // Kích hoạt đếm ngược
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
+        // Sửa cú pháp OnGlobalLayoutListener để tránh lỗi Type Mismatch
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             var last = 0
             override fun onGlobalLayout() {
@@ -78,7 +75,6 @@ class AnswerActivity : ComponentActivity() {
                 val h = r.height()
                 if (h != last) {
                     last = h
-                    // Chỉ kích hoạt cursor nếu EditText đã được khởi tạo
                     if (::et.isInitialized) reActivateCursor()
                 }
             }
@@ -185,7 +181,6 @@ class AnswerActivity : ComponentActivity() {
         
         timeoutHandler.removeCallbacks(timeoutRunnable)
         
-        // Ẩn bàn phím và xóa focus ngay lập tức
         if (::et.isInitialized) et.clearFocus()
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: window.decorView
