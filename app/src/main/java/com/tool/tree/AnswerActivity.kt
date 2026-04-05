@@ -62,18 +62,19 @@ class AnswerActivity : Activity() {
         observeLayout()
     }
 
-    private fun setupWindow() {
-        window.apply {
-            addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
-            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
-            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-            attributes = attributes.apply {
-                gravity = Gravity.BOTTOM
-                width = WindowManager.LayoutParams.MATCH_PARENT
-                height = WindowManager.LayoutParams.WRAP_CONTENT
-            }
+private fun setupWindow() {
+    window.apply {
+        addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
+        addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        attributes = attributes.apply {
+            gravity = Gravity.BOTTOM
+            width = WindowManager.LayoutParams.MATCH_PARENT
+            height = WindowManager.LayoutParams.WRAP_CONTENT
         }
     }
+}
+
 
     private fun setupQuickButtons(data: String, max: Int?) {
         data.split("|").forEach { part ->
@@ -197,7 +198,6 @@ class AnswerActivity : Activity() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: window.decorView
         imm.hideSoftInputFromWindow(view.windowToken, 0)
-
         finish()
         overridePendingTransition(0, 0)
     }
@@ -221,4 +221,5 @@ class AnswerActivity : Activity() {
         }
         return super.dispatchTouchEvent(ev)
     }
+
 }
