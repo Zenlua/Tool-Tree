@@ -93,9 +93,9 @@ class MainActivity : AppCompatActivity() {
                 titleList.clear()
     
                 // Tab Favorites
-                favorites?.takeIf { it.isNotEmpty() }?.let {
+                if (!favorites.isNullOrEmpty()) {
                     val fragment = ActionListFragment.create(
-                        it,
+                        favorites,
                         getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
                         null,
                         ThemeModeState.getThemeMode()
@@ -105,9 +105,9 @@ class MainActivity : AppCompatActivity() {
                 }
     
                 // Tab Pages
-                pages?.takeIf { it.isNotEmpty() }?.let {
+                if (!pages.isNullOrEmpty()) {
                     val fragment = ActionListFragment.create(
-                        it,
+                        pages,
                         getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
                         null,
                         ThemeModeState.getThemeMode()
