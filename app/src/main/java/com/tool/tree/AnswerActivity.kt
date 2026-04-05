@@ -1,6 +1,6 @@
 package com.tool.tree
 
-import androidx.activity.ComponentActivity
+import android.app.Activity
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
@@ -16,15 +16,13 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import java.io.File
-import androidx.activity.addCallback
 
-class AnswerActivity : ComponentActivity() {
+class AnswerActivity : Activity() {
 
     private val answerFile by lazy { File(cacheDir, "answer.log") }
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
     
-    // Biến quan trọng: Chống ghi file đè và chống lặp lệnh finish
     private var isProcessed = false
     
     private val timeoutHandler = Handler(Looper.getMainLooper())
@@ -35,11 +33,6 @@ class AnswerActivity : ComponentActivity() {
         
         if (answerFile.exists()) { answerFile.delete() }
         setupWindow()
-
-        // Xử lý phím Back (cho cả nút bấm và cử chỉ vuốt)
-        onBackPressedDispatcher.addCallback(this) {
-            sendNullAndFinish()
-        }
 
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
@@ -75,15 +68,17 @@ class AnswerActivity : ComponentActivity() {
                 val h = r.height()
                 if (h != last) {
                     last = h
-                    // Chỉ kích hoạt lại nếu Activity chưa trong quá trình đóng
                     if (::et.isInitialized && !isProcessed) reActivateCursor()
                 }
             }
         })
     }
 
-    // CỰC KỲ QUAN TRỌNG: Khi vuốt Back, Activity sẽ Pause. 
-    // Nếu chưa xử lý ghi file, ta ép nó kết thúc tại đây.
+    // Xử lý Back cho Activity thuần
+    override fun onBackPressed() {
+        sendNullAndFinish()
+    }
+
     override fun onPause() {
         super.onPause()
         if (!isProcessed) {
@@ -110,7 +105,8 @@ class AnswerActivity : ComponentActivity() {
 
     private fun setupDefaultInput(textColor: Int, isDark: Boolean, max: Int?) {
         et = EditText(this).apply {
-            hint = getString(R.string.hint_answer)
+            // SỬ DỤNG STRING XML CŨ
+            hint = getString(R.string.hint_answer) 
             setTextColor(textColor)
             setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
             backgroundTintList = ColorStateList.valueOf(textColor)
@@ -122,6 +118,7 @@ class AnswerActivity : ComponentActivity() {
         }
 
         val btn = Button(this).apply {
+            // SỬ DỤNG STRING XML CŨ
             text = getString(R.string.btn_send)
             setOnClickListener { send(et.text.toString(), max) }
         }
@@ -144,7 +141,6 @@ class AnswerActivity : ComponentActivity() {
 
     private fun setupWindow() {
         window.apply {
-            // Không sử dụng các cờ ép buộc hiển thị liên tục
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
@@ -158,7 +154,8 @@ class AnswerActivity : ComponentActivity() {
         if (isProcessed) return
         val text = input.trim()
         if (text.isEmpty()) {
-            toast(getString(R.string.do_not_empty))
+            // SỬ DỤNG STRING XML CŨ
+            Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -170,11 +167,14 @@ class AnswerActivity : ComponentActivity() {
                 val num = text.toIntOrNull()
                 if (num != null && num in 0..max) num.toString() else text
             } else text
+            
+            // GHI FILE VÀ RUNG TẠI ĐÂY
             answerFile.writeText(output)
+            root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            
         } catch (e: Exception) { e.printStackTrace() }
         
-        finish()
-        overridePendingTransition(0, 0)
+        finishWithCleanUp()
     }
 
     private fun sendNullAndFinish() {
@@ -183,29 +183,27 @@ class AnswerActivity : ComponentActivity() {
         
         timeoutHandler.removeCallbacks(timeoutRunnable)
         
-        // 1. Xóa focus để ngăn bàn phím tự hiện lại
-        if (::et.isInitialized) {
-            et.clearFocus()
-        }
-        
-        // 2. Ẩn bàn phím ngay lập tức
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(window.decorView.windowToken, 0)
-
-        // 3. Ghi file
         try {
+            // GHI FILE VÀ RUNG TẠI ĐÂY
             answerFile.writeText("null")
+            root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            
         } catch (e: Exception) { e.printStackTrace() }
         
-        // 4. Kết thúc Activity ngay lập tức
+        finishWithCleanUp()
+    }
+
+    private fun finishWithCleanUp() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        val view = currentFocus ?: window.decorView
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+        
         finish()
         overridePendingTransition(0, 0)
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         timeoutHandler.removeCallbacks(timeoutRunnable)
+        super.onDestroy()
     }
-
-    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 }
