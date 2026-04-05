@@ -211,10 +211,11 @@ class AnswerActivity : Activity() {
     
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_DOWN) {
-            val v = currentFocus
-            val outRect = Rect()
-            root.getGlobalVisibleRect(outRect)
-            if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
+            val x = ev.rawX.toInt()
+            val y = ev.rawY.toInt()
+            val hitRect = Rect()
+            root.getGlobalVisibleRect(hitRect)
+            if (!hitRect.contains(x, y)) {
                 sendNullAndFinish()
                 return true
             }
