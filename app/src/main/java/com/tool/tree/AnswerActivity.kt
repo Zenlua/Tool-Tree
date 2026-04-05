@@ -13,6 +13,7 @@ import android.widget.*
 import java.io.File
 import android.os.Build
 import android.window.OnBackInvokedDispatcher
+import android.window.OnBackInvokedCallback
 
 class AnswerActivity : Activity() {
 
@@ -22,6 +23,7 @@ class AnswerActivity : Activity() {
     private lateinit var root: LinearLayout
     private var allowKeyboard = true
     private var isProcessed = false
+    private var backCallback: OnBackInvokedCallback? = null
 
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private val timeoutRunnable = Runnable { sendNullAndFinish() }
@@ -63,11 +65,13 @@ class AnswerActivity : Activity() {
         
 
         if (Build.VERSION.SDK_INT >= 33) {
-            onBackInvokedDispatcher.registerOnBackInvokedCallback(
-                OnBackInvokedDispatcher.PRIORITY_DEFAULT
-            ) {
+            backCallback = OnBackInvokedCallback {
                 handleBack()
             }
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                backCallback!!
+            )
         }
     }
 
@@ -134,20 +138,36 @@ class AnswerActivity : Activity() {
         }
     }
 
-    if (height != lastHeight) {
-        lastHeight = height
-        if (::et.isInitialized && !isProcessed && allowKeyboard) {
-            reActivateCursor()
-        }
+    private fun observeLayout() {
+        root.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+    
+            private var lastHeight = 0
+    
+            override fun onGlobalLayout() {
+                val r = Rect()
+                root.getWindowVisibleDisplayFrame(r)
+    
+                val height = r.height()
+                if (height != lastHeight) {
+                    lastHeight = height
+                    if (::et.isInitialized && !isProcessed && allowKeyboard) {
+                        reActivateCursor()
+                    }
+                }
+            }
+        })
     }
 
     private fun handleBack() {
         if (isProcessed) return
         allowKeyboard = false
-        et.clearFocus()
+        if (::et.isInitialized) {
+            et.clearFocus()
+        }
         sendNullAndFinish()
     }
-    
+
     override fun onBackPressed() {
         handleBack()
     }
@@ -211,6 +231,11 @@ class AnswerActivity : Activity() {
 
     override fun onDestroy() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
+        if (Build.VERSION.SDK_INT >= 33) {
+            backCallback?.let {
+                onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it)
+            }
+        }
         super.onDestroy()
     }
 }
