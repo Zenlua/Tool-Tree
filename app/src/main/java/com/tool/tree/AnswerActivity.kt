@@ -74,35 +74,42 @@ class AnswerActivity : Activity() {
         setContentView(rootLayout)
 
         // ==================== XỬ LÝ ĐẨY LAYOUT KHI MỞ BÀN PHÍM ====================
-        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
-            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
-
-            if (imeInsets.bottom > 0) {
-                // Đẩy layout lên đúng bằng chiều cao bàn phím
-                view.translationY = -imeInsets.bottom.toFloat() + 40f
-            } else {
-                view.translationY = 0f
-            }
-            insets
+ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
+        val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+        if (imeInsets.bottom > 0) {
+            view.translationY = -imeInsets.bottom.toFloat() + 40f
+        } else {
+            view.translationY = 0f
         }
-
+        insets
+    }
         // Cấu hình Window
-        window.apply {
-            setGravity(Gravity.BOTTOM)
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
-            
-            clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
-            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
-        }
+window.apply {
+        setGravity(Gravity.BOTTOM)
+        setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
+        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        
+        clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+        addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
+        addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+    }
 
         // Tự động hiện bàn phím
+etAnswer.postDelayed({
+        etAnswer.isFocusableInTouchMode = true
+        etAnswer.requestFocus()
+
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        
+        // Cách mạnh nhất hiện nay
+        imm.showSoftInput(etAnswer, InputMethodManager.SHOW_IMPLICIT)
+        
+        // Nếu vẫn không hiện, thử cách này (thêm 1 dòng nữa)
         etAnswer.postDelayed({
-            etAnswer.requestFocus()
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(etAnswer, InputMethodManager.SHOW_IMPLICIT)
-        }, 150)
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+        }, 300)
+
+    }, 250) // delay 250ms là ổn nhất
 
         // Hàm gửi đáp án
         fun sendAnswer() {
