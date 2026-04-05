@@ -24,7 +24,7 @@ class AnswerActivity : ComponentActivity() {
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
     
-    // Biến quan trọng để kiểm soát việc ghi file
+    // Biến quan trọng: Chống ghi file đè và chống lặp lệnh finish
     private var isProcessed = false
     
     private val timeoutHandler = Handler(Looper.getMainLooper())
@@ -33,11 +33,10 @@ class AnswerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Luôn làm sạch file cũ khi khởi tạo
         if (answerFile.exists()) { answerFile.delete() }
         setupWindow()
 
-        // Lớp bảo vệ 1: Xử lý phím Back/Vuốt Back truyền thống
+        // Xử lý phím Back (cho cả nút bấm và cử chỉ vuốt)
         onBackPressedDispatcher.addCallback(this) {
             sendNullAndFinish()
         }
@@ -66,8 +65,6 @@ class AnswerActivity : ComponentActivity() {
         }
 
         setContentView(root)
-
-        // Kích hoạt đếm ngược tự động tắt
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
@@ -78,17 +75,18 @@ class AnswerActivity : ComponentActivity() {
                 val h = r.height()
                 if (h != last) {
                     last = h
-                    if (::et.isInitialized) reActivateCursor()
+                    // Chỉ kích hoạt lại nếu Activity chưa trong quá trình đóng
+                    if (::et.isInitialized && !isProcessed) reActivateCursor()
                 }
             }
         })
     }
 
-    // Lớp bảo vệ 2: Chốt chặn cuối cùng khi Activity bị đóng/ẩn (Vuốt Back cử chỉ)
+    // CỰC KỲ QUAN TRỌNG: Khi vuốt Back, Activity sẽ Pause. 
+    // Nếu chưa xử lý ghi file, ta ép nó kết thúc tại đây.
     override fun onPause() {
         super.onPause()
         if (!isProcessed) {
-            // Nếu người dùng vuốt thoát mà chưa nhấn gửi, ghi null luôn
             sendNullAndFinish()
         }
     }
@@ -136,6 +134,7 @@ class AnswerActivity : ComponentActivity() {
     }
 
     private fun reActivateCursor() {
+        if (isProcessed) return
         et.post {
             if (!et.hasFocus()) et.requestFocus()
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
@@ -145,6 +144,7 @@ class AnswerActivity : ComponentActivity() {
 
     private fun setupWindow() {
         window.apply {
+            // Không sử dụng các cờ ép buộc hiển thị liên tục
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
@@ -162,18 +162,19 @@ class AnswerActivity : ComponentActivity() {
             return
         }
 
-        isProcessed = true // Đánh dấu đã xử lý thành công
+        isProcessed = true
         timeoutHandler.removeCallbacks(timeoutRunnable)
         
         try {
-            val finalVal = if (max != null) {
+            val output = if (max != null) {
                 val num = text.toIntOrNull()
                 if (num != null && num in 0..max) num.toString() else text
             } else text
-            answerFile.writeText(finalVal)
+            answerFile.writeText(output)
         } catch (e: Exception) { e.printStackTrace() }
         
         finish()
+        overridePendingTransition(0, 0)
     }
 
     private fun sendNullAndFinish() {
@@ -182,15 +183,21 @@ class AnswerActivity : ComponentActivity() {
         
         timeoutHandler.removeCallbacks(timeoutRunnable)
         
-        // Ẩn phím ngay lập tức
-        if (::et.isInitialized) et.clearFocus()
+        // 1. Xóa focus để ngăn bàn phím tự hiện lại
+        if (::et.isInitialized) {
+            et.clearFocus()
+        }
+        
+        // 2. Ẩn bàn phím ngay lập tức
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(window.decorView.windowToken, 0)
 
+        // 3. Ghi file
         try {
             answerFile.writeText("null")
         } catch (e: Exception) { e.printStackTrace() }
         
+        // 4. Kết thúc Activity ngay lập tức
         finish()
         overridePendingTransition(0, 0)
     }
