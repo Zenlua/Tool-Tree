@@ -20,13 +20,12 @@ class AnswerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Cấu hình Window TRƯỚC KHI setContentView
+        // 1. Cấu hình Window
         setupWindow()
 
         val max = intent.getStringExtra("max")?.toIntOrNull()
         val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         val colorMain = if (isDark) Color.WHITE else Color.BLACK
-        val colorBg = if (isDark) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5")
 
         // 2. Khởi tạo EditText
         etAnswer = EditText(this).apply {
@@ -38,9 +37,11 @@ class AnswerActivity : Activity() {
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             
-            // Ép View luôn ở trạng thái sẵn sàng nhận phím
+            // Ép buộc hiện con trỏ nhấp nháy
+            isCursorVisible = true
             isFocusable = true
             isFocusableInTouchMode = true
+            requestFocus() 
         }
 
         val btnSend = Button(this).apply {
@@ -51,14 +52,21 @@ class AnswerActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(20, 20, 20, 20)
-            setBackgroundColor(colorBg)
+            setBackgroundColor(if (isDark) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5"))
             addView(etAnswer)
             addView(btnSend)
         }
 
         setContentView(root)
 
-        // 3. Xử lý phím Enter
+        // 3. Logic quan trọng để hiện con trỏ và phím xóa ngay lập tức
+        etAnswer.post {
+            etAnswer.requestFocus()
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            // Sử dụng SHOW_FORCED để ép hệ thống nhận diện việc nhập liệu
+            imm.showSoftInput(etAnswer, InputMethodManager.SHOW_FORCED)
+        }
+
         etAnswer.setOnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_SEND) {
                 processSend(etAnswer.text.toString(), max)
@@ -68,36 +76,22 @@ class AnswerActivity : Activity() {
     }
 
     private fun setupWindow() {
-        // QUAN TRỌNG: Thiết lập Window để nhận sự kiện bàn phím đầy đủ
         window.apply {
-            // Xóa tất cả các cờ có thể gây chặn sự kiện phím (như phím xóa)
+            // Xóa các flag gây cản trở focus
             clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            
-            // Chỉ giữ lại cờ theo dõi chạm bên ngoài
-            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
             
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
                 width = WindowManager.LayoutParams.MATCH_PARENT
                 height = WindowManager.LayoutParams.WRAP_CONTENT
             }
-        }
-    }
-
-    // Gọi bàn phím khi cửa sổ đã thực sự hiển thị
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            etAnswer.requestFocus()
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            // Sử dụng SHOW_FORCED để đảm bảo kết nối giữa bàn phím và EditText
-            imm.showSoftInput(etAnswer, InputMethodManager.SHOW_FORCED)
+            // Cho phép nhận diện chạm bên ngoài để đóng
+            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
         }
     }
 
     override fun onTouchEvent(event: android.view.MotionEvent): Boolean {
-        // Chạm ra ngoài vùng Activity (vùng dim) sẽ đóng Activity
         if (event.action == android.view.MotionEvent.ACTION_OUTSIDE) {
             finish()
             return true
@@ -108,17 +102,17 @@ class AnswerActivity : Activity() {
     private fun processSend(input: String, max: Int?) {
         val text = input.trim()
         if (text.isEmpty()) return
-        
         try {
             if (max != null) {
                 val num = text.toIntOrNull()
                 if (num != null && num in 0..max) {
                     answerFile.writeText(num.toString())
-                } else return
+                    finish()
+                }
             } else {
                 answerFile.writeText(text)
+                finish()
             }
-            finish()
         } catch (e: Exception) { e.printStackTrace() }
     }
 }
