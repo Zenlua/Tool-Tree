@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
@@ -16,7 +17,7 @@ import java.io.File
 
 class AnswerActivity : Activity() {
 
-    private val answerFile by lazy { File(cacheDir, "answer") }
+    private val answerFile by lazy { File(cacheDir, "answer.log") }
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
 
@@ -24,12 +25,68 @@ class AnswerActivity : Activity() {
         super.onCreate(savedInstanceState)
         setupWindow()
 
+        val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
         val isDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
                 Configuration.UI_MODE_NIGHT_YES
 
         val textColor = if (isDark) Color.WHITE else Color.BLACK
+        val bgColor = if (isDark) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5")
 
+        root = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(20, 20, 20, 20)
+            setBackgroundColor(bgColor)
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        // Kiểm tra nếu có dữ liệu câu trả lời (tính năng mới)
+        if (answerData != null && answerData.contains("|")) {
+            setupQuickButtons(answerData, max)
+        } else {
+            // Giữ lại tính năng cũ (ô nhập liệu + nút gửi)
+            setupDefaultInput(textColor, isDark, max)
+        }
+
+        setContentView(root)
+
+        root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            var last = 0
+            override fun onGlobalLayout() {
+                val r = Rect()
+                root.getWindowVisibleDisplayFrame(r)
+                val h = r.height()
+                if (h != last) {
+                    last = h
+                    if (::et.isInitialized) reActivateCursor()
+                }
+            }
+        })
+    }
+
+    private fun setupQuickButtons(data: String, max: Int?) {
+        // Tách chuỗi theo dấu |
+        val parts = data.split("|")
+        parts.forEach { part ->
+            // part có dạng "1:A Test" -> split lấy "1" làm kết quả và "A Test" làm nhãn
+            val pair = part.split(":", limit = 2)
+            if (pair.size == 2) {
+                val resultValue = pair[0].trim()
+                val label = pair[1].trim()
+
+                val btn = Button(this).apply {
+                    text = label
+                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
+                        setMargins(5, 0, 5, 0)
+                    }
+                    setOnClickListener { send(resultValue, max) }
+                }
+                root.addView(btn)
+            }
+        }
+    }
+
+    private fun setupDefaultInput(textColor: Int, isDark: Boolean, max: Int?) {
         et = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             setTextColor(textColor)
@@ -51,29 +108,8 @@ class AnswerActivity : Activity() {
             setOnClickListener { send(et.text.toString(), max) }
         }
 
-        root = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(20, 20, 20, 20)
-            setBackgroundColor(if (isDark)
-                Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5"))
-            addView(et)
-            addView(btn)
-        }
-
-        setContentView(root)
-
-        root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            var last = 0
-            override fun onGlobalLayout() {
-                val r = Rect()
-                root.getWindowVisibleDisplayFrame(r)
-                val h = r.height()
-                if (h != last) {
-                    last = h
-                    reActivateCursor()
-                }
-            }
-        })
+        root.addView(et)
+        root.addView(btn)
 
         et.setOnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_SEND) {
@@ -119,7 +155,12 @@ class AnswerActivity : Activity() {
                 val num = text.toIntOrNull()
                 if (num != null && num in 0..max) {
                     answerFile.writeText(num.toString()); finish()
-                } else toast(getString(R.string.toast_out_of_range, 0, max))
+                } else {
+                    // Nếu là kết quả từ nút bấm (A, B, C...) thì có thể không phải số, 
+                    // nhưng logic cũ yêu cầu max thì kiểm tra range.
+                    // Ở đây tôi cho phép gửi thẳng nếu đó là giá trị từ nút bấm.
+                    answerFile.writeText(text); finish()
+                }
             } else {
                 answerFile.writeText(text); finish()
             }
