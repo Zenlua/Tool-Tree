@@ -1,5 +1,6 @@
 package com.tool.tree
 
+import android.app.Activity
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
@@ -9,12 +10,9 @@ import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
 import java.io.File
-import androidx.activity.addCallback
 
-// Thay đổi kế thừa từ Activity sang AppCompatActivity
-class AnswerActivity : AppCompatActivity() {
+class AnswerActivity : Activity() {
 
     private val answerFile by lazy { File(cacheDir, "answer.log") }
 
@@ -36,7 +34,6 @@ class AnswerActivity : AppCompatActivity() {
         val max = intent.getStringExtra("max")?.toIntOrNull()
         val timeoutSeconds = intent.getStringExtra("time")?.toLongOrNull() ?: 20L
 
-        // Cách kiểm tra Dark Mode vẫn giữ nguyên vì tương thích tốt
         val isDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
                 Configuration.UI_MODE_NIGHT_YES
 
@@ -63,16 +60,9 @@ class AnswerActivity : AppCompatActivity() {
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
         observeLayout()
-        
-        onBackPressedDispatcher.addCallback(this) {
-            sendNullAndFinish()
-        }
     }
 
     private fun setupWindow() {
-        // Đối với AppCompatActivity, đôi khi bạn cần ẩn ActionBar nếu theme mặc định có nó
-        supportActionBar?.hide() 
-
         window.apply {
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             attributes = attributes.apply {
@@ -91,7 +81,6 @@ class AnswerActivity : AppCompatActivity() {
             val value = pair[0].trim()
             val label = pair[1].trim()
 
-            // AppCompatButton sẽ được tự động sử dụng khi kế thừa AppCompatActivity
             val btn = Button(this).apply {
                 text = label
                 layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
@@ -109,7 +98,6 @@ class AnswerActivity : AppCompatActivity() {
             hint = getString(R.string.hint_answer)
             setTextColor(textColor)
             setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
-            // Sử dụng ViewCompat hoặc giữ nguyên backgroundTintList cho API 21+
             backgroundTintList = ColorStateList.valueOf(textColor)
             imeOptions = EditorInfo.IME_ACTION_SEND
 
@@ -209,8 +197,6 @@ class AnswerActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
 
         finish()
-        // Dùng API mới thay cho overridePendingTransition nếu cần, 
-        // nhưng với "0, 0" thì giữ nguyên vẫn ổn.
         overridePendingTransition(0, 0)
     }
 
@@ -219,4 +205,18 @@ class AnswerActivity : AppCompatActivity() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
         super.onDestroy()
     }
+    
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.action == MotionEvent.ACTION_DOWN) {
+            val v = currentFocus
+            val outRect = Rect()
+            root.getGlobalVisibleRect(outRect)
+            if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
+                sendNullAndFinish()
+                return true
+            }
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
 }
