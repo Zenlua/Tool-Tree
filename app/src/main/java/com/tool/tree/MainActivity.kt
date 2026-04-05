@@ -139,22 +139,18 @@ class MainActivity : AppCompatActivity() {
     
             withContext(Dispatchers.Main) {
                 // Reload Favorites
-                if (!favorites.isNullOrEmpty()) {
-                    fragmentList.getOrNull(0)?.updateData(
-                        favorites,
-                        getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
-                        ThemeModeState.getThemeMode()
-                    )
-                }
+                (fragmentList.getOrNull(0) as? ActionListFragment)?.updateData(
+                    favorites ?: emptyList(),
+                    getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
+                    ThemeModeState.getThemeMode()
+                )
     
                 // Reload Pages
-                if (!pages.isNullOrEmpty()) {
-                    fragmentList.getOrNull(1)?.updateData(
-                        pages,
-                        getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
-                        ThemeModeState.getThemeMode()
-                    )
-                }
+                (fragmentList.getOrNull(1) as? ActionListFragment)?.updateData(
+                    pages ?: emptyList(),
+                    getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
+                    ThemeModeState.getThemeMode()
+                )
             }
         }
     }
