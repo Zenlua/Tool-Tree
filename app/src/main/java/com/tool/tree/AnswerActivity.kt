@@ -208,13 +208,13 @@ class AnswerActivity : Activity() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
         super.onDestroy()
     }
-    
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_DOWN) {
-            val x = ev.rawX.toInt()
-            val y = ev.rawY.toInt()
             val hitRect = Rect()
             root.getGlobalVisibleRect(hitRect)
+            val x = ev.rawX.toInt()
+            val y = ev.rawY.toInt()
             if (!hitRect.contains(x, y)) {
                 sendNullAndFinish()
                 return true
