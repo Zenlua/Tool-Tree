@@ -19,40 +19,38 @@ class AnswerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Cấu hình Window trước khi nạp giao diện
-        setupWindowLayout()
+        // 1. Cấu hình Window (Phải gọi trước setContentView)
+        setupWindow()
 
-        // 2. Chuẩn bị dữ liệu & màu sắc
-        if (answerFile.exists()) answerFile.delete()
         val max = intent.getStringExtra("max")?.toIntOrNull()
         val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         
         val colorMain = if (isDark) Color.WHITE else Color.BLACK
         val colorBg = if (isDark) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5")
-        val colorHint = if (isDark) Color.LTGRAY else Color.GRAY
 
-        // 3. Khởi tạo EditText
+        // 2. Tạo UI bằng Code
         val etAnswer = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             setTextColor(colorMain)
-            setHintTextColor(colorHint)
+            setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
             backgroundTintList = ColorStateList.valueOf(colorMain)
             imeOptions = EditorInfo.IME_ACTION_SEND
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+            
+            // Đảm bảo View sẵn sàng nhận tiêu điểm
+            isFocusable = true
             isFocusableInTouchMode = true
         }
 
-        // 4. Khởi tạo Button
         val btnSend = Button(this).apply {
             text = getString(R.string.btn_send)
             setOnClickListener { processSend(etAnswer.text.toString(), max) }
         }
 
-        // 5. Root Layout (Dùng ngang để gọn code)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(40, 40, 40, 40)
+            setPadding(20, 20, 20, 20)
             setBackgroundColor(colorBg)
             addView(etAnswer)
             addView(btnSend)
@@ -60,14 +58,14 @@ class AnswerActivity : Activity() {
 
         setContentView(root)
 
-        // 6. Sửa lỗi Focus & Bàn phím: Delay nhẹ để Window ổn định vị trí Gravity.BOTTOM
+        // 3. Kích hoạt bàn phím (SỬA LỖI FOCUS & BACKSPACE)
         etAnswer.postDelayed({
             etAnswer.requestFocus()
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(etAnswer, InputMethodManager.SHOW_IMPLICIT)
-        }, 200)
+            // Sử dụng SHOW_FORCED để ép bàn phím liên kết chặt chẽ với EditText
+            imm.showSoftInput(etAnswer, InputMethodManager.SHOW_FORCED)
+        }, 300)
 
-        // Sự kiện phím Enter trên bàn phím ảo
         etAnswer.setOnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_SEND) {
                 processSend(etAnswer.text.toString(), max)
@@ -76,16 +74,25 @@ class AnswerActivity : Activity() {
         }
     }
 
-    private fun setupWindowLayout() {
+    private fun setupWindow() {
         window.attributes = window.attributes.apply {
             gravity = Gravity.BOTTOM
             width = WindowManager.LayoutParams.MATCH_PARENT
             height = WindowManager.LayoutParams.WRAP_CONTENT
         }
-        // Cho phép tương tác bên ngoài để đóng hoặc giữ focus
-        window.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-        window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or 
-                         WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+        
+        // Loại bỏ FLAG_NOT_TOUCH_MODAL để tránh lỗi không xóa được chữ
+        window.addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+    }
+
+    // Đóng activity khi chạm ra ngoài vùng nhập liệu
+    override fun onTouchEvent(event: android.view.MotionEvent): Boolean {
+        if (event.action == android.view.MotionEvent.ACTION_OUTSIDE) {
+            finish()
+            return true
+        }
+        return super.onTouchEvent(event)
     }
 
     private fun processSend(input: String, max: Int?) {
@@ -99,9 +106,7 @@ class AnswerActivity : Activity() {
             if (max != null) {
                 val num = text.toIntOrNull()
                 if (num == null || num !in 0..max) {
-                    val errorMsg = if (num == null) getString(R.string.toast_invalid_number) 
-                                   else getString(R.string.toast_out_of_range, 0, max)
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.toast_invalid_number), Toast.LENGTH_SHORT).show()
                     return
                 }
                 answerFile.writeText(num.toString())
@@ -109,8 +114,6 @@ class AnswerActivity : Activity() {
                 answerFile.writeText(text)
             }
             finish()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (e: Exception) { e.printStackTrace() }
     }
 }
