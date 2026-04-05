@@ -56,8 +56,12 @@ class AnswerActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, 8, 0, 8)
+        
             addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            addView(btnSend, LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WRAP_CONTENT)
+            addView(btnSend, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ))
         }
 
         val rootLayout = LinearLayout(this).apply {
