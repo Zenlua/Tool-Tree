@@ -65,11 +65,9 @@ class AnswerActivity : Activity() {
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
         // Xử lý vuốt trở lại (Gesture Back) và phím Back
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                sendNullAndFinish()
-            }
-        })
+        override fun onBackPressed() {
+            sendNullAndFinish()
+        }
 
         // Theo dõi layout để giữ bàn phím
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
@@ -95,7 +93,7 @@ class AnswerActivity : Activity() {
                 height = WindowManager.LayoutParams.WRAP_CONTENT
             }
             // Cải thiện overlay và gesture
-            addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
+            // addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
         }
     }
 
@@ -217,12 +215,12 @@ class AnswerActivity : Activity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (!isFinishing && !isProcessed) {
-            sendNullAndFinish()
-        }
-    }
+    // override fun onPause() {
+        // super.onPause()
+        // if (!isFinishing && !isProcessed) {
+            // sendNullAndFinish()
+        // }
+    // }
 
     override fun onDestroy() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
