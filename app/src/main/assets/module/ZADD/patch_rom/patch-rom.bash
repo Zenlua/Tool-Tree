@@ -465,6 +465,7 @@ if [ "$fix_toolbox" == 1 ];then
             [ -z "$pbver" ] && killtree "Version not found error !"
             if [ ! -f "$MPAT/mod/version" ] || [ "$pbver" != "$(cat "$MPAT/mod/version" 2>/dev/null)" ];then
             echo "Updating: $pbver"
+            mkdir -p "$MPAT/mod"
             echo "$pbver" > "$MPAT/mod/version"
             downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "KaoriosToolbox.*\.apk")" "$MPAT/mod/KaoriosToolbox.apk" &>/dev/null
             downloadb "$(echo "$linkurrl" | jq -r ".assets[].browser_download_url" | grep "com.kousei.kaorios.xml")" "$MPAT/mod/com.kousei.kaorios.xml" &>/dev/null

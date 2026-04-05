@@ -1,7 +1,12 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
 show_help(){
-echo "Use: answeractivity -a|--am -m|--max 5 -a|--answer '1:A|2:B|3:C|4:D' "
+echo "Use: answeractivity -a|--am -m|--max 5 -a|--answer '1:A|2:B|3:C|4:D' -t|--time 20"
+echo
+echo "-a|--am: forced use of am"
+echo "-m|--max: Limit the number ex: 0 to 5"
+echo "-a|--answer: answer button, ex: 1:A|2:B|3:C|4:D"
+echo "-t|--time: waiting timeout, ex: default 20s"
 exit 0
 }
 
@@ -45,9 +50,11 @@ else
     echo "am:[$CMDs]"
 fi
 
+text_answer="$TEMP/answer.log"
 sleep 0.2
-while [ ! -f "$TEMP/answer.log" ]; do
-    sleep 0.5
+
+while [ ! -f "$text_answer" ]; do
+    sleep 0.2
 done
 
-cat $TEMP/answer.log
+[ -f "$text_answer" ] && cat "$text_answer"
