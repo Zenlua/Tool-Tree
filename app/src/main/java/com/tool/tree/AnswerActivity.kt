@@ -62,19 +62,18 @@ class AnswerActivity : Activity() {
         observeLayout()
     }
 
-private fun setupWindow() {
-    window.apply {
-        addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
-        addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
-        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        attributes = attributes.apply {
-            gravity = Gravity.BOTTOM
-            width = WindowManager.LayoutParams.MATCH_PARENT
-            height = WindowManager.LayoutParams.WRAP_CONTENT
+    private fun setupWindow() {
+        window.apply {
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
+            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+            attributes = attributes.apply {
+                gravity = Gravity.BOTTOM
+                width = WindowManager.LayoutParams.MATCH_PARENT
+                height = WindowManager.LayoutParams.WRAP_CONTENT
+            }
         }
     }
-}
-
 
     private fun setupQuickButtons(data: String, max: Int?) {
         data.split("|").forEach { part ->
@@ -210,11 +209,18 @@ private fun setupWindow() {
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_DOWN) {
-            val x = ev.rawX.toInt()
-            val y = ev.rawY.toInt()
-            val hitRect = Rect()
-            root.getGlobalVisibleRect(hitRect)
-            if (!hitRect.contains(x, y)) {
+            val v = currentFocus
+            if (v is EditText) {
+                val outRect = Rect()
+                v.getGlobalVisibleRect(outRect)
+                val isInsideEditText = outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())
+                if (isInsideEditText) {
+                    return super.dispatchTouchEvent(ev)
+                }
+            }
+            val rootRect = Rect()
+            root.getGlobalVisibleRect(rootRect)
+            if (!rootRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
                 sendNullAndFinish()
                 return true
             }
