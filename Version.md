@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Beta**
+**Version: 1.3.9 (5-4-2026)**
 
++ Fix code
 + Fixes the issue where add-on patch ROM update notifications are not appearing
 + Supports swiping to switch tabs
 
