@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.WindowManager
@@ -40,11 +41,11 @@ class AnswerActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        // Kiểm tra nếu có dữ liệu câu trả lời (tính năng mới)
+        // Kiểm tra tính năng mới: Nếu có chuỗi answer dạng "1:A|2:B"
         if (answerData != null && answerData.contains("|")) {
             setupQuickButtons(answerData, max)
         } else {
-            // Giữ lại tính năng cũ (ô nhập liệu + nút gửi)
+            // Giữ lại tính năng cũ: Hiện ô nhập văn bản
             setupDefaultInput(textColor, isDark, max)
         }
 
@@ -58,6 +59,7 @@ class AnswerActivity : Activity() {
                 val h = r.height()
                 if (h != last) {
                     last = h
+                    // Chỉ kích hoạt con trỏ nếu EditText đã được khởi tạo (tính năng cũ)
                     if (::et.isInitialized) reActivateCursor()
                 }
             }
@@ -65,10 +67,10 @@ class AnswerActivity : Activity() {
     }
 
     private fun setupQuickButtons(data: String, max: Int?) {
-        // Tách chuỗi theo dấu |
+        // Tách các lựa chọn bằng dấu |
         val parts = data.split("|")
         parts.forEach { part ->
-            // part có dạng "1:A Test" -> split lấy "1" làm kết quả và "A Test" làm nhãn
+            // Mỗi phần có dạng "GiáTrị:Nhãn" (VD: "1:A Test")
             val pair = part.split(":", limit = 2)
             if (pair.size == 2) {
                 val resultValue = pair[0].trim()
@@ -76,6 +78,7 @@ class AnswerActivity : Activity() {
 
                 val btn = Button(this).apply {
                     text = label
+                    // Dàn đều các nút trên hàng ngang
                     layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
                         setMargins(5, 0, 5, 0)
                     }
@@ -150,15 +153,16 @@ class AnswerActivity : Activity() {
             toast(getString(R.string.do_not_empty)); return
         }
 
+        // Thực hiện rung nhẹ khi nhấn nút (Haptic Feedback)
+        root.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+
         try {
             if (max != null) {
                 val num = text.toIntOrNull()
                 if (num != null && num in 0..max) {
                     answerFile.writeText(num.toString()); finish()
                 } else {
-                    // Nếu là kết quả từ nút bấm (A, B, C...) thì có thể không phải số, 
-                    // nhưng logic cũ yêu cầu max thì kiểm tra range.
-                    // Ở đây tôi cho phép gửi thẳng nếu đó là giá trị từ nút bấm.
+                    // Chấp nhận giá trị từ nút bấm ngay cả khi có tham số max
                     answerFile.writeText(text); finish()
                 }
             } else {
