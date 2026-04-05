@@ -64,10 +64,7 @@ class AnswerActivity : Activity() {
         // Thiết lập timeout
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
-        // Xử lý vuốt trở lại (Gesture Back) và phím Back
-        override fun onBackPressed() {
-            sendNullAndFinish()
-        }
+   
 
         // Theo dõi layout để giữ bàn phím
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
@@ -84,6 +81,11 @@ class AnswerActivity : Activity() {
         })
     }
 
+     // Xử lý vuốt trở lại (Gesture Back) và phím Back
+        override fun onBackPressed() {
+            sendNullAndFinish()
+        }
+        
     private fun setupWindow() {
         window.apply {
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
