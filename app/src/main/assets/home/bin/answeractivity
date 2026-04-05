@@ -5,7 +5,7 @@ echo "Use: answeractivity -a|--am -m|--max 5 -a|--answer '1:A|2:B|3:C|4:D' "
 exit 0
 }
 
-MAXNUMs=""; ANSWERs=""; AMON="";
+MAXNUMs=""; ANSWERs=""; AMON=""; TIMEOUTs="";
 while [ $# -gt 0 ]; do
   case "$1" in
     -m|--max)
@@ -14,6 +14,10 @@ while [ $# -gt 0 ]; do
       ;;
     -a|--answer)
       ANSWERs="$2"
+      shift 2
+      ;;
+    -t|--time)
+      TIMEOUTs="$2"
       shift 2
       ;;
     -a|--am)
@@ -32,7 +36,8 @@ done
 
 # Mặc định
 CMDs="start -n com.tool.tree/com.tool.tree.AnswerActivity "
-[ "$MAXNUMs" ] && CMDs+="--max $MAXNUMs "
+[ "$MAXNUMs" ] && CMDs+="--es max $MAXNUMs "
+[ "$TIMEOUTs" ] && CMDs+="--es time $TIMEOUTs "
 [ "$ANSWERs" ] && CMDs+="--es answer \"$ANSWERs\" "
 if [ "$AMON" == 1 ] || [ -z "$shell_progres" ];then
     eval "am $CMDs" &>/dev/null
