@@ -6,6 +6,8 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -21,15 +23,22 @@ class AnswerActivity : Activity() {
     private val answerFile by lazy { File(cacheDir, "answer.log") }
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
+    
+    // Handler để quản lý thời gian chờ
+    private val timeoutHandler = Handler(Looper.getMainLooper())
+    private val timeoutRunnable = Runnable { sendNullAndFinish() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        if (answerFile.exists()) {answerFile.delete()}
+        if (answerFile.exists()) { answerFile.delete() }
         setupWindow()
 
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
+        // Lấy thời gian chờ từ intent (mặc định 30s nếu có flag hoặc truyền vào)
+        val timeoutSeconds = intent.getIntExtra("time", 30).toLong()
+
         val isDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
                 Configuration.UI_MODE_NIGHT_YES
 
@@ -43,15 +52,16 @@ class AnswerActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        // Kiểm tra tính năng mới: Nếu có chuỗi answer dạng "1:A|2:B"
         if (answerData != null && answerData.contains("|")) {
             setupQuickButtons(answerData, max)
         } else {
-            // Giữ lại tính năng cũ: Hiện ô nhập văn bản
             setupDefaultInput(textColor, isDark, max)
         }
 
         setContentView(root)
+
+        // Bắt đầu đếm ngược ngay khi Activity tạo xong
+        timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             var last = 0
@@ -61,18 +71,20 @@ class AnswerActivity : Activity() {
                 val h = r.height()
                 if (h != last) {
                     last = h
-                    // Chỉ kích hoạt con trỏ nếu EditText đã được khởi tạo (tính năng cũ)
                     if (::et.isInitialized) reActivateCursor()
                 }
             }
         })
     }
 
+    // Xử lý khi nhấn phím Back
+    override fun onBackPressed() {
+        sendNullAndFinish()
+    }
+
     private fun setupQuickButtons(data: String, max: Int?) {
-        // Tách các lựa chọn bằng dấu |
         val parts = data.split("|")
         parts.forEach { part ->
-            // Mỗi phần có dạng "GiáTrị:Nhãn" (VD: "1:A Test")
             val pair = part.split(":", limit = 2)
             if (pair.size == 2) {
                 val resultValue = pair[0].trim()
@@ -80,7 +92,6 @@ class AnswerActivity : Activity() {
 
                 val btn = Button(this).apply {
                     text = label
-                    // Dàn đều các nút trên hàng ngang
                     layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
                         setMargins(5, 0, 5, 0)
                     }
@@ -155,7 +166,9 @@ class AnswerActivity : Activity() {
             toast(getString(R.string.do_not_empty)); return
         }
 
-        // Thực hiện rung nhẹ khi nhấn nút (Haptic Feedback)
+        // Hủy đếm ngược vì người dùng đã thao tác
+        timeoutHandler.removeCallbacks(timeoutRunnable)
+
         root.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
 
         try {
@@ -164,7 +177,6 @@ class AnswerActivity : Activity() {
                 if (num != null && num in 0..max) {
                     answerFile.writeText(num.toString()); finish()
                 } else {
-                    // Chấp nhận giá trị từ nút bấm ngay cả khi có tham số max
                     answerFile.writeText(text); finish()
                 }
             } else {
@@ -173,6 +185,23 @@ class AnswerActivity : Activity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    // Hàm dùng chung để kết thúc với giá trị null
+    private fun sendNullAndFinish() {
+        timeoutHandler.removeCallbacks(timeoutRunnable)
+        try {
+            answerFile.writeText("null")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        finish()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Đảm bảo không còn callback nào chạy ngầm khi đóng app
+        timeoutHandler.removeCallbacks(timeoutRunnable)
     }
 
     private fun toast(msg: String) =

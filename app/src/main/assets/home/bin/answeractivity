@@ -40,8 +40,9 @@ else
     echo "am:[$CMDs]"
 fi
 
+sleep 0.2
 while [ ! -f "$TEMP/answer.log" ]; do
-    sleep 1
+    sleep 0.5
 done
 
 cat $TEMP/answer.log
