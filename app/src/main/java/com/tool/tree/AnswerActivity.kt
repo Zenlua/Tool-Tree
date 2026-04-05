@@ -23,6 +23,8 @@ class AnswerActivity : ComponentActivity() {
     private val answerFile by lazy { File(cacheDir, "answer.log") }
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
+    
+    // Biến quan trọng để kiểm soát việc ghi file
     private var isProcessed = false
     
     private val timeoutHandler = Handler(Looper.getMainLooper())
@@ -31,17 +33,18 @@ class AnswerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Luôn làm sạch file cũ khi khởi tạo
         if (answerFile.exists()) { answerFile.delete() }
         setupWindow()
 
+        // Lớp bảo vệ 1: Xử lý phím Back/Vuốt Back truyền thống
         onBackPressedDispatcher.addCallback(this) {
             sendNullAndFinish()
         }
 
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
-        val timeoutStr = intent.getStringExtra("time")
-        val timeoutSeconds = timeoutStr?.toLongOrNull() ?: 20L
+        val timeoutSeconds = intent.getStringExtra("time")?.toLongOrNull() ?: 20L
 
         val isDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
                 Configuration.UI_MODE_NIGHT_YES
@@ -64,9 +67,9 @@ class AnswerActivity : ComponentActivity() {
 
         setContentView(root)
 
+        // Kích hoạt đếm ngược tự động tắt
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
-        // Sửa cú pháp OnGlobalLayoutListener để tránh lỗi Type Mismatch
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             var last = 0
             override fun onGlobalLayout() {
@@ -81,6 +84,15 @@ class AnswerActivity : ComponentActivity() {
         })
     }
 
+    // Lớp bảo vệ 2: Chốt chặn cuối cùng khi Activity bị đóng/ẩn (Vuốt Back cử chỉ)
+    override fun onPause() {
+        super.onPause()
+        if (!isProcessed) {
+            // Nếu người dùng vuốt thoát mà chưa nhấn gửi, ghi null luôn
+            sendNullAndFinish()
+        }
+    }
+
     private fun setupQuickButtons(data: String, max: Int?) {
         val parts = data.split("|")
         parts.forEach { part ->
@@ -88,12 +100,9 @@ class AnswerActivity : ComponentActivity() {
             if (pair.size == 2) {
                 val resultValue = pair[0].trim()
                 val label = pair[1].trim()
-
                 val btn = Button(this).apply {
                     text = label
-                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
-                        setMargins(5, 0, 5, 0)
-                    }
+                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(5, 0, 5, 0) }
                     setOnClickListener { send(resultValue, max) }
                 }
                 root.addView(btn)
@@ -108,28 +117,21 @@ class AnswerActivity : ComponentActivity() {
             setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
             backgroundTintList = ColorStateList.valueOf(textColor)
             imeOptions = EditorInfo.IME_ACTION_SEND
-            inputType = if (max != null)
-                android.text.InputType.TYPE_CLASS_NUMBER
-            else android.text.InputType.TYPE_CLASS_TEXT
-
+            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             isFocusable = true
             isFocusableInTouchMode = true
-            isCursorVisible = true
         }
 
         val btn = Button(this).apply {
             text = getString(R.string.btn_send)
             setOnClickListener { send(et.text.toString(), max) }
         }
-
         root.addView(et)
         root.addView(btn)
 
         et.setOnEditorActionListener { _, id, _ ->
-            if (id == EditorInfo.IME_ACTION_SEND) {
-                send(et.text.toString(), max); true
-            } else false
+            if (id == EditorInfo.IME_ACTION_SEND) { send(et.text.toString(), max); true } else false
         }
     }
 
@@ -156,22 +158,21 @@ class AnswerActivity : ComponentActivity() {
         if (isProcessed) return
         val text = input.trim()
         if (text.isEmpty()) {
-            toast(getString(R.string.do_not_empty)); return
+            toast(getString(R.string.do_not_empty))
+            return
         }
 
-        isProcessed = true
+        isProcessed = true // Đánh dấu đã xử lý thành công
         timeoutHandler.removeCallbacks(timeoutRunnable)
-        root.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-
+        
         try {
-            val finalResult = if (max != null) {
+            val finalVal = if (max != null) {
                 val num = text.toIntOrNull()
                 if (num != null && num in 0..max) num.toString() else text
             } else text
-            answerFile.writeText(finalResult)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+            answerFile.writeText(finalVal)
+        } catch (e: Exception) { e.printStackTrace() }
+        
         finish()
     }
 
@@ -181,16 +182,15 @@ class AnswerActivity : ComponentActivity() {
         
         timeoutHandler.removeCallbacks(timeoutRunnable)
         
+        // Ẩn phím ngay lập tức
         if (::et.isInitialized) et.clearFocus()
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        val view = currentFocus ?: window.decorView
-        imm.hideSoftInputFromWindow(view.windowToken, 0)
+        imm.hideSoftInputFromWindow(window.decorView.windowToken, 0)
 
         try {
             answerFile.writeText("null")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (e: Exception) { e.printStackTrace() }
+        
         finish()
         overridePendingTransition(0, 0)
     }
@@ -200,6 +200,5 @@ class AnswerActivity : ComponentActivity() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
     }
 
-    private fun toast(msg: String) =
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 }
