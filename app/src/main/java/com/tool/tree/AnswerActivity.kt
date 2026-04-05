@@ -5,13 +5,8 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Rect
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.Gravity
-import android.view.HapticFeedbackConstants
-import android.view.ViewTreeObserver
-import android.view.WindowManager
+import android.os.*
+import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
@@ -20,6 +15,7 @@ import java.io.File
 class AnswerActivity : Activity() {
 
     private val answerFile by lazy { File(cacheDir, "answer.log") }
+
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
 
@@ -42,7 +38,7 @@ class AnswerActivity : Activity() {
                 Configuration.UI_MODE_NIGHT_YES
 
         val textColor = if (isDark) Color.WHITE else Color.BLACK
-        val bgColor = if (isDark) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5")
+        val bgColor = if (isDark) 0xFF2A2A2A.toInt() else 0xFFF5F5F5.toInt()
 
         root = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -51,7 +47,7 @@ class AnswerActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        if (answerData != null && answerData.contains("|")) {
+        if (answerData?.contains("|") == true) {
             setupQuickButtons(answerData, max)
         } else {
             setupDefaultInput(textColor, isDark, max)
@@ -59,31 +55,11 @@ class AnswerActivity : Activity() {
 
         setContentView(root)
 
-        // Thiết lập timeout
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
-   
-
-        // Theo dõi layout để giữ bàn phím
-        root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            var lastHeight = 0
-            override fun onGlobalLayout() {
-                val r = Rect()
-                root.getWindowVisibleDisplayFrame(r)
-                val height = r.height()
-                if (height != lastHeight) {
-                    lastHeight = height
-                    if (::et.isInitialized && !isProcessed) reActivateCursor()
-                }
-            }
-        })
+        observeLayout()
     }
 
-     // Xử lý vuốt trở lại (Gesture Back) và phím Back
-        override fun onBackPressed() {
-            sendNullAndFinish()
-        }
-        
     private fun setupWindow() {
         window.apply {
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
@@ -92,27 +68,26 @@ class AnswerActivity : Activity() {
                 width = WindowManager.LayoutParams.MATCH_PARENT
                 height = WindowManager.LayoutParams.WRAP_CONTENT
             }
-            // Cải thiện overlay và gesture
-            // addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
         }
     }
 
     private fun setupQuickButtons(data: String, max: Int?) {
-        val parts = data.split("|")
-        parts.forEach { part ->
+        data.split("|").forEach { part ->
             val pair = part.split(":", limit = 2)
-            if (pair.size == 2) {
-                val resultValue = pair[0].trim()
-                val label = pair[1].trim()
-                val btn = Button(this).apply {
-                    text = label
-                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
-                        setMargins(5, 0, 5, 0)
-                    }
-                    setOnClickListener { send(resultValue, max) }
+            if (pair.size != 2) return@forEach
+
+            val value = pair[0].trim()
+            val label = pair[1].trim()
+
+            val btn = Button(this).apply {
+                text = label
+                layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
+                    setMargins(5, 0, 5, 0)
                 }
-                root.addView(btn)
+                setOnClickListener { send(value, max) }
             }
+
+            root.addView(btn)
         }
     }
 
@@ -123,13 +98,13 @@ class AnswerActivity : Activity() {
             setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
             backgroundTintList = ColorStateList.valueOf(textColor)
             imeOptions = EditorInfo.IME_ACTION_SEND
-            inputType = if (max != null) 
-                android.text.InputType.TYPE_CLASS_NUMBER 
-            else 
+
+            inputType = if (max != null)
+                android.text.InputType.TYPE_CLASS_NUMBER
+            else
                 android.text.InputType.TYPE_CLASS_TEXT
+
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
-            isFocusable = true
-            isFocusableInTouchMode = true
         }
 
         val btn = Button(this).apply {
@@ -148,8 +123,26 @@ class AnswerActivity : Activity() {
         }
     }
 
+    private fun observeLayout() {
+        root.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+
+            private var lastHeight = 0
+
+            override fun onGlobalLayout() {
+                val r = Rect()
+                root.getWindowVisibleDisplayFrame(r)
+
+                val height = r.height()
+                if (height != lastHeight) {
+                    lastHeight = height
+                    if (::et.isInitialized && !isProcessed) reActivateCursor()
+                }
+            }
+        })
+    }
+
     private fun reActivateCursor() {
-        if (isProcessed) return
         et.post {
             if (!et.hasFocus()) et.requestFocus()
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
@@ -159,6 +152,7 @@ class AnswerActivity : Activity() {
 
     private fun send(input: String, max: Int?) {
         if (isProcessed) return
+
         val text = input.trim()
         if (text.isEmpty()) {
             Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
@@ -176,24 +170,21 @@ class AnswerActivity : Activity() {
 
             answerFile.writeText(output)
             root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
 
         finishWithCleanUp()
     }
 
     private fun sendNullAndFinish() {
         if (isProcessed) return
+
         isProcessed = true
         timeoutHandler.removeCallbacks(timeoutRunnable)
 
         try {
             answerFile.writeText("null")
             root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
 
         finishWithCleanUp()
     }
@@ -206,21 +197,6 @@ class AnswerActivity : Activity() {
         finish()
         overridePendingTransition(0, 0)
     }
-
-    // Xử lý thêm khi mất focus (rất quan trọng với Gesture Navigation)
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (!hasFocus && !isProcessed && !isFinishing) {
-            sendNullAndFinish()
-        }
-    }
-
-    // override fun onPause() {
-        // super.onPause()
-        // if (!isFinishing && !isProcessed) {
-            // sendNullAndFinish()
-        // }
-    // }
 
     override fun onDestroy() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
