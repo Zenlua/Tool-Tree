@@ -90,9 +90,7 @@
         <activity
             android:name=".AnswerActivity"
             android:theme="@style/AppTheme.AnswerOverlay"
-            android:launchMode="singleTop"
-            android:exported="true"
-            android:windowSoftInputMode="stateVisible|adjustResize"/>
+            android:exported="true" />
         <activity
             android:theme="@style/AppThemeDark"
             android:name=".CrashLogActivity"

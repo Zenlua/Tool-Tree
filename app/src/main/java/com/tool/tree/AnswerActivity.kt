@@ -45,6 +45,13 @@ class AnswerActivity : Activity() {
             backgroundTintList = ColorStateList.valueOf(textColor) // background để mặc định → gạch dưới vẫn như cũ
         }
 
+        etAnswer.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.showSoftInput(etAnswer, 0)
+            }
+        }
+
         // Nút gửi
         val btnSend = Button(this).apply { text = getString(R.string.btn_send) }
 
@@ -60,11 +67,28 @@ class AnswerActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(20, 20, 20, 20)
             setBackgroundColor(backgroundColor)
-            ViewCompat.setFitsSystemWindows(this, true)
+            // ViewCompat.setFitsSystemWindows(this, true)
             addView(inputLayout)
         }
 
         setContentView(rootLayout)
+        
+        val originalPaddingBottom = rootLayout.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
+        
+            val imeInsets = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime())
+            val isKeyboardVisible = insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())
+        
+            view.setPadding(
+                view.paddingLeft,
+                view.paddingTop,
+                view.paddingRight,
+                if (isKeyboardVisible) originalPaddingBottom + imeInsets.bottom
+                else originalPaddingBottom
+            )
+        
+            insets
+        }
 
         window.attributes.apply {
             gravity = Gravity.BOTTOM
@@ -75,7 +99,6 @@ class AnswerActivity : Activity() {
         window.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
         window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
         window.addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
         // Hàm gửi đáp án
         fun sendAnswer() {
