@@ -95,7 +95,9 @@
             android:excludeFromRecents="true"
             android:configChanges="orientation|screenSize"
             android:launchMode="singleTop" />
-
+        <activity
+            android:name=".CodeRunnerActivity"
+            android:exported="true"/>
         <activity
             android:theme="@style/AppThemeDark"
             android:name=".CrashLogActivity"
