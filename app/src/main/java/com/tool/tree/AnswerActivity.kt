@@ -62,19 +62,26 @@ class AnswerActivity : Activity() {
         observeLayout()
     }
 
-    private fun setupWindow() {
-        window.apply {
-            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-            addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
-            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
-            
-            attributes = attributes.apply {
-                gravity = Gravity.BOTTOM
-                width = WindowManager.LayoutParams.MATCH_PARENT
-                height = WindowManager.LayoutParams.WRAP_CONTENT
-            }
+private fun setupWindow() {
+    window.apply {
+        // Flag này giúp Activity nhận được sự kiện touch kể cả khi người dùng chạm ra ngoài cửa sổ của nó
+        addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
+        addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+        
+        // Nên thêm FLAG_DIM_BEHIND để tạo hiệu ứng mờ phía sau, giúp người dùng biết vùng nào là bên ngoài
+        addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        attributes.dimAmount = 0.5f
+
+        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        
+        attributes = attributes.apply {
+            gravity = Gravity.BOTTOM
+            width = WindowManager.LayoutParams.MATCH_PARENT
+            height = WindowManager.LayoutParams.WRAP_CONTENT
         }
     }
+}
+
 
     private fun setupQuickButtons(data: String, max: Int?) {
         data.split("|").forEach { part ->
@@ -209,18 +216,19 @@ class AnswerActivity : Activity() {
         super.onDestroy()
     }
 
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.action == MotionEvent.ACTION_DOWN) {
-            val hitRect = Rect()
-            root.getGlobalVisibleRect(hitRect)
-            val x = ev.rawX.toInt()
-            val y = ev.rawY.toInt()
-            if (!hitRect.contains(x, y)) {
-                sendNullAndFinish()
-                return true
-            }
+override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+    if (ev.action == MotionEvent.ACTION_DOWN) {
+        val x = ev.rawX.toInt()
+        val y = ev.rawY.toInt()
+        val hitRect = Rect()
+        root.getGlobalVisibleRect(hitRect)
+        if (!hitRect.contains(x, y)) {
+            sendNullAndFinish()
+            return true
         }
-        return super.dispatchTouchEvent(ev)
     }
+    return super.dispatchTouchEvent(ev)
+}
+
 
 }
