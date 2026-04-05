@@ -65,8 +65,6 @@ class AnswerActivity : Activity() {
     private fun setupWindow() {
         window.apply {
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-            addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
-            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
                 width = WindowManager.LayoutParams.MATCH_PARENT
@@ -156,26 +154,21 @@ class AnswerActivity : Activity() {
 
     private fun send(input: String, max: Int?) {
         if (isProcessed) return
-
-        val text = input.trim()
-        if (text.isEmpty()) {
-            Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
-            return
-        }
-
+        val trimmedInput = input.trim()
+        val result = if (trimmedInput.isEmpty()) "null" else trimmedInput
         isProcessed = true
         timeoutHandler.removeCallbacks(timeoutRunnable)
-
         try {
-            val output = if (max != null) {
-                val num = text.toIntOrNull()
-                if (num != null && num in 0..max) num.toString() else text
-            } else text
-
+            val output = if (max != null && result != "null") {
+                val num = result.toIntOrNull()
+                if (num != null && num in 0..max) num.toString() else result
+            } else {
+                result
+            }
             answerFile.writeText(output)
             root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-        } catch (_: Exception) {}
-
+        } catch (_: Exception) {
+        }
         finishWithCleanUp()
     }
 
@@ -205,27 +198,6 @@ class AnswerActivity : Activity() {
         isProcessed = true
         timeoutHandler.removeCallbacks(timeoutRunnable)
         super.onDestroy()
-    }
-
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.action == MotionEvent.ACTION_DOWN) {
-            val v = currentFocus
-            if (v is EditText) {
-                val outRect = Rect()
-                v.getGlobalVisibleRect(outRect)
-                val isInsideEditText = outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())
-                if (isInsideEditText) {
-                    return super.dispatchTouchEvent(ev)
-                }
-            }
-            val rootRect = Rect()
-            root.getGlobalVisibleRect(rootRect)
-            if (!rootRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
-                sendNullAndFinish()
-                return true
-            }
-        }
-        return super.dispatchTouchEvent(ev)
     }
 
 }
