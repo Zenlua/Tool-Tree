@@ -24,21 +24,20 @@ class AnswerActivity : Activity() {
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
     
-    // Handler để quản lý tác vụ chạy ngầm (đếm ngược thời gian)
+    // Handler quản lý đếm ngược
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private val timeoutRunnable = Runnable { sendNullAndFinish() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Xóa log cũ nếu tồn tại
         if (answerFile.exists()) { answerFile.delete() }
         setupWindow()
 
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
 
-        // Lấy thời gian chờ: Mặc định 20s, ưu tiên giá trị từ flag --es time
+        // Mặc định 20s, nếu có flag --es time thì lấy giá trị đó
         val timeoutStr = intent.getStringExtra("time")
         val timeoutSeconds = timeoutStr?.toLongOrNull() ?: 20L
 
@@ -55,7 +54,6 @@ class AnswerActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        // Kiểm tra hiển thị nút chọn nhanh hoặc ô nhập văn bản
         if (answerData != null && answerData.contains("|")) {
             setupQuickButtons(answerData, max)
         } else {
@@ -64,10 +62,9 @@ class AnswerActivity : Activity() {
 
         setContentView(root)
 
-        // Bắt đầu đếm ngược thời gian chờ
+        // Kích hoạt đếm ngược
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
-        // Theo dõi thay đổi layout (bàn phím hiện/ẩn)
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             var last = 0
             override fun onGlobalLayout() {
@@ -82,7 +79,7 @@ class AnswerActivity : Activity() {
         })
     }
 
-    // Tính năng: Nhấn phím Back cũng trả về null
+    // Khi vuốt Back hoặc nhấn nút Back
     override fun onBackPressed() {
         sendNullAndFinish()
     }
@@ -144,8 +141,8 @@ class AnswerActivity : Activity() {
             if (!et.hasFocus()) et.requestFocus()
             et.isCursorVisible = false
             et.isCursorVisible = true
-            (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
-                .showSoftInput(et, InputMethodManager.SHOW_IMPLICIT)
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(et, InputMethodManager.SHOW_IMPLICIT)
         }
     }
 
@@ -153,10 +150,8 @@ class AnswerActivity : Activity() {
         window.apply {
             clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            setSoftInputMode(
-                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or
-                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
-            )
+            // Sử dụng ADJUST_RESIZE và tránh ép buộc ALWAYS_VISIBLE để tránh lỗi nảy bàn phím khi đóng
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
                 width = WindowManager.LayoutParams.MATCH_PARENT
@@ -171,9 +166,7 @@ class AnswerActivity : Activity() {
             toast(getString(R.string.do_not_empty)); return
         }
 
-        // Hủy đếm ngược nếu người dùng đã chủ động gửi dữ liệu
         timeoutHandler.removeCallbacks(timeoutRunnable)
-
         root.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
 
         try {
@@ -192,9 +185,16 @@ class AnswerActivity : Activity() {
         }
     }
 
-    // Hàm xử lý việc ghi giá trị null và đóng Activity
+    // Hàm thoát sạch sẽ: Ẩn phím -> Ghi null -> Đóng
     private fun sendNullAndFinish() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
+        
+        // Ẩn bàn phím ngay lập tức để không bị hiện lại khi Activity đóng
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        currentFocus?.let {
+            imm.hideSoftInputFromWindow(it.windowToken, 0)
+        }
+
         try {
             answerFile.writeText("null")
         } catch (e: Exception) {
@@ -205,7 +205,6 @@ class AnswerActivity : Activity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Đảm bảo dừng Handler để tránh rò rỉ bộ nhớ
         timeoutHandler.removeCallbacks(timeoutRunnable)
     }
 
