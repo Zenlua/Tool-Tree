@@ -15,6 +15,7 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.activity.OnBackPressedCallback
 import java.io.File
 
 class AnswerActivity : Activity() {
@@ -22,16 +23,16 @@ class AnswerActivity : Activity() {
     private val answerFile by lazy { File(cacheDir, "answer.log") }
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
-    
+
     private var isProcessed = false
-    
+
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private val timeoutRunnable = Runnable { sendNullAndFinish() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        if (answerFile.exists()) { answerFile.delete() }
+
+        if (answerFile.exists()) answerFile.delete()
         setupWindow()
 
         val answerData = intent.getStringExtra("answer")
@@ -58,31 +59,42 @@ class AnswerActivity : Activity() {
         }
 
         setContentView(root)
+
+        // Thiết lập timeout
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
+        // Xử lý vuốt trở lại (Gesture Back) và phím Back
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                sendNullAndFinish()
+            }
+        })
+
+        // Theo dõi layout để giữ bàn phím
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            var last = 0
+            var lastHeight = 0
             override fun onGlobalLayout() {
                 val r = Rect()
                 root.getWindowVisibleDisplayFrame(r)
-                val h = r.height()
-                if (h != last) {
-                    last = h
+                val height = r.height()
+                if (height != lastHeight) {
+                    lastHeight = height
                     if (::et.isInitialized && !isProcessed) reActivateCursor()
                 }
             }
         })
     }
 
-    // Xử lý Back cho Activity thuần
-    override fun onBackPressed() {
-        sendNullAndFinish()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        if (!isProcessed) {
-            sendNullAndFinish()
+    private fun setupWindow() {
+        window.apply {
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            attributes = attributes.apply {
+                gravity = Gravity.BOTTOM
+                width = WindowManager.LayoutParams.MATCH_PARENT
+                height = WindowManager.LayoutParams.WRAP_CONTENT
+            }
+            // Cải thiện overlay và gesture
+            addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
         }
     }
 
@@ -95,7 +107,9 @@ class AnswerActivity : Activity() {
                 val label = pair[1].trim()
                 val btn = Button(this).apply {
                     text = label
-                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(5, 0, 5, 0) }
+                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
+                        setMargins(5, 0, 5, 0)
+                    }
                     setOnClickListener { send(resultValue, max) }
                 }
                 root.addView(btn)
@@ -105,28 +119,33 @@ class AnswerActivity : Activity() {
 
     private fun setupDefaultInput(textColor: Int, isDark: Boolean, max: Int?) {
         et = EditText(this).apply {
-            // SỬ DỤNG STRING XML CŨ
-            hint = getString(R.string.hint_answer) 
+            hint = getString(R.string.hint_answer)
             setTextColor(textColor)
             setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
             backgroundTintList = ColorStateList.valueOf(textColor)
             imeOptions = EditorInfo.IME_ACTION_SEND
-            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
+            inputType = if (max != null) 
+                android.text.InputType.TYPE_CLASS_NUMBER 
+            else 
+                android.text.InputType.TYPE_CLASS_TEXT
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             isFocusable = true
             isFocusableInTouchMode = true
         }
 
         val btn = Button(this).apply {
-            // SỬ DỤNG STRING XML CŨ
             text = getString(R.string.btn_send)
             setOnClickListener { send(et.text.toString(), max) }
         }
+
         root.addView(et)
         root.addView(btn)
 
         et.setOnEditorActionListener { _, id, _ ->
-            if (id == EditorInfo.IME_ACTION_SEND) { send(et.text.toString(), max); true } else false
+            if (id == EditorInfo.IME_ACTION_SEND) {
+                send(et.text.toString(), max)
+                true
+            } else false
         }
     }
 
@@ -139,57 +158,44 @@ class AnswerActivity : Activity() {
         }
     }
 
-    private fun setupWindow() {
-        window.apply {
-            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-            attributes = attributes.apply {
-                gravity = Gravity.BOTTOM
-                width = WindowManager.LayoutParams.MATCH_PARENT
-                height = WindowManager.LayoutParams.WRAP_CONTENT
-            }
-        }
-    }
-
     private fun send(input: String, max: Int?) {
         if (isProcessed) return
         val text = input.trim()
         if (text.isEmpty()) {
-            // SỬ DỤNG STRING XML CŨ
             Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
             return
         }
 
         isProcessed = true
         timeoutHandler.removeCallbacks(timeoutRunnable)
-        
+
         try {
             val output = if (max != null) {
                 val num = text.toIntOrNull()
                 if (num != null && num in 0..max) num.toString() else text
             } else text
-            
-            // GHI FILE VÀ RUNG TẠI ĐÂY
+
             answerFile.writeText(output)
             root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            
-        } catch (e: Exception) { e.printStackTrace() }
-        
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         finishWithCleanUp()
     }
 
     private fun sendNullAndFinish() {
         if (isProcessed) return
         isProcessed = true
-        
         timeoutHandler.removeCallbacks(timeoutRunnable)
-        
+
         try {
-            // GHI FILE VÀ RUNG TẠI ĐÂY
             answerFile.writeText("null")
             root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            
-        } catch (e: Exception) { e.printStackTrace() }
-        
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         finishWithCleanUp()
     }
 
@@ -197,9 +203,24 @@ class AnswerActivity : Activity() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: window.decorView
         imm.hideSoftInputFromWindow(view.windowToken, 0)
-        
+
         finish()
         overridePendingTransition(0, 0)
+    }
+
+    // Xử lý thêm khi mất focus (rất quan trọng với Gesture Navigation)
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus && !isProcessed && !isFinishing) {
+            sendNullAndFinish()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (!isFinishing && !isProcessed) {
+            sendNullAndFinish()
+        }
     }
 
     override fun onDestroy() {
