@@ -8,98 +8,97 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import java.io.File
 import androidx.core.view.ViewCompat
-import android.content.res.ColorStateList
 import androidx.core.view.WindowInsetsCompat
+import android.content.res.ColorStateList
 
 class AnswerActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Kiểm tra chế độ tối/sáng
-        val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        val isDarkMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
+        val isDarkMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
-        // File lưu đáp án
-        val answerFile = File(cacheDir, "answer")
-        if (answerFile.exists()) answerFile.delete()
+        val answerFile = File(cacheDir, "answer").apply { delete() }
 
-        val min = 0
         val max = intent.getStringExtra("max")?.toIntOrNull()
+        val isNumberMode = max != null
 
-        // Màu theo chế độ
+        // Màu sắc
         val backgroundColor = if (isDarkMode) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5")
         val textColor = if (isDarkMode) Color.parseColor("#FFFFFF") else Color.parseColor("#000000")
-        val hintColor = if (isDarkMode) Color.parseColor("#AAAAAA") else Color.parseColor("#555555")
+        val hintColor = if (isDarkMode) Color.parseColor("#AAAAAA") else Color.parseColor("#666666")
 
-        // EditText với background bo góc, gạch ngang màu chữ, cao hơn, rộng hơn
+        // EditText
         val etAnswer = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             imeOptions = EditorInfo.IME_ACTION_SEND
-            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER
-                        else android.text.InputType.TYPE_CLASS_TEXT
-            setTextColor(textColor)       // chữ nhập theo sáng/tối
-            setHintTextColor(hintColor)   // hint theo sáng/tối
-            backgroundTintList = ColorStateList.valueOf(textColor) // background để mặc định → gạch dưới vẫn như cũ
+            inputType = if (isNumberMode) 
+                android.text.InputType.TYPE_CLASS_NUMBER 
+            else android.text.InputType.TYPE_CLASS_TEXT
+
+            setTextColor(textColor)
+            setHintTextColor(hintColor)
+            setBackground(createEditTextBackground())
+            backgroundTintList = ColorStateList.valueOf(textColor)
+            setPadding(20, 16, 20, 16)
         }
 
-        etAnswer.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                imm.showSoftInput(etAnswer, 0)
-            }
+        val btnSend = Button(this).apply {
+            text = getString(R.string.btn_send)
+            minWidth = 140
         }
 
-        // Nút gửi
-        val btnSend = Button(this).apply { text = getString(R.string.btn_send) }
-
-        // Layout ngang: EditText + Button
         val inputLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 8, 0, 8)
             addView(etAnswer, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            addView(btnSend)
+            addView(btnSend, LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WRAP_CONTENT)
         }
 
-        // Root layout nửa dưới
         val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(20, 20, 20, 20)
+            setPadding(24, 32, 24, 40)
             setBackgroundColor(backgroundColor)
-            // ViewCompat.setFitsSystemWindows(this, true)
             addView(inputLayout)
         }
 
         setContentView(rootLayout)
-        
-        val originalPaddingBottom = rootLayout.paddingBottom
+
+        // ==================== XỬ LÝ ĐẨY LAYOUT KHI MỞ BÀN PHÍM ====================
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
-        
-            val imeInsets = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime())
-            val isKeyboardVisible = insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())
-        
-            view.setPadding(
-                view.paddingLeft,
-                view.paddingTop,
-                view.paddingRight,
-                if (isKeyboardVisible) originalPaddingBottom + imeInsets.bottom
-                else originalPaddingBottom
-            )
-        
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+
+            if (imeInsets.bottom > 0) {
+                // Đẩy layout lên đúng bằng chiều cao bàn phím
+                view.translationY = -imeInsets.bottom.toFloat() + 40f
+            } else {
+                view.translationY = 0f
+            }
             insets
         }
 
-        window.attributes.apply {
-            gravity = Gravity.BOTTOM
-            height = WindowManager.LayoutParams.WRAP_CONTENT
-            width = WindowManager.LayoutParams.MATCH_PARENT
+        // Cấu hình Window
+        window.apply {
+            setGravity(Gravity.BOTTOM)
+            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+            
+            clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+            addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
+            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
         }
 
-        window.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-        window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
-        window.addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+        // Tự động hiện bàn phím
+        etAnswer.postDelayed({
+            etAnswer.requestFocus()
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(etAnswer, InputMethodManager.SHOW_IMPLICIT)
+        }, 150)
 
         // Hàm gửi đáp án
         fun sendAnswer() {
@@ -109,39 +108,34 @@ class AnswerActivity : Activity() {
                 return
             }
 
-            if (max != null) {
+            if (isNumberMode) {
                 val num = text.toIntOrNull()
-                if (num == null) {
-                    Toast.makeText(this, getString(R.string.toast_invalid_number), Toast.LENGTH_SHORT).show()
-                    return
-                }
-                if (num < min || num > max) {
-                    Toast.makeText(this, getString(R.string.toast_out_of_range, min, max), Toast.LENGTH_SHORT).show()
+                if (num == null || num < 0 || num > max!!) {
+                    Toast.makeText(this, getString(R.string.toast_out_of_range, 0, max), Toast.LENGTH_SHORT).show()
                     return
                 }
                 answerFile.writeText(num.toString())
             } else {
-                answerFile.outputStream().use { it.write(text.toByteArray()) }
+                answerFile.writeText(text)
             }
-
             finish()
         }
 
-        // --- MỤC ĐÃ SỬA: Focus và gọi bàn phím ---
-        etAnswer.post {
-            etAnswer.isFocusableInTouchMode = true
-            etAnswer.requestFocus()
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-            imm.showSoftInput(etAnswer, 0)
-        }
-
-        // Sự kiện click & IME
         btnSend.setOnClickListener { sendAnswer() }
         etAnswer.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 sendAnswer()
                 true
             } else false
+        }
+    }
+
+    private fun createEditTextBackground(): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setStroke(3, Color.parseColor("#888888"))
+            cornerRadius = 16f
+            setColor(Color.TRANSPARENT)
         }
     }
 }
