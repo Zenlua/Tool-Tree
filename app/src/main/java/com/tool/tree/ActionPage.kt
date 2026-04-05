@@ -442,11 +442,7 @@ class ActionPage : AppCompatActivity() {
                     items = PageConfigSh(this@ActionPage, pageConfigSh, this).execute()
                 }
                 if (items == null && pageConfigPath.isNotEmpty()) {
-                    items = PageConfigReader(
-                        applicationContext,
-                        pageConfigPath,
-                        pageConfigDir
-                    ).readConfigXml()
+                    items = PageConfigReader(applicationContext, pageConfigPath, pageConfigDir).readConfigXml()
                 }
 
                 if (afterRead.isNotEmpty()) {
@@ -474,16 +470,22 @@ class ActionPage : AppCompatActivity() {
                             }
                         }
 
-                        val fragment = ActionListFragment.create(
-                            items,
-                            actionShortClickHandler,
-                            autoRunTask,
-                            ThemeModeState.getThemeMode()
-                        )
-                        supportFragmentManager.beginTransaction().replace(R.id.main_list, fragment)
-                            .commitAllowingStateLoss()
+                        val existingFragment = supportFragmentManager.findFragmentById(R.id.main_list) as? ActionListFragment
+                        if (existingFragment != null && !showLoading) {
+                            existingFragment.updateData(items, actionShortClickHandler, ThemeModeState.getThemeMode())
+                        } else {
+                            val fragment = ActionListFragment.create(
+                                items,
+                                actionShortClickHandler,
+                                autoRunTask,
+                                ThemeModeState.getThemeMode()
+                            )
+                            supportFragmentManager.beginTransaction()
+                                .replace(R.id.main_list, fragment)
+                                .commitAllowingStateLoss()
+                            actionsLoaded = true
+                        }
                         hideDialog()
-                        actionsLoaded = true
                     }
                 } else {
                     if (loadFail.isNotEmpty()) {
