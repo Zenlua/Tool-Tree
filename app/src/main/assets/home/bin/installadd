@@ -1,33 +1,54 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
+source language
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-echo "installadd file.add folder"
+echo "installadd [file.add|http://file.add] folder_ouput"
 exit
 fi
 
-gprop(){ awk -F= -v k="$1" '$1==k{print $2; exit}'; }
-source language
 echo "${more_text_4} $1"
 echo
+
+if [ -f "$1" ]; then
 loadmd="$(7z x "$1" addon.prop -so 2>/dev/null)"
-loadid="$(echo "$loadmd" | gprop id)"
+else
+taive "$1" "$TMP/addon.add"
+loadmd="$(7z x "$TMP/addon.add" addon.prop -so 2>/dev/null)"
+fi
+
+[ -z "$loadmd" ] && killtree "Error extract add-on"
+gprop(){ echo "$loadmd" | awk -F= -v k="$1" '$1==k{print $2; exit}'; }
+loadid="$(gprop id)"
 [ -z "$loadid" ] && killtree "ID not found in addon.prop"
-echo "$name_text: $(echo "$loadmd" | gprop name) $(echo "$loadmd" | gprop version)"
+
+echo "$name_text: $(gprop name) $(gprop version)"
 echo
+
 echo "ID: $loadid"
 echo
-echo "$author_text: $(echo "$loadmd" | gprop author)"
+
+echo "$author_text: $(gprop author)"
 echo
+
 [ -d "$2/$loadid" ] && rm -fr "$2/$loadid"
 mkdir -p "$2/$loadid"
+
 echo "$addon_text_3"
 echo
-7z x "$1" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
+
+if [ -f "$1" ]; then
+    7z x "$1" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
+else
+    7z x "$TMP/addon.add" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
+fi
+
 echo 0 > "$2/$loadid/status"
 chmod -R 755 "$2/$loadid"
+
 if [ -f "$2/$loadid/install.sh" ];then
-"$2/$loadid/install.sh"
-rm -fr "$2/$loadid/install.sh"
+    "$2/$loadid/install.sh"
+    rm -fr "$2/$loadid/install.sh"
 fi
+
 echo "$flash_text_12"
