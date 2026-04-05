@@ -17,89 +17,89 @@ import java.io.File
 class AnswerActivity : Activity() {
 
     private val answerFile by lazy { File(cacheDir, "answer") }
-    private lateinit var etAnswer: EditText
-    private lateinit var rootLayout: LinearLayout
+    private lateinit var et: EditText
+    private lateinit var root: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setupWindow()
 
         val max = intent.getStringExtra("max")?.toIntOrNull()
-        val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        val colorMain = if (isDark) Color.WHITE else Color.BLACK
+        val isDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+                Configuration.UI_MODE_NIGHT_YES
 
-        etAnswer = EditText(this).apply {
+        val textColor = if (isDark) Color.WHITE else Color.BLACK
+
+        et = EditText(this).apply {
             hint = getString(R.string.hint_answer)
-            setTextColor(colorMain)
+            setTextColor(textColor)
             setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
-            backgroundTintList = ColorStateList.valueOf(colorMain)
+            backgroundTintList = ColorStateList.valueOf(textColor)
             imeOptions = EditorInfo.IME_ACTION_SEND
-            // Chuyển sang TEXT để ổn định phím xóa trên mọi bàn phím
-            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
+            inputType = if (max != null)
+                android.text.InputType.TYPE_CLASS_NUMBER
+            else android.text.InputType.TYPE_CLASS_TEXT
+
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             isFocusable = true
             isFocusableInTouchMode = true
             isCursorVisible = true
         }
 
-        val btnSend = Button(this).apply {
+        val btn = Button(this).apply {
             text = getString(R.string.btn_send)
-            setOnClickListener { processSend(etAnswer.text.toString(), max) }
+            setOnClickListener { send(et.text.toString(), max) }
         }
 
-        rootLayout = LinearLayout(this).apply {
+        root = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(20, 20, 20, 20)
-            setBackgroundColor(if (isDark) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5"))
-            addView(etAnswer)
-            addView(btnSend)
+            setBackgroundColor(if (isDark)
+                Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5"))
+            addView(et)
+            addView(btn)
         }
-        setContentView(rootLayout)
 
-        // LẮNG NGHE SỰ KIỆN LAYOUT (Khi bàn phím đẩy ô nhập lên)
-        rootLayout.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            private var lastHeight = 0
+        setContentView(root)
+
+        root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            var last = 0
             override fun onGlobalLayout() {
                 val r = Rect()
-                rootLayout.getWindowVisibleDisplayFrame(r)
-                val currentHeight = r.height()
-                
-                // Nếu chiều cao thay đổi (nghĩa là bàn phím vừa đẩy xong)
-                if (currentHeight != lastHeight) {
-                    lastHeight = currentHeight
+                root.getWindowVisibleDisplayFrame(r)
+                val h = r.height()
+                if (h != last) {
+                    last = h
                     reActivateCursor()
                 }
             }
         })
 
-        etAnswer.setOnEditorActionListener { _, id, _ ->
-            if (id == EditorInfo.IME_ACTION_SEND) { processSend(etAnswer.text.toString(), max); true } else false
+        et.setOnEditorActionListener { _, id, _ ->
+            if (id == EditorInfo.IME_ACTION_SEND) {
+                send(et.text.toString(), max); true
+            } else false
         }
     }
 
     private fun reActivateCursor() {
-        etAnswer.post {
-            if (!etAnswer.hasFocus()) etAnswer.requestFocus()
-            
-            // Ép hệ thống vẽ lại con trỏ
-            etAnswer.isCursorVisible = false
-            etAnswer.isCursorVisible = true
-            
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(etAnswer, InputMethodManager.SHOW_IMPLICIT)
+        et.post {
+            if (!et.hasFocus()) et.requestFocus()
+            et.isCursorVisible = false
+            et.isCursorVisible = true
+            (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+                .showSoftInput(et, InputMethodManager.SHOW_IMPLICIT)
         }
     }
 
     private fun setupWindow() {
         window.apply {
-            // Xóa cờ gây lỗi phím xóa
             clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            
-            // Ép chế độ đẩy giao diện
-            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or 
-                             WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-
+            setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
+            )
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
                 width = WindowManager.LayoutParams.MATCH_PARENT
@@ -108,21 +108,26 @@ class AnswerActivity : Activity() {
         }
     }
 
-    private fun processSend(input: String, max: Int?) {
+    private fun send(input: String, max: Int?) {
         val text = input.trim()
         if (text.isEmpty()) {
-            Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
-            return
+            toast(getString(R.string.do_not_empty)); return
         }
+
         try {
             if (max != null) {
                 val num = text.toIntOrNull()
                 if (num != null && num in 0..max) {
                     answerFile.writeText(num.toString()); finish()
-                } else Toast.makeText(this, getString(R.string.toast_out_of_range, 0, max), Toast.LENGTH_SHORT).show()
+                } else toast(getString(R.string.toast_out_of_range, 0, max))
             } else {
                 answerFile.writeText(text); finish()
             }
-        } catch (e: Exception) { e.printStackTrace() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
+
+    private fun toast(msg: String) =
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 }

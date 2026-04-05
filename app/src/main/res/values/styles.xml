@@ -71,13 +71,13 @@
         <item name="android:textSize">11dp</item>
     </style>
 
-<style name="AppTheme.AnswerOverlay" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-    <item name="android:windowIsTranslucent">true</item>
-    <item name="android:windowBackground">@android:color/transparent</item>
-    <item name="android:windowNoTitle">true</item>
-    <item name="android:windowIsFloating">false</item> <item name="android:backgroundDimEnabled">true</item>
-</style>
-
+    <style name="AppTheme.AnswerOverlay" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
 
     <style name="activityAnim">
         <item name="android:activityOpenEnterAnimation">@anim/activity_open_enter</item>
