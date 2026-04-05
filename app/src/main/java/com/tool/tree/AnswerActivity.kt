@@ -1,6 +1,5 @@
 package com.tool.tree
 
-import android.app.Activity
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
@@ -10,9 +9,12 @@ import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import java.io.File
+import androidx.activity.addCallback
 
-class AnswerActivity : Activity() {
+// Thay đổi kế thừa từ Activity sang AppCompatActivity
+class AnswerActivity : AppCompatActivity() {
 
     private val answerFile by lazy { File(cacheDir, "answer.log") }
 
@@ -34,6 +36,7 @@ class AnswerActivity : Activity() {
         val max = intent.getStringExtra("max")?.toIntOrNull()
         val timeoutSeconds = intent.getStringExtra("time")?.toLongOrNull() ?: 20L
 
+        // Cách kiểm tra Dark Mode vẫn giữ nguyên vì tương thích tốt
         val isDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
                 Configuration.UI_MODE_NIGHT_YES
 
@@ -45,6 +48,8 @@ class AnswerActivity : Activity() {
             setPadding(20, 20, 20, 20)
             setBackgroundColor(bgColor)
             gravity = Gravity.CENTER_VERTICAL
+            isFocusable = true
+            isFocusableInTouchMode = true
         }
 
         if (answerData?.contains("|") == true) {
@@ -58,9 +63,16 @@ class AnswerActivity : Activity() {
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
         observeLayout()
+        
+        onBackPressedDispatcher.addCallback(this) {
+            sendNullAndFinish()
+        }
     }
 
     private fun setupWindow() {
+        // Đối với AppCompatActivity, đôi khi bạn cần ẩn ActionBar nếu theme mặc định có nó
+        supportActionBar?.hide() 
+
         window.apply {
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             attributes = attributes.apply {
@@ -79,6 +91,7 @@ class AnswerActivity : Activity() {
             val value = pair[0].trim()
             val label = pair[1].trim()
 
+            // AppCompatButton sẽ được tự động sử dụng khi kế thừa AppCompatActivity
             val btn = Button(this).apply {
                 text = label
                 layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
@@ -96,6 +109,7 @@ class AnswerActivity : Activity() {
             hint = getString(R.string.hint_answer)
             setTextColor(textColor)
             setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
+            // Sử dụng ViewCompat hoặc giữ nguyên backgroundTintList cho API 21+
             backgroundTintList = ColorStateList.valueOf(textColor)
             imeOptions = EditorInfo.IME_ACTION_SEND
 
@@ -136,7 +150,6 @@ class AnswerActivity : Activity() {
                 val height = r.height()
                 if (height != lastHeight) {
                     lastHeight = height
-                    // Không kích hoạt lại bàn phím nếu đang trong quá trình đóng (isProcessed)
                     if (::et.isInitialized && !isProcessed) reActivateCursor()
                 }
             }
@@ -176,11 +189,6 @@ class AnswerActivity : Activity() {
         finishWithCleanUp()
     }
 
-    // Xử lý vuốt trở lại hoặc bấm phím Back
-    override fun onBackPressed() {
-        sendNullAndFinish()
-    }
-
     private fun sendNullAndFinish() {
         if (isProcessed) return
 
@@ -196,21 +204,18 @@ class AnswerActivity : Activity() {
     }
 
     private fun finishWithCleanUp() {
-        // Tắt bàn phím
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: window.decorView
         imm.hideSoftInputFromWindow(view.windowToken, 0)
 
-        // Xóa focus để tránh listener bật lại bàn phím khi layout co lại
-        if (::et.isInitialized) {
-            et.clearFocus()
-        }
-
         finish()
+        // Dùng API mới thay cho overridePendingTransition nếu cần, 
+        // nhưng với "0, 0" thì giữ nguyên vẫn ổn.
         overridePendingTransition(0, 0)
     }
 
     override fun onDestroy() {
+        isProcessed = true
         timeoutHandler.removeCallbacks(timeoutRunnable)
         super.onDestroy()
     }
