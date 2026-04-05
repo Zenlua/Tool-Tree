@@ -24,20 +24,23 @@ class AnswerActivity : Activity() {
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
     
-    // Handler để quản lý thời gian chờ
+    // Handler để quản lý tác vụ chạy ngầm (đếm ngược thời gian)
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private val timeoutRunnable = Runnable { sendNullAndFinish() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Xóa log cũ nếu tồn tại
         if (answerFile.exists()) { answerFile.delete() }
         setupWindow()
 
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
-        // Lấy thời gian chờ từ intent (mặc định 30s nếu có flag hoặc truyền vào)
-        val timeoutSeconds = intent.getIntExtra("time", 30).toLong()
+
+        // Lấy thời gian chờ: Mặc định 20s, ưu tiên giá trị từ flag --es time
+        val timeoutStr = intent.getStringExtra("time")
+        val timeoutSeconds = timeoutStr?.toLongOrNull() ?: 20L
 
         val isDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
                 Configuration.UI_MODE_NIGHT_YES
@@ -52,6 +55,7 @@ class AnswerActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
+        // Kiểm tra hiển thị nút chọn nhanh hoặc ô nhập văn bản
         if (answerData != null && answerData.contains("|")) {
             setupQuickButtons(answerData, max)
         } else {
@@ -60,9 +64,10 @@ class AnswerActivity : Activity() {
 
         setContentView(root)
 
-        // Bắt đầu đếm ngược ngay khi Activity tạo xong
+        // Bắt đầu đếm ngược thời gian chờ
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
+        // Theo dõi thay đổi layout (bàn phím hiện/ẩn)
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             var last = 0
             override fun onGlobalLayout() {
@@ -77,7 +82,7 @@ class AnswerActivity : Activity() {
         })
     }
 
-    // Xử lý khi nhấn phím Back
+    // Tính năng: Nhấn phím Back cũng trả về null
     override fun onBackPressed() {
         sendNullAndFinish()
     }
@@ -166,7 +171,7 @@ class AnswerActivity : Activity() {
             toast(getString(R.string.do_not_empty)); return
         }
 
-        // Hủy đếm ngược vì người dùng đã thao tác
+        // Hủy đếm ngược nếu người dùng đã chủ động gửi dữ liệu
         timeoutHandler.removeCallbacks(timeoutRunnable)
 
         root.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
@@ -187,7 +192,7 @@ class AnswerActivity : Activity() {
         }
     }
 
-    // Hàm dùng chung để kết thúc với giá trị null
+    // Hàm xử lý việc ghi giá trị null và đóng Activity
     private fun sendNullAndFinish() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
         try {
@@ -200,7 +205,7 @@ class AnswerActivity : Activity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Đảm bảo không còn callback nào chạy ngầm khi đóng app
+        // Đảm bảo dừng Handler để tránh rò rỉ bộ nhớ
         timeoutHandler.removeCallbacks(timeoutRunnable)
     }
 
