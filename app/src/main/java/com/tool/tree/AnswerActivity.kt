@@ -24,6 +24,8 @@ class AnswerActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        if (answerFile.exists()) {answerFile.delete()}
         setupWindow()
 
         val answerData = intent.getStringExtra("answer")
