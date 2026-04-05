@@ -5,9 +5,7 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.Gravity
-import android.view.MotionEvent
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -21,24 +19,28 @@ class AnswerActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // 1. Cấu hình Window cơ bản
         setupWindow()
 
         val max = intent.getStringExtra("max")?.toIntOrNull()
         val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         val colorMain = if (isDark) Color.WHITE else Color.BLACK
 
+        // 2. Khởi tạo EditText
         etAnswer = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             setTextColor(colorMain)
             setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
             backgroundTintList = ColorStateList.valueOf(colorMain)
             imeOptions = EditorInfo.IME_ACTION_SEND
+            // Lưu ý: Nếu vẫn lỗi phím xóa, hãy thử đổi tạm sang TYPE_CLASS_TEXT để kiểm tra
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             
-            isCursorVisible = true
             isFocusable = true
             isFocusableInTouchMode = true
+            isCursorVisible = true 
         }
 
         val btnSend = Button(this).apply {
@@ -55,47 +57,45 @@ class AnswerActivity : Activity() {
         }
         setContentView(root)
 
+        // 3. GIẢI PHÁP 3: Đợi Window thực sự có Focus
+        val viewTreeObserver = window.decorView.viewTreeObserver
+        viewTreeObserver.addOnWindowFocusChangeListener { hasFocus ->
+            if (hasFocus) {
+                activateInput()
+            }
+        }
+
         etAnswer.setOnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_SEND) { processSend(etAnswer.text.toString(), max); true } else false
         }
     }
 
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            etAnswer.postDelayed({
-                // 1. Mô phỏng hành động chạm tay
-                simulateClickOnEditText(etAnswer)
-                
-                // 2. Ép bàn phím mở
-                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showSoftInput(etAnswer, InputMethodManager.SHOW_FORCED)
-            }, 300)
+    private fun activateInput() {
+        etAnswer.post {
+            etAnswer.requestFocus()
+            
+            // "Mẹo" ép con trỏ nhấp nháy: Tắt đi rồi bật lại
+            etAnswer.isCursorVisible = false
+            etAnswer.isCursorVisible = true
+            
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            // Sử dụng 0 thay vì SHOW_FORCED để hệ thống tự tối ưu kết nối
+            imm.showSoftInput(etAnswer, 0)
         }
-    }
-
-    private fun simulateClickOnEditText(editText: EditText) {
-        val location = IntArray(2)
-        editText.getLocationOnScreen(location)
-        val x = location[0] + editText.width / 2f
-        val y = location[1] + editText.height / 2f
-
-        val downTime = SystemClock.uptimeMillis()
-        val eventDown = MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, x, y, 0)
-        val eventUp = MotionEvent.obtain(downTime, SystemClock.uptimeMillis() + 50, MotionEvent.ACTION_UP, x, y, 0)
-
-        editText.dispatchTouchEvent(eventDown)
-        editText.dispatchTouchEvent(eventUp)
-
-        eventDown.recycle()
-        eventUp.recycle()
     }
 
     private fun setupWindow() {
         window.apply {
+            // Xóa cờ chặn Focus - Quan trọng nhất cho phím Xóa
             clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+            
             addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+            
+            // Ép trạng thái bàn phím từ Window level
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or 
+                             WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
                 width = WindowManager.LayoutParams.MATCH_PARENT
@@ -104,8 +104,8 @@ class AnswerActivity : Activity() {
         }
     }
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_OUTSIDE) {
+    override fun onTouchEvent(event: android.view.MotionEvent): Boolean {
+        if (event.action == android.view.MotionEvent.ACTION_OUTSIDE) {
             finish()
             return true
         }
