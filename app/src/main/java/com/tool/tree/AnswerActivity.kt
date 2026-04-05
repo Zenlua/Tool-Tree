@@ -15,19 +15,20 @@ import java.io.File
 class AnswerActivity : Activity() {
 
     private val answerFile by lazy { File(cacheDir, "answer.log") }
-
-    private lateinit var et: EditText
     private lateinit var root: LinearLayout
-
+    private lateinit var et: EditText
     private var isProcessed = false
-
+    private var hasInput = false
     private val timeoutHandler = Handler(Looper.getMainLooper())
-    private val timeoutRunnable = Runnable { sendNullAndFinish() }
+    private val timeoutRunnable = Runnable { finishWithResult("null") }
+    private var layoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         if (answerFile.exists()) answerFile.delete()
         setupWindow()
+
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
         val timeoutSeconds = intent.getStringExtra("time")?.toLongOrNull() ?: 20L
@@ -43,11 +44,13 @@ class AnswerActivity : Activity() {
             isFocusable = true
             isFocusableInTouchMode = true
         }
+
         if (answerData?.contains("|") == true) {
             setupQuickButtons(answerData, max)
         } else {
             setupDefaultInput(textColor, isDark, max)
         }
+
         setContentView(root)
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
         observeLayout()
@@ -66,13 +69,13 @@ class AnswerActivity : Activity() {
 
     private fun setupQuickButtons(data: String, max: Int?) {
         data.split("|").forEach { part ->
-            val pair = part.split(":", limit = 2)
-            if (pair.size != 2) return@forEach
-            val value = pair[0].trim()
-            val label = pair[1].trim()
+            val index = part.indexOf(":")
+            if (index == -1) return@forEach
+            val value = part.substring(0, index).trim()
+            val label = part.substring(index + 1).trim()
             val btn = Button(this).apply {
                 text = label
-                layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
+                layoutParams = LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1f).apply {
                     setMargins(5, 0, 5, 0)
                 }
                 setOnClickListener { send(value, max) }
@@ -82,6 +85,7 @@ class AnswerActivity : Activity() {
     }
 
     private fun setupDefaultInput(textColor: Int, isDark: Boolean, max: Int?) {
+        hasInput = true
         et = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             setTextColor(textColor)
@@ -92,14 +96,17 @@ class AnswerActivity : Activity() {
                 android.text.InputType.TYPE_CLASS_NUMBER
             else
                 android.text.InputType.TYPE_CLASS_TEXT
-            layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
+            layoutParams = LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1f)
         }
+
         val btn = Button(this).apply {
             text = getString(R.string.btn_send)
             setOnClickListener { send(et.text.toString(), max) }
         }
+
         root.addView(et)
         root.addView(btn)
+
         et.setOnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_SEND) {
                 send(et.text.toString(), max)
@@ -109,8 +116,7 @@ class AnswerActivity : Activity() {
     }
 
     private fun observeLayout() {
-        root.viewTreeObserver.addOnGlobalLayoutListener(object :
-            ViewTreeObserver.OnGlobalLayoutListener {
+        layoutListener = object : ViewTreeObserver.OnGlobalLayoutListener {
             private var lastHeight = 0
             override fun onGlobalLayout() {
                 val r = Rect()
@@ -118,10 +124,11 @@ class AnswerActivity : Activity() {
                 val height = r.height()
                 if (height != lastHeight) {
                     lastHeight = height
-                    if (::et.isInitialized && !isProcessed) reActivateCursor()
+                    if (hasInput && !isProcessed) reActivateCursor()
                 }
             }
-        })
+        }
+        root.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
     }
 
     private fun reActivateCursor() {
@@ -136,38 +143,25 @@ class AnswerActivity : Activity() {
         if (isProcessed) return
         val text = input.trim()
         if (text.isEmpty()) {
-            isProcessed = true
-            timeoutHandler.removeCallbacks(timeoutRunnable)
-            saveAndFinish("null")
+            finishWithResult("null")
             return
         }
         if (max != null) {
             val num = text.toIntOrNull()
             if (num == null || num !in 0..max) {
-                val errorMsg = getString(R.string.toast_out_of_range, 0, max)
-                Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this,getString(R.string.toast_out_of_range, 0, max),Toast.LENGTH_SHORT).show()
                 return
             }
         }
-        isProcessed = true
-        timeoutHandler.removeCallbacks(timeoutRunnable)
-        saveAndFinish(text)
+        finishWithResult(text)
     }
 
-    private fun saveAndFinish(content: String) {
-        try {
-            answerFile.writeText(content)
-            root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-        } catch (_: Exception) {}
-        finishWithCleanUp()
-    }
-
-    private fun sendNullAndFinish() {
+    private fun finishWithResult(content: String) {
         if (isProcessed) return
         isProcessed = true
         timeoutHandler.removeCallbacks(timeoutRunnable)
         try {
-            answerFile.writeText("null")
+            answerFile.writeText(content)
             root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         } catch (_: Exception) {}
         finishWithCleanUp()
