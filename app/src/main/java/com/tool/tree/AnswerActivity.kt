@@ -20,28 +20,33 @@ class AnswerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Cấu hình Window
+        // 1. Cấu hình Window để nhận diện bàn phím và phím xóa (Backspace)
         setupWindow()
 
-        val max = intent.getStringExtra("max")?.toIntOrNull()
+        val maxStr = intent.getStringExtra("max")
+        val max = maxStr?.toIntOrNull()
         val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        
         val colorMain = if (isDark) Color.WHITE else Color.BLACK
+        val colorBg = if (isDark) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5")
+        val colorHint = if (isDark) Color.LTGRAY else Color.GRAY
 
-        // 2. Khởi tạo EditText
+        // 2. Khởi tạo EditText với đầy đủ thuộc tính Focus
         etAnswer = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             setTextColor(colorMain)
-            setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
+            setHintTextColor(colorHint)
             backgroundTintList = ColorStateList.valueOf(colorMain)
             imeOptions = EditorInfo.IME_ACTION_SEND
-            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
+            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER 
+                        else android.text.InputType.TYPE_CLASS_TEXT
+            
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             
-            // Ép buộc hiện con trỏ nhấp nháy
+            // Ép buộc hiện con trỏ nhấp nháy ngay lập tức
             isCursorVisible = true
             isFocusable = true
             isFocusableInTouchMode = true
-            requestFocus() 
         }
 
         val btnSend = Button(this).apply {
@@ -49,24 +54,26 @@ class AnswerActivity : Activity() {
             setOnClickListener { processSend(etAnswer.text.toString(), max) }
         }
 
+        // 3. Layout Chính (Padding 20)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(20, 20, 20, 20)
-            setBackgroundColor(if (isDark) Color.parseColor("#2A2A2A") else Color.parseColor("#F5F5F5"))
+            setBackgroundColor(colorBg)
             addView(etAnswer)
             addView(btnSend)
         }
 
         setContentView(root)
 
-        // 3. Logic quan trọng để hiện con trỏ và phím xóa ngay lập tức
+        // 4. Kích hoạt tiêu điểm và bàn phím (Sửa lỗi con trỏ & phím xóa)
         etAnswer.post {
             etAnswer.requestFocus()
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            // Sử dụng SHOW_FORCED để ép hệ thống nhận diện việc nhập liệu
+            // SHOW_FORCED đảm bảo bàn phím gắn chặt với EditText để phím Backspace hoạt động
             imm.showSoftInput(etAnswer, InputMethodManager.SHOW_FORCED)
         }
 
+        // Sự kiện phím Enter trên bàn phím
         etAnswer.setOnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_SEND) {
                 processSend(etAnswer.text.toString(), max)
@@ -77,17 +84,18 @@ class AnswerActivity : Activity() {
 
     private fun setupWindow() {
         window.apply {
-            // Xóa các flag gây cản trở focus
+            // Xóa các cờ ngăn cản việc nhận phím hệ thống
             clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+            
+            // Cho phép đóng khi chạm ngoài nhưng vẫn giữ Focus để nhập liệu
+            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
             
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
                 width = WindowManager.LayoutParams.MATCH_PARENT
                 height = WindowManager.LayoutParams.WRAP_CONTENT
             }
-            // Cho phép nhận diện chạm bên ngoài để đóng
-            addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
         }
     }
 
@@ -101,18 +109,31 @@ class AnswerActivity : Activity() {
 
     private fun processSend(input: String, max: Int?) {
         val text = input.trim()
-        if (text.isEmpty()) return
+        
+        // --- GIỮ LẠI CÁC CHECK VĂN BẢN TRỐNG CŨ ---
+        if (text.isEmpty()) {
+            Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
+            return
+        }
+
         try {
             if (max != null) {
                 val num = text.toIntOrNull()
-                if (num != null && num in 0..max) {
-                    answerFile.writeText(num.toString())
-                    finish()
+                if (num == null) {
+                    Toast.makeText(this, getString(R.string.toast_invalid_number), Toast.LENGTH_SHORT).show()
+                    return
                 }
+                if (num < 0 || num > max) {
+                    Toast.makeText(this, getString(R.string.toast_out_of_range, 0, max), Toast.LENGTH_SHORT).show()
+                    return
+                }
+                answerFile.writeText(num.toString())
             } else {
                 answerFile.writeText(text)
-                finish()
             }
-        } catch (e: Exception) { e.printStackTrace() }
+            finish()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
