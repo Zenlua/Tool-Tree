@@ -24,7 +24,6 @@ class AnswerActivity : Activity() {
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
     
-    // Handler quản lý đếm ngược
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private val timeoutRunnable = Runnable { sendNullAndFinish() }
 
@@ -37,7 +36,7 @@ class AnswerActivity : Activity() {
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
 
-        // Mặc định 20s, nếu có flag --es time thì lấy giá trị đó
+        // Mặc định 20s, tùy chỉnh qua flag --es time
         val timeoutStr = intent.getStringExtra("time")
         val timeoutSeconds = timeoutStr?.toLongOrNull() ?: 20L
 
@@ -62,7 +61,6 @@ class AnswerActivity : Activity() {
 
         setContentView(root)
 
-        // Kích hoạt đếm ngược
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
@@ -79,7 +77,7 @@ class AnswerActivity : Activity() {
         })
     }
 
-    // Khi vuốt Back hoặc nhấn nút Back
+    // Ghi đè phím Back để thoát sạch sẽ
     override fun onBackPressed() {
         sendNullAndFinish()
     }
@@ -150,7 +148,7 @@ class AnswerActivity : Activity() {
         window.apply {
             clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            // Sử dụng ADJUST_RESIZE và tránh ép buộc ALWAYS_VISIBLE để tránh lỗi nảy bàn phím khi đóng
+            // Chỉ dùng ADJUST_RESIZE, tránh ALWAYS_VISIBLE để không bị nảy bàn phím
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
@@ -185,22 +183,29 @@ class AnswerActivity : Activity() {
         }
     }
 
-    // Hàm thoát sạch sẽ: Ẩn phím -> Ghi null -> Đóng
+    // Hàm thoát quan trọng: Sửa lỗi nảy bàn phím khi ấn Back
     private fun sendNullAndFinish() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
         
-        // Ẩn bàn phím ngay lập tức để không bị hiện lại khi Activity đóng
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        currentFocus?.let {
-            imm.hideSoftInputFromWindow(it.windowToken, 0)
+        // 1. Xóa focus khỏi EditText ngay lập tức
+        if (::et.isInitialized) {
+            et.clearFocus()
         }
 
+        // 2. Ẩn bàn phím thủ công qua root token
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(window.decorView.windowToken, 0)
+
+        // 3. Ghi log null
         try {
             answerFile.writeText("null")
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+        // 4. Kết thúc và xóa hiệu ứng chuyển cảnh để đóng nhanh nhất
         finish()
+        overridePendingTransition(0, 0)
     }
 
     override fun onDestroy() {
