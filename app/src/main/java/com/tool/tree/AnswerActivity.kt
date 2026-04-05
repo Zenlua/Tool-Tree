@@ -10,7 +10,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
-import android.view.View
 import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
@@ -23,22 +22,21 @@ class AnswerActivity : Activity() {
     private val answerFile by lazy { File(cacheDir, "answer.log") }
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
-    
+    private var isSent = false // Cờ kiểm tra đã gửi dữ liệu chưa
+
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private val timeoutRunnable = Runnable { sendNullAndFinish() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Luôn xóa log cũ khi bắt đầu để đảm bảo tính chính xác
         if (answerFile.exists()) { answerFile.delete() }
         setupWindow()
 
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
-
-        // Mặc định 20s, tùy chỉnh qua flag --es time
-        val timeoutStr = intent.getStringExtra("time")
-        val timeoutSeconds = timeoutStr?.toLongOrNull() ?: 20L
+        val timeoutSeconds = intent.getStringExtra("time")?.toLongOrNull() ?: 20L
 
         val isDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
                 Configuration.UI_MODE_NIGHT_YES
@@ -60,7 +58,6 @@ class AnswerActivity : Activity() {
         }
 
         setContentView(root)
-
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
@@ -77,9 +74,17 @@ class AnswerActivity : Activity() {
         })
     }
 
-    // Ghi đè phím Back để thoát sạch sẽ
+    // 1. Chốt chặn cho nút Back vật lý/cũ
     override fun onBackPressed() {
         sendNullAndFinish()
+    }
+
+    // 2. Chốt chặn quan trọng nhất: Khi Activity không còn hiển thị (Vuốt Back cử chỉ, nhấn Home...)
+    override fun onPause() {
+        super.onPause()
+        if (!isSent) {
+            sendNullAndFinish()
+        }
     }
 
     private fun setupQuickButtons(data: String, max: Int?) {
@@ -89,12 +94,9 @@ class AnswerActivity : Activity() {
             if (pair.size == 2) {
                 val resultValue = pair[0].trim()
                 val label = pair[1].trim()
-
                 val btn = Button(this).apply {
                     text = label
-                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply {
-                        setMargins(5, 0, 5, 0)
-                    }
+                    layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(5, 0, 5, 0) }
                     setOnClickListener { send(resultValue, max) }
                 }
                 root.addView(btn)
@@ -109,36 +111,27 @@ class AnswerActivity : Activity() {
             setHintTextColor(if (isDark) Color.LTGRAY else Color.GRAY)
             backgroundTintList = ColorStateList.valueOf(textColor)
             imeOptions = EditorInfo.IME_ACTION_SEND
-            inputType = if (max != null)
-                android.text.InputType.TYPE_CLASS_NUMBER
-            else android.text.InputType.TYPE_CLASS_TEXT
-
+            inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             isFocusable = true
             isFocusableInTouchMode = true
-            isCursorVisible = true
         }
 
         val btn = Button(this).apply {
             text = getString(R.string.btn_send)
             setOnClickListener { send(et.text.toString(), max) }
         }
-
         root.addView(et)
         root.addView(btn)
 
         et.setOnEditorActionListener { _, id, _ ->
-            if (id == EditorInfo.IME_ACTION_SEND) {
-                send(et.text.toString(), max); true
-            } else false
+            if (id == EditorInfo.IME_ACTION_SEND) { send(et.text.toString(), max); true } else false
         }
     }
 
     private fun reActivateCursor() {
         et.post {
             if (!et.hasFocus()) et.requestFocus()
-            et.isCursorVisible = false
-            et.isCursorVisible = true
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(et, InputMethodManager.SHOW_IMPLICIT)
         }
@@ -146,9 +139,6 @@ class AnswerActivity : Activity() {
 
     private fun setupWindow() {
         window.apply {
-            clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-            clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            // Chỉ dùng ADJUST_RESIZE, tránh ALWAYS_VISIBLE để không bị nảy bàn phím
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
@@ -160,50 +150,36 @@ class AnswerActivity : Activity() {
 
     private fun send(input: String, max: Int?) {
         val text = input.trim()
-        if (text.isEmpty()) {
-            toast(getString(R.string.do_not_empty)); return
-        }
+        if (text.isEmpty()) { toast(getString(R.string.do_not_empty)); return }
 
+        isSent = true // Đánh dấu đã gửi thành công
         timeoutHandler.removeCallbacks(timeoutRunnable)
         root.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
 
         try {
-            if (max != null) {
+            val output = if (max != null) {
                 val num = text.toIntOrNull()
-                if (num != null && num in 0..max) {
-                    answerFile.writeText(num.toString()); finish()
-                } else {
-                    answerFile.writeText(text); finish()
-                }
-            } else {
-                answerFile.writeText(text); finish()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+                if (num != null && num in 0..max) num.toString() else text
+            } else text
+            answerFile.writeText(output)
+        } catch (e: Exception) { e.printStackTrace() }
+        finish()
     }
 
-    // Hàm thoát quan trọng: Sửa lỗi nảy bàn phím khi ấn Back
     private fun sendNullAndFinish() {
+        if (isSent) return // Nếu đã gửi rồi thì không ghi null đè lên
+        isSent = true 
         timeoutHandler.removeCallbacks(timeoutRunnable)
         
-        // 1. Xóa focus khỏi EditText ngay lập tức
-        if (::et.isInitialized) {
-            et.clearFocus()
-        }
-
-        // 2. Ẩn bàn phím thủ công qua root token
+        // Ẩn phím và xóa focus ngay lập tức
+        if (::et.isInitialized) et.clearFocus()
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(window.decorView.windowToken, 0)
 
-        // 3. Ghi log null
         try {
             answerFile.writeText("null")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        // 4. Kết thúc và xóa hiệu ứng chuyển cảnh để đóng nhanh nhất
+        } catch (e: Exception) { e.printStackTrace() }
+        
         finish()
         overridePendingTransition(0, 0)
     }
@@ -213,6 +189,5 @@ class AnswerActivity : Activity() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
     }
 
-    private fun toast(msg: String) =
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 }
