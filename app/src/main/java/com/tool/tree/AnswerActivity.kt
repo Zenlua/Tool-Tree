@@ -5,7 +5,9 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -19,15 +21,12 @@ class AnswerActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // 1. Cấu hình Window (Xóa sạch các cờ cản trở)
         setupWindow()
 
         val max = intent.getStringExtra("max")?.toIntOrNull()
         val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         val colorMain = if (isDark) Color.WHITE else Color.BLACK
 
-        // 2. Khởi tạo EditText
         etAnswer = EditText(this).apply {
             hint = getString(R.string.hint_answer)
             setTextColor(colorMain)
@@ -40,9 +39,6 @@ class AnswerActivity : Activity() {
             isCursorVisible = true
             isFocusable = true
             isFocusableInTouchMode = true
-            
-            // Tự động bôi đen toàn bộ khi nhận Focus (Giúp phím xóa hoạt động)
-            setSelectAllOnFocus(true) 
         }
 
         val btnSend = Button(this).apply {
@@ -57,7 +53,6 @@ class AnswerActivity : Activity() {
             addView(etAnswer)
             addView(btnSend)
         }
-
         setContentView(root)
 
         etAnswer.setOnEditorActionListener { _, id, _ ->
@@ -65,30 +60,42 @@ class AnswerActivity : Activity() {
         }
     }
 
-    // KỸ THUẬT MỚI: Ép Focus và Bôi đen ngay khi cửa sổ sẵn sàng
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
             etAnswer.postDelayed({
-                etAnswer.requestFocus()
-                // Lệnh bôi đen toàn bộ chữ hiện có
-                etAnswer.selectAll() 
+                // 1. Mô phỏng hành động chạm tay
+                simulateClickOnEditText(etAnswer)
                 
+                // 2. Ép bàn phím mở
                 val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-                // Sử dụng SHOW_FORCED để ép kết nối bàn phím
                 imm.showSoftInput(etAnswer, InputMethodManager.SHOW_FORCED)
-            }, 100) // Delay cực ngắn để Window ổn định Focus
+            }, 300)
         }
+    }
+
+    private fun simulateClickOnEditText(editText: EditText) {
+        val location = IntArray(2)
+        editText.getLocationOnScreen(location)
+        val x = location[0] + editText.width / 2f
+        val y = location[1] + editText.height / 2f
+
+        val downTime = SystemClock.uptimeMillis()
+        val eventDown = MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, x, y, 0)
+        val eventUp = MotionEvent.obtain(downTime, SystemClock.uptimeMillis() + 50, MotionEvent.ACTION_UP, x, y, 0)
+
+        editText.dispatchTouchEvent(eventDown)
+        editText.dispatchTouchEvent(eventUp)
+
+        eventDown.recycle()
+        eventUp.recycle()
     }
 
     private fun setupWindow() {
         window.apply {
-            // Xóa FLAG_ALT_FOCUSABLE_IM là bắt buộc để dùng phím Xóa
             clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            
             addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
-            
             attributes = attributes.apply {
                 gravity = Gravity.BOTTOM
                 width = WindowManager.LayoutParams.MATCH_PARENT
@@ -97,8 +104,8 @@ class AnswerActivity : Activity() {
         }
     }
 
-    override fun onTouchEvent(event: android.view.MotionEvent): Boolean {
-        if (event.action == android.view.MotionEvent.ACTION_OUTSIDE) {
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_OUTSIDE) {
             finish()
             return true
         }
