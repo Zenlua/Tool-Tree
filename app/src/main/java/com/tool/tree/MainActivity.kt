@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
@@ -28,7 +29,6 @@ import com.omarea.krscript.model.*
 import com.omarea.krscript.ui.ActionListFragment
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityMainBinding
-import com.tool.tree.ui.MainPagerAdapter
 import com.tool.tree.ui.TabIconHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,7 +37,6 @@ import kotlinx.coroutines.withContext
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var adapter: MainPagerAdapter
     private val handler = Handler(Looper.getMainLooper())
     private val progressBarDialog = ProgressBarDialog(this)
     private var krScriptConfig = KrScriptConfig()
@@ -49,6 +48,8 @@ class MainActivity : AppCompatActivity() {
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
     private val ACTION_FILE_PATH_CHOOSER = 65400
     private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
+    private val fragmentList = ArrayList<Fragment>()
+    private val titleList = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,12 +89,8 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
     
-                // Khởi tạo adapter nếu chưa có
-                if (!::adapter.isInitialized) {
-                    adapter = MainPagerAdapter(this@MainActivity)
-                    binding.viewPager.adapter = adapter
-                    binding.viewPager.offscreenPageLimit = 2
-                }
+                fragmentList.clear()
+                titleList.clear()
     
                 // Tab Favorites
                 favorites?.takeIf { it.isNotEmpty() }?.let {
@@ -103,11 +100,8 @@ class MainActivity : AppCompatActivity() {
                         null,
                         ThemeModeState.getThemeMode()
                     )
-                    if (adapter.getFragment(0) == null) {
-                        adapter.addFragment(fragment, getString(R.string.tab_favorites))
-                    } else {
-                        adapter.replaceFragment(0, fragment)
-                    }
+                    fragmentList.add(fragment)
+                    titleList.add(getString(R.string.tab_favorites))
                 }
     
                 // Tab Pages
@@ -118,12 +112,16 @@ class MainActivity : AppCompatActivity() {
                         null,
                         ThemeModeState.getThemeMode()
                     )
-                    if (adapter.getFragment(1) == null) {
-                        adapter.addFragment(fragment, getString(R.string.tab_pages))
-                    } else {
-                        adapter.replaceFragment(1, fragment)
-                    }
+                    fragmentList.add(fragment)
+                    titleList.add(getString(R.string.tab_pages))
                 }
+    
+                // Thiết lập adapter mặc định cho ViewPager2
+                binding.viewPager.adapter = object : androidx.viewpager2.adapter.FragmentStateAdapter(this@MainActivity) {
+                    override fun getItemCount(): Int = fragmentList.size
+                    override fun createFragment(position: Int): Fragment = fragmentList[position]
+                }
+                binding.viewPager.offscreenPageLimit = 2
     
                 // Thiết lập tab layout
                 setupTabs()
@@ -131,6 +129,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
+    // ========================
+    // RELOAD TAB
+    // ========================
     private fun reloadTabs() {
         lifecycleScope.launch(Dispatchers.IO) {
             val favorites = getItems(krScriptConfig.favoriteConfig)
@@ -139,8 +140,7 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 // Reload Favorites
                 if (!favorites.isNullOrEmpty()) {
-                    val favoriteFragment = adapter.getFragment(0) as? ActionListFragment
-                    favoriteFragment?.updateData(
+                    fragmentList.getOrNull(0)?.updateData(
                         favorites,
                         getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
                         ThemeModeState.getThemeMode()
@@ -149,8 +149,7 @@ class MainActivity : AppCompatActivity() {
     
                 // Reload Pages
                 if (!pages.isNullOrEmpty()) {
-                    val pagesFragment = adapter.getFragment(1) as? ActionListFragment
-                    pagesFragment?.updateData(
+                    fragmentList.getOrNull(1)?.updateData(
                         pages,
                         getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
                         ThemeModeState.getThemeMode()
@@ -160,10 +159,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
+    // ========================
+    // SETUP TAB LAYOUT
+    // ========================
     private fun setupTabs() {
         val tabHelper = TabIconHelper(this)
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            val title = adapter.getTitle(position)
+            val title = titleList.getOrNull(position) ?: "Tab $position"
             val iconRes = if (title == getString(R.string.tab_favorites)) R.drawable.tab_favorites else R.drawable.tab_pages
             tab.customView = tabHelper.createTabView(title, getDrawable(iconRes)!!, position == binding.viewPager.currentItem)
         }.attach()
@@ -174,6 +176,7 @@ class MainActivity : AppCompatActivity() {
                 isFavoritesTab = tab.position == 0
                 invalidateOptionsMenu()
             }
+    
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
