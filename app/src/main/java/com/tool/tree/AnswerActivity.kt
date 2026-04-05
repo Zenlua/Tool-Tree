@@ -20,7 +20,7 @@ class AnswerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Cấu hình Window (Xóa bỏ các cờ gây lỗi phím xóa)
+        // 1. Cấu hình Window (Xóa sạch các cờ cản trở)
         setupWindow()
 
         val max = intent.getStringExtra("max")?.toIntOrNull()
@@ -37,10 +37,12 @@ class AnswerActivity : Activity() {
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             
-            // Ép buộc thuộc tính hiển thị con trỏ
             isCursorVisible = true
             isFocusable = true
             isFocusableInTouchMode = true
+            
+            // Tự động bôi đen toàn bộ khi nhận Focus (Giúp phím xóa hoạt động)
+            setSelectAllOnFocus(true) 
         }
 
         val btnSend = Button(this).apply {
@@ -58,38 +60,33 @@ class AnswerActivity : Activity() {
 
         setContentView(root)
 
-        // 3. Sự kiện phím Enter
         etAnswer.setOnEditorActionListener { _, id, _ ->
-            if (id == EditorInfo.IME_ACTION_SEND) {
-                processSend(etAnswer.text.toString(), max)
-                true
-            } else false
+            if (id == EditorInfo.IME_ACTION_SEND) { processSend(etAnswer.text.toString(), max); true } else false
         }
     }
 
-    // PHẦN QUAN TRỌNG NHẤT: Ép hệ thống gán Input Connection để xóa được chữ
+    // KỸ THUẬT MỚI: Ép Focus và Bôi đen ngay khi cửa sổ sẵn sàng
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            etAnswer.post {
+            etAnswer.postDelayed({
                 etAnswer.requestFocus()
-                // Sử dụng SHOW_FORCED để ép bàn phím liên kết với con trỏ
-                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showSoftInput(etAnswer, InputMethodManager.SHOW_FORCED)
+                // Lệnh bôi đen toàn bộ chữ hiện có
+                etAnswer.selectAll() 
                 
-                // Mẹo: Di chuyển con trỏ xuống cuối văn bản (nếu có) để kích hoạt lại InputConnection
-                etAnswer.setSelection(etAnswer.text.length)
-            }
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                // Sử dụng SHOW_FORCED để ép kết nối bàn phím
+                imm.showSoftInput(etAnswer, InputMethodManager.SHOW_FORCED)
+            }, 100) // Delay cực ngắn để Window ổn định Focus
         }
     }
 
     private fun setupWindow() {
         window.apply {
-            // BẮT BUỘC: Xóa các cờ này để phím Backspace hoạt động
+            // Xóa FLAG_ALT_FOCUSABLE_IM là bắt buộc để dùng phím Xóa
             clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
             
-            // Cho phép nhận diện chạm bên ngoài
             addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
             
             attributes = attributes.apply {
@@ -117,19 +114,13 @@ class AnswerActivity : Activity() {
         try {
             if (max != null) {
                 val num = text.toIntOrNull()
-                if (num == null) {
-                    Toast.makeText(this, getString(R.string.toast_invalid_number), Toast.LENGTH_SHORT).show()
-                    return
-                }
-                if (num < 0 || num > max) {
-                    Toast.makeText(this, getString(R.string.toast_out_of_range, 0, max), Toast.LENGTH_SHORT).show()
-                    return
-                }
-                answerFile.writeText(num.toString())
+                if (num != null && num in 0..max) {
+                    answerFile.writeText(num.toString())
+                    finish()
+                } else Toast.makeText(this, getString(R.string.toast_out_of_range, 0, max), Toast.LENGTH_SHORT).show()
             } else {
-                answerFile.writeText(text)
+                answerFile.writeText(text); finish()
             }
-            finish()
         } catch (e: Exception) { e.printStackTrace() }
     }
 }
