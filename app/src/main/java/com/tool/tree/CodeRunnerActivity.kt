@@ -3,7 +3,7 @@ package com.tool.tree
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.*
+import android.view.Gravity
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -28,7 +28,7 @@ class CodeRunnerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ===== ROOT =====
+        // ===== ROOT LAYOUT =====
         val root = FrameLayout(this)
         val container = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
 
@@ -45,21 +45,21 @@ class CodeRunnerActivity : AppCompatActivity() {
         val btnBackHistory = ImageView(this).apply {
             setImageResource(android.R.drawable.ic_media_previous)
             setPadding(20, 20, 20, 20)
-            setBackgroundResource(android.R.attr.selectableItemBackgroundBorderless)
+            setBackgroundColor(0x00000000) // Tạm màu trong suốt
             setOnClickListener { historyBack() }
         }
 
         val btnForwardHistory = ImageView(this).apply {
             setImageResource(android.R.drawable.ic_media_next)
             setPadding(20, 20, 20, 20)
-            setBackgroundResource(android.R.attr.selectableItemBackgroundBorderless)
+            setBackgroundColor(0x00000000)
             setOnClickListener { historyForward() }
         }
 
         val btnMenu = ImageView(this).apply {
             setImageResource(android.R.drawable.ic_menu_more)
             setPadding(20, 20, 20, 20)
-            setBackgroundResource(android.R.attr.selectableItemBackgroundBorderless)
+            setBackgroundColor(0x00000000)
             setOnClickListener {
                 val popup = android.widget.PopupMenu(this@CodeRunnerActivity, this)
                 popup.menu.add("Font code")
@@ -76,10 +76,11 @@ class CodeRunnerActivity : AppCompatActivity() {
         rightLayout.addView(btnForwardHistory)
         rightLayout.addView(btnMenu)
 
-        val params = Toolbar.LayoutParams(Toolbar.LayoutParams.WRAP_CONTENT,
-            Toolbar.LayoutParams.WRAP_CONTENT).apply { gravity = Gravity.END }
+        val params = Toolbar.LayoutParams(
+            Toolbar.LayoutParams.WRAP_CONTENT,
+            Toolbar.LayoutParams.WRAP_CONTENT
+        ).apply { gravity = Gravity.END }
         toolbar.addView(rightLayout, params)
-
         container.addView(toolbar)
 
         // ===== EDITOR =====
@@ -94,7 +95,7 @@ class CodeRunnerActivity : AppCompatActivity() {
         scroll.addView(editor)
         container.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
 
-        // ===== FAB =====
+        // ===== FAB RUN BUTTON =====
         val btnRun = ImageView(this).apply {
             setImageResource(android.R.drawable.ic_media_play)
             setPadding(30, 30, 30, 30)
@@ -135,11 +136,19 @@ class CodeRunnerActivity : AppCompatActivity() {
 
     // ===== HISTORY =====
     private fun historyBack() {
-        if (historyIndex > 0) historyIndex--; setEditor(historyList[historyIndex])
+        if (historyIndex > 0) {
+            historyIndex--
+            setEditor(historyList[historyIndex])
+        }
     }
+
     private fun historyForward() {
-        if (historyIndex < historyList.size - 1) historyIndex++; setEditor(historyList[historyIndex])
+        if (historyIndex < historyList.size - 1) {
+            historyIndex++
+            setEditor(historyList[historyIndex])
+        }
     }
+
     private fun setEditor(text: String) {
         editor.setText(text)
         editor.setSelection(text.length)
@@ -155,7 +164,6 @@ class CodeRunnerActivity : AppCompatActivity() {
         }
 
         val node = RunnableNode("")
-
         node.shell = code
 
         val dialog = DialogLogFragment.create(
