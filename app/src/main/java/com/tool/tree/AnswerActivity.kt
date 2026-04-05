@@ -11,9 +11,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import java.io.File
-import android.os.Build
-import android.window.OnBackInvokedDispatcher
-import android.window.OnBackInvokedCallback
 
 class AnswerActivity : Activity() {
 
@@ -21,9 +18,8 @@ class AnswerActivity : Activity() {
 
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
-    private var allowKeyboard = true
+
     private var isProcessed = false
-    private var backCallback: OnBackInvokedCallback? = null
 
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private val timeoutRunnable = Runnable { sendNullAndFinish() }
@@ -62,17 +58,6 @@ class AnswerActivity : Activity() {
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
         observeLayout()
-        
-
-        if (Build.VERSION.SDK_INT >= 33) {
-            backCallback = OnBackInvokedCallback {
-                handleBack()
-            }
-            onBackInvokedDispatcher.registerOnBackInvokedCallback(
-                OnBackInvokedDispatcher.PRIORITY_DEFAULT,
-                backCallback!!
-            )
-        }
     }
 
     private fun setupWindow() {
@@ -141,39 +126,24 @@ class AnswerActivity : Activity() {
     private fun observeLayout() {
         root.viewTreeObserver.addOnGlobalLayoutListener(object :
             ViewTreeObserver.OnGlobalLayoutListener {
-    
+
             private var lastHeight = 0
-    
+
             override fun onGlobalLayout() {
                 val r = Rect()
                 root.getWindowVisibleDisplayFrame(r)
-    
+
                 val height = r.height()
                 if (height != lastHeight) {
                     lastHeight = height
-                    if (::et.isInitialized && !isProcessed && allowKeyboard) {
-                        reActivateCursor()
-                    }
+                    // Không kích hoạt lại bàn phím nếu đang trong quá trình đóng (isProcessed)
+                    if (::et.isInitialized && !isProcessed) reActivateCursor()
                 }
             }
         })
     }
 
-    private fun handleBack() {
-        if (isProcessed) return
-        allowKeyboard = false
-        if (::et.isInitialized) {
-            et.clearFocus()
-        }
-        sendNullAndFinish()
-    }
-
-    override fun onBackPressed() {
-        handleBack()
-    }
-
     private fun reActivateCursor() {
-        if (!allowKeyboard || isProcessed) return
         et.post {
             if (!et.hasFocus()) et.requestFocus()
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
@@ -206,6 +176,11 @@ class AnswerActivity : Activity() {
         finishWithCleanUp()
     }
 
+    // Xử lý vuốt trở lại hoặc bấm phím Back
+    override fun onBackPressed() {
+        sendNullAndFinish()
+    }
+
     private fun sendNullAndFinish() {
         if (isProcessed) return
 
@@ -221,9 +196,15 @@ class AnswerActivity : Activity() {
     }
 
     private fun finishWithCleanUp() {
+        // Tắt bàn phím
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: window.decorView
         imm.hideSoftInputFromWindow(view.windowToken, 0)
+
+        // Xóa focus để tránh listener bật lại bàn phím khi layout co lại
+        if (::et.isInitialized) {
+            et.clearFocus()
+        }
 
         finish()
         overridePendingTransition(0, 0)
@@ -231,11 +212,6 @@ class AnswerActivity : Activity() {
 
     override fun onDestroy() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
-        if (Build.VERSION.SDK_INT >= 33) {
-            backCallback?.let {
-                onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it)
-            }
-        }
         super.onDestroy()
     }
 }
