@@ -11,6 +11,8 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import java.io.File
+import android.os.Build
+import android.window.OnBackInvokedDispatcher
 
 class AnswerActivity : Activity() {
 
@@ -18,7 +20,7 @@ class AnswerActivity : Activity() {
 
     private lateinit var et: EditText
     private lateinit var root: LinearLayout
-
+    private var allowKeyboard = true
     private var isProcessed = false
 
     private val timeoutHandler = Handler(Looper.getMainLooper())
@@ -58,6 +60,15 @@ class AnswerActivity : Activity() {
         timeoutHandler.postDelayed(timeoutRunnable, timeoutSeconds * 1000)
 
         observeLayout()
+        
+
+        if (Build.VERSION.SDK_INT >= 33) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) {
+                handleBack()
+            }
+        }
     }
 
     private fun setupWindow() {
@@ -123,26 +134,26 @@ class AnswerActivity : Activity() {
         }
     }
 
-    private fun observeLayout() {
-        root.viewTreeObserver.addOnGlobalLayoutListener(object :
-            ViewTreeObserver.OnGlobalLayoutListener {
+    if (height != lastHeight) {
+        lastHeight = height
+        if (::et.isInitialized && !isProcessed && allowKeyboard) {
+            reActivateCursor()
+        }
+    }
 
-            private var lastHeight = 0
-
-            override fun onGlobalLayout() {
-                val r = Rect()
-                root.getWindowVisibleDisplayFrame(r)
-
-                val height = r.height()
-                if (height != lastHeight) {
-                    lastHeight = height
-                    if (::et.isInitialized && !isProcessed) reActivateCursor()
-                }
-            }
-        })
+    private fun handleBack() {
+        if (isProcessed) return
+        allowKeyboard = false
+        et.clearFocus()
+        sendNullAndFinish()
+    }
+    
+    override fun onBackPressed() {
+        handleBack()
     }
 
     private fun reActivateCursor() {
+        if (!allowKeyboard || isProcessed) return
         et.post {
             if (!et.hasFocus()) et.requestFocus()
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
