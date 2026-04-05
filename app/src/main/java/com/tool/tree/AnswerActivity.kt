@@ -20,7 +20,7 @@ class AnswerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Cấu hình Window
+        // 1. Cấu hình Window (Xóa bỏ các cờ gây lỗi phím xóa)
         setupWindow()
 
         val max = intent.getStringExtra("max")?.toIntOrNull()
@@ -37,7 +37,7 @@ class AnswerActivity : Activity() {
             inputType = if (max != null) android.text.InputType.TYPE_CLASS_NUMBER else android.text.InputType.TYPE_CLASS_TEXT
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
             
-            // Ép buộc các thuộc tính hiển thị
+            // Ép buộc thuộc tính hiển thị con trỏ
             isCursorVisible = true
             isFocusable = true
             isFocusableInTouchMode = true
@@ -58,6 +58,7 @@ class AnswerActivity : Activity() {
 
         setContentView(root)
 
+        // 3. Sự kiện phím Enter
         etAnswer.setOnEditorActionListener { _, id, _ ->
             if (id == EditorInfo.IME_ACTION_SEND) {
                 processSend(etAnswer.text.toString(), max)
@@ -66,24 +67,29 @@ class AnswerActivity : Activity() {
         }
     }
 
-    // SỬA LỖI TẠI ĐÂY: Gọi bàn phím trong onResume để đảm bảo Activity đã "Active" hoàn toàn
-    override fun onResume() {
-        super.onResume()
-        etAnswer.post {
-            etAnswer.requestFocus()
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            // Sử dụng SHOW_IMPLICIT kết hợp với focus thực tế của View
-            imm.showSoftInput(etAnswer, InputMethodManager.SHOW_IMPLICIT)
+    // PHẦN QUAN TRỌNG NHẤT: Ép hệ thống gán Input Connection để xóa được chữ
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            etAnswer.post {
+                etAnswer.requestFocus()
+                // Sử dụng SHOW_FORCED để ép bàn phím liên kết với con trỏ
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(etAnswer, InputMethodManager.SHOW_FORCED)
+                
+                // Mẹo: Di chuyển con trỏ xuống cuối văn bản (nếu có) để kích hoạt lại InputConnection
+                etAnswer.setSelection(etAnswer.text.length)
+            }
         }
     }
 
     private fun setupWindow() {
         window.apply {
-            // Xóa sạch các cờ có thể gây tranh chấp Focus
+            // BẮT BUỘC: Xóa các cờ này để phím Backspace hoạt động
             clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
             
-            // QUAN TRỌNG: Đảm bảo Window chiếm quyền Focus để nhận sự kiện bàn phím
+            // Cho phép nhận diện chạm bên ngoài
             addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
             
             attributes = attributes.apply {
@@ -108,7 +114,6 @@ class AnswerActivity : Activity() {
             Toast.makeText(this, getString(R.string.do_not_empty), Toast.LENGTH_SHORT).show()
             return
         }
-
         try {
             if (max != null) {
                 val num = text.toIntOrNull()
