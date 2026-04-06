@@ -18,6 +18,7 @@ import com.tool.tree.R
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.TextNode
+import com.omarea.krscript.config.IconPathAnalysis
 
 
 class ListItemText(private val context: Context,
@@ -25,8 +26,18 @@ class ListItemText(private val context: Context,
                    config: TextNode) : ListItemView(context, layoutId, config) {
 
     private val rowsView = layout.findViewById<TextView?>(R.id.kr_rows)
+    protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon)
 
     init {
+        if (extraIconView != null) {
+            extraIconView?.visibility = View.GONE
+            if (config.photoPath.isNotEmpty()) {
+                IconPathAnalysis().loadPhoto(context, config)?.run {
+                    extraIconView?.setImageDrawable(this)
+                    extraIconView?.visibility = View.VISIBLE
+                }
+            }
+        }
         if (config.rows.isNotEmpty() && rowsView != null) {
             rowsView.movementMethod = LinkMovementMethod.getInstance() // 不设置 ClickableSpan 点击没反应
             // rowsView.setOnClickListener {}
