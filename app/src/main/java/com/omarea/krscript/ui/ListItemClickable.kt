@@ -74,19 +74,9 @@ open class ListItemClickable(context: Context,
             }
         }
         // ===== Background ảnh động =====
-        val bg = contentView.background
-        if (bg is RippleDrawable) {
-            val content = bg.getDrawable(0)
-            if (content is LayerDrawable) {
-                val index = content.findIndexByLayerId(R.id.bg_image)
-                if (index != -1) {
-                    content.setDrawable(index, ColorDrawable(Color.TRANSPARENT))
-                    if (config.backgroundPath.isNotEmpty()) {
-                        IconPathAnalysis().loadBackground(context, config)?.run {
-                            content.setDrawable(index, this)
-                        }
-                    }
-                }
+        if (config.backgroundPath.isNotEmpty()) {
+            IconPathAnalysis().loadBackground(context, config)?.run {
+                contentView.background = this
             }
         }
     }
