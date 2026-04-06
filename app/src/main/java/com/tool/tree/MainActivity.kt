@@ -91,70 +91,66 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
     
-                // --- Remove fragment cũ khỏi FragmentManager ---
-                supportFragmentManager.fragments.forEach { fragment ->
-                    supportFragmentManager.beginTransaction().remove(fragment).commitNow()
-                }
+                // --- Tạo danh sách fragment mới ---
+                val fragments = mutableListOf<Fragment>()
+                val titles = mutableListOf<String>()
     
-                // --- Clear adapter nếu cần ---
-                if (::adapter.isInitialized) {
-                    adapter.clearFragments()
-                } else {
-                    adapter = MainPagerAdapter(this@MainActivity)
-                    binding.viewPager.adapter = adapter
-                    binding.viewPager.offscreenPageLimit = 2
-                }
-    
-                // --- Thêm lại các tab mới ---
                 favorites?.takeIf { it.isNotEmpty() }?.let {
-                    adapter.addFragment(
+                    fragments.add(
                         ActionListFragment.create(
                             it,
                             getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
                             null,
                             ThemeModeState.getThemeMode()
-                        ),
-                        getString(R.string.tab_favorites)
+                        )
                     )
+                    titles.add(getString(R.string.tab_favorites))
                 }
     
                 pages?.takeIf { it.isNotEmpty() }?.let {
-                    adapter.addFragment(
+                    fragments.add(
                         ActionListFragment.create(
                             it,
                             getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
                             null,
                             ThemeModeState.getThemeMode()
-                        ),
-                        getString(R.string.tab_pages)
+                        )
                     )
+                    titles.add(getString(R.string.tab_pages))
                 }
     
                 tab3Items?.takeIf { it.isNotEmpty() }?.let {
-                    adapter.addFragment(
+                    fragments.add(
                         ActionListFragment.create(
                             it,
                             getKrScriptActionHandler(krScriptConfig.customTab3Config, false),
                             null,
                             ThemeModeState.getThemeMode()
-                        ),
-                        getString(R.string.tab_custom3)
+                        )
                     )
+                    titles.add(getString(R.string.tab_custom3))
                 }
     
                 tab4Items?.takeIf { it.isNotEmpty() }?.let {
-                    adapter.addFragment(
+                    fragments.add(
                         ActionListFragment.create(
                             it,
                             getKrScriptActionHandler(krScriptConfig.customTab4Config, false),
                             null,
                             ThemeModeState.getThemeMode()
-                        ),
-                        getString(R.string.tab_custom4)
+                        )
                     )
+                    titles.add(getString(R.string.tab_custom4))
                 }
     
-                // --- Setup lại TabLayout ---
+                // --- Gán adapter mới cho ViewPager2 ---
+                binding.viewPager.adapter = object : FragmentStateAdapter(this@MainActivity) {
+                    override fun getItemCount(): Int = fragments.size
+                    override fun createFragment(position: Int): Fragment = fragments[position]
+                }
+                binding.viewPager.offscreenPageLimit = 2
+    
+                // --- Setup tab layout ---
                 setupTabs()
             }
         }
