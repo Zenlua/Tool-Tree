@@ -1,14 +1,12 @@
 package com.omarea.common.ui;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewOutlineProvider;
+import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
 
 import androidx.annotation.Nullable;
@@ -22,15 +20,11 @@ public class BlurViewLinearLayout extends LinearLayout {
 
     private Paint overlayPaint;
 
-    // cache
     private Bitmap rootBitmap;
     private Bitmap blurBitmap;
 
-    private int lastX = -1, lastY = -1;
+    private int[] lastLoc = new int[]{-1, -1};
     private int lastW = -1, lastH = -1;
-
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private boolean pendingUpdate = false;
 
     public BlurViewLinearLayout(Context context) {
         super(context);
@@ -51,7 +45,7 @@ public class BlurViewLinearLayout extends LinearLayout {
         ThemeConfig config = new ThemeConfig(context);
         blurEnabled = config.getAllowTransparentUI();
 
-        // bo góc
+        // bo góc giống v31
         setOutlineProvider(new ViewOutlineProvider() {
             @Override
             public void getOutline(View view, Outline outline) {
@@ -59,33 +53,20 @@ public class BlurViewLinearLayout extends LinearLayout {
             }
         });
         setClipToOutline(true);
+
+        // giống v31: update trước khi draw
+        getViewTreeObserver().addOnPreDrawListener(preDrawListener);
     }
 
-    // ===== gọi thủ công khi cần =====
-    public void updateBlur() {
-        if (!blurEnabled) return;
+    private final ViewTreeObserver.OnPreDrawListener preDrawListener = () -> {
+        if (!blurEnabled) return true;
 
-        if (pendingUpdate) return;
-        pendingUpdate = true;
-
-        // delay nhẹ để tránh spam
-        handler.postDelayed(() -> {
-            pendingUpdate = false;
-            doBlur();
-        }, 120);
-    }
-
-    private void doBlur() {
         try {
-            Context ctx = getContext();
-            if (!(ctx instanceof Activity)) return;
+            // 🔥 giống v31: dùng rootView
+            View root = getRootView();
+            if (root.getWidth() == 0 || root.getHeight() == 0) return true;
 
-            Activity act = (Activity) ctx;
-
-            View root = act.findViewById(android.R.id.content);
-            if (root.getWidth() == 0 || root.getHeight() == 0) return;
-
-            // 🔥 cache root bitmap (không tạo lại liên tục)
+            // cache root bitmap
             if (rootBitmap == null ||
                     rootBitmap.getWidth() != root.getWidth() ||
                     rootBitmap.getHeight() != root.getHeight()) {
@@ -102,29 +83,27 @@ public class BlurViewLinearLayout extends LinearLayout {
             Canvas rootCanvas = new Canvas(rootBitmap);
             root.draw(rootCanvas);
 
-            // ===== tính vị trí chuẩn =====
+            // 🔥 vị trí theo window (giống v31)
             int[] loc = new int[2];
-            int[] rootLoc = new int[2];
+            getLocationInWindow(loc);
 
-            getLocationOnScreen(loc);
-            root.getLocationOnScreen(rootLoc);
-
-            int x = loc[0] - rootLoc[0];
-            int y = loc[1] - rootLoc[1];
+            int x = loc[0];
+            int y = loc[1];
             int w = getWidth();
             int h = getHeight();
 
-            // tránh update nếu không đổi
-            if (x == lastX && y == lastY && w == lastW && h == lastH) {
-                return;
+            // tránh update liên tục
+            if (lastLoc[0] == x && lastLoc[1] == y && lastW == w && lastH == h) {
+                return true;
             }
 
-            lastX = x;
-            lastY = y;
+            lastLoc[0] = x;
+            lastLoc[1] = y;
             lastW = w;
             lastH = h;
 
-            float scale = root.getWidth() / 220f; // 🔥 tối ưu hiệu năng
+            // scale giống v31
+            float scale = root.getWidth() / 180f;
 
             int bw = Math.max(1, (int) (w / scale));
             int bh = Math.max(1, (int) (h / scale));
@@ -156,7 +135,9 @@ public class BlurViewLinearLayout extends LinearLayout {
 
         } catch (Exception ignored) {
         }
-    }
+
+        return true;
+    };
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -175,11 +156,9 @@ public class BlurViewLinearLayout extends LinearLayout {
         }
     }
 
-    // ===== API =====
-
     public void refreshConfig() {
         ThemeConfig config = new ThemeConfig(getContext());
         blurEnabled = config.getAllowTransparentUI();
-        updateBlur();
+        invalidate();
     }
 }
