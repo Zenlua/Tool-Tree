@@ -6,6 +6,8 @@ import android.widget.ImageView
 import com.tool.tree.R
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.model.ClickableNode
+import android.graphics.drawable.RippleDrawable
+import android.graphics.drawable.LayerDrawable
 
 open class ListItemClickable(context: Context,
                              layoutId: Int,
@@ -15,6 +17,7 @@ open class ListItemClickable(context: Context,
     protected var shortcutIconView = layout.findViewById<View?>(R.id.kr_shortcut_icon)
     protected var iconView = layout.findViewById<ImageView?>(R.id.kr_icon)
     protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon)
+    protected val contentView = layout.findViewById<View>(android.R.id.content)
 
     fun setOnClickListener(onClickListener: OnClickListener): ListItemClickable {
         this.mOnClickListener = onClickListener
@@ -64,6 +67,20 @@ open class ListItemClickable(context: Context,
                 IconPathAnalysis().loadPhoto(context, config)?.run {
                     extraIconView?.setImageDrawable(this)
                     extraIconView?.visibility = View.VISIBLE
+                }
+            }
+        }
+        // ===== Background ảnh động =====
+        val bg = contentView?.background
+        if (bg is RippleDrawable && config.backgroundPath.isNotEmpty()) {
+            val drawable = IconPathAnalysis().loadBackground(context, config)
+            drawable?.let { newBg ->
+                val content = bg.getDrawable(0)
+                if (content is LayerDrawable) {
+                    val index = content.findIndexByLayerId(R.id.bg_image)
+                    if (index != -1) {
+                        content.setDrawable(index, newBg)
+                    }
                 }
             }
         }

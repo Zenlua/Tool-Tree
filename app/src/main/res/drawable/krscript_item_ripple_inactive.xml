@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="?attr/cardBg" />
-    <corners android:radius="5dp" />
-</shape>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+    <item>
+        <layer-list>
+            <item
+                android:id="@+id/bg_image">
+                <color android:color="@android:color/transparent"/>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/cardBg" />
+                    <corners android:radius="5dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</ripple>
