@@ -610,6 +610,11 @@ class PageConfigReader {
                 resourceNode(parser)
             }
         }
+        for (i in 0 until parser.attributeCount) {
+            when (parser.getAttributeName(i)) {
+                "photo", "photo-path" -> textNode.photo = parser.getAttributeValue(i).trim()
+            }
+        }
     }
 
     private fun rowNode(textNode: TextNode, parser: XmlPullParser) {
