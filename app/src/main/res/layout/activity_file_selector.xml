@@ -3,11 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:backgroundTintMode="screen"
-    android:clipToPadding="true"
     android:fitsSystemWindows="true"
-    android:keepScreenOn="false"
     tools:openDrawer="start">
+
+    <include
+        layout="@layout/app_bar_main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <com.omarea.common.ui.OverScrollListView
         android:id="@+id/file_selector_list"
@@ -16,8 +18,4 @@
         android:paddingTop="56dp">
     </com.omarea.common.ui.OverScrollListView>
 
-    <include
-        layout="@layout/app_bar_main"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 </androidx.drawerlayout.widget.DrawerLayout>

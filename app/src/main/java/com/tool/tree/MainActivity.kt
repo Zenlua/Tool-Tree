@@ -87,70 +87,74 @@ class MainActivity : AppCompatActivity() {
             val pages = getItems(krScriptConfig.pageListConfig)
             val tab3Items = getItems(krScriptConfig.customTab3Config)
             val tab4Items = getItems(krScriptConfig.customTab4Config)
-
+    
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
-                fragmentList.clear()
-                titleList.clear()
-
-                // Tab Favorites
-                if (!favorites.isNullOrEmpty()) {
-                    fragmentList.add(
+    
+                // --- Remove fragment cũ khỏi FragmentManager ---
+                supportFragmentManager.fragments.forEach { fragment ->
+                    supportFragmentManager.beginTransaction().remove(fragment).commitNow()
+                }
+    
+                // --- Clear adapter nếu cần ---
+                if (::adapter.isInitialized) {
+                    adapter.clearFragments()
+                } else {
+                    adapter = MainPagerAdapter(this@MainActivity)
+                    binding.viewPager.adapter = adapter
+                    binding.viewPager.offscreenPageLimit = 2
+                }
+    
+                // --- Thêm lại các tab mới ---
+                favorites?.takeIf { it.isNotEmpty() }?.let {
+                    adapter.addFragment(
                         ActionListFragment.create(
-                            favorites,
+                            it,
                             getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
                             null,
                             ThemeModeState.getThemeMode()
-                        )
+                        ),
+                        getString(R.string.tab_favorites)
                     )
-                    titleList.add(getString(R.string.tab_favorites))
                 }
-
-                // Tab Pages
-                if (!pages.isNullOrEmpty()) {
-                    fragmentList.add(
+    
+                pages?.takeIf { it.isNotEmpty() }?.let {
+                    adapter.addFragment(
                         ActionListFragment.create(
-                            pages,
+                            it,
                             getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
                             null,
                             ThemeModeState.getThemeMode()
-                        )
+                        ),
+                        getString(R.string.tab_pages)
                     )
-                    titleList.add(getString(R.string.tab_pages))
                 }
-
-                // Tab 3
-                if (!tab3Items.isNullOrEmpty()) {
-                    fragmentList.add(
+    
+                tab3Items?.takeIf { it.isNotEmpty() }?.let {
+                    adapter.addFragment(
                         ActionListFragment.create(
-                            tab3Items,
+                            it,
                             getKrScriptActionHandler(krScriptConfig.customTab3Config, false),
                             null,
                             ThemeModeState.getThemeMode()
-                        )
+                        ),
+                        getString(R.string.tab_custom3)
                     )
-                    titleList.add(getString(R.string.tab_custom3))
                 }
-
-                // Tab 4
-                if (!tab4Items.isNullOrEmpty()) {
-                    fragmentList.add(
+    
+                tab4Items?.takeIf { it.isNotEmpty() }?.let {
+                    adapter.addFragment(
                         ActionListFragment.create(
-                            tab4Items,
+                            it,
                             getKrScriptActionHandler(krScriptConfig.customTab4Config, false),
                             null,
                             ThemeModeState.getThemeMode()
-                        )
+                        ),
+                        getString(R.string.tab_custom4)
                     )
-                    titleList.add(getString(R.string.tab_custom4))
                 }
-
-                // Thiết lập adapter cho ViewPager2
-                binding.viewPager.adapter = object : androidx.viewpager2.adapter.FragmentStateAdapter(this@MainActivity) {
-                    override fun getItemCount(): Int = fragmentList.size
-                    override fun createFragment(position: Int): Fragment = fragmentList[position]
-                }
-                binding.viewPager.offscreenPageLimit = 2
+    
+                // --- Setup lại TabLayout ---
                 setupTabs()
             }
         }
