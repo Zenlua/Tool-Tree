@@ -2,7 +2,6 @@ package com.tool.tree
 
 import android.content.ComponentName
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -12,9 +11,7 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.omarea.common.shared.FilePathResolver
@@ -27,11 +24,11 @@ import com.omarea.krscript.model.*
 import com.omarea.krscript.ui.ActionListFragment
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityMainBinding
+import com.tool.tree.ui.MainPagerAdapter
 import com.tool.tree.ui.TabIconHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.tool.tree.ui.MainPagerAdapter
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
+        setSupportActionBar(binding.toolbar)
         setTitle(R.string.app_name)
 
         progressBarDialog.showDialog(getString(R.string.please_wait))
@@ -82,17 +79,16 @@ class MainActivity : AppCompatActivity() {
             val pages = getItems(krScriptConfig.pageListConfig)
             val tab3Items = getItems(krScriptConfig.customTab3Config)
             val tab4Items = getItems(krScriptConfig.customTab4Config)
-    
+
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
-    
-                // Khởi tạo adapter nếu chưa có
+
                 if (!::adapter.isInitialized) {
                     adapter = MainPagerAdapter(this@MainActivity)
                     binding.viewPager.adapter = adapter
                     binding.viewPager.offscreenPageLimit = 2
                 }
-    
+
                 // Tab Favorites
                 favorites?.takeIf { it.isNotEmpty() }?.let {
                     val fragment = ActionListFragment.create(
@@ -107,7 +103,7 @@ class MainActivity : AppCompatActivity() {
                         adapter.replaceFragment(0, fragment)
                     }
                 }
-    
+
                 // Tab Pages
                 pages?.takeIf { it.isNotEmpty() }?.let {
                     val fragment = ActionListFragment.create(
@@ -122,7 +118,7 @@ class MainActivity : AppCompatActivity() {
                         adapter.replaceFragment(1, fragment)
                     }
                 }
-    
+
                 // Tab 3
                 tab3Items?.takeIf { it.isNotEmpty() }?.let {
                     val fragment = ActionListFragment.create(
@@ -137,7 +133,7 @@ class MainActivity : AppCompatActivity() {
                         adapter.replaceFragment(2, fragment)
                     }
                 }
-    
+
                 // Tab 4
                 tab4Items?.takeIf { it.isNotEmpty() }?.let {
                     val fragment = ActionListFragment.create(
@@ -152,16 +148,12 @@ class MainActivity : AppCompatActivity() {
                         adapter.replaceFragment(3, fragment)
                     }
                 }
-    
-                // Thiết lập tab layout
+
                 setupTabs()
             }
         }
     }
 
-    // ========================
-    // RELOAD TAB
-    // ========================
     private fun reloadTabs() {
         lifecycleScope.launch(Dispatchers.IO) {
             val favorites = getItems(krScriptConfig.favoriteConfig)
@@ -170,26 +162,41 @@ class MainActivity : AppCompatActivity() {
             val tab4Items = getItems(krScriptConfig.customTab4Config)
 
             withContext(Dispatchers.Main) {
-                (fragmentList.getOrNull(0) as? ActionListFragment)?.updateData(
-                    favorites ?: emptyList(),
-                    getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
-                    ThemeModeState.getThemeMode()
-                )
-                (fragmentList.getOrNull(1) as? ActionListFragment)?.updateData(
-                    pages ?: emptyList(),
-                    getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
-                    ThemeModeState.getThemeMode()
-                )
-                (fragmentList.getOrNull(2) as? ActionListFragment)?.updateData(
-                    tab3Items ?: emptyList(),
-                    getKrScriptActionHandler(krScriptConfig.customTab3Config, false),
-                    ThemeModeState.getThemeMode()
-                )
-                (fragmentList.getOrNull(3) as? ActionListFragment)?.updateData(
-                    tab4Items ?: emptyList(),
-                    getKrScriptActionHandler(krScriptConfig.customTab4Config, false),
-                    ThemeModeState.getThemeMode()
-                )
+                // Reload Favorites
+                if (!favorites.isNullOrEmpty()) {
+                    (adapter.getFragment(0) as? ActionListFragment)?.updateData(
+                        favorites,
+                        getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
+                        ThemeModeState.getThemeMode()
+                    )
+                }
+
+                // Reload Pages
+                if (!pages.isNullOrEmpty()) {
+                    (adapter.getFragment(1) as? ActionListFragment)?.updateData(
+                        pages,
+                        getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
+                        ThemeModeState.getThemeMode()
+                    )
+                }
+
+                // Reload Tab 3
+                if (!tab3Items.isNullOrEmpty()) {
+                    (adapter.getFragment(2) as? ActionListFragment)?.updateData(
+                        tab3Items,
+                        getKrScriptActionHandler(krScriptConfig.customTab3Config, false),
+                        ThemeModeState.getThemeMode()
+                    )
+                }
+
+                // Reload Tab 4
+                if (!tab4Items.isNullOrEmpty()) {
+                    (adapter.getFragment(3) as? ActionListFragment)?.updateData(
+                        tab4Items,
+                        getKrScriptActionHandler(krScriptConfig.customTab4Config, false),
+                        ThemeModeState.getThemeMode()
+                    )
+                }
             }
         }
     }
@@ -217,7 +224,6 @@ class MainActivity : AppCompatActivity() {
                 isFavoritesTab = tab.position == 0
                 invalidateOptionsMenu()
             }
-
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
@@ -294,10 +300,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (fileSelectedInterface == null) {
-            super.onActivityResult(requestCode, resultCode, data)
-            return
-        }
         val path = when (requestCode) {
             ACTION_FILE_PATH_CHOOSER -> if (resultCode == RESULT_OK) data?.data?.let { FilePathResolver().getPath(this, it) } else null
             ACTION_FILE_PATH_CHOOSER_INNER -> if (resultCode == RESULT_OK) data?.getStringExtra("file") else null
@@ -306,14 +308,6 @@ class MainActivity : AppCompatActivity() {
         fileSelectedInterface?.onFileSelected(path)
         fileSelectedInterface = null
         super.onActivityResult(requestCode, resultCode, data)
-    }
-
-    private fun getPath(uri: Uri): String? {
-        return try {
-            FilePathResolver().getPath(this, uri)
-        } catch (ex: Exception) {
-            null
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
