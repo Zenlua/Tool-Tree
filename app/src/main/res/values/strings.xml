@@ -15,6 +15,9 @@
     <string name="tab_home">Home</string>
     <string name="tab_favorites">Favorites</string>
     <string name="tab_pages">Utilities</string>
+    <string name="tab_custom3">Home 3</string>
+    <string name="tab_custom4">Home 4</string>
+    <string name="tab_home">Home</string>
     <string name="copy_success">Copy successful</string>
     <string name="pio_starting">~•-•~</string>
     <string name="pop_before_start">Preparing to start the application…</string>
