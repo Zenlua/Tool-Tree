@@ -7,11 +7,6 @@ import com.tool.tree.R
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.model.ClickableNode
 
-import android.graphics.drawable.RippleDrawable
-import android.graphics.drawable.LayerDrawable
-import android.graphics.drawable.ColorDrawable
-import android.graphics.Color
-
 open class ListItemClickable(context: Context,
                              layoutId: Int,
                              config: ClickableNode) : ListItemView(context, layoutId, config) {
@@ -20,7 +15,6 @@ open class ListItemClickable(context: Context,
     protected var shortcutIconView = layout.findViewById<View?>(R.id.kr_shortcut_icon)
     protected var iconView = layout.findViewById<ImageView?>(R.id.kr_icon)
     protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon)
-    protected val contentView = layout.findViewById<View>(android.R.id.content)
 
     fun setOnClickListener(onClickListener: OnClickListener): ListItemClickable {
         this.mOnClickListener = onClickListener
@@ -76,7 +70,7 @@ open class ListItemClickable(context: Context,
         // ===== Background ảnh động =====
         if (config.backgroundPath.isNotEmpty()) {
             IconPathAnalysis().loadBackground(context, config)?.run {
-                contentView.background = this
+            layout.background = this
             }
         }
     }
