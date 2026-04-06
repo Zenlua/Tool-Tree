@@ -92,66 +92,73 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
     
-                // --- Tạo danh sách fragment mới ---
-                val fragments = mutableListOf<Fragment>()
-                val titles = mutableListOf<String>()
+                // Xóa fragment cũ khỏi FragmentManager trước
+                val ft = supportFragmentManager.beginTransaction()
+                for (f in fragmentList) ft.remove(f)
+                ft.commitNowAllowingStateLoss()
     
-                favorites?.takeIf { it.isNotEmpty() }?.let {
-                    fragments.add(
+                fragmentList.clear()
+                titleList.clear()
+    
+                // Tab Favorites
+                if (!favorites.isNullOrEmpty()) {
+                    fragmentList.add(
                         ActionListFragment.create(
-                            it,
+                            favorites,
                             getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
                             null,
                             ThemeModeState.getThemeMode()
                         )
                     )
-                    titles.add(getString(R.string.tab_favorites))
+                    titleList.add(getString(R.string.tab_favorites))
                 }
     
-                pages?.takeIf { it.isNotEmpty() }?.let {
-                    fragments.add(
+                // Tab Pages
+                if (!pages.isNullOrEmpty()) {
+                    fragmentList.add(
                         ActionListFragment.create(
-                            it,
+                            pages,
                             getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
                             null,
                             ThemeModeState.getThemeMode()
                         )
                     )
-                    titles.add(getString(R.string.tab_pages))
+                    titleList.add(getString(R.string.tab_pages))
                 }
     
-                tab3Items?.takeIf { it.isNotEmpty() }?.let {
-                    fragments.add(
+                // Tab 3
+                if (!tab3Items.isNullOrEmpty()) {
+                    fragmentList.add(
                         ActionListFragment.create(
-                            it,
+                            tab3Items,
                             getKrScriptActionHandler(krScriptConfig.customTab3Config, false),
                             null,
                             ThemeModeState.getThemeMode()
                         )
                     )
-                    titles.add(getString(R.string.tab_custom3))
+                    titleList.add(getString(R.string.tab_custom3))
                 }
     
-                tab4Items?.takeIf { it.isNotEmpty() }?.let {
-                    fragments.add(
+                // Tab 4
+                if (!tab4Items.isNullOrEmpty()) {
+                    fragmentList.add(
                         ActionListFragment.create(
-                            it,
+                            tab4Items,
                             getKrScriptActionHandler(krScriptConfig.customTab4Config, false),
                             null,
                             ThemeModeState.getThemeMode()
                         )
                     )
-                    titles.add(getString(R.string.tab_custom4))
+                    titleList.add(getString(R.string.tab_custom4))
                 }
     
-                // --- Gán adapter mới cho ViewPager2 ---
-                binding.viewPager.adapter = object : FragmentStateAdapter(this@MainActivity) {
-                    override fun getItemCount(): Int = fragments.size
-                    override fun createFragment(position: Int): Fragment = fragments[position]
+                // Gán adapter mới cho ViewPager2
+                binding.viewPager.adapter = object : androidx.viewpager2.adapter.FragmentStateAdapter(this@MainActivity) {
+                    override fun getItemCount(): Int = fragmentList.size
+                    override fun createFragment(position: Int): Fragment = fragmentList[position]
                 }
+    
                 binding.viewPager.offscreenPageLimit = 2
-    
-                // --- Setup tab layout ---
                 setupTabs()
             }
         }
