@@ -45,7 +45,7 @@ class ListItemText(private val context: Context,
                 if (extraIconView != null) {
                     extraIconView?.visibility = View.GONE
                     if (row.photo.isNotEmpty()) {
-                        IconPathAnalysis().loadtextPhoto(context, row)?.run {
+                        IconPathAnalysis().loadtextPhoto(context, row, config.pageConfigDir)?.run {
                             extraIconView?.setImageDrawable(this)
                             extraIconView?.visibility = View.VISIBLE
                         }

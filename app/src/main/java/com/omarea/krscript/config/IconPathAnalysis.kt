@@ -52,9 +52,9 @@ class IconPathAnalysis {
         return null
     }
 
-    fun loadtextPhoto(context: Context, row: TextNode.TextRow): Drawable? {
-        if (!row.photo.isEmpty()) {
-            val inputStream = PathAnalysis(context, textNode.pageConfigDir).parsePath(row.photo)
+    fun loadtextPhoto(context: Context, row: TextNode.TextRow, pageDir: String): Drawable? {
+        if (row.photo.isNotEmpty()) {
+            val inputStream = PathAnalysis(context, pageDir).parsePath(row.photo)
             inputStream?.run {
                 return bitmap2Drawable(BitmapFactory.decodeStream(this))
             }
