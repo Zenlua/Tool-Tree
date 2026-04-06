@@ -19,7 +19,7 @@ import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.TextNode
 import com.omarea.krscript.config.IconPathAnalysis
-
+import android.widget.ImageView
 
 class ListItemText(private val context: Context,
                    layoutId: Int,
