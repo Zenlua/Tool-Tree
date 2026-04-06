@@ -4,7 +4,7 @@ import android.text.Layout
 
 class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPath) {
     val rows = ArrayList<TextRow>()
-    var photoPath = ""
+    var photo = ""
 
     class TextRow {
         // 文字大小

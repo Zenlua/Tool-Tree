@@ -7,7 +7,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import com.tool.tree.R
 import com.omarea.krscript.model.ClickableNode
-
+import com.omarea.krscript.model.TextNode
 
 class IconPathAnalysis {
     // 获取快捷方式的图标
@@ -45,6 +45,16 @@ class IconPathAnalysis {
     fun loadPhoto(context: Context, clickableNode: ClickableNode): Drawable? {
         if (!clickableNode.photoPath.isEmpty()) {
             val inputStream = PathAnalysis(context, clickableNode.pageConfigDir).parsePath(clickableNode.photoPath)
+            inputStream?.run {
+                return bitmap2Drawable(BitmapFactory.decodeStream(this))
+            }
+        }
+        return null
+    }
+
+    fun loadtextPhoto(context: Context, textNode: TextNode): Drawable? {
+        if (!textNode.photo.isEmpty()) {
+            val inputStream = PathAnalysis(context, textNode.pageConfigDir).parsePath(textNode.photo)
             inputStream?.run {
                 return bitmap2Drawable(BitmapFactory.decodeStream(this))
             }

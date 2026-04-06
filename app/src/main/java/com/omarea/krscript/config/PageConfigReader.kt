@@ -601,7 +601,7 @@ class PageConfigReader {
                 summaryNode(textNode, parser)
             }
             "photo", "photo-path" -> {
-                photoPath(textNode, parser)
+                textNode.photo = parser.nextText()
             }
             "slice" -> {
                 rowNode(textNode, parser)

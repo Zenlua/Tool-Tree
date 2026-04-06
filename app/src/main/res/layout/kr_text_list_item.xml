@@ -37,7 +37,7 @@
         style="@style/textSmall" />
         
     <ImageView
-        android:id="@+id/kr_extra_icon"
+        android:id="@+id/kr_extra_icon_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"

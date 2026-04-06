@@ -26,13 +26,13 @@ class ListItemText(private val context: Context,
                    config: TextNode) : ListItemView(context, layoutId, config) {
 
     private val rowsView = layout.findViewById<TextView?>(R.id.kr_rows)
-    protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon)
+    protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon_text)
 
     init {
         if (extraIconView != null) {
             extraIconView?.visibility = View.GONE
-            if (config.photoPath.isNotEmpty()) {
-                IconPathAnalysis().loadPhoto(context, config)?.run {
+            if (config.photo.isNotEmpty()) {
+                IconPathAnalysis().loadtextPhoto(context, config)?.run {
                     extraIconView?.setImageDrawable(this)
                     extraIconView?.visibility = View.VISIBLE
                 }
