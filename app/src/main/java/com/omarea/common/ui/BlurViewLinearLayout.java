@@ -1,13 +1,11 @@
 package com.omarea.common.ui;
 
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.Rect;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
@@ -30,11 +28,6 @@ public class BlurViewLinearLayout extends LinearLayout {
     private boolean blurEnabled = false;
 
     private Paint overlayPaint;
-
-    // ===== fallback bitmap =====
-    private Bitmap blurBitmap;
-    private int lastX = -1, lastY = -1;
-    private int lastW = -1, lastH = -1;
 
     public BlurViewLinearLayout(Context context) {
         super(context);
@@ -60,7 +53,7 @@ public class BlurViewLinearLayout extends LinearLayout {
         ThemeConfig config = new ThemeConfig(context);
         blurEnabled = config.getAllowTransparentUI();
 
-        // 🔥 bo góc
+        // 🔥 bo góc toàn bộ
         setOutlineProvider(new ViewOutlineProvider() {
             @Override
             public void getOutline(View view, Outline outline) {
@@ -69,7 +62,7 @@ public class BlurViewLinearLayout extends LinearLayout {
         });
         setClipToOutline(true);
 
-        // fallback listener (Android < 12)
+        // fallback Android < 12
         if (Build.VERSION.SDK_INT < 31) {
             getViewTreeObserver().addOnPreDrawListener(preDrawListener);
         }
@@ -85,6 +78,7 @@ public class BlurViewLinearLayout extends LinearLayout {
             return;
         }
 
+        // Android 12+
         if (Build.VERSION.SDK_INT >= 31) {
             setRenderEffect(
                     RenderEffect.createBlurEffect(
@@ -96,69 +90,24 @@ public class BlurViewLinearLayout extends LinearLayout {
         }
     }
 
-    // ===== fallback blur (Android < 12) =====
+    // ===== Android < 12 dùng FastBlurUtility =====
     private final ViewTreeObserver.OnPreDrawListener preDrawListener = () -> {
         if (!blurEnabled) return true;
-
         if (Build.VERSION.SDK_INT >= 31) return true;
 
         try {
-            View root = getRootView();
-            if (root.getWidth() == 0 || root.getHeight() == 0) return true;
+            Context ctx = getContext();
+            if (!(ctx instanceof Activity)) return true;
 
-            int[] loc = new int[2];
-            getLocationInWindow(loc);
+            Activity act = (Activity) ctx;
 
-            int x = loc[0];
-            int y = loc[1];
-            int w = getWidth();
-            int h = getHeight();
-
-            // tránh update liên tục
-            if (x == lastX && y == lastY && w == lastW && h == lastH) {
-                return true;
-            }
-
-            lastX = x;
-            lastY = y;
-            lastW = w;
-            lastH = h;
-
-            float scale = root.getWidth() / 150f; // blur strength
-
-            int bw = Math.max(1, (int) (w / scale));
-            int bh = Math.max(1, (int) (h / scale));
-
-            if (blurBitmap == null || blurBitmap.getWidth() != bw || blurBitmap.getHeight() != bh) {
-                if (blurBitmap != null) blurBitmap.recycle();
-                blurBitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888);
-            }
-
-            Canvas canvas = new Canvas(blurBitmap);
-            canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-
-            Bitmap rootBitmap = Bitmap.createBitmap(
-                    root.getWidth(),
-                    root.getHeight(),
-                    Bitmap.Config.ARGB_8888
-            );
-            Canvas rootCanvas = new Canvas(rootBitmap);
-            root.draw(rootCanvas);
-
-            Rect src = new Rect(
-                    (int) (x / scale),
-                    (int) (y / scale),
-                    (int) ((x + w) / scale),
-                    (int) ((y + h) / scale)
+            // 🔥 lấy blur full màn hình
+            BitmapDrawable drawable = new BitmapDrawable(
+                    getResources(),
+                    FastBlurUtility.getBlurBackgroundDrawer(act)
             );
 
-            Rect dst = new Rect(0, 0, bw, bh);
-
-            canvas.drawBitmap(rootBitmap, src, dst, null);
-
-            rootBitmap.recycle();
-
-            setBackground(new BitmapDrawable(getResources(), blurBitmap));
+            setBackground(drawable);
 
         } catch (Exception ignored) {
         }
@@ -170,16 +119,6 @@ public class BlurViewLinearLayout extends LinearLayout {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         applyBlur();
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-
-        if (blurBitmap != null) {
-            blurBitmap.recycle();
-            blurBitmap = null;
-        }
     }
 
     @Override
