@@ -203,7 +203,7 @@ class MainActivity : AppCompatActivity() {
                 getString(R.string.tab_pages) -> R.drawable.tab_pages
                 getString(R.string.tab_custom3) -> R.drawable.tab_custom3
                 getString(R.string.tab_custom4) -> R.drawable.tab_custom4
-                else -> R.drawable.tab_default
+                else -> R.drawable.tab_home
             }
             tab.customView = tabHelper.createTabView(title, getDrawable(iconRes)!!, position == binding.viewPager.currentItem)
         }.attach()
