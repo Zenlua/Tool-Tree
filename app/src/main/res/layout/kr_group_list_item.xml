@@ -13,7 +13,7 @@
         android:layout_marginStart="6dp"
         style="@style/textSmall" />
 
-    <LinearLayout
+    <com.omarea.common.ui.BlurViewLinearLayout
         android:id="@android:id/content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
