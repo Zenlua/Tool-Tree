@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setSupportActionBar(binding.toolbar)
+        setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
         setTitle(R.string.app_name)
 
         progressBarDialog.showDialog(getString(R.string.please_wait))
