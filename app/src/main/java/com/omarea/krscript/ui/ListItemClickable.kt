@@ -6,8 +6,11 @@ import android.widget.ImageView
 import com.tool.tree.R
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.model.ClickableNode
+
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.LayerDrawable
+import android.graphics.drawable.ColorDrawable
+import android.graphics.Color
 
 open class ListItemClickable(context: Context,
                              layoutId: Int,
@@ -71,15 +74,17 @@ open class ListItemClickable(context: Context,
             }
         }
         // ===== Background ảnh động =====
-        val bg = contentView?.background
-        if (bg is RippleDrawable && config.backgroundPath.isNotEmpty()) {
-            val drawable = IconPathAnalysis().loadBackground(context, config)
-            drawable?.let { newBg ->
-                val content = bg.getDrawable(0)
-                if (content is LayerDrawable) {
-                    val index = content.findIndexByLayerId(R.id.bg_image)
-                    if (index != -1) {
-                        content.setDrawable(index, newBg)
+        val bg = contentView.background
+        if (bg is RippleDrawable) {
+            val content = bg.getDrawable(0)
+            if (content is LayerDrawable) {
+                val index = content.findIndexByLayerId(R.id.bg_image)
+                if (index != -1) {
+                    content.setDrawable(index, ColorDrawable(Color.TRANSPARENT))
+                    if (config.backgroundPath.isNotEmpty()) {
+                        IconPathAnalysis().loadBackground(context, config)?.run {
+                            content.setDrawable(index, this)
+                        }
                     }
                 }
             }
