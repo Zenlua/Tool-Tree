@@ -590,11 +590,6 @@ class PageConfigReader {
     }
 
     private fun tagStartInText(textNode: TextNode, parser: XmlPullParser) {
-        for (i in 0 until parser.attributeCount) {
-            when (parser.getAttributeName(i)) {
-                "photo", "photo-path" -> textNode.photo = parser.getAttributeValue(i).trim()
-            }
-        }
         when (parser.name) {
             "title" -> {
                 textNode.title = parser.nextText()
@@ -604,9 +599,6 @@ class PageConfigReader {
             }
             "summary" -> {
                 summaryNode(textNode, parser)
-            }
-            "photo", "photo-path" -> {
-                textNode.photo = parser.nextText()
             }
             "slice" -> {
                 rowNode(textNode, parser)
@@ -633,6 +625,7 @@ class PageConfigReader {
                     "break" -> textRow.breakRow = (attrValue == "1" || attrValue == "true" || attrValue == "break")
                     "link", "href" -> textRow.link = attrValue
                     "activity", "a", "intent" -> textRow.activity = attrValue
+                    "photo", "photo-path" -> textRow.photo = attrValue.trim()
                     "script", "run" -> {
                         textRow.onClickScript = attrValue
                     }

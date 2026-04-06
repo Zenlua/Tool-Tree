@@ -29,15 +29,6 @@ class ListItemText(private val context: Context,
     protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon_text)
 
     init {
-        if (extraIconView != null) {
-            extraIconView?.visibility = View.GONE
-            if (config.photo.isNotEmpty()) {
-                IconPathAnalysis().loadtextPhoto(context, config)?.run {
-                    extraIconView?.setImageDrawable(this)
-                    extraIconView?.visibility = View.VISIBLE
-                }
-            }
-        }
         if (config.rows.isNotEmpty() && rowsView != null) {
             rowsView.movementMethod = LinkMovementMethod.getInstance() // 不设置 ClickableSpan 点击没反应
             // rowsView.setOnClickListener {}
@@ -51,7 +42,16 @@ class ListItemText(private val context: Context,
                 val length = text.length
                 val spannableString = SpannableString(text)
 
-
+                if (extraIconView != null) {
+                    extraIconView?.visibility = View.GONE
+                    if (row.photo.isNotEmpty()) {
+                        IconPathAnalysis().loadtextPhoto(context, row)?.run {
+                            extraIconView?.setImageDrawable(this)
+                            extraIconView?.visibility = View.VISIBLE
+                        }
+                    }
+                }
+        
                 if (row.underline) {
                     spannableString.setSpan(UnderlineSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }

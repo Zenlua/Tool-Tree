@@ -4,7 +4,6 @@ import android.text.Layout
 
 class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPath) {
     val rows = ArrayList<TextRow>()
-    var photo = ""
 
     class TextRow {
         // 文字大小
@@ -33,5 +32,6 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var dynamicTextSh: String = ""
         // 点击后执行的脚本
         internal var onClickScript: String = ""
+        internal var photo: String = ""
     }
 }
