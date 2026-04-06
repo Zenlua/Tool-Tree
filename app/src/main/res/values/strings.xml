@@ -1,34 +1,20 @@
 <resources>
-
-    <string name="kr_script_config">kr-script.conf</string>
-    <bool name="force_root">false</bool>
-    <string name="app_name">Tool-Tree</string>
-
-    <string name="float_monitor_tips">Double-tap the floating window to close it, or press and drag to adjust its position</string>
-    <string name="permission_float">Please grant permission to display floating windows!</string>
-    <string name="please_wait">Please wait</string>
-    <string name="title_activity_action_page">Function Pages</string>
-
-    <string name="channel_name">Download</string>
     <string name="processing">Processing...</string>
     <string name="completed">Complete</string>
-
+    <string name="please_wait">Please wait</string>
+    <string name="kr_script_config">kr-script.conf</string>
+    <string name="app_name">Tool-Tree</string>
+    <string name="title_activity_action_page">Function Pages</string>
+    <string name="channel_name">Download</string>
     <string name="author_name">Kakathic</string>
     <string name="about_title">About</string>
     <string name="appliction_desc">Lots of utilities on the phone</string>
     <string name="appliction_name">[•-•]</string>
     <string name="appliction_author">Great tools</string>
     <string name="engine_version_name">Developing this project</string>
-
     <string name="tab_home">Home</string>
     <string name="tab_favorites">Favorites</string>
     <string name="tab_pages">Utilities</string>
-
-    <string name="monitor_laod">Load: %d%%</string>
-    <string name="monitor_core_count">%d Cores</string>
-    <string name="monitor_cache_cleared">Cached RAM has been reclaimed</string>
-    <string name="monitor_ram_cleared">RAM fragments have been defragmented</string>
-
     <string name="copy_success">Copy successful</string>
     <string name="pio_starting">~•-•~</string>
     <string name="pop_before_start">Preparing to start the application…</string>
@@ -36,7 +22,6 @@
     <string name="transparent_ui">Transparent UI</string>
     <string name="title_activity_file_selector">Please select a file</string>
     <string name="title_activity_folder_selector">Please select a directory</string>
-
     <string name="text_power_shutdown">Shutdown</string>
     <string name="text_power_reboot">Restart</string>
     <string name="text_power_dowload">Download</string>
@@ -44,14 +29,12 @@
     <string name="text_power_fastboot">Fastboot</string>
     <string name="text_power_edl">9008 (EDL)</string>
     <string name="menu_power">Select action power (root)</string>
-    
     <string name="power_emergency_cmd">input keyevent 26; svc power reboot edl || reboot edl</string>
     <string name="power_fastboot_cmd">input keyevent 26; svc power reboot bootloader || reboot bootloader</string>
     <string name="power_download_cmd">input keyevent 26; svc power reboot download || reboot download</string>
     <string name="power_reboot_cmd">input keyevent 26; svc power reboot || reboot;</string>
     <string name="power_recovery_cmd">input keyevent 26; svc power reboot recovery || reboot recovery</string>
     <string name="power_shutdown_cmd">input keyevent 26; svc power shutdown || reboot -p</string>
-
     <string name="permission_dialog_message">"User Warning:
 
 • Be careful when modifying the ROM
@@ -69,7 +52,6 @@ Required Permissions:
 
 If you agree, press the confirm button to continue."</string>
     <string name="permission_dialog_title">Application Terms of Use</string>
-
     <string name="notification_ui">"Notification "</string>
     <string name="wakelock_service_running">WakeLock Service Running</string>
     <string name="service_active_with_wakelock">Running in the background</string>
@@ -80,7 +62,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="dialog_title_select_directory">Do you want to select this folder?</string>
     <string name="dialog_title_select_file">Do you want to select this file?</string>
     <string name="no_files_in_directory">The folder is empty and contains no files!</string>
-    
     <string name="execute_success">Execution successful</string>
     <string name="execute_fail">Execution failed</string>
     <string name="execute_wait">Executing, please wait...</string>
@@ -90,12 +71,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="help_title">Instructions</string>
     <string name="confirm_message">Reminder message</string>
     <string name="confirm_title">Reminder title</string>
-
-    <string name="hint_answer">Please enter the value...</string>
-    <string name="btn_send">Done</string>
-    <string name="toast_invalid_number">Please enter the number</string>
-    <string name="toast_out_of_range">The number must be between %1$d and %2$d</string>
-
     <string name="shell_executor">Script Executor</string>
     <string name="btn_skip">Skip</string>
     <string name="btn_exit">Exit</string>
@@ -113,6 +88,10 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_param_load">Get status\u0020</string>
     <string name="kr_param_options_load">Loading candidate list\u0020</string>
     <string name="kr_params_render">Rendering UI…</string>
+    <string name="hint_answer">Please enter the value...</string>
+    <string name="btn_send">Done</string>
+    <string name="toast_invalid_number">Please enter the number</string>
+    <string name="toast_out_of_range">The number must be between %1$d and %2$d</string>
     <string name="kr_please_choose_folder">Please select a folder</string>
     <string name="kr_please_choose_file">"Please select a file "</string>
     <string name="kr_please_choose_app">Please select an app</string>
@@ -126,7 +105,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_download_downloading">Downloading file</string>
     <string name="kr_color_picker">Select a color</string>
     <string name="kr_invalid_color">Invalid color value. Only formats like #ff88aa00 are supported</string>
-
     <string name="kr_shortcut_create_fail">Failed to create shortcut</string>
     <string name="kr_shortcut_create_success">Shortcut creation request has been sent</string>
     <string name="kr_shortcut_create">Add shortcut</string>
@@ -140,7 +118,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_bg_task_start_desc">You can view the task progress and logs through the system notification center</string>
     <string name="kr_slice_script_result">Script output</string>
     <string name="kr_slice_activity_fail">Unable to open activity~</string>
-
     <string name="kr_page_before_load">Preparing to parse configuration</string>
     <string name="kr_page_loading">Parsing configuration</string>
     <string name="kr_page_after_load">Configuration parsing completed</string>

@@ -1,35 +1,23 @@
 <resources>
-    <string name="float_monitor_tips">Koppintson duplán a lebegő ablakra a bezáráshoz, vagy tartsa lenyomva és húzza a pozíció módosításához</string>
-    <string name="permission_float">Kérjük, adja meg a lebegő ablak megjelenítési engedélyét!</string>
-
     <string name="please_wait">Kérjük, várjon</string>
     <string name="title_activity_action_page">Funkciók oldala</string>
     <string name="about_title">Névjegy</string>
     <string name="appliction_desc">Számos hasznos eszköz a telefonon</string>
     <string name="appliction_author">Nagyszerű eszköz</string>
     <string name="engine_version_name">Az alkalmazás fejlesztés alatt áll</string>
-
     <string name="tab_home">Kezdőlap</string>
     <string name="tab_favorites">Kedvencek</string>
     <string name="tab_pages">Eszközök</string>
-
-    <string name="monitor_laod">Terhelés: %d%%</string>
-    <string name="monitor_core_count">%d mag</string>
-    <string name="monitor_cache_cleared">A RAM gyorsítótár felszabadítva</string>
-    <string name="monitor_ram_cleared">A RAM töredezettsége megtisztítva</string>
-
     <string name="copy_success">Sikeres másolás</string>
     <string name="pop_before_start">Alkalmazás indítása…</string>
     <string name="pop_started">Alkalmazás elindítva</string>
     <string name="transparent_ui">Átlátszó UI</string>
     <string name="title_activity_file_selector">"Kérjük, válasszon fájlt "</string>
     <string name="title_activity_folder_selector">Kérjük, válasszon mappát</string>
-
     <string name="hint_answer">Kérjük, adja meg az értéket...</string>
     <string name="btn_send">Kész</string>
     <string name="toast_invalid_number">Kérjük, adjon meg egy számot</string>
     <string name="toast_out_of_range">A számnak %1$d és %2$d között kell lennie</string>
-
     <string name="text_power_shutdown">Kikapcsolás</string>
     <string name="text_power_reboot">Újraindítás</string>
     <string name="text_power_dowload">Letöltés</string>
@@ -37,7 +25,6 @@
     <string name="text_power_fastboot">Fastboot</string>
     <string name="text_power_edl">9008 (EDL)</string>
     <string name="menu_power">Energiagazdálkodási művelet kiválasztása (root)</string>
-
     <string name="permission_dialog_message">"Felhasználói figyelmeztetés:
 
 • Legyen óvatos a ROM módosításakor
@@ -55,7 +42,6 @@ Szükséges engedélyek:
 
 Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz."</string>
     <string name="permission_dialog_title">Az alkalmazás használati feltételei</string>
-
     <string name="notification_ui">"Értesítés "</string>
     <string name="wakelock_service_running">A WakeLock szolgáltatás fut</string>
     <string name="service_active_with_wakelock">Háttérben fut</string>
@@ -66,7 +52,6 @@ Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz."</string>
     <string name="dialog_title_select_directory">Ki szeretné választani ezt a mappát?</string>
     <string name="dialog_title_select_file">Ki szeretné jelölni ezt a fájlt?</string>
     <string name="no_files_in_directory">A mappa üres és nem tartalmaz fájlokat!</string>
-    
     <string name="execute_success">Végrehajtás sikeres</string>
     <string name="execute_fail">Végrehajtás sikertelen</string>
     <string name="execute_wait">Végrehajtás folyamatban, kérjük várjon…</string>
@@ -76,7 +61,6 @@ Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz."</string>
     <string name="help_title">Útmutató</string>
     <string name="confirm_message">Megerősítő üzenet</string>
     <string name="confirm_title">Megerősítés címe</string>
-
     <string name="shell_executor">Szkript végrehajtó</string>
     <string name="btn_skip">Kihagyás</string>
     <string name="btn_exit">Kilépés</string>
@@ -107,7 +91,6 @@ Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz."</string>
     <string name="kr_download_downloading">A fájl letöltése folyamatban</string>
     <string name="kr_color_picker">Szín kiválasztása</string>
     <string name="kr_invalid_color">Érvénytelen színérték. Csak az olyan formátum támogatott, mint a #ff88aa00</string>
-
     <string name="kr_shortcut_create_fail">Parancsikon létrehozása sikertelen</string>
     <string name="kr_shortcut_create_success">A parancsikon létrehozási kérelem elküldve</string>
     <string name="kr_shortcut_create">Parancsikon hozzáadása</string>
@@ -121,7 +104,6 @@ Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz."</string>
     <string name="kr_bg_task_start_desc">A feladat előrehaladását és naplóit a rendszer értesítési központján keresztül tekintheti meg</string>
     <string name="kr_slice_script_result">Szkript eredménye</string>
     <string name="kr_slice_activity_fail">Az Activity megnyitása nem sikerült~</string>
-
     <string name="kr_page_before_load">A konfiguráció elemzésének előkészítése</string>
     <string name="kr_page_loading">Konfiguráció elemzése</string>
     <string name="kr_page_after_load">A konfiguráció elemzése befejeződött</string>
