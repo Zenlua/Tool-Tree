@@ -7,6 +7,11 @@ import com.tool.tree.R
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.model.ClickableNode
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.LayerDrawable
+import android.graphics.drawable.RippleDrawable
+
 open class ListItemClickable(context: Context,
                              layoutId: Int,
                              config: ClickableNode) : ListItemView(context, layoutId, config) {
@@ -69,9 +74,17 @@ open class ListItemClickable(context: Context,
         }
         // ===== Background ảnh động =====
         if (config.backgroundPath.isNotEmpty()) {
-            IconPathAnalysis().loadBackground(context, config)?.run {
-            layout.background = this
-            layout.invalidateOutline()
+            val bg = layout.background
+            if (bg is RippleDrawable) {
+                val layer = bg.getDrawable(0)
+                if (layer is LayerDrawable) {
+                    val index = layer.findIndexByLayerId(R.id.bg_image)
+                    if (index != -1) {
+                        IconPathAnalysis().loadBackground(context, config)?.let {
+                            layer.setDrawable(index, it)
+                        }
+                    }
+                }
             }
         }
     }
