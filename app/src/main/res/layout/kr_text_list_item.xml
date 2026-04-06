@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        style="@style/textSmall"  />
+        style="@style/textSmall" />
 
     <TextView
         android:id="@id/kr_summary"
@@ -35,4 +35,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="@style/textSmall" />
+        
+    <ImageView
+        android:id="@+id/kr_extra_icon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+        
 </LinearLayout>
