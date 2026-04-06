@@ -4,8 +4,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -33,24 +31,21 @@ import com.tool.tree.ui.TabIconHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.tool.tree.ui.MainPagerAdapter
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val handler = Handler(Looper.getMainLooper())
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
     private var krScriptConfig = KrScriptConfig()
     private val hasRoot by lazy { KeepShellPublic.checkRoot() }
-
     private var openedSubPage = false
     private var isFavoritesTab = false
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
 
     private val ACTION_FILE_PATH_CHOOSER = 65400
     private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
-    private val fragmentList = ArrayList<Fragment>()
-    private val titleList = ArrayList<String>()
+    private lateinit var adapter: MainPagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,8 +53,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
         setTitle(R.string.app_name)
 
         progressBarDialog.showDialog(getString(R.string.please_wait))
@@ -92,22 +86,17 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
     
-                // Khởi tạo adapter mới nếu chưa có
+                // Khởi tạo adapter nếu chưa có
                 if (!::adapter.isInitialized) {
                     adapter = MainPagerAdapter(this@MainActivity)
                     binding.viewPager.adapter = adapter
                     binding.viewPager.offscreenPageLimit = 2
-                } else {
-                    // Xóa hết fragment cũ
-                    for (i in adapter.itemCount - 1 downTo 0) {
-                        adapter.replaceFragment(i, ActionListFragment.create(arrayListOf()))
-                    }
                 }
     
                 // Tab Favorites
-                if (!favorites.isNullOrEmpty()) {
+                favorites?.takeIf { it.isNotEmpty() }?.let {
                     val fragment = ActionListFragment.create(
-                        favorites,
+                        it,
                         getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
                         null,
                         ThemeModeState.getThemeMode()
@@ -120,9 +109,9 @@ class MainActivity : AppCompatActivity() {
                 }
     
                 // Tab Pages
-                if (!pages.isNullOrEmpty()) {
+                pages?.takeIf { it.isNotEmpty() }?.let {
                     val fragment = ActionListFragment.create(
-                        pages,
+                        it,
                         getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
                         null,
                         ThemeModeState.getThemeMode()
@@ -135,9 +124,9 @@ class MainActivity : AppCompatActivity() {
                 }
     
                 // Tab 3
-                if (!tab3Items.isNullOrEmpty()) {
+                tab3Items?.takeIf { it.isNotEmpty() }?.let {
                     val fragment = ActionListFragment.create(
-                        tab3Items,
+                        it,
                         getKrScriptActionHandler(krScriptConfig.customTab3Config, false),
                         null,
                         ThemeModeState.getThemeMode()
@@ -150,9 +139,9 @@ class MainActivity : AppCompatActivity() {
                 }
     
                 // Tab 4
-                if (!tab4Items.isNullOrEmpty()) {
+                tab4Items?.takeIf { it.isNotEmpty() }?.let {
                     val fragment = ActionListFragment.create(
-                        tab4Items,
+                        it,
                         getKrScriptActionHandler(krScriptConfig.customTab4Config, false),
                         null,
                         ThemeModeState.getThemeMode()
@@ -211,7 +200,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupTabs() {
         val tabHelper = TabIconHelper(this)
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            val title = titleList.getOrNull(position) ?: "Tab $position"
+            val title = adapter.getTitle(position)
             val iconRes = when (title) {
                 getString(R.string.tab_favorites) -> R.drawable.tab_favorites
                 getString(R.string.tab_pages) -> R.drawable.tab_pages
@@ -244,10 +233,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun restartApp() {
-        val intent = Intent(this, SplashActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        intent.putExtra("force_reset", true)
-        startActivity(intent)
+        startActivity(Intent(this, SplashActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            putExtra("force_reset", true)
+        })
         finish()
     }
 
@@ -274,8 +263,7 @@ class MainActivity : AppCompatActivity() {
                     addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
                     addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
                     putExtra("page", page)
-                    if (clickableNode is RunnableNode)
-                        putExtra("autoRunItemId", clickableNode.key)
+                    if (clickableNode is RunnableNode) putExtra("autoRunItemId", clickableNode.key)
                 }
                 handler.onAddToFavorites(clickableNode, intent)
             }
@@ -293,11 +281,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         return try {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = fileSelectedInterface.mimeType() ?: "*/*"
-            }
-            startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
+            }, ACTION_FILE_PATH_CHOOSER)
             this.fileSelectedInterface = fileSelectedInterface
             true
         } catch (e: Exception) {
