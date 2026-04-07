@@ -40,12 +40,6 @@ public class ScriptEnvironmen {
     private static boolean rooted = false;
     private static KeepShell privateShell;
     private static ShellTranslation shellTranslation;
-    private static Boolean isDark = null;
-    private static Boolean isDark = null;
-
-    private static boolean getIsDark() {
-        return isDark != null ? isDark : (isDark = new ThemeModeState().isDarkMode());
-    }
 
     public static boolean isInited() {
         return inited;
@@ -242,8 +236,8 @@ public class ScriptEnvironmen {
         int androidUid = fileOwner.getUserId();
         params.put("ANDROID_UID", String.valueOf(androidUid));
 
+        params.put("DARK_MODE", (isDark != null ? isDark : (isDark = ThemeModeState.INSTANCE.isDarkMode())) ? "true" : "false");
         params.put("APP_USER_ID", fileOwner.getFileOwner());
-        params.put("DARK_MODE", getIsDark() ? "true" : "false");
         params.put("ROOT_PERMISSION", rooted ? "true" : "false");
         params.put("SDCARD_PATH", Environment.getExternalStorageDirectory().getAbsolutePath());
 
