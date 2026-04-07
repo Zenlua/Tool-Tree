@@ -119,6 +119,7 @@ object ThemeModeState {
         }
     }
 
+    @JvmStatic
     fun isDarkMode(): Boolean {
         return themeMode.isDarkMode
     }

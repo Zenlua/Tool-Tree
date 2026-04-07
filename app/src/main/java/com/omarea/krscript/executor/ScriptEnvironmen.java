@@ -236,7 +236,7 @@ public class ScriptEnvironmen {
         int androidUid = fileOwner.getUserId();
         params.put("ANDROID_UID", String.valueOf(androidUid));
 
-        params.put("DARK_MODE", (isDark != null ? isDark : (isDark = ThemeModeState.INSTANCE.isDarkMode())) ? "true" : "false");
+        Params.put("DARK_MODE", ThemeModeState.INSTANCE.isDarkMode() ? "true" : "false");
         params.put("APP_USER_ID", fileOwner.getFileOwner());
         params.put("ROOT_PERMISSION", rooted ? "true" : "false");
         params.put("SDCARD_PATH", Environment.getExternalStorageDirectory().getAbsolutePath());
