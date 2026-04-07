@@ -17,7 +17,6 @@ object ThemeModeState {
 
     private var themeMode: ThemeMode = ThemeMode()
 
-    @JvmStatic
     fun isDarkMode(): Boolean {
         return themeMode.isDarkMode
     }
