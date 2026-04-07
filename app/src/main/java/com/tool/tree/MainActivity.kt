@@ -343,9 +343,7 @@ class MainActivity : AppCompatActivity() {
     private fun showSettingsDialog() {
         val layout = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
         val themeConfig = ThemeConfig(this)
-    
         val themeSelector = layout.findViewById<TextView>(R.id.theme_selector)
-    
         val themeNames = listOf(
             getString(R.string.theme_system_default),
             getString(R.string.theme_light),
@@ -354,19 +352,22 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.theme_wallpaper_dark),
             getString(R.string.theme_wallpaper_light)
         )
-    
         themeSelector.text = themeNames[themeConfig.getThemeMode().coerceAtMost(themeNames.size - 1)]
-    
         themeSelector.setOnClickListener {
             val popup = ListPopupWindow(this)
             popup.anchorView = themeSelector
-            popup.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, themeNames))
+            val themeNamesWithTitle = listOf(getString(R.string.select_theme)) + themeNames
+            val adapter = ArrayAdapter(this, R.layout.item_theme, themeNamesWithTitle)
+            popup.setAdapter(adapter)
             popup.setOnItemClickListener { _, _, position, _ ->
-                themeConfig.setThemeMode(position)
+                if (position == 0) return@setOnItemClickListener
+                val actualPosition = position - 1
+                themeConfig.setThemeMode(actualPosition)
                 ThemeModeState.switchTheme(this)
-                themeSelector.text = themeNames[position]
+                themeSelector.text = themeNames[actualPosition]
                 popup.dismiss()
             }
+            popup.width = 490
             popup.show()
         }
     
@@ -375,7 +376,6 @@ class MainActivity : AppCompatActivity() {
         checkNotification.setOnCheckedChangeListener { _, isChecked ->
             themeConfig.setAllowNotificationUI(isChecked)
         }
-    
         DialogHelper.customDialog(this, layout)
     }
 }
