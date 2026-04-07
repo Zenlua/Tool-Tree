@@ -120,11 +120,10 @@
     <string formatted="false" name="kr_sdk_discrepancy_message">Эта функция работает только на системах с SDK %d</string>
     <string name="picker_not_item">Нет доступных вариантов</string>
     <string name="picker_select_none">Ничего не выбрано</string>
-    <string name="select_theme">Выбрать тему</string>
-    <string name="theme_system_default">Системная</string>
-    <string name="theme_light">Светлая</string>
-    <string name="theme_dark">Тёмная</string>
-    <string name="theme_wallpaper_system">Обои + Система</string>
-    <string name="theme_wallpaper_dark">Обои + Тёмная</string>
-    <string name="theme_wallpaper_light">Обои + Светлая</string>
+    <string name="theme_system_default">Стандартный интерфейс</string>
+    <string name="theme_light">Светлый режим</string>
+    <string name="theme_dark">Тёмный режим</string>
+    <string name="theme_wallpaper_system">Обои + Стандартный</string>
+    <string name="theme_wallpaper_dark">Обои + Тёмный</string>
+    <string name="theme_wallpaper_light">Обои + Светлый</string>
 </resources>

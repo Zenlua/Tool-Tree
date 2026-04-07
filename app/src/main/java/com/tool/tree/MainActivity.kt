@@ -356,7 +356,7 @@ class MainActivity : AppCompatActivity() {
         themeSelector.setOnClickListener {
             val popup = ListPopupWindow(this)
             popup.anchorView = themeSelector
-            popup.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, themeNames))
+            popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_default, themeNames))
             popup.setOnItemClickListener { _, _, position, _ ->
                 themeConfig.setThemeMode(position)
                 ThemeModeState.switchTheme(this)
