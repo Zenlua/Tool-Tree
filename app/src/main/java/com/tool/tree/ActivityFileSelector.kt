@@ -35,11 +35,9 @@ class ActivityFileSelector : AppCompatActivity() {
         // setTitle(R.string.app_name)
 
         // 显示返回按钮
-        supportActionBar?.apply {
-            setHomeButtonEnabled(true)
-            setDisplayHomeAsUpEnabled(true)
-        }
-        toolbar.setNavigationOnClickListener { _ ->
+        supportActionBar!!.setHomeButtonEnabled(true)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener {
             finish()
         }
 
