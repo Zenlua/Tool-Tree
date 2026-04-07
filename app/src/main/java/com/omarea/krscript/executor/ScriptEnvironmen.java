@@ -232,13 +232,16 @@ public class ScriptEnvironmen {
         params.put("ANDROID_SDK", String.valueOf(Build.VERSION.SDK_INT));
         params.put("KERNEL_VERSION", System.getProperty("os.version"));
 
+        try {
         FileOwner fileOwner = new FileOwner(context);
         int androidUid = fileOwner.getUserId();
         params.put("ANDROID_UID", String.valueOf(androidUid));
-
-        params.put("DARK_MODE", ThemeModeState.isDarkMode() ? "true" : "false");
-        params.put("APP_USER_ID", fileOwner.getFileOwner());
+        // params.put("DARK_MODE", ThemeModeState.isDarkMode() ? "true" : "false");
         params.put("ROOT_PERMISSION", rooted ? "true" : "false");
+        } catch (Exception ignored) {
+        }
+
+        params.put("APP_USER_ID", fileOwner.getFileOwner());
         params.put("SDCARD_PATH", Environment.getExternalStorageDirectory().getAbsolutePath());
 
         try {
