@@ -97,6 +97,8 @@ project_text_10="为 Java 分配内存"
 project_text_11="运行命令时保持屏幕常亮"
 project_text_12="CPU数量限制"
 project_text_13="设置后，所有进程最多只能使用所选择数量的CPU"
+project_text_14="更换背景图片"
+project_text_15="要恢复系统映像，请删除所有路径并按确定。"
 
 # mount img
 mount_text_1="挂载 IMG"

@@ -95,6 +95,8 @@ project_text_10="RAM lefoglalása a Java számára"
 project_text_11="Képernyő bekapcsolva tartása parancsok futtatása közben"
 project_text_12="CPU-k számának korlátozása"
 project_text_13="Beállítás után a folyamatok legfeljebb a kiválasztott számú CPU-t használhatják"
+project_text_14="A háttérkép módosítása"
+project_text_15="A rendszerkép visszaállításához törölje az összes elérési utat, majd kattintson az OK gombra"
 
 # mount img
 mount_text_1="IMG csatlakoztatás"

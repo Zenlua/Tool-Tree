@@ -97,6 +97,8 @@ project_text_10="Allocate RAM for Java"
 project_text_11="Keep screen on while running commands"
 project_text_12="CPU limit"
 project_text_13="After setting, processes can only use up to the selected number of CPUs"
+project_text_14="Change the background image"
+project_text_15="To restore the system image, delete all paths and press OK"
 
 # mount img
 mount_text_1="Mount IMG"

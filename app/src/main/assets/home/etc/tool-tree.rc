@@ -545,6 +545,19 @@ slog show_infor_text_2 "$show_infor_text_2"
 <param name="use_cpus" label="'$option_text'" option-sh="seq 1 $(nproc --all)" value-sh="glog use_cpu" />
 <set>slog use_cpu "$use_cpus"</set>
 </action>
+</group>
+
+<group>
+<action icon="'`urlpng background`'" warning="'$project_text_15'" shell="hidden" auto-restart="true">
+<title>'$project_text_14'</title>
+<param name="uri_change_background" type="file" suffix="jpg" value-sh="glog uri_change_background" />
+<set>
+slog uri_change_background "$uri_change_background"
+[ -f "$uri_change_background" ] && cp -f "$uri_change_background" "$ETC/background.jpg"
+[ -z "$uri_change_background" ] && rm -f "$ETC/background.jpg"
+set_permis "$ETC/background.jpg" &>/dev/null
+</set>
+</action>
 </group>'
 }
 

@@ -33,6 +33,7 @@ import android.widget.TextView
 import android.widget.ArrayAdapter
 import androidx.appcompat.widget.ListPopupWindow
 import android.widget.CheckBox
+import android.net.Uri
 
 class MainActivity : AppCompatActivity() {
 
