@@ -98,7 +98,7 @@ project_text_11="Luôn sáng MH ở chạy lệnh"
 project_text_12="Giới hạn số CPU"
 project_text_13="Sau khi thiết lập, các tiến trình chỉ có thể sử dụng tối đa số CPU đã chọn"
 project_text_14="Thay đổi ảnh nền"
-project_text_15="Muốn khôi phục ảnh hệ thống, xoá toàn bộ đường dẫn và ấn OK"
+project_text_15="Muốn khôi phục ảnh hệ thống, xoá toàn bộ đường dẫn và ấn xác nhận, thao tác này sẽ tự khởi động lại ứng dụng"
 
 # mount img
 mount_text_1="Mount IMG"
