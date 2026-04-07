@@ -62,22 +62,29 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="0dp"
-                android:layout_weight="50"
-                android:layout_height="wrap_content">
-
-                <Switch
-                    android:id="@+id/transparent_ui"
-                    android:switchPadding="6dp"
-                    android:padding="0dp"
-                    android:textColor="#888"
-                    android:textSize="12dp"
-                    android:text="transparent_ui"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_weight="50"
+            android:layout_height="wrap_content">
+        
+            <TextView
+                android:id="@+id/theme_selector"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="0dp"
+                android:textSize="12sp"
+                android:textColor="#888"
+                android:drawableEnd="@drawable/abc_spinner_mtrl_am_alpha"
+                android:drawablePadding="6dp"
+                android:layout_marginTop="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:focusable="true"/>
+        </LinearLayout>
             <LinearLayout
                 android:paddingBottom="4dp"
                 android:orientation="vertical"
@@ -85,15 +92,17 @@
                 android:layout_weight="50"
                 android:layout_height="wrap_content">
                 <TextView
+                    android:id="@+id/authorText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="28dp"
                     android:text="@string/author_name"
                     android:textAlignment="textEnd"
                     android:textColor="#aaaaaa"
                     android:textSize="11sp" />
 
                 <TextView
+                    android:id="@+id/engineText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
