@@ -356,14 +356,14 @@ class MainActivity : AppCompatActivity() {
         themeSelector.setOnClickListener {
             val popup = ListPopupWindow(this)
             popup.anchorView = themeSelector
-            popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_default, themeNames))
+            popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_dropdown, themeNames))
             popup.setOnItemClickListener { _, _, position, _ ->
                 themeConfig.setThemeMode(position)
                 ThemeModeState.switchTheme(this)
                 themeSelector.text = themeNames[position]
                 popup.dismiss()
             }
-            popup.width = 500
+            popup.width = 490
             popup.show()
         }
     

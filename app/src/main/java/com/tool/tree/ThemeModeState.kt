@@ -3,12 +3,14 @@ package com.tool.tree
 import android.app.Activity
 import android.app.WallpaperManager
 import android.content.res.Configuration
+import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
 import com.omarea.common.ui.ThemeMode
+import java.io.File
 
 @Suppress("DEPRECATION")
 object ThemeModeState {
@@ -22,9 +24,21 @@ object ThemeModeState {
         if (activity == null) return themeMode
 
         val config = ThemeConfig(activity)
-        val customMode = config.getThemeMode() // 0–5
-        val wallpaper = WallpaperManager.getInstance(activity)
-        val wallpaperDrawable = (wallpaper.drawable as? BitmapDrawable)
+        val customMode = config.getThemeMode()
+
+        val wallpaperDrawable = try {
+            val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
+            if (customWallpaperFile.exists()) {
+                val bitmap = BitmapFactory.decodeFile(customWallpaperFile.absolutePath)
+                if (bitmap != null) BitmapDrawable(activity.resources, bitmap)
+                else WallpaperManager.getInstance(activity).drawable as? BitmapDrawable
+            } else {
+                WallpaperManager.getInstance(activity).drawable as? BitmapDrawable
+            }
+        } catch (e: Exception) {
+            WallpaperManager.getInstance(activity).drawable as? BitmapDrawable
+        }
+
         val nightModeFlags = activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         val isSystemNight = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
 
