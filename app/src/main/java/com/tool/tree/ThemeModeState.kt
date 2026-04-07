@@ -31,13 +31,13 @@ object ThemeModeState {
                 themeMode.isDarkMode = isNight
                 themeMode.isLightStatusBar = !isNight
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                activity.setTheme(if (isNight) R.style.AppThemeDark else R.style.AppThemeLight)
+                activity.setTheme(if (isNight) R.style.AppThemeDark else R.style.AppTheme)
             }
             1 -> { // Light
                 themeMode.isDarkMode = false
                 themeMode.isLightStatusBar = true
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                activity.setTheme(R.style.AppThemeLight)
+                activity.setTheme(R.style.AppTheme)
             }
             2 -> { // Dark
                 themeMode.isDarkMode = true
