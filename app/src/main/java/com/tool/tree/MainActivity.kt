@@ -38,7 +38,7 @@ import android.net.Uri
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val progressBarDialog = ProgressBarDialog(this)
+    private val progressBarDialog by lazy { ProgressBarDialog(this) }
     private var krScriptConfig = KrScriptConfig()
     private val hasRoot by lazy { KeepShellPublic.checkRoot() }
     private var openedSubPage = false
@@ -305,27 +305,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (fileSelectedInterface == null) {
-            super.onActivityResult(requestCode, resultCode, data)
-            return
+        val path = when (requestCode) {
+            ACTION_FILE_PATH_CHOOSER -> if (resultCode == RESULT_OK) data?.data?.let { FilePathResolver().getPath(this, it) } else null
+            ACTION_FILE_PATH_CHOOSER_INNER -> if (resultCode == RESULT_OK) data?.getStringExtra("file") else null
+            else -> null
         }
-        when (requestCode) {
-            ACTION_FILE_PATH_CHOOSER -> {
-                val path = if (resultCode == RESULT_OK) {
-                    data?.data?.let { FilePathResolver().getPath(this, it) }
-                } else null
-                fileSelectedInterface?.onFileSelected(path)
-            }
-            ACTION_FILE_PATH_CHOOSER_INNER -> {
-                val path = if (resultCode == RESULT_OK) {
-                    data?.getStringExtra("file")
-                } else null
-                fileSelectedInterface?.onFileSelected(path)
-            }
-        }
+        fileSelectedInterface?.onFileSelected(path)
         fileSelectedInterface = null
         super.onActivityResult(requestCode, resultCode, data)
     }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
         return true
@@ -355,48 +344,18 @@ class MainActivity : AppCompatActivity() {
     private fun showSettingsDialog() {
         val layout = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
         val themeConfig = ThemeConfig(this)
-        val themeSelector = layout.findViewById<TextView>(R.id.theme_selector)
-        val themeNames = listOf(
-            getString(R.string.theme_system_default),
-            getString(R.string.theme_light),
-            getString(R.string.theme_dark),
-            getString(R.string.theme_wallpaper_system),
-            getString(R.string.theme_wallpaper_dark),
-            getString(R.string.theme_wallpaper_light)
-        )
-        themeSelector.text = themeNames[themeConfig.getThemeMode().coerceAtMost(themeNames.size - 1)]
-        themeSelector.setOnClickListener {
-            val popup = ListPopupWindow(this)
-            popup.anchorView = themeSelector
-            popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_dropdown, themeNames))
-            popup.setOnItemClickListener { _, _, position, _ ->
-                themeConfig.setThemeMode(position)
-                ThemeModeState.switchTheme(this)
-                themeSelector.text = themeNames[position]
-                popup.dismiss()
+
+        listOf(
+            layout.findViewById<CompoundButton>(R.id.transparent_ui) to themeConfig.getAllowTransparentUI(),
+            layout.findViewById<CompoundButton>(R.id.notification_ui) to themeConfig.getAllowNotificationUI()
+        ).forEach { (button, checked) ->
+            button.isChecked = checked
+            button.setOnCheckedChangeListener { _, isChecked ->
+                when (button.id) {
+                    R.id.transparent_ui -> themeConfig.setAllowTransparentUI(isChecked)
+                    R.id.notification_ui -> themeConfig.setAllowNotificationUI(isChecked)
+                }
             }
-            popup.width = 490
-            popup.show()
-        }
-
-        val checkNotification = layout.findViewById<CheckBox>(R.id.notification_ui)
-        checkNotification.isChecked = themeConfig.getAllowNotificationUI()
-        checkNotification.setOnCheckedChangeListener { _, isChecked ->
-            themeConfig.setAllowNotificationUI(isChecked)
-        }
-
-        val authorText = layout.findViewById<TextView>(R.id.authorText)
-        val engineText = layout.findViewById<TextView>(R.id.engineText)
-        val authorUrl = "https://zenlua.github.io/Tool-Tree/website/Information.html"
-        val engineUrl = "https://github.com/Zenlua/Tool-Tree"
-        authorText.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authorUrl))
-            startActivity(intent)
-        }
-    
-        engineText.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(engineUrl))
-            startActivity(intent)
         }
 
         DialogHelper.customDialog(this, layout)
