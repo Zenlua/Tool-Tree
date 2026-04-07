@@ -242,7 +242,8 @@ public class ScriptEnvironmen {
         }
 
         try {
-        params.put("DARK_MODE", ThemeModeState.isDarkMode() ? "true" : "false");
+            ThemeMode themeMode = ThemeModeState.getThemeMode(); // Lấy object ThemeMode
+            params.put("DARK_MODE", themeMode.isDarkMode() ? "true" : "false");
         } catch (Exception ignored) {
         }
 
