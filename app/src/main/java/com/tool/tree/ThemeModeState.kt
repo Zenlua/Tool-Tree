@@ -2,80 +2,132 @@ package com.tool.tree
 
 import android.app.Activity
 import android.app.WallpaperManager
-import android.content.Context
-import android.graphics.Color
+import android.content.res.Configuration
+import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.view.View
 import android.view.WindowManager
-import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
 import com.omarea.common.ui.ThemeMode
+import java.io.File
 
 @Suppress("DEPRECATION")
 object ThemeModeState {
+
     private var themeMode: ThemeMode = ThemeMode()
 
-    // Hàm này vẫn giữ nguyên tính năng cũ: tự động xác định chế độ Dark/Light mode dựa vào cấu hình hệ thống
+    @JvmStatic
+    fun isDarkMode(): Boolean {
+        return themeMode.isDarkMode
+    }
+
+    /**
+     * Áp dụng theme dựa trên cấu hình từ ThemeConfig
+     */
     fun switchTheme(activity: Activity? = null): ThemeMode {
-        if (activity != null) {
-            val nightModeFlags = activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-            val isNightMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
+        if (activity == null) return themeMode
 
-            // Kiểm tra quyền đọc/ghi bộ nhớ ngoài nếu cần thiết
-            if (ThemeConfig(activity).getAllowTransparentUI()) {
-                val wallpaper = WallpaperManager.getInstance(activity)
-                val wallpaperInfo = wallpaper.wallpaperInfo
+        val config = ThemeConfig(activity)
+        val customMode = config.getThemeMode()
 
-                if (isNightMode) {
-                    themeMode.isDarkMode = true
-                    activity.setTheme(R.style.AppThemeWallpaper)
-                } else {
-                    themeMode.isDarkMode = false
-                    activity.setTheme(R.style.AppThemeWallpaperLight)
-                }
-
-                // Xử lý với hình nền động
-                if (wallpaperInfo != null && wallpaperInfo.packageName != null) {
-                    activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-                } else {
-                    val wallpaperDrawable = wallpaper.drawable
-                    activity.window.setBackgroundDrawable(wallpaperDrawable)
-                }
+        val wallpaperDrawable = try {
+            val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
+            if (customWallpaperFile.exists()) {
+                val bitmap = BitmapFactory.decodeFile(customWallpaperFile.absolutePath)
+                if (bitmap != null) BitmapDrawable(activity.resources, bitmap)
+                else WallpaperManager.getInstance(activity).drawable as? BitmapDrawable
             } else {
-                if (isNightMode) {
-                    themeMode.isDarkMode = true
-                    themeMode.isLightStatusBar = false
-                    activity.setTheme(R.style.AppThemeDark)
-                } else {
-                    themeMode.isDarkMode = false
-                }
+                WallpaperManager.getInstance(activity).drawable as? BitmapDrawable
             }
+        } catch (e: Exception) {
+            WallpaperManager.getInstance(activity).drawable as? BitmapDrawable
+        }
 
-            // Thiết lập giao diện cho status bar và navigation bar
-            if (!themeMode.isDarkMode) {
-                themeMode.isLightStatusBar = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        val nightModeFlags = activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val isSystemNight = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
 
-                activity.window.run {
-                    clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-                    decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                    } else {
-                        decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                    }
-                }
+        when (customMode) {
+            0 -> { // mặc định: theo hệ thống, không hình nền
+                themeMode.isDarkMode = isSystemNight
+                applyAppTheme(activity, isSystemNight, false)
+            }
+            1 -> { // ép sáng
+                themeMode.isDarkMode = false
+                applyAppTheme(activity, false, false)
+            }
+            2 -> { // ép tối
+                themeMode.isDarkMode = true
+                applyAppTheme(activity, true, false)
+            }
+            3 -> { // hình nền + theo hệ thống
+                themeMode.isDarkMode = isSystemNight
+                applyAppTheme(activity, isSystemNight, true, wallpaperDrawable)
+            }
+            4 -> { // hình nền + tối
+                themeMode.isDarkMode = true
+                applyAppTheme(activity, true, true, wallpaperDrawable)
+            }
+            5 -> { // hình nền + sáng
+                themeMode.isDarkMode = false
+                applyAppTheme(activity, false, true, wallpaperDrawable)
+            }
+            else -> { // fallback
+                themeMode.isDarkMode = isSystemNight
+                applyAppTheme(activity, isSystemNight, false)
             }
         }
+
+        configureSystemBars(activity)
         return themeMode
     }
 
-    // Thêm khả năng thay đổi Dark Mode thủ công mà không ảnh hưởng đến tính năng cũ
+    /**
+     * Áp dụng theme thực tế cho Activity
+     */
+    private fun applyAppTheme(activity: Activity, darkMode: Boolean, useWallpaper: Boolean, wallpaper: BitmapDrawable? = null) {
+        themeMode.isDarkMode = darkMode
+
+        when {
+            useWallpaper && wallpaper != null -> {
+                activity.setTheme(if (darkMode) R.style.AppThemeWallpaper else R.style.AppThemeWallpaperLight)
+                activity.window.run {
+                    clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+                    addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                    setBackgroundDrawable(wallpaper)
+                }
+            }
+            darkMode -> {
+                activity.setTheme(R.style.AppThemeDark)
+                themeMode.isLightStatusBar = false
+            }
+            else -> {
+                activity.setTheme(R.style.AppTheme)
+                themeMode.isLightStatusBar = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            }
+        }
+    }
+
+    /**
+     * Thiết lập status bar & navigation bar
+     */
+    private fun configureSystemBars(activity: Activity) {
+        val window = activity.window
+        if (!themeMode.isDarkMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else 0
+            )
+        } else {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        }
+    }
+
+    /**
+     * Thay đổi Dark Mode thủ công
+     */
     fun setNightModeManually(isDarkMode: Boolean) {
-        // Cập nhật lại chế độ dark mode theo lựa chọn của người dùng
         themeMode.isDarkMode = isDarkMode
         if (isDarkMode) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
@@ -86,8 +138,8 @@ object ThemeModeState {
         }
     }
 
-    // Lấy trạng thái chế độ hiện tại (dark/light mode)
-    fun getThemeMode(): ThemeMode {
-        return themeMode
-    }
+    /**
+     * Lấy trạng thái theme hiện tại
+     */
+    fun getThemeMode(): ThemeMode = themeMode
 }

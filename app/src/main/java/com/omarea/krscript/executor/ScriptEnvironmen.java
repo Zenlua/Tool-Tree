@@ -23,13 +23,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
-import android.provider.Settings;;
+import android.provider.Settings;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import java.util.TimeZone;;
+import java.util.TimeZone;
 import java.lang.Runtime;
 import java.nio.file.Paths;
-import android.widget.Toast;;
+import android.widget.Toast;
+import com.tool.tree.ThemeModeState;
 
 public class ScriptEnvironmen {
     private static final String ASSETS_FILE = "file:///android_asset/";
@@ -235,20 +236,13 @@ public class ScriptEnvironmen {
         int androidUid = fileOwner.getUserId();
         params.put("ANDROID_UID", String.valueOf(androidUid));
 
-        try {
-            params.put("APP_USER_ID", fileOwner.getFileOwner());
-        } catch (Exception ignored) {
-        }
-
-        try {
-        params.put("DARK_MODE", (Resources.getSystem().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES ? "true" : "false");
-        } catch (Exception ignored) {
-        }
-
+        params.put("DARK_MODE", ThemeModeState.INSTANCE.isDarkMode() ? "true" : "false");
+        params.put("APP_USER_ID", fileOwner.getFileOwner());
         params.put("ROOT_PERMISSION", rooted ? "true" : "false");
         params.put("SDCARD_PATH", Environment.getExternalStorageDirectory().getAbsolutePath());
+
         try {
-            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+        PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
         params.put("PACKAGE_NAME", context.getPackageName());
         params.put("PACKAGE_VERSION_NAME", packageInfo.versionName);
         params.put("PATH_APK", context.getApplicationInfo().sourceDir);
@@ -258,8 +252,7 @@ public class ScriptEnvironmen {
             } else {
                 params.put("PACKAGE_VERSION_CODE", String.valueOf(packageInfo.versionCode));
             }
-        } catch (Exception ex) {
-        }
+        } catch (Exception ex) {}
 
         return params;
     }
@@ -332,18 +325,27 @@ public class ScriptEnvironmen {
             params = new HashMap<>();
         }
 
-        // 页面配置文件路径
         if (nodeInfo != null) {
             String parentPageConfigDir = nodeInfo.getPageConfigDir();
             String currentPageConfigPath = nodeInfo.getCurrentPageConfigPath();
-            params.put("PAGE_CONFIG_DIR", parentPageConfigDir);
-            params.put("PAGE_CONFIG_FILE", currentPageConfigPath);
-            if (currentPageConfigPath.startsWith("file:///android_asset/")) {
-                params.put("PAGE_WORK_DIR", new ExtractAssets(context).getExtractPath(parentPageConfigDir));
-                params.put("PAGE_WORK_FILE", new ExtractAssets(context).getExtractPath(currentPageConfigPath));
-            } else {
-                params.put("PAGE_WORK_DIR", parentPageConfigDir);
-                params.put("PAGE_WORK_FILE", currentPageConfigPath);
+            if (parentPageConfigDir != null && !parentPageConfigDir.isEmpty()) {
+                params.put("PAGE_CONFIG_DIR", parentPageConfigDir);
+            }
+            if (currentPageConfigPath != null && !currentPageConfigPath.isEmpty()) {
+                params.put("PAGE_CONFIG_FILE", currentPageConfigPath);
+                if (currentPageConfigPath.startsWith("file:///android_asset/")) {
+                    String workDir = new ExtractAssets(context).getExtractPath(parentPageConfigDir);
+                    String workFile = new ExtractAssets(context).getExtractPath(currentPageConfigPath);
+                    if (workDir != null && !workDir.isEmpty()) {
+                        params.put("PAGE_WORK_DIR", workDir);
+                    }
+                    if (workFile != null && !workFile.isEmpty()) {
+                        params.put("PAGE_WORK_FILE", workFile);
+                    }
+                } else {
+                    params.put("PAGE_WORK_DIR", parentPageConfigDir);
+                    params.put("PAGE_WORK_FILE", currentPageConfigPath);
+                }
             }
         }
 

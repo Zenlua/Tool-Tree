@@ -18,13 +18,15 @@ import com.tool.tree.R
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.TextNode
-
+import com.omarea.krscript.config.IconPathAnalysis
+import android.widget.ImageView
 
 class ListItemText(private val context: Context,
                    layoutId: Int,
                    config: TextNode) : ListItemView(context, layoutId, config) {
 
     private val rowsView = layout.findViewById<TextView?>(R.id.kr_rows)
+    protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon_text)
 
     init {
         if (config.rows.isNotEmpty() && rowsView != null) {
@@ -40,7 +42,16 @@ class ListItemText(private val context: Context,
                 val length = text.length
                 val spannableString = SpannableString(text)
 
-
+                if (extraIconView != null) {
+                    extraIconView?.visibility = View.GONE
+                    if (row.photo.isNotEmpty()) {
+                        IconPathAnalysis().loadtextPhoto(context, row, config.pageConfigDir)?.run {
+                            extraIconView?.setImageDrawable(this)
+                            extraIconView?.visibility = View.VISIBLE
+                        }
+                    }
+                }
+        
                 if (row.underline) {
                     spannableString.setSpan(UnderlineSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }

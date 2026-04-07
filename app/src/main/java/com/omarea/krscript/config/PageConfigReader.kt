@@ -625,6 +625,7 @@ class PageConfigReader {
                     "break" -> textRow.breakRow = (attrValue == "1" || attrValue == "true" || attrValue == "break")
                     "link", "href" -> textRow.link = attrValue
                     "activity", "a", "intent" -> textRow.activity = attrValue
+                    "photo", "photo-path" -> textRow.photo = attrValue.trim()
                     "script", "run" -> {
                         textRow.onClickScript = attrValue
                     }

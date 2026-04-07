@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         setTitle(R.string.app_name)
 
         progressBarDialog.showDialog(getString(R.string.please_wait))
-        loadTabs()
+        loadTabs() // Load tab ngay khi vào
 
         val themeConfig = ThemeConfig(applicationContext)
         if (themeConfig.getAllowNotificationUI()) {
@@ -344,18 +344,48 @@ class MainActivity : AppCompatActivity() {
     private fun showSettingsDialog() {
         val layout = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
         val themeConfig = ThemeConfig(this)
-
-        listOf(
-            layout.findViewById<CompoundButton>(R.id.transparent_ui) to themeConfig.getAllowTransparentUI(),
-            layout.findViewById<CompoundButton>(R.id.notification_ui) to themeConfig.getAllowNotificationUI()
-        ).forEach { (button, checked) ->
-            button.isChecked = checked
-            button.setOnCheckedChangeListener { _, isChecked ->
-                when (button.id) {
-                    R.id.transparent_ui -> themeConfig.setAllowTransparentUI(isChecked)
-                    R.id.notification_ui -> themeConfig.setAllowNotificationUI(isChecked)
-                }
+        val themeSelector = layout.findViewById<TextView>(R.id.theme_selector)
+        val themeNames = listOf(
+            getString(R.string.theme_system_default),
+            getString(R.string.theme_light),
+            getString(R.string.theme_dark),
+            getString(R.string.theme_wallpaper_system),
+            getString(R.string.theme_wallpaper_dark),
+            getString(R.string.theme_wallpaper_light)
+        )
+        themeSelector.text = themeNames[themeConfig.getThemeMode().coerceAtMost(themeNames.size - 1)]
+        themeSelector.setOnClickListener {
+            val popup = ListPopupWindow(this)
+            popup.anchorView = themeSelector
+            popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_dropdown, themeNames))
+            popup.setOnItemClickListener { _, _, position, _ ->
+                themeConfig.setThemeMode(position)
+                ThemeModeState.switchTheme(this)
+                themeSelector.text = themeNames[position]
+                popup.dismiss()
             }
+            popup.width = 490
+            popup.show()
+        }
+
+        val checkNotification = layout.findViewById<CheckBox>(R.id.notification_ui)
+        checkNotification.isChecked = themeConfig.getAllowNotificationUI()
+        checkNotification.setOnCheckedChangeListener { _, isChecked ->
+            themeConfig.setAllowNotificationUI(isChecked)
+        }
+
+        val authorText = layout.findViewById<TextView>(R.id.authorText)
+        val engineText = layout.findViewById<TextView>(R.id.engineText)
+        val authorUrl = "https://zenlua.github.io/Tool-Tree/website/Information.html"
+        val engineUrl = "https://github.com/Zenlua/Tool-Tree"
+        authorText.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authorUrl))
+            startActivity(intent)
+        }
+    
+        engineText.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(engineUrl))
+            startActivity(intent)
         }
 
         DialogHelper.customDialog(this, layout)

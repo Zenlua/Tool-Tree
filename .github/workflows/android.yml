@@ -91,6 +91,7 @@ jobs:
 
   build-debug:
     runs-on: ubuntu-latest
+    environment: Debug
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17

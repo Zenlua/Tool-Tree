@@ -16,16 +16,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.Collator
 import java.util.Locale
+import com.tool.tree.ThemeModeState
 
 class ParamsAppChooserRender(
     private var actionParamInfo: ActionParamInfo,
     private var context: FragmentActivity
 ) : DialogAppChooser.Callback {
 
-    private val uiMode = context.resources.configuration.uiMode
-    private val darkMode: Boolean =
-        (uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-
+    private val darkMode: Boolean = ThemeModeState.isDarkMode()
     private lateinit var valueView: TextView
     private lateinit var nameView: TextView
     private lateinit var packages: ArrayList<AdapterAppChooser.AppInfo>
