@@ -30,7 +30,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.widget.TextView
-import android.widget.Switch
 import android.widget.ArrayAdapter
 import androidx.appcompat.widget.ListPopupWindow
 
@@ -370,9 +369,9 @@ class MainActivity : AppCompatActivity() {
             popup.show()
         }
     
-        val switchNotification = layout.findViewById<Switch>(R.id.notification_ui)
-        switchNotification.isChecked = themeConfig.getAllowNotificationUI()
-        switchNotification.setOnCheckedChangeListener { _, isChecked ->
+        val checkNotification = layout.findViewById<CheckBox>(R.id.notification_ui)
+        checkNotification.isChecked = themeConfig.getAllowNotificationUI()
+        checkNotification.setOnCheckedChangeListener { _, isChecked ->
             themeConfig.setAllowNotificationUI(isChecked)
         }
     
