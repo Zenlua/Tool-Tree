@@ -18,7 +18,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import com.tool.tree.R
 import androidx.core.graphics.drawable.toDrawable
-import com.tool.tree.ThemeModeState
 
 class DialogHelper {
     class DialogButton(val text: String, val onClick: Runnable? = null, val dismiss: Boolean = true)
@@ -397,7 +396,18 @@ class DialogHelper {
         }
 
         private fun isNightMode(context: Context): Boolean {
-            return ThemeModeState.isDarkMode()
+            val nightModeFlags = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+            return when (AppCompatDelegate.getDefaultNightMode()) {
+                AppCompatDelegate.MODE_NIGHT_YES -> {
+                    true
+                }
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM, AppCompatDelegate.MODE_NIGHT_UNSPECIFIED -> {
+                    nightModeFlags == Configuration.UI_MODE_NIGHT_YES
+                }
+                else -> {
+                    false
+                }
+            }
         }
 
         fun setWindowBlurBg(window: Window, activity: Activity) {
