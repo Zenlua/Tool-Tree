@@ -3,5 +3,5 @@
     <!-- Khi nhấn -->
     <item android:color="?attr/colorPrimary" android:state_pressed="true"/>
     <!-- Mặc định -->
-    <item android:color="?attr/colorOnSurface"/>
+    <item android:color="?android:attr/textColorPrimary"/>
 </selector>

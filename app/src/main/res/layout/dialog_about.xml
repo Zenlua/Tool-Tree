@@ -49,6 +49,7 @@
             android:layout_marginTop="24dp"
             android:text="@string/appliction_name"
             android:textAlignment="center"
+            android:alpha="0.8"
             android:textColor="@drawable/text_color_selector"
             android:textSize="36dp" />
 
@@ -57,6 +58,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:alpha="0.7"
             android:layout_marginTop="11dp"
             android:textColor="@drawable/text_color_selector"
             android:text="@string/appliction_author" />
@@ -104,7 +106,7 @@
                     android:text="@string/author_name"
                     android:textAlignment="textEnd"
                     android:textColor="@drawable/text_color_selector"
-                    android:alpha="0.2"
+                    android:alpha="0.6"
                     android:textSize="11sp" />
 
                 <TextView
@@ -115,7 +117,7 @@
                     android:text="@string/engine_version_name"
                     android:textAlignment="textEnd"
                     android:textColor="@drawable/text_color_selector"
-                    android:alpha="0.2"
+                    android:alpha="0.6"
                     android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
