@@ -242,7 +242,7 @@ public class ScriptEnvironmen {
         }
 
         try {
-        params.put("DARK_MODE", (Resources.getSystem().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES ? "true" : "false");
+        params.put("DARK_MODE", ThemeModeState.INSTANCE.isDarkMode() ? "true" : "false");
         } catch (Exception ignored) {
         }
 
