@@ -5,6 +5,7 @@ import android.app.WallpaperManager
 import android.content.res.Configuration
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.view.View
 import android.view.WindowManager
@@ -84,7 +85,12 @@ object ThemeModeState {
     /**
      * Áp dụng theme thực tế cho Activity
      */
-    private fun applyAppTheme(activity: Activity, darkMode: Boolean, useWallpaper: Boolean, wallpaper: BitmapDrawable? = null) {
+    private fun applyAppTheme(
+        activity: Activity,
+        darkMode: Boolean,
+        useWallpaper: Boolean,
+        wallpaper: BitmapDrawable? = null
+    ) {
         themeMode.isDarkMode = darkMode
 
         when {
@@ -99,10 +105,20 @@ object ThemeModeState {
             darkMode -> {
                 activity.setTheme(R.style.AppThemeDark)
                 themeMode.isLightStatusBar = false
+                activity.window.run {
+                    clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+                    addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                    setBackgroundDrawable(ColorDrawable(0xFF000000.toInt()))
+                }
             }
             else -> {
                 activity.setTheme(R.style.AppTheme)
                 themeMode.isLightStatusBar = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                activity.window.run {
+                    clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+                    addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                    setBackgroundDrawable(ColorDrawable(0xFFFFFFFF.toInt()))
+                }
             }
         }
     }
@@ -112,15 +128,19 @@ object ThemeModeState {
      */
     private fun configureSystemBars(activity: Activity) {
         val window = activity.window
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+
+        var flags = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+
         if (!themeMode.isDarkMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else 0
-            )
-        } else {
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            flags = flags or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                flags = flags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            }
         }
+
+        window.decorView.systemUiVisibility = flags
     }
 
     /**
