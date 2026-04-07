@@ -12,14 +12,16 @@ import com.omarea.common.model.SelectItem
 import com.omarea.common.ui.DialogItemChooser
 import com.tool.tree.R
 import com.omarea.krscript.model.ActionParamInfo
-import com.tool.tree.ThemeModeState
 
 class ParamsSingleSelect(
         private var actionParamInfo: ActionParamInfo,
         private var context: FragmentActivity
 ) {
 
-    private val darkMode: Boolean = ThemeModeState.isDarkMode()
+    private val uiMode = context.resources.configuration.uiMode
+    // Kiểm tra chế độ tối sử dụng UI_MODE_NIGHT_YES
+    private var darkMode: Boolean = (uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
     val options = actionParamInfo.optionsFromShell!!
     var selectedIndex = ActionParamsLayoutRender.getParamOptionsCurrentIndex(actionParamInfo, options) // 获取当前选中项索引
 

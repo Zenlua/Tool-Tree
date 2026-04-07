@@ -32,6 +32,5 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var dynamicTextSh: String = ""
         // 点击后执行的脚本
         internal var onClickScript: String = ""
-        internal var photo: String = ""
     }
 }
