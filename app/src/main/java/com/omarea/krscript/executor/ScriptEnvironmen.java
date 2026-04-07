@@ -40,6 +40,12 @@ public class ScriptEnvironmen {
     private static boolean rooted = false;
     private static KeepShell privateShell;
     private static ShellTranslation shellTranslation;
+    private static Boolean isDark = null;
+    private static Boolean isDark = null;
+
+    private static boolean getIsDark() {
+        return isDark != null ? isDark : (isDark = new ThemeModeState().isDarkMode());
+    }
 
     public static boolean isInited() {
         return inited;
@@ -236,31 +242,21 @@ public class ScriptEnvironmen {
         int androidUid = fileOwner.getUserId();
         params.put("ANDROID_UID", String.valueOf(androidUid));
 
-        try {
-            params.put("APP_USER_ID", fileOwner.getFileOwner());
-        } catch (Exception ignored) {
-        }
-
-        try {
-            ThemeMode themeMode = ThemeModeState.getThemeMode(); // Lấy object ThemeMode
-            params.put("DARK_MODE", themeMode.isDarkMode() ? "true" : "false");
-        } catch (Exception ignored) {
-        }
-
+        params.put("APP_USER_ID", fileOwner.getFileOwner());
+        params.put("DARK_MODE", getIsDark() ? "true" : "false");
         params.put("ROOT_PERMISSION", rooted ? "true" : "false");
         params.put("SDCARD_PATH", Environment.getExternalStorageDirectory().getAbsolutePath());
-        try {
-            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+
+        PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
         params.put("PACKAGE_NAME", context.getPackageName());
         params.put("PACKAGE_VERSION_NAME", packageInfo.versionName);
         params.put("PATH_APK", context.getApplicationInfo().sourceDir);
         params.put("APP_UID", String.valueOf(android.os.Process.myUid()));
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                params.put("PACKAGE_VERSION_CODE", String.valueOf(packageInfo.getLongVersionCode()));
-            } else {
-                params.put("PACKAGE_VERSION_CODE", String.valueOf(packageInfo.versionCode));
-            }
-        } catch (Exception ex) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            params.put("PACKAGE_VERSION_CODE", String.valueOf(packageInfo.getLongVersionCode()));
+        } else {
+            params.put("PACKAGE_VERSION_CODE", String.valueOf(packageInfo.versionCode));
         }
 
         return params;
