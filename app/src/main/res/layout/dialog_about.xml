@@ -76,7 +76,7 @@
                 android:text="@string/select_theme"
                 android:textSize="12sp"
                 android:textColor="#888"
-                android:drawableEnd="@drawable/ic_arrow_down"
+                android:drawableEnd="@drawable/abc_spinner_mtrl_am_alpha"
                 android:drawablePadding="8dp"
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
