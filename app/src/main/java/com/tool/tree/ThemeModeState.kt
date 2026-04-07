@@ -45,7 +45,7 @@ object ThemeModeState {
                         activity.setTheme(R.style.AppThemeDark)
                         themeMode.isLightStatusBar = false
                     } else {
-                        activity.setTheme(R.style.AppThemeLight)
+                        activity.setTheme(R.style.AppTheme)
                         themeMode.isLightStatusBar = true
                     }
                 }
