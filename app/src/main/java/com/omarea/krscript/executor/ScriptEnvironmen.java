@@ -23,14 +23,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
-import android.provider.Settings;;
+import android.provider.Settings;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import java.util.TimeZone;;
+import java.util.TimeZone;
 import java.lang.Runtime;
 import java.nio.file.Paths;
-import android.widget.Toast;;
-import com.tool.tree.ThemeModeState
+import android.widget.Toast;
+import com.tool.tree.ThemeModeState;
 
 public class ScriptEnvironmen {
     private static final String ASSETS_FILE = "file:///android_asset/";
