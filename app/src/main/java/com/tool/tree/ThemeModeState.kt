@@ -24,7 +24,7 @@ object ThemeModeState {
         val config = ThemeConfig(activity)
         val customMode = config.getThemeMode() // 0–5
         val wallpaper = WallpaperManager.getInstance(activity)
-        val wallpaperDrawable = wallpaper.drawable
+        val wallpaperDrawable = (wallpaper.drawable as? BitmapDrawable)
         val nightModeFlags = activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         val isSystemNight = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
 
@@ -83,7 +83,7 @@ object ThemeModeState {
                 themeMode.isLightStatusBar = false
             }
             else -> {
-                activity.setTheme(R.style.AppThemeLight)
+                activity.setTheme(R.style.AppTheme)
                 themeMode.isLightStatusBar = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             }
         }
