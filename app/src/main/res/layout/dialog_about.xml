@@ -92,15 +92,17 @@
                 android:layout_weight="50"
                 android:layout_height="wrap_content">
                 <TextView
+                    android:id="@+id/authorText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="28dp"
                     android:text="@string/author_name"
                     android:textAlignment="textEnd"
                     android:textColor="#aaaaaa"
                     android:textSize="11sp" />
 
                 <TextView
+                    android:id="@+id/engineText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"

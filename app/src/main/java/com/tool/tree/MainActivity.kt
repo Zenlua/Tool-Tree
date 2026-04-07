@@ -366,12 +366,27 @@ class MainActivity : AppCompatActivity() {
             popup.width = 490
             popup.show()
         }
-    
+
         val checkNotification = layout.findViewById<CheckBox>(R.id.notification_ui)
         checkNotification.isChecked = themeConfig.getAllowNotificationUI()
         checkNotification.setOnCheckedChangeListener { _, isChecked ->
             themeConfig.setAllowNotificationUI(isChecked)
         }
+
+        val authorText = layout.findViewById<TextView>(R.id.authorText)
+        val engineText = layout.findViewById<TextView>(R.id.engineText)
+        val authorUrl = "https://zenlua.github.io/Tool-Tree/website/Information.html"
+        val engineUrl = "https://github.com/Zenlua/Tool-Tree"
+        authorText.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authorUrl))
+            startActivity(intent)
+        }
+    
+        engineText.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(engineUrl))
+            startActivity(intent)
+        }
+
         DialogHelper.customDialog(this, layout)
     }
 }
