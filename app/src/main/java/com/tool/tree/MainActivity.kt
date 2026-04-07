@@ -38,7 +38,7 @@ import android.net.Uri
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val progressBarDialog by lazy { ProgressBarDialog(this) }
+    private val progressBarDialog = ProgressBarDialog(this)
     private var krScriptConfig = KrScriptConfig()
     private val hasRoot by lazy { KeepShellPublic.checkRoot() }
     private var openedSubPage = false
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         setTitle(R.string.app_name)
 
         progressBarDialog.showDialog(getString(R.string.please_wait))
-        loadTabs() // Load tab ngay khi vào
+        loadTabs()
 
         val themeConfig = ThemeConfig(applicationContext)
         if (themeConfig.getAllowNotificationUI()) {
@@ -305,16 +305,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val path = when (requestCode) {
-            ACTION_FILE_PATH_CHOOSER -> if (resultCode == RESULT_OK) data?.data?.let { FilePathResolver().getPath(this, it) } else null
-            ACTION_FILE_PATH_CHOOSER_INNER -> if (resultCode == RESULT_OK) data?.getStringExtra("file") else null
-            else -> null
+        if (fileSelectedInterface == null) {
+            super.onActivityResult(requestCode, resultCode, data)
+            return
         }
-        fileSelectedInterface?.onFileSelected(path)
+        when (requestCode) {
+            ACTION_FILE_PATH_CHOOSER -> {
+                val path = if (resultCode == RESULT_OK) {
+                    data?.data?.let { FilePathResolver().getPath(this, it) }
+                } else null
+                fileSelectedInterface?.onFileSelected(path)
+            }
+            ACTION_FILE_PATH_CHOOSER_INNER -> {
+                val path = if (resultCode == RESULT_OK) {
+                    data?.getStringExtra("file")
+                } else null
+                fileSelectedInterface?.onFileSelected(path)
+            }
+        }
         fileSelectedInterface = null
         super.onActivityResult(requestCode, resultCode, data)
     }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
         return true
