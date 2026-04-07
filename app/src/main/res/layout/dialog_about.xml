@@ -25,7 +25,7 @@
                 android:textSize="11sp" />
             <CheckBox
                     android:textSize="11dp"
-                    android:textColor="#BB888888"
+                    android:textColor="#aaaaaa"
                     android:id="@+id/notification_ui"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -43,18 +43,22 @@
             android:textSize="11dp" />
 
         <TextView
+            android:id="@+id/appliction_nameText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="@string/appliction_name"
             android:textAlignment="center"
+            android:textColor="@drawable/text_color_selector"
             android:textSize="36dp" />
 
         <TextView
+            android:id="@+id/appliction_authorText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="11dp"
+            android:textColor="@drawable/text_color_selector"
             android:text="@string/appliction_author" />
 
         <LinearLayout
@@ -74,7 +78,8 @@
                 android:layout_height="wrap_content"
                 android:padding="0dp"
                 android:textSize="12sp"
-                android:textColor="#888"
+                android:textColor="#aaaaaa"
+                android:textStyle="bold"
                 android:drawableEnd="@drawable/abc_spinner_mtrl_am_alpha"
                 android:drawablePadding="6dp"
                 android:layout_marginTop="4dp"
@@ -98,7 +103,8 @@
                     android:layout_marginTop="28dp"
                     android:text="@string/author_name"
                     android:textAlignment="textEnd"
-                    android:textColor="#aaaaaa"
+                    android:textColor="@drawable/text_color_selector"
+                    android:alpha="0.2"
                     android:textSize="11sp" />
 
                 <TextView
@@ -108,7 +114,8 @@
                     android:layout_marginTop="4dp"
                     android:text="@string/engine_version_name"
                     android:textAlignment="textEnd"
-                    android:textColor="#aaaaaa"
+                    android:textColor="@drawable/text_color_selector"
+                    android:alpha="0.2"
                     android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
