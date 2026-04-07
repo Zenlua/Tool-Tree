@@ -334,18 +334,27 @@ public class ScriptEnvironmen {
             params = new HashMap<>();
         }
 
-        // 页面配置文件路径
         if (nodeInfo != null) {
             String parentPageConfigDir = nodeInfo.getPageConfigDir();
             String currentPageConfigPath = nodeInfo.getCurrentPageConfigPath();
-            params.put("PAGE_CONFIG_DIR", parentPageConfigDir);
-            params.put("PAGE_CONFIG_FILE", currentPageConfigPath);
-            if (currentPageConfigPath.startsWith("file:///android_asset/")) {
-                params.put("PAGE_WORK_DIR", new ExtractAssets(context).getExtractPath(parentPageConfigDir));
-                params.put("PAGE_WORK_FILE", new ExtractAssets(context).getExtractPath(currentPageConfigPath));
-            } else {
-                params.put("PAGE_WORK_DIR", parentPageConfigDir);
-                params.put("PAGE_WORK_FILE", currentPageConfigPath);
+            if (parentPageConfigDir != null && !parentPageConfigDir.isEmpty()) {
+                params.put("PAGE_CONFIG_DIR", parentPageConfigDir);
+            }
+            if (currentPageConfigPath != null && !currentPageConfigPath.isEmpty()) {
+                params.put("PAGE_CONFIG_FILE", currentPageConfigPath);
+                if (currentPageConfigPath.startsWith("file:///android_asset/")) {
+                    String workDir = new ExtractAssets(context).getExtractPath(parentPageConfigDir);
+                    String workFile = new ExtractAssets(context).getExtractPath(currentPageConfigPath);
+                    if (workDir != null && !workDir.isEmpty()) {
+                        params.put("PAGE_WORK_DIR", workDir);
+                    }
+                    if (workFile != null && !workFile.isEmpty()) {
+                        params.put("PAGE_WORK_FILE", workFile);
+                    }
+                } else {
+                    params.put("PAGE_WORK_DIR", parentPageConfigDir);
+                    params.put("PAGE_WORK_FILE", currentPageConfigPath);
+                }
             }
         }
 
