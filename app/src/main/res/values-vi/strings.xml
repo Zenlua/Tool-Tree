@@ -13,7 +13,6 @@
     <string name="copy_success">Sao chép thành công</string>
     <string name="pop_before_start">Đang khởi động ứng dụng…</string>
     <string name="pop_started">Khởi động ứng dụng</string>
-    <string name="transparent_ui">Ui trong suốt</string>
     <string name="title_activity_file_selector">"Vui lòng chọn tệp "</string>
     <string name="title_activity_folder_selector">Vui lòng chọn thư mục</string>
     <string name="text_power_shutdown">Tắt nguồn</string>
@@ -123,4 +122,11 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string formatted="false" name="kr_sdk_discrepancy_message">Tính năng này chỉ chạy trên hệ thống có SDK %d</string>
     <string name="picker_not_item">Không có tùy chọn khả dụng</string>
     <string name="picker_select_none">Chưa chọn mục nào</string>
+    <string name="select_theme">Chọn giao diện</string>
+    <string name="theme_system_default">Theo hệ thống</string>
+    <string name="theme_light">Sáng</string>
+    <string name="theme_dark">Tối</string>
+    <string name="theme_wallpaper_system">Hình nền + Theo hệ thống</string>
+    <string name="theme_wallpaper_dark">Hình nền + Tối</string>
+    <string name="theme_wallpaper_light">Hình nền + Sáng</string>
 </resources>

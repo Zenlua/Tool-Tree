@@ -339,18 +339,39 @@ class MainActivity : AppCompatActivity() {
     private fun showSettingsDialog() {
         val layout = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
         val themeConfig = ThemeConfig(this)
-        listOf(
-            layout.findViewById<CompoundButton>(R.id.transparent_ui) to themeConfig.getAllowTransparentUI(),
-            layout.findViewById<CompoundButton>(R.id.notification_ui) to themeConfig.getAllowNotificationUI()
-        ).forEach { (button, checked) ->
-            button.isChecked = checked
-            button.setOnCheckedChangeListener { _, isChecked ->
-                when (button.id) {
-                    R.id.transparent_ui -> themeConfig.setAllowTransparentUI(isChecked)
-                    R.id.notification_ui -> themeConfig.setAllowNotificationUI(isChecked)
-                }
+    
+        val themeSelector = layout.findViewById<TextView>(R.id.theme_selector)
+    
+        val themeNames = listOf(
+            getString(R.string.theme_system_default),
+            getString(R.string.theme_light),
+            getString(R.string.theme_dark),
+            getString(R.string.theme_wallpaper_system),
+            getString(R.string.theme_wallpaper_dark),
+            getString(R.string.theme_wallpaper_light)
+        )
+    
+        themeSelector.text = themeNames[themeConfig.getThemeMode().coerceAtMost(themeNames.size - 1)]
+    
+        themeSelector.setOnClickListener {
+            val popup = ListPopupWindow(this)
+            popup.anchorView = themeSelector
+            popup.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, themeNames))
+            popup.setOnItemClickListener { _, _, position, _ ->
+                themeConfig.setThemeMode(position)
+                ThemeModeState.switchTheme(this)
+                themeSelector.text = themeNames[position]
+                popup.dismiss()
             }
+            popup.show()
         }
+    
+        val switchNotification = layout.findViewById<Switch>(R.id.notification_ui)
+        switchNotification.isChecked = themeConfig.getAllowNotificationUI()
+        switchNotification.setOnCheckedChangeListener { _, isChecked ->
+            themeConfig.setAllowNotificationUI(isChecked)
+        }
+    
         DialogHelper.customDialog(this, layout)
     }
 }

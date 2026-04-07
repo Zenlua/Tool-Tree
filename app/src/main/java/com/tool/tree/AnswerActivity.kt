@@ -32,7 +32,7 @@ class AnswerActivity : Activity() {
         val answerData = intent.getStringExtra("answer")
         val max = intent.getStringExtra("max")?.toIntOrNull()
         val timeoutSeconds = intent.getStringExtra("time")?.toLongOrNull() ?: 20L
-        val isDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        val isDark = ThemeModeState.isDarkMode()
         val textColor = if (isDark) Color.WHITE else Color.BLACK
         val bgColor = if (isDark) 0xFF2A2A2A.toInt() else 0xFFF5F5F5.toInt()
 

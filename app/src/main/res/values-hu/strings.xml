@@ -11,7 +11,6 @@
     <string name="copy_success">Sikeres másolás</string>
     <string name="pop_before_start">Alkalmazás indítása…</string>
     <string name="pop_started">Alkalmazás elindítva</string>
-    <string name="transparent_ui">Átlátszó UI</string>
     <string name="title_activity_file_selector">"Kérjük, válasszon fájlt "</string>
     <string name="title_activity_folder_selector">Kérjük, válasszon mappát</string>
     <string name="hint_answer">Kérjük, adja meg az értéket...</string>
@@ -121,4 +120,11 @@ Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz."</string>
     <string formatted="false" name="kr_sdk_discrepancy_message">Ez a funkció csak %d SDK-val rendelkező rendszereken fut</string>
     <string name="picker_not_item">Nincsenek elérhető lehetőségek</string>
     <string name="picker_select_none">Nincs kiválasztott elem</string>
+    <string name="select_theme">Téma kiválasztása</string>
+    <string name="theme_system_default">Rendszer alapértelmezett</string>
+    <string name="theme_light">Világos</string>
+    <string name="theme_dark">Sötét</string>
+    <string name="theme_wallpaper_system">Háttérkép + Rendszer</string>
+    <string name="theme_wallpaper_dark">Háttérkép + Sötét</string>
+    <string name="theme_wallpaper_light">Háttérkép + Világos</string>
 </resources>

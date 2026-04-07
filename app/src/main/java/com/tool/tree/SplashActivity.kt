@@ -102,11 +102,8 @@ class SplashActivity : AppCompatActivity() {
     
         val controller = WindowCompat.getInsetsController(window, window.decorView)
     
-        val isDark =
-            (resources.configuration.uiMode and
-                    Configuration.UI_MODE_NIGHT_MASK) ==
-                    Configuration.UI_MODE_NIGHT_YES
-    
+        val isDark = ThemeModeState.isDarkMode()
+
         controller?.isAppearanceLightStatusBars = !isDark
         controller?.isAppearanceLightNavigationBars = !isDark
     }

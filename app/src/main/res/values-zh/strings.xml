@@ -15,7 +15,6 @@
     <string name="copy_success">复制成功</string>
     <string name="pop_before_start">正在启动应用…</string>
     <string name="pop_started">应用已启动</string>
-    <string name="transparent_ui">透明 UI</string>
     <string name="title_activity_file_selector">"请选择文件 "</string>
     <string name="title_activity_folder_selector">请选择文件夹</string>
     <string name="text_power_shutdown">关机</string>
@@ -122,4 +121,11 @@
     <string formatted="false" name="kr_sdk_discrepancy_message">此功能仅可在 SDK %d 的系统上运行</string>
     <string name="picker_not_item">没有可用选项</string>
     <string name="picker_select_none">未选择任何项目</string>
+    <string name="select_theme">选择主题</string>
+    <string name="theme_system_default">系统默认</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_wallpaper_system">壁纸 + 系统</string>
+    <string name="theme_wallpaper_dark">壁纸 + 深色</string>
+    <string name="theme_wallpaper_light">壁纸 + 浅色</string>
 </resources>

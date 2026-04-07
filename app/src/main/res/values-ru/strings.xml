@@ -15,7 +15,6 @@
     <string name="copy_success">Копирование выполнено успешно</string>
     <string name="pop_before_start">Запуск приложения…</string>
     <string name="pop_started">Приложение запущено</string>
-    <string name="transparent_ui">Прозрачный UI</string>
     <string name="title_activity_file_selector">"Пожалуйста, выберите файл "</string>
     <string name="title_activity_folder_selector">Пожалуйста, выберите папку</string>
     <string name="text_power_shutdown">Выключение</string>
@@ -121,4 +120,11 @@
     <string formatted="false" name="kr_sdk_discrepancy_message">Эта функция работает только на системах с SDK %d</string>
     <string name="picker_not_item">Нет доступных вариантов</string>
     <string name="picker_select_none">Ничего не выбрано</string>
+    <string name="select_theme">Выбрать тему</string>
+    <string name="theme_system_default">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_wallpaper_system">Обои + Система</string>
+    <string name="theme_wallpaper_dark">Обои + Тёмная</string>
+    <string name="theme_wallpaper_light">Обои + Светлая</string>
 </resources>

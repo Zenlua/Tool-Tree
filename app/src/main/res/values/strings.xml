@@ -21,7 +21,6 @@
     <string name="pio_starting">~•-•~</string>
     <string name="pop_before_start">Preparing to start the application…</string>
     <string name="pop_started">Start application</string>
-    <string name="transparent_ui">Transparent UI</string>
     <string name="title_activity_file_selector">Please select a file</string>
     <string name="title_activity_folder_selector">Please select a directory</string>
     <string name="text_power_shutdown">Shutdown</string>
@@ -137,4 +136,11 @@ If you agree, press the confirm button to continue."</string>
     <string formatted="false" name="kr_sdk_discrepancy_message">This feature only runs on systems with SDK %d</string>
     <string name="picker_not_item">No available options</string>
     <string name="picker_select_none">No item selected</string>
+    <string name="select_theme">Select Theme</string>
+    <string name="theme_system_default">System Default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_wallpaper_system">Wallpaper + System</string>
+    <string name="theme_wallpaper_dark">Wallpaper + Dark</string>
+    <string name="theme_wallpaper_light">Wallpaper + Light</string>
 </resources>

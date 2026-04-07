@@ -27,6 +27,7 @@ import com.omarea.krscript.model.*
 import com.omarea.krscript.shortcut.ActionShortcutManager
 import androidx.core.net.toUri
 import android.content.res.Configuration
+import com.tool.tree.ThemeModeState
 
 class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.OnItemClickListener {
     companion object {
@@ -49,6 +50,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private var themeMode: ThemeMode? = null
     private var pageLayoutRender: PageLayoutRender? = null
     private lateinit var rootGroup: ListItemGroup
+    private var darkMode = ThemeModeState.isDarkMode()
 
     private fun setListData(
             actionInfos: ArrayList<NodeInfoBase>?,
@@ -275,8 +277,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 progressBarDialog.hideDialog()
 
                 if (optionsSorted != null) {
-                    val uiMode = resources.configuration.uiMode
-                    val darkMode = uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
                     DialogItemChooser(darkMode, optionsSorted, item.multiple, object : DialogItemChooser.Callback {
                         override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
                             if (item.multiple) {
@@ -407,9 +407,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                             val center = dialogView.findViewById<ViewGroup>(R.id.kr_params_center)
                             center.removeAllViews()
                             center.addView(linearLayout)
-
-                            val darkMode = themeMode != null && themeMode!!.isDarkMode
-
                             val dialog = (if (isLongList) {
                                 val builder = AlertDialog.Builder(
                                     this.context,
@@ -539,8 +536,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             val onDismiss = Runnable {
                 krScriptActionHandler?.onActionCompleted(nodeInfo)
             }
-            val darkMode = themeMode != null && themeMode!!.isDarkMode
-
             val dialog = DialogLogFragment.create(nodeInfo, onExit, onDismiss, script, params, darkMode)
             dialog.isCancelable = false
             dialog.show(requireFragmentManager(), "")

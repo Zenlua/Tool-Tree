@@ -30,6 +30,7 @@ import java.util.TimeZone;;
 import java.lang.Runtime;
 import java.nio.file.Paths;
 import android.widget.Toast;;
+import com.tool.tree.ThemeModeState
 
 public class ScriptEnvironmen {
     private static final String ASSETS_FILE = "file:///android_asset/";
@@ -241,7 +242,7 @@ public class ScriptEnvironmen {
         }
 
         try {
-        params.put("DARK_MODE", (Resources.getSystem().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES ? "true" : "false");
+        params.put("DARK_MODE", ThemeModeState.isDarkMode() ? "true" : "false");
         } catch (Exception ignored) {
         }
 
