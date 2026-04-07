@@ -356,18 +356,14 @@ class MainActivity : AppCompatActivity() {
         themeSelector.setOnClickListener {
             val popup = ListPopupWindow(this)
             popup.anchorView = themeSelector
-            val themeNamesWithTitle = listOf(getString(R.string.select_theme)) + themeNames
-            val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, themeNamesWithTitle)
-            popup.setAdapter(adapter)
+            popup.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, themeNames))
             popup.setOnItemClickListener { _, _, position, _ ->
-                if (position == 0) return@setOnItemClickListener
-                val actualPosition = position - 1
-                themeConfig.setThemeMode(actualPosition)
+                themeConfig.setThemeMode(position)
                 ThemeModeState.switchTheme(this)
-                themeSelector.text = themeNames[actualPosition]
+                themeSelector.text = themeNames[position]
                 popup.dismiss()
             }
-            popup.width = 490
+            popup.width = 500
             popup.show()
         }
     
