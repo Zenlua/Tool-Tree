@@ -57,10 +57,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             krScriptActionHandler: KrScriptActionHandler? = null,
             autoRunTask: AutoRunTask? = null,
             themeMode: ThemeMode? = null) {
-        this.actionInfos = actionInfos
-        this.krScriptActionHandler = krScriptActionHandler
-        this.autoRunTask = autoRunTask
-        this.themeMode = themeMode
+        if (actionInfos != null) {
+            this.actionInfos = actionInfos
+            this.krScriptActionHandler = krScriptActionHandler
+            this.autoRunTask = autoRunTask
+            this.themeMode = themeMode
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -77,16 +79,16 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private fun renderInterface() {
         val context = context ?: return
         val currentActionInfos = actionInfos ?: return
-
         rootGroup = ListItemGroup(context, true, GroupNode(""))
-        pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
         
-        val layout = rootGroup.getView()
-        val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
-        rootView?.removeAllViews()
-        rootView?.addView(layout)
-        
-        triggerAction(autoRunTask)
+        if (actionInfos != null) {
+            pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
+            val layout = rootGroup.getView()
+            val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
+            rootView?.removeAllViews()
+            rootView?.addView(layout)
+            triggerAction(autoRunTask)
+        }
     }
     
     fun updateData(
