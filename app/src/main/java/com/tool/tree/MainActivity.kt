@@ -360,7 +360,7 @@ class MainActivity : AppCompatActivity() {
             popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_dropdown, themeNames))
             popup.setOnItemClickListener { _, _, position, _ ->
                 themeConfig.setThemeMode(position)
-                ThemeModeState.switchTheme(this)
+                ThemeModeState.switchTheme(this, position)
                 themeSelector.text = themeNames[position]
                 popup.dismiss()
             }
