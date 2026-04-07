@@ -357,7 +357,7 @@ class MainActivity : AppCompatActivity() {
             val popup = ListPopupWindow(this)
             popup.anchorView = themeSelector
             val themeNamesWithTitle = listOf(getString(R.string.select_theme)) + themeNames
-            val adapter = ArrayAdapter(this, R.layout.item_theme, themeNamesWithTitle)
+            val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, themeNamesWithTitle)
             popup.setAdapter(adapter)
             popup.setOnItemClickListener { _, _, position, _ ->
                 if (position == 0) return@setOnItemClickListener
