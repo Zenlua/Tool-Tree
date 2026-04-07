@@ -50,19 +50,16 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private var themeMode: ThemeMode? = null
     private var pageLayoutRender: PageLayoutRender? = null
     private lateinit var rootGroup: ListItemGroup
-    private var darkMode = ThemeModeState.isDarkMode()
 
     private fun setListData(
-            actionInfos: ArrayList<NodeInfoBase>?,
-            krScriptActionHandler: KrScriptActionHandler? = null,
-            autoRunTask: AutoRunTask? = null,
-            themeMode: ThemeMode? = null) {
-        if (actionInfos != null) {
-            this.actionInfos = actionInfos
-            this.krScriptActionHandler = krScriptActionHandler
-            this.autoRunTask = autoRunTask
-            this.themeMode = themeMode
-        }
+        actionInfos: ArrayList<NodeInfoBase>?,
+        krScriptActionHandler: KrScriptActionHandler? = null,
+        autoRunTask: AutoRunTask? = null,
+        themeMode: ThemeMode? = null) {
+        this.actionInfos = actionInfos
+        this.krScriptActionHandler = krScriptActionHandler
+        this.autoRunTask = autoRunTask
+        this.themeMode = themeMode
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -80,15 +77,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         val context = context ?: return
         val currentActionInfos = actionInfos ?: return
         rootGroup = ListItemGroup(context, true, GroupNode(""))
-        
-        if (actionInfos != null) {
-            pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
-            val layout = rootGroup.getView()
-            val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
-            rootView?.removeAllViews()
-            rootView?.addView(layout)
-            triggerAction(autoRunTask)
-        }
+        pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
+        val layout = rootGroup.getView()
+        val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
+        rootView?.removeAllViews()
+        rootView?.addView(layout)
+        triggerAction(autoRunTask)
     }
     
     fun updateData(
@@ -279,7 +273,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 progressBarDialog.hideDialog()
 
                 if (optionsSorted != null) {
-                    DialogItemChooser(darkMode, optionsSorted, item.multiple, object : DialogItemChooser.Callback {
+                    DialogItemChooser(ThemeModeState.isDarkMode(), optionsSorted, item.multiple, object : DialogItemChooser.Callback {
                         override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
                             if (item.multiple) {
                                 pickerExecute(item, (selected.map { "" + it.value }).joinToString(item.separator), onCompleted)
@@ -412,7 +406,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                             val dialog = (if (isLongList) {
                                 val builder = AlertDialog.Builder(
                                     this.context,
-                                    if (darkMode) R.style.kr_full_screen_dialog_dark else R.style.kr_full_screen_dialog_light
+                                    if (ThemeModeState.isDarkMode()) R.style.kr_full_screen_dialog_dark else R.style.kr_full_screen_dialog_light
                                 )
                                 builder.setView(dialogView).create().apply {
                                     show()
@@ -538,7 +532,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             val onDismiss = Runnable {
                 krScriptActionHandler?.onActionCompleted(nodeInfo)
             }
-            val dialog = DialogLogFragment.create(nodeInfo, onExit, onDismiss, script, params, darkMode)
+            val dialog = DialogLogFragment.create(nodeInfo, onExit, onDismiss, script, params, ThemeModeState.isDarkMode())
             dialog.isCancelable = false
             dialog.show(requireFragmentManager(), "")
         }
