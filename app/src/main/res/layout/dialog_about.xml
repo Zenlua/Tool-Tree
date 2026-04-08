@@ -21,10 +21,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/about_title"
-                android:alpha="0.6"
+                android:alpha="0.7"
                 android:textSize="11sp" />
             <CheckBox
-                    android:textSize="11dp"
+                    android:textSize="11sp"
                     android:alpha="0.6"
                     android:id="@+id/notification_ui"
                     android:layout_width="match_parent"
@@ -40,7 +40,7 @@
             android:layout_marginTop="4dp"
             android:text="@string/appliction_desc"
             android:textColor="@color/colorAccent"
-            android:textSize="11dp" />
+            android:textSize="11sp" />
 
         <TextView
             android:id="@+id/appliction_nameText"
@@ -51,7 +51,7 @@
             android:textAlignment="center"
             android:alpha="0.8"
             android:textColor="@drawable/text_color_selector"
-            android:textSize="40dp" />
+            android:textSize="40sp" />
 
         <TextView
             android:id="@+id/appliction_authorText"
@@ -84,8 +84,8 @@
                 android:id="@+id/theme_selector"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="11dp"
-                android:alpha="0.8"
+                android:textSize="11sp"
+                android:alpha="0.9"
                 android:textStyle="bold"
                 android:drawableEnd="@drawable/abc_spinner_mtrl_am_alpha"
                 android:drawablePadding="6dp"
@@ -104,25 +104,21 @@
                 android:layout_weight="50"
                 android:layout_height="wrap_content">
                 <TextView
-                    android:id="@+id/authorText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="28dp"
                     android:padding="4dp"
                     android:text="@string/author_name"
                     android:textAlignment="textEnd"
-                    android:textColor="@drawable/text_color_selector"
                     android:alpha="0.6"
                     android:textSize="11sp" />
 
                 <TextView
-                    android:id="@+id/engineText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="@string/engine_version_name"
                     android:textAlignment="textEnd"
-                    android:textColor="@drawable/text_color_selector"
                     android:alpha="0.6"
                     android:textSize="11sp" />
             </LinearLayout>

@@ -374,22 +374,10 @@ class MainActivity : AppCompatActivity() {
             themeConfig.setAllowNotificationUI(isChecked)
         }
 
-        val authorText = layout.findViewById<TextView>(R.id.authorText)
-        val engineText = layout.findViewById<TextView>(R.id.engineText)
         val appliction_nameText = layout.findViewById<TextView>(R.id.appliction_nameText)
         val appliction_authorText = layout.findViewById<TextView>(R.id.appliction_authorText)
         val authorUrl = "https://zenlua.github.io/Tool-Tree/website/Information.html"
         val engineUrl = "https://github.com/Zenlua/Tool-Tree"
-        
-        authorText.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authorUrl))
-            startActivity(intent)
-        }
-        engineText.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(engineUrl))
-            startActivity(intent)
-        }
-        
         appliction_authorText.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authorUrl))
             startActivity(intent)
