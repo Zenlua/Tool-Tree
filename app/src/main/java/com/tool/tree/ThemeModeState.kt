@@ -9,6 +9,7 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
 import com.omarea.common.ui.ThemeMode
 import java.io.File
+import com.omarea.common.ui.BlurEngine
 
 @Suppress("DEPRECATION")
 object ThemeModeState {
@@ -64,6 +65,14 @@ object ThemeModeState {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                 applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper, false)
             }
+        }
+
+        if (level >= 3) {
+            BlurEngine.isPaused = false
+            BlurEngine.controller.captureAndBlur(activity)
+        } else {
+            BlurEngine.isPaused = true
+            BlurEngine.blurBitmap = null
         }
 
         applyWindowFlags(activity)
