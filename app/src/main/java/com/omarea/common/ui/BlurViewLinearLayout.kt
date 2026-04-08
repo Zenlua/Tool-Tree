@@ -1,8 +1,10 @@
 package com.omarea.common.ui
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Rect
 import android.util.AttributeSet
+import android.view.View
 import android.widget.LinearLayout
 
 class BlurViewLinearLayout @JvmOverloads constructor(
@@ -14,39 +16,38 @@ class BlurViewLinearLayout @JvmOverloads constructor(
     private var isInitialized = false
 
     init {
-        // QUAN TRỌNG: Để onDraw luôn được gọi trong ViewGroup
+        // Cho phép ViewGroup gọi onDraw()
         setWillNotDraw(false)
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (!isInitialized) {
+            helper.init()
+            isInitialized = true
+        }
+    }
+
     override fun onDraw(canvas: Canvas) {
-        // 1. Lấy tấm ảnh mờ từ Helper
-        val blurBitmap = helper.getCroppedBitmap()
-        
-        if (blurBitmap != null && !blurBitmap.isRecycled) {
-            // 2. Vẽ tấm ảnh mờ lấp đầy diện tích View trước khi vẽ background XML
+        // 1. Lấy ảnh đã cắt từ Helper
+        val blur = helper.getCroppedBitmap()
+        if (blur != null && !blur.isRecycled) {
+            // 2. Vẽ ảnh mờ bao phủ toàn bộ diện tích View
             val destRect = Rect(0, 0, width, height)
-            canvas.drawBitmap(blurBitmap, null, destRect, null)
+            canvas.drawBitmap(blur, null, destRect, null)
         }
         
-        // 3. Sau đó mới gọi super.onDraw để Android vẽ cái 
-        // android:background="@drawable/krscript_item_ripple_inactive" đè lên
+        // 3. Vẽ background XML (bo góc và ripple) đè lên trên ảnh mờ
         super.onDraw(canvas)
     }
 
-    // Các hàm khác giữ nguyên để tính toán tọa độ
     override fun computeScroll() {
-        helper.update()
-        invalidate() // Ép vẽ lại liên tục khi cuộn
         super.computeScroll()
-    }
-
-    override fun onAttachedToWindow() {
-        if (!isInitialized) { helper.init(); isInitialized = true }
-        super.onAttachedToWindow()
+        helper.update()
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        helper.update()
         super.onSizeChanged(w, h, oldw, oldh)
+        helper.update()
     }
 }
