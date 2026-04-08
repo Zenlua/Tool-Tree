@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     style="@style/dialogRoot">
@@ -28,7 +28,7 @@
                 <CheckBox
                     android:textSize="11sp"
                     android:gravity="center_vertical"
-                    android:id="@id+/notification_ui"
+                    android:id="@+id/notification_ui"
                     android:focusable="true"
                     android:clickable="true"
                     android:layout_width="wrap_content"
@@ -53,7 +53,7 @@
                 android:textSize="40sp"
                 android:textColor="@drawable/text_color_selector"
                 android:layout_gravity="center"
-                android:id="@id+/appliction_nameText"
+                android:id="@+id/appliction_nameText"
                 android:focusable="true"
                 android:clickable="true"
                 android:layout_width="wrap_content"
@@ -69,7 +69,7 @@
             <TextView
                 android:textColor="@drawable/text_color_selector"
                 android:layout_gravity="center"
-                android:id="@id+/appliction_authorText"
+                android:id="@+id/appliction_authorText"
                 android:focusable="true"
                 android:clickable="true"
                 android:layout_width="wrap_content"
@@ -99,7 +99,7 @@
                     android:textStyle="bold"
                     android:ellipsize="end"
                     android:gravity="center_vertical"
-                    android:id="@id+/theme_selector"
+                    android:id="@+id/theme_selector"
                     android:focusable="true"
                     android:clickable="true"
                     android:layout_width="wrap_content"
@@ -136,4 +136,4 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-</FrameLayout>
+</layout>
