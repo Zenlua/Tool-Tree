@@ -19,6 +19,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.tool.tree.R
 import androidx.core.graphics.drawable.toDrawable
 import com.tool.tree.ThemeModeState
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 
 class DialogHelper {
     class DialogButton(val text: String, val onClick: Runnable? = null, val dismiss: Boolean = true)
@@ -76,12 +78,14 @@ class DialogHelper {
         // --- Cache blur bitmap ---
         private object BlurCache {
             private var cachedBlur: Bitmap? = null
-    
             fun getBlur(activity: Activity): Bitmap? {
-                if (cachedBlur == null || cachedBlur!!.isRecycled) {
+                val bmp = cachedBlur
+                return if (bmp == null || bmp.isRecycled) {
                     cachedBlur = FastBlurUtility.getBlurBackgroundDrawer(activity)
+                    cachedBlur
+                } else {
+                    bmp
                 }
-                return cachedBlur
             }
     
             fun clear() {
