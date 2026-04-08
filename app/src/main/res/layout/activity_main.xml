@@ -19,33 +19,24 @@
         android:layout_below="@id/appbar"
         android:layout_above="@id/blur_bottom_container" />
 
-    <FrameLayout
+    <com.omarea.common.ui.BlurBottomBarLayout
+        android:id="@+id/blur_bottom_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
-    
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?android:attr/navigationBarColor" />
+        android:background="@drawable/krscript_item_ripple_in"
+        android:layout_alignParentBottom="true" >
 
-        <com.omarea.common.ui.BlurBottomBarLayout
-            android:id="@+id/blur_bottom_container"
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
-
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                app:tabBackground="@android:color/transparent"
-                app:tabRippleColor="@android:color/transparent"
-                app:tabGravity="fill"
-                app:tabMode="fixed"
-                app:tabIndicatorHeight="0dp"
-                app:tabMaxWidth="0dp"
-                app:tabIndicatorFullWidth="false" />
-        </com.omarea.common.ui.BlurBottomBarLayout>
-    </FrameLayout>
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:tabBackground="@android:color/transparent"
+            app:tabRippleColor="@android:color/transparent"
+            app:tabGravity="fill"
+            app:tabMode="fixed"
+            app:tabIndicatorHeight="0dp"
+            app:tabMaxWidth="0dp"
+            app:tabIndicatorFullWidth="false" />
+    </com.omarea.common.ui.BlurBottomBarLayout>
 </RelativeLayout>
