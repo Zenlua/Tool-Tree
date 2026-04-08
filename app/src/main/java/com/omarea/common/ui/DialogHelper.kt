@@ -73,6 +73,23 @@ class DialogHelper {
         // 是否禁用模糊背景
         var disableBlurBg = false
 
+        // --- Cache blur bitmap ---
+        private object BlurCache {
+            private var cachedBlur: Bitmap? = null
+    
+            fun getBlur(activity: Activity): Bitmap? {
+                if (cachedBlur == null || cachedBlur!!.isRecycled) {
+                    cachedBlur = FastBlurUtility.getBlurBackgroundDrawer(activity)
+                }
+                return cachedBlur
+            }
+    
+            fun clear() {
+                cachedBlur?.recycle()
+                cachedBlur = null
+            }
+        }
+
         fun animDialog(dialog: AlertDialog?): DialogWrap? {
             if (dialog != null && !dialog.isShowing) {
                 dialog.window?.run {
@@ -406,7 +423,7 @@ class DialogHelper {
                 val blurBitmap = if (disableBlurBg || wallpaperMode) {
                     null
                 } else {
-                    FastBlurUtility.getBlurBackgroundDrawer(activity)
+                    BlurCache.getBlur(activity)
                 }
                 if (blurBitmap != null) {
                     setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
@@ -420,19 +437,17 @@ class DialogHelper {
                                 setDimAmount(0.5f)
                                 return
                             } else {
-                                if (wallpaperMode || isNightMode(context)) {
-                                    val d = Color.argb(255, 18, 18, 18).toDrawable()
-                                    setBackgroundDrawable(d)
+                                val d = if (wallpaperMode || isNightMode(context)) {
+                                    Color.argb(255, 18, 18, 18).toDrawable()
                                 } else {
-                                    val d = Color.argb(255, 245, 245, 245).toDrawable()
-                                    setBackgroundDrawable(d)
+                                    Color.argb(255, 245, 245, 245).toDrawable()
                                 }
+                                setBackgroundDrawable(d)
                             }
                         } else {
-                            val d = bg.toDrawable()
-                            setBackgroundDrawable(d)
+                            setBackgroundDrawable(bg.toDrawable())
                         }
-                    } catch (_: java.lang.Exception) {
+                    } catch (_: Exception) {
                         setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
                     }
                 }

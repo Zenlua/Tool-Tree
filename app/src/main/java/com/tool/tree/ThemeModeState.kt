@@ -30,8 +30,7 @@ object ThemeModeState {
 
         when (level.coerceIn(0, 5)) {
             0 -> { // System default
-                val nightModeFlags = activity.resources.configuration.uiMode and
-                        android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                val nightModeFlags = activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
                 val isNight = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES
                 themeMode.isDarkMode = isNight
                 themeMode.isLightStatusBar = !isNight
@@ -51,6 +50,11 @@ object ThemeModeState {
                 activity.setTheme(R.style.AppThemeDark)
             }
             3 -> { // Wallpaper system
+                val nightModeFlags = activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                val isNight = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
+                themeMode.isDarkMode = isNight
+                themeMode.isLightStatusBar = !isNight
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                 applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper)
             }
             4 -> { // Wallpaper dark

@@ -5,9 +5,9 @@
     android:orientation="vertical"
     android:gravity="center_vertical"
     android:paddingLeft="4dp"
-    android:paddingTop="10dp"
+    android:paddingTop="5dp"
     android:paddingRight="4dp"
-    android:paddingBottom="16dp">
+    android:paddingBottom="10dp">
 
     <TextView
         android:id="@id/kr_title"
@@ -42,6 +42,7 @@
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"
+        android:paddingBottom="5dp"
         android:visibility="gone" />
         
 </LinearLayout>

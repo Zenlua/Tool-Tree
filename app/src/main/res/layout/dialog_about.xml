@@ -85,7 +85,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="11dp"
-                android:alpha="0.6"
+                android:alpha="0.8"
                 android:textStyle="bold"
                 android:drawableEnd="@drawable/abc_spinner_mtrl_am_alpha"
                 android:drawablePadding="6dp"
