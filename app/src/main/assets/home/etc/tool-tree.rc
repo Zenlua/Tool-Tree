@@ -500,17 +500,13 @@ xml_print '<group>
 <get>glog Tset</get>
 <set>slog Tset $state</set>
 </switch>
-</group>
 
-<group>
 <switch icon="'`urlpng icon_off`'" shell="hidden" reload="true">
 <title>'$project_text_7'</title>
 <get>glog Ticon</get>
 <set>slog Ticon $state</set>
 </switch>
-</group>
 
-<group>
 <switch icon="'`urlpng shell_off`'" shell="hidden">
 <title>'$project_text_6'</title>
 <get>glog shellc</get>
