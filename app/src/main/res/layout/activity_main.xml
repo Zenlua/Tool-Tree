@@ -21,16 +21,26 @@
         android:layout_height="match_parent" />
 
     <!-- TabLayout (DƯỚI CÙNG) -->
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout"
+    <com.omarea.common.ui.BlurViewLinearLayout
+        android:id="@+id/tabLayout_container"
         android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:navigationBarColor"
-        app:tabGravity="fill"
-        app:tabMode="fixed"
-        app:tabIndicatorHeight="0dp"
-        app:tabMaxWidth="0dp"
-        app:tabIndicatorFullWidth="false" />
+        android:orientation="vertical">
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:tabGravity="fill"
+            app:tabMode="fixed"
+            app:tabIndicatorHeight="0dp"
+            app:tabMaxWidth="0dp"
+            app:tabIndicatorFullWidth="false"
+            app:tabBackground="@android:color/transparent"
+            app:tabRippleColor="@android:color/transparent" />
+
+    </com.omarea.common.ui.BlurViewLinearLayout>
 
 </RelativeLayout>
