@@ -126,4 +126,5 @@ Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz."</string>
     <string name="theme_wallpaper_system">Háttérkép + Alapértelmezett</string>
     <string name="theme_wallpaper_dark">Háttérkép + Sötét</string>
     <string name="theme_wallpaper_light">Háttérkép + Világos</string>
+    <string name="theme_text">Témák</string>
 </resources>

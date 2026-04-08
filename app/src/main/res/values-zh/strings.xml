@@ -127,4 +127,5 @@
     <string name="theme_wallpaper_system">壁纸 + 默认</string>
     <string name="theme_wallpaper_dark">壁纸 + 深色</string>
     <string name="theme_wallpaper_light">壁纸 + 浅色</string>
+    <string name="theme_text">主题</string>
 </resources>

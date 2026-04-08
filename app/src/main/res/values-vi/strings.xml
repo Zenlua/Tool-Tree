@@ -128,4 +128,5 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="theme_wallpaper_system">Hình nền + Mặc định</string>
     <string name="theme_wallpaper_dark">Hình nền + Tối</string>
     <string name="theme_wallpaper_light">Hình nền + Sáng</string>
+    <string name="theme_text">Chủ đề</string>
 </resources>

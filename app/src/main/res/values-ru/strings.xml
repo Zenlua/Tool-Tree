@@ -126,4 +126,5 @@
     <string name="theme_wallpaper_system">Обои + Стандартный</string>
     <string name="theme_wallpaper_dark">Обои + Тёмный</string>
     <string name="theme_wallpaper_light">Обои + Светлый</string>
+    <string name="theme_text">Темы</string>
 </resources>

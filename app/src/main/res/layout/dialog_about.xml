@@ -73,13 +73,20 @@
             android:layout_width="0dp"
             android:layout_weight="50"
             android:layout_height="wrap_content">
-        
+            <TextView
+                android:textSize="11sp"
+                android:textColor="@drawable/text_color_selector"
+                android:padding="0dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/theme_text"
+                android:alpha="0.6" />
             <TextView
                 android:id="@+id/theme_selector"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="0dp"
-                android:textSize="12sp"
+                android:textSize="11dp"
                 android:textColor="#aaaaaa"
                 android:textStyle="bold"
                 android:drawableEnd="@drawable/abc_spinner_mtrl_am_alpha"
@@ -103,6 +110,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="28dp"
+                    android:padding="4dp"
                     android:text="@string/author_name"
                     android:textAlignment="textEnd"
                     android:textColor="@drawable/text_color_selector"
