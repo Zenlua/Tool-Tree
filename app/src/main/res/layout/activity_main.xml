@@ -3,34 +3,46 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
-
-    <!-- Toolbar -->
-    <include
-        layout="@layout/app_bar_main"
-        android:id="@+id/appbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <!-- ViewPager2 -->
+    android:fitsSystemWindows="false">
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
-        android:layout_below="@id/appbar"
-        android:layout_above="@id/tabLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_above="@+id/blur_bottom_container"
+        android:layout_alignParentTop="true" />
 
-    <!-- TabLayout (DƯỚI CÙNG) -->
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout"
-        android:layout_alignParentBottom="true"
+    <com.omarea.common.ui.BlurTopBarLayout
+        android:id="@+id/blur_top_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:navigationBarColor"
-        app:tabGravity="fill"
-        app:tabMode="fixed"
-        app:tabIndicatorHeight="0dp"
-        app:tabMaxWidth="0dp"
-        app:tabIndicatorFullWidth="false" />
+        android:layout_alignParentTop="true"
+        android:fitsSystemWindows="false"
+        android:paddingTop="32dp">
+        <include
+            layout="@layout/app_bar_main"
+            android:id="@+id/appbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </com.omarea.common.ui.BlurTopBarLayout>
+
+    <com.omarea.common.ui.BlurBottomBarLayout
+        android:id="@+id/blur_bottom_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:tabBackground="@android:color/transparent"
+            app:tabRippleColor="@android:color/transparent"
+            app:tabGravity="fill"
+            app:tabMode="fixed"
+            app:tabIndicatorHeight="0dp"
+            app:tabMaxWidth="0dp"
+            app:tabIndicatorFullWidth="false" />
+    </com.omarea.common.ui.BlurBottomBarLayout>
 
 </RelativeLayout>
