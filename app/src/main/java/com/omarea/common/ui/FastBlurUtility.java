@@ -118,7 +118,7 @@ public class FastBlurUtility {
         return bmpGrayscale;
     }
 
-    private static Bitmap startBlurBackground(Bitmap bkg) {
+    public static Bitmap startBlurBackground(Bitmap bkg) {
         if (bkg == null) {
             return null;
         }
