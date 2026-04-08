@@ -14,15 +14,15 @@ public class BlurController {
             Bitmap source = null;
             File customWallpaperFile = new File(activity.getFilesDir(), "home/etc/wallpaper.jpg");
 
-            // Ưu tiên 1: Lấy từ file wallpaper tùy chỉnh
+            // Ưu tiên 1: Wallpaper tùy chỉnh
             if (customWallpaperFile.exists()) {
                 source = BitmapFactory.decodeFile(customWallpaperFile.getAbsolutePath());
             } 
             
-            // Ưu tiên 2: Lấy từ WallpaperManager nếu không dùng Live Wallpaper
+            // Ưu tiên 2: Wallpaper hệ thống (Ảnh tĩnh)
             if (source == null) {
                 WallpaperManager wm = WallpaperManager.getInstance(activity);
-                if (wm.getWallpaperInfo() == null) { // Chỉ lấy được nếu là ảnh tĩnh
+                if (wm.getWallpaperInfo() == null) {
                     Drawable drawable = wm.getDrawable();
                     if (drawable instanceof BitmapDrawable) {
                         source = ((BitmapDrawable) drawable).getBitmap();
@@ -30,18 +30,14 @@ public class BlurController {
                 }
             }
 
-            // Ưu tiên 3: Nếu là Live Wallpaper hoặc không lấy được ảnh, chụp màn hình làm fallback
-            if (source == null) {
-                source = BlurUtils.captureScreen(activity);
-            }
-
+            // Xử lý làm mờ bằng Utility mới của bạn
             if (source != null) {
-                // Resize và làm mờ
-                int width = 192;
-                int height = (int) (192f * source.getHeight() / source.getWidth());
-                Bitmap small = Bitmap.createScaledBitmap(source, width, height, true);
-                
-                BlurEngine.blurBitmap = BlurUtils.stackBlur(small, 25); // Tăng radius lên 10 cho đẹp
+                // Dùng phương thức startBlurBackground để tự động thu nhỏ + làm mờ + làm tối
+                BlurEngine.blurBitmap = FastBlurUtility.startBlurBackground(source);
+                BlurEngine.isPaused = false;
+            } else {
+                // Fallback: Chụp màn hình nếu không lấy được ảnh nền trực tiếp
+                BlurEngine.blurBitmap = FastBlurUtility.getBlurBackgroundDrawer(activity);
                 BlurEngine.isPaused = false;
             }
         }).start();
