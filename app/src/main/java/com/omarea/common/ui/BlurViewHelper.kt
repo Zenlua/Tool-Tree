@@ -1,26 +1,25 @@
 package com.omarea.common.ui
 
 import android.graphics.*
-import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.view.View
+import android.view.ViewOutlineProvider
+import android.view.ViewTreeObserver
 import androidx.appcompat.app.AppCompatActivity
 
 /**
- * Lớp hỗ trợ xử lý logic làm mờ cho View
+ * Lớp Helper xử lý logic cắt ảnh nền (Tương ứng với v31 trong mã gốc)
+ * Đã được sửa đổi để không ghi đè background XML của View.
  */
-class BlurViewHelper(private val view: View) {
+class BlurHelper(private val view: View) {
 
     companion object {
-        // Bitmap nền đã được làm mờ (phải được gán từ bên ngoài, ví dụ từ Activity/Service)
-        var blurBackground: Bitmap? = null
+        @JvmField var blurBackground: Bitmap? = null // Ảnh nền toàn màn hình đã blur
+        @JvmField var isBlurEnabled = true
+        @JvmField var cornerRadius = 30.0f // Có thể điều chỉnh qua code nếu cần
         
-        // Cấu hình mặc định
-        var isBlurEnabled = true
-        var defaultCornerRadius = 30.0f
-        
-        // Màu phủ nhẹ (Overlay) để tạo hiệu ứng kính thực hơn
-        private val OVERLAY_COLOR = Color.parseColor("#20ffffff")
+        // Tỉ lệ nén để tối ưu hiệu năng (giống bản gốc 192)
+        private const val SCALE_REFERENCE = 192f
     }
 
     private var lastLocation = intArrayOf(Int.MIN_VALUE, Int.MIN_VALUE)
@@ -28,85 +27,104 @@ class BlurViewHelper(private val view: View) {
     private var croppedBitmap: Bitmap? = null
 
     /**
-     * Khởi tạo các thuộc tính cơ bản cho View
+     * Trả về Bitmap đã được cắt để View vẽ trong onDraw
      */
-    fun init() {
-        view.clipToOutline = true
-        // Lắng nghe sự kiện trước khi vẽ để cập nhật khung hình mờ
-        view.viewTreeObserver.addOnPreDrawListener {
-            updateBlurFrame()
-            true
-        }
+    fun getCroppedBitmap(): Bitmap? {
+        return if (isBlurEnabled) croppedBitmap else null
     }
 
     /**
-     * Tính toán và cắt ảnh nền khớp với vị trí của View hiện tại
+     * Khởi tạo các listener (Tương đương hàm m() trong v31)
      */
-    fun updateBlurFrame() {
+    fun init() {
+        // Thiết lập Outline để bo góc theo cornerRadius (nếu XML không bo)
+        view.outlineProvider = ViewOutlineProvider.BACKGROUND
+        view.clipToOutline = true
+        
+        // Lắng nghe sự kiện trước khi vẽ để cập nhật khung hình
+        view.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (view.isAttachedToWindow) {
+                    update()
+                }
+                return true
+            }
+        })
+    }
+
+    /**
+     * Logic tính toán tọa độ và trích xuất phần ảnh mờ (Tương đương hàm n() trong v31)
+     */
+    fun update() {
         val bg = blurBackground ?: return
         
         if (isBlurEnabled && view.width > 0 && view.height > 0 && view.isAttachedToWindow) {
-            val activity = view.context as? AppCompatActivity ?: return
+            val context = view.context as? AppCompatActivity ?: return
             
-            // Bỏ qua nếu đang ở chế độ đa cửa sổ (Multi-window) để tránh sai lệch tọa độ
+            // Bỏ qua nếu đang ở chế độ đặc biệt của Android (Multi-window)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                if (activity.isInMultiWindowMode || activity.isInPictureInPictureMode) return
+                if (context.isInMultiWindowMode || context.isInPictureInPictureMode) return
             }
 
-            val currentLocation = intArrayOf(0, 0)
-            view.getLocationInWindow(currentLocation)
+            val location = intArrayOf(0, 0)
+            view.getLocationInWindow(location)
 
-            // Tối ưu: Chỉ xử lý nếu View bị di chuyển hoặc đổi kích thước
-            if (lastLocation[0] == currentLocation[0] && 
-                lastLocation[1] == currentLocation[1] && 
-                lastSize[0] == view.width && 
-                lastSize[1] == view.height) {
+            // Kiểm tra xem vị trí hoặc kích thước có thay đổi không để tránh tính toán thừa
+            if (lastLocation[0] == location[0] && lastLocation[1] == location[1] &&
+                lastSize[0] == view.width && lastSize[1] == view.height) {
                 return
             }
 
-            lastLocation = currentLocation
+            lastLocation = location
             lastSize = arrayOf(view.width, view.height)
 
             try {
-                // Tỉ lệ nén để tăng hiệu suất (tương tự bản gốc dùng 192)
-                val scaleFactor = view.rootView.width.toFloat() / 192f
+                // Tính toán tỉ lệ scale dựa trên độ phân giải màn hình
+                val scale = view.rootView.width.toFloat() / SCALE_REFERENCE
                 
-                val scaledW = (view.width / scaleFactor).toInt()
-                val scaledH = (view.height / scaleFactor).toInt()
-                val offsetX = (currentLocation[0] / scaleFactor).toInt()
-                val offsetY = (currentLocation[1] / scaleFactor).toInt()
+                val sw = (view.width / scale).toInt().coerceAtLeast(1)
+                val sh = (view.height / scale).toInt().coerceAtLeast(1)
+                val ox = (location[0] / scale).toInt()
+                val oy = (location[1] / scale).toInt()
 
-                // Quản lý bộ nhớ Bitmap
-                if (croppedBitmap == null || croppedBitmap?.width != scaledW || croppedBitmap?.height != scaledH) {
+                // Khởi tạo hoặc tái sử dụng Bitmap để tiết kiệm RAM
+                if (croppedBitmap == null || croppedBitmap?.width != sw || croppedBitmap?.height != sh) {
                     croppedBitmap?.recycle()
-                    croppedBitmap = Bitmap.createBitmap(scaledW, scaledH, Bitmap.Config.ARGB_8888)
+                    croppedBitmap = Bitmap.createBitmap(sw, sh, Bitmap.Config.ARGB_8888)
                 }
 
-                croppedBitmap?.let { bitmap ->
-                    val canvas = Canvas(bitmap)
+                croppedBitmap?.let { out ->
+                    val canvas = Canvas(out)
+                    // Xóa sạch canvas cũ
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
                     
-                    // Xác định vùng cần cắt trên ảnh nền lớn
-                    val srcRect = Rect(
-                        offsetX.coerceAtLeast(0),
-                        offsetY.coerceAtLeast(0),
-                        (offsetX + scaledW).coerceAtMost(bg.width),
-                        (offsetY + scaledH).coerceAtMost(bg.height)
+                    // Xác định vùng cắt trên ảnh blurBackground lớn
+                    val src = Rect(
+                        ox.coerceAtLeast(0),
+                        oy.coerceAtLeast(0),
+                        (ox + sw).coerceAtMost(bg.width),
+                        (oy + sh).coerceAtMost(bg.height)
                     )
                     
-                    val destRect = Rect(0, 0, srcRect.width(), srcRect.height())
-                    canvas.drawBitmap(bg, srcRect, destRect, null)
+                    val dest = Rect(0, 0, src.width(), src.height())
                     
-                    // Vẽ thêm một lớp màu phủ trắng mỏng để tạo hiệu ứng kính mờ
-                    canvas.drawColor(OVERLAY_COLOR)
+                    // Vẽ phần ảnh nền vào bitmap nhỏ
+                    canvas.drawBitmap(bg, src, dest, null)
                     
-                    // Cập nhật Background cho View
-                    view.background = BitmapDrawable(view.resources, bitmap)
+                    // Thông báo cho View thực hiện vẽ lại (gọi onDraw)
+                    view.invalidate()
                 }
             } catch (e: Exception) {
-                // Tránh crash app nếu có lỗi xử lý đồ họa
                 e.printStackTrace()
             }
         }
+    }
+    
+    /**
+     * Giải phóng bộ nhớ khi View bị hủy
+     */
+    fun destroy() {
+        croppedBitmap?.recycle()
+        croppedBitmap = null
     }
 }
