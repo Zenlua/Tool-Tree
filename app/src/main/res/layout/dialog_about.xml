@@ -46,12 +46,12 @@
             android:id="@+id/appliction_nameText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="40dp"
             android:text="@string/appliction_name"
             android:textAlignment="center"
             android:alpha="0.8"
             android:textColor="@drawable/text_color_selector"
-            android:textSize="36dp" />
+            android:textSize="40dp" />
 
         <TextView
             android:id="@+id/appliction_authorText"
@@ -59,7 +59,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:alpha="0.7"
-            android:layout_marginTop="11dp"
+            android:layout_marginTop="6dp"
             android:textColor="@drawable/text_color_selector"
             android:text="@string/appliction_author" />
 
@@ -76,7 +76,6 @@
             <TextView
                 android:textSize="11sp"
                 android:textColor="@drawable/text_color_selector"
-                android:padding="0dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/theme_text"
@@ -85,7 +84,6 @@
                 android:id="@+id/theme_selector"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="0dp"
                 android:textSize="11dp"
                 android:textColor="#aaaaaa"
                 android:textStyle="bold"
