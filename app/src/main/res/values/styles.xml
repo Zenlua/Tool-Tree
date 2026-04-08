@@ -167,7 +167,6 @@
 
     <style name="SceneCheckBox" parent="Widget.AppCompat.CompoundButton.CheckBox">
         <item name="android:textColor">?android:attr/textColorPrimary</item>
-        <item name="android:button">?android:attr/listChoiceIndicatorMultiple</item>
         <item name="android:background">@null</item>
         <item name="android:paddingStart">0dp</item>
         <item name="android:paddingLeft">0dp</item>
@@ -179,7 +178,6 @@
     </style>
     <style name="SceneRadioBox" parent="Widget.AppCompat.CompoundButton.RadioButton">
         <item name="android:textColor">?android:attr/textColorPrimary</item>
-        <item name="android:button">?android:attr/listChoiceIndicatorSingle</item>
         <item name="android:background">@null</item>
         <item name="android:paddingStart">0dp</item>
         <item name="android:paddingLeft">0dp</item>
