@@ -4,26 +4,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="false">
+
+    <include
+        layout="@layout/app_bar_main"
+        android:id="@+id/appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/blur_bottom_container"
-        android:layout_alignParentTop="true" />
-
-    <com.omarea.common.ui.BlurTopBarLayout
-        android:id="@+id/blur_top_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:fitsSystemWindows="false"
-        android:paddingTop="32dp">
-        <include
-            layout="@layout/app_bar_main"
-            android:id="@+id/appbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </com.omarea.common.ui.BlurTopBarLayout>
+        android:layout_below="@id/appbar"
+        android:layout_above="@id/blur_bottom_container" />
 
     <com.omarea.common.ui.BlurBottomBarLayout
         android:id="@+id/blur_bottom_container"
@@ -44,5 +37,5 @@
             app:tabMaxWidth="0dp"
             app:tabIndicatorFullWidth="false" />
     </com.omarea.common.ui.BlurBottomBarLayout>
-
+    
 </RelativeLayout>
