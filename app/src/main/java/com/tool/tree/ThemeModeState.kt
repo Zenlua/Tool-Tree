@@ -123,6 +123,7 @@ object ThemeModeState {
         if (!themeMode.isDarkMode && themeMode.isLightStatusBar) {
             activity.window.run {
                 clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+                decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
                 decorView.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
