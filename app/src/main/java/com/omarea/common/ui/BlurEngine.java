@@ -9,12 +9,16 @@ public final class BlurEngine {
     public static BlurController controller = new BlurController();
     public static Bitmap blurBitmap; 
     public static boolean isPaused = true;
-    public static float cornerRadius = 30.0f;
+    
+    // Giữ giá trị mặc định cho toàn hệ thống
+    public static float DEFAULT_CORNER_RADIUS = 30.0f;
+    
+    // Chuyển thành biến instance (không có static) để mỗi View có một radius riêng
+    public float cornerRadius = DEFAULT_CORNER_RADIUS;
 
     private View targetView;
     private int[] location = new int[2];
 
-    // Hàm lấy màu phủ động dựa trên Dark Mode
     private int getBlurTintColor() {
         if (ThemeModeState.isDarkMode()) {
             return Color.parseColor("#44000000");
@@ -28,8 +32,14 @@ public final class BlurEngine {
     }
 
     public void setup() {
-        targetView.setOutlineProvider(new BlurOutlineProvider(cornerRadius));
-        targetView.setClipToOutline(true);
+        // Kiểm tra nếu có bo góc thì mới tạo Outline, giúp tối ưu hiệu năng cho Top/Bottom Bar
+        if (cornerRadius > 0) {
+            targetView.setOutlineProvider(new BlurOutlineProvider(cornerRadius));
+            targetView.setClipToOutline(true);
+        } else {
+            targetView.setOutlineProvider(null);
+            targetView.setClipToOutline(false);
+        }
         targetView.getViewTreeObserver().addOnPreDrawListener(new BlurPreDrawListener(this));
     }
 
@@ -53,10 +63,7 @@ public final class BlurEngine {
         y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
 
         if (w > 0 && h > 0) {
-            // Cắt ảnh mờ
             Bitmap cropped = Bitmap.createBitmap(blurBitmap, x, y, w, h);
-            
-            // ÁP DỤNG MÀU PHỦ ĐỘNG TẠI ĐÂY
             Canvas canvas = new Canvas(cropped);
             canvas.drawColor(getBlurTintColor()); 
 
@@ -69,7 +76,6 @@ public final class BlurEngine {
         p.setStyle(Paint.Style.STROKE);
         p.setStrokeWidth(3.0f);
         
-        // Cập nhật cả màu viền cho đồng bộ
         if (ThemeModeState.isDarkMode()) {
             p.setColor(Color.parseColor("#20FFFFFF"));
         } else {
@@ -78,7 +84,8 @@ public final class BlurEngine {
         return p;
     }
 
-    public static float getCornerRadius() {
+    // Không dùng static cho getter này nữa để lấy đúng giá trị của từng engine
+    public float getCornerRadius() {
         return cornerRadius;
     }
 }

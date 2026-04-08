@@ -2,22 +2,21 @@ package com.omarea.common.ui;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.util.AttributeSet;
 
 public class BlurBottomBarLayout extends BlurViewLinearLayout {
     public BlurBottomBarLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+        // Tắt bo góc cho thanh dưới
+        this.engine.cornerRadius = 0f;
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        // Vẽ đường viền chỉ ở phía trên (Top Stroke)
-        Paint paint = BlurEngine.getStrokePaint();
-        float strokeWidth = paint.getStrokeWidth();
-
-        // Vẽ từ (0, 0) đến (Width, 0)
-        canvas.drawLine(0, strokeWidth/2, getWidth(), strokeWidth/2, paint);
+    protected void drawStroke(Canvas canvas) {
+        // Chỉ vẽ một đường kẻ ngang ở trên cùng
+        float strokeWidth = BlurEngine.getStrokePaint().getStrokeWidth();
+        canvas.drawLine(0, strokeWidth/2, 
+                        getWidth(), strokeWidth/2, 
+                        BlurEngine.getStrokePaint());
     }
 }

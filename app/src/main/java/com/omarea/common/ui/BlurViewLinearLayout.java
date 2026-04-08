@@ -6,12 +6,17 @@ import android.util.AttributeSet;
 import android.widget.LinearLayout;
 
 public class BlurViewLinearLayout extends LinearLayout {
-    private BlurEngine engine;
+    protected BlurEngine engine; // Đổi thành protected để lớp con truy cập trực tiếp
 
     public BlurViewLinearLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.engine = new BlurEngine(this);
         setWillNotDraw(false); 
+    }
+
+    // Cho phép lớp con lấy engine để cấu hình lại
+    public BlurEngine getEngine() {
+        return engine;
     }
 
     @Override
@@ -23,9 +28,16 @@ public class BlurViewLinearLayout extends LinearLayout {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        // Vẽ viền ngoài cho View
-        canvas.drawRoundRect(0, 0, getWidth(), getHeight(), 
-            BlurEngine.getCornerRadius(), BlurEngine.getCornerRadius(), 
-            BlurEngine.getStrokePaint());
+        drawStroke(canvas);
+    }
+
+    // Tách riêng logic vẽ viền để lớp con dễ dàng ghi đè
+    protected void drawStroke(Canvas canvas) {
+        float radius = engine.cornerRadius;
+        if (radius > 0) {
+            canvas.drawRoundRect(0, 0, getWidth(), getHeight(), 
+                radius, radius, 
+                BlurEngine.getStrokePaint());
+        }
     }
 }
