@@ -10,15 +10,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:elevation="0dp"
-        android:background="@android:color/transparent"
+        android:background="?android:attr/statusBarColor"
         android:theme="?android:actionBarTheme">
 
         <com.omarea.common.ui.BlurTopBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:fitsSystemWindows="false"
-            android:paddingTop="32dp">
+            android:fitsSystemWindows="false" >
             
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
