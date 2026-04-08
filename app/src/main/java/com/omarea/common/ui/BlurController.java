@@ -32,13 +32,20 @@ public class BlurController {
 
             // Xử lý làm mờ bằng Utility mới của bạn
             if (source != null) {
-                // Dùng phương thức startBlurBackground để tự động thu nhỏ + làm mờ + làm tối
-                BlurEngine.blurBitmap = FastBlurUtility.startBlurBackground(source);
-                BlurEngine.isPaused = false;
+                // Gọi hàm sau khi đã sửa thành public
+                Bitmap blurredResult = FastBlurUtility.startBlurBackground(source);
+                
+                // Kiểm tra null trước khi gán
+                if (blurredResult != null) {
+                    BlurEngine.blurBitmap = blurredResult;
+                    BlurEngine.isPaused = false;
+                }
             } else {
-                // Fallback: Chụp màn hình nếu không lấy được ảnh nền trực tiếp
-                BlurEngine.blurBitmap = FastBlurUtility.getBlurBackgroundDrawer(activity);
-                BlurEngine.isPaused = false;
+                Bitmap screenshotBlur = FastBlurUtility.getBlurBackgroundDrawer(activity);
+                if (screenshotBlur != null) {
+                    BlurEngine.blurBitmap = screenshotBlur;
+                    BlurEngine.isPaused = false;
+                }
             }
         }).start();
     }
