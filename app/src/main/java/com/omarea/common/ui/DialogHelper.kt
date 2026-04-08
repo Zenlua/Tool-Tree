@@ -425,13 +425,9 @@ class DialogHelper {
             val wallpaperMode = activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0
             window.run {
                 val blurBitmap = if (disableBlurBg) {
-                   null
+                    null
                 } else {
-                    if (wallpaperMode) {
-                        BlurCache.getBlur(activity)
-                    } else {
-                        FastBlurUtility.getBlurBackgroundDrawer(activity)
-                    }
+                    BlurCache.getBlur(activity)
                 }
                 if (blurBitmap != null) {
                     setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
