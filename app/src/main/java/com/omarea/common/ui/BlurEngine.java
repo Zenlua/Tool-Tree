@@ -23,7 +23,7 @@ public final class BlurEngine {
         if (ThemeModeState.isDarkMode()) {
             return Color.parseColor("#44000000");
         } else {
-            return Color.parseColor("#a0FFFFFF");
+            return Color.parseColor("#c0FFFFFF");
         }
     }
 

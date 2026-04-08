@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     style="@style/dialogRoot">
-    <LinearLayout
+    <com.omarea.common.ui.BlurViewLinearLayout
         android:orientation="vertical"
         android:background="@drawable/confirm_dialog_bg"
         android:padding="@dimen/activity_horizontal_margin"
@@ -135,5 +135,5 @@
                     android:textAlignment="textEnd" />
             </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+    </com.omarea.common.ui.BlurViewLinearLayout>
 </FrameLayout>
