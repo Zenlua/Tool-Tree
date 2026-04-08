@@ -41,7 +41,7 @@ public class BlurController {
                 int height = (int) (192f * source.getHeight() / source.getWidth());
                 Bitmap small = Bitmap.createScaledBitmap(source, width, height, true);
                 
-                BlurEngine.blurBitmap = BlurUtils.stackBlur(small, 10); // Tăng radius lên 10 cho đẹp
+                BlurEngine.blurBitmap = BlurUtils.stackBlur(small, 25); // Tăng radius lên 10 cho đẹp
                 BlurEngine.isPaused = false;
             }
         }).start();
