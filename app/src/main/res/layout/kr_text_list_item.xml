@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:gravity="center_vertical"
     android:paddingLeft="4dp"
-    android:paddingTop="5dp"
+    android:paddingTop="10dp"
     android:paddingRight="4dp"
     android:paddingBottom="16dp">
 

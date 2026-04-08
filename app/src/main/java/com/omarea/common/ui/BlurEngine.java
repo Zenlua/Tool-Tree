@@ -3,7 +3,7 @@ package com.omarea.common.ui;
 import android.graphics.*;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.View;
-import com.tool.tree.ThemeModeState; // Import lớp quản lý Theme của bạn
+import com.tool.tree.ThemeModeState;
 
 public final class BlurEngine {
     public static BlurController controller = new BlurController();
@@ -17,11 +17,9 @@ public final class BlurEngine {
     // Hàm lấy màu phủ động dựa trên Dark Mode
     private int getBlurTintColor() {
         if (ThemeModeState.isDarkMode()) {
-            // Nếu là Dark Mode: Phủ một lớp đen mờ (20% đen)
-            return Color.parseColor("#33000000"); 
+            return Color.parseColor("#44000000");
         } else {
-            // Nếu là Light Mode: Phủ một lớp trắng mờ (15% trắng)
-            return Color.parseColor("#26FFFFFF");
+            return Color.parseColor("#a0FFFFFF");
         }
     }
 
@@ -73,9 +71,9 @@ public final class BlurEngine {
         
         // Cập nhật cả màu viền cho đồng bộ
         if (ThemeModeState.isDarkMode()) {
-            p.setColor(Color.parseColor("#15FFFFFF")); // Viền trắng cực mảnh cho Dark
+            p.setColor(Color.parseColor("#20FFFFFF"));
         } else {
-            p.setColor(Color.parseColor("#25000000")); // Viền đen cực mảnh cho Light
+            p.setColor(Color.parseColor("#20000000"));
         }
         return p;
     }

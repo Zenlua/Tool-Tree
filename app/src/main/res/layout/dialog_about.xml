@@ -21,11 +21,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/about_title"
-                android:textColor="#aaaaaa"
+                android:alpha="0.6"
                 android:textSize="11sp" />
             <CheckBox
                     android:textSize="11dp"
-                    android:textColor="#aaaaaa"
+                    android:alpha="0.6"
                     android:id="@+id/notification_ui"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -85,7 +85,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="11dp"
-                android:textColor="#aaaaaa"
+                android:alpha="0.6"
                 android:textStyle="bold"
                 android:drawableEnd="@drawable/abc_spinner_mtrl_am_alpha"
                 android:drawablePadding="6dp"
