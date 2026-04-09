@@ -15,19 +15,12 @@ public final class BlurEngine {
     private View targetView;
     private int[] location = new int[2];
 
-    // Sử dụng Rect để tính toán tọa độ cắt ảnh
     private Rect srcRect = new Rect();
-    // Bitmap đệm để tránh tạo mới liên tục
     private Bitmap cachedBitmap;
     private Canvas cachedCanvas;
-
-    private int getBlurTintColor() {
-        if (ThemeModeState.isDarkMode()) {
-            return Color.parseColor("#88000000");
-        } else {
-            return Color.parseColor("#c0FFFFFF");
-        }
-    }
+    
+    // Cache lại Paint để tránh cấp phát bộ nhớ trong onDraw
+    private static Paint strokePaint;
 
     public BlurEngine(View view) {
         this.targetView = view;
@@ -41,13 +34,11 @@ public final class BlurEngine {
             targetView.setOutlineProvider(null);
             targetView.setClipToOutline(false);
         }
-        targetView.getViewTreeObserver().addOnPreDrawListener(new BlurPreDrawListener(this));
+        
+        // SỬA LỖI: Truyền cả engine và targetView vào listener
+        targetView.getViewTreeObserver().addOnPreDrawListener(new BlurPreDrawListener(this, targetView));
     }
 
-    /**
-     * Lấy Bitmap mờ đã được cập nhật tọa độ. 
-     * Tối ưu hóa bằng cách không tạo mới Bitmap nếu kích thước không đổi.
-     */
     public Bitmap getUpdatedBlurBitmap() {
         if (isPaused || blurBitmap == null || targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
             return null;
@@ -69,21 +60,19 @@ public final class BlurEngine {
 
         if (w > 0 && h > 0) {
             try {
-                // KIỂM TRA: Nếu kích thước View thay đổi hoặc chưa có cache thì mới khởi tạo lại
                 if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
                     if (cachedBitmap != null) cachedBitmap.recycle();
                     cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                     cachedCanvas = new Canvas(cachedBitmap);
                 }
 
-                // Cập nhật vùng cần cắt từ ảnh gốc
                 srcRect.set(x, y, x + w, y + h);
 
-                // Vẽ mảnh ảnh từ hình nền vào Bitmap đệm (Dùng Canvas để vẽ thay vì createBitmap liên tục)
-                cachedCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR); // Xóa cũ
+                // Xóa cũ và vẽ mảnh mới
+                cachedCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR); 
                 cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
                 
-                // Phủ lớp màu theme lên trên
+                // Nhuộm màu kính mờ
                 cachedCanvas.drawColor(getBlurTintColor()); 
                 
                 return cachedBitmap;
@@ -94,28 +83,40 @@ public final class BlurEngine {
         return null;
     }
 
-    public static Paint getStrokePaint() {
-        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-        p.setStyle(Paint.Style.STROKE);
-        p.setStrokeWidth(5.0f); // Giảm nhẹ độ dày viền cho tinh tế
-        
+    private int getBlurTintColor() {
+        // Tối ưu màu sắc cho SDK 23+ (Dark mode hệ thống chưa có nên dựa vào ThemeModeState là chuẩn)
         if (ThemeModeState.isDarkMode()) {
-            p.setColor(Color.parseColor("#25FFFFFF"));
+            return Color.parseColor("#99000000"); // Đậm hơn một chút cho sang
         } else {
-            p.setColor(Color.parseColor("#20000000"));
+            return Color.parseColor("#B3FFFFFF"); // Trắng mờ nhẹ
         }
-        return p;
+    }
+
+    public static Paint getStrokePaint() {
+        if (strokePaint == null) {
+            strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            strokePaint.setStyle(Paint.Style.STROKE);
+            strokePaint.setStrokeWidth(5.0f); // Độ dày lý tưởng cho SDK 23+
+        }
+        
+        // Cập nhật màu viền theo Theme hiện tại
+        if (ThemeModeState.isDarkMode()) {
+            strokePaint.setColor(Color.parseColor("#25FFFFFF"));
+        } else {
+            strokePaint.setColor(Color.parseColor("#15000000"));
+        }
+        return strokePaint;
     }
 
     public float getCornerRadius() {
         return cornerRadius;
     }
     
-    // Đừng quên dọn dẹp khi View bị hủy
     public void destroy() {
         if (cachedBitmap != null && !cachedBitmap.isRecycled()) {
             cachedBitmap.recycle();
             cachedBitmap = null;
         }
+        cachedCanvas = null;
     }
 }
