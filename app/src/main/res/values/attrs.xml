@@ -14,6 +14,7 @@
     <!-- Thuộc tính chung -->
     <attr name="cardBg" format="color"/>
     <attr name="colorParse" format="color" />
+    <attr name="colorPirm" format="color" />
     
     <!-- Trạng thái tiến trình -->
     <declare-styleable name="ProgressState">

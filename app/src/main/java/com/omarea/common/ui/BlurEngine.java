@@ -3,6 +3,8 @@ package com.omarea.common.ui;
 import android.graphics.*;
 import android.view.View;
 import com.tool.tree.ThemeModeState;
+import androidx.core.content.ContextCompat;
+import com.tool.tree.R;
 
 public final class BlurEngine {
     public static BlurController controller = new BlurController();
@@ -89,9 +91,9 @@ public final class BlurEngine {
     private int getBlurTintColor() {
         // Tối ưu màu sắc cho SDK 23+ (Dark mode hệ thống chưa có nên dựa vào ThemeModeState là chuẩn)
         if (ThemeModeState.isDarkMode()) {
-            return Color.parseColor("#88000000"); // Đậm hơn một chút cho sang
+            return ContextCompat.getColor(targetView.getContext(), R.color.colorBlurDark); // Đậm hơn một chút cho sang
         } else {
-            return Color.parseColor("#c0FFFFFF"); // Trắng mờ nhẹ
+            return ContextCompat.getColor(targetView.getContext(), R.color.colorBlurLight); // Trắng mờ nhẹ
         }
     }
 
@@ -104,9 +106,9 @@ public final class BlurEngine {
         
         // Cập nhật màu viền theo Theme hiện tại
         if (ThemeModeState.isDarkMode()) {
-            strokePaint.setColor(Color.parseColor("#80888888"));
+            strokePaint.setColor(ContextCompat.getColor(targetView.getContext(), R.color.colorPirmLight));
         } else {
-            strokePaint.setColor(Color.parseColor("#80888888"));
+            strokePaint.setColor(ContextCompat.getColor(targetView.getContext(), R.color.colorPirmDark));
         }
         return strokePaint;
     }
