@@ -3,10 +3,14 @@ package com.tool.tree
 import android.app.Activity
 import android.app.WallpaperManager
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.omarea.common.ui.ThemeMode
 import java.io.File
 import com.omarea.common.ui.BlurEngine
@@ -87,6 +91,7 @@ object ThemeModeState {
         val night = forceDark ?: (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_YES)
         themeMode.isDarkMode = night
         activity.setTheme(if (night) R.style.AppThemeWallpaper else R.style.AppThemeWallpaperLight)
+        
         try {
             val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
             if (useCustomWallpaper && customWallpaperFile.exists()) {
@@ -104,15 +109,38 @@ object ThemeModeState {
                 activity.window.setBackgroundDrawable(wallpaper.drawable)
             }
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            activity.window.apply {
-                statusBarColor = android.graphics.Color.TRANSPARENT
-                navigationBarColor = android.graphics.Color.TRANSPARENT
-                setDecorFitsSystemWindows(true)
-            }
-        } else {
-            activity.window.apply {
-                statusBarColor = android.graphics.Color.TRANSPARENT
+
+        // --- PHẦN XỬ LÝ CHIỀU CAO STATUS BAR & NAVIGATION BAR ---
+        activity.window.apply {
+            statusBarColor = Color.TRANSPARENT
+            navigationBarColor = Color.TRANSPARENT
+
+            // Kích hoạt chế độ tràn viền (Edge-to-Edge)
+            WindowCompat.setDecorFitsSystemWindows(this, false)
+
+            val decorView = decorView
+            val topBlur = decorView.findViewById<View>(activity.resources.getIdentifier("blur_top_container", "id", activity.packageName))
+            val bottomBlur = decorView.findViewById<View>(activity.resources.getIdentifier("blur_bottom_container", "id", activity.packageName))
+
+            // Lắng nghe WindowInsets để lấy chiều cao chuẩn của hệ thống
+            ViewCompat.setOnApplyWindowInsetsListener(decorView) { _, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                
+                // Cập nhật chiều cao cho container phía trên (Status Bar)
+                topBlur?.let {
+                    val params = it.layoutParams
+                    params.height = systemBars.top
+                    it.layoutParams = params
+                }
+
+                // Cập nhật chiều cao cho container phía dưới (Navigation Bar)
+                bottomBlur?.let {
+                    val params = it.layoutParams
+                    params.height = systemBars.bottom
+                    it.layoutParams = params
+                }
+                
+                insets
             }
         }
     }

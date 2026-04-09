@@ -14,6 +14,7 @@
         android:theme="?android:actionBarTheme">
 
         <com.omarea.common.ui.BlurTopBarLayout
+            android:id="@+id/blur_top_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
