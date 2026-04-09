@@ -106,7 +106,7 @@ public final class BlurEngine {
         if (ThemeModeState.isDarkMode()) {
             strokePaint.setColor(Color.parseColor("#25FFFFFF"));
         } else {
-            strokePaint.setColor(Color.parseColor("#25000000"));
+            strokePaint.setColor(Color.parseColor("#30000000"));
         }
         return strokePaint;
     }
