@@ -83,7 +83,7 @@
 
     <ProgressBar
         android:id="@+id/action_progress"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="8dp"
