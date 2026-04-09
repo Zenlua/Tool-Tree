@@ -1,7 +1,6 @@
 package com.omarea.common.ui;
 
 import android.graphics.*;
-import android.graphics.drawable.BitmapDrawable;
 import android.view.View;
 import com.tool.tree.ThemeModeState;
 
@@ -16,14 +15,17 @@ public final class BlurEngine {
     private View targetView;
     private int[] location = new int[2];
 
-    // Cache lại bitmap cũ để tái sử dụng, tránh tạo mới liên tục gây lag
+    // Sử dụng Rect để tính toán tọa độ cắt ảnh
+    private Rect srcRect = new Rect();
+    // Bitmap đệm để tránh tạo mới liên tục
     private Bitmap cachedBitmap;
+    private Canvas cachedCanvas;
 
     private int getBlurTintColor() {
         if (ThemeModeState.isDarkMode()) {
-            return Color.parseColor("#88000000"); // Dark: mờ tối
+            return Color.parseColor("#88000000");
         } else {
-            return Color.parseColor("#c0FFFFFF"); // Light: mờ trắng sáng
+            return Color.parseColor("#c0FFFFFF");
         }
     }
 
@@ -39,17 +41,18 @@ public final class BlurEngine {
             targetView.setOutlineProvider(null);
             targetView.setClipToOutline(false);
         }
-        // Listener này sẽ gọi updateBlur() mỗi khi màn hình sắp vẽ
         targetView.getViewTreeObserver().addOnPreDrawListener(new BlurPreDrawListener(this));
     }
 
-    // HÀM QUAN TRỌNG: Cập nhật và trả về Bitmap đã cắt đúng tọa độ
+    /**
+     * Lấy Bitmap mờ đã được cập nhật tọa độ. 
+     * Tối ưu hóa bằng cách không tạo mới Bitmap nếu kích thước không đổi.
+     */
     public Bitmap getUpdatedBlurBitmap() {
         if (isPaused || blurBitmap == null || targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
             return null;
         }
 
-        // Lấy tọa độ thực tế của View trên cửa sổ hiện tại
         targetView.getLocationInWindow(location);
         
         View rootView = targetView.getRootView();
@@ -61,23 +64,27 @@ public final class BlurEngine {
         int w = (int) (targetView.getWidth() * scaleX);
         int h = (int) (targetView.getHeight() * scaleY);
 
-        // Ràng buộc tọa độ trong phạm vi của ảnh blur gốc
         x = Math.max(0, Math.min(x, blurBitmap.getWidth() - w));
         y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
 
         if (w > 0 && h > 0) {
             try {
-                // Giải phóng bitmap cũ trước khi tạo mới để tránh tràn bộ nhớ (OOM)
-                if (cachedBitmap != null && !cachedBitmap.isRecycled()) {
-                    cachedBitmap.recycle();
+                // KIỂM TRA: Nếu kích thước View thay đổi hoặc chưa có cache thì mới khởi tạo lại
+                if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
+                    if (cachedBitmap != null) cachedBitmap.recycle();
+                    cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                    cachedCanvas = new Canvas(cachedBitmap);
                 }
 
-                // Cắt mảnh ảnh từ hình nền đã blur
-                cachedBitmap = Bitmap.createBitmap(blurBitmap, x, y, w, h);
+                // Cập nhật vùng cần cắt từ ảnh gốc
+                srcRect.set(x, y, x + w, y + h);
+
+                // Vẽ mảnh ảnh từ hình nền vào Bitmap đệm (Dùng Canvas để vẽ thay vì createBitmap liên tục)
+                cachedCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR); // Xóa cũ
+                cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
                 
-                // Vẽ đè màu Tint lên mảnh ảnh đã cắt
-                Canvas canvas = new Canvas(cachedBitmap);
-                canvas.drawColor(getBlurTintColor()); 
+                // Phủ lớp màu theme lên trên
+                cachedCanvas.drawColor(getBlurTintColor()); 
                 
                 return cachedBitmap;
             } catch (Exception e) {
@@ -87,16 +94,10 @@ public final class BlurEngine {
         return null;
     }
 
-    // Bỏ hàm updateBlur cũ dùng setBackground để tránh vòng lặp vô tận
-    @Deprecated
-    public void updateBlur() {
-        // Không dùng nữa
-    }
-
     public static Paint getStrokePaint() {
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setStyle(Paint.Style.STROKE);
-        p.setStrokeWidth(5.0f); // Độ dày viền nhỏ lại một chút cho thanh thoát
+        p.setStrokeWidth(5.0f); // Giảm nhẹ độ dày viền cho tinh tế
         
         if (ThemeModeState.isDarkMode()) {
             p.setColor(Color.parseColor("#25FFFFFF"));
@@ -108,5 +109,13 @@ public final class BlurEngine {
 
     public float getCornerRadius() {
         return cornerRadius;
+    }
+    
+    // Đừng quên dọn dẹp khi View bị hủy
+    public void destroy() {
+        if (cachedBitmap != null && !cachedBitmap.isRecycled()) {
+            cachedBitmap.recycle();
+            cachedBitmap = null;
+        }
     }
 }
