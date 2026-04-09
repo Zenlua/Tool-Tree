@@ -1,18 +1,23 @@
 package com.omarea.common.ui;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
 
 public class BlurViewLinearLayout extends LinearLayout {
     protected BlurEngine engine;
-    private RectF strokeRect = new RectF(); // Khai báo dùng lại để tránh cấp phát bộ nhớ trong onDraw
+    private RectF strokeRect = new RectF();
+    private Rect srcRect = new Rect();
+    private Rect dstRect = new Rect();
 
     public BlurViewLinearLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.engine = new BlurEngine(this);
+        // Quan trọng: Phải set false để hệ thống gọi hàm onDraw của ViewGroup
         setWillNotDraw(false); 
     }
 
@@ -28,7 +33,22 @@ public class BlurViewLinearLayout extends LinearLayout {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        // 1. Vẽ lớp kính mờ (Blur) trước khi vẽ nội dung con
+        if (!BlurEngine.isPaused) {
+            Bitmap blurFragment = engine.getUpdatedBlurBitmap();
+            if (blurFragment != null && !blurFragment.isRecycled()) {
+                srcRect.set(0, 0, blurFragment.getWidth(), blurFragment.getHeight());
+                dstRect.set(0, 0, getWidth(), getHeight());
+                
+                // Vẽ mảnh ảnh mờ khớp với vị trí hiện tại của View
+                canvas.drawBitmap(blurFragment, srcRect, dstRect, null);
+            }
+        }
+
+        // 2. Vẽ nội dung của View (Background mặc định, các View con như TabLayout, v.v.)
         super.onDraw(canvas);
+
+        // 3. Vẽ viền (Stroke) lên trên cùng để không bị che khuất
         drawStroke(canvas);
     }
 
@@ -36,27 +56,22 @@ public class BlurViewLinearLayout extends LinearLayout {
         float radius = engine.cornerRadius;
         float strokeWidth = BlurEngine.getStrokePaint().getStrokeWidth();
 
-        // GIẢI PHÁP: Thụt lề (Inset) vào một khoảng bằng nửa độ dày của viền
-        // Điều này đảm bảo toàn bộ nét vẽ nằm bên trong giới hạn của View
+        // Thụt lề (Inset) để viền nằm trọn trong View, không bị cut mất 1 nửa
         float inset = strokeWidth / 2f;
-        
-        strokeRect.set(
-            inset, 
-            inset, 
-            getWidth() - inset, 
-            getHeight() - inset
-        );
+        strokeRect.set(inset, inset, getWidth() - inset, getHeight() - inset);
 
         if (radius > 0) {
-            // Điều chỉnh lại bán kính bo góc để khớp với vị trí mới sau khi thụt lề
+            // Điều chỉnh bán kính bo góc nhẹ để khớp với đường thụt lề
             float adjustedRadius = Math.max(0, radius - inset);
-            
-            canvas.drawRoundRect(strokeRect, 
-                adjustedRadius, adjustedRadius, 
-                BlurEngine.getStrokePaint());
+            canvas.drawRoundRect(strokeRect, adjustedRadius, adjustedRadius, BlurEngine.getStrokePaint());
         } else {
-            // Nếu không bo góc, vẽ hình chữ nhật thường nhưng vẫn phải thụt lề
             canvas.drawRect(strokeRect, BlurEngine.getStrokePaint());
         }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        // Có thể thêm logic dọn dẹp bitmap trong engine tại đây nếu cần
     }
 }

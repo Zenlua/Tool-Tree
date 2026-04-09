@@ -10,20 +10,20 @@ public final class BlurEngine {
     public static Bitmap blurBitmap; 
     public static boolean isPaused = true;
     
-    // Giữ giá trị mặc định cho toàn hệ thống
     public static float DEFAULT_CORNER_RADIUS = 30.0f;
-    
-    // Chuyển thành biến instance (không có static) để mỗi View có một radius riêng
     public float cornerRadius = DEFAULT_CORNER_RADIUS;
 
     private View targetView;
     private int[] location = new int[2];
 
+    // Cache lại bitmap cũ để tái sử dụng, tránh tạo mới liên tục gây lag
+    private Bitmap cachedBitmap;
+
     private int getBlurTintColor() {
         if (ThemeModeState.isDarkMode()) {
-            return Color.parseColor("#44000000");
+            return Color.parseColor("#44000000"); // Dark: mờ tối
         } else {
-            return Color.parseColor("#c0FFFFFF");
+            return Color.parseColor("#c0FFFFFF"); // Light: mờ trắng sáng
         }
     }
 
@@ -32,7 +32,6 @@ public final class BlurEngine {
     }
 
     public void setup() {
-        // Kiểm tra nếu có bo góc thì mới tạo Outline, giúp tối ưu hiệu năng cho Top/Bottom Bar
         if (cornerRadius > 0) {
             targetView.setOutlineProvider(new BlurOutlineProvider(cornerRadius));
             targetView.setClipToOutline(true);
@@ -40,14 +39,17 @@ public final class BlurEngine {
             targetView.setOutlineProvider(null);
             targetView.setClipToOutline(false);
         }
+        // Listener này sẽ gọi updateBlur() mỗi khi màn hình sắp vẽ
         targetView.getViewTreeObserver().addOnPreDrawListener(new BlurPreDrawListener(this));
     }
 
-    public void updateBlur() {
-        if (isPaused || blurBitmap == null || targetView.getWidth() <= 0) {
-            return;
+    // HÀM QUAN TRỌNG: Cập nhật và trả về Bitmap đã cắt đúng tọa độ
+    public Bitmap getUpdatedBlurBitmap() {
+        if (isPaused || blurBitmap == null || targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
+            return null;
         }
 
+        // Lấy tọa độ thực tế của View trên cửa sổ hiện tại
         targetView.getLocationInWindow(location);
         
         View rootView = targetView.getRootView();
@@ -59,32 +61,51 @@ public final class BlurEngine {
         int w = (int) (targetView.getWidth() * scaleX);
         int h = (int) (targetView.getHeight() * scaleY);
 
+        // Ràng buộc tọa độ trong phạm vi của ảnh blur gốc
         x = Math.max(0, Math.min(x, blurBitmap.getWidth() - w));
         y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
 
         if (w > 0 && h > 0) {
-            Bitmap cropped = Bitmap.createBitmap(blurBitmap, x, y, w, h);
-            Canvas canvas = new Canvas(cropped);
-            canvas.drawColor(getBlurTintColor()); 
+            try {
+                // Giải phóng bitmap cũ trước khi tạo mới để tránh tràn bộ nhớ (OOM)
+                if (cachedBitmap != null && !cachedBitmap.isRecycled()) {
+                    cachedBitmap.recycle();
+                }
 
-            targetView.setBackground(new BitmapDrawable(targetView.getResources(), cropped));
+                // Cắt mảnh ảnh từ hình nền đã blur
+                cachedBitmap = Bitmap.createBitmap(blurBitmap, x, y, w, h);
+                
+                // Vẽ đè màu Tint lên mảnh ảnh đã cắt
+                Canvas canvas = new Canvas(cachedBitmap);
+                canvas.drawColor(getBlurTintColor()); 
+                
+                return cachedBitmap;
+            } catch (Exception e) {
+                return null;
+            }
         }
+        return null;
+    }
+
+    // Bỏ hàm updateBlur cũ dùng setBackground để tránh vòng lặp vô tận
+    @Deprecated
+    public void updateBlur() {
+        // Không dùng nữa
     }
 
     public static Paint getStrokePaint() {
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setStyle(Paint.Style.STROKE);
-        p.setStrokeWidth(5.0f);
+        p.setStrokeWidth(5.0f); // Độ dày viền nhỏ lại một chút cho thanh thoát
         
         if (ThemeModeState.isDarkMode()) {
-            p.setColor(Color.parseColor("#20FFFFFF"));
+            p.setColor(Color.parseColor("#25FFFFFF"));
         } else {
             p.setColor(Color.parseColor("#20000000"));
         }
         return p;
     }
 
-    // Không dùng static cho getter này nữa để lấy đúng giá trị của từng engine
     public float getCornerRadius() {
         return cornerRadius;
     }
