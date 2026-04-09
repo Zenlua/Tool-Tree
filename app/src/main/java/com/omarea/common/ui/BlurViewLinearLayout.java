@@ -34,10 +34,19 @@ public class BlurViewLinearLayout extends LinearLayout {
     // Tách riêng logic vẽ viền để lớp con dễ dàng ghi đè
     protected void drawStroke(Canvas canvas) {
         float radius = engine.cornerRadius;
-        if (radius > 0) {
-            canvas.drawRoundRect(0, 0, getWidth(), getHeight(), 
-                radius, radius, 
-                BlurEngine.getStrokePaint());
-        }
+        if (radius <= 0) return;
+    
+        Paint paint = BlurEngine.getStrokePaint();
+        float halfStroke = paint.getStrokeWidth() / 2f;
+    
+        RectF rect = new RectF(
+            halfStroke,
+            halfStroke,
+            getWidth() - halfStroke,
+            getHeight() - halfStroke
+        );
+    
+        float innerRadius = Math.max(0, radius - halfStroke);
+        canvas.drawRoundRect(rect, innerRadius, innerRadius, paint);
     }
 }

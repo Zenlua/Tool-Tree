@@ -74,7 +74,7 @@ public final class BlurEngine {
     public static Paint getStrokePaint() {
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setStyle(Paint.Style.STROKE);
-        p.setStrokeWidth(5.0f);
+        p.setStrokeWidth(4.0f);
         
         if (ThemeModeState.isDarkMode()) {
             p.setColor(Color.parseColor("#20FFFFFF"));
