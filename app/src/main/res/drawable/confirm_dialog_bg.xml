@@ -11,7 +11,7 @@
             <stroke
                 android:width="2dp"
                 android:color="?attr/colorParse" />
-            <corners android:radius="4dp" />
+            <corners android:radius="3dp" />
         </shape>
     </item>
 </layer-list>

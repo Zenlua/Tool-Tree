@@ -44,6 +44,7 @@
             android:textColor="@color/colorAccent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textStyle="bold"
             android:text="@string/appliction_desc" />
         <FrameLayout
             android:layout_width="match_parent"
@@ -54,6 +55,7 @@
                 android:textColor="@drawable/text_color_selector"
                 android:layout_gravity="center"
                 android:id="@+id/appliction_nameText"
+                android:textStyle="bold"
                 android:focusable="true"
                 android:clickable="true"
                 android:alpha="0.8"
@@ -70,6 +72,7 @@
                 android:textColor="@drawable/text_color_selector"
                 android:layout_gravity="center"
                 android:id="@+id/appliction_authorText"
+                android:textStyle="bold"
                 android:focusable="true"
                 android:clickable="true"
                 android:alpha="0.7"
@@ -119,6 +122,7 @@
                 <TextView
                     android:textSize="11sp"
                     android:padding="4dp"
+                    android:textStyle="bold"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="28dp"
@@ -126,6 +130,7 @@
                     android:textAlignment="textEnd" />
                 <TextView
                     android:textSize="11sp"
+                    android:textStyle="bold"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
