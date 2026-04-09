@@ -119,8 +119,8 @@ object ThemeModeState {
             WindowCompat.setDecorFitsSystemWindows(this, false)
 
             val decorView = decorView
-            val topBlur = decorView.findViewById<View>(activity.resources.getIdentifier("blur_top_container", "id", activity.packageName))
-            val bottomBlur = decorView.findViewById<View>(activity.resources.getIdentifier("blur_bottom_container", "id", activity.packageName))
+            val topBlur = decorView.findViewById<View>(activity.resources.getIdentifier("appbar", "id", activity.packageName))
+            val bottomBlur = decorView.findViewById<View>(activity.resources.getIdentifier("tabLayout", "id", activity.packageName))
 
             // Lắng nghe WindowInsets để lấy chiều cao chuẩn của hệ thống
             ViewCompat.setOnApplyWindowInsetsListener(decorView) { _, insets ->
