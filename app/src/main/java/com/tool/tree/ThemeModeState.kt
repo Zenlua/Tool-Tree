@@ -108,7 +108,7 @@ object ThemeModeState {
             activity.window.apply {
                 statusBarColor = android.graphics.Color.TRANSPARENT
                 navigationBarColor = android.graphics.Color.TRANSPARENT
-                setDecorFitsSystemWindows(false)
+                setDecorFitsSystemWindows(true)
             }
         } else {
             activity.window.apply {

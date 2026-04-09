@@ -21,7 +21,7 @@ public final class BlurEngine {
 
     private int getBlurTintColor() {
         if (ThemeModeState.isDarkMode()) {
-            return Color.parseColor("#44000000"); // Dark: mờ tối
+            return Color.parseColor("#88000000"); // Dark: mờ tối
         } else {
             return Color.parseColor("#c0FFFFFF"); // Light: mờ trắng sáng
         }
