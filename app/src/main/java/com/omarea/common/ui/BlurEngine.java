@@ -99,7 +99,7 @@ public final class BlurEngine {
         p.setStrokeWidth(5.0f); // Độ dày viền nhỏ lại một chút cho thanh thoát
         
         if (ThemeModeState.isDarkMode()) {
-            p.setColor(Color.parseColor("#20FFFFFF"));
+            p.setColor(Color.parseColor("#25FFFFFF"));
         } else {
             p.setColor(Color.parseColor("#20000000"));
         }

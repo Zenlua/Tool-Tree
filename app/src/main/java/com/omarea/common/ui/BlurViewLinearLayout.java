@@ -35,14 +35,7 @@ public class BlurViewLinearLayout extends LinearLayout {
     protected void onDraw(Canvas canvas) {
         // 1. Vẽ lớp kính mờ (Blur) trước khi vẽ nội dung con
         if (!BlurEngine.isPaused) {
-            Bitmap blurFragment = engine.getUpdatedBlurBitmap();
-            if (blurFragment != null && !blurFragment.isRecycled()) {
-                srcRect.set(0, 0, blurFragment.getWidth(), blurFragment.getHeight());
-                dstRect.set(0, 0, getWidth(), getHeight());
-                
-                // Vẽ mảnh ảnh mờ khớp với vị trí hiện tại của View
-                canvas.drawBitmap(blurFragment, srcRect, dstRect, null);
-            }
+           engine.updateBlur();
         }
 
         // 2. Vẽ nội dung của View (Background mặc định, các View con như TabLayout, v.v.)
