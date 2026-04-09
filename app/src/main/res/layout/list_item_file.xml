@@ -43,7 +43,7 @@
             android:lines="1"
             android:text=""
             android:textColor="#8888"
-            android:textSize="11dp" />
+            android:textSize="12sp" />
     </LinearLayout>
 
 
@@ -54,6 +54,6 @@
         android:paddingLeft="7dp"
         android:text=""
         android:textColor="#aaa"
-        android:textSize="11dp"
+        android:textSize="12sp"
         android:visibility="gone" />
 </LinearLayout>

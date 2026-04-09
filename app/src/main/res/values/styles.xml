@@ -70,7 +70,7 @@
 
     <style name="textSmall">
         <item name="android:textColor">?android:attr/textColorSecondary</item>
-        <item name="android:textSize">11dp</item>
+        <item name="android:textSize">12sp</item>
     </style>
 
     <style name="AppTheme.AnswerOverlay" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -220,14 +220,14 @@
         <item name="android:layout_height">32dp</item>
         <item name="android:paddingLeft">8dp</item>
         <item name="android:paddingRight">8dp</item>
-        <item name="android:textSize">11dp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">?android:colorAccent</item>
         <item name="android:stateListAnimator">@null</item>
     </style>
 
     <style name="textSmallTitle" parent="textTitle">
-        <item name="android:textSize">11dp</item>
+        <item name="android:textSize">12sp</item>
     </style>
 
     <style name="textDefault">
@@ -239,7 +239,7 @@
 
     <style name="textSecondary">
         <item name="android:textColor">?android:attr/textColorSecondary</item>
-        <item name="android:textSize">11dp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:fontFamily">sans-serif-light</item>
         <item name="android:alpha">0.5</item>
     </style>

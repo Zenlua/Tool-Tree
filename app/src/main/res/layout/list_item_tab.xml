@@ -25,7 +25,7 @@
         android:lines="1"
         android:textAlignment="center"
         android:textColor="?android:attr/textColorPrimary"
-        android:textSize="11sp"
+        android:textSize="12sp"
         android:textStyle="bold" />
 
 </LinearLayout>
