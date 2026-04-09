@@ -2,11 +2,13 @@ package com.omarea.common.ui;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
 
 public class BlurViewLinearLayout extends LinearLayout {
-    protected BlurEngine engine; // Đổi thành protected để lớp con truy cập trực tiếp
+    protected BlurEngine engine;
+    private RectF strokeRect = new RectF(); // Khai báo dùng lại để tránh cấp phát bộ nhớ trong onDraw
 
     public BlurViewLinearLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -14,7 +16,6 @@ public class BlurViewLinearLayout extends LinearLayout {
         setWillNotDraw(false); 
     }
 
-    // Cho phép lớp con lấy engine để cấu hình lại
     public BlurEngine getEngine() {
         return engine;
     }
@@ -31,22 +32,31 @@ public class BlurViewLinearLayout extends LinearLayout {
         drawStroke(canvas);
     }
 
-    // Tách riêng logic vẽ viền để lớp con dễ dàng ghi đè
     protected void drawStroke(Canvas canvas) {
         float radius = engine.cornerRadius;
-        if (radius <= 0) return;
-    
-        Paint paint = BlurEngine.getStrokePaint();
-        float halfStroke = paint.getStrokeWidth() / 2f;
-    
-        RectF rect = new RectF(
-            halfStroke,
-            halfStroke,
-            getWidth() - halfStroke,
-            getHeight() - halfStroke
+        float strokeWidth = BlurEngine.getStrokePaint().getStrokeWidth();
+
+        // GIẢI PHÁP: Thụt lề (Inset) vào một khoảng bằng nửa độ dày của viền
+        // Điều này đảm bảo toàn bộ nét vẽ nằm bên trong giới hạn của View
+        float inset = strokeWidth / 2f;
+        
+        strokeRect.set(
+            inset, 
+            inset, 
+            getWidth() - inset, 
+            getHeight() - inset
         );
-    
-        float innerRadius = Math.max(0, radius - halfStroke);
-        canvas.drawRoundRect(rect, innerRadius, innerRadius, paint);
+
+        if (radius > 0) {
+            // Điều chỉnh lại bán kính bo góc để khớp với vị trí mới sau khi thụt lề
+            float adjustedRadius = Math.max(0, radius - inset);
+            
+            canvas.drawRoundRect(strokeRect, 
+                adjustedRadius, adjustedRadius, 
+                BlurEngine.getStrokePaint());
+        } else {
+            // Nếu không bo góc, vẽ hình chữ nhật thường nhưng vẫn phải thụt lề
+            canvas.drawRect(strokeRect, BlurEngine.getStrokePaint());
+        }
     }
 }
