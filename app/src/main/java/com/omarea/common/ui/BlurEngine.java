@@ -91,7 +91,7 @@ public final class BlurEngine {
         if (ThemeModeState.isDarkMode()) {
             return Color.parseColor("#80000000"); // Đậm hơn một chút cho sang
         } else {
-            return Color.parseColor("#80FFFFFF"); // Trắng mờ nhẹ
+            return Color.parseColor("#B2FFFFFF"); // Trắng mờ nhẹ
         }
     }
 
@@ -106,7 +106,7 @@ public final class BlurEngine {
         if (ThemeModeState.isDarkMode()) {
             strokePaint.setColor(Color.parseColor("#25FFFFFF"));
         } else {
-            strokePaint.setColor(Color.parseColor("#20000000"));
+            strokePaint.setColor(Color.parseColor("#25000000"));
         }
         return strokePaint;
     }
