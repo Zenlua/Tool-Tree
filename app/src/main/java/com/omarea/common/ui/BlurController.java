@@ -55,19 +55,14 @@ public class BlurController {
                 blurredResult = FastBlurUtility.getBlurBackgroundDrawer(act);
             }
 
+            // Trong file BlurController.java
             if (blurredResult != null) {
-                // Quản lý bộ nhớ: Giải phóng bitmap cũ ngay lập tức
-                if (BlurEngine.blurBitmap != null && !BlurEngine.blurBitmap.isRecycled()) {
-                    BlurEngine.blurBitmap.recycle();
-                }
-                
+                // THAY ĐỔI: Không gọi recycle() ở đây nữa để tránh xung đột với luồng UI đang vẽ
+                // Việc gán tham chiếu mới sẽ giúp tham chiếu cũ được GC tự động dọn dẹp an toàn hơn
                 BlurEngine.blurBitmap = blurredResult;
                 BlurEngine.isPaused = false;
-                
-                // Cập nhật UI trên luồng chính
                 act.runOnUiThread(() -> {
                     if (act.getWindow() != null) {
-                        // Ép toàn bộ cửa sổ vẽ lại để áp dụng hiệu ứng kính mờ mới
                         act.getWindow().getDecorView().invalidate();
                     }
                 });

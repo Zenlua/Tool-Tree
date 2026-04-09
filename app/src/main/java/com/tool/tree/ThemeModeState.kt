@@ -3,14 +3,10 @@ package com.tool.tree
 import android.app.Activity
 import android.app.WallpaperManager
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import com.omarea.common.ui.ThemeMode
 import java.io.File
 import com.omarea.common.ui.BlurEngine
@@ -107,40 +103,6 @@ object ThemeModeState {
                 activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
             } else {
                 activity.window.setBackgroundDrawable(wallpaper.drawable)
-            }
-        }
-
-        // --- PHẦN XỬ LÝ CHIỀU CAO STATUS BAR & NAVIGATION BAR ---
-        activity.window.apply {
-            statusBarColor = Color.TRANSPARENT
-            navigationBarColor = Color.TRANSPARENT
-
-            // Kích hoạt chế độ tràn viền (Edge-to-Edge)
-            WindowCompat.setDecorFitsSystemWindows(this, false)
-
-            val decorView = decorView
-            val topBlur = decorView.findViewById<View>(activity.resources.getIdentifier("blur_top_container", "id", activity.packageName))
-            val bottomBlur = decorView.findViewById<View>(activity.resources.getIdentifier("blur_bottom_container", "id", activity.packageName))
-
-            // Lắng nghe WindowInsets để lấy chiều cao chuẩn của hệ thống
-            ViewCompat.setOnApplyWindowInsetsListener(decorView) { _, insets ->
-                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                
-                // Cập nhật chiều cao cho container phía trên (Status Bar)
-                topBlur?.let {
-                    val params = it.layoutParams
-                    params.height = systemBars.top
-                    it.layoutParams = params
-                }
-
-                // Cập nhật chiều cao cho container phía dưới (Navigation Bar)
-                bottomBlur?.let {
-                    val params = it.layoutParams
-                    params.height = systemBars.bottom
-                    it.layoutParams = params
-                }
-                
-                insets
             }
         }
     }

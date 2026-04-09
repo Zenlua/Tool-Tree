@@ -59,23 +59,26 @@ public final class BlurEngine {
         y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
 
         if (w > 0 && h > 0) {
+            // Trong file BlurEngine.java -> hàm getUpdatedBlurBitmap()
             try {
+                // Kiểm tra thêm điều kiện isRecycled() của ảnh gốc
+                if (blurBitmap == null || blurBitmap.isRecycled()) return null;
+            
                 if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
-                    if (cachedBitmap != null) cachedBitmap.recycle();
+                    // Thay vì recycle(), chỉ cần gán null để GC xử lý nếu muốn an toàn tuyệt đối
                     cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                     cachedCanvas = new Canvas(cachedBitmap);
                 }
-
+            
                 srcRect.set(x, y, x + w, y + h);
-
-                // Xóa cũ và vẽ mảnh mới
                 cachedCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR); 
-                cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
                 
-                // Nhuộm màu kính mờ
-                cachedCanvas.drawColor(getBlurTintColor()); 
-                
-                return cachedBitmap;
+                // Kiểm tra lại lần cuối trước khi vẽ
+                if (!blurBitmap.isRecycled()) {
+                    cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
+                    cachedCanvas.drawColor(getBlurTintColor()); 
+                    return cachedBitmap;
+                }
             } catch (Exception e) {
                 return null;
             }
