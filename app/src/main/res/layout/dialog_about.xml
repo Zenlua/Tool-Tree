@@ -3,9 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     style="@style/dialogRoot">
-    <com.omarea.common.ui.BlurViewLinearLayout
+    <LinearLayout
         android:orientation="vertical"
-        android:background="@drawable/krscript_item_ripple_inactive"
+        android:background="@drawable/krscript_item_ripple_kon"
         android:padding="@dimen/activity_horizontal_margin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -131,5 +131,5 @@
                     android:textAlignment="textEnd" />
             </LinearLayout>
         </LinearLayout>
-    </com.omarea.common.ui.BlurViewLinearLayout>
+    </LinearLayout>
 </FrameLayout>

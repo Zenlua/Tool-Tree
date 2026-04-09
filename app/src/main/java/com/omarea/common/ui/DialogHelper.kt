@@ -75,25 +75,6 @@ class DialogHelper {
         // 是否禁用模糊背景
         var disableBlurBg = false
 
-        // --- Cache blur bitmap ---
-        private object BlurCache {
-            private var cachedBlur: Bitmap? = null
-            fun getBlur(activity: Activity): Bitmap? {
-                val bmp = cachedBlur
-                return if (bmp == null || bmp.isRecycled) {
-                    cachedBlur = FastBlurUtility.getBlurBackgroundDrawer(activity)
-                    cachedBlur
-                } else {
-                    bmp
-                }
-            }
-    
-            fun clear() {
-                cachedBlur?.recycle()
-                cachedBlur = null
-            }
-        }
-
         fun animDialog(dialog: AlertDialog?): DialogWrap? {
             if (dialog != null && !dialog.isShowing) {
                 dialog.window?.run {
@@ -427,12 +408,7 @@ class DialogHelper {
                 val blurBitmap = if (disableBlurBg) {
                     null
                 } else {
-                    if (wallpaperMode) {
-                        FastBlurUtility.getBlurBackgroundDrawer(activity)
-                        //BlurCache.getBlur(activity)
-                    } else {
-                        FastBlurUtility.getBlurBackgroundDrawer(activity)
-                    }
+                    FastBlurUtility.getBlurBackgroundDrawer(activity)
                 }
                 if (blurBitmap != null) {
                     setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
