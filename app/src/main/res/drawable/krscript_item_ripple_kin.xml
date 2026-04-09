@@ -6,7 +6,7 @@
             <solid android:color="?attr/cardBg" />
             <corners android:radius="5dp" />
             <stroke
-                android:width="4dp"
+                android:width="1dp"
                 android:color="?attr/colorParse" />
         </shape>
     </item>

@@ -5,7 +5,7 @@
     style="@style/dialogRoot">
     <LinearLayout
         android:orientation="vertical"
-        android:background="@drawable/krscript_item_ripple_kon"
+        android:background="@drawable/confirm_dialog_bg"
         android:padding="@dimen/activity_horizontal_margin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -56,6 +56,7 @@
                 android:id="@+id/appliction_nameText"
                 android:focusable="true"
                 android:clickable="true"
+                android:alpha="0.8"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/appliction_name"
@@ -71,6 +72,7 @@
                 android:id="@+id/appliction_authorText"
                 android:focusable="true"
                 android:clickable="true"
+                android:alpha="0.7"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/appliction_author" />
