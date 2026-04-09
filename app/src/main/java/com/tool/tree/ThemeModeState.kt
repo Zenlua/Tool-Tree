@@ -36,15 +36,15 @@ object ThemeModeState {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                 activity.setTheme(if (isNight) R.style.AppThemeDark else R.style.AppTheme)
             }
-            1 -> { // Light
-                themeMode.isDarkMode = false
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                activity.setTheme(R.style.AppTheme)
-            }
-            2 -> { // Dark
+            1 -> { // Dark
                 themeMode.isDarkMode = true
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 activity.setTheme(R.style.AppThemeDark)
+            }
+            2 -> { // Light
+                themeMode.isDarkMode = false
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                activity.setTheme(R.style.AppTheme)
             }
             3 -> { // Wallpaper system
                 val nightModeFlags = activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
@@ -53,15 +53,15 @@ object ThemeModeState {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                 applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper)
             }
-            4 -> { // Wallpaper light
-                themeMode.isDarkMode = false
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper, false)
-            }
-            5 -> { // Wallpaper dark
+            4 -> { // Wallpaper Dark
                 themeMode.isDarkMode = true
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper, true)
+            }
+            5 -> { // Wallpaper Light
+                themeMode.isDarkMode = false
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper, false)
             }
         }
 

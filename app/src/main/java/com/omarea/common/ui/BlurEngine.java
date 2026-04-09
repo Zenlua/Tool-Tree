@@ -89,7 +89,7 @@ public final class BlurEngine {
     private int getBlurTintColor() {
         // Tối ưu màu sắc cho SDK 23+ (Dark mode hệ thống chưa có nên dựa vào ThemeModeState là chuẩn)
         if (ThemeModeState.isDarkMode()) {
-            return Color.parseColor("#80000000"); // Đậm hơn một chút cho sang
+            return Color.parseColor("#88000000"); // Đậm hơn một chút cho sang
         } else {
             return Color.parseColor("#c0FFFFFF"); // Trắng mờ nhẹ
         }
@@ -104,9 +104,9 @@ public final class BlurEngine {
         
         // Cập nhật màu viền theo Theme hiện tại
         if (ThemeModeState.isDarkMode()) {
-            strokePaint.setColor(Color.parseColor("#25FFFFFF"));
+            strokePaint.setColor(Color.parseColor("#80888888"));
         } else {
-            strokePaint.setColor(Color.parseColor("#25888888"));
+            strokePaint.setColor(Color.parseColor("#80888888"));
         }
         return strokePaint;
     }

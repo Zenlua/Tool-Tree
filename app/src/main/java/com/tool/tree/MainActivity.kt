@@ -347,11 +347,11 @@ class MainActivity : AppCompatActivity() {
         val themeSelector = layout.findViewById<TextView>(R.id.theme_selector)
         val themeNames = listOf(
             getString(R.string.theme_system_default),
-            getString(R.string.theme_light),
             getString(R.string.theme_dark),
+            getString(R.string.theme_light),
             getString(R.string.theme_wallpaper_system),
-            getString(R.string.theme_wallpaper_light),
-            getString(R.string.theme_wallpaper_dark)
+            getString(R.string.theme_wallpaper_dark),
+            getString(R.string.theme_wallpaper_light)
         )
         themeSelector.text = themeNames[themeConfig.getThemeMode().coerceAtMost(themeNames.size - 1)]
         themeSelector.setOnClickListener {
