@@ -10,8 +10,7 @@
         android:paddingRight="8dp"
         android:paddingBottom="@dimen/activity_vertical_margin"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:alpha="1">
+        android:layout_height="wrap_content" >
         <TextView
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
@@ -39,7 +38,7 @@
                     android:layout_height="40dp"
                     android:src="@drawable/power_shutdown"
                     android:scaleType="centerInside"
-                    android:alpha="0.9"
+                    android:alpha="0.8"
                     android:layout_marginEnd="@dimen/activity_horizontal_margin"
                     app:tint="#FFFFFFFF" />
                 <LinearLayout
@@ -70,7 +69,7 @@
                     android:layout_height="40dp"
                     android:src="@drawable/power_reboot"
                     android:scaleType="centerInside"
-                    android:alpha="0.9"
+                    android:alpha="0.8"
                     android:layout_marginEnd="@dimen/activity_horizontal_margin"
                     android:backgroundTint="#FF8BC34A"
                     app:tint="#FFFFFFFF" />
@@ -104,7 +103,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/power_recovery"
                 android:scaleType="centerInside"
-                android:alpha="0.9"
+                android:alpha="0.8"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:backgroundTint="#FF00BCD4"
                 app:tint="#FFFFFFFF" />
@@ -138,7 +137,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/power_fastboot"
                 android:scaleType="centerInside"
-                android:alpha="0.9"
+                android:alpha="0.8"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:backgroundTint="#FFEA3F00"
                 app:tint="#FFFFFFFF" />
@@ -171,7 +170,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/power_hot_reboot"
                 android:scaleType="centerInside"
-                android:alpha="0.9"
+                android:alpha="0.8"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:backgroundTint="#C8787878"
                 app:tint="#FFFFFFFF" />
@@ -205,7 +204,7 @@
                 android:layout_height="40dp"
                 android:src="@drawable/power_emergency"
                 android:scaleType="centerInside"
-                android:alpha="0.9"
+                android:alpha="0.8"
                 android:layout_marginEnd="@dimen/activity_horizontal_margin"
                 android:backgroundTint="#C8787878"
                 app:tint="#FFFFFFFF" />
