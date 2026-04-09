@@ -40,7 +40,7 @@
 
     <com.omarea.common.ui.OverScrollView
         android:layout_marginTop="16dp"
-        android:background="@drawable/confirm_dialog_bg"
+        android:background="@drawable/krscript_item_ripple_kon"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/bottom_actions"
@@ -83,10 +83,12 @@
 
     <ProgressBar
         android:id="@+id/action_progress"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="8dp"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp"
         android:layout_below="@+id/top_bar"
         android:indeterminate="true"
         android:max="100"

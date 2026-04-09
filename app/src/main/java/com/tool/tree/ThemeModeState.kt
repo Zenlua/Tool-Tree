@@ -104,6 +104,17 @@ object ThemeModeState {
                 activity.window.setBackgroundDrawable(wallpaper.drawable)
             }
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activity.window.apply {
+                statusBarColor = android.graphics.Color.TRANSPARENT
+                navigationBarColor = android.graphics.Color.TRANSPARENT
+                setDecorFitsSystemWindows(false)
+            }
+        } else {
+            activity.window.apply {
+                statusBarColor = android.graphics.Color.TRANSPARENT
+            }
+        }
     }
 
     private fun applyWindowFlags(activity: Activity) {
@@ -111,11 +122,12 @@ object ThemeModeState {
             activity.window.run {
                 clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
                 addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-                val flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                decorView.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    flags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                } else {
-                    flags
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    var flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        flags = flags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                    }
+                    decorView.systemUiVisibility = flags
                 }
             }
         }
