@@ -33,19 +33,16 @@ object ThemeModeState {
                 val nightModeFlags = activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
                 val isNight = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES
                 themeMode.isDarkMode = isNight
-                themeMode.isLightStatusBar = !isNight
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                 activity.setTheme(if (isNight) R.style.AppThemeDark else R.style.AppTheme)
             }
             1 -> { // Light
                 themeMode.isDarkMode = false
-                themeMode.isLightStatusBar = true
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                 activity.setTheme(R.style.AppTheme)
             }
             2 -> { // Dark
                 themeMode.isDarkMode = true
-                themeMode.isLightStatusBar = false
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 activity.setTheme(R.style.AppThemeDark)
             }
@@ -53,19 +50,16 @@ object ThemeModeState {
                 val nightModeFlags = activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
                 val isNight = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES
                 themeMode.isDarkMode = isNight
-                themeMode.isLightStatusBar = !isNight
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                 applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper)
             }
             4 -> { // Wallpaper dark
                 themeMode.isDarkMode = true
-                themeMode.isLightStatusBar = false
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper, true)
             }
             5 -> { // Wallpaper light
                 themeMode.isDarkMode = false
-                themeMode.isLightStatusBar = true
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                 applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper, false)
             }
@@ -90,15 +84,9 @@ object ThemeModeState {
         useCustomWallpaper: Boolean,
         forceDark: Boolean? = null
     ) {
-        val night = forceDark ?: (activity.resources.configuration.uiMode and
-                android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
-                android.content.res.Configuration.UI_MODE_NIGHT_YES)
-
+        val night = forceDark ?: (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_YES)
         themeMode.isDarkMode = night
-        themeMode.isLightStatusBar = !night
-
         activity.setTheme(if (night) R.style.AppThemeWallpaper else R.style.AppThemeWallpaperLight)
-
         try {
             val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
             if (useCustomWallpaper && customWallpaperFile.exists()) {
@@ -110,7 +98,6 @@ object ThemeModeState {
                 activity.window.setBackgroundDrawable(wallpaper.drawable)
             }
         } catch (e: Exception) {
-            // fallback an toàn
             if (wallpaperInfo != null && wallpaperInfo.packageName != null) {
                 activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
             } else {
@@ -124,7 +111,7 @@ object ThemeModeState {
             activity.window.run {
                 clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
                 addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-                val flags = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                val flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                 decorView.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     flags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
                 } else {
