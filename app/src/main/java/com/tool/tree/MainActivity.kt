@@ -350,8 +350,8 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.theme_light),
             getString(R.string.theme_dark),
             getString(R.string.theme_wallpaper_system),
-            getString(R.string.theme_wallpaper_dark),
-            getString(R.string.theme_wallpaper_light)
+            getString(R.string.theme_wallpaper_light),
+            getString(R.string.theme_wallpaper_dark)
         )
         themeSelector.text = themeNames[themeConfig.getThemeMode().coerceAtMost(themeNames.size - 1)]
         themeSelector.setOnClickListener {

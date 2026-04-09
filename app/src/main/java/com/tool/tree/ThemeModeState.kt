@@ -53,24 +53,25 @@ object ThemeModeState {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                 applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper)
             }
-            4 -> { // Wallpaper dark
-                themeMode.isDarkMode = true
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper, true)
-            }
-            5 -> { // Wallpaper light
+            4 -> { // Wallpaper light
                 themeMode.isDarkMode = false
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                 applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper, false)
+            }
+            5 -> { // Wallpaper dark
+                themeMode.isDarkMode = true
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                applyWallpaperMode(activity, wallpaper, wallpaperInfo, useCustomWallpaper, true)
             }
         }
 
         if (level >= 3) {
             BlurEngine.isPaused = false
-            BlurEngine.controller.captureAndBlur(activity)
+            if (BlurEngine.blurBitmap == null || BlurEngine.blurBitmap.isRecycled) {
+                BlurEngine.controller.captureAndBlur(activity)
+            }
         } else {
             BlurEngine.isPaused = true
-            BlurEngine.blurBitmap = null
         }
 
         applyWindowFlags(activity)
