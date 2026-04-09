@@ -15,7 +15,7 @@
             android:layout_height="wrap_content"
             android:minHeight="150dp"
             android:layout_marginTop="6dp"
-            android:background="@drawable/confirm_dialog_bg"
+            android:background="@drawable/krscript_item_ripple_kon"
             android:orientation="vertical">
 
             <TextView

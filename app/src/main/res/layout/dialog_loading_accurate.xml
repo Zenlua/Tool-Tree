@@ -11,7 +11,7 @@
         android:layout_height="match_parent"
         android:keepScreenOn="true"
         android:orientation="vertical"
-        android:background="@drawable/confirm_dialog_bg"
+        android:background="@drawable/krscript_item_ripple_kon"
         android:padding="26dp">
 
         <com.omarea.common.ui.ProgressCircle

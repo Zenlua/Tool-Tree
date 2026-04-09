@@ -5,7 +5,7 @@
     style="@style/dialogRoot">
     <LinearLayout
         android:orientation="vertical"
-        android:background="@drawable/confirm_dialog_bg"
+        android:background="@drawable/krscript_item_ripple_kon"
         android:padding="@dimen/activity_horizontal_margin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
