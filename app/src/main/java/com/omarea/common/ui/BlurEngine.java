@@ -91,7 +91,7 @@ public final class BlurEngine {
         if (ThemeModeState.isDarkMode()) {
             return Color.parseColor("#80000000"); // Đậm hơn một chút cho sang
         } else {
-            return Color.parseColor("#B2FFFFFF"); // Trắng mờ nhẹ
+            return Color.parseColor("#c0FFFFFF"); // Trắng mờ nhẹ
         }
     }
 
@@ -99,7 +99,7 @@ public final class BlurEngine {
         if (strokePaint == null) {
             strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             strokePaint.setStyle(Paint.Style.STROKE);
-            strokePaint.setStrokeWidth(6.0f); // Độ dày lý tưởng cho SDK 23+
+            strokePaint.setStrokeWidth(3.0f); // Độ dày lý tưởng cho SDK 23+
         }
         
         // Cập nhật màu viền theo Theme hiện tại
