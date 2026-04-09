@@ -8,6 +8,8 @@
         android:background="@drawable/krscript_item_ripple_kon"
         android:padding="@dimen/activity_horizontal_margin"
         android:layout_width="match_parent"
+        android:paddingRight="8dp"
+        android:paddingLeft="8dp"
         android:layout_height="wrap_content">
         <LinearLayout
             android:gravity="center_vertical"
