@@ -108,21 +108,48 @@ object ThemeModeState {
         }
     }
 
-    private fun applyWindowFlags(activity: Activity) {
-        if (!themeMode.isDarkMode) {
-            activity.window.run {
-                clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-                addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    var flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        flags = flags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                    }
-                    decorView.systemUiVisibility = flags
+private fun applyWindowFlags(activity: Activity) {
+    val window = activity.window
+    
+    // 1. Kích hoạt chế độ tràn viền (Edge-to-Edge)
+    androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+    window.statusBarColor = android.graphics.Color.TRANSPARENT
+    window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+    // 2. Tự động xử lý Padding cho Top và Bottom Bar
+    val rootView = window.decorView.rootView
+    androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
+        val systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        
+        // Tìm và đẩy padding cho Top Bar (Status Bar)
+        activity.findViewById<View>(R.id.blur_top_container)?.setPadding(0, systemBars.top, 0, 0)
+        
+        // Tìm và đẩy padding cho Bottom Bar (Navigation Bar)
+        activity.findViewById<View>(R.id.blur_bottom_container)?.setPadding(0, 0, 0, systemBars.bottom)
+        
+        insets
+    }
+
+    // 3. Logic xử lý Icon sáng/tối hiện tại của bạn
+    if (!themeMode.isDarkMode) {
+        window.run {
+            addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val controller = androidx.core.view.WindowInsetsControllerCompat(this, decorView)
+                controller.isAppearanceLightStatusBars = true
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    controller.isAppearanceLightNavigationBars = true
                 }
             }
         }
+    } else {
+        // Đảm bảo icon màu trắng khi ở Dark Mode
+        val controller = androidx.core.view.WindowInsetsControllerCompat(window, window.decorView)
+        controller.isAppearanceLightStatusBars = false
+        controller.isAppearanceLightNavigationBars = false
     }
+}
+
 
     fun getThemeMode(): ThemeMode = themeMode
 }
