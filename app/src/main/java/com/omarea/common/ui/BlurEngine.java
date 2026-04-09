@@ -99,7 +99,7 @@ public final class BlurEngine {
         if (strokePaint == null) {
             strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             strokePaint.setStyle(Paint.Style.STROKE);
-            strokePaint.setStrokeWidth(5.0f); // Độ dày lý tưởng cho SDK 23+
+            strokePaint.setStrokeWidth(6.0f); // Độ dày lý tưởng cho SDK 23+
         }
         
         // Cập nhật màu viền theo Theme hiện tại
