@@ -58,7 +58,7 @@ public class BlurViewLinearLayout extends LinearLayout {
 
     protected void drawStroke(Canvas canvas) {
         // Sử dụng paint tĩnh từ engine để tối ưu
-        android.graphics.Paint paint = BlurEngine.getStrokePaint();
+        android.graphics.Paint paint = BlurEngine.getStrokePaint(getContext());
         float radius = engine.cornerRadius;
         float strokeWidth = paint.getStrokeWidth();
 

@@ -89,27 +89,31 @@ public final class BlurEngine {
     }
 
     private int getBlurTintColor() {
-        // Tối ưu màu sắc cho SDK 23+ (Dark mode hệ thống chưa có nên dựa vào ThemeModeState là chuẩn)
-        if (ThemeModeState.isDarkMode()) {
-            return ContextCompat.getColor(targetView.getContext(), R.color.colorBlurDark); // Đậm hơn một chút cho sang
-        } else {
-            return ContextCompat.getColor(targetView.getContext(), R.color.colorBlurLight); // Trắng mờ nhẹ
-        }
+        Context context = targetView.getContext();
+        // Kiểm tra Dark Mode từ trạng thái ứng dụng
+        int colorRes = ThemeModeState.isDarkMode() ? R.color.colorBlurDark : R.color.colorBlurLight;
+        return ContextCompat.getColor(context, colorRes);
     }
 
-    public static Paint getStrokePaint() {
+    /**
+     * @param context Cần truyền context vào vì đây là phương thức static
+     */
+    public static Paint getStrokePaint(Context context) {
         if (strokePaint == null) {
             strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             strokePaint.setStyle(Paint.Style.STROKE);
-            strokePaint.setStrokeWidth(3.0f); // Độ dày lý tưởng cho SDK 23+
+            strokePaint.setStrokeWidth(3.0f); 
         }
         
-        // Cập nhật màu viền theo Theme hiện tại
-        if (ThemeModeState.isDarkMode()) {
-            strokePaint.setColor(ContextCompat.getColor(targetView.getContext(), R.color.colorPirmLight));
-        } else {
-            strokePaint.setColor(ContextCompat.getColor(targetView.getContext(), R.color.colorPirmDark));
+        // Xác định màu sắc dựa trên theme hiện tại
+        int colorRes = ThemeModeState.isDarkMode() ? R.color.colorPirmLight : R.color.colorPirmDark;
+        int color = ContextCompat.getColor(context, colorRes);
+        
+        // Chỉ cập nhật nếu màu sắc thực sự thay đổi để tối ưu hiệu năng vẽ
+        if (strokePaint.getColor() != color) {
+            strokePaint.setColor(color);
         }
+        
         return strokePaint;
     }
 

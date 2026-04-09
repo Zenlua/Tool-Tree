@@ -14,7 +14,7 @@ public class BlurTopBarLayout extends BlurViewLinearLayout {
 
     @Override
     protected void drawStroke(Canvas canvas) {
-        Paint paint = BlurEngine.getStrokePaint();
+        Paint paint = BlurEngine.getStrokePaint(getContext());
         float strokeWidth = paint.getStrokeWidth();
         
         // GIẢI PHÁP: Tính toán vị trí Y sao cho đường kẻ nằm trọn bên trong View

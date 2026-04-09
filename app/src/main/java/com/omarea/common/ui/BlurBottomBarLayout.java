@@ -17,7 +17,7 @@ public class BlurBottomBarLayout extends BlurViewLinearLayout {
     @Override
     protected void drawStroke(Canvas canvas) {
         // Lấy Paint tĩnh từ BlurEngine để đảm bảo màu sắc thay đổi theo Dark/Light Mode
-        Paint paint = BlurEngine.getStrokePaint();
+        Paint paint = BlurEngine.getStrokePaint(getContext());
         float strokeWidth = paint.getStrokeWidth();
         
         // GIẢI PHÁP: Vẽ đường kẻ ở cạnh trên cùng (Top Edge) của Bottom Bar
