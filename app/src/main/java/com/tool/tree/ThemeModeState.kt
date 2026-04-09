@@ -123,6 +123,8 @@ private fun applyWindowFlags(activity: Activity) {
         
         // Tìm và đẩy padding cho Top Bar (Status Bar)
         activity.findViewById<View>(R.id.blur_top_container)?.setPadding(0, systemBars.top, 0, 0)
+        activity.findViewById<View>(R.id.file_selector_list)?.setPadding(0, systemBars.top, 0, 0)
+        activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
         
         // Tìm và đẩy padding cho Bottom Bar (Navigation Bar)
         activity.findViewById<View>(R.id.blur_bottom_container)?.setPadding(0, 0, 0, systemBars.bottom)
