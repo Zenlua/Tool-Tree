@@ -18,6 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/menu_power"
+            android:layout_marginBottom="8dp"
             style="@style/textDefault" />
         <LinearLayout
             android:orientation="horizontal"
@@ -27,7 +28,7 @@
             <com.omarea.common.ui.BlurViewLinearLayout
                 android:orientation="horizontal"
                 android:id="@+id/power_shutdown"
-                android:background="@drawable/krscript_item_ripple"
+                android:background="@drawable/krscript_item_ripple_ac"
                 android:layout_height="65dp"
                 android:layout_weight="1.0"
                 style="@style/ListCardItemSmall">
@@ -58,7 +59,7 @@
             <com.omarea.common.ui.BlurViewLinearLayout
                 android:orientation="horizontal"
                 android:id="@+id/power_reboot"
-                android:background="@drawable/krscript_item_ripple"
+                android:background="@drawable/krscript_item_ripple_ac"
                 android:layout_height="65dp"
                 android:layout_weight="1.0"
                 style="@style/ListCardItemSmall">
@@ -91,7 +92,8 @@
         <com.omarea.common.ui.BlurViewLinearLayout
             android:orientation="horizontal"
             android:id="@+id/power_recovery"
-            android:background="@drawable/krscript_item_ripple"
+            android:background="@drawable/krscript_item_ripple_ac"
+            android:layout_marginBottom="8dp"
             android:layout_height="65dp"
             android:layout_weight="1.0"
             style="@style/ListCardItemSmall">
@@ -123,7 +125,8 @@
         <com.omarea.common.ui.BlurViewLinearLayout
             android:orientation="horizontal"
             android:id="@+id/power_fastboot"
-            android:background="@drawable/krscript_item_ripple"
+            android:background="@drawable/krscript_item_ripple_ac"
+            android:layout_marginBottom="8dp"
             android:layout_height="65dp"
             android:layout_weight="1.0"
             style="@style/ListCardItemSmall">
@@ -156,7 +159,8 @@
         <com.omarea.common.ui.BlurViewLinearLayout
             android:orientation="horizontal"
             android:id="@+id/power_hot_reboot"
-            android:background="@drawable/krscript_item_ripple"
+            android:background="@drawable/krscript_item_ripple_ac"
+            android:layout_marginBottom="8dp"
             android:layout_height="65dp"
             android:layout_weight="1.0"
             style="@style/ListCardItemSmall">
@@ -188,7 +192,8 @@
         <com.omarea.common.ui.BlurViewLinearLayout
             android:orientation="horizontal"
             android:id="@+id/power_emergency"
-            android:background="@drawable/krscript_item_ripple"
+            android:background="@drawable/krscript_item_ripple_ac"
+            android:layout_marginBottom="8dp"
             android:layout_height="65dp"
             android:layout_weight="1.0"
             style="@style/ListCardItemSmall">

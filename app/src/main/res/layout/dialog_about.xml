@@ -5,7 +5,7 @@
     style="@style/dialogRoot">
     <com.omarea.common.ui.BlurViewLinearLayout
         android:orientation="vertical"
-        android:background="@drawable/confirm_dialog_bg"
+        android:background="@drawable/krscript_item_ripple_ac"
         android:padding="@dimen/activity_horizontal_margin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -16,10 +16,10 @@
             android:layout_height="wrap_content">
             <TextView
                 android:textSize="11sp"
+                android:textStyle="bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/about_title"
-                android:alpha="0.8" />
+                android:text="@string/about_title" />
             <LinearLayout
                 android:gravity="end"
                 android:orientation="horizontal"
@@ -35,7 +35,7 @@
                     android:layout_height="wrap_content"
                     android:button="@null"
                     android:text="@string/notification_ui"
-                    android:alpha="0.5"
+                    android:alpha="0.6"
                     android:drawableEnd="?android:attr/listChoiceIndicatorMultiple" />
             </LinearLayout>
         </LinearLayout>
@@ -59,7 +59,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/appliction_name"
-                android:alpha="0.8"
                 android:textAlignment="center" />
         </FrameLayout>
         <FrameLayout
@@ -74,8 +73,7 @@
                 android:clickable="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/appliction_author"
-                android:alpha="0.7" />
+                android:text="@string/appliction_author" />
         </FrameLayout>
         <LinearLayout
             android:gravity="bottom"
@@ -89,13 +87,14 @@
                 android:layout_weight="50.0">
                 <TextView
                     android:textSize="11sp"
+                    android:textStyle="bold"
                     android:textColor="@drawable/text_color_selector"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/theme_text"
-                    android:alpha="0.5" />
+                    android:alpha="0.8" />
                 <TextView
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     android:ellipsize="end"
                     android:gravity="center_vertical"
@@ -107,7 +106,6 @@
                     android:layout_marginTop="4dp"
                     android:singleLine="true"
                     android:drawablePadding="6dp"
-                    android:alpha="0.7"
                     android:drawableEnd="@drawable/abc_spinner_mtrl_am_alpha" />
             </LinearLayout>
             <LinearLayout
@@ -123,7 +121,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="28dp"
                     android:text="@string/author_name"
-                    android:alpha="0.7"
                     android:textAlignment="textEnd" />
                 <TextView
                     android:textSize="11sp"
@@ -131,7 +128,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="@string/engine_version_name"
-                    android:alpha="0.7"
                     android:textAlignment="textEnd" />
             </LinearLayout>
         </LinearLayout>
