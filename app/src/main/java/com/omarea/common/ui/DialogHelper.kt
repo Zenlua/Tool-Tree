@@ -428,7 +428,8 @@ class DialogHelper {
                     null
                 } else {
                     if (wallpaperMode) {
-                        BlurCache.getBlur(activity)
+                        FastBlurUtility.getBlurBackgroundDrawer(activity)
+                        //BlurCache.getBlur(activity)
                     } else {
                         FastBlurUtility.getBlurBackgroundDrawer(activity)
                     }
