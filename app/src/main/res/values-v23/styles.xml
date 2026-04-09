@@ -17,6 +17,7 @@
         <item name="android:statusBarColor">#c0ffffff</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:colorForegroundInverse">#c0ffffff</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="cardBg">@color/cardBgLightTransparent</item>
     </style>
@@ -25,6 +26,7 @@
         <item name="android:navigationBarColor">#a0000000</item>
         <item name="android:statusBarColor">#a0000000</item>
         <item name="android:colorForegroundInverse">#a0000000</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="cardBg">@color/cardBgDarkTransparent</item>
     </style>
