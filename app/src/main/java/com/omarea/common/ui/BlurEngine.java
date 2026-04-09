@@ -5,6 +5,8 @@ import android.view.View;
 import com.tool.tree.ThemeModeState;
 import androidx.core.content.ContextCompat;
 import com.tool.tree.R;
+import android.content.Context;
+import androidx.core.content.ContextCompat;
 
 public final class BlurEngine {
     public static BlurController controller = new BlurController();
