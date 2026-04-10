@@ -223,19 +223,22 @@ class DialogLogFragment : DialogFragment() {
         override fun onProgress(current: Int, total: Int) {
             shellProgress?.post {
                 when {
-                    current < 0 -> {
-                        shellProgress?.visibility = View.VISIBLE
-                        shellProgress?.isIndeterminate = true
+                    current < 0 -> shellProgress?.apply {
+                        visibility = View.VISIBLE
+                        isIndeterminate = true
                     }
                     current >= total -> shellProgress?.visibility = View.GONE
-                    else -> {
-                        shellProgress?.visibility = View.VISIBLE
-                        shellProgress?.isIndeterminate = false
-                        shellProgress?.max = total
-                        shellProgress?.progress = current
-                        val params = shellProgress?.layoutParams
-                        params?.height = 4
-                        shellProgress?.layoutParams = params
+                    else -> shellProgress?.apply {
+                        visibility = View.VISIBLE
+                        isIndeterminate = false
+                        max = total
+                        progress = current
+                        (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+                            params.height = 4
+                            params.topMargin = 44
+                            layoutParams = params
+                        }
+                        requestLayout()
                     }
                 }
             }
