@@ -26,7 +26,6 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
-import android.view.animation.AnimationUtils
 
 class SplashActivity : AppCompatActivity() {
 
