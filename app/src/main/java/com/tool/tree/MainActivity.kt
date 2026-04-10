@@ -1,16 +1,25 @@
 package com.tool.tree
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.CompoundButton
+import android.widget.ArrayAdapter
+import android.widget.CheckBox
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.ListPopupWindow
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -29,11 +38,6 @@ import com.tool.tree.ui.TabIconHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import android.widget.TextView
-import android.widget.ArrayAdapter
-import androidx.appcompat.widget.ListPopupWindow
-import android.widget.CheckBox
-import android.net.Uri
 
 class MainActivity : AppCompatActivity() {
 
@@ -47,6 +51,7 @@ class MainActivity : AppCompatActivity() {
 
     private val ACTION_FILE_PATH_CHOOSER = 65400
     private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
+    private val NOTIFICATION_PERMISSION_REQUEST_CODE = 101
     private lateinit var adapter: MainPagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,13 +63,11 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
         setTitle(R.string.app_name)
 
-        progressBarDialog.showDialog(getString(R.string.please_wait))
-        loadTabs() // Load tab ngay khi vào
+        // Kiểm tra quyền thông báo dựa trên cài đặt của người dùng
+        checkNotificationPermission()
 
-        val themeConfig = ThemeConfig(applicationContext)
-        if (themeConfig.getAllowNotificationUI()) {
-            WakeLockService.startService(applicationContext)
-        }
+        progressBarDialog.showDialog(getString(R.string.please_wait))
+        loadTabs()
 
         onBackPressedDispatcher.addCallback(this) {
             startService(Intent(this@MainActivity, WakeLockService::class.java).apply {
@@ -75,9 +78,43 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ========================
-    // LOAD TAB
-    // ========================
+    private fun checkNotificationPermission() {
+        val themeConfig = ThemeConfig(this)
+        // Chỉ xin quyền nếu người dùng đang bật tính năng Thông báo trong cài đặt
+        if (themeConfig.getAllowNotificationUI()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                        NOTIFICATION_PERMISSION_REQUEST_CODE
+                    )
+                } else {
+                    WakeLockService.startService(applicationContext)
+                }
+            } else {
+                WakeLockService.startService(applicationContext)
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            val themeConfig = ThemeConfig(this)
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Người dùng đồng ý cấp quyền
+                if (themeConfig.getAllowNotificationUI()) {
+                    WakeLockService.startService(applicationContext)
+                }
+            } else {
+                // Người dùng từ chối: Tắt cấu hình thông báo để lần sau không hỏi nữa
+                themeConfig.setAllowNotificationUI(false)
+                Toast.makeText(this, "Notifications have been disabled due to lack of permission.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun loadTabs() {
         lifecycleScope.launch(Dispatchers.IO) {
             val favorites = getItems(krScriptConfig.favoriteConfig)
@@ -94,64 +131,28 @@ class MainActivity : AppCompatActivity() {
                     binding.viewPager.offscreenPageLimit = 2
                 }
 
-                // Tab Favorites
                 favorites?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(
-                        it,
-                        getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
-                        null,
-                        ThemeModeState.getThemeMode()
-                    )
-                    if (adapter.getFragment(0) == null) {
-                        adapter.addFragment(fragment, getString(R.string.tab_favorites))
-                    } else {
-                        adapter.replaceFragment(0, fragment)
-                    }
+                    val fragment = ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), null, ThemeModeState.getThemeMode())
+                    if (adapter.getFragment(0) == null) adapter.addFragment(fragment, getString(R.string.tab_favorites))
+                    else adapter.replaceFragment(0, fragment)
                 }
 
-                // Tab Pages
                 pages?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(
-                        it,
-                        getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
-                        null,
-                        ThemeModeState.getThemeMode()
-                    )
-                    if (adapter.getFragment(1) == null) {
-                        adapter.addFragment(fragment, getString(R.string.tab_pages))
-                    } else {
-                        adapter.replaceFragment(1, fragment)
-                    }
+                    val fragment = ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), null, ThemeModeState.getThemeMode())
+                    if (adapter.getFragment(1) == null) adapter.addFragment(fragment, getString(R.string.tab_pages))
+                    else adapter.replaceFragment(1, fragment)
                 }
 
-                // Tab 3
                 tab3Items?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(
-                        it,
-                        getKrScriptActionHandler(krScriptConfig.customTab3Config, false),
-                        null,
-                        ThemeModeState.getThemeMode()
-                    )
-                    if (adapter.getFragment(2) == null) {
-                        adapter.addFragment(fragment, getString(R.string.tab_custom3))
-                    } else {
-                        adapter.replaceFragment(2, fragment)
-                    }
+                    val fragment = ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), null, ThemeModeState.getThemeMode())
+                    if (adapter.getFragment(2) == null) adapter.addFragment(fragment, getString(R.string.tab_custom3))
+                    else adapter.replaceFragment(2, fragment)
                 }
 
-                // Tab 4
                 tab4Items?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(
-                        it,
-                        getKrScriptActionHandler(krScriptConfig.customTab4Config, false),
-                        null,
-                        ThemeModeState.getThemeMode()
-                    )
-                    if (adapter.getFragment(3) == null) {
-                        adapter.addFragment(fragment, getString(R.string.tab_custom4))
-                    } else {
-                        adapter.replaceFragment(3, fragment)
-                    }
+                    val fragment = ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), null, ThemeModeState.getThemeMode())
+                    if (adapter.getFragment(3) == null) adapter.addFragment(fragment, getString(R.string.tab_custom4))
+                    else adapter.replaceFragment(3, fragment)
                 }
 
                 setupTabs()
@@ -167,48 +168,14 @@ class MainActivity : AppCompatActivity() {
             val tab4Items = getItems(krScriptConfig.customTab4Config)
 
             withContext(Dispatchers.Main) {
-                // Reload Favorites
-                if (!favorites.isNullOrEmpty()) {
-                    (adapter.getFragment(0) as? ActionListFragment)?.updateData(
-                        favorites,
-                        getKrScriptActionHandler(krScriptConfig.favoriteConfig, true),
-                        ThemeModeState.getThemeMode()
-                    )
-                }
-
-                // Reload Pages
-                if (!pages.isNullOrEmpty()) {
-                    (adapter.getFragment(1) as? ActionListFragment)?.updateData(
-                        pages,
-                        getKrScriptActionHandler(krScriptConfig.pageListConfig, false),
-                        ThemeModeState.getThemeMode()
-                    )
-                }
-
-                // Reload Tab 3
-                if (!tab3Items.isNullOrEmpty()) {
-                    (adapter.getFragment(2) as? ActionListFragment)?.updateData(
-                        tab3Items,
-                        getKrScriptActionHandler(krScriptConfig.customTab3Config, false),
-                        ThemeModeState.getThemeMode()
-                    )
-                }
-
-                // Reload Tab 4
-                if (!tab4Items.isNullOrEmpty()) {
-                    (adapter.getFragment(3) as? ActionListFragment)?.updateData(
-                        tab4Items,
-                        getKrScriptActionHandler(krScriptConfig.customTab4Config, false),
-                        ThemeModeState.getThemeMode()
-                    )
-                }
+                if (!favorites.isNullOrEmpty()) (adapter.getFragment(0) as? ActionListFragment)?.updateData(favorites, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), ThemeModeState.getThemeMode())
+                if (!pages.isNullOrEmpty()) (adapter.getFragment(1) as? ActionListFragment)?.updateData(pages, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), ThemeModeState.getThemeMode())
+                if (!tab3Items.isNullOrEmpty()) (adapter.getFragment(2) as? ActionListFragment)?.updateData(tab3Items, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), ThemeModeState.getThemeMode())
+                if (!tab4Items.isNullOrEmpty()) (adapter.getFragment(3) as? ActionListFragment)?.updateData(tab4Items, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), ThemeModeState.getThemeMode())
             }
         }
     }
 
-    // ========================
-    // SETUP TAB LAYOUT
-    // ========================
     private fun setupTabs() {
         val tabHelper = TabIconHelper(this)
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
@@ -226,7 +193,7 @@ class MainActivity : AppCompatActivity() {
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 tabHelper.updateHighlight(binding.tabLayout, tab.position)
-                isFavoritesTab = tab.position == 0
+                isFavoritesTab = (tab.position == 0)
                 invalidateOptionsMenu()
             }
             override fun onTabUnselected(tab: TabLayout.Tab) {}
@@ -271,8 +238,7 @@ class MainActivity : AppCompatActivity() {
                 val page = clickableNode as? PageNode ?: pageNode
                 val intent = Intent().apply {
                     component = ComponentName(applicationContext, ActionPage::class.java)
-                    addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
-                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                    addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or Intent.FLAG_ACTIVITY_NO_HISTORY)
                     putExtra("page", page)
                     if (clickableNode is RunnableNode) putExtra("autoRunItemId", clickableNode.key)
                 }
@@ -299,7 +265,6 @@ class MainActivity : AppCompatActivity() {
             this.fileSelectedInterface = fileSelectedInterface
             true
         } catch (e: Exception) {
-            Toast.makeText(this, "File picker error: ${e.message}", Toast.LENGTH_SHORT).show()
             false
         }
     }
@@ -344,14 +309,13 @@ class MainActivity : AppCompatActivity() {
     private fun showSettingsDialog() {
         val layout = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
         val themeConfig = ThemeConfig(this)
+        
+        // Cấu hình Theme Selector
         val themeSelector = layout.findViewById<TextView>(R.id.theme_selector)
         val themeNames = listOf(
-            getString(R.string.theme_system_default),
-            getString(R.string.theme_dark),
-            getString(R.string.theme_light),
-            getString(R.string.theme_wallpaper_system),
-            getString(R.string.theme_wallpaper_dark),
-            getString(R.string.theme_wallpaper_light)
+            getString(R.string.theme_system_default), getString(R.string.theme_dark),
+            getString(R.string.theme_light), getString(R.string.theme_wallpaper_system),
+            getString(R.string.theme_wallpaper_dark), getString(R.string.theme_wallpaper_light)
         )
         themeSelector.text = themeNames[themeConfig.getThemeMode().coerceAtMost(themeNames.size - 1)]
         themeSelector.setOnClickListener {
@@ -360,7 +324,6 @@ class MainActivity : AppCompatActivity() {
             popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_dropdown, themeNames))
             popup.setOnItemClickListener { _, _, position, _ ->
                 themeConfig.setThemeMode(position)
-                ThemeModeState.switchTheme(this, position)
                 themeSelector.text = themeNames[position]
                 popup.dismiss()
             }
@@ -368,24 +331,25 @@ class MainActivity : AppCompatActivity() {
             popup.show()
         }
 
+        // Cấu hình CheckBox Notification
         val checkNotification = layout.findViewById<CheckBox>(R.id.notification_ui)
         checkNotification.isChecked = themeConfig.getAllowNotificationUI()
         checkNotification.setOnCheckedChangeListener { _, isChecked ->
             themeConfig.setAllowNotificationUI(isChecked)
+            // Nếu người dùng chủ động bật lại, thực hiện xin quyền ngay
+            if (isChecked) {
+                checkNotificationPermission()
+            }
         }
 
-        val appliction_nameText = layout.findViewById<TextView>(R.id.appliction_nameText)
-        val appliction_authorText = layout.findViewById<TextView>(R.id.appliction_authorText)
-        val authorUrl = "https://zenlua.github.io/Tool-Tree/website/Information.html"
-        val engineUrl = "https://github.com/Zenlua/Tool-Tree"
-        appliction_authorText.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authorUrl))
-            startActivity(intent)
+        // Các liên kết thông tin
+        layout.findViewById<TextView>(R.id.appliction_authorText).setOnClickListener {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://zenlua.github.io/Tool-Tree/website/Information.html")))
         }
-        appliction_nameText.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(engineUrl))
-            startActivity(intent)
+        layout.findViewById<TextView>(R.id.appliction_nameText).setOnClickListener {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Zenlua/Tool-Tree")))
         }
+
         DialogHelper.customDialog(this, layout)
     }
 }

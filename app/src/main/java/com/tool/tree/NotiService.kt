@@ -3,6 +3,7 @@ package com.tool.tree
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.os.Build
@@ -44,19 +45,33 @@ class NotiService : Service() {
             val notificationChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Notification",
-                NotificationManager.IMPORTANCE_HIGH // Đặt độ ưu tiên cao để thông báo có thể hiện thị ở chế độ Heads-Up
+                NotificationManager.IMPORTANCE_HIGH // Đặt độ ưu tiên cao để hiển thị Heads-Up
             ).apply {
-                // Thiết lập thông tin cho Notification Channel
                 setSound(null, null)
                 enableLights(false)
                 enableVibration(false)
-                importance = NotificationManager.IMPORTANCE_HIGH // Đảm bảo rằng thông báo có độ ưu tiên cao
+                importance = NotificationManager.IMPORTANCE_HIGH
             }
 
             notificationManager?.createNotificationChannel(notificationChannel)
         }
 
-        // Tạo Notification Builder
+        // 1. Tạo Intent để mở lại đúng task trước đó của ứng dụng
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+        }
+
+        // 2. Bọc Intent vào PendingIntent
+        val contentPendingIntent = launchIntent?.let {
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            PendingIntent.getActivity(this, 0, it, flags)
+        }
+
+        // 3. Tạo Notification Builder
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, CHANNEL_ID)
         } else {
@@ -64,12 +79,17 @@ class NotiService : Service() {
         }
 
         builder.apply {
-            setContentTitle(title)  // Tiêu đề là tên app mặc định
+            setContentTitle(title)
             setContentText(message)
             setStyle(Notification.BigTextStyle().bigText(message))
-            setSmallIcon(applicationInfo.icon)  // Sử dụng biểu tượng mặc định của ứng dụng
+            setSmallIcon(applicationInfo.icon)
             setAutoCancel(true)
-            setPriority(Notification.PRIORITY_HIGH)  // Đặt độ ưu tiên cao để hiển thị heads-up notification
+            setPriority(Notification.PRIORITY_HIGH) // Heads-up cho Android cũ
+            
+            // 4. Gắn click action mở app
+            contentPendingIntent?.let {
+                setContentIntent(it)
+            }
         }
 
         // Hiển thị thông báo
