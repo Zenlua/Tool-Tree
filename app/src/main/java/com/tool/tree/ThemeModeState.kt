@@ -64,8 +64,8 @@ object ThemeModeState {
             }
         }
 
-        // CẬP NHẬT TẠI ĐÂY: Luôn gọi captureAndBlur khi ở chế độ Wallpaper
-        // BlurController sẽ tự chịu trách nhiệm so sánh file cũ/mới
+        // CẬP NHẬT: Luôn gọi captureAndBlur khi ở chế độ Wallpaper (level >= 3)
+        // Không sử dụng check null ở đây vì BlurController đã có logic so sánh File Size bên trong
         if (level >= 3) {
             BlurEngine.isPaused = false
             BlurEngine.controller.captureAndBlur(activity)
@@ -98,7 +98,7 @@ object ThemeModeState {
             } else if (wallpaperInfo != null && wallpaperInfo.packageName != null) {
                 activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
             } else {
-                // Xóa cache WallpaperManager trước khi lấy Drawable
+                // CẬP NHẬT: Xóa cache của WallpaperManager trước khi lấy Drawable hệ thống
                 wallpaper.forgetLoadedWallpaper()
                 activity.window.setBackgroundDrawable(wallpaper.drawable)
             }

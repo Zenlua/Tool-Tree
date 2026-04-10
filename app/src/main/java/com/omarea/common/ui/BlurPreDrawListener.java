@@ -5,9 +5,8 @@ import android.view.ViewTreeObserver;
 
 public class BlurPreDrawListener implements ViewTreeObserver.OnPreDrawListener {
     private View targetView;
-    private BlurEngine engine; // Thêm engine để đồng bộ logic
+    private BlurEngine engine; 
 
-    // Cập nhật Constructor để nhận 2 tham số như BlurEngine đang gọi
     public BlurPreDrawListener(BlurEngine engine, View view) {
         this.engine = engine;
         this.targetView = view;
@@ -15,8 +14,8 @@ public class BlurPreDrawListener implements ViewTreeObserver.OnPreDrawListener {
 
     @Override
     public boolean onPreDraw() {
-        // Chỉ invalidate khi không bị tạm dừng và có dữ liệu bitmap
-        if (!BlurEngine.isPaused && BlurEngine.blurBitmap != null) {
+        // Chỉ ra lệnh vẽ lại khi có dữ liệu bitmap và không bị tạm dừng
+        if (!BlurEngine.isPaused && BlurEngine.blurBitmap != null && !BlurEngine.blurBitmap.isRecycled()) {
             targetView.invalidate();
         }
         return true;

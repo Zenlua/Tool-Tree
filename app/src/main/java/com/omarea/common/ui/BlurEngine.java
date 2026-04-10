@@ -6,11 +6,12 @@ import com.tool.tree.ThemeModeState;
 import androidx.core.content.ContextCompat;
 import com.tool.tree.R;
 import android.content.Context;
-import androidx.core.content.ContextCompat;
 
 public final class BlurEngine {
     public static BlurController controller = new BlurController();
-    public static Bitmap blurBitmap; 
+    
+    // CẬP NHẬT: volatile đảm bảo biến được cập nhật ngay lập tức giữa các luồng
+    public static volatile Bitmap blurBitmap; 
     public static boolean isPaused = true;
     
     public static float DEFAULT_CORNER_RADIUS = 30.0f;
@@ -22,8 +23,6 @@ public final class BlurEngine {
     private Rect srcRect = new Rect();
     private Bitmap cachedBitmap;
     private Canvas cachedCanvas;
-    
-    // Cache lại Paint để tránh cấp phát bộ nhớ trong onDraw
     private static Paint strokePaint;
 
     public BlurEngine(View view) {
@@ -38,8 +37,6 @@ public final class BlurEngine {
             targetView.setOutlineProvider(null);
             targetView.setClipToOutline(false);
         }
-        
-        // SỬA LỖI: Truyền cả engine và targetView vào listener
         targetView.getViewTreeObserver().addOnPreDrawListener(new BlurPreDrawListener(this, targetView));
     }
 
@@ -63,13 +60,10 @@ public final class BlurEngine {
         y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
 
         if (w > 0 && h > 0) {
-            // Trong file BlurEngine.java -> hàm getUpdatedBlurBitmap()
             try {
-                // Kiểm tra thêm điều kiện isRecycled() của ảnh gốc
                 if (blurBitmap == null || blurBitmap.isRecycled()) return null;
             
                 if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
-                    // Thay vì recycle(), chỉ cần gán null để GC xử lý nếu muốn an toàn tuyệt đối
                     cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                     cachedCanvas = new Canvas(cachedBitmap);
                 }
@@ -77,7 +71,6 @@ public final class BlurEngine {
                 srcRect.set(x, y, x + w, y + h);
                 cachedCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR); 
                 
-                // Kiểm tra lại lần cuối trước khi vẽ
                 if (!blurBitmap.isRecycled()) {
                     cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
                     cachedCanvas.drawColor(getBlurTintColor()); 
@@ -92,14 +85,10 @@ public final class BlurEngine {
 
     private int getBlurTintColor() {
         Context context = targetView.getContext();
-        // Kiểm tra Dark Mode từ trạng thái ứng dụng
         int colorRes = ThemeModeState.isDarkMode() ? R.color.colorBlurDark : R.color.colorBlurLight;
         return ContextCompat.getColor(context, colorRes);
     }
 
-    /**
-     * @param context Cần truyền context vào vì đây là phương thức static
-     */
     public static Paint getStrokePaint(Context context) {
         if (strokePaint == null) {
             strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -107,11 +96,9 @@ public final class BlurEngine {
             strokePaint.setStrokeWidth(3.0f); 
         }
         
-        // Xác định màu sắc dựa trên theme hiện tại
         int colorRes = ThemeModeState.isDarkMode() ? R.color.colorPirmLight : R.color.colorPirmDark;
         int color = ContextCompat.getColor(context, colorRes);
         
-        // Chỉ cập nhật nếu màu sắc thực sự thay đổi để tối ưu hiệu năng vẽ
         if (strokePaint.getColor() != color) {
             strokePaint.setColor(color);
         }
@@ -119,10 +106,6 @@ public final class BlurEngine {
         return strokePaint;
     }
 
-    public float getCornerRadius() {
-        return cornerRadius;
-    }
-    
     public void destroy() {
         if (cachedBitmap != null && !cachedBitmap.isRecycled()) {
             cachedBitmap.recycle();

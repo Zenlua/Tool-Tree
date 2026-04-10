@@ -12,7 +12,7 @@ import java.lang.ref.WeakReference;
 
 public class BlurController {
 
-    // Lưu trữ thông tin file cũ để so sánh
+    // Sử dụng biến static để ghi nhớ trạng thái file giữa các lần gọi
     private static long lastFileLength = -1;
     private static long lastFileModified = -1;
     
@@ -26,35 +26,34 @@ public class BlurController {
             Bitmap source = null;
             Context context = act.getApplicationContext();
 
-            // 1. Kiểm tra Wallpaper tùy chỉnh
+            // 1. Kiểm tra Wallpaper tùy chỉnh trong /files/home/etc/wallpaper.jpg
             File customWallpaperFile = new File(act.getFilesDir(), "home/etc/wallpaper.jpg");
             
             if (customWallpaperFile.exists()) {
                 long currentLength = customWallpaperFile.length();
                 long currentModified = customWallpaperFile.lastModified();
 
-                // Nếu file giống hệt lần trước thì thoát, tránh xử lý thừa
+                // KIỂM TRA THAY ĐỔI: Nếu dung lượng và thời gian cũ giống hệt thì thoát
                 if (currentLength == lastFileLength && currentModified == lastFileModified) {
-                    // Nếu đã có ảnh blur rồi thì không cần làm lại
                     if (BlurEngine.blurBitmap != null && !BlurEngine.blurBitmap.isRecycled()) {
-                        return;
+                        return; // Không có gì thay đổi, không cần làm mờ lại
                     }
                 }
 
-                // Cập nhật thông tin file mới
+                // Cập nhật dấu vết mới
                 lastFileLength = currentLength;
                 lastFileModified = currentModified;
                 source = BitmapFactory.decodeFile(customWallpaperFile.getAbsolutePath());
             } else {
-                // Reset nếu không dùng file custom
+                // Reset dấu vết nếu file custom bị xóa
                 lastFileLength = -1;
                 lastFileModified = -1;
             }
 
-            // 2. Lấy Wallpaper hệ thống nếu không có file hoặc file lỗi
+            // 2. Lấy Wallpaper hệ thống nếu không có file custom
             if (source == null) {
                 WallpaperManager wm = WallpaperManager.getInstance(context);
-                // Ép hệ thống xóa cache để lấy ảnh mới nhất (vừa đổi ngoài launcher)
+                // XÓA CACHE: Buộc hệ thống đọc lại ảnh nền mới nhất từ Launcher
                 wm.forgetLoadedWallpaper(); 
                 
                 if (wm.getWallpaperInfo() == null) { 
@@ -65,7 +64,7 @@ public class BlurController {
                 }
             }
 
-            // Xử lý Blur
+            // 3. Xử lý làm mờ
             Bitmap blurredResult;
             if (source != null) {
                 blurredResult = FastBlurUtility.startBlurBackground(source);
@@ -77,7 +76,7 @@ public class BlurController {
                 BlurEngine.blurBitmap = blurredResult;
                 BlurEngine.isPaused = false;
                 
-                // Cập nhật UI ngay lập tức
+                // Ép UI vẽ lại ngay lập tức
                 act.runOnUiThread(() -> {
                     if (act != null && !act.isFinishing() && act.getWindow() != null) {
                         act.getWindow().getDecorView().invalidate();
