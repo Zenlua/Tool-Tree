@@ -38,20 +38,9 @@
             style="@style/dialogDesc" />
 
     </LinearLayout>
-    <ProgressBar
-        android:id="@+id/action_progress"
-        android:layout_marginTop="2dp"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="8dp"
-        android:paddingStart="1dp"
-        android:paddingEnd="1dp"
-        android:layout_below="@+id/btn_hide"
-        android:indeterminate="true"
-        android:max="100"
-        android:progress="0" />
+
     <com.omarea.common.ui.OverScrollView
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="16dp"
         android:background="@drawable/krscript_item_ripple_kon"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -94,4 +83,18 @@
             android:text="@string/btn_exit" />
 
     </LinearLayout>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/action_progress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btn_hide"
+        android:layout_marginTop="14dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:indeterminate="true"
+        app:trackThickness="4dp"
+        app:trackCornerRadius="2dp"
+        app:indicatorColor="?attr/colorPrimary" />
+
 </RelativeLayout>
