@@ -62,7 +62,7 @@ class DialogLogFragment : DialogFragment() {
 
         nodeInfo?.let { node ->
             if (node.reloadPage) {
-                binding.btnHide.visibility = View.INVISIBLE
+                binding.btnHide.visibility = View.GONE
             }
 
             val shellHandler = openExecutor(node)
@@ -118,20 +118,20 @@ class DialogLogFragment : DialogFragment() {
             binding.btnHide.visibility = View.VISIBLE
             binding.btnCancel.visibility = View.VISIBLE
         } else {
-            binding.btnHide.visibility = View.INVISIBLE
+            binding.btnHide.visibility = View.GONE
             binding.btnCancel.visibility = View.GONE
         }
 
         if (nodeInfo.title.isNotEmpty()) {
             binding.title.text = nodeInfo.title
         } else {
-            binding.title.visibility = View.INVISIBLE
+            binding.title.visibility = View.GONE
         }
 
         if (nodeInfo.desc.isNotEmpty()) {
             binding.desc.text = nodeInfo.desc
         } else {
-            binding.desc.visibility = View.INVISIBLE
+            binding.desc.visibility = View.GONE
         }
 
         binding.actionProgress.isIndeterminate = true
@@ -143,10 +143,10 @@ class DialogLogFragment : DialogFragment() {
                 onExit.run()
                 offScreen()
                 _binding?.let { b ->
-                    b.btnHide.visibility = View.INVISIBLE
+                    b.btnHide.visibility = View.GONE
                     b.btnCancel.visibility = View.GONE
                     b.btnExit.visibility = View.VISIBLE
-                    b.actionProgress.visibility = View.INVISIBLE
+                    b.actionProgress.visibility = View.GONE
                 }
                 isCancelable = true
             }
@@ -227,7 +227,7 @@ class DialogLogFragment : DialogFragment() {
                         shellProgress?.visibility = View.VISIBLE
                         shellProgress?.isIndeterminate = true
                     }
-                    current >= total -> shellProgress?.visibility = View.GONE
+                    current >= total -> shellProgress?.visibility = View.INVISIBLE
                     else -> {
                         shellProgress?.visibility = View.VISIBLE
                         shellProgress?.isIndeterminate = false

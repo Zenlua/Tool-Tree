@@ -25,17 +25,12 @@
 
         <TextView
             android:id="@+id/title"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:paddingTop="0dp"
             style="@style/dialogTitle" />
 
         <TextView
             android:id="@+id/desc"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:paddingTop="0dp"
             style="@style/dialogDesc" />
+
     </LinearLayout>
 
     <com.omarea.common.ui.OverScrollView
@@ -55,6 +50,7 @@
             android:fontFamily="monospace"
             android:textSize="12sp"
             android:padding="12dp" />
+
     </com.omarea.common.ui.OverScrollView>
 
     <LinearLayout
@@ -79,6 +75,7 @@
             android:id="@+id/btn_exit"
             style="@style/dialogConfirmBtn"
             android:text="@string/btn_exit" />
+
     </LinearLayout>
 
     <ProgressBar
