@@ -11,32 +11,53 @@ import java.io.File;
 import java.lang.ref.WeakReference;
 
 public class BlurController {
+
+    // Lưu trữ trạng thái file để so sánh ở lần chạy kế tiếp
+    private static long lastFileLength = -1;
+    private static long lastFileModified = -1;
     
     /**
      * Chụp và làm mờ ảnh nền. 
-     * Đã lược bỏ kiểm tra quyền vì đã được xử lý ở logic bên ngoài.
      */
     public void captureAndBlur(Activity activity) {
         final WeakReference<Activity> activityRef = new WeakReference<>(activity);
         
         new Thread(() -> {
             Activity act = activityRef.get();
-            // Kiểm tra an toàn trước khi xử lý
             if (act == null || act.isFinishing() || act.isDestroyed()) return;
 
             Bitmap source = null;
             Context context = act.getApplicationContext();
 
-            // 1. Ưu tiên: Wallpaper tùy chỉnh từ thư mục riêng của app
+            // 1. Kiểm tra Wallpaper tùy chỉnh trong internal storage
             File customWallpaperFile = new File(act.getFilesDir(), "home/etc/wallpaper.jpg");
+            
             if (customWallpaperFile.exists()) {
+                long currentLength = customWallpaperFile.length();
+                long currentModified = customWallpaperFile.lastModified();
+
+                // KIỂM TRA THAY ĐỔI: Nếu size và thời gian giống hệt cũ thì bỏ qua không xử lý lại
+                if (currentLength == lastFileLength && currentModified == lastFileModified) {
+                    return; 
+                }
+
+                // Cập nhật dấu vết file mới
+                lastFileLength = currentLength;
+                lastFileModified = currentModified;
+
                 source = BitmapFactory.decodeFile(customWallpaperFile.getAbsolutePath());
+            } else {
+                // Nếu file custom không tồn tại, reset dấu vết để có thể nhận diện lại nếu file xuất hiện sau này
+                lastFileLength = -1;
+                lastFileModified = -1;
             }
 
-            // 2. Kế tiếp: Lấy trực tiếp Wallpaper hệ thống
+            // 2. Kế tiếp: Lấy trực tiếp Wallpaper hệ thống nếu không có file custom
             if (source == null) {
                 WallpaperManager wm = WallpaperManager.getInstance(context);
-                // wallpaperInfo == null xác nhận đây là ảnh tĩnh (không phải Live Wallpaper)
+                // Xóa cache cũ của WallpaperManager để đảm bảo lấy ảnh mới nhất nếu hệ thống vừa đổi
+                wm.forgetLoadedWallpaper(); 
+                
                 if (wm.getWallpaperInfo() == null) { 
                     Drawable drawable = wm.getDrawable();
                     if (drawable instanceof BitmapDrawable) {
@@ -45,24 +66,22 @@ public class BlurController {
                 }
             }
 
-            // Xử lý kết quả mờ
+            // Xử lý làm mờ
             Bitmap blurredResult;
             if (source != null) {
-                // Làm mờ từ nguồn ảnh wallpaper (nhanh và sạch hơn)
                 blurredResult = FastBlurUtility.startBlurBackground(source);
             } else {
-                // Cuối cùng: Chụp màn hình nếu không lấy được ảnh nền (Fallback)
+                // Fallback: Chụp màn hình (Lưu ý: Fallback này có thể không cần check file size)
                 blurredResult = FastBlurUtility.getBlurBackgroundDrawer(act);
             }
 
-            // Trong file BlurController.java
             if (blurredResult != null) {
-                // THAY ĐỔI: Không gọi recycle() ở đây nữa để tránh xung đột với luồng UI đang vẽ
-                // Việc gán tham chiếu mới sẽ giúp tham chiếu cũ được GC tự động dọn dẹp an toàn hơn
                 BlurEngine.blurBitmap = blurredResult;
                 BlurEngine.isPaused = false;
+                
+                // Cập nhật UI
                 act.runOnUiThread(() -> {
-                    if (act.getWindow() != null) {
+                    if (act != null && !act.isFinishing() && act.getWindow() != null) {
                         act.getWindow().getDecorView().invalidate();
                     }
                 });
