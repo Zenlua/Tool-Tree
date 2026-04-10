@@ -26,6 +26,7 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
+import android.view.animation.AnimationUtils
 
 class SplashActivity : AppCompatActivity() {
 
@@ -62,9 +63,8 @@ class SplashActivity : AppCompatActivity() {
             showAgreementDialog()
         }
 
-        val imageView = findViewById<ImageView>(R.id.start_logo_xml)
         val rotateAnim = AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate)
-        imageView.startAnimation(rotateAnim)
+        binding.startLogoXml.startAnimation(rotateAnim)
 
         applyTheme()
     }
