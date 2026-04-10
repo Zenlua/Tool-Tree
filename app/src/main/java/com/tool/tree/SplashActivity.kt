@@ -1,38 +1,31 @@
 package com.tool.tree
 
-import android.content.Context
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.os.Handler
-import android.provider.Settings
+import android.util.TypedValue
 import android.view.animation.AnimationUtils
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.shell.ShellExecutor
 import com.omarea.common.ui.DialogHelper
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.tool.tree.databinding.ActivitySplashBinding
-import com.tool.tree.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
-import java.util.Locale
-import android.util.TypedValue
 
 class SplashActivity : AppCompatActivity() {
 
@@ -42,25 +35,36 @@ class SplashActivity : AppCompatActivity() {
     private var hasRoot = false
     private var started = false
     private var starting = false
+    
+    private val rows = mutableListOf<String>()
+    private var ignored = false
+    private val maxLines = 5
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 1. Áp dụng ngôn ngữ sớm nhất có thể
         applyAppLanguage()
         super.onCreate(savedInstanceState)
+        
         ThemeModeState.switchTheme(this)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
+        // 2. Hỗ trợ hiển thị tràn viền (Edge-to-Edge) cho các máy đời mới
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         if (ScriptEnvironmen.isInited() && isTaskRoot &&
             !intent.getBooleanExtra("force_reset", false)) {
             gotoHome()
             return
         }
 
-        if (!hasAgreed()) showAgreementDialog()
+        if (!hasAgreed()) {
+            showAgreementDialog()
+        }
 
-        binding.startLogoXml.postDelayed({
-            binding.startLogoXml.startAnimation(AnimationUtils.loadAnimation(this, R.anim.blink))
-        }, 2000)
+        val imageView = findViewById<ImageView>(R.id.start_logo_xml)
+        val rotateAnim = AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate)
+        imageView.startAnimation(rotateAnim)
 
         applyTheme()
     }
@@ -69,104 +73,145 @@ class SplashActivity : AppCompatActivity() {
         runCatching {
             val langFile = File(filesDir, "home/log/language")
             val lang = langFile.takeIf { it.exists() }?.readText()?.trim()?.takeIf { it.isNotEmpty() } ?: return
-            val locale = Locale.forLanguageTag(lang.replace("_", "-"))
-            if (Locale.getDefault() != locale) {
-                Locale.setDefault(locale)
-                val config = Configuration(resources.configuration).apply { setLocale(locale) }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    resources.updateConfiguration(config, resources.displayMetrics)
-                } else {
-                    @Suppress("DEPRECATION")
-                    resources.updateConfiguration(config, resources.displayMetrics)
+            
+            // Cách chuẩn hỗ trợ từ SDK thấp đến cao
+            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(lang.replace("_", "-"))
+            AppCompatDelegate.setApplicationLocales(appLocale)
+        }
+    }
+
+    private fun applyTheme() {
+        val typedValue = TypedValue()
+        theme.resolveAttribute(android.R.attr.windowBackground, typedValue, true)
+        val bgColor = if (typedValue.resourceId != 0) ContextCompat.getColor(this, typedValue.resourceId) else typedValue.data
+        
+        window.statusBarColor = bgColor
+        window.navigationBarColor = bgColor
+    
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        val isDark = ThemeModeState.isDarkMode()
+
+        // WindowInsetsControllerCompat tự động xử lý các bản Android cũ hơn (dưới SDK 30)
+        controller.isAppearanceLightStatusBars = !isDark
+        controller.isAppearanceLightNavigationBars = !isDark
+    }
+
+    // =================== PERMISSIONS (Hỗ trợ SDK 23+) ===================
+    private fun getRequiredPermissions(): Array<String> {
+        return when {
+            // Android 13 (API 33) trở lên
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                arrayOf(
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.READ_MEDIA_VIDEO
+                )
+            }
+            // Android 6.0 (API 23) đến Android 12
+            else -> {
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
+    }
+
+    private fun hasPermissions(): Boolean {
+        return getRequiredPermissions().all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun requestAppPermissions() {
+        saveAgreement()
+        if (hasPermissions()) {
+            started = true
+            checkRootAndStart()
+        } else {
+            ActivityCompat.requestPermissions(this, getRequiredPermissions(), REQUEST_CODE_PERMISSIONS)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            // Kiểm tra xem tất cả quyền được cấp chưa
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                started = true
+                checkRootAndStart()
+            } else {
+                finish() // Hoặc thông báo yêu cầu quyền
+            }
+        }
+    }
+
+    // =================== SHELL & LOGS (Tối ưu Coroutines) ===================
+    private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val process = if (hasRoot) ShellExecutor.getSuperUserRuntime() else ShellExecutor.getRuntime()
+                process?.let { p ->
+                    // Thực thi lệnh trong một job riêng
+                    val shellJob = launch(Dispatchers.IO) {
+                        DataOutputStream(p.outputStream).use { os ->
+                            ScriptEnvironmen.executeShell(
+                                this@SplashActivity, os, config.beforeStartSh, config.variables, null, "pio-splash"
+                            )
+                        }
+                    }
+                    
+                    // Đọc log đồng thời (hỗ trợ SDK 23+)
+                    val outJob = launch { readStreamAsync(p.inputStream.bufferedReader()) }
+                    val errJob = launch { readStreamAsync(p.errorStream.bufferedReader()) }
+
+                    p.waitFor()
+                    shellJob.join()
+                    outJob.join()
+                    errJob.join()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                withContext(Dispatchers.Main) {
+                    gotoHome()
                 }
             }
         }
     }
 
-    private fun getThemeColor(attr: Int): Int {
-        val typedValue = TypedValue()
-        theme.resolveAttribute(attr, typedValue, true)
-    
-        return if (typedValue.resourceId != 0) {
-            getColor(typedValue.resourceId)
-        } else {
-            typedValue.data
+    private suspend fun readStreamAsync(reader: BufferedReader) {
+        withContext(Dispatchers.IO) {
+            reader.useLines { lines ->
+                lines.forEach { line ->
+                    withContext(Dispatchers.Main) {
+                        onLogOutput(line)
+                    }
+                }
+            }
         }
     }
-    
-    private fun applyTheme() {
-        val bgColor = getThemeColor(android.R.attr.windowBackground)
-    
-        window.statusBarColor = bgColor
-        window.navigationBarColor = bgColor
-    
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-    
-        val isDark = ThemeModeState.isDarkMode()
 
-        controller?.isAppearanceLightStatusBars = !isDark
-        controller?.isAppearanceLightNavigationBars = !isDark
+    private fun onLogOutput(log: String) {
+        synchronized(rows) {
+            if (rows.size >= maxLines) {
+                rows.removeAt(0)
+                ignored = true
+            }
+            rows.add(log)
+            binding.startStateText.text = rows.joinToString("\n", if (ignored) "……\n" else "")
+        }
     }
 
-    // =================== AGREEMENT ===================
+    // Các hàm phụ trợ khác giữ nguyên logic của bạn...
     private fun showAgreementDialog() {
-        DialogHelper.warning(
-            this,
-            getString(R.string.permission_dialog_title),
-            getString(R.string.permission_dialog_message),
-            Runnable { requestAppPermissions() },
-            Runnable { finish() }
-        ).setCancelable(false)
+        DialogHelper.warning(this, getString(R.string.permission_dialog_title), getString(R.string.permission_dialog_message), { requestAppPermissions() }, { finish() }).setCancelable(false)
     }
 
-    private fun hasAgreed(): Boolean =
-        getSharedPreferences("kr-script-config", MODE_PRIVATE)
-            .getBoolean("agreed_permissions", false)
+    private fun hasAgreed() = getSharedPreferences("kr-script-config", MODE_PRIVATE).getBoolean("agreed_permissions", false)
 
-    private fun saveAgreement() {
-        getSharedPreferences("kr-script-config", MODE_PRIVATE)
-            .edit()
-            .putBoolean("agreed_permissions", true)
-            .apply()
-    }
+    private fun saveAgreement() = getSharedPreferences("kr-script-config", MODE_PRIVATE).edit().putBoolean("agreed_permissions", true).apply()
 
-    // =================== PERMISSION ===================
-    private fun hasReadPermission() = ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-    
-    private fun requestReadPermission() = ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE_PERMISSIONS)
-
-    private fun requestAppPermissions() {
-        saveAgreement()
-        if (hasReadPermission()) {
-            started = true
-            checkRootAndStart()
-        } else requestReadPermission()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (hasAgreed() && !started) {
-            started = true
-            checkRootAndStart()
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                started = true
-                checkRootAndStart()
-            } else finish()
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    // =================== ROOT ===================
     @Synchronized
     private fun checkRootAndStart() {
         if (!started || starting) return
         starting = true
-
         lifecycleScope.launch(Dispatchers.IO) {
             hasRoot = KeepShellPublic.checkRoot()
             withContext(Dispatchers.Main) {
@@ -179,76 +224,14 @@ class SplashActivity : AppCompatActivity() {
     private fun startToFinish() {
         binding.startStateText.text = getString(R.string.pop_started)
         val config = KrScriptConfig().init(this)
-
-        if (config.beforeStartSh.isNotEmpty()) {
-            runBeforeStartSh(config, hasRoot)
-        } else gotoHome()
+        if (config.beforeStartSh.isNotEmpty()) runBeforeStartSh(config, hasRoot) else gotoHome()
     }
 
     private fun gotoHome() {
-        startActivity(
-            if (intent?.getBooleanExtra("JumpActionPage", false) == true)
-                Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
-            else Intent(this, MainActivity::class.java)
-        )
+        val nextIntent = if (intent?.getBooleanExtra("JumpActionPage", false) == true) {
+            Intent(this, ActionPage::class.java).apply { intent?.extras?.let { putExtras(it) } }
+        } else Intent(this, MainActivity::class.java)
+        startActivity(nextIntent)
         finish()
-    }
-
-    private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val process = if (hasRoot)
-                    ShellExecutor.getSuperUserRuntime()
-                else
-                    ShellExecutor.getRuntime()
-                process?.let {
-                    DataOutputStream(it.outputStream).use { os ->
-                        ScriptEnvironmen.executeShell(
-                            this@SplashActivity,
-                            os,
-                            config.beforeStartSh,
-                            config.variables,
-                            null,
-                            "pio-splash"
-                        )
-                    }
-                    launch { readStreamAsync(it.inputStream.bufferedReader()) }
-                    launch { readStreamAsync(it.errorStream.bufferedReader()) }
-    
-                    it.waitFor()
-                }
-            } finally {
-                withContext(Dispatchers.Main) {
-                    gotoHome()
-                }
-            }
-        }
-    }
-
-    // Buffer lưu 4 dòng cuối
-    private val rows = mutableListOf<String>()
-    private var ignored = false
-    private val maxLines = 5
-    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
-
-    private fun readStreamAsync(reader: BufferedReader) {
-        Thread {
-            reader.forEachLine { line ->
-                onLogOutput(line)
-            }
-        }.start()
-    }
-
-    private fun onLogOutput(log: String) {
-        handler.post {
-            synchronized(rows) {
-                if (rows.size >= maxLines) {
-                    rows.removeAt(0)
-                    ignored = true
-                }
-                rows.add(log)
-                binding.startStateText.text = rows.joinToString("\n", if (ignored) "……\n" else "")
-            }
-        }
     }
 }
