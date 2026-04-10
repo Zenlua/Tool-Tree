@@ -25,16 +25,33 @@
 
         <TextView
             android:id="@+id/title"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:paddingTop="0dp"
             style="@style/dialogTitle" />
 
         <TextView
             android:id="@+id/desc"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:paddingTop="0dp"
             style="@style/dialogDesc" />
 
     </LinearLayout>
-
+    <ProgressBar
+        android:id="@+id/action_progress"
+        android:layout_marginTop="4dp"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:paddingStart="1dp"
+        android:paddingEnd="1dp"
+        android:layout_below="@+id/btn_hide"
+        android:indeterminate="true"
+        android:max="100"
+        android:progress="0" />
     <com.omarea.common.ui.OverScrollView
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:background="@drawable/krscript_item_ripple_kon"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -77,17 +94,4 @@
             android:text="@string/btn_exit" />
 
     </LinearLayout>
-
-    <ProgressBar
-        android:id="@+id/action_progress"
-        android:layout_marginTop="4dp"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="8dp"
-        android:paddingStart="1dp"
-        android:paddingEnd="1dp"
-        android:layout_below="@+id/top_bar"
-        android:indeterminate="true"
-        android:max="100"
-        android:progress="0" />
 </RelativeLayout>

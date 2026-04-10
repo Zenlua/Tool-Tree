@@ -125,13 +125,13 @@ class DialogLogFragment : DialogFragment() {
         if (nodeInfo.title.isNotEmpty()) {
             binding.title.text = nodeInfo.title
         } else {
-            binding.title.visibility = View.GONE
+            binding.title.visibility = View.INVISIBLE
         }
 
         if (nodeInfo.desc.isNotEmpty()) {
             binding.desc.text = nodeInfo.desc
         } else {
-            binding.desc.visibility = View.GONE
+            binding.desc.visibility = View.INVISIBLE
         }
 
         binding.actionProgress.isIndeterminate = true
@@ -227,7 +227,7 @@ class DialogLogFragment : DialogFragment() {
                         shellProgress?.visibility = View.VISIBLE
                         shellProgress?.isIndeterminate = true
                     }
-                    current >= total -> shellProgress?.visibility = View.INVISIBLE
+                    current >= total -> shellProgress?.visibility = View.GONE
                     else -> {
                         shellProgress?.visibility = View.VISIBLE
                         shellProgress?.isIndeterminate = false
