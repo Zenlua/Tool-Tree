@@ -25,6 +25,7 @@ import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
 import android.content.DialogInterface
 import com.tool.tree.R
+import java.lang.ref.WeakReference
 
 class DialogLogFragment : DialogFragment() {
 
@@ -39,6 +40,9 @@ class DialogLogFragment : DialogFragment() {
     private var params: HashMap<String, String>? = null
     private var themeResId: Int = 0
     private var onDismissRunnable: Runnable? = null
+    
+    // Lưu tham chiếu Handler để giải phóng khi hủy View
+    private var currentHandler: MyShellHandler? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -136,8 +140,7 @@ class DialogLogFragment : DialogFragment() {
 
         binding.actionProgress.isIndeterminate = true
 
-        return MyShellHandler(requireContext().applicationContext, object : IActionEventHandler {
-            // Thay chỗ này trong openExecutor -> onCompleted()
+        val handler = MyShellHandler(requireContext().applicationContext, object : IActionEventHandler {
             override fun onCompleted() {
                 running = false
                 onExit.run()
@@ -171,6 +174,9 @@ class DialogLogFragment : DialogFragment() {
                 }
             }
         }, binding.shellOutput, binding.actionProgress)
+
+        this.currentHandler = handler
+        return handler
     }
 
     @FunctionalInterface
@@ -182,10 +188,13 @@ class DialogLogFragment : DialogFragment() {
 
     class MyShellHandler(
         context: Context,
-        private var actionEventHandler: IActionEventHandler,
-        private var logView: TextView?,
-        private var shellProgress: ProgressBar?
+        private var actionEventHandler: IActionEventHandler?,
+        logView: TextView?,
+        shellProgress: ProgressBar?
     ) : ShellHandlerBase(context) {
+
+        private val logViewRef = WeakReference(logView)
+        private val progressRef = WeakReference(shellProgress)
 
         private val errorColor = getColor(R.color.kr_shell_log_error)
         private val basicColor = getColor(R.color.kr_shell_log_basic)
@@ -199,6 +208,12 @@ class DialogLogFragment : DialogFragment() {
             } else {
                 context.resources.getColor(resId)
             }
+        }
+
+        fun release() {
+            logViewRef.clear()
+            progressRef.clear()
+            actionEventHandler = null
         }
 
         override fun handleMessage(msg: Message) {
@@ -218,17 +233,20 @@ class DialogLogFragment : DialogFragment() {
             updateLog(msg, errorColor)
         }
 
-        override fun onStart(forceStop: Runnable?) = actionEventHandler.onStart(forceStop)
+        override fun onStart(forceStop: Runnable?) {
+            actionEventHandler?.onStart(forceStop)
+        }
 
         override fun onProgress(current: Int, total: Int) {
-            shellProgress?.post {
+            val shellProgress = progressRef.get() ?: return
+            shellProgress.post {
                 when {
-                    current < 0 -> shellProgress?.apply {
+                    current < 0 -> shellProgress.apply {
                         visibility = View.VISIBLE
                         isIndeterminate = true
                     }
-                    current >= total -> shellProgress?.visibility = View.GONE
-                    else -> shellProgress?.apply {
+                    current >= total -> shellProgress.visibility = View.GONE
+                    else -> shellProgress.apply {
                         visibility = View.VISIBLE
                         isIndeterminate = false
                         max = total
@@ -238,30 +256,30 @@ class DialogLogFragment : DialogFragment() {
                             params.topMargin = 44
                             layoutParams = params
                         }
-                        requestLayout()
                     }
                 }
             }
         }
 
         override fun onStart(msg: Any?) {
-            logView?.text = ""
+            logViewRef.get()?.text = ""
         }
 
         override fun onExit(msg: Any?) {
             val code = (msg as? Int) ?: -1
             if (!hasError && code == 0) {
-                actionEventHandler.onSuccess()
+                actionEventHandler?.onSuccess()
             }
             updateLog(context.getString(R.string.kr_shell_completed), endColor)
-            actionEventHandler.onCompleted()
+            actionEventHandler?.onCompleted()
         }
 
         override fun updateLog(msg: SpannableString?) {
+            val logView = logViewRef.get() ?: return
             msg?.let {
-                logView?.post {
-                    logView?.append(it)
-                    (logView?.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
+                logView.post {
+                    logView.append(it)
+                    (logView.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
                 }
             }
         }
@@ -293,6 +311,8 @@ class DialogLogFragment : DialogFragment() {
     }
 
     override fun onDestroyView() {
+        currentHandler?.release()
+        currentHandler = null
         super.onDestroyView()
         _binding = null
     }
