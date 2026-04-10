@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/dialogRoot" xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/dialogRoot"
     android:clickable="true"
     android:focusable="true">
 
@@ -84,17 +84,18 @@
 
     </LinearLayout>
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
+    <ProgressBar
         android:id="@+id/action_progress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        style="?android:attr/progressBarStyleHorizontal"
         android:layout_below="@+id/btn_hide"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_gravity="center_horizontal"
         android:layout_marginTop="14dp"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
         android:indeterminate="true"
-        app:trackThickness="8dp"
-        app:trackCornerRadius="4dp"
-        app:indicatorColor="?attr/colorPrimary" />
+        android:progress="0"
+        android:max="100" />
 
 </RelativeLayout>

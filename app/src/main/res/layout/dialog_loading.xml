@@ -19,8 +19,7 @@
             android:layout_height="80dp"
             android:layout_gravity="center_horizontal"
             android:layout_margin="30dp"
-            android:indeterminate="true"
-            android:max="100" />
+            android:indeterminate="true" />
 
         <TextView
             android:id="@+id/dialog_text"
