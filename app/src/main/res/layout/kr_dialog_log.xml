@@ -93,8 +93,8 @@
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
         android:indeterminate="true"
-        app:trackThickness="4dp"
-        app:trackCornerRadius="2dp"
+        app:trackThickness="8dp"
+        app:trackCornerRadius="4dp"
         app:indicatorColor="?attr/colorPrimary" />
 
 </RelativeLayout>
