@@ -14,14 +14,14 @@
     <color name="color_load_hight">#fc8a1b</color>
     <color name="color_load_veryhight">#f9592f</color>
 
-    <color name="colorBlurLight">#C0FFFFFF</color>
+    <color name="colorBlurLight">#DDFFFFFF</color>
     <color name="colorBlurDark">#80000000</color>
     
     <color name="colorPirmLight">#25FFFFFF</color>
     <color name="colorPirmDark">#33888888</color>
     
     <color name="colorParseLight">#25FFFFFF</color>
-    <color name="colorParseDark">#25000000</color>
+    <color name="colorParseDark">#20000000</color>
     
     <color name="colorAccent">#0dbda2</color>
     <color name="colorPrimary">#64CDB6</color>

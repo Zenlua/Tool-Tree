@@ -62,7 +62,7 @@ class DialogLogFragment : DialogFragment() {
 
         nodeInfo?.let { node ->
             if (node.reloadPage) {
-                binding.btnHide.visibility = View.GONE
+                binding.btnHide.visibility = View.INVISIBLE
             }
 
             val shellHandler = openExecutor(node)
@@ -118,20 +118,20 @@ class DialogLogFragment : DialogFragment() {
             binding.btnHide.visibility = View.VISIBLE
             binding.btnCancel.visibility = View.VISIBLE
         } else {
-            binding.btnHide.visibility = View.GONE
+            binding.btnHide.visibility = View.INVISIBLE
             binding.btnCancel.visibility = View.GONE
         }
 
         if (nodeInfo.title.isNotEmpty()) {
             binding.title.text = nodeInfo.title
         } else {
-            binding.title.visibility = View.GONE
+            binding.title.visibility = View.INVISIBLE
         }
 
         if (nodeInfo.desc.isNotEmpty()) {
             binding.desc.text = nodeInfo.desc
         } else {
-            binding.desc.visibility = View.GONE
+            binding.desc.visibility = View.INVISIBLE
         }
 
         binding.actionProgress.isIndeterminate = true
@@ -143,10 +143,10 @@ class DialogLogFragment : DialogFragment() {
                 onExit.run()
                 offScreen()
                 _binding?.let { b ->
-                    b.btnHide.visibility = View.GONE
+                    b.btnHide.visibility = View.INVISIBLE
                     b.btnCancel.visibility = View.GONE
                     b.btnExit.visibility = View.VISIBLE
-                    b.actionProgress.visibility = View.GONE
+                    b.actionProgress.visibility = View.INVISIBLE
                 }
                 isCancelable = true
             }
