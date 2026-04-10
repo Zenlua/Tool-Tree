@@ -233,6 +233,9 @@ class DialogLogFragment : DialogFragment() {
                         shellProgress?.isIndeterminate = false
                         shellProgress?.max = total
                         shellProgress?.progress = current
+                        val params = shellProgress?.layoutParams
+                        params?.height = 4
+                        shellProgress?.layoutParams = params
                     }
                 }
             }
