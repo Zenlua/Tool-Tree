@@ -125,13 +125,13 @@ class DialogLogFragment : DialogFragment() {
         if (nodeInfo.title.isNotEmpty()) {
             binding.title.text = nodeInfo.title
         } else {
-            binding.title.visibility = View.INVISIBLE
+            binding.title.visibility = View.GONE
         }
 
         if (nodeInfo.desc.isNotEmpty()) {
             binding.desc.text = nodeInfo.desc
         } else {
-            binding.desc.visibility = View.INVISIBLE
+            binding.desc.visibility = View.GONE
         }
 
         binding.actionProgress.isIndeterminate = true
