@@ -1,8 +1,10 @@
 package com.tool.tree
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,44 +22,42 @@ import com.omarea.common.shell.ShellExecutor
 import com.omarea.common.ui.DialogHelper
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.tool.tree.databinding.ActivitySplashBinding
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
-import android.content.res.Configuration
 import java.util.Locale
 
 class SplashActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySplashBinding
     private val REQUEST_CODE_PERMISSIONS = 1001
-    private val REQUEST_CODE_MANAGE_STORAGE = 1002
+    private val REQUEST_CODE_MANAGE_ALL_FILES = 1002
 
     private var hasRoot = false
-    private var startingJob: Job? = null // Dùng Job để quản lý luồng khởi động
-    
-    private val rows = mutableListOf<String>()
-    private var ignored = false
-    private val maxLines = 5
+    private var started = false
+    private var starting = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         applyAppLanguage()
         super.onCreate(savedInstanceState)
-        
         ThemeModeState.switchTheme(this)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // Kiểm tra khởi tạo nhanh
+        // 1. Kiểm tra nếu script đã chạy hoặc đang chạy thì vào thẳng Home
         if (ScriptEnvironmen.isInited() && isTaskRoot &&
             !intent.getBooleanExtra("force_reset", false)) {
             gotoHome()
             return
         }
 
-        if (!hasAgreed()) {
+        // 2. Logic khởi đầu: Nếu chưa đồng ý hoặc thiếu quyền thì hiện Dialog
+        if (hasAgreed() && hasRequiredPermissions()) {
+            checkPermissionsNextStep()
+        } else {
             showAgreementDialog()
         }
 
@@ -65,135 +65,136 @@ class SplashActivity : AppCompatActivity() {
         applyTheme()
     }
 
-    // Luồng khởi động duy nhất
-    private fun startLogic() {
-        if (startingJob?.isActive == true) return // Nếu đang chạy thì không chạy thêm luồng mới
+    // =================== LOGIC XỬ LÝ QUYỀN ===================
 
-        startingJob = lifecycleScope.launch(Dispatchers.Main) {
-            saveAgreement()
-            
-            // Bước 1: Kiểm tra Root với Timeout tránh treo cứng
-            hasRoot = withContext(Dispatchers.IO) {
-                try {
-                    withTimeoutOrNull(5000) { KeepShellPublic.checkRoot() } ?: false
-                } catch (e: Exception) { false }
-            }
-
-            // Bước 2: Chuẩn bị config và chạy script
-            binding.startStateText.text = getString(R.string.pop_started)
-            val config = KrScriptConfig().init(this@SplashActivity)
-            
-            if (config.beforeStartSh.isNotEmpty()) {
-                executeShellLogic(config, hasRoot)
-            } else {
-                gotoHome()
-            }
-        }
+    private fun showAgreementDialog() {
+        DialogHelper.warning(
+            this,
+            getString(R.string.permission_dialog_title),
+            getString(R.string.permission_dialog_message),
+            Runnable { 
+                // Người dùng đồng ý bảng Dialog -> Chuyển sang xin quyền bộ nhớ hệ thống
+                requestRequiredPermissions() 
+            },
+            Runnable { finishAffinity() } // Không đồng ý -> Thoát ứng dụng
+        ).setCancelable(false)
     }
 
-    private suspend fun executeShellLogic(config: KrScriptConfig, hasRoot: Boolean) {
-        withContext(Dispatchers.IO) {
-            var process: Process? = null
-            try {
-                process = if (hasRoot) ShellExecutor.getSuperUserRuntime() else ShellExecutor.getRuntime()
-                process?.let { p ->
-                    // Đọc log song song
-                    val logJob = launch {
-                        p.inputStream.bufferedReader().useLines { lines ->
-                            lines.forEach { line ->
-                                withContext(Dispatchers.Main) { onLogOutput(line) }
-                            }
-                        }
-                    }
-
-                    // Thực thi shell
-                    DataOutputStream(p.outputStream).use { os ->
-                        ScriptEnvironmen.executeShell(
-                            this@SplashActivity, os, config.beforeStartSh, config.variables, null, "pio-splash"
-                        )
-                    }
-                    
-                    // Đợi tối đa 15s cho script
-                    withTimeoutOrNull(15000) { p.waitFor() }
-                    logJob.cancel()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                process?.destroy() // Giải phóng tiến trình
-                withContext(Dispatchers.Main) { gotoHome() }
-            }
+    private fun hasRequiredPermissions(): Boolean {
+        val permissions = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+            permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
+        } else {
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Chỉ chạy nếu đã đồng ý và các quyền đã sẵn sàng
-        if (hasAgreed() && startingJob == null && hasPermissions()) {
-            startLogic()
-        }
-    }
-
-    // --- Giữ nguyên các hàm bổ trợ của bạn ---
-
-    private fun hasPermissions(): Boolean {
-        val basic = getRequiredPermissions().all {
+        return permissions.all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
-        val manage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager() else true
-        return basic && manage
     }
 
-    private fun getRequiredPermissions(): Array<String> {
-        return when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
-            else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        }
-    }
-
-    private fun requestAppPermissions() {
-        val missing = getRequiredPermissions().filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
-        if (missing.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, missing.toTypedArray(), REQUEST_CODE_PERMISSIONS)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            requestManageStoragePermission()
+    private fun requestRequiredPermissions() {
+        val permissions = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+            permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
         } else {
-            startLogic()
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+        ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_CODE_PERMISSIONS)
+    }
+
+    private fun checkPermissionsNextStep() {
+        // Ưu tiên sau: Nếu là Android 11+ và chưa có quyền "All Files Access"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+            requestManageAllFilesPermission()
+        } else {
+            checkRootAndStart()
         }
     }
 
-    private fun requestManageStoragePermission() {
-        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply { data = Uri.parse("package:$packageName") }
-        try { startActivityForResult(intent, REQUEST_CODE_MANAGE_STORAGE) }
-        catch (e: Exception) { startActivityForResult(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION), REQUEST_CODE_MANAGE_STORAGE) }
+    private fun requestManageAllFilesPermission() {
+        try {
+            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES)
+        } catch (e: Exception) {
+            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+            startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES)
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) requestAppPermissions() else finish()
+            // Nếu người dùng đồng ý các quyền bộ nhớ cơ bản
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                checkPermissionsNextStep()
+            } else {
+                // Nếu từ chối bất kỳ quyền nào -> Thoát app
+                finishAffinity()
+            }
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_MANAGE_STORAGE) {
-            if (hasPermissions()) startLogic() else finish()
+        if (requestCode == REQUEST_CODE_MANAGE_ALL_FILES) {
+            // Sau khi từ màn hình cài đặt All Files quay lại, tiến hành check root
+            checkRootAndStart()
         }
     }
 
-    private fun onLogOutput(log: String) {
-        synchronized(rows) {
-            if (rows.size >= maxLines) { rows.removeAt(0); ignored = true }
-            rows.add(log)
-            binding.startStateText.text = rows.joinToString("\n", if (ignored) "……\n" else "")
+    // =================== LOGIC ROOT & KHỞI CHẠY ===================
+
+    @Synchronized
+    private fun checkRootAndStart() {
+        if (starting) return
+        starting = true
+        started = true
+
+        // Khi đã vượt qua hết các bước xin quyền và bắt đầu check root -> Lưu trạng thái đồng ý
+        saveAgreement()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            hasRoot = KeepShellPublic.checkRoot()
+            withContext(Dispatchers.Main) {
+                starting = false
+                startToFinish()
+            }
         }
     }
+
+    private fun startToFinish() {
+        binding.startStateText.text = getString(R.string.pop_started)
+        val config = KrScriptConfig().init(this)
+
+        if (config.beforeStartSh.isNotEmpty()) {
+            runBeforeStartSh(config, hasRoot)
+        } else {
+            gotoHome()
+        }
+    }
+
+    private fun hasAgreed(): Boolean =
+        getSharedPreferences("kr-script-config", MODE_PRIVATE).getBoolean("agreed_permissions", false)
+
+    private fun saveAgreement() {
+        getSharedPreferences("kr-script-config", MODE_PRIVATE)
+            .edit()
+            .putBoolean("agreed_permissions", true)
+            .apply()
+    }
+
+    // =================== CÁC HÀM TIỆN ÍCH KHÁC ===================
 
     private fun applyAppLanguage() {
         runCatching {
             val langFile = File(filesDir, "home/log/language")
-            val lang = langFile.takeIf { it.exists() }?.readText()?.trim() ?: return
+            val lang = langFile.takeIf { it.exists() }?.readText()?.trim()?.takeIf { it.isNotEmpty() } ?: return
             val locale = Locale.forLanguageTag(lang.replace("_", "-"))
             if (Locale.getDefault() != locale) {
                 Locale.setDefault(locale)
@@ -206,28 +207,69 @@ class SplashActivity : AppCompatActivity() {
     private fun applyTheme() {
         val typedValue = TypedValue()
         theme.resolveAttribute(android.R.attr.windowBackground, typedValue, true)
-        val bgColor = if (typedValue.resourceId != 0) ContextCompat.getColor(this, typedValue.resourceId) else typedValue.data
+        val bgColor = if (typedValue.resourceId != 0) getColor(typedValue.resourceId) else typedValue.data
+        
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = bgColor
         window.navigationBarColor = bgColor
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            val isDark = ThemeModeState.isDarkMode()
-            isAppearanceLightStatusBars = !isDark
-            isAppearanceLightNavigationBars = !isDark
+    
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        val isDark = ThemeModeState.isDarkMode()
+        controller.isAppearanceLightStatusBars = !isDark
+        controller.isAppearanceLightNavigationBars = !isDark
+    }
+
+    private fun gotoHome() {
+        val intentToStart = if (intent?.getBooleanExtra("JumpActionPage", false) == true) {
+            Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
+        } else {
+            Intent(this, MainActivity::class.java)
+        }
+        startActivity(intentToStart)
+        finish()
+    }
+
+    private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val process = if (hasRoot) ShellExecutor.getSuperUserRuntime() else ShellExecutor.getRuntime()
+                process?.let {
+                    DataOutputStream(it.outputStream).use { os ->
+                        ScriptEnvironmen.executeShell(this@SplashActivity, os, config.beforeStartSh, config.variables, null, "pio-splash")
+                    }
+                    launch { readStreamAsync(it.inputStream.bufferedReader()) }
+                    launch { readStreamAsync(it.errorStream.bufferedReader()) }
+                    it.waitFor()
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    gotoHome()
+                }
+            }
         }
     }
 
-    private fun showAgreementDialog() {
-        DialogHelper.warning(this, getString(R.string.permission_dialog_title), getString(R.string.permission_dialog_message), { requestAppPermissions() }, { finish() }).setCancelable(false)
+    private val rows = mutableListOf<String>()
+    private var ignored = false
+    private val maxLines = 5
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+
+    private fun readStreamAsync(reader: BufferedReader) {
+        try {
+            reader.forEachLine { line -> onLogOutput(line) }
+        } catch (e: Exception) {}
     }
 
-    private fun hasAgreed() = getSharedPreferences("kr-script-config", MODE_PRIVATE).getBoolean("agreed_permissions", false)
-    private fun saveAgreement() = getSharedPreferences("kr-script-config", MODE_PRIVATE).edit().putBoolean("agreed_permissions", true).apply()
-
-    private fun gotoHome() {
-        val nextIntent = if (intent?.getBooleanExtra("JumpActionPage", false) == true) {
-            Intent(this, ActionPage::class.java).apply { intent?.extras?.let { putExtras(it) } }
-        } else Intent(this, MainActivity::class.java)
-        startActivity(nextIntent)
-        finish()
+    private fun onLogOutput(log: String) {
+        handler.post {
+            synchronized(rows) {
+                if (rows.size >= maxLines) {
+                    rows.removeAt(0)
+                    ignored = true
+                }
+                rows.add(log)
+                binding.startStateText.text = rows.joinToString("\n", if (ignored) "……\n" else "")
+            }
+        }
     }
 }
