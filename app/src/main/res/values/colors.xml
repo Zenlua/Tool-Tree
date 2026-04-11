@@ -5,7 +5,7 @@
     <color name="status_bg_dark">#222222</color>
     <color name="status_bg_light">@android:color/white</color>
     <color name="cardBgDark">#222222</color>
-    <color name="cardBgDarkTransparent">#9A000000</color>
+    <color name="cardBgDarkTransparent">#9A222222</color>
     <color name="cardBgLight">#CCFFFFFF</color>
     <color name="cardBgLightTransparent">#B3FFFFFF</color>
 
