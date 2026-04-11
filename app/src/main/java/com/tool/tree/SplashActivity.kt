@@ -53,11 +53,17 @@ class SplashActivity : AppCompatActivity() {
             return
         }
 
-        // 2. Logic khởi đầu: Nếu chưa đồng ý hoặc thiếu quyền thì hiện Dialog
-        if (hasAgreed() && hasRequiredPermissions()) {
-            checkPermissionsNextStep()
-        } else {
+        // 2. Logic khởi đầu: Tách biệt "Đồng ý điều khoản" và "Quyền hệ thống"
+        if (!hasAgreed()) {
+            // Nếu chưa từng đồng ý điều khoản, hiện Dialog đầu tiên
             showAgreementDialog()
+        } else {
+            // Đã đồng ý điều khoản rồi, chỉ kiểm tra quyền Android
+            if (hasRequiredPermissions()) {
+                checkPermissionsNextStep()
+            } else {
+                requestRequiredPermissions()
+            }
         }
 
         binding.startLogoXml.startAnimation(AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate))
@@ -72,10 +78,12 @@ class SplashActivity : AppCompatActivity() {
             getString(R.string.permission_dialog_title),
             getString(R.string.permission_dialog_message),
             Runnable { 
-                // Người dùng đồng ý bảng Dialog -> Chuyển sang xin quyền bộ nhớ hệ thống
+                // Quan trọng: Lưu trạng thái đồng ý ngay khi nhấn nút
+                saveAgreement() 
+                // Sau đó mới đi xin quyền hệ thống
                 requestRequiredPermissions() 
             },
-            Runnable { finishAffinity() } // Không đồng ý -> Thoát ứng dụng
+            Runnable { finishAffinity() }
         ).setCancelable(false)
     }
 
@@ -106,7 +114,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun checkPermissionsNextStep() {
-        // Ưu tiên sau: Nếu là Android 11+ và chưa có quyền "All Files Access"
+        // Nếu là Android 11+ và chưa có quyền "All Files Access"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
             requestManageAllFilesPermission()
         } else {
@@ -129,11 +137,9 @@ class SplashActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            // Nếu người dùng đồng ý các quyền bộ nhớ cơ bản
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 checkPermissionsNextStep()
             } else {
-                // Nếu từ chối bất kỳ quyền nào -> Thoát app
                 finishAffinity()
             }
         }
@@ -142,7 +148,6 @@ class SplashActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_MANAGE_ALL_FILES) {
-            // Sau khi từ màn hình cài đặt All Files quay lại, tiến hành check root
             checkRootAndStart()
         }
     }
@@ -153,9 +158,6 @@ class SplashActivity : AppCompatActivity() {
     private fun checkRootAndStart() {
         if (started) return
         started = true
-
-        // Khi đã vượt qua hết các bước xin quyền và bắt đầu check root -> Lưu trạng thái đồng ý
-        saveAgreement()
 
         lifecycleScope.launch(Dispatchers.IO) {
             hasRoot = KeepShellPublic.checkRoot()
