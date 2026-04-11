@@ -14,7 +14,7 @@ class ThemeConfig(private val context: Context) {
     }
 
     fun getThemeMode(): Int {
-        return config.getInt(KEY_THEME_MODE, 3)
+        return config.getInt(KEY_THEME_MODE, 0)
     }
 
     fun setThemeMode(mode: Int) {
