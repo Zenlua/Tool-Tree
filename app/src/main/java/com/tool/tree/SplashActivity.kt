@@ -67,7 +67,7 @@ class SplashActivity : AppCompatActivity() {
         }
 
         binding.startLogoXml.startAnimation(AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate))
-        applyTheme()
+        // applyTheme()
     }
 
     // =================== LOGIC XỬ LÝ QUYỀN ===================
