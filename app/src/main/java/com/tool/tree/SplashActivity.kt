@@ -48,15 +48,10 @@ class SplashActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         // 1. Kiểm tra nếu script đã chạy hoặc đang chạy thì vào thẳng Home
-        forceReset = intent.getBooleanExtra("force_reset", false)
-        if (!forceReset && ScriptEnvironmen.isInited() && isTaskRoot) {
+        if (ScriptEnvironmen.isInited() && isTaskRoot &&
+            !intent.getBooleanExtra("force_reset", false)) {
             gotoHome()
             return
-        }
-        
-        if (forceReset) {
-            config.beforeStartSh = "" // hoặc mảng rỗng
-            ScriptEnvironmen.reset()   // nếu có method reset
         }
 
         // 2. Logic khởi đầu: Nếu chưa đồng ý hoặc thiếu quyền thì hiện Dialog
