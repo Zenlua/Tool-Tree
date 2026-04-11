@@ -53,6 +53,11 @@ class SplashActivity : AppCompatActivity() {
             gotoHome()
             return
         }
+        
+        if (forceReset) {
+            config.beforeStartSh = "" // hoặc mảng rỗng
+            ScriptEnvironmen.reset()   // nếu có method reset
+        }
 
         // 2. Logic khởi đầu: Nếu chưa đồng ý hoặc thiếu quyền thì hiện Dialog
         if (hasAgreed() && hasRequiredPermissions()) {
@@ -170,7 +175,7 @@ class SplashActivity : AppCompatActivity() {
         binding.startStateText.text = getString(R.string.pop_started)
         val config = KrScriptConfig().init(this)
 
-        if (config.beforeStartSh.isNotEmpty() || forceReset) {
+        if (config.beforeStartSh.isNotEmpty()) {
             runBeforeStartSh(config, hasRoot)
         } else {
             gotoHome()
