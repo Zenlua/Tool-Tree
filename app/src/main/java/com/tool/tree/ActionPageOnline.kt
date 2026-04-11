@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.MenuItem
 import android.view.View
 import android.webkit.*
 import android.widget.Toast
@@ -34,28 +35,48 @@ class ActionPageOnline : AppCompatActivity() {
     private var progressPolling: Timer? = null
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
     private val ACTION_FILE_PATH_CHOOSER = 65400
+    
+    // ID định danh cho mục menu mới
+    private val MENU_OPEN_BROWSER = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Sử dụng ThemeModeState để quản lý giao diện đồng nhất (Status Bar, Navigation Bar)
         themeMode = ThemeModeState.switchTheme(this)
         
         binding = ActivityActionPageOnlineBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
+        // Lấy toolbar từ layout được include (webappbar)
+        val toolbar = binding.webappbar.toolbar
         setSupportActionBar(toolbar)
         setTitle(R.string.app_name)
 
-        // Hiển thị nút quay lại
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setHomeButtonEnabled(true)
+        
         toolbar.setNavigationOnClickListener {
             finish()
         }
 
-        // Xử lý nút back chuẩn Android 13+
+        // --- THÊM MENU 3 CHẤM BẰNG CODE ---
+        // Thêm mục "Mở bằng trình duyệt" vào menu 
+        toolbar.menu.add(0, MENU_OPEN_BROWSER, 0, "Mở bằng trình duyệt").apply {
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        }
+
+        // Xử lý sự kiện khi click vào menu
+        toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                MENU_OPEN_BROWSER -> {
+                    openInDefaultBrowser()
+                    true
+                }
+                else -> false
+            }
+        }
+        // ----------------------------------
+
         onBackPressedDispatcher.addCallback(this) {
             if (binding.krOnlineWebview.canGoBack()) {
                 binding.krOnlineWebview.goBack()
@@ -67,6 +88,21 @@ class ActionPageOnline : AppCompatActivity() {
         loadIntentData()
     }
 
+    // Hàm thực hiện mở URL hiện tại bằng trình duyệt mặc định của máy
+    private fun openInDefaultBrowser() {
+        val currentUrl = binding.krOnlineWebview.url
+        if (!currentUrl.isNullOrEmpty()) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(currentUrl))
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Không tìm thấy trình duyệt phù hợp", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(this, "Trang web hiện không có URL hợp lệ", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun loadIntentData() {
         val intent = this.intent
         val extras = intent.extras
@@ -75,13 +111,11 @@ class ActionPageOnline : AppCompatActivity() {
                 title = extras.getString("title")
             }
 
-            // Load URL vào Webview
             when {
                 extras.containsKey("config") -> initWebview(extras.getString("config"))
                 extras.containsKey("url") -> initWebview(extras.getString("url"))
             }
 
-            // Xử lý download nếu có
             if (extras.containsKey("downloadUrl")) {
                 val downloader = Downloader(this)
                 val url = extras.getString("downloadUrl")!!
