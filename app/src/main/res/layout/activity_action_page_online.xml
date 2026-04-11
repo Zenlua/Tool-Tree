@@ -7,12 +7,13 @@
 
     <include
         layout="@layout/app_bar_main"
+        android:id="@+id/webappbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
     <WebView
+        android:layout_below="@id/webappbar"
         android:id="@+id/kr_online_webview"
-        android:layout_marginTop="?actionBarSize"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone" />
