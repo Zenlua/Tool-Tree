@@ -1,10 +1,15 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.4.0 (11-4-2026)**
+
++ Update the theme interface.
++ Fixed code
+
 **Version: 1.3.9 (5-4-2026)**
 
-+ Fix code
-+ Fixes the issue where add-on patch ROM update notifications are not appearing
++ Troubleshooting add-on patch ROM notifications
 + Supports swiping to switch tabs
++ Fixed code
 
 **Version: 1.3.8 (2-4-2026)**
 
