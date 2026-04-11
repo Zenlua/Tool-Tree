@@ -38,7 +38,7 @@ public class CrashLogActivity extends AppCompatActivity {
         // ===== TITLE =====
         TextView title = new TextView(this);
         title.setText("Tool Tree Crash");
-        title.setTextSize(25); // chữ to
+        title.setTextSize(25); 
         title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         title.setPadding(14, 0, 0, 16);
         root.addView(title);
@@ -52,11 +52,7 @@ public class CrashLogActivity extends AppCompatActivity {
         ));
 
         LinearLayout.LayoutParams btnParams =
-                new LinearLayout.LayoutParams(
-                        0,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        1f
-                );
+                new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
 
         Button copyBtn = new Button(this);
         copyBtn.setText("Copy");
@@ -74,10 +70,7 @@ public class CrashLogActivity extends AppCompatActivity {
         // ===== SCROLL VIEW (VERTICAL + HORIZONTAL) =====
         ScrollView verticalScroll = new ScrollView(this);
         verticalScroll.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-        ));
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
         
         HorizontalScrollView horizontalScroll = new HorizontalScrollView(this);
         
@@ -87,7 +80,6 @@ public class CrashLogActivity extends AppCompatActivity {
         textView.setTextSize(12);
         textView.setTypeface(android.graphics.Typeface.MONOSPACE);
         
-        // Không tự xuống dòng
         textView.setHorizontallyScrolling(true);
         textView.setHorizontalScrollBarEnabled(true);
         
@@ -99,36 +91,28 @@ public class CrashLogActivity extends AppCompatActivity {
 
         setContentView(root);
 
-        // ===== COPY BUTTON =====
+        // ===== COPY LOGIC =====
         copyBtn.setOnClickListener(v -> {
-            ClipboardManager clipboard =
-                    (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            ClipData clip = ClipData.newPlainText("Crash Log", log);
-            clipboard.setPrimaryClip(clip);
-            Toast.makeText(this, "Copied.", Toast.LENGTH_SHORT).show();
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard != null) {
+                ClipData clip = ClipData.newPlainText("Crash Log", log);
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(this, "Copied.", Toast.LENGTH_SHORT).show();
+            }
         });
 
-        // ===== SHARE FILE BUTTON =====
+        // ===== SHARE LOGIC =====
         shareBtn.setOnClickListener(v -> {
             try {
-                String time = new SimpleDateFormat(
-                        "yyyyMMdd_HHmmss",
-                        Locale.getDefault()
-                ).format(new Date());
-
+                String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
                 String fileName = "Tool-Tree_log_" + time + ".txt";
-
                 File file = new File(getCacheDir(), fileName);
 
                 FileOutputStream fos = new FileOutputStream(file);
                 fos.write(log.getBytes());
                 fos.close();
 
-                Uri uri = FileProvider.getUriForFile(
-                        this,
-                        getPackageName() + ".provider",
-                        file
-                );
+                Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".provider", file);
 
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
@@ -138,29 +122,24 @@ public class CrashLogActivity extends AppCompatActivity {
                 startActivity(Intent.createChooser(shareIntent, "Share log file"));
 
             } catch (Exception e) {
-                e.printStackTrace();
                 Toast.makeText(this, "Failed to share file.", Toast.LENGTH_SHORT).show();
             }
         });
         
-        // Khởi động lại app khi bấm Back (có delay 200ms)
+        // ===== BACK PRESS LOGIC =====
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                Intent intent = getPackageManager()
-                        .getLaunchIntentForPackage(getPackageName());
+                Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
                 if (intent != null) {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    new android.os.Handler(android.os.Looper.getMainLooper())
-                            .postDelayed(() -> {
-                                startActivity(intent);
-                                finish();
-                            }, 200);
+                    // Thực hiện chuyển cảnh ngay lập tức khi người dùng bấm Back
+                    startActivity(intent);
+                    finish();
                 } else {
                     finish();
                 }
             }
         });
-
     }
 }

@@ -15,7 +15,6 @@ import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.ListPopupWindow
 import androidx.appcompat.widget.Toolbar
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -32,6 +31,7 @@ import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.MainPagerAdapter
 import com.tool.tree.ui.TabIconHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -76,12 +76,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadTabs() {
         lifecycleScope.launch(Dispatchers.IO) {
+            // Kiểm tra an toàn trước khi lấy dữ liệu
             val favorites = getItems(krScriptConfig.favoriteConfig)
             val pages = getItems(krScriptConfig.pageListConfig)
             val tab3Items = getItems(krScriptConfig.customTab3Config)
             val tab4Items = getItems(krScriptConfig.customTab4Config)
 
             withContext(Dispatchers.Main) {
+                // Kiểm tra xem Activity còn tồn tại không trước khi cập nhật UI
+                if (!isActive || isFinishing) return@withContext
+                
                 progressBarDialog.hideDialog()
 
                 if (!::adapter.isInitialized) {
@@ -90,6 +94,7 @@ class MainActivity : AppCompatActivity() {
                     binding.viewPager.offscreenPageLimit = 2
                 }
 
+                // Xử lý nạp Fragment an toàn
                 favorites?.takeIf { it.isNotEmpty() }?.let {
                     val fragment = ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), null, ThemeModeState.getThemeMode())
                     if (adapter.getFragment(0) == null) adapter.addFragment(fragment, getString(R.string.tab_favorites))
@@ -127,6 +132,8 @@ class MainActivity : AppCompatActivity() {
             val tab4Items = getItems(krScriptConfig.customTab4Config)
 
             withContext(Dispatchers.Main) {
+                if (!isActive || isFinishing) return@withContext
+                
                 if (!favorites.isNullOrEmpty()) (adapter.getFragment(0) as? ActionListFragment)?.updateData(favorites, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), ThemeModeState.getThemeMode())
                 if (!pages.isNullOrEmpty()) (adapter.getFragment(1) as? ActionListFragment)?.updateData(pages, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), ThemeModeState.getThemeMode())
                 if (!tab3Items.isNullOrEmpty()) (adapter.getFragment(2) as? ActionListFragment)?.updateData(tab3Items, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), ThemeModeState.getThemeMode())
@@ -160,12 +167,24 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {
+    /**
+     * Lấy danh sách item từ cấu hình trang.
+     * Đã thêm kiểm tra null-safety để tránh NullPointerException.
+     */
+    private fun getItems(pageNode: PageNode?): ArrayList<NodeInfoBase>? {
+        if (pageNode == null) return null
+        
         var items: ArrayList<NodeInfoBase>? = null
-        if (pageNode.pageConfigSh.isNotEmpty())
+        
+        // Sử dụng ?. để truy cập thuộc tính an toàn
+        if (pageNode.pageConfigSh?.isNotEmpty() == true) {
             items = PageConfigSh(this, pageNode.pageConfigSh, null).execute()
-        if (items == null && pageNode.pageConfigPath.isNotEmpty())
+        }
+        
+        if (items == null && pageNode.pageConfigPath?.isNotEmpty() == true) {
             items = PageConfigReader(this.applicationContext, pageNode.pageConfigPath, null).readConfigXml()
+        }
+        
         return items
     }
 
@@ -270,7 +289,6 @@ class MainActivity : AppCompatActivity() {
         val layout = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
         val themeConfig = ThemeConfig(this)
         
-        // Cấu hình Theme Selector
         val themeSelector = layout.findViewById<TextView>(R.id.theme_selector)
         val themeNames = listOf(
             getString(R.string.theme_system_default), getString(R.string.theme_dark),
@@ -291,14 +309,12 @@ class MainActivity : AppCompatActivity() {
             popup.show()
         }
 
-        // Cấu hình CheckBox Notification
         val checkNotification = layout.findViewById<CheckBox>(R.id.notification_ui)
         checkNotification.isChecked = themeConfig.getAllowNotificationUI()
         checkNotification.setOnCheckedChangeListener { _, isChecked ->
             themeConfig.setAllowNotificationUI(isChecked)
         }
 
-        // Các liên kết thông tin
         layout.findViewById<TextView>(R.id.appliction_authorText).setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://zenlua.github.io/Tool-Tree/website/Information.html")))
         }
