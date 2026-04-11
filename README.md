@@ -4,7 +4,7 @@
 
 - Supports both `root` or `no-root` versions and is only for `arm64-bit`
 
-- 💾 Download: **[Release](https://github.com/Zenlua/Tool-Tree/releases/latest)** or **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
+- 📲 Download: **[Release](https://github.com/Zenlua/Tool-Tree/releases/latest)** or **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
 
 ### See details
 
