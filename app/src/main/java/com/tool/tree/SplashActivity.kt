@@ -38,7 +38,6 @@ class SplashActivity : AppCompatActivity() {
 
     private var hasRoot = false
     private var started = false
-    private var forceReset = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         applyAppLanguage()
@@ -48,8 +47,8 @@ class SplashActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         // 1. Kiểm tra nếu script đã chạy hoặc đang chạy thì vào thẳng Home
-        forceReset = intent.getBooleanExtra("force_reset", false)
-        if (!forceReset && ScriptEnvironmen.isInited() && isTaskRoot) {
+        if (ScriptEnvironmen.isInited() && isTaskRoot &&
+            !intent.getBooleanExtra("force_reset", false)) {
             gotoHome()
             return
         }
@@ -170,7 +169,7 @@ class SplashActivity : AppCompatActivity() {
         binding.startStateText.text = getString(R.string.pop_started)
         val config = KrScriptConfig().init(this)
 
-        if (config.beforeStartSh.isNotEmpty() || forceReset) {
+        if (config.beforeStartSh.isNotEmpty()) {
             runBeforeStartSh(config, hasRoot)
         } else {
             gotoHome()
