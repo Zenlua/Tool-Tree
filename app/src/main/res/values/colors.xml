@@ -5,16 +5,16 @@
     <color name="status_bg_dark">#222222</color>
     <color name="status_bg_light">@android:color/white</color>
     <color name="cardBgDark">#222222</color>
-    <color name="cardBgDarkTransparent">#a0000000</color>
-    <color name="cardBgLight">#DDFFFFFF</color>
-    <color name="cardBgLightTransparent">#C0FFFFFF</color>
+    <color name="cardBgDarkTransparent">#9A000000</color>
+    <color name="cardBgLight">#CCFFFFFF</color>
+    <color name="cardBgLightTransparent">#B3FFFFFF</color>
 
     <color name="color_load_low">#02d98d</color>
     <color name="color_load_mid">#87cb00</color>
     <color name="color_load_hight">#fc8a1b</color>
     <color name="color_load_veryhight">#f9592f</color>
 
-    <color name="colorBlurLight">#DDFFFFFF</color>
+    <color name="colorBlurLight">#CDFFFFFF</color>
     <color name="colorBlurDark">#80000000</color>
     
     <color name="colorPirmLight">#25FFFFFF</color>
@@ -26,7 +26,6 @@
     <color name="colorAccent">#0dbda2</color>
     <color name="colorPrimary">#64CDB6</color>
     <color name="colorPrimaryDark">#30C7B6</color>
-    <color name="splash_bg_color">#f4f4f4</color>
     <color name="warning">#FFB300</color>
     
     <color name="kr_params_view_bg">#11000000</color>
