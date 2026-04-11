@@ -48,8 +48,8 @@ class SplashActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         // 1. Kiểm tra nếu script đã chạy hoặc đang chạy thì vào thẳng Home
-        if (ScriptEnvironmen.isInited() && isTaskRoot &&
-            !intent.getBooleanExtra("force_reset", false)) {
+        forceReset = intent.getBooleanExtra("force_reset", false)
+        if (!forceReset && ScriptEnvironmen.isInited() && isTaskRoot) {
             gotoHome()
             return
         }
@@ -170,7 +170,7 @@ class SplashActivity : AppCompatActivity() {
         binding.startStateText.text = getString(R.string.pop_started)
         val config = KrScriptConfig().init(this)
 
-        if (config.beforeStartSh.isNotEmpty()) {
+        if (config.beforeStartSh.isNotEmpty() || forceReset) {
             runBeforeStartSh(config, hasRoot)
         } else {
             gotoHome()
