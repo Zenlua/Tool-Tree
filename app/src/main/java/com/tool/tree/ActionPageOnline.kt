@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.webkit.*
@@ -35,48 +36,35 @@ class ActionPageOnline : AppCompatActivity() {
     private var progressPolling: Timer? = null
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
     private val ACTION_FILE_PATH_CHOOSER = 65400
-    
-    // ID định danh cho mục menu mới
+
+    // ID định danh cho mục menu mở trình duyệt
     private val MENU_OPEN_BROWSER = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Sử dụng ThemeModeState để quản lý giao diện
         themeMode = ThemeModeState.switchTheme(this)
         
         binding = ActivityActionPageOnlineBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Lấy toolbar từ layout được include (webappbar)
+        // Thiết lập Toolbar từ layout được include (webappbar)
         val toolbar = binding.webappbar.toolbar
         setSupportActionBar(toolbar)
         setTitle(R.string.app_name)
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeButtonEnabled(true)
-        
+        // Hiển thị nút quay lại
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setHomeButtonEnabled(true)
+        }
+
         toolbar.setNavigationOnClickListener {
             finish()
         }
 
-        // --- THÊM MENU 3 CHẤM BẰNG CODE ---
-        // Thêm mục "Mở bằng trình duyệt" vào menu 
-        toolbar.menu.add(0, MENU_OPEN_BROWSER, 0, "Mở bằng trình duyệt").apply {
-            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-        }
-
-        // Xử lý sự kiện khi click vào menu
-        toolbar.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                MENU_OPEN_BROWSER -> {
-                    openInDefaultBrowser()
-                    true
-                }
-                else -> false
-            }
-        }
-        // ----------------------------------
-
+        // Xử lý nút back chuẩn Android 13+
         onBackPressedDispatcher.addCallback(this) {
             if (binding.krOnlineWebview.canGoBack()) {
                 binding.krOnlineWebview.goBack()
@@ -88,7 +76,37 @@ class ActionPageOnline : AppCompatActivity() {
         loadIntentData()
     }
 
-    // Hàm thực hiện mở URL hiện tại bằng trình duyệt mặc định của máy
+    /**
+     * Tạo menu 3 chấm (Overflow Menu) trực tiếp bằng code
+     */
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        // SHOW_AS_ACTION_NEVER sẽ ép item này vào menu 3 chấm mặc định
+        menu?.add(0, MENU_OPEN_BROWSER, 0, "Mở bằng trình duyệt")?.apply {
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        }
+        return true
+    }
+
+    /**
+     * Xử lý sự kiện khi click vào item trong menu 3 chấm
+     */
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            MENU_OPEN_BROWSER -> {
+                openInDefaultBrowser()
+                true
+            }
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    /**
+     * Mở URL hiện tại của WebView bằng trình duyệt mặc định của hệ thống
+     */
     private fun openInDefaultBrowser() {
         val currentUrl = binding.krOnlineWebview.url
         if (!currentUrl.isNullOrEmpty()) {
@@ -99,7 +117,7 @@ class ActionPageOnline : AppCompatActivity() {
                 Toast.makeText(this, "Không tìm thấy trình duyệt phù hợp", Toast.LENGTH_SHORT).show()
             }
         } else {
-            Toast.makeText(this, "Trang web hiện không có URL hợp lệ", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Đang tải trang, vui lòng đợi...", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -111,11 +129,13 @@ class ActionPageOnline : AppCompatActivity() {
                 title = extras.getString("title")
             }
 
+            // Load URL vào Webview
             when {
                 extras.containsKey("config") -> initWebview(extras.getString("config"))
                 extras.containsKey("url") -> initWebview(extras.getString("url"))
             }
 
+            // Xử lý download nếu có
             if (extras.containsKey("downloadUrl")) {
                 val downloader = Downloader(this)
                 val url = extras.getString("downloadUrl")!!
