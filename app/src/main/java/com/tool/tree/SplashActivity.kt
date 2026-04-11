@@ -243,7 +243,7 @@ class SplashActivity : AppCompatActivity() {
             this, 
             getString(R.string.permission_dialog_title), 
             getString(R.string.permission_dialog_message), 
-            { checkAndRequestPermissions() }, 
+            { requestAppPermissions() }, 
             { finish() }
         ).setCancelable(false)
     }
