@@ -128,4 +128,5 @@
     <string name="theme_wallpaper_dark">壁纸 + 深色</string>
     <string name="theme_wallpaper_light">壁纸 + 浅色</string>
     <string name="theme_text">主题</string>
+    <string name="open_in_browser">使用浏览器打开</string>
 </resources>

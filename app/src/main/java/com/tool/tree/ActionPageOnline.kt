@@ -81,7 +81,7 @@ class ActionPageOnline : AppCompatActivity() {
      */
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         // SHOW_AS_ACTION_NEVER sẽ ép item này vào menu 3 chấm mặc định
-        menu?.add(0, MENU_OPEN_BROWSER, 0, "Mở bằng trình duyệt")?.apply {
+        menu?.add(0, MENU_OPEN_BROWSER, 0, R.string.open_in_browser)?.apply {
             setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         }
         return true
@@ -114,10 +114,10 @@ class ActionPageOnline : AppCompatActivity() {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(currentUrl))
                 startActivity(intent)
             } catch (e: Exception) {
-                Toast.makeText(this, "Không tìm thấy trình duyệt phù hợp", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No suitable browser found.", Toast.LENGTH_SHORT).show()
             }
         } else {
-            Toast.makeText(this, "Đang tải trang, vui lòng đợi...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Loading page, please wait...", Toast.LENGTH_SHORT).show()
         }
     }
 
