@@ -1,11 +1,8 @@
 package com.tool.tree
 
-import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -18,8 +15,7 @@ import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.ListPopupWindow
 import androidx.appcompat.widget.Toolbar
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -38,7 +34,6 @@ import com.tool.tree.ui.TabIconHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.core.app.NotificationManagerCompat
 
 class MainActivity : AppCompatActivity() {
 
@@ -52,7 +47,6 @@ class MainActivity : AppCompatActivity() {
 
     private val ACTION_FILE_PATH_CHOOSER = 65400
     private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
-    private val NOTIFICATION_PERMISSION_REQUEST_CODE = 101
     private lateinit var adapter: MainPagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,11 +58,12 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
         setTitle(R.string.app_name)
 
-        // Kiểm tra quyền thông báo dựa trên cài đặt của người dùng
-        checkNotificationPermission()
-
         progressBarDialog.showDialog(getString(R.string.please_wait))
         loadTabs()
+
+        if (ThemeConfig(this).getAllowNotificationUI()) {
+            WakeLockService.startService(applicationContext)
+        }
 
         onBackPressedDispatcher.addCallback(this) {
             startService(Intent(this@MainActivity, WakeLockService::class.java).apply {
@@ -76,25 +71,6 @@ class MainActivity : AppCompatActivity() {
             })
             isEnabled = false
             onBackPressedDispatcher.onBackPressed()
-        }
-    }
-
-    private fun checkNotificationPermission() {
-        val themeConfig = ThemeConfig(this)
-        if (themeConfig.getAllowNotificationUI()) {
-            if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
-                WakeLockService.startService(applicationContext)
-            } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    ActivityCompat.requestPermissions(
-                        this,
-                        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                        NOTIFICATION_PERMISSION_REQUEST_CODE
-                    )
-                } else {
-                    Toast.makeText(this, "Please enable notifications in your device settings.", Toast.LENGTH_SHORT).show()
-                }
-            }
         }
     }
 

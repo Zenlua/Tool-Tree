@@ -51,7 +51,6 @@ class SplashActivity : AppCompatActivity() {
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        // Edge-to-edge hỗ trợ từ Android 6.0+ qua thư viện Compat
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         if (ScriptEnvironmen.isInited() && isTaskRoot &&
@@ -64,40 +63,57 @@ class SplashActivity : AppCompatActivity() {
             showAgreementDialog()
         }
 
-        // Animation xoay logo
         val rotateAnim = AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate)
         binding.startLogoXml.startAnimation(rotateAnim)
 
         applyTheme()
     }
 
-    // =================== QUẢN LÝ QUYỀN HẠN (SDK 23+) ===================
+    // =================== PERMISSIONS & STORAGE ===================
     
-    private fun hasPermissions(): Boolean {
-        // Ưu tiên kiểm tra quyền mạnh nhất trên Android 11+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (Environment.isExternalStorageManager()) return true
+    private fun getRequiredPermissions(): Array<String> {
+        return when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+            }
+            else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
-        
-        // Kiểm tra quyền Storage truyền thống
-        val read = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        val write = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        return read && write
+    }
+
+    private fun hasPermissions(): Boolean {
+        // 1. Kiểm tra các quyền Runtime cơ bản
+        val basicPermissions = getRequiredPermissions().all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+
+        // 2. Kiểm tra quyền MANAGE_EXTERNAL_STORAGE (Android 11+)
+        val manageStoragePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else {
+            true // Các bản cũ không có quyền này
+        }
+
+        return basicPermissions && manageStoragePermission
     }
 
     private fun requestAppPermissions() {
         saveAgreement()
+        
+        // Bước 1: Xin các quyền Runtime cơ bản trước
+        val missingBasic = getRequiredPermissions().filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+: Thử xin quyền All Files Access trước
-            if (!Environment.isExternalStorageManager()) {
-                requestManageStoragePermission()
-            } else {
-                startLogic()
-            }
-        } else {
-            // Android 6.0 - 10: Xin quyền READ/WRITE
-            checkFallbackPermissions()
+        if (missingBasic.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, missingBasic.toTypedArray(), REQUEST_CODE_PERMISSIONS)
+        } 
+        // Bước 2: Nếu quyền cơ bản có rồi nhưng thiếu MANAGE_EXTERNAL_STORAGE trên A11+
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+            requestManageStoragePermission()
+        } 
+        // Bước 3: Đã đủ hết quyền
+        else {
+            startLogic()
         }
     }
 
@@ -113,19 +129,19 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkFallbackPermissions() {
-        val permissions = arrayOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-        val missing = permissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-
-        if (missing.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, missing.toTypedArray(), REQUEST_CODE_PERMISSIONS)
-        } else {
-            startLogic()
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                // Sau khi có quyền cơ bản, kiểm tra tiếp MANAGE_STORAGE nếu cần
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+                    requestManageStoragePermission()
+                } else {
+                    startLogic()
+                }
+            } else {
+                finish()
+            }
         }
     }
 
@@ -136,21 +152,8 @@ class SplashActivity : AppCompatActivity() {
                 if (Environment.isExternalStorageManager()) {
                     startLogic()
                 } else {
-                    // FALLBACK: Nếu người dùng không cấp quyền MANAGE, xin quyền READ/WRITE cũ
-                    checkFallbackPermissions()
+                    finish() // Người dùng từ chối cấp quyền All Files Access
                 }
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                startLogic()
-            } else {
-                // Nếu cả quyền cũ cũng bị từ chối -> Thoát
-                finish()
             }
         }
     }
@@ -164,13 +167,13 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Kiểm tra lại quyền khi người dùng quay lại từ Settings
+        // Tự động kiểm tra nếu đã đồng nhất thỏa thuận nhưng chưa khởi chạy
         if (hasAgreed() && !started && hasPermissions()) {
             startLogic()
         }
     }
 
-    // =================== SHELL & LOGS (COROUTINES) ===================
+    // =================== SHELL & LOGS ===================
 
     private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
         lifecycleScope.launch(Dispatchers.IO) {
@@ -185,7 +188,6 @@ class SplashActivity : AppCompatActivity() {
                         }
                     }
                     
-                    // Đọc log song song
                     val outJob = launch { readStreamAsync(p.inputStream.bufferedReader()) }
                     val errJob = launch { readStreamAsync(p.errorStream.bufferedReader()) }
 
@@ -227,12 +229,12 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    // =================== GIAO DIỆN & TIỆN ÍCH ===================
+    // =================== HELPERS ===================
 
     private fun applyAppLanguage() {
         runCatching {
             val langFile = File(filesDir, "home/log/language")
-            val lang = langFile.takeIf { it.exists() }?.readText()?.trim() ?: return
+            val lang = langFile.takeIf { it.exists() }?.readText()?.trim()?.takeIf { it.isNotEmpty() } ?: return
             val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(lang.replace("_", "-"))
             AppCompatDelegate.setApplicationLocales(appLocale)
         }
@@ -242,25 +244,16 @@ class SplashActivity : AppCompatActivity() {
         val typedValue = TypedValue()
         theme.resolveAttribute(android.R.attr.windowBackground, typedValue, true)
         val bgColor = if (typedValue.resourceId != 0) ContextCompat.getColor(this, typedValue.resourceId) else typedValue.data
-        
         window.statusBarColor = bgColor
         window.navigationBarColor = bgColor
-    
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         val isDark = ThemeModeState.isDarkMode()
-
         controller.isAppearanceLightStatusBars = !isDark
         controller.isAppearanceLightNavigationBars = !isDark
     }
 
     private fun showAgreementDialog() {
-        DialogHelper.warning(
-            this,
-            getString(R.string.permission_dialog_title),
-            getString(R.string.permission_dialog_message),
-            { requestAppPermissions() },
-            { finish() }
-        ).setCancelable(false)
+        DialogHelper.warning(this, getString(R.string.permission_dialog_title), getString(R.string.permission_dialog_message), { requestAppPermissions() }, { finish() }).setCancelable(false)
     }
 
     private fun hasAgreed() = getSharedPreferences("kr-script-config", MODE_PRIVATE).getBoolean("agreed_permissions", false)
@@ -283,21 +276,13 @@ class SplashActivity : AppCompatActivity() {
     private fun startToFinish() {
         binding.startStateText.text = getString(R.string.pop_started)
         val config = KrScriptConfig().init(this)
-        if (config.beforeStartSh.isNotEmpty()) {
-            runBeforeStartSh(config, hasRoot)
-        } else {
-            gotoHome()
-        }
+        if (config.beforeStartSh.isNotEmpty()) runBeforeStartSh(config, hasRoot) else gotoHome()
     }
 
     private fun gotoHome() {
         val nextIntent = if (intent?.getBooleanExtra("JumpActionPage", false) == true) {
-            Intent(this, ActionPage::class.java).apply {
-                intent?.extras?.let { putExtras(it) }
-            }
-        } else {
-            Intent(this, MainActivity::class.java)
-        }
+            Intent(this, ActionPage::class.java).apply { intent?.extras?.let { putExtras(it) } }
+        } else Intent(this, MainActivity::class.java)
         startActivity(nextIntent)
         finish()
     }
