@@ -75,7 +75,7 @@ class SplashActivity : AppCompatActivity() {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
                 arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
             }
-            else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
 
@@ -94,7 +94,6 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun requestAppPermissions() {
-        saveAgreement()
         val missingBasic = getRequiredPermissions().filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
@@ -153,6 +152,7 @@ class SplashActivity : AppCompatActivity() {
     private fun startLogic() {
         if (!started) {
             started = true
+            saveAgreement()
             checkRootAndStart()
         }
     }
@@ -176,19 +176,16 @@ class SplashActivity : AppCompatActivity() {
                             )
                         }
                     }
-                    val outJob = launch { readStreamAsync(p.inputStream.bufferedReader()) }
-                    val errJob = launch { readStreamAsync(p.errorStream.bufferedReader()) }
+                    launch { readStreamAsync(p.inputStream.bufferedReader()) }
+                    launch { readStreamAsync(p.errorStream.bufferedReader()) }
+                    
                     p.waitFor()
                     shellJob.join()
-                    outJob.join()
-                    errJob.join()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
-                withContext(Dispatchers.Main) {
-                    gotoHome()
-                }
+                withContext(Dispatchers.Main) { gotoHome() }
             }
         }
     }
@@ -197,9 +194,7 @@ class SplashActivity : AppCompatActivity() {
         withContext(Dispatchers.IO) {
             reader.useLines { lines ->
                 lines.forEach { line ->
-                    withContext(Dispatchers.Main) {
-                        onLogOutput(line)
-                    }
+                    withContext(Dispatchers.Main) { onLogOutput(line) }
                 }
             }
         }
@@ -224,12 +219,7 @@ class SplashActivity : AppCompatActivity() {
             if (Locale.getDefault() != locale) {
                 Locale.setDefault(locale)
                 val config = Configuration(resources.configuration).apply { setLocale(locale) }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    resources.updateConfiguration(config, resources.displayMetrics)
-                } else {
-                    @Suppress("DEPRECATION")
-                    resources.updateConfiguration(config, resources.displayMetrics)
-                }
+                resources.updateConfiguration(config, resources.displayMetrics)
             }
         }
     }
@@ -240,14 +230,22 @@ class SplashActivity : AppCompatActivity() {
         val bgColor = if (typedValue.resourceId != 0) ContextCompat.getColor(this, typedValue.resourceId) else typedValue.data
         window.statusBarColor = bgColor
         window.navigationBarColor = bgColor
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-        val isDark = ThemeModeState.isDarkMode()
-        controller.isAppearanceLightStatusBars = !isDark
-        controller.isAppearanceLightNavigationBars = !isDark
+        
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            val isDark = ThemeModeState.isDarkMode()
+            isAppearanceLightStatusBars = !isDark
+            isAppearanceLightNavigationBars = !isDark
+        }
     }
 
     private fun showAgreementDialog() {
-        DialogHelper.warning(this, getString(R.string.permission_dialog_title), getString(R.string.permission_dialog_message), { requestAppPermissions() }, { finish() }).setCancelable(false)
+        DialogHelper.warning(
+            this, 
+            getString(R.string.permission_dialog_title), 
+            getString(R.string.permission_dialog_message), 
+            { checkAndRequestPermissions() }, 
+            { finish() }
+        ).setCancelable(false)
     }
 
     private fun hasAgreed() = getSharedPreferences("kr-script-config", MODE_PRIVATE).getBoolean("agreed_permissions", false)
