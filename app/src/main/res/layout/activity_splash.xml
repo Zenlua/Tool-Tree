@@ -2,27 +2,22 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="false"
+    android:fitsSystemWindows="true"
     android:backgroundTintMode="screen"
-    android:clipToPadding="true"> <!-- đổi màu nền nếu muốn -->
+    android:clipToPadding="true">
 
-    <!-- LinearLayout chính chứa FrameLayout + TextView -->
     <LinearLayout
         android:id="@+id/start_logo"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        android:layout_gravity="center_horizontal"
-        android:paddingTop="50dp">
+        android:layout_gravity="center"> <!-- <--- căn cả màn hình -->
 
-        <!-- FrameLayout chồng background + logo -->
         <FrameLayout
             android:layout_width="250dp"
-            android:layout_height="250dp"
-            android:layout_gravity="center">
+            android:layout_height="250dp">
 
-            <!-- Background xoay -->
             <ImageView
                 android:id="@+id/start_logo_xml"
                 android:layout_width="match_parent"
@@ -30,7 +25,6 @@
                 android:src="@drawable/ic_settings_background"
                 android:scaleType="centerCrop"/>
 
-            <!-- Logo chính -->
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -38,30 +32,24 @@
                 android:scaleType="centerInside"/>
         </FrameLayout>
 
-        <!-- Text hiển thị trạng thái -->
         <TextView
             android:id="@+id/fullscreen_content"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="center"
-            android:keepScreenOn="true"
             android:text="@string/pio_starting"
             android:textSize="35sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginTop="20dp"/>
 
         <TextView
             android:id="@+id/start_state_text"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginBottom="40dp"
-            android:minLines="8"
             android:text="@string/pop_before_start"
-            android:textAlignment="center"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginTop="10dp"/>
     </LinearLayout>
 
 </FrameLayout>

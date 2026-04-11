@@ -38,6 +38,7 @@ import com.tool.tree.ui.TabIconHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.core.app.NotificationManagerCompat
 
 class MainActivity : AppCompatActivity() {
 
@@ -80,37 +81,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkNotificationPermission() {
         val themeConfig = ThemeConfig(this)
-        // Chỉ xin quyền nếu người dùng đang bật tính năng Thông báo trong cài đặt
         if (themeConfig.getAllowNotificationUI()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+                WakeLockService.startService(applicationContext)
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     ActivityCompat.requestPermissions(
                         this,
                         arrayOf(Manifest.permission.POST_NOTIFICATIONS),
                         NOTIFICATION_PERMISSION_REQUEST_CODE
                     )
                 } else {
-                    WakeLockService.startService(applicationContext)
+                    Toast.makeText(this, "Please enable notifications in your device settings.", Toast.LENGTH_SHORT).show()
                 }
-            } else {
-                WakeLockService.startService(applicationContext)
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
-            val themeConfig = ThemeConfig(this)
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Người dùng đồng ý cấp quyền
-                if (themeConfig.getAllowNotificationUI()) {
-                    WakeLockService.startService(applicationContext)
-                }
-            } else {
-                // Người dùng từ chối: Tắt cấu hình thông báo để lần sau không hỏi nữa
-                themeConfig.setAllowNotificationUI(false)
-                Toast.makeText(this, "Notifications have been disabled due to lack of permission.", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -265,6 +248,7 @@ class MainActivity : AppCompatActivity() {
             this.fileSelectedInterface = fileSelectedInterface
             true
         } catch (e: Exception) {
+            Toast.makeText(this, "File picker error: ${e.message}", Toast.LENGTH_SHORT).show()
             false
         }
     }
@@ -336,10 +320,6 @@ class MainActivity : AppCompatActivity() {
         checkNotification.isChecked = themeConfig.getAllowNotificationUI()
         checkNotification.setOnCheckedChangeListener { _, isChecked ->
             themeConfig.setAllowNotificationUI(isChecked)
-            // Nếu người dùng chủ động bật lại, thực hiện xin quyền ngay
-            if (isChecked) {
-                checkNotificationPermission()
-            }
         }
 
         // Các liên kết thông tin
