@@ -28,6 +28,8 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
+import android.content.res.Configuration
+import java.util.Locale
 
 class SplashActivity : AppCompatActivity() {
 
@@ -63,14 +65,11 @@ class SplashActivity : AppCompatActivity() {
             showAgreementDialog()
         }
 
-        val rotateAnim = AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate)
-        binding.startLogoXml.startAnimation(rotateAnim)
+        binding.startLogoXml.startAnimation(AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate))
 
         applyTheme()
     }
 
-    // =================== PERMISSIONS & STORAGE ===================
-    
     private fun getRequiredPermissions(): Array<String> {
         return when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
@@ -81,16 +80,14 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun hasPermissions(): Boolean {
-        // 1. Kiểm tra các quyền Runtime cơ bản
         val basicPermissions = getRequiredPermissions().all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
 
-        // 2. Kiểm tra quyền MANAGE_EXTERNAL_STORAGE (Android 11+)
         val manageStoragePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
         } else {
-            true // Các bản cũ không có quyền này
+            true
         }
 
         return basicPermissions && manageStoragePermission
@@ -98,20 +95,16 @@ class SplashActivity : AppCompatActivity() {
 
     private fun requestAppPermissions() {
         saveAgreement()
-        
-        // Bước 1: Xin các quyền Runtime cơ bản trước
         val missingBasic = getRequiredPermissions().filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
 
         if (missingBasic.isNotEmpty()) {
             ActivityCompat.requestPermissions(this, missingBasic.toTypedArray(), REQUEST_CODE_PERMISSIONS)
-        } 
-        // Bước 2: Nếu quyền cơ bản có rồi nhưng thiếu MANAGE_EXTERNAL_STORAGE trên A11+
+        }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
             requestManageStoragePermission()
-        } 
-        // Bước 3: Đã đủ hết quyền
+        }
         else {
             startLogic()
         }
@@ -133,7 +126,6 @@ class SplashActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                // Sau khi có quyền cơ bản, kiểm tra tiếp MANAGE_STORAGE nếu cần
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
                     requestManageStoragePermission()
                 } else {
@@ -152,7 +144,7 @@ class SplashActivity : AppCompatActivity() {
                 if (Environment.isExternalStorageManager()) {
                     startLogic()
                 } else {
-                    finish() // Người dùng từ chối cấp quyền All Files Access
+                    finish()
                 }
             }
         }
@@ -167,13 +159,10 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Tự động kiểm tra nếu đã đồng nhất thỏa thuận nhưng chưa khởi chạy
         if (hasAgreed() && !started && hasPermissions()) {
             startLogic()
         }
     }
-
-    // =================== SHELL & LOGS ===================
 
     private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
         lifecycleScope.launch(Dispatchers.IO) {
@@ -187,10 +176,8 @@ class SplashActivity : AppCompatActivity() {
                             )
                         }
                     }
-                    
                     val outJob = launch { readStreamAsync(p.inputStream.bufferedReader()) }
                     val errJob = launch { readStreamAsync(p.errorStream.bufferedReader()) }
-
                     p.waitFor()
                     shellJob.join()
                     outJob.join()
@@ -229,14 +216,21 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    // =================== HELPERS ===================
-
     private fun applyAppLanguage() {
         runCatching {
             val langFile = File(filesDir, "home/log/language")
             val lang = langFile.takeIf { it.exists() }?.readText()?.trim()?.takeIf { it.isNotEmpty() } ?: return
-            val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(lang.replace("_", "-"))
-            AppCompatDelegate.setApplicationLocales(appLocale)
+            val locale = Locale.forLanguageTag(lang.replace("_", "-"))
+            if (Locale.getDefault() != locale) {
+                Locale.setDefault(locale)
+                val config = Configuration(resources.configuration).apply { setLocale(locale) }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    resources.updateConfiguration(config, resources.displayMetrics)
+                } else {
+                    @Suppress("DEPRECATION")
+                    resources.updateConfiguration(config, resources.displayMetrics)
+                }
+            }
         }
     }
 
