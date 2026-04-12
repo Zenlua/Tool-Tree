@@ -44,6 +44,7 @@
         android:background="@drawable/krscript_item_ripple_kon"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:overScrollMode="never"
         android:layout_above="@id/bottom_actions"
         android:layout_below="@+id/top_bar">
 
