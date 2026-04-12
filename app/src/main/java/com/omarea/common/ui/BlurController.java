@@ -7,15 +7,44 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
 import java.io.File;
 import java.lang.ref.WeakReference;
 
 public class BlurController {
 
-    // Sử dụng biến static để ghi nhớ trạng thái file giữa các lần gọi
     private static long lastFileLength = -1;
     private static long lastFileModified = -1;
     
+    /**
+     * Thuật toán làm mờ sử dụng RenderScript (Thay thế FastBlurUtility)
+     */
+    private Bitmap blurBitmap(Context context, Bitmap bitmap, float radius) {
+        if (bitmap == null) return null;
+        
+        Bitmap outBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
+        RenderScript rs = RenderScript.create(context);
+        
+        try {
+            Allocation input = Allocation.createFromBitmap(rs, bitmap);
+            Allocation output = Allocation.createFromBitmap(rs, outBitmap);
+            
+            ScriptIntrinsicBlur intrinsicBlur = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
+            intrinsicBlur.setRadius(radius); // Giá trị tối đa là 25f
+            intrinsicBlur.setInput(input);
+            intrinsicBlur.forEach(output);
+            
+            output.copyTo(outBitmap);
+        } finally {
+            rs.destroy();
+        }
+        
+        return outBitmap;
+    }
+
     public void captureAndBlur(Activity activity) {
         final WeakReference<Activity> activityRef = new WeakReference<>(activity);
         
@@ -26,34 +55,30 @@ public class BlurController {
             Bitmap source = null;
             Context context = act.getApplicationContext();
 
-            // 1. Kiểm tra Wallpaper tùy chỉnh trong /files/home/etc/wallpaper.jpg
+            // 1. Kiểm tra Wallpaper tùy chỉnh
             File customWallpaperFile = new File(act.getFilesDir(), "home/etc/wallpaper.jpg");
             
             if (customWallpaperFile.exists()) {
                 long currentLength = customWallpaperFile.length();
                 long currentModified = customWallpaperFile.lastModified();
 
-                // KIỂM TRA THAY ĐỔI: Nếu dung lượng và thời gian cũ giống hệt thì thoát
                 if (currentLength == lastFileLength && currentModified == lastFileModified) {
                     if (BlurEngine.blurBitmap != null && !BlurEngine.blurBitmap.isRecycled()) {
-                        return; // Không có gì thay đổi, không cần làm mờ lại
+                        return; 
                     }
                 }
 
-                // Cập nhật dấu vết mới
                 lastFileLength = currentLength;
                 lastFileModified = currentModified;
                 source = BitmapFactory.decodeFile(customWallpaperFile.getAbsolutePath());
             } else {
-                // Reset dấu vết nếu file custom bị xóa
                 lastFileLength = -1;
                 lastFileModified = -1;
             }
 
-            // 2. Lấy Wallpaper hệ thống nếu không có file custom
+            // 2. Lấy Wallpaper hệ thống nếu cần
             if (source == null) {
                 WallpaperManager wm = WallpaperManager.getInstance(context);
-                // XÓA CACHE: Buộc hệ thống đọc lại ảnh nền mới nhất từ Launcher
                 wm.forgetLoadedWallpaper(); 
                 
                 if (wm.getWallpaperInfo() == null) { 
@@ -64,24 +89,26 @@ public class BlurController {
                 }
             }
 
-            // 3. Xử lý làm mờ
-            Bitmap blurredResult;
+            // 3. Xử lý làm mờ và tối ưu RAM
             if (source != null) {
-                blurredResult = FastBlurUtility.startBlurBackground(source);
-            } else {
-                blurredResult = FastBlurUtility.getBlurBackgroundDrawer(act);
-            }
-
-            if (blurredResult != null) {
-                BlurEngine.blurBitmap = blurredResult;
-                BlurEngine.isPaused = false;
+                // Tối ưu: Giảm kích thước ảnh xuống 4 lần giúp giảm 16 lần lượng RAM tiêu thụ 
+                // và làm hiệu ứng mờ trông "mịn" hơn.
+                int width = Math.max(source.getWidth() / 4, 1);
+                int height = Math.max(source.getHeight() / 4, 1);
+                Bitmap scaledSource = Bitmap.createScaledBitmap(source, width, height, false);
                 
-                // Ép UI vẽ lại ngay lập tức
-                act.runOnUiThread(() -> {
-                    if (act != null && !act.isFinishing() && act.getWindow() != null) {
-                        act.getWindow().getDecorView().invalidate();
-                    }
-                });
+                Bitmap blurredResult = blurBitmap(context, scaledSource, 15f);
+
+                if (blurredResult != null) {
+                    BlurEngine.blurBitmap = blurredResult;
+                    BlurEngine.isPaused = false;
+                    
+                    act.runOnUiThread(() -> {
+                        if (act != null && !act.isFinishing() && act.getWindow() != null) {
+                            act.getWindow().getDecorView().invalidate();
+                        }
+                    });
+                }
             }
         }).start();
     }

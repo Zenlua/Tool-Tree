@@ -75,12 +75,11 @@ public class FastBlurUtility {
 
         // Tạo bộ lọc màu để giảm độ sáng (contrast 0.85f ~ giảm 15% độ sáng)
         ColorMatrix cm = new ColorMatrix();
-        float contrast = 1.05f; 
-        float brightness = 90f; 
+        float contrast = 0.95f; 
         cm.set(new float[]{
-                contrast, 0, 0, 0, brightness,
-                0, contrast, 0, 0, brightness,
-                0, 0, contrast, 0, brightness,
+                contrast, 0, 0, 0, 0,
+                0, contrast, 0, 0, 0,
+                0, 0, contrast, 0, 0,
                 0, 0, 0, 1, 0});
         paint.setColorFilter(new ColorMatrixColorFilter(cm));
 

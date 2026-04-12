@@ -10,7 +10,7 @@ import android.content.Context;
 public final class BlurEngine {
     public static BlurController controller = new BlurController();
     
-    // CẬP NHẬT: volatile đảm bảo biến được cập nhật ngay lập tức giữa các luồng
+    // volatile để đảm bảo tính nhất quán dữ liệu giữa Thread của Controller và UI Thread
     public static volatile Bitmap blurBitmap; 
     public static boolean isPaused = true;
     
@@ -41,13 +41,16 @@ public final class BlurEngine {
     }
 
     public Bitmap getUpdatedBlurBitmap() {
-        if (isPaused || blurBitmap == null || targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
+        // Kiểm tra an toàn Bitmap trước khi xử lý
+        if (isPaused || blurBitmap == null || blurBitmap.isRecycled() || 
+            targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
             return null;
         }
 
         targetView.getLocationInWindow(location);
         
         View rootView = targetView.getRootView();
+        // Tính toán tỷ lệ dựa trên kích thước thực tế của bitmap (đã được scale nhỏ ở Controller)
         float scaleX = (float) blurBitmap.getWidth() / rootView.getWidth();
         float scaleY = (float) blurBitmap.getHeight() / rootView.getHeight();
 
@@ -56,14 +59,15 @@ public final class BlurEngine {
         int w = (int) (targetView.getWidth() * scaleX);
         int h = (int) (targetView.getHeight() * scaleY);
 
+        // Giới hạn vùng cắt bên trong phạm vi Bitmap
         x = Math.max(0, Math.min(x, blurBitmap.getWidth() - w));
         y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
 
         if (w > 0 && h > 0) {
             try {
-                if (blurBitmap == null || blurBitmap.isRecycled()) return null;
-            
                 if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
+                    // Giải phóng cached cũ nếu kích thước thay đổi
+                    if (cachedBitmap != null) cachedBitmap.recycle();
                     cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                     cachedCanvas = new Canvas(cachedBitmap);
                 }
@@ -71,11 +75,9 @@ public final class BlurEngine {
                 srcRect.set(x, y, x + w, y + h);
                 cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
                 
-                if (!blurBitmap.isRecycled()) {
-                    cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
-                    cachedCanvas.drawColor(getBlurTintColor()); 
-                    return cachedBitmap;
-                }
+                cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
+                cachedCanvas.drawColor(getBlurTintColor()); 
+                return cachedBitmap;
             } catch (Exception e) {
                 return null;
             }
