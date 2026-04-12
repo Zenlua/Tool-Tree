@@ -13,7 +13,7 @@ public class FastBlurUtility {
 
     // Tỉ lệ thu nhỏ ảnh để xử lý nhanh (1/10 giúp giảm 100 lần số pixel cần tính toán)
     private static final float SCALE_FACTOR = 0.10f;
-    private static final int BLUR_RADIUS = 8;
+    private static final int BLUR_RADIUS = 10;
 
     /**
      * Chụp màn hình và làm mờ (Dùng làm phương án dự phòng khi không lấy được Wallpaper)
@@ -75,7 +75,7 @@ public class FastBlurUtility {
 
         // Tạo bộ lọc màu để giảm độ sáng (contrast 0.85f ~ giảm 15% độ sáng)
         ColorMatrix cm = new ColorMatrix();
-        float contrast = 0.85f; 
+        float contrast = 0.95f; 
         cm.set(new float[]{
                 contrast, 0, 0, 0, 0,
                 0, contrast, 0, 0, 0,

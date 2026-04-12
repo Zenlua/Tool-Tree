@@ -83,17 +83,10 @@ public final class BlurEngine {
         return null;
     }
 
-    // private int getBlurTintColor() {
-        // Context context = targetView.getContext();
-        // int colorRes = ThemeModeState.isDarkMode() ? R.color.colorBlurDark : R.color.colorBlurLight;
-        // return ContextCompat.getColor(context, colorRes);
-    // }
-
     private int getBlurTintColor() {
         Context context = targetView.getContext();
         int colorRes = ThemeModeState.isDarkMode() ? R.color.colorBlurDark : R.color.colorBlurLight;
-        int baseColor = ContextCompat.getColor(context, colorRes);
-        return Color.argb(200, Color.red(baseColor), Color.green(baseColor), Color.blue(baseColor));
+        return ContextCompat.getColor(context, colorRes);
     }
 
     public static Paint getStrokePaint(Context context) {
