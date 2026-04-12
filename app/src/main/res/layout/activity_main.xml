@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="false">
+
     <include
         layout="@layout/app_bar_main"
         android:id="@+id/appbar"
@@ -37,6 +38,7 @@
             app:tabIndicatorHeight="0dp"
             app:tabMaxWidth="0dp"
             app:tabIndicatorFullWidth="false" />
-            
+
     </com.omarea.common.ui.BlurBottomBarLayout>
+
 </RelativeLayout>

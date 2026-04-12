@@ -33,4 +33,5 @@
         </com.omarea.common.ui.BlurTopBarLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

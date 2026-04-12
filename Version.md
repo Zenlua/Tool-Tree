@@ -2,6 +2,7 @@
 
 **Version: 1.4.0 (12-4-2026)**
 
++ Fix the missing first folder in the file.
 + Fix lag issues caused by blur
 + Update the theme interface.
 + Fix code
