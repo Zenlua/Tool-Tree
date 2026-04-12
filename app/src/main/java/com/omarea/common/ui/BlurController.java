@@ -106,7 +106,7 @@ public class BlurController {
                 // SỬ DỤNG IF ĐỂ CHECK THEME
                 float contrastValue;
                 if (ThemeModeState.isDarkMode()) {
-                    contrastValue = 0.7f; // Chế độ tối: giảm tương phản, làm ảnh dịu đi
+                    contrastValue = 0.9f; // Chế độ tối: giảm tương phản, làm ảnh dịu đi
                 } else {
                     contrastValue = 1.2f; // Chế độ sáng: tăng tương phản, làm ảnh tươi sáng
                 }
