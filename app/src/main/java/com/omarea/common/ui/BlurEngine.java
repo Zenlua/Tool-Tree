@@ -72,7 +72,11 @@ public final class BlurEngine {
                 cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
                 
                 if (!blurBitmap.isRecycled()) {
-                    cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
+                    int dstLeft = x < 0 ? -x : 0;
+                    int dstTop  = y < 0 ? -y : 0;
+                    Rect dstRect = new Rect(dstLeft, dstTop, dstLeft + srcRect.width(), dstTop + srcRect.height());
+                    
+                    cachedCanvas.drawBitmap(blurBitmap, srcRect, dstRect, null);
                     cachedCanvas.drawColor(getBlurTintColor()); 
                     return cachedBitmap;
                 }
