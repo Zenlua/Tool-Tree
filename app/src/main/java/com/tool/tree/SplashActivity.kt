@@ -29,6 +29,7 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
+import com.tool.tree.databinding.ActivityMainBinding
 
 class SplashActivity : AppCompatActivity() {
 
@@ -66,8 +67,11 @@ class SplashActivity : AppCompatActivity() {
             }
         }
 
-        binding.startLogoXml.startAnimation(AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate))
-        // applyTheme()
+        binding.startLogoXml.postDelayed({
+            val animation = AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate)
+            binding.startLogoXml.startAnimation(animation)
+        }, 2000)
+
     }
 
     // =================== LOGIC XỬ LÝ QUYỀN ===================
@@ -83,7 +87,7 @@ class SplashActivity : AppCompatActivity() {
                 // Sau đó mới đi xin quyền hệ thống
                 requestRequiredPermissions() 
             },
-            Runnable { finishAffinity() }
+            Runnable { finish() }
         ).setCancelable(false)
     }
 
@@ -135,14 +139,12 @@ class SplashActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 checkPermissionsNextStep()
-            } else {
-                finishAffinity()
-            }
+            } else finish()
         }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -204,12 +206,11 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun gotoHome() {
-        val intentToStart = if (intent?.getBooleanExtra("JumpActionPage", false) == true) {
-            Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
-        } else {
-            Intent(this, MainActivity::class.java)
-        }
-        startActivity(intentToStart)
+        startActivity(
+            if (intent?.getBooleanExtra("JumpActionPage", false) == true)
+                Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
+            else Intent(this, MainActivity::class.java)
+        )
         finish()
     }
 
