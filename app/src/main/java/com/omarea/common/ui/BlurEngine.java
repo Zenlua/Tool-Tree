@@ -9,8 +9,6 @@ import android.content.Context;
 
 public final class BlurEngine {
     public static BlurController controller = new BlurController();
-    
-    // volatile để đảm bảo tính nhất quán dữ liệu giữa Thread của Controller và UI Thread
     public static volatile Bitmap blurBitmap; 
     public static boolean isPaused = true;
     
@@ -41,32 +39,41 @@ public final class BlurEngine {
     }
 
     public Bitmap getUpdatedBlurBitmap() {
-        // Kiểm tra an toàn Bitmap trước khi xử lý
+        // 1. Kiểm tra an toàn: Bitmap phải tồn tại và View phải có kích thước
         if (isPaused || blurBitmap == null || blurBitmap.isRecycled() || 
             targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
             return null;
         }
 
-        targetView.getLocationInWindow(location);
+        // 2. Lấy vị trí CHÍNH XÁC của View trên màn hình ngay tại thời điểm vẽ
+        targetView.getLocationOnScreen(location); 
         
+        // 3. Lấy kích thước toàn màn hình (hoặc root view) để tính tỷ lệ
         View rootView = targetView.getRootView();
-        // Tính toán tỷ lệ dựa trên kích thước thực tế của bitmap (đã được scale nhỏ ở Controller)
-        float scaleX = (float) blurBitmap.getWidth() / rootView.getWidth();
-        float scaleY = (float) blurBitmap.getHeight() / rootView.getHeight();
+        int rootWidth = rootView.getWidth();
+        int rootHeight = rootView.getHeight();
 
-        int x = (int) (location[0] * scaleX);
-        int y = (int) (location[1] * scaleY);
-        int w = (int) (targetView.getWidth() * scaleX);
-        int h = (int) (targetView.getHeight() * scaleY);
+        if (rootWidth <= 0 || rootHeight <= 0) return null;
 
-        // Giới hạn vùng cắt bên trong phạm vi Bitmap
+        // 4. Tính toán tỷ lệ giữa ảnh blur đã scale và màn hình thực tế
+        float scaleX = (float) blurBitmap.getWidth() / rootWidth;
+        float scaleY = (float) blurBitmap.getHeight() / rootHeight;
+
+        // 5. Tính toán tọa độ vùng cắt trên ảnh blur
+        // Cần dùng float để tránh sai số tích lũy khi vuốt nhanh, sau đó mới ép kiểu int
+        int x = Math.round(location[0] * scaleX);
+        int y = Math.round(location[1] * scaleY);
+        int w = Math.round(targetView.getWidth() * scaleX);
+        int h = Math.round(targetView.getHeight() * scaleY);
+
+        // 6. Ràng buộc tọa độ để không cắt ra ngoài phạm vi bitmap
         x = Math.max(0, Math.min(x, blurBitmap.getWidth() - w));
         y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
 
         if (w > 0 && h > 0) {
             try {
+                // Tối ưu bộ nhớ: Chỉ tạo lại bitmap đệm khi kích thước view thay đổi
                 if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
-                    // Giải phóng cached cũ nếu kích thước thay đổi
                     if (cachedBitmap != null) cachedBitmap.recycle();
                     cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                     cachedCanvas = new Canvas(cachedBitmap);
@@ -75,8 +82,12 @@ public final class BlurEngine {
                 srcRect.set(x, y, x + w, y + h);
                 cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
                 
+                // Vẽ vùng ảnh tương ứng từ ảnh nền vào cache
                 cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
+                
+                // Nhuộm màu (Tint) để tạo hiệu ứng kính mờ (Frost Glass)
                 cachedCanvas.drawColor(getBlurTintColor()); 
+                
                 return cachedBitmap;
             } catch (Exception e) {
                 return null;
@@ -97,14 +108,11 @@ public final class BlurEngine {
             strokePaint.setStyle(Paint.Style.STROKE);
             strokePaint.setStrokeWidth(3.0f); 
         }
-        
         int colorRes = ThemeModeState.isDarkMode() ? R.color.colorPirmLight : R.color.colorPirmDark;
         int color = ContextCompat.getColor(context, colorRes);
-        
         if (strokePaint.getColor() != color) {
             strokePaint.setColor(color);
         }
-        
         return strokePaint;
     }
 
