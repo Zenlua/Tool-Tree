@@ -136,12 +136,12 @@ If you agree, press the confirm button to continue."</string>
     <string formatted="false" name="kr_sdk_discrepancy_message">This feature only runs on systems with SDK %d</string>
     <string name="picker_not_item">No available options</string>
     <string name="picker_select_none">No item selected</string>
-    <string name="theme_system_default">Default theme</string>
+    <string name="theme_system_default">System Default</string>
     <string name="theme_light">Light Mode</string>
     <string name="theme_dark">Dark Mode</string>
-    <string name="theme_wallpaper_system">Wallpaper + Default</string>
-    <string name="theme_wallpaper_dark">Wallpaper + Dark</string>
-    <string name="theme_wallpaper_light">Wallpaper + Light</string>
+    <string name="theme_wallpaper_system">Wallpaper Default</string>
+    <string name="theme_wallpaper_dark">Wallpaper Dark</string>
+    <string name="theme_wallpaper_light">Wallpaper Light</string>
     <string name="theme_text">Theme</string>
     <string name="open_in_browser">Open with a browser</string>
 </resources>

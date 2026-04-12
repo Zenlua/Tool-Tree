@@ -7,6 +7,14 @@
     android:minHeight="?android:attr/listPreferredItemHeight">
 
     <ImageView
+        android:id="@+id/kr_extra_bg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+
+    <ImageView
         android:id="@id/kr_shortcut_icon"
         android:layout_width="10dp"
         android:layout_height="10dp"
@@ -17,20 +25,19 @@
         app:tint="@color/kr_shortcut_color" />
 
     <LinearLayout
+        android:id="@+id/kr_layout_ac"
         android:layout_marginStart="10dp"
         android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp"
         android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:gravity="center_vertical"
         android:layout_toStartOf="@id/kr_widget"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         <ImageView
             android:padding="0dp"
             android:id="@id/kr_icon"
-            android:layout_marginStart="10dp"
-            android:layout_gravity="center_vertical"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="5dp"
             android:layout_width="35dp"
             android:layout_height="35dp" />
 
@@ -62,14 +69,6 @@
                 style="@style/textSmall"
                 android:visibility="gone" />
 
-            <ImageView
-                android:id="@+id/kr_extra_icon"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
-                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 
@@ -85,4 +84,15 @@
         android:alpha="0.9"
         android:padding="5dp"
         app:tint="?android:colorAccent" />
+        
+    <ImageView
+        android:id="@+id/kr_extra_icon"
+        android:layout_below="@id/kr_layout_ac"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+
 </RelativeLayout>

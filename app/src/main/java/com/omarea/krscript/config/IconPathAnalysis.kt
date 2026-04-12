@@ -52,6 +52,16 @@ class IconPathAnalysis {
         return null
     }
 
+    fun loadBg(context: Context, clickableNode: ClickableNode): Drawable? {
+        if (!clickableNode.bgPath.isEmpty()) {
+            val inputStream = PathAnalysis(context, clickableNode.pageConfigDir).parsePath(clickableNode.bgPath)
+            inputStream?.run {
+                return bitmap2Drawable(BitmapFactory.decodeStream(this))
+            }
+        }
+        return null
+    }
+
     fun loadtextPhoto(context: Context, row: TextNode.TextRow, pageDir: String): Drawable? {
         if (row.photo.isNotEmpty()) {
             val inputStream = PathAnalysis(context, pageDir).parsePath(row.photo)
