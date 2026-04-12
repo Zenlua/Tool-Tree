@@ -28,13 +28,14 @@
         android:id="@+id/kr_params_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/top_bar"
-        android:layout_marginTop="16dp">
+        android:layout_below="@+id/top_bar" >
 
-        <com.omarea.common.ui.OverScrollView
+        <ScrollView
             android:id="@+id/kr_params_center"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:requiresFadingEdge="vertical"
+            android:fadingEdge="vertical"
             android:layout_above="@+id/bottom_actions"
             android:padding="16dp" />
 

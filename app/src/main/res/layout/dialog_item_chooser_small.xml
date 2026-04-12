@@ -68,12 +68,16 @@
     </FrameLayout>
 
     <ListView
-        android:overScrollMode="never"
         android:background="@drawable/krscript_item_ripple_kon"
         android:paddingEnd="5dp"
         android:id="@+id/item_list"
         android:scrollbars="none"
         android:divider="@null"
+        android:fastScrollEnabled="true"
+        android:scrollbarStyle="insideOverlay"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdge="vertical"
+        android:smoothScrollbar="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
