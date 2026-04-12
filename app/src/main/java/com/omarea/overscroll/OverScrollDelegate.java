@@ -131,8 +131,8 @@ public class OverScrollDelegate {
 
 	private final View mView;
 	private final OverScrollable mOverScrollable;
-	private boolean mEnableDragOverScroll = false;
-	private boolean mEnableFlingOverScroll = false;
+	private boolean mEnableDragOverScroll = true;
+	private boolean mEnableFlingOverScroll = true;
 	private OverScrollStyle mStyle;
 
 	// private final Path mPath = new Path();
