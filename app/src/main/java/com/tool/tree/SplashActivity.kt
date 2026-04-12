@@ -158,7 +158,7 @@ class SplashActivity : AppCompatActivity() {
 
     @Synchronized
     private fun checkRootAndStart() {
-        if (started) return
+        if (!started) return
         started = true
 
         lifecycleScope.launch(Dispatchers.IO) {
