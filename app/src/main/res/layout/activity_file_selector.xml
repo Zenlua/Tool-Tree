@@ -9,15 +9,18 @@
     android:keepScreenOn="false"
     tools:openDrawer="start">
 
-    <com.omarea.common.ui.OverScrollListView
-        android:id="@+id/file_selector_list"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="56dp">
-    </com.omarea.common.ui.OverScrollListView>
-
     <include
         layout="@layout/app_bar_main"
+        android:id="@+id/fileappbar"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <com.omarea.common.ui.OverScrollListView
+        android:id="@+id/file_selector_list"
+        android:layout_below="@id/fileappbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+    </com.omarea.common.ui.OverScrollListView>
+
 </androidx.drawerlayout.widget.DrawerLayout>
