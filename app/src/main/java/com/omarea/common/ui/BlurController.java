@@ -15,6 +15,7 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
+import com.tool.tree.ThemeModeState;
 import java.io.File;
 import java.lang.ref.WeakReference;
 
@@ -24,27 +25,30 @@ public class BlurController {
     private static long lastFileModified = -1;
 
     /**
-     * Tăng độ sáng cho Bitmap sử dụng ColorMatrix
-     * @param brightness: 0 là bình thường, dương là sáng hơn (ví dụ: 40f)
+     * Điều chỉnh độ tương phản (Contrast) của Bitmap
+     * @param contrast 1.2f cho chế độ sáng, 0.7f cho chế độ tối
      */
-    private Bitmap adjustBrightness(Bitmap bitmap, float brightness) {
+    private Bitmap adjustContrast(Bitmap bitmap, float contrast) {
         if (bitmap == null) return null;
-        
-        Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
-        Canvas canvas = new Canvas(newBitmap);
+
+        Bitmap out = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
+        Canvas canvas = new Canvas(out);
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        
-        // Ma trận điều chỉnh độ sáng: Cộng thêm giá trị vào các kênh R, G, B
+
+        // Công thức tính offset để giữ điểm xám trung tâm không bị lệch màu quá nhiều
+        // offset = (1 - contrast) * 128
+        float offset = (1f - contrast) * 128f;
+
         ColorMatrix cm = new ColorMatrix(new float[] {
-                1, 0, 0, 0, brightness,
-                0, 1, 0, 0, brightness,
-                0, 0, 1, 0, brightness,
+                contrast, 0, 0, 0, offset,
+                0, contrast, 0, 0, offset,
+                0, 0, contrast, 0, offset,
                 0, 0, 0, 1, 0
         });
-        
+
         paint.setColorFilter(new ColorMatrixColorFilter(cm));
         canvas.drawBitmap(bitmap, 0, 0, paint);
-        return newBitmap;
+        return out;
     }
 
     private Bitmap blurBitmap(Context context, Bitmap bitmap, float radius) {
@@ -75,7 +79,7 @@ public class BlurController {
             Bitmap source = null;
             Context context = act.getApplicationContext();
 
-            // 1. Lấy Wallpaper (Tùy chỉnh hoặc Hệ thống)
+            // 1. Lấy Wallpaper gốc
             File customWallpaperFile = new File(act.getFilesDir(), "home/etc/wallpaper.jpg");
             if (customWallpaperFile.exists()) {
                 long currentLength = customWallpaperFile.length();
@@ -97,17 +101,25 @@ public class BlurController {
                 }
             }
 
-            // 2. Xử lý làm sáng và làm mờ
+            // 2. Xử lý logic Theme và Hiệu ứng
             if (source != null) {
-                // Bước A: Tăng độ sáng (Cộng 45 đơn vị để lớp mờ trông rực rỡ hơn)
-                Bitmap brightSource = adjustBrightness(source, 45f);
+                // SỬ DỤNG IF ĐỂ CHECK THEME
+                float contrastValue;
+                if (ThemeModeState.isDarkMode()) {
+                    contrastValue = 0.7f; // Chế độ tối: giảm tương phản, làm ảnh dịu đi
+                } else {
+                    contrastValue = 1.2f; // Chế độ sáng: tăng tương phản, làm ảnh tươi sáng
+                }
 
-                // Bước B: Scale nhỏ để tối ưu RAM
-                int width = Math.max(brightSource.getWidth() / 4, 1);
-                int height = Math.max(brightSource.getHeight() / 4, 1);
-                Bitmap scaledSource = Bitmap.createScaledBitmap(brightSource, width, height, false);
+                // A. Áp dụng Contrast
+                Bitmap processedSource = adjustContrast(source, contrastValue);
+
+                // B. Scale nhỏ để tối ưu (giảm 4 lần kích thước = giảm 16 lần RAM)
+                int width = Math.max(processedSource.getWidth() / 4, 1);
+                int height = Math.max(processedSource.getHeight() / 4, 1);
+                Bitmap scaledSource = Bitmap.createScaledBitmap(processedSource, width, height, false);
                 
-                // Bước C: Blur bằng RenderScript
+                // C. Blur bằng RenderScript (Radius 15f là mức cân bằng tốt)
                 Bitmap blurredResult = blurBitmap(context, scaledSource, 15f);
 
                 if (blurredResult != null) {
@@ -121,8 +133,10 @@ public class BlurController {
                     });
                 }
                 
-                // Giải phóng bitmap tạm để tránh tràn RAM
-                if (brightSource != source) brightSource.recycle();
+                // Dọn dẹp bitmap trung gian để tránh rò rỉ bộ nhớ
+                if (processedSource != source) {
+                    processedSource.recycle();
+                }
             }
         }).start();
     }
