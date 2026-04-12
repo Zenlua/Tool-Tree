@@ -203,21 +203,6 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    private fun applyTheme() {
-        val typedValue = TypedValue()
-        theme.resolveAttribute(android.R.attr.windowBackground, typedValue, true)
-        val bgColor = if (typedValue.resourceId != 0) getColor(typedValue.resourceId) else typedValue.data
-        
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = bgColor
-        window.navigationBarColor = bgColor
-    
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-        val isDark = ThemeModeState.isDarkMode()
-        controller.isAppearanceLightStatusBars = !isDark
-        controller.isAppearanceLightNavigationBars = !isDark
-    }
-
     private fun gotoHome() {
         val intentToStart = if (intent?.getBooleanExtra("JumpActionPage", false) == true) {
             Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }

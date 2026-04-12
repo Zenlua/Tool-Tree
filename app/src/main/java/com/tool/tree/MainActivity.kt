@@ -132,8 +132,6 @@ class MainActivity : AppCompatActivity() {
             val tab4Items = getItems(krScriptConfig.customTab4Config)
 
             withContext(Dispatchers.Main) {
-                if (!isActive || isFinishing) return@withContext
-                
                 if (!favorites.isNullOrEmpty()) (adapter.getFragment(0) as? ActionListFragment)?.updateData(favorites, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), ThemeModeState.getThemeMode())
                 if (!pages.isNullOrEmpty()) (adapter.getFragment(1) as? ActionListFragment)?.updateData(pages, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), ThemeModeState.getThemeMode())
                 if (!tab3Items.isNullOrEmpty()) (adapter.getFragment(2) as? ActionListFragment)?.updateData(tab3Items, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), ThemeModeState.getThemeMode())
@@ -171,20 +169,12 @@ class MainActivity : AppCompatActivity() {
      * Lấy danh sách item từ cấu hình trang.
      * Đã thêm kiểm tra null-safety để tránh NullPointerException.
      */
-    private fun getItems(pageNode: PageNode?): ArrayList<NodeInfoBase>? {
-        if (pageNode == null) return null
-        
+    private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {
         var items: ArrayList<NodeInfoBase>? = null
-        
-        // Sử dụng ?. để truy cập thuộc tính an toàn
-        if (pageNode.pageConfigSh?.isNotEmpty() == true) {
+        if (pageNode.pageConfigSh.isNotEmpty())
             items = PageConfigSh(this, pageNode.pageConfigSh, null).execute()
-        }
-        
-        if (items == null && pageNode.pageConfigPath?.isNotEmpty() == true) {
+        if (items == null && pageNode.pageConfigPath.isNotEmpty())
             items = PageConfigReader(this.applicationContext, pageNode.pageConfigPath, null).readConfigXml()
-        }
-        
         return items
     }
 
