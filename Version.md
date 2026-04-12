@@ -1,22 +1,23 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.4.0 (11-4-2026)**
+**Version: 1.4.0 (12-4-2026)**
 
++ Fix lag issues caused by blur
 + Update the theme interface.
-+ Fixed code
++ Fix code
 
 **Version: 1.3.9 (5-4-2026)**
 
 + Troubleshooting add-on patch ROM notifications
 + Supports swiping to switch tabs
-+ Fixed code
++ Fix code
 
 **Version: 1.3.8 (2-4-2026)**
 
 + Code optimization
-+ Fixed build super
-+ Fixed check online
-+ Fixed errors when changing app language
++ Fix build super
++ Fix check online
++ Fix errors when changing app language
 + Update add-on patch ROM
 + Redesign the interface to be more user-friendly
 + Optimize the source code
@@ -85,7 +86,7 @@
 
 **Version: 1.3.0 (10-2-2026)**
 
-+ Fixed contextpatch that's causing the crashes.
++ Fix contextpatch that's causing the crashes.
 + Add a progress bar when extracting erofs.
 + Add new plugin
 + Improve some code
@@ -177,14 +178,14 @@
 **Version: 1.1.6 (29-10-2025)**
 
 + Update toybox version 8.1.3
-+ Fixed apk build error
++ Fix apk build error
 + Update some commands
-+ Fixed add language feature
++ Fix add language feature
 
 **Version: 1.1.5 (28-10-2025)**
 
-+ Fixed power menu command
-+ Fixed some other minor bugs
++ Fix power menu command
++ Fix some other minor bugs
 + Move apkeditor inside utilities
 + Add feature in utilities
 + Add new add-ons 
@@ -198,8 +199,8 @@
 
 **Version: 1.1.3 (13-9-2025)**
 
-+ Fixed theme interface bug
-+ Fixed smali build with smali
++ Fix theme interface bug
++ Fix smali build with smali
 
 **Version: 1.1.2 (5-9-2025)**
 
@@ -208,7 +209,7 @@
 
 **Version: 1.1.1 (3-9-2025)**
 
-+ Fixed java command
++ Fix java command
 + Brotli command update
 + Add language Hungarian 
 
@@ -274,18 +275,18 @@
 
 **Version: 1.0.3**
 
-+ Fixed bugs
++ Fix bugs
 + Change Payload.bin decompression for faster decompression
 + Add f2fs build (root) and unpack
 + Super optimized 
-+ Fixed notification
++ Fix notification
 + Update erofs, unpack and build
 + Add background running
 + Turn off noti sound
 + Reduce app size
-+ Fixed lz4 compression
-+ Fixed sdat2img lost 
-+ Fixed br, dat not showing type
++ Fix lz4 compression
++ Fix sdat2img lost 
++ Fix br, dat not showing type
 + Speed up file processing
 + Change default build ext to rw make_ext4fs, instead of ro e2fsdroid
 
