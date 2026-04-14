@@ -260,7 +260,7 @@ class DialogLogFragment : DialogFragment() {
             val listView = listViewRef.get() ?: return
             msg?.let { origin ->
                 // Lưu text gốc vào builder để copy không giới hạn
-                fullLogBuilder.append(origin.toString()).append("\n")
+                fullLogBuilder.append(origin.toString()).append("")
 
                 listView.post {
                     // Đưa trực tiếp đối tượng SpannableString vào list để giữ màu
