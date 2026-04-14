@@ -102,7 +102,7 @@ class DialogLogFragment : DialogFragment() {
         binding.btnCopy.setOnClickListener {
             try {
                 val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                // Copy toàn bộ log từ StringBuilder (không giới hạn)
+                // Lấy toàn bộ log từ Builder (không giới hạn 5000 dòng)
                 val fullLog = currentHandler?.getAllLogText() ?: ""
                 val clip = ClipData.newPlainText("shell_log", fullLog)
                 clipboard.setPrimaryClip(clip)
@@ -176,7 +176,7 @@ class DialogLogFragment : DialogFragment() {
         private val logData = mutableListOf<SpannableString>()
         private val fullLogBuilder = StringBuilder()
 
-        // SỬ DỤNG log_item.xml CỦA BẠN TẠI ĐÂY
+        // Sử dụng log_item.xml bạn đã tạo
         private val adapter = ArrayAdapter<SpannableString>(
             context, 
             R.layout.log_item, 
@@ -192,7 +192,7 @@ class DialogLogFragment : DialogFragment() {
 
         init {
             listView?.adapter = adapter
-            listView?.divider = null // Xóa gạch ngang giữa các dòng log
+            listView?.divider = null
         }
 
         private fun getColor(resId: Int): Int {
@@ -260,22 +260,35 @@ class DialogLogFragment : DialogFragment() {
 
         override fun updateLog(msg: SpannableString?) {
             val listView = listViewRef.get() ?: return
-            msg?.let {
-                val rawStr = it.toString()
-                // Lưu vào Builder để Copy (giữ nguyên gốc)
-                fullLogBuilder.append(rawStr).append("\n")
+            msg?.let { origin ->
+                // Lưu vào builder để Copy (giữ nguyên gốc kèm xuống dòng)
+                fullLogBuilder.append(origin.toString()).append("\n")
 
-                // XỬ LÝ HIỂN THỊ: Xóa bỏ ký tự ngắt dòng thừa để log khít nhau
-                val displayStr = rawStr.replace("\n", "").replace("\r", "")
-                if (displayStr.isEmpty()) return@let
+                // Xử lý hiển thị
+                val rawStr = origin.toString()
+                val cleanStr = rawStr.trim('\n', '\r')
+                if (cleanStr.isEmpty()) return@let
 
-                // Ở đây ta dùng lại object 'it' nhưng xóa bỏ ký tự xuống dòng nếu cần giữ Span màu sắc
-                // Hoặc đơn giản là tạo Spannable mới từ chuỗi đã làm sạch
-                val cleanSpannable = SpannableString(displayStr)
+                // Tạo Spannable mới để hiển thị khít dòng
+                val cleanSpannable = SpannableString(cleanStr)
+                
+                // SAO CHÉP MÀU SẮC: Chuyển các Span từ msg gốc sang bản hiển thị
+                val spans = origin.getSpans(0, origin.length, Any::class.java)
+                for (span in spans) {
+                    val start = origin.getSpanStart(span)
+                    val end = origin.getSpanEnd(span)
+                    
+                    if (start < cleanSpannable.length) {
+                        val newEnd = if (end > cleanSpannable.length) cleanSpannable.length else end
+                        try {
+                            cleanSpannable.setSpan(span, start, newEnd, origin.getSpanFlags(span))
+                        } catch (e: Exception) {}
+                    }
+                }
 
                 listView.post {
                     logData.add(cleanSpannable)
-                    // Giới hạn 5000 dòng trên giao diện để tránh lag
+                    // Giới hạn 5000 dòng cuối trên giao diện
                     if (logData.size > 5000) {
                         logData.subList(0, logData.size - 5000).clear()
                     }
