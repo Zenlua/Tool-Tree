@@ -247,7 +247,7 @@ class DialogLogFragment : DialogFragment() {
             msg?.let {
                 logView.post {
                     logView.append(it)
-                    (logView.parent as? ScrollView)?.smoothScrollTo(0, logView.bottom + logView.paddingBottom)
+                    (logView.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
                 }
             }
         }
