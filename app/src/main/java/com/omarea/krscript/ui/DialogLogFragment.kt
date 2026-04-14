@@ -244,10 +244,14 @@ class DialogLogFragment : DialogFragment() {
 
         override fun updateLog(msg: SpannableString?) {
             val logView = logViewRef.get() ?: return
+            val scrollView = logView.parent as? ScrollView ?: return
             msg?.let {
                 logView.post {
+                    val isAtBottom = (logView.bottom - (scrollView.height + scrollView.scrollY)) <= 50
                     logView.append(it)
-                    (logView.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
+                    if (isAtBottom) {
+                        scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+                    }
                 }
             }
         }
