@@ -261,16 +261,12 @@ class DialogLogFragment : DialogFragment() {
             msg?.let { origin ->
                 fullLogBuilder.append(origin.toString()).append("\n")
                 listView.post {
-                    val cleanMsg = origin.toString().trim('\n', '\r')
-                    if (cleanMsg.isNotEmpty()) {
-                        val spannableClean = SpannableString(cleanMsg)
-                        logData.add(spannableClean)
-                        if (logData.size > 5000) {
-                            logData.subList(0, logData.size - 5000).clear()
-                        }
-                        adapter.notifyDataSetChanged()
-                        listView.setSelection(logData.size - 1)
+                    logData.add(origin)
+                    if (logData.size > 5000) {
+                        logData.subList(0, logData.size - 5000).clear()
                     }
+                    adapter.notifyDataSetChanged()
+                    listView.setSelection(logData.size - 1)
                 }
             }
         }
