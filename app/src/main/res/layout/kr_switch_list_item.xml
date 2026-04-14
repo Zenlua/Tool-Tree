@@ -18,7 +18,6 @@
         android:id="@id/kr_shortcut_icon"
         android:layout_width="10dp"
         android:layout_height="10dp"
-        android:padding="5dp"
         android:layout_marginStart="6dp"
         android:layout_marginTop="6dp"
         android:src="@drawable/kr_shortcut_icon"
@@ -47,6 +46,7 @@
             android:layout_gravity="center_vertical"
             android:clickable="false"
             android:elevation="5dp"
+            android:padding="5dp"
             android:enabled="false"
             android:focusable="false" />
             

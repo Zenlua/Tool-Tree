@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.DialogInterface
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
@@ -12,19 +13,15 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
-import android.widget.ScrollView
-import android.widget.TextView
-import android.widget.Toast
 import android.view.WindowManager
+import android.widget.*
 import androidx.fragment.app.DialogFragment
 import com.omarea.common.ui.DialogHelper
-import com.tool.tree.databinding.KrDialogLogBinding
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
-import android.content.DialogInterface
 import com.tool.tree.R
+import com.tool.tree.databinding.KrDialogLogBinding
 import java.lang.ref.WeakReference
 
 class DialogLogFragment : DialogFragment() {
@@ -41,14 +38,9 @@ class DialogLogFragment : DialogFragment() {
     private var themeResId: Int = 0
     private var onDismissRunnable: Runnable? = null
     
-    // Lưu tham chiếu Handler để giải phóng khi hủy View
     private var currentHandler: MyShellHandler? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = KrDialogLogBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -110,7 +102,9 @@ class DialogLogFragment : DialogFragment() {
         binding.btnCopy.setOnClickListener {
             try {
                 val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("text", binding.shellOutput.text.toString())
+                // Lấy toàn bộ text từ StringBuilder của handler (không bị giới hạn bởi ListView)
+                val fullLog = currentHandler?.getAllLogText() ?: ""
+                val clip = ClipData.newPlainText("shell_log", fullLog)
                 clipboard.setPrimaryClip(clip)
                 Toast.makeText(requireContext(), getString(R.string.copy_success), Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
@@ -126,20 +120,12 @@ class DialogLogFragment : DialogFragment() {
             binding.btnCancel.visibility = View.GONE
         }
 
-        if (nodeInfo.title.isNotEmpty()) {
-            binding.title.text = nodeInfo.title
-        } else {
-            binding.title.visibility = View.GONE
-        }
-
-        if (nodeInfo.desc.isNotEmpty()) {
-            binding.desc.text = nodeInfo.desc
-        } else {
-            binding.desc.visibility = View.GONE
-        }
+        binding.title.text = if (nodeInfo.title.isNotEmpty()) nodeInfo.title else { binding.title.visibility = View.GONE; "" }
+        binding.desc.text = if (nodeInfo.desc.isNotEmpty()) nodeInfo.desc else { binding.desc.visibility = View.GONE; "" }
 
         binding.actionProgress.isIndeterminate = true
 
+        // Khởi tạo Handler với ListView
         val handler = MyShellHandler(requireContext().applicationContext, object : IActionEventHandler {
             override fun onCompleted() {
                 running = false
@@ -162,18 +148,11 @@ class DialogLogFragment : DialogFragment() {
                 running = true
                 canceled = false
                 forceStopRunnable = forceStop
-
                 dialog?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-                if (nodeInfo.interruptable && forceStop != null) {
-                    binding.btnCancel.visibility = View.VISIBLE
-                    binding.btnExit.visibility = View.GONE
-                } else {
-                    binding.btnExit.visibility = View.GONE
-                    binding.btnCancel.visibility = View.GONE
-                }
+                binding.btnExit.visibility = View.GONE
+                binding.btnCancel.visibility = if (nodeInfo.interruptable && forceStop != null) View.VISIBLE else View.GONE
             }
-        }, binding.shellOutput, binding.actionProgress)
+        }, binding.shellOutputList, binding.actionProgress)
 
         this.currentHandler = handler
         return handler
@@ -189,12 +168,19 @@ class DialogLogFragment : DialogFragment() {
     class MyShellHandler(
         context: Context,
         private var actionEventHandler: IActionEventHandler?,
-        logView: TextView?,
+        listView: ListView?,
         shellProgress: ProgressBar?
     ) : ShellHandlerBase(context) {
 
-        private val logViewRef = WeakReference(logView)
+        private val listViewRef = WeakReference(listView)
         private val progressRef = WeakReference(shellProgress)
+
+        // Dữ liệu cho hiển thị (Giới hạn 5k dòng)
+        private val logData = mutableListOf<SpannableString>()
+        private val adapter = ArrayAdapter<SpannableString>(context, android.R.layout.simple_list_item_1, logData)
+        
+        // Dữ liệu cho Copy (Không giới hạn)
+        private val fullLogBuilder = StringBuilder()
 
         private val errorColor = getColor(R.color.kr_shell_log_error)
         private val basicColor = getColor(R.color.kr_shell_log_basic)
@@ -202,19 +188,21 @@ class DialogLogFragment : DialogFragment() {
         private val endColor = getColor(R.color.kr_shell_log_end)
         private var hasError = false
 
+        init {
+            listView?.adapter = adapter
+        }
+
         private fun getColor(resId: Int): Int {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                context.getColor(resId)
-            } else {
-                context.resources.getColor(resId)
-            }
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) context.getColor(resId) else context.resources.getColor(resId)
         }
 
         fun release() {
-            logViewRef.clear()
+            listViewRef.clear()
             progressRef.clear()
             actionEventHandler = null
         }
+
+        fun getAllLogText(): String = fullLogBuilder.toString()
 
         override fun handleMessage(msg: Message) {
             when (msg.what) {
@@ -241,45 +229,45 @@ class DialogLogFragment : DialogFragment() {
             val shellProgress = progressRef.get() ?: return
             shellProgress.post {
                 when {
-                    current < 0 -> shellProgress.apply {
-                        visibility = View.VISIBLE
-                        isIndeterminate = true
-                    }
+                    current < 0 -> { shellProgress.visibility = View.VISIBLE; shellProgress.isIndeterminate = true }
                     current >= total -> shellProgress.visibility = View.GONE
-                    else -> shellProgress.apply {
-                        visibility = View.VISIBLE
-                        isIndeterminate = false
-                        max = total
-                        progress = current
-                        (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = 4
-                            params.topMargin = 44
-                            layoutParams = params
-                        }
+                    else -> {
+                        shellProgress.visibility = View.VISIBLE
+                        shellProgress.isIndeterminate = false
+                        shellProgress.max = total
+                        shellProgress.progress = current
                     }
                 }
             }
         }
 
         override fun onStart(msg: Any?) {
-            logViewRef.get()?.text = ""
+            logData.clear()
+            fullLogBuilder.setLength(0)
+            adapter.notifyDataSetChanged()
         }
 
         override fun onExit(msg: Any?) {
             val code = (msg as? Int) ?: -1
-            if (!hasError && code == 0) {
-                actionEventHandler?.onSuccess()
-            }
+            if (!hasError && code == 0) actionEventHandler?.onSuccess()
             updateLog(context.getString(R.string.kr_shell_completed), endColor)
             actionEventHandler?.onCompleted()
         }
 
         override fun updateLog(msg: SpannableString?) {
-            val logView = logViewRef.get() ?: return
+            val listView = listViewRef.get() ?: return
             msg?.let {
-                logView.post {
-                    logView.append(it)
-                    (logView.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
+                // Thêm vào Builder cho việc Copy (Không giới hạn)
+                fullLogBuilder.append(it.toString()).append("\n")
+
+                // Cập nhật giao diện (Giới hạn 5000 dòng cuối)
+                listView.post {
+                    logData.add(it)
+                    if (logData.size > 5000) {
+                        logData.subList(0, logData.size - 5000).clear()
+                    }
+                    adapter.notifyDataSetChanged()
+                    listView.setSelection(logData.size - 1)
                 }
             }
         }
@@ -289,25 +277,17 @@ class DialogLogFragment : DialogFragment() {
         super.onResume()
         dialog?.setOnKeyListener { _, keyCode, event ->
             if (!uiVisible || !running) return@setOnKeyListener false
-            event.action == KeyEvent.ACTION_DOWN &&
-                    (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)
+            event.action == KeyEvent.ACTION_DOWN && (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)
         }
     }
 
-    private fun offScreen() {
-        dialog?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-    }
+    private fun offScreen() = dialog?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-    private fun closeView() {
-        try {
-            dismissAllowingStateLoss()
-        } catch (ex: Exception) {}
-    }
+    private fun closeView() { try { dismissAllowingStateLoss() } catch (ex: Exception) {} }
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         onDismissRunnable?.run()
-        onDismissRunnable = null
     }
 
     override fun onDestroyView() {
@@ -323,14 +303,7 @@ class DialogLogFragment : DialogFragment() {
     }
 
     companion object {
-        fun create(
-            nodeInfo: RunnableNode,
-            onExit: Runnable,
-            onDismiss: Runnable,
-            script: String,
-            params: HashMap<String, String>?,
-            darkMode: Boolean = false
-        ): DialogLogFragment {
+        fun create(nodeInfo: RunnableNode, onExit: Runnable, onDismiss: Runnable, script: String, params: HashMap<String, String>?, darkMode: Boolean = false): DialogLogFragment {
             val fragment = DialogLogFragment()
             fragment.nodeInfo = nodeInfo
             fragment.onExit = onExit

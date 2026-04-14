@@ -39,26 +39,20 @@
 
     </LinearLayout>
 
-    <ScrollView
-        android:layout_marginTop="16dp"
-        android:background="@drawable/krscript_item_ripple_kon"
+    <ListView
+        android:id="@+id/shell_output_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:overScrollMode="never"
         android:layout_above="@id/bottom_actions"
-        android:layout_below="@+id/top_bar">
-
-        <TextView
-            android:id="@+id/shell_output"
-            android:breakStrategy="simple"
-            android:textIsSelectable="true"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textSize="12sp"
-            android:padding="12dp" />
-
-    </ScrollView>
+        android:layout_below="@+id/top_bar"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/krscript_item_ripple_kon"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:stackFromBottom="true"
+        android:transcriptMode="alwaysScroll"
+        android:padding="8dp"
+        android:overScrollMode="never" />
 
     <LinearLayout
         android:id="@+id/bottom_actions"
