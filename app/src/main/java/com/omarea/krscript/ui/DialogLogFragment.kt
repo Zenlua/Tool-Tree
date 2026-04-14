@@ -102,7 +102,6 @@ class DialogLogFragment : DialogFragment() {
         binding.btnCopy.setOnClickListener {
             try {
                 val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                // Lấy toàn bộ log từ Builder (không giới hạn 5000 dòng)
                 val fullLog = currentHandler?.getAllLogText() ?: ""
                 val clip = ClipData.newPlainText("shell_log", fullLog)
                 clipboard.setPrimaryClip(clip)
@@ -173,11 +172,10 @@ class DialogLogFragment : DialogFragment() {
 
         private val listViewRef = WeakReference(listView)
         private val progressRef = WeakReference(shellProgress)
-        private val logData = mutableListOf<SpannableString>()
+        private val logData = mutableListOf<CharSequence>() // Dùng CharSequence để giữ nguyên Span
         private val fullLogBuilder = StringBuilder()
 
-        // Sử dụng log_item.xml bạn đã tạo
-        private val adapter = ArrayAdapter<SpannableString>(
+        private val adapter = ArrayAdapter<CharSequence>(
             context, 
             R.layout.log_item, 
             android.R.id.text1, 
@@ -261,38 +259,20 @@ class DialogLogFragment : DialogFragment() {
         override fun updateLog(msg: SpannableString?) {
             val listView = listViewRef.get() ?: return
             msg?.let { origin ->
-                // Lưu vào builder để Copy (giữ nguyên gốc kèm xuống dòng)
+                // Lưu text gốc vào builder để copy không giới hạn
                 fullLogBuilder.append(origin.toString()).append("\n")
 
-                // Xử lý hiển thị
-                val rawStr = origin.toString()
-                val cleanStr = rawStr.trim('\n', '\r')
-                if (cleanStr.isEmpty()) return@let
-
-                // Tạo Spannable mới để hiển thị khít dòng
-                val cleanSpannable = SpannableString(cleanStr)
-                
-                // SAO CHÉP MÀU SẮC: Chuyển các Span từ msg gốc sang bản hiển thị
-                val spans = origin.getSpans(0, origin.length, Any::class.java)
-                for (span in spans) {
-                    val start = origin.getSpanStart(span)
-                    val end = origin.getSpanEnd(span)
-                    
-                    if (start < cleanSpannable.length) {
-                        val newEnd = if (end > cleanSpannable.length) cleanSpannable.length else end
-                        try {
-                            cleanSpannable.setSpan(span, start, newEnd, origin.getSpanFlags(span))
-                        } catch (e: Exception) {}
-                    }
-                }
-
                 listView.post {
-                    logData.add(cleanSpannable)
-                    // Giới hạn 5000 dòng cuối trên giao diện
+                    // Đưa trực tiếp đối tượng SpannableString vào list để giữ màu
+                    logData.add(origin)
+                    
+                    // Giới hạn 5000 dòng cuối để đảm bảo hiệu năng UI
                     if (logData.size > 5000) {
                         logData.subList(0, logData.size - 5000).clear()
                     }
+                    
                     adapter.notifyDataSetChanged()
+                    // Luôn cuộn tới dòng mới nhất ở dưới cùng
                     listView.setSelection(logData.size - 1)
                 }
             }
