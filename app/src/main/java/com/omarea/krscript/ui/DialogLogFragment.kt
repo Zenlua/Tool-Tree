@@ -102,7 +102,7 @@ class DialogLogFragment : DialogFragment() {
         binding.btnCopy.setOnClickListener {
             try {
                 val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                // Lấy toàn bộ text từ StringBuilder của handler (không bị giới hạn bởi ListView)
+                // Copy toàn bộ log từ StringBuilder (không giới hạn)
                 val fullLog = currentHandler?.getAllLogText() ?: ""
                 val clip = ClipData.newPlainText("shell_log", fullLog)
                 clipboard.setPrimaryClip(clip)
@@ -125,8 +125,20 @@ class DialogLogFragment : DialogFragment() {
 
         binding.actionProgress.isIndeterminate = true
 
-        // Khởi tạo Handler với ListView
         val handler = MyShellHandler(requireContext().applicationContext, object : IActionEventHandler {
+            override fun onStart(forceStop: Runnable?) {
+                running = true
+                canceled = false
+                forceStopRunnable = forceStop
+                dialog?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                binding.btnExit.visibility = View.GONE
+                binding.btnCancel.visibility = if (nodeInfo.interruptable && forceStop != null) View.VISIBLE else View.GONE
+            }
+
+            override fun onSuccess() {
+                if (nodeInfo.autoOff) closeView()
+            }
+
             override fun onCompleted() {
                 running = false
                 onExit.run()
@@ -138,19 +150,6 @@ class DialogLogFragment : DialogFragment() {
                     b.actionProgress.visibility = View.GONE
                 }
                 isCancelable = true
-            }
-
-            override fun onSuccess() {
-                if (nodeInfo.autoOff) closeView()
-            }
-
-            override fun onStart(forceStop: Runnable?) {
-                running = true
-                canceled = false
-                forceStopRunnable = forceStop
-                dialog?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                binding.btnExit.visibility = View.GONE
-                binding.btnCancel.visibility = if (nodeInfo.interruptable && forceStop != null) View.VISIBLE else View.GONE
             }
         }, binding.shellOutputList, binding.actionProgress)
 
@@ -174,13 +173,16 @@ class DialogLogFragment : DialogFragment() {
 
         private val listViewRef = WeakReference(listView)
         private val progressRef = WeakReference(shellProgress)
-
-        // Dữ liệu cho hiển thị (Giới hạn 5k dòng)
         private val logData = mutableListOf<SpannableString>()
-        private val adapter = ArrayAdapter<SpannableString>(context, android.R.layout.simple_list_item_1, logData)
-        
-        // Dữ liệu cho Copy (Không giới hạn)
         private val fullLogBuilder = StringBuilder()
+
+        // SỬ DỤNG log_item.xml CỦA BẠN TẠI ĐÂY
+        private val adapter = ArrayAdapter<SpannableString>(
+            context, 
+            R.layout.log_item, 
+            android.R.id.text1, 
+            logData
+        )
 
         private val errorColor = getColor(R.color.kr_shell_log_error)
         private val basicColor = getColor(R.color.kr_shell_log_basic)
@@ -190,6 +192,7 @@ class DialogLogFragment : DialogFragment() {
 
         init {
             listView?.adapter = adapter
+            listView?.divider = null // Xóa gạch ngang giữa các dòng log
         }
 
         private fun getColor(resId: Int): Int {
@@ -228,15 +231,16 @@ class DialogLogFragment : DialogFragment() {
         override fun onProgress(current: Int, total: Int) {
             val shellProgress = progressRef.get() ?: return
             shellProgress.post {
-                when {
-                    current < 0 -> { shellProgress.visibility = View.VISIBLE; shellProgress.isIndeterminate = true }
-                    current >= total -> shellProgress.visibility = View.GONE
-                    else -> {
-                        shellProgress.visibility = View.VISIBLE
-                        shellProgress.isIndeterminate = false
-                        shellProgress.max = total
-                        shellProgress.progress = current
-                    }
+                if (current < 0) {
+                    shellProgress.visibility = View.VISIBLE
+                    shellProgress.isIndeterminate = true
+                } else if (current >= total) {
+                    shellProgress.visibility = View.GONE
+                } else {
+                    shellProgress.visibility = View.VISIBLE
+                    shellProgress.isIndeterminate = false
+                    shellProgress.max = total
+                    shellProgress.progress = current
                 }
             }
         }
@@ -257,12 +261,21 @@ class DialogLogFragment : DialogFragment() {
         override fun updateLog(msg: SpannableString?) {
             val listView = listViewRef.get() ?: return
             msg?.let {
-                // Thêm vào Builder cho việc Copy (Không giới hạn)
-                fullLogBuilder.append(it.toString()).append("\n")
+                val rawStr = it.toString()
+                // Lưu vào Builder để Copy (giữ nguyên gốc)
+                fullLogBuilder.append(rawStr).append("\n")
 
-                // Cập nhật giao diện (Giới hạn 5000 dòng cuối)
+                // XỬ LÝ HIỂN THỊ: Xóa bỏ ký tự ngắt dòng thừa để log khít nhau
+                val displayStr = rawStr.replace("\n", "").replace("\r", "")
+                if (displayStr.isEmpty()) return@let
+
+                // Ở đây ta dùng lại object 'it' nhưng xóa bỏ ký tự xuống dòng nếu cần giữ Span màu sắc
+                // Hoặc đơn giản là tạo Spannable mới từ chuỗi đã làm sạch
+                val cleanSpannable = SpannableString(displayStr)
+
                 listView.post {
-                    logData.add(it)
+                    logData.add(cleanSpannable)
+                    // Giới hạn 5000 dòng trên giao diện để tránh lag
                     if (logData.size > 5000) {
                         logData.subList(0, logData.size - 5000).clear()
                     }

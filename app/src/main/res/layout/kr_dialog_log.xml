@@ -51,6 +51,7 @@
         android:dividerHeight="0dp"
         android:stackFromBottom="true"
         android:transcriptMode="alwaysScroll"
+        android:fastScrollEnabled="true"
         android:padding="8dp"
         android:overScrollMode="never" />
 
