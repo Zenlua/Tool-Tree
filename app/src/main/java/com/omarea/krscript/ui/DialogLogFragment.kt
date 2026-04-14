@@ -259,21 +259,18 @@ class DialogLogFragment : DialogFragment() {
         override fun updateLog(msg: SpannableString?) {
             val listView = listViewRef.get() ?: return
             msg?.let { origin ->
-                // Lưu text gốc vào builder để copy không giới hạn
-                fullLogBuilder.append(origin.toString()).append("")
-
+                fullLogBuilder.append(origin.toString()).append("\n")
                 listView.post {
-                    // Đưa trực tiếp đối tượng SpannableString vào list để giữ màu
-                    logData.add(origin)
-                    
-                    // Giới hạn 5000 dòng cuối để đảm bảo hiệu năng UI
-                    if (logData.size > 5000) {
-                        logData.subList(0, logData.size - 5000).clear()
+                    val cleanMsg = origin.toString().trim('\n', '\r')
+                    if (cleanMsg.isNotEmpty()) {
+                        val spannableClean = SpannableString(cleanMsg)
+                        logData.add(spannableClean)
+                        if (logData.size > 5000) {
+                            logData.subList(0, logData.size - 5000).clear()
+                        }
+                        adapter.notifyDataSetChanged()
+                        listView.setSelection(logData.size - 1)
                     }
-                    
-                    adapter.notifyDataSetChanged()
-                    // Luôn cuộn tới dòng mới nhất ở dưới cùng
-                    listView.setSelection(logData.size - 1)
                 }
             }
         }
