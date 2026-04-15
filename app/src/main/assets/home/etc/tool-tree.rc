@@ -864,7 +864,7 @@ xml_print '<group>
 <param name="nounpak" value-sh="glog dkjdj" label="'$decode_text_1'" type="switch" />
 <param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" />
 <param name="vavb" label="'$builds_text_8'" type="switch"/>
-<param name="IMAGES" desc="'$decode_text_3'" multiple="true" options-sh="findfile 2 $PTSD" required="true"/>
+<param name="IMAGES" desc="'$decode_text_3'" multiple="true" options-sh="findfile 2 $PTSD | sort" required="true"/>
 <set>
 slog vavbbgdf "$vavb"
 slog xoa_oat_boot "$xoa_oat_boot"
@@ -981,7 +981,7 @@ checktime
 <option value="br">File.new.dat.br</option>
 </param>
 <param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'"/>
-<param name="IMAGES" desc="'$convert_text_3'" options-sh="findfile 1 $PTSD" multiple="true" required="true"/>
+<param name="IMAGES" desc="'$convert_text_3'" options-sh="findfile 1 $PTSD | sort" multiple="true" required="true"/>
 <set>
 slog format_img "$format_img"
 slog nen_br "$nen_br"
