@@ -461,6 +461,9 @@ fi
 </action>
 <text>
 <desc>'"$(cat $TEMP/version.txt 2>/dev/null)"'</desc>
+<slices>
+<slice photo="'$ETC'/icon/tool-tree.jpg" />
+</slices>
 </text>
 </group>'
 }
