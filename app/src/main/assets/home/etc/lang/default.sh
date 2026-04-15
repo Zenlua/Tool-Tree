@@ -43,6 +43,7 @@ config_text="Configuration"
 time_text="Time"
 pin_text="Pin add-on"
 unpin_text="Unpin add-on"
+dissblur_text="Turn off blur effect"
 tool_unpack_text="Decoding tool"
 
 # Home

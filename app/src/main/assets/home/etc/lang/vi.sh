@@ -43,6 +43,7 @@ config_text="Cấu hình"
 time_text="Thời gian"
 pin_text="Ghim add-on"
 unpin_text="Bỏ ghim"
+dissblur_text="Tắt hiệu ứng mờ"
 tool_unpack_text="Công cụ giải mã"
 
 # Home

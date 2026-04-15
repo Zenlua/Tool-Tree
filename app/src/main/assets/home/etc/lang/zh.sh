@@ -43,6 +43,7 @@ config_text="配置"
 time_text="时间"
 pin_text="置顶"
 unpin_text="取消置顶"
+dissblur_text="关闭模糊效果"
 tool_unpack_text="解码工具"
 
 # Home

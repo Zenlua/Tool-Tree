@@ -549,8 +549,10 @@ slog show_infor_text_2 "$show_infor_text_2"
 <group>
 <action icon="'`urlpng background`'" warning="'$project_text_15'" shell="hidden" auto-restart="true">
 <title>'$project_text_14'</title>
+<param name="dissblur" label="'$dissblur_text'" value-sh="glog dissblur" type="bool" />
 <param name="uri_change_background" type="file" suffix="jpg" value-sh="glog uri_change_background" editable="true" />
 <set>
+slog dissblur "$dissblur"
 slog uri_change_background "$uri_change_background"
 [ -f "$uri_change_background" ] && cp -f "$uri_change_background" "$ETC/wallpaper.jpg"
 [ -z "$uri_change_background" ] && rm -f "$ETC/wallpaper.jpg"

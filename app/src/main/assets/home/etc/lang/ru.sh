@@ -43,6 +43,7 @@ config_text="Конфигурация"
 time_text="Время"
 pin_text="Закрепить"
 unpin_text="Открепить"
+dissblur_text="Отключить эффект размытия"
 tool_unpack_text="Инструмент декодирования"
 
 # Home

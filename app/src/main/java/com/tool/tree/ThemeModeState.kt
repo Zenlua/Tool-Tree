@@ -3,9 +3,7 @@ package com.tool.tree
 import android.app.Activity
 import android.app.WallpaperManager
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
@@ -24,11 +22,30 @@ object ThemeModeState {
     @JvmStatic
     fun isDarkMode(): Boolean = themeMode.isDarkMode
 
+    /**
+     * Kiểm tra file cấu hình tắt blur dựa trên đường dẫn tương đối
+     * Đường dẫn đầy đủ sẽ là: /data/user/0/com.tool.tree/files/home/log/dissblur
+     */
+    private fun isBlurDisabled(activity: Activity): Boolean {
+        val file = File(activity.filesDir, "home/log/dissblur")
+        return try {
+            if (file.exists()) {
+                file.readText().trim() == "1"
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun switchTheme(activity: Activity, themeLevel: Int? = null): ThemeMode {
         val level = themeLevel ?: ThemeConfig(activity).getThemeMode()
         
-        // Cập nhật logic xác định Night Mode hệ thống nhanh hơn
-        val isSystemNight = (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        // Xác định chế độ tối của hệ thống
+        val isSystemNight = (activity.resources.configuration.uiMode and 
+                android.content.res.Configuration.UI_MODE_NIGHT_MASK) == 
+                android.content.res.Configuration.UI_MODE_NIGHT_YES
 
         when (level.coerceIn(0, 5)) {
             0 -> {
@@ -63,10 +80,9 @@ object ThemeModeState {
             }
         }
 
-        // BlurEngine logic
-        if (level >= 3) {
+        // Logic xử lý Blur: Chỉ bật khi level >= 3 VÀ file dissblur không phải là 1
+        if (level >= 3 && !isBlurDisabled(activity)) {
             BlurEngine.isPaused = false
-            // Đảm bảo View đã layout xong trước khi capture
             activity.window.decorView.post {
                 BlurEngine.controller.captureAndBlur(activity)
             }
@@ -86,15 +102,14 @@ object ThemeModeState {
 
         try {
             if (customWallpaperFile.exists()) {
-                // Sử dụng createFromPath để tiết kiệm bộ nhớ hơn decode trực tiếp
                 val drawable = Drawable.createFromPath(customWallpaperFile.absolutePath)
                 activity.window.setBackgroundDrawable(drawable)
             } else if (wallpaper.wallpaperInfo != null) {
-                // Nếu là Live Wallpaper, dùng flag SHOW_WALLPAPER
+                // Live Wallpaper
                 activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
                 activity.window.setBackgroundDrawable(null)
             } else {
-                // Hình nền tĩnh hệ thống
+                // Hệ thống Wallpaper tĩnh
                 activity.window.setBackgroundDrawable(wallpaper.drawable)
             }
         } catch (e: Exception) {
@@ -104,26 +119,23 @@ object ThemeModeState {
 
     private fun applyWindowFlags(activity: Activity) {
         val window = activity.window
-        // Thiết lập Edge-to-Edge chuẩn SDK 23+
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
 
         val rootView = window.decorView
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             
-            // Cập nhật padding cho các container nếu tồn tại
             activity.findViewById<View>(R.id.blur_top_container)?.setPadding(0, systemBars.top, 0, 0)
             activity.findViewById<View>(R.id.file_selector_list)?.setPadding(0, systemBars.top, 0, 0)
             activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
             activity.findViewById<View>(R.id.blur_bottom_container)?.setPadding(0, 0, 0, systemBars.bottom)
             activity.findViewById<View>(R.id.kr_online_webview)?.setPadding(0, systemBars.top, 0, 0)
             
-            insets // Trả về insets để các view khác vẫn nhận được
+            insets
         }
 
-        // Điều khiển màu icon trên thanh trạng thái
         val controller = WindowInsetsControllerCompat(window, rootView)
         val useLightIcons = !themeMode.isDarkMode
         controller.isAppearanceLightStatusBars = useLightIcons

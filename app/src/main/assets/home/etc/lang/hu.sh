@@ -41,6 +41,7 @@ alignment_text="Igazítás"
 synthetic_text="Szintetikus"
 config_text="Konfiguráció"
 time_text="Idő"
+dissblur_text="Elmosódás effektus kikapcsolása"
 tool_unpack_text="Dekódoló eszköz"
 
 # Home
