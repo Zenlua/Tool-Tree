@@ -5,7 +5,7 @@
     android:gravity="center_vertical"
     android:orientation="vertical"
     android:paddingLeft="16dp"
-    android:paddingTop="5dp"
+    android:paddingTop="0dp"
     android:paddingRight="16dp"
     android:paddingBottom="10dp">
 
@@ -13,6 +13,7 @@
         android:id="@id/kr_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         style="@style/textTitle"
         android:breakStrategy="simple" />
 
@@ -22,6 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         style="@style/textSmall"
+        android:visibility="gone"
         android:breakStrategy="simple" />
 
     <TextView
@@ -31,6 +33,7 @@
         android:layout_marginTop="4dp"
         android:textColor="?android:colorAccent"
         style="@style/textSmall"
+        android:visibility="gone"
         android:breakStrategy="simple" />
 
     <TextView
@@ -38,6 +41,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="@style/textSmall"
+        android:visibility="gone"
+        android:layout_marginBottom="6dp"
         android:breakStrategy="simple" />
 
     <ImageView
@@ -46,6 +51,6 @@
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"
-        android:paddingBottom="5dp"
+        android:paddingBottom="6dp"
         android:visibility="gone" />
 </LinearLayout>

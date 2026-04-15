@@ -5,12 +5,13 @@
     android:orientation="vertical"
     android:gravity="center_vertical"
     android:paddingLeft="4dp"
-    android:paddingTop="5dp"
+    android:paddingTop="0dp"
     android:paddingRight="4dp"
     android:paddingBottom="10dp">
 
     <TextView
         android:id="@id/kr_title"
+        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="@style/textTitle" />
@@ -20,6 +21,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
+        android:visibility="gone"
         style="@style/textSmall" />
 
     <TextView
@@ -28,12 +30,15 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:textColor="?android:colorAccent"
+        android:visibility="gone"
         style="@style/textSmall" />
 
     <TextView
         android:id="@id/kr_rows"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:visibility="gone"
         style="@style/textSmall" />
         
     <ImageView
@@ -42,7 +47,7 @@
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"
-        android:paddingBottom="5dp"
+        android:paddingBottom="6dp"
         android:visibility="gone" />
         
 </LinearLayout>
