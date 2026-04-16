@@ -185,10 +185,10 @@ fi
 <option type="default" id="home" auto-off="true" reload="true" interruptible="false" >'$home_text'</option>
 <handler>
 case "$menu_id" in
-  hide) slog settadd 1 & progress 0.02 10 & ;;
-  xoa) slog settadd 2 & progress 0.02 10 & ;;
-  home) slog settadd 0 & progress 0.02 10 & ;;
-  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Addon.html]" & progress 0.02 10 & ;;
+  hide) slog settadd 1 ;;
+  xoa) slog settadd 2 ;;
+  home) slog settadd 0 ;;
+  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Addon.html]" ;;
   file) installadd "$file" "$AON"; slog settadd 0 ;;
 esac
 </handler>
@@ -295,10 +295,10 @@ fi
 <option type="default" id="home" auto-off="true" reload="true" interruptible="false" >'$home_text'</option>
 <handler>
 case "$menu_id" in
-  hide) slog settadd2 1 & progress 0.02 10 & ;;
-  xoa) slog settadd2 2 & progress 0.02 10 & ;;
-  home) slog settadd2 0 & progress 0.02 10 & ;;
-  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Apkon.html]" & progress 0.02 10 & ;;
+  hide) slog settadd2 1 ;;
+  xoa) slog settadd2 2 ;;
+  home) slog settadd2 0 ;;
+  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Apkon.html]" ;;
   file) installadd "$file" "$AOK"; slog settadd2 0 ;;
 esac
 </handler>
