@@ -237,7 +237,8 @@ if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [
 
 echo -e "$decompile_text: ${file_img##*/} ($dang_file)...\n"
 # xoá cũ
-[ -d "$in_name" ] && rm -fr "$in_name" "$info" "$file_contexts" "$fs_config" "$fs_options" "$info_size" "$OUTPUT/config/exception.log"
+rm -fr "$in_name" "$info" "$file_contexts" "$fs_config" "$fs_options" "$info_size" "$OUTPUT/config/exception.log"
+
 # tạo thư mục
 mkdir -p "$in_name" $OUTPUT/config
 

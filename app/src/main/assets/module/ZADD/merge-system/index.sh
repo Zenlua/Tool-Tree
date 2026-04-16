@@ -7,7 +7,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?><page>'
 source $MPAT/language.sh
 
 echo '<group>
-<action interruptible="false">
+<action>
 <title>'$name_text'</title>
 <set>
 slog silencekd "$silence"

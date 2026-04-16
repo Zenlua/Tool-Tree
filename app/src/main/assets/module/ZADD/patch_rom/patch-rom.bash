@@ -375,10 +375,16 @@ elif [ "${vv##*/}" == "Settings.apk" ];then
             move-result-object v0
             return-object v0
             .end method' $oi/smali/classes*/com/android/settings/device/ParseMiShopDataUtils.smali
-            Thaythe '</resources>' '    <string name="device_description_cpu" public="false">CPU</string>
-            <string name="device_description_resolution" public="false">Resolution</string>
-            <string name="device_description_screen" public="false">Display</string>
-            </resources>' "$oi/resources/package_1/res/values/strings.xml"
+            add_string='    <string name="device_description_cpu" >CPU</string>
+            <string name="device_description_resolution" >Resolution</string>
+            <string name="device_description_screen" >Display</string>'
+            Thaythe '</resources>' "$add_string
+            </resources>" "$oi/resources/package_1/res/values/strings.xml"
+            stringidd="$(update_id.py "$oi/resources/package_1/res/values/public.xml" "$add_string")"
+            for vcsk in $(echo "$stringidd" | grep "Added:" | cut -d: -f2); do
+            Thaythe '# static fields' "# static fields
+            .field public static final $(echo "$vcsk" | awk '{print $1}'):I = $(echo "$vcsk" | awk '{print $3}' | cut -d= -f2)" "$(find "$fd"/smali/classes*/com/android/settings -path "$oi/smali/classes/androidx/window" -prune -o -type f -name "R\$$(echo "$vcsk" | awk '{print $2}' | cut -d= -f2).smali" -exec grep -l ".field public static final" {} +; )"
+            done
         fi
     fi
 fi
