@@ -88,7 +88,7 @@ saved="$OUTPUT/out/${INPUT##*/}.img"
 info_size="${INPUT%/*}/config/${INPUT##*/}_size.txt"
 kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
 dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
-lvnen="$(glog nen_br 8)"
+lvnen="$(glog nen_br 4)"
 info_type="$(cat "$info" 2>/dev/null)"
 
 # Ép build mặc định đối với định dạng sau

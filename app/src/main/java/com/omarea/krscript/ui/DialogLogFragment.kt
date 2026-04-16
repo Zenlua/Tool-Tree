@@ -214,6 +214,11 @@ class DialogLogFragment : DialogFragment() {
                     current < 0 -> shellProgress.apply {
                         visibility = View.VISIBLE
                         isIndeterminate = true
+                        (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+                            params.height = 12
+                            params.topMargin = 34
+                            layoutParams = params
+                        }
                     }
                     current >= total -> shellProgress.visibility = View.GONE
                     else -> shellProgress.apply {
