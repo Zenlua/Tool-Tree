@@ -630,7 +630,7 @@ echo "'$save_text' $Extract"
 </set>
 </action>
 
-<action icon="'`urlpng flash`'" interruptible="false">
+<action icon="'`urlpng flash`'">
 <title>'$flash_text_1'</title>
 <summary>'$show_root'</summary>
 <lock>
