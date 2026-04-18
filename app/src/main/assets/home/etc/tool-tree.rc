@@ -208,6 +208,12 @@ slog shell2 "$shell2"
 slog shell3 "$shell3"
 slog shell4 "$shell4"
 slog shell5 "$shell5"
+# history
+echo "$shell
+$shell2
+$shell3
+$shell4
+$shell5" >> $TMP/shell_history.bash
 eval "$shell
 $shell2
 $shell3
@@ -318,6 +324,12 @@ slog shells2 "$shells2"
 slog shells3 "$shells3"
 slog shells4 "$shells4"
 slog shells5 "$shells5"
+# history
+echo "$shells
+$shells2
+$shells3
+$shells4
+$shells5" >> $TMP/shell_history.bash
 eval "$shells
 $shells2
 $shells3
@@ -406,6 +418,12 @@ slog shella2 "$shella2"
 slog shella3 "$shella3"
 slog shella4 "$shella4"
 slog shella5 "$shella5"
+# history
+echo "$shella
+$shella2
+$shella3
+$shella4
+$shella5" >> $TMP/shell_history.bash
 eval "$shella
 $shella2
 $shella3
