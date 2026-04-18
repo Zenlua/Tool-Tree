@@ -2,7 +2,7 @@
 
 if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ];then
 project_text="Dự án"
-string_text_1="Tệp đầu vào ở dự án"
+string_text_1="Tệp đầu vào ở"
 select_text="Lựa chọn"
 network_text="Vui lòng kết nối mạng !"
 addon_noti="Có phiên bản mới, ấn nút 3 chấm để cập nhật add-on"

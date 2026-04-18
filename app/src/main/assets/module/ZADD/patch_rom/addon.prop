@@ -13,7 +13,7 @@ google_text="Currently using google translate"
 
 # home
 project_text="Project"
-string_text_1="Import files at project"
+string_text_1="Input file at"
 select_text="Options"
 network_text="Please connect to the internet !"
 addon_noti="A new version is available; press the three dots to update the add-on."
