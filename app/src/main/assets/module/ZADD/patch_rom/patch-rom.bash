@@ -377,6 +377,7 @@ elif [ "${vv##*/}" == "Settings.apk" ];then
             .end method' $oi/smali/classes*/com/android/settings/device/ParseMiShopDataUtils.smali
             add_string='    <string name="device_description_cpu" >CPU</string>
             <string name="device_description_resolution" >Resolution</string>
+            <string name="device_description_battery" >Battery capacity</string>
             <string name="device_description_screen" >Display</string>'
             Thaythe '</resources>' "$add_string
             </resources>" "$oi/resources/package_1/res/values/strings.xml"
