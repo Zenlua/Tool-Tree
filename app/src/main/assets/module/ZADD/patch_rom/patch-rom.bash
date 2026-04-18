@@ -537,7 +537,7 @@ if [ "$fix_toolbox" == 1 ];then
             .catchall {:try_start .. :try_end} :after_appinj\
             :after_appinj' "$path_smali_2" || about "Error method iput-object mLoadedApk"
             # xử lý còn lại
-            if [ -d "$psystem/priv-app" ]; then
+            if [[ -d "$psystem/priv-app" && "$vv" != "$SDC"* ]]; then
             mkdir -p "$psystem/priv-app/KaoriosToolbox/lib/arm64"
             cp -rf "$MPAT/mod/KaoriosToolbox.apk" "$psystem/priv-app/KaoriosToolbox"
             unzip -qoj "$MPAT/mod/KaoriosToolbox.apk" lib/arm64-v8a/* -d "$psystem/priv-app/KaoriosToolbox/lib/arm64"
