@@ -383,7 +383,7 @@ elif [ "${vv##*/}" == "Settings.apk" ];then
             stringidd="$(update_id.py "$oi/resources/package_1/res/values/public.xml" "$add_string")"
             for vcsk in $(echo "$stringidd" | grep "Added:" | cut -d: -f2); do
             Thaythe '# static fields' "# static fields
-            .field public static final $(echo "$vcsk" | awk '{print $1}'):I = $(echo "$vcsk" | awk '{print $3}' | cut -d= -f2)" "$(find "$fd"/smali/classes*/com/android/settings -path "$oi/smali/classes/androidx/window" -prune -o -type f -name "R\$$(echo "$vcsk" | awk '{print $2}' | cut -d= -f2).smali" -exec grep -l ".field public static final" {} +; )"
+            .field public static final $(echo "$vcsk" | awk '{print $1}'):I = $(echo "$vcsk" | awk '{print $3}' | cut -d= -f2)" "$(find "$oi"/smali/classes*/com/android/settings -path "$oi/smali/classes/androidx/window" -prune -o -type f -name "R\$$(echo "$vcsk" | awk '{print $2}' | cut -d= -f2).smali" -exec grep -l ".field public static final" {} +; )"
             done
         fi
     fi
