@@ -146,10 +146,7 @@ if checkonline; then
     if [[ ${number_ver:-0} -gt $number_ver2 ]];then
         if [ ! -f $MPAT/update ];then
         echo 1 >$MPAT/update
-        id_random="$RANDOM"
-        notiservice --am --id 106632 --title "$(gprop name "$MPAT/addon.prop")" --message "$addon_noti"
-        sleep 10
-        notiservice --am --id 106632 -d true
+        showtoast "$addon_noti"
         fi
     else
     [ -f $MPAT/update ] && rm -f $MPAT/update
