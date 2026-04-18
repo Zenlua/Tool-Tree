@@ -1,4 +1,4 @@
 
-Update log: 1.7
+Update log: 1.8
 
-+ Fix incorrect directory decoding error
++ Fix the settings error that causes the app to crash.

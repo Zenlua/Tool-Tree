@@ -708,8 +708,13 @@ echo "Save at: $psystem/etc/init/rezetprop.rc, $psystem/bin/rezetprop.sh"
 
 search(){
 for vcs in $@; do
-seprojects="$(find $SDH/$PTSH $SDC -type d \( -name "app" -o -name "priv-app" -o -name "framework" -o -name "data-app" -o -name "overlay" -o -name "apex" -o -name "APK" \) -exec find {} -type f -name "$vcs" -print -quit \; 2>/dev/null)"
-[ -f "$seprojects" ] && echo "$seprojects|${seprojects##*/}" || echo "ERROR_$RANDOM|File not found: $vcs"
+seprojects="$(find $SDH/$PTSH -type f -name "$vcs" \( -path "*/app/*" -o -path "*/priv-app/*" -o -path "*/framework/*" -o -path "*/data-app/*" -o -path "*/overlay/*" -o -path "*/apex/*" \) -print -quit 2>/dev/null)"
+seasdcard="$(find $SDC -type f -name "$vcs" \( -path "*/ROM/*" -o -path "*/APK/*" \) -print -quit 2>/dev/null)"
+[ -f "$seprojects" ] && echo "$seprojects|$PTSH: ${seprojects##*/}"
+[ -f "$seasdcard" ] && echo "$seasdcard|sdcard: ${seasdcard##*/}"
+if [[ ! -f "$seprojects" && ! -f "$seasdcard" ]];then
+echo "ERROR_$RANDOM|File not found: $vcs"
+fi
 done
 }
 

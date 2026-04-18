@@ -39,7 +39,7 @@ slog del_app_patch "$del_app_patch"
 
 <group>
 <action title="'$title_framework_patch'" summary="Android 12+">
-<param name="FILE" option-sh="'$pathsh' search framework.jar services.jar miui-services.jar" multiple="true" value-sh="glog kaorios_toolbox_patch_os" required="true" desc="'$string_text_1': '$PTSH'/***" />
+<param name="FILE" option-sh="'$pathsh' search framework.jar services.jar miui-services.jar" multiple="true" value-sh="glog kaorios_toolbox_patch_os" required="true" desc="'$string_text_1': '$PTSH'/***, '$SDC'/APK" />
 <param name="fix_toolbox" label="'$label_fix_toolbox'" desc="'$required_files_text': framework.jar" type="bool" />
 <param name="fix_apksign" label="'$label_fix_apksign'" desc="'$required_files_text': framework.jar, services.jar, (Xiaomi: miui-services.jar)" type="bool" />
 <set>
@@ -50,7 +50,7 @@ checktime
 </action>
 
 <action title="'$title_cn_global'" summary="Xiaomi, Android 12+">
-<param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar PowerKeeper.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_noti_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
+<param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar PowerKeeper.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_noti_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, '$SDC'/APK" required="true"/>
 <param name="fix_noti" label="'$label_fix_noti'" desc="'$required_files_text': miui-framework.jar, miui-services.jar, PowerKeeper.apk, MiuiSystemUI.apk" type="bool" />
 <param name="fix_global" label="'$label_fix_global'" desc="'$required_files_text': miui-framework.jar, miui-services.jar, Settings.apk" type="bool" />
 <set>
@@ -63,7 +63,7 @@ checktime
 
 <group>
 <action title="'$title_ime'" summary="Xiaomi">
-<param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_key_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
+<param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_key_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, '$SDC'/APK" required="true"/>
 <param name="ime_app" placeholder="com.google.android.inputmethod.latin" desc="'$desc_ime_app'" type="text" value-sh="glog ime_app" required="true"/>
 <param name="ime_color" placeholder="#f0f3f8" desc="'$desc_color_light'" type="text" value-sh="glog ime_color" required="true"/>
 <param name="ime_color_dark" placeholder="#1e1f21" desc="'$desc_color_dark'" type="text" value-sh="glog ime_color_dark" required="true"/>
@@ -82,7 +82,7 @@ checktime
 
 <group>
 <action title="'$title_many_patch'" summary="Xiaomi, Android 12+">
-<param name="FILE" option-sh="'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
+<param name="FILE" option-sh="'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, '$SDC'/APK" required="true"/>
 <param name="fix_screen" label="'$label_fix_screen'" desc="'$required_files_text': miui-services.jar, services.jar" type="bool" />
 <param name="fix_fps" label="'$label_fix_fps'" desc="'$required_files_text': PowerKeeper.apk" type="bool" />
 <param name="fix_window" label="'$label_fix_window'" desc="'$required_files_text': miui-services.jar" type="bool" />
@@ -96,7 +96,7 @@ checktime
 </action>
 
 <action title="'$title_app_patch'" summary="Xiaomi">
-<param name="FILE" option-sh="'$pathsh' search *ThemeManager.apk *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk MIUIGallery.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***" required="true"/>
+<param name="FILE" option-sh="'$pathsh' search *ThemeManager.apk *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk MIUIGallery.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, '$SDC'/APK" required="true"/>
 <param name="fix_themes" label="'$label_fix_themes'" desc="'$required_files_text': ThemeManager.apk" type="bool" />
 <param name="fix_appvault" label="'$label_fix_appvault'" desc="'$required_files_text': PersonalAssistant.apk" type="bool" />
 <param name="fix_thoit" label="'$label_fix_thoit'" desc="'$required_files_text': MIUIWeather.apk" type="bool" />
