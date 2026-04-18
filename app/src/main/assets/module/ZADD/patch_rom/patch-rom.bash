@@ -537,12 +537,14 @@ if [ "$fix_toolbox" == 1 ];then
             .catchall {:try_start .. :try_end} :after_appinj\
             :after_appinj' "$path_smali_2" || about "Error method iput-object mLoadedApk"
             # xử lý còn lại
+            if [ -d "$psystem/priv-app" ]; then
             mkdir -p "$psystem/priv-app/KaoriosToolbox/lib/arm64"
             cp -rf "$MPAT/mod/KaoriosToolbox.apk" "$psystem/priv-app/KaoriosToolbox"
             unzip -qoj "$MPAT/mod/KaoriosToolbox.apk" lib/arm64-v8a/* -d "$psystem/priv-app/KaoriosToolbox/lib/arm64"
             cp -rf "$MPAT/mod/com.kousei.kaorios.xml" "$psystem/etc/permissions"
             sprop persist.sys.kaorios kousei "$psystem/build.prop"
             echo "Auto added to the project: persist.sys.kaorios=kousei, com.kousei.kaorios.xml, KaoriosToolbox.apk"
+            fi
         fi
     fi
 fi
@@ -706,7 +708,7 @@ echo "Save at: $psystem/etc/init/rezetprop.rc, $psystem/bin/rezetprop.sh"
 
 search(){
 for vcs in $@; do
-seprojects="$(find $SDH/$PTSH -type d \( -name "app" -o -name "priv-app" -o -name "framework" -o -name "data-app" -o -name "overlay" -o -name "apex" \) -exec find {} -type f -name "$vcs" -print -quit \; 2>/dev/null)"
+seprojects="$(find $SDH/$PTSH $SDC -type d \( -name "app" -o -name "priv-app" -o -name "framework" -o -name "data-app" -o -name "overlay" -o -name "apex" -o -name "APK" \) -exec find {} -type f -name "$vcs" -print -quit \; 2>/dev/null)"
 [ -f "$seprojects" ] && echo "$seprojects|${seprojects##*/}" || echo "ERROR_$RANDOM|File not found: $vcs"
 done
 }
