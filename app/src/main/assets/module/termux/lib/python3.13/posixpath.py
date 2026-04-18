@@ -18,7 +18,7 @@ pardir = '..'
 extsep = '.'
 sep = '/'
 pathsep = ':'
-defpath = '/data/data/com.tool.tree/files/home/bin'
+defpath = '/data/data/com.termux/files/usr/bin'
 altsep = None
 devnull = '/dev/null'
 

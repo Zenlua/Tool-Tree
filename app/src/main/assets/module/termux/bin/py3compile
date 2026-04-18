@@ -224,7 +224,7 @@ def compile(files, versions, force, optimize, e_patterns=None):
 def main():
     usage = '%prog [-V [X.Y][-][A.B]] DIR_OR_FILE [-X REGEXPR]\n' +\
         '       %prog -p PACKAGE'
-    parser = optparse.OptionParser(usage, version='%prog 3.13.12-5',
+    parser = optparse.OptionParser(usage, version='%prog 3.13.13-1',
                                    option_class=Option)
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='turn verbose mode on')

@@ -8,7 +8,7 @@ from subprocess import PIPE, Popen
 from pickle import dumps
 
 log = logging.getLogger(__name__)
-PUBLIC_DIR_RE = re.compile(r'.*?/data/data/com.tool.tree/files/home/termux/lib/python(\d(?:.\d+)?)/(site|dist)-packages')
+PUBLIC_DIR_RE = re.compile(r'.*?/data/data/com.termux/files/usr/lib/python(\d(?:.\d+)?)/(site|dist)-packages')
 
 
 class memoize:
