@@ -3,7 +3,7 @@
 id=merge-system
 name=Merge system-root
 author=Kakathic
-description=Merge partitions into system_root
+description=Merge partitions
 version=1.0
 versionCode=100
 root=false
