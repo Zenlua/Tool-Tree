@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.4.1 (19-4-2026)**
+
++ Fix error add-on, code
++ Update some execution commands
+
 **Version: 1.4.0 (12-4-2026)**
 
 + Fix the missing first folder in the file.
