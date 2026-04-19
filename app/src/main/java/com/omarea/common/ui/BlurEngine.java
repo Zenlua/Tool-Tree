@@ -47,19 +47,12 @@ public final class BlurEngine {
         // Lấy RootView thực sự (thường là DecorView của Window)
         View rootView = targetView.getRootView();
         if (rootView == null) return null;
-
-        // Lấy vị trí của View hiện tại trên màn hình
         targetView.getLocationOnScreen(location);
-        
-        // Tỷ lệ giữa Bitmap blur (đã thu nhỏ) và kích thước thực tế của RootView
-        // Điều này đảm bảo dù ScrollView dài bao nhiêu, vị trí vẫn khớp với Wallpaper phía sau DecorView
         float scaleX = (float) blurBitmap.getWidth() / rootView.getWidth();
         float scaleY = (float) blurBitmap.getHeight() / rootView.getHeight();
 
         int w = (int) (targetView.getWidth() * scaleX);
         int h = (int) (targetView.getHeight() * scaleY);
-        
-        // Tính toán tọa độ cắt dựa trên vị trí tuyệt đối trên màn hình
         int x = (int) (location[0] * scaleX);
         int y = (int) (location[1] * scaleY);
 
@@ -78,10 +71,7 @@ public final class BlurEngine {
                 srcRect.set(x, y, x + w, y + h);
                 cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
                 
-                // Vẽ vùng tương ứng của ảnh nền vào cachedBitmap
                 cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
-                
-                // Phủ lớp màu (Tint)
                 cachedCanvas.drawColor(getBlurTintColor()); 
                 return cachedBitmap;
             } catch (Exception e) {
