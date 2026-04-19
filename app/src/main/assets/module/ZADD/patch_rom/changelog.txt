@@ -1,4 +1,8 @@
 
+Update log: 1.9
+
++ Remove Kaorios Tool Box
+
 Update log: 1.8
 
 + Fix the settings error that causes the app to crash.

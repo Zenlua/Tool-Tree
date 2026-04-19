@@ -4,8 +4,8 @@ id=patch_rom
 name=Patch ROM
 author=Kakathic
 description=Quick ROM patch
-version=1.8
-versionCode=118
+version=1.9
+versionCode=119
 root=false
 
 # language
