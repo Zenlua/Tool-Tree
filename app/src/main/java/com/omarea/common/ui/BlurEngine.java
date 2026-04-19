@@ -6,20 +6,18 @@ import com.tool.tree.ThemeModeState;
 import androidx.core.content.ContextCompat;
 import com.tool.tree.R;
 import android.content.Context;
+import android.util.DisplayMetrics;
 
 public final class BlurEngine {
     public static BlurController controller = new BlurController();
-    
-    // volatile để đảm bảo tính nhất quán dữ liệu giữa Thread của Controller và UI Thread
     public static volatile Bitmap blurBitmap; 
-    public static boolean isPaused = true;
+    public static boolean isPaused = false; // Mặc định để false để có thể chạy ngay
     
     public static float DEFAULT_CORNER_RADIUS = 30.0f;
     public float cornerRadius = DEFAULT_CORNER_RADIUS;
 
     private View targetView;
     private int[] location = new int[2];
-
     private Rect srcRect = new Rect();
     private Bitmap cachedBitmap;
     private Canvas cachedCanvas;
@@ -41,32 +39,35 @@ public final class BlurEngine {
     }
 
     public Bitmap getUpdatedBlurBitmap() {
-        // Kiểm tra an toàn Bitmap trước khi xử lý
         if (isPaused || blurBitmap == null || blurBitmap.isRecycled() || 
             targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
             return null;
         }
 
-        targetView.getLocationInWindow(location);
+        // Lấy tọa độ tuyệt đối trên màn hình thay vì trong Window
+        targetView.getLocationOnScreen(location);
         
-        View rootView = targetView.getRootView();
-        // Tính toán tỷ lệ dựa trên kích thước thực tế của bitmap (đã được scale nhỏ ở Controller)
-        float scaleX = (float) blurBitmap.getWidth() / rootView.getWidth();
-        float scaleY = (float) blurBitmap.getHeight() / rootView.getHeight();
+        Context context = targetView.getContext();
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        
+        // Tính tỷ lệ dựa trên kích thước thực tế của màn hình (Screen Metrics)
+        // Điều này đảm bảo ảnh blur khớp 1:1 với Wallpaper gốc phía sau
+        float scaleX = (float) blurBitmap.getWidth() / dm.widthPixels;
+        float scaleY = (float) blurBitmap.getHeight() / dm.heightPixels;
 
-        int x = (int) (location[0] * scaleX);
-        int y = (int) (location[1] * scaleY);
         int w = (int) (targetView.getWidth() * scaleX);
         int h = (int) (targetView.getHeight() * scaleY);
+        int x = (int) (location[0] * scaleX);
+        int y = (int) (location[1] * scaleY);
 
-        // Giới hạn vùng cắt bên trong phạm vi Bitmap
+        // Giới hạn vùng cắt để không bị OutOfBounds
         x = Math.max(0, Math.min(x, blurBitmap.getWidth() - w));
         y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
 
         if (w > 0 && h > 0) {
             try {
+                // Chỉ khởi tạo lại cachedBitmap khi kích thước view thay đổi (rất quan trọng cho ScrollView)
                 if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
-                    // Giải phóng cached cũ nếu kích thước thay đổi
                     if (cachedBitmap != null) cachedBitmap.recycle();
                     cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                     cachedCanvas = new Canvas(cachedBitmap);
@@ -74,9 +75,9 @@ public final class BlurEngine {
             
                 srcRect.set(x, y, x + w, y + h);
                 cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
-                
                 cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
                 cachedCanvas.drawColor(getBlurTintColor()); 
+                
                 return cachedBitmap;
             } catch (Exception e) {
                 return null;

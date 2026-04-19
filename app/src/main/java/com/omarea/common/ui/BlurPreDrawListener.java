@@ -14,8 +14,9 @@ public class BlurPreDrawListener implements ViewTreeObserver.OnPreDrawListener {
 
     @Override
     public boolean onPreDraw() {
-        // Chỉ ra lệnh vẽ lại khi có dữ liệu bitmap và không bị tạm dừng
-        if (!BlurEngine.isPaused && BlurEngine.blurBitmap != null && !BlurEngine.blurBitmap.isRecycled()) {
+        // Kiểm tra hiển thị: Nếu View không hiển thị thì không cần phí tài nguyên vẽ
+        if (targetView.isShown() && !BlurEngine.isPaused && BlurEngine.blurBitmap != null) {
+            // Ép View vẽ lại liên tục để cập nhật vị trí Blur theo ScrollView
             targetView.invalidate();
         }
         return true;
