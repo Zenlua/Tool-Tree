@@ -1,8 +1,6 @@
 
-Update log: 1.9
+Update log:
 
-+ Remove Kaorios Tool Box
-
-Update log: 1.8
-
-+ Fix the settings error that causes the app to crash.
+2.0: Add some code validation commands
+1.9: Remove Kaorios Tool Box
+1.8: Fix the settings error that causes the app to crash

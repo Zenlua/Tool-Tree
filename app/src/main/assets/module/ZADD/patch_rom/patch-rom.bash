@@ -159,8 +159,9 @@ elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
     Thaythe com.iflytek.inputmethod.miui "$(glog ime_app)" "$(Timkiem com.iflytek.inputmethod.miui "$oi/smali")"
     if [ "$(gprop ro.miui.support_miui_ime_bottom "$psystem/build.prop")" != 1 ];then
-    sprop "ro.miui.support_miui_ime_bottom" 1 "$psystem/build.prop"
-    cp -rf "$MPAT/mod/GestureLineOverlay.apk" "$pproduct/overlay"
+    echo "Add props to system: ro.miui.support_miui_ime_bottom=1"
+    [ -f "$psystem/build.prop" ] && sprop "ro.miui.support_miui_ime_bottom" 1 "$psystem/build.prop"
+    [ -d "$pproduct/overlay" ] && cp -rf "$MPAT/mod/GestureLineOverlay.apk" "$pproduct/overlay"
     fi
 elif [ "${vv##*/}" == "Settings.apk" ];then
     Thaythe com.iflytek.inputmethod.miui "$(glog ime_app)" "$(Timkiem com.iflytek.inputmethod.miui "$oi/smali" | sed '/MecBoardInputController/d')"
