@@ -492,7 +492,7 @@ fi
 <desc>'"$(cat $TEMP/ver4.txt 2>/dev/null)"'</desc>
 <slices>
 <slice photo="'$ETC'/icon/tool-tree.jpg" />
-</slices></text></group>
+</slices></text>
 
 </group>'
 }
