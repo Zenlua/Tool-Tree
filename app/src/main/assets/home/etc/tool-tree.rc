@@ -477,23 +477,9 @@ showtoast "'$update_text_4'"
 fi
 </set>
 </action>
-</group>
-
-<group><text>
-<desc>'"$(cat $TEMP/ver1.txt 2>/dev/null)"'</desc>
-</text></group>
-<group><text>
-<desc>'"$(cat $TEMP/ver2.txt 2>/dev/null)"'</desc>
-</text></group>
-<group><text>
-<desc>'"$(cat $TEMP/ver3.txt 2>/dev/null)"'</desc>
-</text></group>
-<group><text>
-<desc>'"$(cat $TEMP/ver4.txt 2>/dev/null)"'</desc>
-<slices>
-<slice photo="'$ETC'/icon/tool-tree.jpg" />
-</slices></text>
-
+<text>
+<desc>'"$(cat $TEMP/version.txt 2>/dev/null)"'</desc>
+</text>
 </group>'
 }
 
