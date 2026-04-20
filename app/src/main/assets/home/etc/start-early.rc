@@ -9,10 +9,12 @@ if checkonline; then
     # Tải về nhật ký
     echo -e "Download the log and the latest version..."
     timeout 20 taive 'https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/Version.md' $TEMP/Version.md
-    text_num_1="$(grep -nm1 Version: $TEMP/Version.md | tail -1 | cut -d: -f1)"
-    text_num_2="$(grep -nm5 Version: $TEMP/Version.md | tail -1 | cut -d: -f1)"
-    sed -n "$text_num_1,$((text_num_2 - 1))p" $TEMP/Version.md | sed -e "s|\*\*||g" -e "s|+|•|g" | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/version.txt
-    
+    inputtextver="$(cat $TEMP/Version.md | sed -e 's|\*\*||g' -e 's|+|•|g')"
+    echo "$inputtextver" | awk 'BEGIN{RS="\\*\\*Version:"} NR==2 {printf "**Version:%s", $0}' | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/ver1.txt
+    echo "$inputtextver" | awk 'BEGIN{RS="\\*\\*Version:"} NR==3 {printf "**Version:%s", $0}' | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/ver2.txt
+    echo "$inputtextver" | awk 'BEGIN{RS="\\*\\*Version:"} NR==4 {printf "**Version:%s", $0}' | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/ver3.txt
+    echo "$inputtextver" | awk 'BEGIN{RS="\\*\\*Version:"} NR==5 {printf "**Version:%s", $0}' | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/ver4.txt
+
     # Thông báo cập nhật
     websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
     websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
@@ -22,20 +24,16 @@ if checkonline; then
     elif [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]];then
         if [[ "$websum" != "$(checksum "$PATH_APK")" ]] && [[ -n $websum ]];then
             if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
-            notiservice --am --id 12345 --message "$update_text_6"
+            showtoast --am "$update_text_6"
             echo "$tagname" > $TEMP/update
-            sleep 10
-            notiservice --am --id 12345 -d true
             fi
         else
             [ -f $TEMP/update ] && rm -f $TEMP/update
         fi
     else
         if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
-        notiservice --am --id 12345 --message "$update_text_6"
+        showtoast --am "$update_text_6"
         echo "$tagname" > $TEMP/update
-        sleep 10
-        notiservice --am --id 12345 -d true
         fi
     fi
 fi
