@@ -8,12 +8,17 @@ import com.tool.tree.R;
 import android.content.Context;
 
 public final class BlurEngine {
-    // Tỉ lệ thu nhỏ và bán kính mờ để cân bằng hiệu năng
+    // --- Các thành phần cũ để giữ tương thích hệ thống ---
+    public static BlurController controller = new BlurController();
+    public static volatile Bitmap blurBitmap;
+    public static boolean isPaused = false;
+    public static float DEFAULT_CORNER_RADIUS = 30.0f;
+    
+    // --- Cấu hình cho tính năng Blur thời gian thực (Lựa chọn 2) ---
     private static final float SCALE_FACTOR = 0.15f; 
     private static final int BLUR_RADIUS = 8;
 
-    public static boolean isPaused = false;
-    public float cornerRadius = 30.0f;
+    public float cornerRadius = DEFAULT_CORNER_RADIUS;
 
     private View targetView;
     private int[] location = new int[2];
@@ -38,7 +43,7 @@ public final class BlurEngine {
     }
 
     /**
-     * CẬP NHẬT: Tự động chụp nội dung phía sau View hiện tại
+     * Logic mới: Chụp nội dung phía sau trực tiếp để không bị mất blur khi cuộn dài
      */
     public Bitmap getUpdatedBlurBitmap() {
         if (isPaused || targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
@@ -48,38 +53,43 @@ public final class BlurEngine {
         View rootView = targetView.getRootView();
         if (rootView == null) return null;
 
-        // 1. Tính toán kích thước thu nhỏ
+        // 1. Tính toán kích thước thu nhỏ để tối ưu hiệu suất
         int w = Math.round(targetView.getWidth() * SCALE_FACTOR);
         int h = Math.round(targetView.getHeight() * SCALE_FACTOR);
 
         if (w <= 0 || h <= 0) return null;
 
         try {
-            // 2. Khởi tạo hoặc tái sử dụng Bitmap đệm
+            // 2. Quản lý bộ nhớ đệm Bitmap
             if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
                 if (cachedBitmap != null) cachedBitmap.recycle();
                 cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                 cachedCanvas = new Canvas(cachedBitmap);
             }
         
-            // 3. Xác định vị trí của View trên màn hình
+            // 3. Xác định tọa độ thực tế trên màn hình
             targetView.getLocationOnScreen(location);
 
-            // 4. CHỤP NỘI DUNG PHÍA SAU
+            // 4. CHỤP NỘI DUNG NỀN (Lựa chọn 2)
             cachedCanvas.save();
             cachedCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+            
+            // Di chuyển và scale canvas để "soi" đúng phần diện tích phía sau targetView
             cachedCanvas.scale(SCALE_FACTOR, SCALE_FACTOR);
             cachedCanvas.translate(-location[0], -location[1]);
             
-            // Tạm ẩn chính nó để không bị hiệu ứng gương (chụp đè chính mình)
+            // Tạm ẩn chính nó để tránh vòng lặp hiển thị (Recursive drawing)
             targetView.setVisibility(View.INVISIBLE);
             rootView.draw(cachedCanvas);
             targetView.setVisibility(View.VISIBLE);
+            
             cachedCanvas.restore();
 
-            // 5. LÀM MỜ & NHUỘM MÀU
+            // 5. Làm mờ trực tiếp trên ảnh đã thu nhỏ
             fastBlur(cachedBitmap, BLUR_RADIUS);
-            cachedCanvas.drawColor(getBlurTintColor()); 
+
+            // 6. Phủ màu Tint theo theme (Dark/Light)
+            cachedCanvas.drawColor(getBlurTintColor());
             
             return cachedBitmap;
         } catch (Exception e) {
@@ -97,7 +107,7 @@ public final class BlurEngine {
         if (strokePaint == null) {
             strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             strokePaint.setStyle(Paint.Style.STROKE);
-            strokePaint.setStrokeWidth(3.0f); 
+            strokePaint.setStrokeWidth(3.0f);
         }
         int colorRes = ThemeModeState.isDarkMode() ? R.color.colorPirmLight : R.color.colorPirmDark;
         int color = ContextCompat.getColor(context, colorRes);
@@ -106,7 +116,7 @@ public final class BlurEngine {
     }
 
     /**
-     * Thuật toán StackBlur tích hợp trực tiếp để xử lý tại chỗ
+     * Thuật toán StackBlur tích hợp (Dùng xử lý ảnh nhỏ cực nhanh)
      */
     private void fastBlur(Bitmap bitmap, int radius) {
         if (radius < 1) return;
