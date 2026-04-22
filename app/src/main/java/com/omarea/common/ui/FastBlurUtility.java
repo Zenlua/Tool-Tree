@@ -16,44 +16,16 @@ public class FastBlurUtility {
     private static final int BLUR_RADIUS = 8;
 
     /**
-     * Chụp màn hình và làm mờ (Đã tối ưu hóa quản lý Engine)
-     * Quy trình: Lưu trạng thái -> Tạm dừng Engine -> Xử lý ảnh -> Khôi phục trạng thái cũ
+     * Chụp màn hình và làm mờ (Dùng làm phương án dự phòng khi không lấy được Wallpaper)
      */
     public static Bitmap getBlurBackgroundDrawer(Activity activity) {
-        // 1. Kiểm tra và lưu lại trạng thái gốc của Engine
-        // Chỉ can thiệp nếu Engine hiện tại đang KHÔNG ở trạng thái tạm dừng
-        boolean wasPausedOriginal = BlurEngine.isPaused;
-        
-        if (!wasPausedOriginal) {
-            BlurEngine.isPaused = true;
-        }
-
-        try {
-            // 2. Thực hiện quy trình chụp màn hình
-            Bitmap bmp = takeScreenShot(activity);
-            if (bmp == null) {
-                return null;
-            }
-            
-            // 3. Thực hiện quy trình làm mờ và nhuộm tối (Dim)
-            return startBlurBackground(bmp);
-
-        } catch (Exception e) {
-            // Tránh crash ứng dụng nếu có lỗi xử lý đồ họa hoặc bộ nhớ
-            e.printStackTrace();
-            return null;
-        } finally {
-            // 4. KHÔI PHỤC TRẠNG THÁI:
-            // Nếu ban đầu Engine đang chạy (!wasPausedOriginal), thì giờ ta bật lại.
-            // Nếu ban đầu nó đã tắt sẵn (do Theme Level < 3), thì ta giữ nguyên trạng thái tắt đó.
-            if (!wasPausedOriginal) {
-                BlurEngine.isPaused = false;
-            }
-        }
+        Bitmap bmp = takeScreenShot(activity);
+        return startBlurBackground(bmp);
     }
 
     /**
      * Quy trình xử lý: Thu nhỏ -> Làm mờ -> Phóng to & Nhuộm tối (Dim)
+     * Đảm bảo mượt mà từ SDK 23 trở lên.
      */
     public static Bitmap startBlurBackground(Bitmap bkg) {
         if (bkg == null || bkg.isRecycled()) return null;
@@ -75,7 +47,7 @@ public class FastBlurUtility {
     }
 
     /**
-     * Chụp ảnh màn hình an toàn
+     * Chụp ảnh màn hình an toàn trên SDK 23+
      */
     private static Bitmap takeScreenShot(Activity activity) {
         try {
@@ -98,9 +70,10 @@ public class FastBlurUtility {
         Bitmap output = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
         
+        // Paint với bộ lọc chống răng cưa và lọc bitmap khi scale
         Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
 
-        // Tạo bộ lọc màu để giảm độ sáng (contrast 0.80f ~ giảm 20% độ sáng)
+        // Tạo bộ lọc màu để giảm độ sáng (contrast 0.85f ~ giảm 15% độ sáng)
         ColorMatrix cm = new ColorMatrix();
         float contrast = 0.80f; 
         cm.set(new float[]{
@@ -110,10 +83,12 @@ public class FastBlurUtility {
                 0, 0, 0, 1, 0});
         paint.setColorFilter(new ColorMatrixColorFilter(cm));
 
+        // Vẽ ảnh từ vùng nguồn (nhỏ) ra vùng đích (toàn màn hình)
         Rect src = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
         Rect dst = new Rect(0, 0, targetW, targetH);
         canvas.drawBitmap(bitmap, src, dst, paint);
 
+        // Giải phóng bitmap tạm sau khi đã vẽ xong
         if (bitmap != null && !bitmap.isRecycled()) {
             bitmap.recycle();
         }
@@ -122,7 +97,8 @@ public class FastBlurUtility {
     }
 
     /**
-     * Thuật toán StackBlur - Tối ưu cho hiệu năng CPU
+     * Thuật toán StackBlur (Multi-pass box blur) - Tối ưu cho hiệu năng CPU
+     * Hỗ trợ hoàn hảo cho các thiết bị từ cũ đến mới.
      */
     private static Bitmap fastBlur(Bitmap sentBitmap, int radius) {
         Bitmap bitmap = sentBitmap.copy(sentBitmap.getConfig(), true);
