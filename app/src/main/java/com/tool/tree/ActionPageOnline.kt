@@ -45,13 +45,11 @@ class ActionPageOnline : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Sử dụng ThemeModeState để quản lý giao diện
         themeMode = ThemeModeState.switchTheme(this)
         
         binding = ActivityActionPageOnlineBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Thiết lập Toolbar
         val toolbar: Toolbar = binding.webappbar.toolbar
         setSupportActionBar(toolbar)
         setTitle(R.string.app_name)
@@ -65,10 +63,8 @@ class ActionPageOnline : AppCompatActivity() {
             finish()
         }
 
-        // Bật tăng tốc phần cứng cho WebView
         binding.krOnlineWebview.setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
-        // Xử lý nút back chuẩn Android 13+
         onBackPressedDispatcher.addCallback(this) {
             if (binding.krOnlineWebview.canGoBack()) {
                 binding.krOnlineWebview.goBack()
@@ -148,16 +144,14 @@ class ActionPageOnline : AppCompatActivity() {
         binding.krOnlineWebview.visibility = View.VISIBLE
         val settings = binding.krOnlineWebview.settings
         
-        // Tối ưu cấu hình
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         settings.databaseEnabled = true
         settings.cacheMode = WebSettings.LOAD_DEFAULT
         
-        // Chặn ảnh tạm thời để ưu tiên load layout/script
-        settings.blockNetworkImage = true
+        settings.blockNetworkImage = false
+        settings.loadsImagesAutomatically = true
 
-        // Cập nhật Dark Mode dựa trên ThemeModeState
         if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
             val isDark = ThemeModeState.isDarkMode()
             WebSettingsCompat.setForceDark(settings, if (isDark) FORCE_DARK_ON else FORCE_DARK_OFF)
@@ -191,14 +185,16 @@ class ActionPageOnline : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 progressBarDialog.hideDialog()
-                // Mở lại việc tải ảnh
-                view?.settings?.blockNetworkImage = false
                 view?.title?.let { setTitle(it) }
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
-                progressBarDialog.showDialog(getString(R.string.please_wait))
+                // CẬP NHẬT: Thêm nút hủy và xử lý stopLoading()
+                progressBarDialog.showDialog(getString(R.string.please_wait), getString(R.string.btn_cancel)) {
+                    binding.krOnlineWebview.stopLoading()
+                    progressBarDialog.hideDialog()
+                }
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -217,7 +213,6 @@ class ActionPageOnline : AppCompatActivity() {
             }
         }
 
-        // Khởi chạy Injector
         WebViewInjector(binding.krOnlineWebview,
             object : ParamsFileChooserRender.FileChooserInterface {
                 override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
@@ -312,7 +307,6 @@ class ActionPageOnline : AppCompatActivity() {
                     try {
                         val nameColumn = cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI)
                         val uriStr = cursor.getString(nameColumn)
-                        // Sử dụng extension toUri() đã import
                         absPath = FilePathResolver().getPath(this@ActionPageOnline, uriStr.toUri()) ?: ""
                         fileName = absPath
                     } catch (_: Exception) {}

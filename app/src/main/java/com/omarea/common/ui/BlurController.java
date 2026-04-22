@@ -120,7 +120,7 @@ public class BlurController {
                 Bitmap scaledSource = Bitmap.createScaledBitmap(processedSource, width, height, false);
                 
                 // C. Blur bằng RenderScript (Radius 15f là mức cân bằng tốt)
-                Bitmap blurredResult = blurBitmap(context, scaledSource, 10f);
+                Bitmap blurredResult = blurBitmap(context, scaledSource, 15f);
 
                 if (blurredResult != null) {
                     BlurEngine.blurBitmap = blurredResult;
