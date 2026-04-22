@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 public class FastBlurUtility {
 
     private static final float SCALE_FACTOR = 0.10f;
-    private static final int BLUR_RADIUS = 10;
+    private static final int BLUR_RADIUS = 8;
     
     // Executor để xử lý các tác vụ nặng ngoài UI Thread
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
