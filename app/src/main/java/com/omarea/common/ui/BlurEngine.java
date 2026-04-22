@@ -17,8 +17,6 @@ public final class BlurEngine {
 
     private View targetView;
     private int[] location = new int[2];
-    private int[] parentLocation = new int[2];
-    private Rect srcRect = new Rect();
     private Bitmap cachedBitmap;
     private Canvas cachedCanvas;
     private static Paint strokePaint;
@@ -44,41 +42,52 @@ public final class BlurEngine {
             return null;
         }
 
-        // Lấy RootView thực sự (thường là DecorView của Window)
+        // Lấy RootView để tính toán tỷ lệ chính xác giữa màn hình và BlurBitmap
         View rootView = targetView.getRootView();
         if (rootView == null) return null;
+
         targetView.getLocationOnScreen(location);
+        
         float scaleX = (float) blurBitmap.getWidth() / rootView.getWidth();
         float scaleY = (float) blurBitmap.getHeight() / rootView.getHeight();
 
+        // Kích thước thực tế của vùng Blur trên View
         int w = (int) (targetView.getWidth() * scaleX);
         int h = (int) (targetView.getHeight() * scaleY);
+
+        // Tọa độ thực tế (cho phép giá trị âm khi vuốt ra ngoài biên)
         int x = (int) (location[0] * scaleX);
         int y = (int) (location[1] * scaleY);
 
-        // Chống tràn biên Bitmap
-        x = Math.max(0, Math.min(x, blurBitmap.getWidth() - w));
-        y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
-
-        if (w > 0 && h > 0) {
-            try {
-                if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
-                    if (cachedBitmap != null) cachedBitmap.recycle();
-                    cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-                    cachedCanvas = new Canvas(cachedBitmap);
-                }
-            
-                srcRect.set(x, y, x + w, y + h);
-                cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
-                
-                cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
-                cachedCanvas.drawColor(getBlurTintColor()); 
-                return cachedBitmap;
-            } catch (Exception e) {
-                return null;
+        try {
+            // Khởi tạo hoặc tái sử dụng cachedBitmap theo kích thước View
+            if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
+                if (cachedBitmap != null) cachedBitmap.recycle();
+                cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                cachedCanvas = new Canvas(cachedBitmap);
             }
+        
+            // Xóa canvas cũ
+            cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
+            
+            /**
+             * GIẢI PHÁP CHO VẤN ĐỀ 4:
+             * Thay vì dùng srcRect cắt giới hạn trong Bitmap, ta dịch chuyển Canvas.
+             * Chúng ta dịch chuyển ngược một khoảng đúng bằng tọa độ của View trên màn hình.
+             * Điều này đảm bảo ảnh nền luôn khớp với vị trí của View bất kể View ở đâu.
+             */
+            cachedCanvas.save();
+            cachedCanvas.translate(-x, -y);
+            cachedCanvas.drawBitmap(blurBitmap, 0, 0, null);
+            cachedCanvas.restore();
+
+            // Phủ lớp màu (Tint) lên trên lớp blur
+            cachedCanvas.drawColor(getBlurTintColor()); 
+            
+            return cachedBitmap;
+        } catch (Exception e) {
+            return null;
         }
-        return null;
     }
 
     private int getBlurTintColor() {
