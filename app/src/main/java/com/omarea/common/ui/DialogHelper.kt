@@ -409,7 +409,6 @@ class DialogHelper {
                 val blurBitmap = if (disableBlurBg) {
                     null
                 } else {
-                    BlurEngine.destroy()
                     FastBlurUtility.getBlurBackgroundDrawer(activity)
                 }
                 if (blurBitmap != null) {
