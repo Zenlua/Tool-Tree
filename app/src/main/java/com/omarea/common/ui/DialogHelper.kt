@@ -405,48 +405,37 @@ class DialogHelper {
         // Trong setWindowBlurBg
         fun setWindowBlurBg(window: Window, activity: Activity) {
             val wallpaperMode = activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0
-            
-            if (disableBlurBg) {
-                window.applyDefaultBackground(activity, wallpaperMode)
-                return
-            }
-        
-            FastBlurUtility.getBlurBackgroundAsync(activity) { blurBitmap ->
-                // An toàn: Không làm việc với activity đã đóng
-                if (activity.isFinishing || activity.isDestroyed) {
-                    blurBitmap?.recycle()
-                    return@getBlurBackgroundAsync
+            window.run {
+                val blurBitmap = if (disableBlurBg) {
+                    null
+                } else {
+                    FastBlurUtility.getBlurBackgroundDrawer(activity)
                 }
-        
                 if (blurBitmap != null) {
-                    window.setBackgroundDrawable(BitmapDrawable(activity.resources, blurBitmap))
+                    setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
                 } else {
-                    window.applyDefaultBackground(activity, wallpaperMode)
-                }
-            }
-        }
-
-        // Tách logic nền mặc định ra để tái sử dụng
-        private fun Window.applyDefaultBackground(activity: Activity, wallpaperMode: Boolean) {
-            try {
-                val bg = getWindowBackground(activity)
-                if (bg == Color.TRANSPARENT) {
-                    if (isFloating) {
-                        setBackgroundDrawable(bg.toDrawable())
-                        setDimAmount(0.5f)
-                    } else {
-                        val d = if (wallpaperMode || isNightMode(context)) {
-                            Color.argb(255, 18, 18, 18).toDrawable()
+                    try {
+                        val bg = getWindowBackground(activity)
+                        if (bg == Color.TRANSPARENT) {
+                            if (isFloating) {
+                                setBackgroundDrawable(bg.toDrawable())
+                                setDimAmount(0.5f)
+                                return
+                            } else {
+                                val d = if (wallpaperMode || isNightMode(context)) {
+                                    Color.argb(255, 18, 18, 18).toDrawable()
+                                } else {
+                                    Color.argb(255, 245, 245, 245).toDrawable()
+                                }
+                                setBackgroundDrawable(d)
+                            }
                         } else {
-                            Color.argb(255, 245, 245, 245).toDrawable()
+                            setBackgroundDrawable(bg.toDrawable())
                         }
-                        setBackgroundDrawable(d)
+                    } catch (_: Exception) {
+                        setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
                     }
-                } else {
-                    setBackgroundDrawable(bg.toDrawable())
                 }
-            } catch (_: Exception) {
-                setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             }
         }
     }
