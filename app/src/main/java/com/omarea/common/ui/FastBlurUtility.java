@@ -13,7 +13,7 @@ public class FastBlurUtility {
 
     // Tỉ lệ thu nhỏ ảnh để xử lý nhanh (1/10 giúp giảm 100 lần số pixel cần tính toán)
     private static final float SCALE_FACTOR = 0.15f;
-    private static final int BLUR_RADIUS = 6;
+    private static final int BLUR_RADIUS = 8;
 
     /**
      * Chụp màn hình và làm mờ (Dùng làm phương án dự phòng khi không lấy được Wallpaper)
