@@ -63,7 +63,7 @@ public class WebViewInjector {
             webSettings.setCacheMode(WebSettings.LOAD_DEFAULT); // Sử dụng cache hệ thống
             
             // Tạm thời chặn ảnh để ưu tiên tải cấu trúc HTML và Script Shell
-            webSettings.setBlockNetworkImage(true);
+            webSettings.setBlockNetworkImage(false);
             
             webSettings.setAllowFileAccess(credible);
             webSettings.setAllowUniversalAccessFromFileURLs(credible);
