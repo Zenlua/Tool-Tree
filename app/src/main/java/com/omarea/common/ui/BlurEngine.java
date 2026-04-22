@@ -43,51 +43,42 @@ public final class BlurEngine {
             targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
             return null;
         }
-    
+
+        // Lấy RootView thực sự (thường là DecorView của Window)
         View rootView = targetView.getRootView();
         if (rootView == null) return null;
-        
         targetView.getLocationOnScreen(location);
-    
-        int w = targetView.getWidth();
-        int h = targetView.getHeight();
-    
-        try {
-            if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
-                if (cachedBitmap != null) cachedBitmap.recycle();
-                cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-                cachedCanvas = new Canvas(cachedBitmap);
+        float scaleX = (float) blurBitmap.getWidth() / rootView.getWidth();
+        float scaleY = (float) blurBitmap.getHeight() / rootView.getHeight();
+
+        int w = (int) (targetView.getWidth() * scaleX);
+        int h = (int) (targetView.getHeight() * scaleY);
+        int x = (int) (location[0] * scaleX);
+        int y = (int) (location[1] * scaleY);
+
+        // Chống tràn biên Bitmap
+        x = Math.max(0, Math.min(x, blurBitmap.getWidth() - w));
+        y = Math.max(0, Math.min(y, blurBitmap.getHeight() - h));
+
+        if (w > 0 && h > 0) {
+            try {
+                if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
+                    if (cachedBitmap != null) cachedBitmap.recycle();
+                    cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                    cachedCanvas = new Canvas(cachedBitmap);
+                }
+            
+                srcRect.set(x, y, x + w, y + h);
+                cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
+                
+                cachedCanvas.drawBitmap(blurBitmap, srcRect, new Rect(0, 0, w, h), null);
+                cachedCanvas.drawColor(getBlurTintColor()); 
+                return cachedBitmap;
+            } catch (Exception e) {
+                return null;
             }
-    
-            // 1. Tính toán tỉ lệ scale
-            float scaleX = (float) blurBitmap.getWidth() / rootView.getWidth();
-            float scaleY = (float) blurBitmap.getHeight() / rootView.getHeight();
-    
-            // 2. Sử dụng Matrix để dịch chuyển Bitmap thay vì dùng srcRect
-            Matrix matrix = new Matrix();
-            // Dịch chuyển ngược lại vị trí của View trên màn hình để khớp nội dung
-            matrix.postTranslate(-location[0], -location[1]);
-            // Scale để khớp với kích thước blurBitmap đã được thu nhỏ
-            matrix.postScale(scaleX, scaleY);
-    
-            // 3. Tạo Shader với chế độ CLAMP (Kéo dãn pixel biên khi tràn)
-            BitmapShader shader = new BitmapShader(blurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-            shader.setLocalMatrix(matrix);
-    
-            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            paint.setShader(shader);
-    
-            // 4. Vẽ
-            cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
-            cachedCanvas.drawRect(0, 0, w, h, paint);
-            
-            // Vẽ thêm lớp màu Tint
-            cachedCanvas.drawColor(getBlurTintColor()); 
-            
-            return cachedBitmap;
-        } catch (Exception e) {
-            return null;
         }
+        return null;
     }
 
     private int getBlurTintColor() {
