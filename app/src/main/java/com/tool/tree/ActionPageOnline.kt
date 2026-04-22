@@ -39,6 +39,8 @@ class ActionPageOnline : AppCompatActivity() {
     private lateinit var binding: ActivityActionPageOnlineBinding
     private var progressPolling: Timer? = null
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
+    private var isLoading = false // Biến theo dõi trạng thái loading
+    
     private val ACTION_FILE_PATH_CHOOSER = 65400
     private val MENU_OPEN_BROWSER = 1001
 
@@ -59,21 +61,39 @@ class ActionPageOnline : AppCompatActivity() {
             setHomeButtonEnabled(true)
         }
 
+        // Xử lý khi nhấn nút Back trên Toolbar
         toolbar.setNavigationOnClickListener {
-            finish()
-        }
-
-        binding.krOnlineWebview.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-
-        onBackPressedDispatcher.addCallback(this) {
-            if (binding.krOnlineWebview.canGoBack()) {
-                binding.krOnlineWebview.goBack()
+            if (isLoading) {
+                cancelLoading()
             } else {
                 finish()
             }
         }
 
+        binding.krOnlineWebview.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+
+        // Xử lý khi vuốt Back hoặc nhấn nút Back hệ thống
+        onBackPressedDispatcher.addCallback(this) {
+            if (isLoading) {
+                // Nếu đang load thì hủy quá trình load
+                cancelLoading()
+            } else if (binding.krOnlineWebview.canGoBack()) {
+                // Nếu có thể back trong lịch sử web
+                binding.krOnlineWebview.goBack()
+            } else {
+                // Thoát activity
+                finish()
+            }
+        }
+
         loadIntentData()
+    }
+
+    // Hàm bổ trợ để hủy load
+    private fun cancelLoading() {
+        binding.krOnlineWebview.stopLoading()
+        progressBarDialog.hideDialog()
+        isLoading = false
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -90,7 +110,9 @@ class ActionPageOnline : AppCompatActivity() {
                 true
             }
             android.R.id.home -> {
-                finish()
+                // Toolbar đã được xử lý ở setNavigationOnClickListener, 
+                // nhưng giữ ở đây để đảm bảo tính tương thích
+                if (isLoading) cancelLoading() else finish()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -182,19 +204,23 @@ class ActionPageOnline : AppCompatActivity() {
         }
 
         binding.krOnlineWebview.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                isLoading = true
+                progressBarDialog.showDialog(getString(R.string.please_wait))
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                isLoading = false
                 progressBarDialog.hideDialog()
                 view?.title?.let { setTitle(it) }
             }
 
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                // CẬP NHẬT: Thêm nút hủy và xử lý stopLoading()
-                progressBarDialog.showDialog(getString(R.string.please_wait), getString(R.string.btn_cancel)) {
-                    binding.krOnlineWebview.stopLoading()
-                    progressBarDialog.hideDialog()
-                }
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                super.onReceivedError(view, request, error)
+                isLoading = false
+                progressBarDialog.hideDialog()
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
