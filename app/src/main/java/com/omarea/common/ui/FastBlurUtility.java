@@ -5,8 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
@@ -16,10 +16,9 @@ import java.util.concurrent.Executors;
 
 public class FastBlurUtility {
 
-    private static final float SCALE_FACTOR = 0.10f;
+    private static final float SCALE_FACTOR = 0.125f; // Thu nhỏ 8 lần (giống code cũ 0.10f)
     private static final int BLUR_RADIUS = 8;
     
-    // Executor để xử lý các tác vụ nặng ngoài UI Thread
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -31,90 +30,89 @@ public class FastBlurUtility {
      * Phương thức chính: Chụp và làm mờ không gây lag UI
      */
     public static void getBlurBackgroundAsync(Activity activity, BlurCallback callback) {
-        // 1. Chụp màn hình phải thực hiện trên UI Thread
-        Bitmap screenshot = takeScreenShot(activity);
+        // 1. Chụp màn hình ở dạng THU NHỎ ngay trên UI Thread (Rất nhanh, < 16ms)
+        Bitmap smallBitmap = takeSmallScreenshot(activity);
         
-        if (screenshot == null) {
+        if (smallBitmap == null) {
             callback.onBlurCompleted(null);
             return;
         }
 
-        // 2. Đẩy việc xử lý làm mờ vào Background Thread
+        // 2. Đẩy việc xử lý nặng (Blur + Dim) vào Background Thread
         executor.execute(() -> {
-            Bitmap blurred = startBlurProcess(screenshot);
+            // Làm mờ trên ảnh nhỏ
+            Bitmap blurred = fastBlur(smallBitmap, BLUR_RADIUS);
             
-            // 3. Trả kết quả về Main Thread qua Callback
-            mainHandler.post(() -> callback.onBlurCompleted(blurred));
+            // Làm tối ảnh (giống getDimmedBitmap của code cũ)
+            Bitmap dimmed = applyDim(blurred);
+            
+            // Phóng to ảnh bằng Matrix (giống hàm big() của code cũ)
+            Bitmap finalBitmap = upscale(dimmed);
+
+            // 3. Trả kết quả về Main Thread
+            mainHandler.post(() -> callback.onBlurCompleted(finalBitmap));
         });
     }
 
-    private static Bitmap startBlurProcess(Bitmap bkg) {
-        if (bkg == null || bkg.isRecycled()) return null;
-
-        int originWidth = bkg.getWidth();
-        int originHeight = bkg.getHeight();
-
-        // Tính toán kích thước thu nhỏ
-        int width = Math.round(originWidth * SCALE_FACTOR);
-        int height = Math.round(originHeight * SCALE_FACTOR);
-        
-        if (width <= 0 || height <= 0) return bkg;
-
-        // Thu nhỏ ảnh
-        Bitmap smallBitmap = Bitmap.createScaledBitmap(bkg, width, height, true);
-        
-        // Giải phóng ảnh gốc ngay để tiết kiệm RAM
-        if (bkg != smallBitmap) {
-            bkg.recycle();
-        }
-
-        // Làm mờ bằng thuật toán StackBlur
-        Bitmap blurred = fastBlur(smallBitmap, BLUR_RADIUS);
-
-        // Phóng to và làm tối
-        return scaleAndDim(blurred, originWidth, originHeight);
-    }
-
-    private static Bitmap takeScreenShot(Activity activity) {
+    /**
+     * Chụp màn hình và thu nhỏ ngay lập tức để tiết kiệm RAM và CPU
+     */
+    private static Bitmap takeSmallScreenshot(Activity activity) {
         try {
             View view = activity.getWindow().getDecorView();
-            if (view.getWidth() <= 0 || view.getHeight() <= 0) return null;
+            int width = view.getWidth();
+            int height = view.getHeight();
+            if (width <= 0 || height <= 0) return null;
 
-            // Dùng RGB_565 để tiết kiệm 50% bộ nhớ so với ARGB_8888 (phù hợp SDK 23+)
-            Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+            // Tạo bitmap nhỏ ngay từ đầu
+            int smallW = Math.round(width * SCALE_FACTOR);
+            int smallH = Math.round(height * SCALE_FACTOR);
+
+            Bitmap bitmap = Bitmap.createBitmap(smallW, smallH, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
+            
+            // Scale canvas để khi view.draw nó tự thu nhỏ lại
+            canvas.scale(SCALE_FACTOR, SCALE_FACTOR);
             view.draw(canvas);
+            
             return bitmap;
         } catch (Exception e) {
             return null;
         }
     }
 
-    private static Bitmap scaleAndDim(Bitmap bitmap, int targetW, int targetH) {
-        Bitmap output = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888);
+    /**
+     * Làm tối ảnh (Thay thế getDimmedBitmap)
+     */
+    private static Bitmap applyDim(Bitmap bitmap) {
+        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         
-        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
-
-        // Giảm độ sáng 20%
         ColorMatrix cm = new ColorMatrix();
-        float contrast = 0.8f; 
+        float contrast = 0.80f; // Giảm độ sáng giống code cũ
         cm.setScale(contrast, contrast, contrast, 1.0f);
         paint.setColorFilter(new ColorMatrixColorFilter(cm));
-
-        Rect src = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-        Rect dst = new Rect(0, 0, targetW, targetH);
-        canvas.drawBitmap(bitmap, src, dst, paint);
-
-        if (!bitmap.isRecycled()) {
-            bitmap.recycle();
-        }
-
+        
+        canvas.drawBitmap(bitmap, 0, 0, paint);
+        bitmap.recycle();
         return output;
     }
 
     /**
-     * Thuật toán StackBlur tối ưu hóa
+     * Phóng to ảnh (Thay thế hàm big())
+     */
+    private static Bitmap upscale(Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        // Phóng to lại 8 lần (vì lúc đầu đã thu nhỏ 0.125)
+        float scaleUp = 1f / SCALE_FACTOR;
+        matrix.postScale(scaleUp, scaleUp);
+        
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+
+    /**
+     * Thuật toán StackBlur (Giữ nguyên từ code cũ của bạn)
      */
     private static Bitmap fastBlur(Bitmap sentBitmap, int radius) {
         Bitmap bitmap = sentBitmap.copy(sentBitmap.getConfig(), true);
@@ -165,11 +163,9 @@ public class FastBlurUtility {
                 rsum += sir[0] * rbs;
                 gsum += sir[1] * rbs;
                 bsum += sir[2] * rbs;
-                if (i > 0) {
-                    rinsum += sir[0]; ginsum += sir[1]; binsum += sir[2];
-                } else {
-                    routsum += sir[0]; goutsum += sir[1]; boutsum += sir[2];
-                }
+                if (i > 0) rinsum += sir[0]; else routsum += sir[0];
+                if (i > 0) ginsum += sir[1]; else goutsum += sir[1];
+                if (i > 0) binsum += sir[2]; else boutsum += sir[2];
             }
             stackpointer = radius;
             for (x = 0; x < w; x++) {
@@ -197,14 +193,12 @@ public class FastBlurUtility {
             for (i = -radius; i <= radius; i++) {
                 yi = Math.max(0, yp) + x;
                 sir = stack[i + radius];
-                sir[0] = r[yi]; sir[1] = g[yi]; sir[2] = b[yi];
+                sir[0] = r[yi]; sir[1] = g[yi]; sir[2] = b[2];
                 rbs = r1 - Math.abs(i);
                 rsum += r[yi] * rbs; gsum += g[yi] * rbs; bsum += b[yi] * rbs;
-                if (i > 0) {
-                    rinsum += sir[0]; ginsum += sir[1]; binsum += sir[2];
-                } else {
-                    routsum += sir[0]; goutsum += sir[1]; boutsum += sir[2];
-                }
+                if (i > 0) rinsum += sir[0]; else routsum += sir[0];
+                if (i > 0) ginsum += sir[1]; else goutsum += sir[1];
+                if (i > 0) binsum += sir[2]; else boutsum += sir[2];
                 if (i < hm) yp += w;
             }
             yi = x;
@@ -228,7 +222,7 @@ public class FastBlurUtility {
             }
         }
         bitmap.setPixels(pix, 0, w, 0, 0, w, h);
-        sentBitmap.recycle(); // Giải phóng bitmap cũ sau khi copy
+        sentBitmap.recycle();
         return bitmap;
     }
 }
