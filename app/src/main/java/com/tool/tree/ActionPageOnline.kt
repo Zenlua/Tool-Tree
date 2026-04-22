@@ -36,35 +36,28 @@ class ActionPageOnline : AppCompatActivity() {
     private var progressPolling: Timer? = null
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
     private val ACTION_FILE_PATH_CHOOSER = 65400
-
-    // ID định danh cho mục menu mở trình duyệt
     private val MENU_OPEN_BROWSER = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Sử dụng ThemeModeState để quản lý giao diện
         themeMode = ThemeModeState.switchTheme(this)
-        
         binding = ActivityActionPageOnlineBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Thiết lập Toolbar từ layout được include (webappbar)
         val toolbar = binding.webappbar.toolbar
         setSupportActionBar(toolbar)
         setTitle(R.string.app_name)
 
-        // Hiển thị nút quay lại
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setHomeButtonEnabled(true)
         }
 
-        toolbar.setNavigationOnClickListener {
-            finish()
-        }
+        toolbar.setNavigationOnClickListener { finish() }
 
-        // Xử lý nút back chuẩn Android 13+
+        // Bật tăng tốc phần cứng cho WebView ngay từ khi khởi tạo
+        binding.krOnlineWebview.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+
         onBackPressedDispatcher.addCallback(this) {
             if (binding.krOnlineWebview.canGoBack()) {
                 binding.krOnlineWebview.goBack()
@@ -76,20 +69,13 @@ class ActionPageOnline : AppCompatActivity() {
         loadIntentData()
     }
 
-    /**
-     * Tạo menu 3 chấm (Overflow Menu) trực tiếp bằng code
-     */
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        // SHOW_AS_ACTION_NEVER sẽ ép item này vào menu 3 chấm mặc định
         menu?.add(0, MENU_OPEN_BROWSER, 0, R.string.open_in_browser)?.apply {
             setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         }
         return true
     }
 
-    /**
-     * Xử lý sự kiện khi click vào item trong menu 3 chấm
-     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             MENU_OPEN_BROWSER -> {
@@ -104,9 +90,6 @@ class ActionPageOnline : AppCompatActivity() {
         }
     }
 
-    /**
-     * Mở URL hiện tại của WebView bằng trình duyệt mặc định của hệ thống
-     */
     private fun openInDefaultBrowser() {
         val currentUrl = binding.krOnlineWebview.url
         if (!currentUrl.isNullOrEmpty()) {
@@ -129,13 +112,11 @@ class ActionPageOnline : AppCompatActivity() {
                 title = extras.getString("title")
             }
 
-            // Load URL vào Webview
             when {
                 extras.containsKey("config") -> initWebview(extras.getString("config"))
                 extras.containsKey("url") -> initWebview(extras.getString("url"))
             }
 
-            // Xử lý download nếu có
             if (extras.containsKey("downloadUrl")) {
                 val downloader = Downloader(this)
                 val url = extras.getString("downloadUrl")!!
@@ -145,7 +126,6 @@ class ActionPageOnline : AppCompatActivity() {
                 if (downloadId != null) {
                     binding.krDownloadUrl.text = url
                     val autoClose = extras.containsKey("autoClose") && extras.getBoolean("autoClose")
-
                     downloader.saveTaskStatus(taskAliasId, 0)
                     watchDownloadProgress(downloadId, autoClose, taskAliasId)
                 } else {
@@ -185,6 +165,8 @@ class ActionPageOnline : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 progressBarDialog.hideDialog()
+                // Cho phép load ảnh sau khi khung trang đã sẵn sàng để tăng tốc render ban đầu
+                view?.settings?.blockNetworkImage = false
                 view?.title?.let { setTitle(it) }
             }
 
@@ -209,14 +191,15 @@ class ActionPageOnline : AppCompatActivity() {
             }
         }
 
-        url?.let { binding.krOnlineWebview.loadUrl(it) }
-
+        // Khởi chạy Injector với các tối ưu hóa bên trong
         WebViewInjector(binding.krOnlineWebview,
             object : ParamsFileChooserRender.FileChooserInterface {
                 override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
                     return chooseFilePath(fileSelectedInterface)
                 }
             }).inject(this, url?.startsWith("file:///android_asset") == true)
+
+        url?.let { binding.krOnlineWebview.loadUrl(it) }
     }
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
@@ -254,6 +237,12 @@ class ActionPageOnline : AppCompatActivity() {
 
     override fun onDestroy() {
         stopWatchDownloadProgress()
+        // Giải phóng bộ nhớ WebView khi đóng Activity
+        binding.krOnlineWebview.apply {
+            stopLoading()
+            removeAllViews()
+            destroy()
+        }
         super.onDestroy()
     }
 

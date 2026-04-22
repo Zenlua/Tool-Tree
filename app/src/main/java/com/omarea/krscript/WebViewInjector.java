@@ -3,6 +3,8 @@ package com.omarea.krscript;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -40,6 +42,7 @@ public class WebViewInjector {
     private final WebView webView;
     private final Context context;
     private final ParamsFileChooserRender.FileChooserInterface fileChooser;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @SuppressLint("SetJavaScriptEnabled")
     public WebViewInjector(WebView webView, ParamsFileChooserRender.FileChooserInterface fileChooser) {
@@ -51,24 +54,36 @@ public class WebViewInjector {
     @SuppressLint({"JavascriptInterface", "SetJavaScriptEnabled"})
     public void inject(final Activity activity, final boolean credible) {
         if (webView != null) {
-
             WebSettings webSettings = webView.getSettings();
+            
+            // --- TỐI ƯU HÓA WEBVIEW ---
             webSettings.setJavaScriptEnabled(true);
+            webSettings.setDomStorageEnabled(true); // Quan trọng để web chạy nhanh
+            webSettings.setDatabaseEnabled(true);
+            webSettings.setCacheMode(WebSettings.LOAD_DEFAULT); // Sử dụng cache hệ thống
+            
+            // Tạm thời chặn ảnh để ưu tiên tải cấu trúc HTML và Script Shell
+            webSettings.setBlockNetworkImage(true);
+            
             webSettings.setAllowFileAccess(credible);
             webSettings.setAllowUniversalAccessFromFileURLs(credible);
             webSettings.setAllowFileAccessFromFileURLs(credible);
             webSettings.setAllowContentAccess(true);
             webSettings.setUseWideViewPort(true);
+            webSettings.setLoadWithOverviewMode(true);
+            // ---------------------------
 
             webView.addJavascriptInterface(
                     new KrScriptEngine(context),
                     "KrScriptCore"
             );
+            
             webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
                 DialogHelper.Companion.animDialog(new AlertDialog.Builder(context)
                         .setTitle(R.string.kr_download_confirm)
                         .setMessage(url + "\n\n" + mimetype + "\n" + contentLength + "Bytes")
-                        .setPositiveButton(R.string.btn_confirm, (dialog, which) -> new Downloader(context, null).downloadBySystem(url, contentDisposition, mimetype, UUID.randomUUID().toString(), null))
+                        .setPositiveButton(R.string.btn_confirm, (dialog, which) -> 
+                            new Downloader(context, null).downloadBySystem(url, contentDisposition, mimetype, UUID.randomUUID().toString(), null))
                         .setNegativeButton(R.string.btn_cancel, (dialog, which) -> {
                         })).setCancelable(false);
             });
@@ -117,8 +132,7 @@ public class WebViewInjector {
                 final OutputStream outputStream = process.getOutputStream();
                 final DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 
-                setHandler(process, callbackFunction, () -> {
-                });
+                setHandler(process, callbackFunction, () -> { });
 
                 ScriptEnvironmen.executeShell(context, dataOutputStream, script, params, null, null);
                 return true;
@@ -138,34 +152,31 @@ public class WebViewInjector {
                 return fileChooser.openFileChooser(new ParamsFileChooserRender.FileSelectedInterface() {
                     @Override
                     public int type() {
-                        return ParamsFileChooserRender.FileSelectedInterface.Companion.getTYPE_FILE(); // TODO
+                        return ParamsFileChooserRender.FileSelectedInterface.Companion.getTYPE_FILE();
                     }
 
                     @Nullable
                     @Override
                     public String suffix() {
-                        return null; // TODO
+                        return null;
                     }
 
                     @NotNull
                     @Override
                     public String mimeType() {
-                        return "*/*"; // TODO
+                        return "*/*";
                     }
 
                     @Override
                     public void onFileSelected(@Nullable String path) {
-                        try {
-                            final JSONObject message = new JSONObject();
-                            if (path == null || path.isEmpty()) {
-                                message.put("absPath", null);
-                            } else {
-                                message.put("absPath", path);
-                            }
-                            webView.post(() -> webView.evaluateJavascript(callbackFunction + "(" + message + ")", value -> {
-                            }));
-                        } catch (Exception ex) {
-                        }
+                        // Trả dữ liệu về UI thread để tránh crash khi gọi JS
+                        mainHandler.post(() -> {
+                            try {
+                                final JSONObject message = new JSONObject();
+                                message.put("absPath", (path == null || path.isEmpty()) ? null : path);
+                                webView.evaluateJavascript(callbackFunction + "(" + message + ")", null);
+                            } catch (Exception ignored) { }
+                        });
                     }
                 });
             }
@@ -175,44 +186,31 @@ public class WebViewInjector {
         private void setHandler(Process process, final String callbackFunction, final Runnable onExit) {
             final InputStream inputStream = process.getInputStream();
             final InputStream errorStream = process.getErrorStream();
+            
+            // Thread đọc luồng Standard Output
             final Thread reader = new Thread(() -> {
-                String line;
-                try {
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-                    while ((line = bufferedReader.readLine()) != null) {
-                        try {
-                            final JSONObject message = new JSONObject();
-                            message.put("type", ShellHandlerBase.EVENT_REDE);
-                            message.put("message", line + "\n");
-                            webView.post(() -> webView.evaluateJavascript(callbackFunction + "(" + message + ")", value -> {
-
-                            }));
-                        } catch (Exception ex) {
-                        }
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        sendJsLog(callbackFunction, ShellHandlerBase.EVENT_REDE, line + "\n");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
+
+            // Thread đọc luồng Error Output
             final Thread readerError = new Thread(() -> {
-                String line;
-                try {
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(errorStream, StandardCharsets.UTF_8));
-                    while ((line = bufferedReader.readLine()) != null) {
-                        try {
-                            final JSONObject message = new JSONObject();
-                            message.put("type", ShellHandlerBase.EVENT_READ_ERROR);
-                            message.put("message", line + "\n");
-                            webView.post(() -> webView.evaluateJavascript(callbackFunction + "(" + message + ")", value -> {
-
-                            }));
-                        } catch (Exception ex) {
-                        }
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(errorStream, StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        sendJsLog(callbackFunction, ShellHandlerBase.EVENT_READ_ERROR, line + "\n");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
+
             final Process processFinal = process;
             Thread waitExit = new Thread(() -> {
                 int status = -1;
@@ -221,31 +219,29 @@ public class WebViewInjector {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } finally {
-                    try {
-                        final JSONObject message = new JSONObject();
-                        message.put("type", ShellHandlerBase.EVENT_EXIT);
-                        message.put("message", "" + status);
-                        webView.post(() -> webView.evaluateJavascript(callbackFunction + "(" + message + ")", value -> {
+                    sendJsLog(callbackFunction, ShellHandlerBase.EVENT_EXIT, String.valueOf(status));
 
-                        }));
-                    } catch (Exception ex) {
-                    }
-
-                    if (reader.isAlive()) {
-                        reader.interrupt();
-                    }
-                    if (readerError.isAlive()) {
-                        readerError.interrupt();
-                    }
-                    if (onExit != null) {
-                        onExit.run();
-                    }
+                    if (reader.isAlive()) reader.interrupt();
+                    if (readerError.isAlive()) readerError.interrupt();
+                    if (onExit != null) onExit.run();
                 }
             });
 
             reader.start();
             readerError.start();
             waitExit.start();
+        }
+
+        // Hàm hỗ trợ gửi log về WebView thông qua mainHandler để ổn định hiệu suất
+        private void sendJsLog(String callback, int type, String messageStr) {
+            mainHandler.post(() -> {
+                try {
+                    final JSONObject message = new JSONObject();
+                    message.put("type", type);
+                    message.put("message", messageStr);
+                    webView.evaluateJavascript(callback + "(" + message + ")", null);
+                } catch (Exception ignored) { }
+            });
         }
     }
 }
