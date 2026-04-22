@@ -19,6 +19,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.net.toUri
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebSettingsCompat.FORCE_DARK_OFF
+import androidx.webkit.WebSettingsCompat.FORCE_DARK_ON
+import androidx.webkit.WebViewFeature
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.DialogHelper
 import com.omarea.common.ui.ProgressBarDialog
@@ -40,11 +44,15 @@ class ActionPageOnline : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Sử dụng ThemeModeState để quản lý giao diện
         themeMode = ThemeModeState.switchTheme(this)
+        
         binding = ActivityActionPageOnlineBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val toolbar = binding.webappbar.toolbar
+        // Thiết lập Toolbar
+        val toolbar: Toolbar = binding.webappbar.toolbar
         setSupportActionBar(toolbar)
         setTitle(R.string.app_name)
 
@@ -53,11 +61,14 @@ class ActionPageOnline : AppCompatActivity() {
             setHomeButtonEnabled(true)
         }
 
-        toolbar.setNavigationOnClickListener { finish() }
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
-        // Bật tăng tốc phần cứng cho WebView ngay từ khi khởi tạo
+        // Bật tăng tốc phần cứng cho WebView
         binding.krOnlineWebview.setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
+        // Xử lý nút back chuẩn Android 13+
         onBackPressedDispatcher.addCallback(this) {
             if (binding.krOnlineWebview.canGoBack()) {
                 binding.krOnlineWebview.goBack()
@@ -99,8 +110,6 @@ class ActionPageOnline : AppCompatActivity() {
             } catch (e: Exception) {
                 Toast.makeText(this, "No suitable browser found.", Toast.LENGTH_SHORT).show()
             }
-        } else {
-            Toast.makeText(this, "Loading page, please wait...", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -137,6 +146,23 @@ class ActionPageOnline : AppCompatActivity() {
 
     private fun initWebview(url: String?) {
         binding.krOnlineWebview.visibility = View.VISIBLE
+        val settings = binding.krOnlineWebview.settings
+        
+        // Tối ưu cấu hình
+        settings.javaScriptEnabled = true
+        settings.domStorageEnabled = true
+        settings.databaseEnabled = true
+        settings.cacheMode = WebSettings.LOAD_DEFAULT
+        
+        // Chặn ảnh tạm thời để ưu tiên load layout/script
+        settings.blockNetworkImage = true
+
+        // Cập nhật Dark Mode dựa trên ThemeModeState
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+            val isDark = ThemeModeState.isDarkMode()
+            WebSettingsCompat.setForceDark(settings, if (isDark) FORCE_DARK_ON else FORCE_DARK_OFF)
+        }
+
         binding.krOnlineWebview.webChromeClient = object : WebChromeClient() {
             override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
                 DialogHelper.animDialog(
@@ -165,7 +191,7 @@ class ActionPageOnline : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 progressBarDialog.hideDialog()
-                // Cho phép load ảnh sau khi khung trang đã sẵn sàng để tăng tốc render ban đầu
+                // Mở lại việc tải ảnh
                 view?.settings?.blockNetworkImage = false
                 view?.title?.let { setTitle(it) }
             }
@@ -191,7 +217,7 @@ class ActionPageOnline : AppCompatActivity() {
             }
         }
 
-        // Khởi chạy Injector với các tối ưu hóa bên trong
+        // Khởi chạy Injector
         WebViewInjector(binding.krOnlineWebview,
             object : ParamsFileChooserRender.FileChooserInterface {
                 override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
@@ -204,9 +230,10 @@ class ActionPageOnline : AppCompatActivity() {
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         return try {
-            val intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.type = "*/*"
-            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "*/*"
+                addCategory(Intent.CATEGORY_OPENABLE)
+            }
             startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
             this.fileSelectedInterface = fileSelectedInterface
             true
@@ -237,7 +264,6 @@ class ActionPageOnline : AppCompatActivity() {
 
     override fun onDestroy() {
         stopWatchDownloadProgress()
-        // Giải phóng bộ nhớ WebView khi đóng Activity
         binding.krOnlineWebview.apply {
             stopLoading()
             removeAllViews()
@@ -286,6 +312,7 @@ class ActionPageOnline : AppCompatActivity() {
                     try {
                         val nameColumn = cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI)
                         val uriStr = cursor.getString(nameColumn)
+                        // Sử dụng extension toUri() đã import
                         absPath = FilePathResolver().getPath(this@ActionPageOnline, uriStr.toUri()) ?: ""
                         fileName = absPath
                     } catch (_: Exception) {}
