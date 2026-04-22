@@ -380,21 +380,9 @@ class DialogHelper {
             if (context is Activity) {
                 dialog.show()
                 dialog.window?.run {
-                    val wasPausedOriginal = BlurEngine.isPaused
-                    if (!wasPausedOriginal) {
-                        BlurEngine.isPaused = true
-                    }
-
-                    try {
-                        setWindowBlurBg(this, context)
-                    } finally {
-                        if (!wasPausedOriginal) {
-                            BlurEngine.isPaused = false
-                        }
-                    }
-
+                    setWindowBlurBg(this, context)
                     decorView.run {
-                        systemUiVisibility = context.window.decorView.systemUiVisibility
+                        systemUiVisibility = context.window.decorView.systemUiVisibility // View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                     }
                 }
             } else {
@@ -407,28 +395,22 @@ class DialogHelper {
                 }
             }
 
-            val dialogWrap = DialogWrap(dialog).setCancelable(cancelable)
-            dialog.setOnDismissListener {
-                BlurEngine.isPaused = false
-            }
-
-            return setOutsideTouchDismiss(view, dialogWrap)
+            return setOutsideTouchDismiss(view, DialogWrap(dialog).setCancelable(cancelable))
         }
 
         private fun isNightMode(context: Context): Boolean {
             return ThemeModeState.isDarkMode()
         }
 
+        // Trong setWindowBlurBg
         fun setWindowBlurBg(window: Window, activity: Activity) {
             val wallpaperMode = activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0
             window.run {
                 val blurBitmap = if (disableBlurBg) {
                     null
                 } else {
-                    // Gọi hàm này, Java Utility sẽ tự xử lý ảnh mờ
                     FastBlurUtility.getBlurBackgroundDrawer(activity)
                 }
-
                 if (blurBitmap != null) {
                     setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
                 } else {
@@ -437,7 +419,7 @@ class DialogHelper {
                         if (bg == Color.TRANSPARENT) {
                             if (isFloating) {
                                 setBackgroundDrawable(bg.toDrawable())
-                                setDimAmount(0.5f)
+                                setDimAmount(0.8f)
                                 return
                             } else {
                                 val d = if (wallpaperMode || isNightMode(context)) {
