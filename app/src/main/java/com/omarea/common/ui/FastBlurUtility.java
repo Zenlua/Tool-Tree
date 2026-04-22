@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 public class FastBlurUtility {
 
     private static final float SCALE_FACTOR = 0.10f;
-    private static final int BLUR_RADIUS = 8;
+    private static final int BLUR_RADIUS = 10;
     
     // Executor để xử lý các tác vụ nặng ngoài UI Thread
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -81,7 +81,7 @@ public class FastBlurUtility {
             if (view.getWidth() <= 0 || view.getHeight() <= 0) return null;
 
             // Dùng RGB_565 để tiết kiệm 50% bộ nhớ so với ARGB_8888 (phù hợp SDK 23+)
-            Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.RGB_565);
+            Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
             view.draw(canvas);
             return bitmap;
@@ -91,7 +91,7 @@ public class FastBlurUtility {
     }
 
     private static Bitmap scaleAndDim(Bitmap bitmap, int targetW, int targetH) {
-        Bitmap output = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.RGB_565);
+        Bitmap output = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
         
         Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
