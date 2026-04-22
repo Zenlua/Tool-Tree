@@ -21,6 +21,7 @@ import androidx.core.graphics.drawable.toDrawable
 import com.tool.tree.ThemeModeState
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import com.omarea.common.ui.BlurEngine
 
 class DialogHelper {
     class DialogButton(val text: String, val onClick: Runnable? = null, val dismiss: Boolean = true)
@@ -409,6 +410,7 @@ class DialogHelper {
                 val blurBitmap = if (disableBlurBg) {
                     null
                 } else {
+                    BlurEngine.isPaused = true
                     FastBlurUtility.getBlurBackgroundDrawer(activity)
                 }
                 if (blurBitmap != null) {
