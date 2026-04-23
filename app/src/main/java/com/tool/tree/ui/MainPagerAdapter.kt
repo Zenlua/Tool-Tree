@@ -9,45 +9,35 @@ class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activ
 
     private val fragmentList = ArrayList<ActionListFragment>()
     private val fragmentTitles = ArrayList<String>()
+    // Sử dụng ID ổn định thay vì hashCode của Fragment
+    private val fragmentIds = ArrayList<Long>()
+    private var nextId = 0L
 
-    // Thêm Fragment mới vào danh sách
     fun addFragment(fragment: ActionListFragment, title: String) {
         fragmentList.add(fragment)
         fragmentTitles.add(title)
+        fragmentIds.add(nextId++)
         notifyItemInserted(fragmentList.size - 1)
     }
 
-    // Thay thế Fragment tại vị trí cụ thể
     fun replaceFragment(position: Int, fragment: ActionListFragment) {
         if (position in 0 until fragmentList.size) {
             fragmentList[position] = fragment
-            // Sử dụng notifyItemChanged để ViewPager2 biết cần nạp lại Fragment tại vị trí này
+            // Khi thay thế, ta cấp một ID mới cho vị trí này để ViewPager2 tạo lại UI
+            fragmentIds[position] = nextId++
             notifyItemChanged(position)
         }
     }
 
-    // Lấy Fragment tại vị trí
-    fun getFragment(position: Int): ActionListFragment? =
-        fragmentList.getOrNull(position)
+    fun getFragment(position: Int): ActionListFragment? = fragmentList.getOrNull(position)
 
-    // Lấy tiêu đề tab
-    fun getTitle(position: Int): String =
-        fragmentTitles.getOrElse(position) { "" }
+    fun getTitle(position: Int): String = fragmentTitles.getOrElse(position) { "" }
 
     override fun getItemCount(): Int = fragmentList.size
 
-    override fun createFragment(position: Int): Fragment {
-        // Trả về Fragment từ danh sách
-        return fragmentList[position]
-    }
+    override fun createFragment(position: Int): Fragment = fragmentList[position]
 
-    // Để replaceFragment hoạt động chính xác với ViewPager2, bạn nên override thêm hàm này
-    override fun getItemId(position: Int): Long {
-        // Tạo một ID duy nhất cho mỗi instance của Fragment dựa trên hashCode
-        return fragmentList[position].hashCode().toLong()
-    }
+    override fun getItemId(position: Int): Long = fragmentIds[position]
 
-    override fun containsItem(itemId: Long): Boolean {
-        return fragmentList.any { it.hashCode().toLong() == itemId }
-    }
+    override fun containsItem(itemId: Long): Boolean = fragmentIds.contains(itemId)
 }

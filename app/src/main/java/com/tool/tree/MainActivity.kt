@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
 
     private val ACTION_FILE_PATH_CHOOSER = 65400
-    private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
     private lateinit var adapter: MainPagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,12 +57,12 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
         setTitle(R.string.app_name)
 
-        progressBarDialog.showDialog(getString(R.string.please_wait))
-        loadTabs()
-
         if (ThemeConfig(this).getAllowNotificationUI()) {
             WakeLockService.startService(applicationContext)
         }
+
+        initAdapter()
+        loadTabs()
 
         onBackPressedDispatcher.addCallback(this) {
             startService(Intent(this@MainActivity, WakeLockService::class.java).apply {
@@ -74,46 +73,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initAdapter() {
+        if (!::adapter.isInitialized) {
+            adapter = MainPagerAdapter(this)
+            binding.viewPager.adapter = adapter
+            binding.viewPager.offscreenPageLimit = 4
+        }
+    }
+
     private fun loadTabs() {
+        progressBarDialog.showDialog(getString(R.string.please_wait))
+        
         lifecycleScope.launch(Dispatchers.IO) {
-            // Kiểm tra an toàn trước khi lấy dữ liệu
             val favorites = getItems(krScriptConfig.favoriteConfig)
             val pages = getItems(krScriptConfig.pageListConfig)
             val tab3Items = getItems(krScriptConfig.customTab3Config)
             val tab4Items = getItems(krScriptConfig.customTab4Config)
 
+            if (!isActive) return@launch
+
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
-                if (!::adapter.isInitialized) {
-                    adapter = MainPagerAdapter(this@MainActivity)
-                    binding.viewPager.adapter = adapter
-                    binding.viewPager.offscreenPageLimit = 2
+                val theme = ThemeModeState.getThemeMode()
+
+                fun updateTab(pos: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, config: PageNode, isFav: Boolean) {
+                    items?.takeIf { it.isNotEmpty() }?.let {
+                        val fragment = ActionListFragment.create(it, getKrScriptActionHandler(config, isFav), null, theme)
+                        if (adapter.getFragment(pos) == null) {
+                            adapter.addFragment(fragment, getString(titleRes))
+                        } else {
+                            adapter.replaceFragment(pos, fragment)
+                        }
+                    }
                 }
 
-                // Xử lý nạp Fragment an toàn
-                favorites?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), null, ThemeModeState.getThemeMode())
-                    if (adapter.getFragment(0) == null) adapter.addFragment(fragment, getString(R.string.tab_favorites))
-                    else adapter.replaceFragment(0, fragment)
-                }
-
-                pages?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), null, ThemeModeState.getThemeMode())
-                    if (adapter.getFragment(1) == null) adapter.addFragment(fragment, getString(R.string.tab_pages))
-                    else adapter.replaceFragment(1, fragment)
-                }
-
-                tab3Items?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), null, ThemeModeState.getThemeMode())
-                    if (adapter.getFragment(2) == null) adapter.addFragment(fragment, getString(R.string.tab_custom3))
-                    else adapter.replaceFragment(2, fragment)
-                }
-
-                tab4Items?.takeIf { it.isNotEmpty() }?.let {
-                    val fragment = ActionListFragment.create(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), null, ThemeModeState.getThemeMode())
-                    if (adapter.getFragment(3) == null) adapter.addFragment(fragment, getString(R.string.tab_custom4))
-                    else adapter.replaceFragment(3, fragment)
-                }
+                updateTab(0, favorites, R.string.tab_favorites, krScriptConfig.favoriteConfig, true)
+                updateTab(1, pages, R.string.tab_pages, krScriptConfig.pageListConfig, false)
+                updateTab(2, tab3Items, R.string.tab_custom3, krScriptConfig.customTab3Config, false)
+                updateTab(3, tab4Items, R.string.tab_custom4, krScriptConfig.customTab4Config, false)
 
                 setupTabs()
             }
@@ -127,11 +124,15 @@ class MainActivity : AppCompatActivity() {
             val tab3Items = getItems(krScriptConfig.customTab3Config)
             val tab4Items = getItems(krScriptConfig.customTab4Config)
 
+            if (!isActive) return@launch
+
             withContext(Dispatchers.Main) {
-                if (!favorites.isNullOrEmpty()) (adapter.getFragment(0) as? ActionListFragment)?.updateData(favorites, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), ThemeModeState.getThemeMode())
-                if (!pages.isNullOrEmpty()) (adapter.getFragment(1) as? ActionListFragment)?.updateData(pages, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), ThemeModeState.getThemeMode())
-                if (!tab3Items.isNullOrEmpty()) (adapter.getFragment(2) as? ActionListFragment)?.updateData(tab3Items, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), ThemeModeState.getThemeMode())
-                if (!tab4Items.isNullOrEmpty()) (adapter.getFragment(3) as? ActionListFragment)?.updateData(tab4Items, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), ThemeModeState.getThemeMode())
+                val theme = ThemeModeState.getThemeMode()
+                
+                favorites?.let { (adapter.getFragment(0) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), theme) }
+                pages?.let { (adapter.getFragment(1) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), theme) }
+                tab3Items?.let { (adapter.getFragment(2) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), theme) }
+                tab4Items?.let { (adapter.getFragment(3) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), theme) }
             }
         }
     }
@@ -140,16 +141,17 @@ class MainActivity : AppCompatActivity() {
         val tabHelper = TabIconHelper(this)
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             val title = adapter.getTitle(position)
-            val iconRes = when (title) {
-                getString(R.string.tab_favorites) -> R.drawable.tab_favorites
-                getString(R.string.tab_pages) -> R.drawable.tab_pages
-                getString(R.string.tab_custom3) -> R.drawable.tab_custom3
-                getString(R.string.tab_custom4) -> R.drawable.tab_custom4
+            val iconRes = when (position) {
+                0 -> R.drawable.tab_favorites
+                1 -> R.drawable.tab_pages
+                2 -> R.drawable.tab_custom3
+                3 -> R.drawable.tab_custom4
                 else -> R.drawable.tab_home
             }
             tab.customView = tabHelper.createTabView(title, getDrawable(iconRes)!!, position == binding.viewPager.currentItem)
         }.attach()
 
+        binding.tabLayout.clearOnTabSelectedListeners()
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 tabHelper.updateHighlight(binding.tabLayout, tab.position)
@@ -161,28 +163,28 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    /**
-     * Lấy danh sách item từ cấu hình trang.
-     * Đã thêm kiểm tra null-safety để tránh NullPointerException.
-     */
     private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {
-        var items: ArrayList<NodeInfoBase>? = null
-        if (pageNode.pageConfigSh.isNotEmpty())
-            items = PageConfigSh(this, pageNode.pageConfigSh, null).execute()
-        if (items == null && pageNode.pageConfigPath.isNotEmpty())
-            items = PageConfigReader(this.applicationContext, pageNode.pageConfigPath, null).readConfigXml()
-        return items
+        return try {
+            if (pageNode.pageConfigSh.isNotEmpty()) {
+                PageConfigSh(this, pageNode.pageConfigSh, null).execute()
+            } else if (pageNode.pageConfigPath.isNotEmpty()) {
+                PageConfigReader(applicationContext, pageNode.pageConfigPath, null).readConfigXml()
+            } else null
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun restartApp() {
-        startActivity(Intent(this, SplashActivity::class.java).apply {
+        val intent = Intent(this, SplashActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             putExtra("force_reset", true)
-        })
+        }
+        startActivity(intent)
         finish()
     }
 
-    private fun getKrScriptActionHandler(pageNode: PageNode, isFavoritesTab: Boolean): KrScriptActionHandler {
+    private fun getKrScriptActionHandler(pageNode: PageNode, isFavorites: Boolean): KrScriptActionHandler {
         return object : KrScriptActionHandler {
             override fun onActionCompleted(runnableNode: RunnableNode) {
                 when {
@@ -222,10 +224,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         return try {
-            startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = fileSelectedInterface.mimeType() ?: "*/*"
-            }, ACTION_FILE_PATH_CHOOSER)
+            }
+            startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
             this.fileSelectedInterface = fileSelectedInterface
             true
         } catch (e: Exception) {
@@ -235,14 +238,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val path = when (requestCode) {
-            ACTION_FILE_PATH_CHOOSER -> if (resultCode == RESULT_OK) data?.data?.let { FilePathResolver().getPath(this, it) } else null
-            ACTION_FILE_PATH_CHOOSER_INNER -> if (resultCode == RESULT_OK) data?.getStringExtra("file") else null
-            else -> null
-        }
-        fileSelectedInterface?.onFileSelected(path)
-        fileSelectedInterface = null
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == ACTION_FILE_PATH_CHOOSER && resultCode == RESULT_OK) {
+            val path = data?.data?.let { FilePathResolver().getPath(this, it) }
+            fileSelectedInterface?.onFileSelected(path)
+            fileSelectedInterface = null
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -281,7 +282,8 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.theme_light), getString(R.string.theme_wallpaper_system),
             getString(R.string.theme_wallpaper_dark), getString(R.string.theme_wallpaper_light)
         )
-        themeSelector.text = themeNames[themeConfig.getThemeMode().coerceAtMost(themeNames.size - 1)]
+        
+        themeSelector.text = themeNames[themeConfig.getThemeMode().coerceIn(0, themeNames.size - 1)]
         themeSelector.setOnClickListener {
             val popup = ListPopupWindow(this)
             popup.anchorView = themeSelector
@@ -290,15 +292,16 @@ class MainActivity : AppCompatActivity() {
                 themeConfig.setThemeMode(position)
                 themeSelector.text = themeNames[position]
                 popup.dismiss()
+                ThemeModeState.switchTheme(this)
+                recreate()
             }
             popup.width = 500
             popup.show()
         }
 
-        val checkNotification = layout.findViewById<CheckBox>(R.id.notification_ui)
-        checkNotification.isChecked = themeConfig.getAllowNotificationUI()
-        checkNotification.setOnCheckedChangeListener { _, isChecked ->
-            themeConfig.setAllowNotificationUI(isChecked)
+        layout.findViewById<CheckBox>(R.id.notification_ui).apply {
+            isChecked = themeConfig.getAllowNotificationUI()
+            setOnCheckedChangeListener { _, isChecked -> themeConfig.setAllowNotificationUI(isChecked) }
         }
 
         layout.findViewById<TextView>(R.id.appliction_authorText).setOnClickListener {
