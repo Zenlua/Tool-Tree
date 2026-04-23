@@ -97,9 +97,9 @@ class MainActivity : AppCompatActivity() {
                 val theme = ThemeModeState.getThemeMode()
 
                 fun updateTab(pos: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, config: PageNode, isFav: Boolean) {
-                    items?.takeIf { it.isNotEmpty() }?.let {
+                    items?.let {
                         val fragment = ActionListFragment.create(it, getKrScriptActionHandler(config, isFav), null, theme)
-                        if (adapter.getFragment(pos) == null) {
+                        if (pos >= adapter.itemCount) {
                             adapter.addFragment(fragment, getString(titleRes))
                         } else {
                             adapter.replaceFragment(pos, fragment)
@@ -139,6 +139,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupTabs() {
         val tabHelper = TabIconHelper(this)
+        
+        // Kết nối TabLayout và ViewPager2
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             val title = adapter.getTitle(position)
             val iconRes = when (position) {
@@ -151,10 +153,18 @@ class MainActivity : AppCompatActivity() {
             tab.customView = tabHelper.createTabView(title, getDrawable(iconRes)!!, position == binding.viewPager.currentItem)
         }.attach()
 
+        // FIX: Xử lý sự kiện click thủ công cho Custom Tab View
         binding.tabLayout.clearOnTabSelectedListeners()
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
+                // Ép ViewPager2 chuyển trang khi ấn vào icon tab
+                if (binding.viewPager.currentItem != tab.position) {
+                    binding.viewPager.setCurrentItem(tab.position, true)
+                }
+                
+                // Cập nhật hiệu ứng hiển thị (màu sắc/scale) của tab
                 tabHelper.updateHighlight(binding.tabLayout, tab.position)
+                
                 isFavoritesTab = (tab.position == 0)
                 invalidateOptionsMenu()
             }
