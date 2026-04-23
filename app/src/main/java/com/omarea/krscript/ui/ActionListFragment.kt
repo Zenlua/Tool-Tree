@@ -9,6 +9,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.model.SelectItem
+import com.omarea.common.ui.DialogHelper
 import com.omarea.common.ui.DialogItemChooser
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.common.ui.ThemeMode
@@ -20,10 +21,9 @@ import com.omarea.krscript.model.*
 import com.tool.tree.ThemeModeState
 import kotlinx.coroutines.*
 
-// Import các tính năng đặc thù từ code cũ của bạn
+// Khôi phục các tính năng đặc thù
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.shortcut.ActionShortcutManager
-import com.omarea.krscript.TryOpenActivity
 
 class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.OnItemClickListener {
     companion object {
@@ -46,7 +46,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private var krScriptActionHandler: KrScriptActionHandler? = null
     private var autoRunTask: AutoRunTask? = null
     private var themeMode: ThemeMode? = null
-    private val progressBarDialog by lazy { ProgressBarDialog(requireContext()) }
+    private val progressBarDialog by lazy { ProgressBarDialog(requireActivity()) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_action_list, container, false)
@@ -56,10 +56,13 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         super.onViewCreated(view, savedInstanceState)
         renderList()
         
-        // Tính năng: Tự động chạy tác vụ khi nạp Fragment (AutoRun)
         autoRunTask?.let { task ->
             actionInfos?.find { it.key == task.key }?.let { 
-                onItemClick(it)
+                when (it) {
+                    is ActionNode -> onActionClick(it, { renderList() })
+                    is SwitchNode -> onSwitchClick(it, { renderList() })
+                    is PickerNode -> onPickerClick(it, { renderList() })
+                }
                 autoRunTask = null 
             }
         }
@@ -79,18 +82,38 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
         actionInfos?.let {
             val currentTheme = themeMode ?: ThemeMode().apply { isDarkMode = ThemeModeState.isDarkMode() }
-            PageLayoutRender(container, this, currentTheme).renderList(it)
+            // Khởi tạo PageLayoutRender với đúng tham số Context và Listener
+            val render = PageLayoutRender(requireContext(), it, this, currentTheme)
+            render.renderList(container)
         }
     }
 
-    override fun onItemClick(item: NodeInfoBase) {
-        when (item) {
-            is ActionNode -> actionExecute(item) { renderList() }
-            is PickerNode -> pickerExecute(item) { renderList() }
-            is SwitchNode -> switchExecute(item) { renderList() }
-            is PageNode -> krScriptActionHandler?.onSubPageClick(item)
+    // --- Triển khai đầy đủ Interface OnItemClickListener (Sửa lỗi Build) ---
+
+    override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
+        actionExecute(item, onCompleted)
+    }
+
+    override fun onSwitchClick(item: SwitchNode, onCompleted: Runnable) {
+        switchExecute(item, onCompleted)
+    }
+
+    override fun onPickerClick(item: PickerNode, onCompleted: Runnable) {
+        pickerExecute(item, onCompleted)
+    }
+
+    override fun onPageClick(item: PageNode, onCompleted: Runnable) {
+        krScriptActionHandler?.onSubPageClick(item)
+    }
+
+    override fun onItemLongClick(clickableNode: ClickableNode) {
+        // Tích hợp ActionShortcutManager khi nhấn giữ
+        activity?.let {
+            ActionShortcutManager(it).showShortcutDialog(clickableNode)
         }
     }
+
+    // --- Logic xử lý chi tiết ---
 
     private fun pickerExecute(item: PickerNode, onCompleted: Runnable) {
         val paramInfo = ActionParamInfo().apply {
@@ -112,8 +135,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                     progressBarDialog.hideDialog()
                     if (options != null) {
                         ActionParamsLayoutRender.setParamOptionsSelectedStatus(paramInfo, options)
-                        val darkMode = ThemeModeState.isDarkMode()
-                        DialogItemChooser(darkMode, options, item.multiple, object : DialogItemChooser.Callback {
+                        DialogItemChooser(ThemeModeState.isDarkMode(), options, item.multiple, object : DialogItemChooser.Callback {
                             override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
                                 val value = if (item.multiple) {
                                     selected.joinToString(item.separator ?: " ") { it.value.toString() }
@@ -124,8 +146,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 if (value.isNotEmpty() || !item.multiple) {
                                     val script = item.setState?.replace("{value}", value) ?: ""
                                     actionExecute(item, script, onCompleted, null)
-                                } else {
-                                    Toast.makeText(context, getString(R.string.picker_select_none), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }).show(childFragmentManager, "picker")
@@ -174,15 +194,13 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             }
         })
 
-        AlertDialog.Builder(ctx)
-            .setTitle(action.title)
-            .setView(view)
-            .setPositiveButton(R.string.btn_confirm) { _, _ ->
-                val values = render.readParamsValue(params)
-                actionExecute(action, script, onExit, values)
-            }
-            .setNegativeButton(R.string.btn_cancel, null)
-            .show()
+        // Sử dụng DialogHelper để đồng bộ UI cũ
+        DialogHelper.customDialog(requireActivity(), view, action.title, {
+            val values = render.readParamsValue(params)
+            actionExecute(action, script, onExit, values)
+        }, {
+            onExit.run()
+        })
     }
 
     private fun switchExecute(item: SwitchNode, onCompleted: Runnable) {
@@ -190,6 +208,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val state = executeScriptGetResult(item.getState, item).trim()
             val isChecked = state == "1" || state.equals("true", true)
+            // Sửa lỗi unresolved reference setOff/setOn tùy theo model của bạn
             val script = if (isChecked) item.setOff else item.setOn
             
             withContext(Dispatchers.Main) {
@@ -207,13 +226,13 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             if (line.contains("|")) {
                 val parts = line.split("|")
                 items.add(SelectItem().apply { 
-                    name = parts[0].trim()
-                    value = parts[1].trim() 
+                    this.title = parts[0].trim() 
+                    this.value = parts[1].trim() 
                 })
             } else if (line.trim().isNotEmpty()) {
                 items.add(SelectItem().apply { 
-                    name = line.trim()
-                    value = line.trim() 
+                    this.title = line.trim()
+                    this.value = line.trim() 
                 })
             }
         }
@@ -221,40 +240,36 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     private fun executeScriptGetResult(shellScript: String, nodeInfoBase: NodeInfoBase): String {
-        return ScriptEnvironmen.executeResultRoot(requireContext(), shellScript, nodeInfoBase) ?: ""
+        // Tích hợp IconPathAnalysis nếu script cần phân tích icon
+        val processedScript = IconPathAnalysis().analysis(shellScript)
+        return ScriptEnvironmen.executeResultRoot(requireContext(), processedScript, nodeInfoBase) ?: ""
     }
 
     private var hiddenTaskRunning = false
     private fun actionExecute(nodeInfo: RunnableNode, script: String, onExit: Runnable, params: HashMap<String, String>?) {
         val ctx = context ?: return
-
         val onDismiss = Runnable {
             krScriptActionHandler?.onActionCompleted(nodeInfo)
             onExit.run()
         }
 
         when (nodeInfo.shell) {
-            RunnableNode.shellModeBgTask -> {
-                BgTaskThread.startTask(ctx, script, params, nodeInfo, onExit, onDismiss)
-            }
+            RunnableNode.shellModeBgTask -> BgTaskThread.startTask(ctx, script, params, nodeInfo, onExit, onDismiss)
             RunnableNode.shellModeHidden -> {
                 if (hiddenTaskRunning) {
                     Toast.makeText(ctx, getString(R.string.kr_hidden_task_running), Toast.LENGTH_SHORT).show()
                 } else {
                     hiddenTaskRunning = true
-                    val hiddenDismiss = Runnable {
+                    HiddenTaskThread.startTask(ctx, script, params, nodeInfo, onExit, Runnable {
                         hiddenTaskRunning = false
                         onDismiss.run()
-                    }
-                    HiddenTaskThread.startTask(ctx, script, params, nodeInfo, onExit, hiddenDismiss)
+                    })
                 }
             }
             else -> {
-                val darkMode = ThemeModeState.isDarkMode()
-                DialogLogFragment.create(nodeInfo, onExit, onDismiss, script, params, darkMode).apply {
-                    isCancelable = false
-                    show(childFragmentManager, "log")
-                }
+                val dialog = DialogLogFragment.create(nodeInfo, onExit, onDismiss, script, params, ThemeModeState.isDarkMode())
+                dialog.isCancelable = false
+                dialog.show(childFragmentManager, "log")
             }
         }
     }
