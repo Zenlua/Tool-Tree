@@ -115,8 +115,8 @@ public class BlurController {
                 Bitmap processedSource = adjustContrast(source, contrastValue);
 
                 // B. Scale nhỏ để tối ưu (giảm 4 lần kích thước = giảm 16 lần RAM)
-                int width = Math.round(bkg.getWidth() * 0.15f);
-                int height = Math.round(bkg.getHeight() * 0.15f);
+                int width = Math.max(Math.round(processedSource.getWidth() * 0.15f), 1);
+                int height = Math.max(Math.round(processedSource.getHeight() * 0.15f), 1);
                 Bitmap scaledSource = Bitmap.createScaledBitmap(processedSource, width, height, false);
                 
                 Bitmap blurredResult = blurBitmap(context, scaledSource, 16f);
