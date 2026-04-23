@@ -1,12 +1,17 @@
 package com.omarea.krscript.ui
 
 import android.app.AlertDialog
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.model.SelectItem
 import com.omarea.common.ui.DialogHelper
@@ -16,260 +21,383 @@ import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.BgTaskThread
 import com.omarea.krscript.HiddenTaskThread
 import com.tool.tree.R
+import com.omarea.krscript.TryOpenActivity
+import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.*
+import com.omarea.krscript.shortcut.ActionShortcutManager
 import com.tool.tree.ThemeModeState
 import kotlinx.coroutines.*
-
-// Khôi phục các tính năng đặc thù
-import com.omarea.krscript.config.IconPathAnalysis
-import com.omarea.krscript.shortcut.ActionShortcutManager
 
 class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.OnItemClickListener {
     companion object {
         fun create(
-            actionInfos: ArrayList<NodeInfoBase>?,
-            krScriptActionHandler: KrScriptActionHandler? = null,
-            autoRunTask: AutoRunTask? = null,
-            themeMode: ThemeMode? = null
-        ): ActionListFragment {
+                actionInfos: ArrayList<NodeInfoBase>?,
+                krScriptActionHandler: KrScriptActionHandler? = null,
+                autoRunTask: AutoRunTask? = null,
+                themeMode: ThemeMode? = null): ActionListFragment {
             val fragment = ActionListFragment()
-            fragment.actionInfos = actionInfos
-            fragment.krScriptActionHandler = krScriptActionHandler
-            fragment.autoRunTask = autoRunTask
-            fragment.themeMode = themeMode
+            fragment.setListData(actionInfos, krScriptActionHandler, autoRunTask, themeMode)
             return fragment
         }
     }
 
     private var actionInfos: ArrayList<NodeInfoBase>? = null
+    private lateinit var progressBarDialog: ProgressBarDialog
     private var krScriptActionHandler: KrScriptActionHandler? = null
     private var autoRunTask: AutoRunTask? = null
     private var themeMode: ThemeMode? = null
-    private val progressBarDialog by lazy { ProgressBarDialog(requireActivity()) }
+    private var pageLayoutRender: PageLayoutRender? = null
+    private lateinit var rootGroup: ListItemGroup
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_action_list, container, false)
+    private fun setListData(
+        actionInfos: ArrayList<NodeInfoBase>?,
+        krScriptActionHandler: KrScriptActionHandler? = null,
+        autoRunTask: AutoRunTask? = null,
+        themeMode: ThemeMode? = null) {
+        this.actionInfos = actionInfos
+        this.krScriptActionHandler = krScriptActionHandler
+        this.autoRunTask = autoRunTask
+        this.themeMode = themeMode
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
+        return inflater.inflate(R.layout.kr_action_list_fragment, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        renderList()
-        
-        autoRunTask?.let { task ->
-            actionInfos?.find { it.key == task.key }?.let { 
-                when (it) {
-                    is ActionNode -> onActionClick(it, { renderList() })
-                    is SwitchNode -> onSwitchClick(it, { renderList() })
-                    is PickerNode -> onPickerClick(it, { renderList() })
-                }
-                autoRunTask = null 
+        this.progressBarDialog = ProgressBarDialog(this.requireActivity())
+        renderInterface()
+    }
+
+    private fun renderInterface() {
+        val context = context ?: return
+        val currentActionInfos = actionInfos ?: return
+        rootGroup = ListItemGroup(context, true, GroupNode(""))
+        pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
+        val layout = rootGroup.getView()
+        val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
+        rootView?.removeAllViews()
+        rootView?.addView(layout)
+        triggerAction(autoRunTask)
+    }
+    
+    fun updateData(
+        newItems: List<NodeInfoBase>,
+        actionHandler: KrScriptActionHandler?,
+        themeMode: ThemeMode?
+    ) {
+        this.actionInfos = ArrayList(newItems)
+        this.krScriptActionHandler = actionHandler
+        this.themeMode = themeMode
+        if (isAdded && view != null) {
+            renderInterface()
+        }
+    }
+
+    private fun triggerAction(autoRunTask: AutoRunTask?) {
+        autoRunTask?.run {
+            if (!key.isNullOrEmpty()) {
+                onCompleted(rootGroup.triggerActionByKey(key!!))
             }
         }
     }
 
-    fun updateData(actionInfos: ArrayList<NodeInfoBase>, krScriptActionHandler: KrScriptActionHandler?, themeMode: ThemeMode?) {
-        this.actionInfos = actionInfos
-        this.krScriptActionHandler = krScriptActionHandler
-        this.themeMode = themeMode
-        if (isAdded) renderList()
-    }
-
-    private fun renderList() {
-        val view = view ?: return
-        val container = view.findViewById<ViewGroup>(R.id.action_list_container) ?: return
-        container.removeAllViews()
-
-        actionInfos?.let {
-            val currentTheme = themeMode ?: ThemeMode().apply { isDarkMode = ThemeModeState.isDarkMode() }
-            // Khởi tạo PageLayoutRender với đúng tham số Context và Listener
-            val render = PageLayoutRender(requireContext(), it, this, currentTheme)
-            render.renderList(container)
+    private fun nodeUnlocked(clickableNode: ClickableNode): Boolean {
+        val currentSDK = Build.VERSION.SDK_INT
+        if (clickableNode.targetSdkVersion > 0 && currentSDK != clickableNode.targetSdkVersion) {
+            DialogHelper.helpInfo(requireContext(), getString(R.string.kr_sdk_discrepancy), getString(R.string.kr_sdk_discrepancy_message).format(clickableNode.targetSdkVersion))
+            return false
+        } else if (currentSDK > clickableNode.maxSdkVersion) {
+            DialogHelper.helpInfo(requireContext(), getString(R.string.kr_sdk_overtop), getString(R.string.kr_sdk_message).format(clickableNode.minSdkVersion, clickableNode.maxSdkVersion))
+            return false
+        } else if (currentSDK < clickableNode.minSdkVersion) {
+            DialogHelper.helpInfo(requireContext(), getString(R.string.kr_sdk_too_low), getString(R.string.kr_sdk_message).format(clickableNode.minSdkVersion, clickableNode.maxSdkVersion))
+            return false
         }
-    }
 
-    // --- Triển khai đầy đủ Interface OnItemClickListener (Sửa lỗi Build) ---
-
-    override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
-        actionExecute(item, onCompleted)
+        var message = ""
+        val unlocked = (if (clickableNode.lockShell.isNotEmpty()) {
+            message = ScriptEnvironmen.executeResultRoot(context, clickableNode.lockShell, clickableNode)
+            message == "unlock" || message == "unlocked" || message == "false" || message == "0"
+        } else {
+            !clickableNode.locked
+        })
+        if (!unlocked) {
+            Toast.makeText(context, if (message.isNotEmpty()) message else getString(R.string.kr_lock_message), Toast.LENGTH_LONG).show()
+        }
+        return unlocked
     }
 
     override fun onSwitchClick(item: SwitchNode, onCompleted: Runnable) {
-        switchExecute(item, onCompleted)
-    }
-
-    override fun onPickerClick(item: PickerNode, onCompleted: Runnable) {
-        pickerExecute(item, onCompleted)
-    }
-
-    override fun onPageClick(item: PageNode, onCompleted: Runnable) {
-        krScriptActionHandler?.onSubPageClick(item)
-    }
-
-    override fun onItemLongClick(clickableNode: ClickableNode) {
-        // Tích hợp ActionShortcutManager khi nhấn giữ
-        activity?.let {
-            ActionShortcutManager(it).showShortcutDialog(clickableNode)
+        if (nodeUnlocked(item)) {
+            val toValue = !item.checked
+            if (item.confirm) {
+                DialogHelper.warning(requireActivity(), item.title, item.desc, { switchExecute(item, toValue, onCompleted) })
+            } else if (item.warning.isNotEmpty()) {
+                DialogHelper.warning(requireActivity(), item.title, item.warning, { switchExecute(item, toValue, onCompleted) })
+            } else {
+                switchExecute(item, toValue, onCompleted)
+            }
         }
     }
 
-    // --- Logic xử lý chi tiết ---
+    private fun switchExecute(switchNode: SwitchNode, toValue: Boolean, onExit: Runnable) {
+        val script = switchNode.setState ?: return
+        actionExecute(switchNode, script, onExit, object : java.util.HashMap<String, String>() {
+            init { put("state", if (toValue) "1" else "0") }
+        })
+    }
+
+    override fun onPageClick(item: PageNode, onCompleted: Runnable) {
+        if (nodeUnlocked(item)) {
+            if (context != null && item.link.isNotEmpty()) {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, item.link.toUri())
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context?.startActivity(intent)
+                } catch (ex: Exception) {
+                    Toast.makeText(context, context?.getString(R.string.kr_slice_activity_fail), Toast.LENGTH_SHORT).show()
+                }
+            } else if (context != null && item.activity.isNotEmpty()) {
+                TryOpenActivity(requireContext(), item.activity).tryOpen()
+            } else {
+                krScriptActionHandler?.onSubPageClick(item)
+            }
+        }
+    }
+
+    override fun onItemLongClick(clickableNode: ClickableNode) {
+        if (clickableNode.key.isEmpty()) {
+            DialogHelper.alert(this.requireActivity(), getString(R.string.kr_shortcut_create_fail), getString(R.string.kr_ushortcut_nsupported))
+        } else {
+            krScriptActionHandler?.addToFavorites(clickableNode, object : KrScriptActionHandler.AddToFavoritesHandler {
+                override fun onAddToFavorites(clickableNode: ClickableNode, intent: Intent?) {
+                    if (intent != null) {
+                        DialogHelper.confirm(activity!!, getString(R.string.kr_shortcut_create), String.format(getString(R.string.kr_shortcut_create_desc), clickableNode.title), {
+                            val result = ActionShortcutManager(context!!).addShortcut(intent, IconPathAnalysis().loadLogo(context!!, clickableNode), clickableNode)
+                            if (!result) Toast.makeText(context, R.string.kr_shortcut_create_fail, Toast.LENGTH_SHORT).show()
+                            else Toast.makeText(context, getString(R.string.kr_shortcut_create_success), Toast.LENGTH_SHORT).show()
+                        })
+                    }
+                }
+            })
+        }
+    }
+
+    override fun onPickerClick(item: PickerNode, onCompleted: Runnable) {
+        if (nodeUnlocked(item)) {
+            if (item.confirm) {
+                DialogHelper.warning(requireActivity(), item.title, item.desc, { pickerExecute(item, onCompleted) })
+            } else if (item.warning.isNotEmpty()) {
+                DialogHelper.warning(requireActivity(), item.title, item.warning, { pickerExecute(item, onCompleted) })
+            } else {
+                pickerExecute(item, onCompleted)
+            }
+        }
+    }
 
     private fun pickerExecute(item: PickerNode, onCompleted: Runnable) {
         val paramInfo = ActionParamInfo().apply {
             options = item.options
             optionsSh = item.optionsSh
-            separator = item.separator ?: " "
+            separator = item.separator
         }
 
         progressBarDialog.showDialog(getString(R.string.kr_param_options_load))
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                if (!item.getState.isNullOrEmpty()) {
-                    paramInfo.valueFromShell = executeScriptGetResult(item.getState!!, item)
-                }
-                val options = getParamOptions(paramInfo, item)
-                
-                withContext(Dispatchers.Main) {
-                    progressBarDialog.hideDialog()
-                    if (options != null) {
-                        ActionParamsLayoutRender.setParamOptionsSelectedStatus(paramInfo, options)
-                        DialogItemChooser(ThemeModeState.isDarkMode(), options, item.multiple, object : DialogItemChooser.Callback {
-                            override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
-                                val value = if (item.multiple) {
-                                    selected.joinToString(item.separator ?: " ") { it.value.toString() }
-                                } else {
-                                    selected.firstOrNull()?.value?.toString() ?: ""
-                                }
-                                
-                                if (value.isNotEmpty() || !item.multiple) {
-                                    val script = item.setState?.replace("{value}", value) ?: ""
-                                    actionExecute(item, script, onCompleted, null)
-                                }
+            if (item.getState != null) {
+                paramInfo.valueFromShell = executeScriptGetResult(item.getState!!, item)
+            }
+
+            val options = getParamOptions(paramInfo, item)
+            val optionsSorted = if (options != null) {
+                ActionParamsLayoutRender.setParamOptionsSelectedStatus(paramInfo, options)
+                options
+            } else null
+
+            withContext(Dispatchers.Main) {
+                progressBarDialog.hideDialog()
+                if (optionsSorted != null) {
+                    val darkMode = ThemeModeState.isDarkMode()
+                    DialogItemChooser(darkMode, optionsSorted, item.multiple, object : DialogItemChooser.Callback {
+                        override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
+                            val value = if (item.multiple) {
+                                selected.joinToString(item.separator ?: "") { "" + it.value }
+                            } else {
+                                if (selected.isNotEmpty()) "" + selected[0].value else ""
                             }
-                        }).show(childFragmentManager, "picker")
-                    }
+                            if (value.isNotEmpty() || !item.multiple) {
+                                pickerExecute(item, value, onCompleted)
+                            } else {
+                                Toast.makeText(context, getString(R.string.picker_select_none), Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }).show(requireActivity().supportFragmentManager, "picker-item-chooser")
+                } else {
+                    Toast.makeText(context, getString(R.string.picker_not_item), Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    progressBarDialog.hideDialog()
-                    Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-                }
+            }
+        }
+    }
+
+    private fun pickerExecute(pickerNode: PickerNode, toValue: String, onExit: Runnable) {
+        val script = pickerNode.setState ?: return
+        actionExecute(pickerNode, script, onExit, hashMapOf("state" to toValue))
+    }
+
+    override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
+        if (nodeUnlocked(item)) {
+            if (item.confirm) {
+                DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted) })
+            } else if (item.warning.isNotEmpty() && (item.params == null || item.params?.isEmpty() == true)) {
+                DialogHelper.warning(requireActivity(), item.title, item.warning, { actionExecute(item, onCompleted) })
+            } else {
+                actionExecute(item, onCompleted)
             }
         }
     }
 
     private fun actionExecute(action: ActionNode, onExit: Runnable) {
         val script = action.setState ?: return
-        val params = action.params
 
-        if (!params.isNullOrEmpty()) {
+        if (action.params != null && action.params!!.isNotEmpty()) {
+            val actionParamInfos = action.params!!
+            val layoutInflater = LayoutInflater.from(requireContext())
+            val linearLayout = layoutInflater.inflate(R.layout.kr_params_list, null) as LinearLayout
+
             progressBarDialog.showDialog(getString(R.string.onloading))
+
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                params.forEach { param ->
-                    if (!param.valueShell.isNullOrEmpty()) {
+                for (param in actionParamInfos) {
+                    withContext(Dispatchers.Main) {
+                        progressBarDialog.showDialog(getString(R.string.kr_param_load) + (param.label ?: param.name))
+                    }
+                    if (param.valueShell != null) {
                         param.valueFromShell = executeScriptGetResult(param.valueShell!!, action)
+                    }
+                    withContext(Dispatchers.Main) {
+                        progressBarDialog.showDialog(getString(R.string.kr_param_options_load) + (param.label ?: param.name))
                     }
                     param.optionsFromShell = getParamOptions(param, action)
                 }
+
                 withContext(Dispatchers.Main) {
+                    progressBarDialog.showDialog(getString(R.string.kr_params_render))
+                    val render = ActionParamsLayoutRender(linearLayout, requireActivity())
+                    render.renderList(actionParamInfos, object : ParamsFileChooserRender.FileChooserInterface {
+                        override fun openFileChooser(callback: ParamsFileChooserRender.FileSelectedInterface): Boolean {
+                            return krScriptActionHandler?.openFileChooser(callback) ?: false
+                        }
+                    })
                     progressBarDialog.hideDialog()
-                    showParamsDialog(action, params, script, onExit)
+
+                    val customRunner = krScriptActionHandler?.openParamsPage(action, linearLayout) {
+                        try {
+                            actionExecute(action, script, onExit, render.readParamsValue(actionParamInfos))
+                        } catch (ex: Exception) {
+                            Toast.makeText(requireContext(), "" + ex.message, Toast.LENGTH_LONG).show()
+                        }
+                    }
+
+                    if (customRunner != true) {
+                        val isLongList = actionParamInfos.size > 4
+                        val dialogView = LayoutInflater.from(context).inflate(if (isLongList) R.layout.kr_dialog_params else R.layout.kr_dialog_params_small, null)
+                        val center = dialogView.findViewById<ViewGroup>(R.id.kr_params_center)
+                        center.removeAllViews()
+                        center.addView(linearLayout)
+                        
+                        val darkMode = themeMode?.isDarkMode ?: false
+                        val dialog = if (isLongList) {
+                            AlertDialog.Builder(requireContext(), if (darkMode) R.style.kr_full_screen_dialog_dark else R.style.kr_full_screen_dialog_light)
+                                .setView(dialogView).create().apply {
+                                    show()
+                                    window?.let { DialogHelper.setWindowBlurBg(it, requireActivity()) }
+                                }
+                        } else {
+                            DialogHelper.customDialog(requireActivity(), dialogView).dialog
+                        }
+
+                        dialogView.findViewById<TextView>(R.id.title).text = action.title
+                        dialogView.findViewById<TextView>(R.id.desc).apply { if (action.desc.isEmpty()) visibility = View.GONE else text = action.desc }
+                        dialogView.findViewById<TextView>(R.id.warn).apply { if (action.warning.isEmpty()) visibility = View.GONE else text = action.warning }
+
+                        dialogView.findViewById<View>(R.id.btn_cancel).setOnClickListener { dialog?.dismiss() }
+                        dialogView.findViewById<View>(R.id.btn_confirm).setOnClickListener {
+                            try {
+                                actionExecute(action, script, onExit, render.readParamsValue(actionParamInfos))
+                                dialog?.dismiss()
+                            } catch (ex: Exception) {
+                                Toast.makeText(requireContext(), "" + ex.message, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
                 }
             }
-        } else {
-            actionExecute(action, script, onExit, null)
+            return
         }
+        actionExecute(action, script, onExit, null)
     }
 
-    private fun showParamsDialog(action: ActionNode, params: ArrayList<ActionParamInfo>, script: String, onExit: Runnable) {
-        val ctx = context ?: return
-        val view = LayoutInflater.from(ctx).inflate(R.layout.kr_params_list, null) as LinearLayout
-        val render = ActionParamsLayoutRender(view, requireActivity())
-        
-        render.renderList(params, object : ParamsFileChooserRender.FileChooserInterface {
-            override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
-                return krScriptActionHandler?.openFileChooser(fileSelectedInterface) ?: false
-            }
-        })
-
-        // Sử dụng DialogHelper để đồng bộ UI cũ
-        DialogHelper.customDialog(requireActivity(), view, action.title, {
-            val values = render.readParamsValue(params)
-            actionExecute(action, script, onExit, values)
-        }, {
-            onExit.run()
-        })
-    }
-
-    private fun switchExecute(item: SwitchNode, onCompleted: Runnable) {
-        progressBarDialog.showDialog(getString(R.string.please_wait))
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val state = executeScriptGetResult(item.getState, item).trim()
-            val isChecked = state == "1" || state.equals("true", true)
-            // Sửa lỗi unresolved reference setOff/setOn tùy theo model của bạn
-            val script = if (isChecked) item.setOff else item.setOn
-            
-            withContext(Dispatchers.Main) {
-                progressBarDialog.hideDialog()
-                actionExecute(item, script, onCompleted, null)
-            }
+    private fun getParamOptions(actionParamInfo: ActionParamInfo, nodeInfoBase: NodeInfoBase): ArrayList<SelectItem>? {
+        val options = ArrayList<SelectItem>()
+        var shellResult = ""
+        if (actionParamInfo.optionsSh.isNotEmpty()) {
+            shellResult = executeScriptGetResult(actionParamInfo.optionsSh, nodeInfoBase)
         }
-    }
 
-    private fun getParamOptions(param: ActionParamInfo, node: NodeInfoBase): ArrayList<SelectItem>? {
-        val shell = param.optionsSh ?: return param.options
-        val result = executeScriptGetResult(shell, node)
-        val items = ArrayList<SelectItem>()
-        result.split("\n").forEach { line ->
-            if (line.contains("|")) {
-                val parts = line.split("|")
-                items.add(SelectItem().apply { 
-                    this.title = parts[0].trim() 
-                    this.value = parts[1].trim() 
-                })
-            } else if (line.trim().isNotEmpty()) {
-                items.add(SelectItem().apply { 
-                    this.title = line.trim()
-                    this.value = line.trim() 
-                })
+        if (!(shellResult == "error" || shellResult == "null" || shellResult.isEmpty())) {
+            for (item in shellResult.split("\n").filter { it.isNotEmpty() }) {
+                if (item.contains("|")) {
+                    val itemSplit = item.split("|")
+                    options.add(SelectItem().apply {
+                        value = itemSplit[0]
+                        title = if (itemSplit.size > 1) itemSplit[1] else itemSplit[0]
+                    })
+                } else {
+                    options.add(SelectItem().apply { title = item; value = item })
+                }
             }
-        }
-        return if (items.isEmpty()) param.options else items
+        } else if (actionParamInfo.options != null) {
+            options.addAll(actionParamInfo.options!!)
+        } else return null
+
+        return options
     }
 
     private fun executeScriptGetResult(shellScript: String, nodeInfoBase: NodeInfoBase): String {
-        // Tích hợp IconPathAnalysis nếu script cần phân tích icon
-        val processedScript = IconPathAnalysis().analysis(shellScript)
-        return ScriptEnvironmen.executeResultRoot(requireContext(), processedScript, nodeInfoBase) ?: ""
+        return ScriptEnvironmen.executeResultRoot(this.requireContext(), shellScript, nodeInfoBase)
     }
 
-    private var hiddenTaskRunning = false
+    var hiddenTaskRunning = false
     private fun actionExecute(nodeInfo: RunnableNode, script: String, onExit: Runnable, params: HashMap<String, String>?) {
-        val ctx = context ?: return
-        val onDismiss = Runnable {
-            krScriptActionHandler?.onActionCompleted(nodeInfo)
-            onExit.run()
-        }
+        val context = requireContext()
+        val onDismiss = Runnable { krScriptActionHandler?.onActionCompleted(nodeInfo) }
 
         when (nodeInfo.shell) {
-            RunnableNode.shellModeBgTask -> BgTaskThread.startTask(ctx, script, params, nodeInfo, onExit, onDismiss)
+            RunnableNode.shellModeBgTask -> {
+                BgTaskThread.startTask(context, script, params, nodeInfo, onExit, onDismiss)
+            }
             RunnableNode.shellModeHidden -> {
                 if (hiddenTaskRunning) {
-                    Toast.makeText(ctx, getString(R.string.kr_hidden_task_running), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, getString(R.string.kr_hidden_task_running), Toast.LENGTH_SHORT).show()
                 } else {
                     hiddenTaskRunning = true
-                    HiddenTaskThread.startTask(ctx, script, params, nodeInfo, onExit, Runnable {
+                    val hiddenDismiss = Runnable {
                         hiddenTaskRunning = false
                         onDismiss.run()
-                    })
+                    }
+                    HiddenTaskThread.startTask(context, script, params, nodeInfo, onExit, hiddenDismiss)
                 }
             }
             else -> {
-                val dialog = DialogLogFragment.create(nodeInfo, onExit, onDismiss, script, params, ThemeModeState.isDarkMode())
+                val darkMode = themeMode?.isDarkMode ?: false
+                val dialog = DialogLogFragment.create(nodeInfo, onExit, onDismiss, script, params, darkMode)
                 dialog.isCancelable = false
-                dialog.show(childFragmentManager, "log")
+                dialog.show(parentFragmentManager, "")
             }
         }
     }
