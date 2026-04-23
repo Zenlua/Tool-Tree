@@ -103,22 +103,20 @@ public class BlurController {
 
             // 2. Xử lý logic Theme và Hiệu ứng
             if (source != null) {
-                // SỬ DỤNG IF ĐỂ CHECK THEME
                 float contrastValue;
                 if (ThemeModeState.isDarkMode()) {
-                    contrastValue = 0.9f; // Chế độ tối: giảm tương phản, làm ảnh dịu đi
+                    contrastValue = 0.9f;
+                    // Chế độ tối: giảm tương phản, làm ảnh dịu đi
                 } else {
-                    contrastValue = 1.2f; // Chế độ sáng: tăng tương phản, làm ảnh tươi sáng
+                    contrastValue = 1.2f;
+                    // Chế độ sáng: tăng tương phản, làm ảnh tươi sáng
                 }
 
                 // A. Áp dụng Contrast
                 Bitmap processedSource = adjustContrast(source, contrastValue);
-
-                // B. Scale nhỏ để tối ưu (giảm 4 lần kích thước = giảm 16 lần RAM)
                 int width = Math.max(Math.round(processedSource.getWidth() * 0.15f), 1);
                 int height = Math.max(Math.round(processedSource.getHeight() * 0.15f), 1);
                 Bitmap scaledSource = Bitmap.createScaledBitmap(processedSource, width, height, false);
-                
                 Bitmap blurredResult = blurBitmap(context, scaledSource, 16f);
 
                 if (blurredResult != null) {
