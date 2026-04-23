@@ -9,12 +9,12 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>
 <action title="'$title_quick'" auto-off="true">
 <summary>'"$project_text: $PTSH"'</summary>
 <param name="patch_prop" options-sh="echo -e '"'none\nenforce\nlog\ndisable'"'" title="'$desc_patch_prop'" desc="'$desc_patch_prop_long'" label="'$select_text'"/>
-<param name="device_features" label="'$label_device_features'" type="bool" />
-<param name="rw_rom" label="'$label_rw_rom'" desc="'$desc_rw_rom'" type="bool" />
-<param name="delete_gms" label="'$label_delete_gms'" desc="'$desc_delete_gms'" type="bool" />
-<param name="home_poco" label="'$label_home_poco'" desc="'$desc_home_poco'" type="bool" />
+<param name="device_features" label="'$label_device_features'" desc="'$string_text_2': product" type="bool" />
+<param name="rw_rom" label="'$label_rw_rom'" desc="'$string_text_2': vendor, mi_ext, system, system_ext, product, vendor_boot" type="bool" />
+<param name="delete_gms" label="'$label_delete_gms'" desc="'$string_text_2': product" type="bool" />
+<param name="home_poco" label="'$label_home_poco'" desc="'$desc_home_poco', system_ext, system" type="bool" />
 <set>'$pathsh' custom_patch</set>
-<param name="rezetprop_patch" label="'$label_reset_prop'" desc="'$desc_reset_prop'" type="bool" />
+<param name="rezetprop_patch" label="'$label_reset_prop'" desc="'$desc_reset_prop', system" type="bool" />
 <set>'$pathsh' rezetprop_patch</set>
 </action>
 </group>
