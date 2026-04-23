@@ -97,9 +97,9 @@ class MainActivity : AppCompatActivity() {
                 val theme = ThemeModeState.getThemeMode()
 
                 fun updateTab(pos: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, config: PageNode, isFav: Boolean) {
-                    items?.let {
-                        val fragment = ActionListFragment.create(it, getKrScriptActionHandler(config, isFav), null, theme)
-                        if (pos >= adapter.itemCount) {
+                    items?.takeIf { it.isNotEmpty() }?.let { data ->
+                        val fragment = ActionListFragment.create(data, getKrScriptActionHandler(config, isFav), null, theme)
+                        if (adapter.getFragment(pos) == null) {
                             adapter.addFragment(fragment, getString(titleRes))
                         } else {
                             adapter.replaceFragment(pos, fragment)
