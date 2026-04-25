@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.4.2 (25-4-2026)**
+
++ Fix add-on patch ROM errors
++ Fix code
+
 **Version: 1.4.1 (19-4-2026)**
 
 + Fix error add-on, code
