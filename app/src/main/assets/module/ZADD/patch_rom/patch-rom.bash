@@ -431,7 +431,7 @@ if [ "$fix_apksign" == 1 ];then
         Thayvc 1 '.method .*. verify([BII)Z' $oi/smali/classes*/java/security/Signature.smali
         Thayvc 1 '.method .*. verifyManifestHash(Ljava' $oi/smali
     elif [ "${vv##*/}" == "services.jar" ];then
-        ulfbbfkj="$oi/smali/classes*/com/android/server/pm/ReconcilePackageUtils.smali"
+        ulfbbfkj="$(ls -1d $oi/smali/classes*/com/android/server/pm/ReconcilePackageUtils.smali 2>/dev/null)"
         if [ "$(grep -cm1 ALLOW_NON_PRELOADS_SYSTEM_SHAREDUIDS "$ulfbbfkj")" == 1 ]; then
         Thayme '.method static constructor <clinit>()V
             .locals 1
