@@ -431,12 +431,15 @@ if [ "$fix_apksign" == 1 ];then
         Thayvc 1 '.method .*. verify([BII)Z' $oi/smali/classes*/java/security/Signature.smali
         Thayvc 1 '.method .*. verifyManifestHash(Ljava' $oi/smali
     elif [ "${vv##*/}" == "services.jar" ];then
+        ulfbbfkj="$oi/smali/classes*/com/android/server/pm/ReconcilePackageUtils.smali"
+        if [ "$(grep -cm1 ALLOW_NON_PRELOADS_SYSTEM_SHAREDUIDS "$ulfbbfkj")" == 1 ]; then
         Thayme '.method static constructor <clinit>()V
             .locals 1
             const/4 v0, 0x1
             sput-boolean v0, Lcom/android/server/pm/ReconcilePackageUtils;->ALLOW_NON_PRELOADS_SYSTEM_SHAREDUIDS:Z
             return-void
-        .end method' $oi/smali/classes*/com/android/server/pm/ReconcilePackageUtils.smali
+        .end method' "$ulfbbfkj"
+        fi
         file_smali_hhttss="$(Timkiem ".method .*. preparePackageLI(Lcom" $oi/smali/classes*/com/android/server/pm)"
         [ -f "$file_smali_hhttss" ] && awk -v t=$(grep -c '"<nothing>"' "$file_smali_hhttss") '/"<nothing>"/{c++;f=(c==t)} f&&/if-eqz v[0-9]+/{match($0,/v[0-9]+/);r=substr($0,RSTART,RLENGTH);if(last!~"const/4 "r", 0x1")print "    const/4 " r ", 0x1"} {print; if($0!~/^[[:space:]]*$/)last=$0} /isLeavingSharedUser\(\)Z/{f=0}' "$file_smali_hhttss" > "${file_smali_hhttss}_s" && mv "${file_smali_hhttss}_s" "$file_smali_hhttss"
         Thayvc 1 '.method .*. doesSignatureMatchForPermissions(Ljava' $oi/smali/classes*/com/android/server/pm

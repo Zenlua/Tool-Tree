@@ -2,6 +2,7 @@
 
 **Version: 1.4.2 (25-4-2026)**
 
++ Fix bootloop add-on patch-rom
 + Fix add-on patch ROM errors
 + Fix code
 

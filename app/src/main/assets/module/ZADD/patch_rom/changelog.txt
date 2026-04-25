@@ -1,6 +1,7 @@
 
 Update log:
 
+2.2: Fix bootloop
 2.1: Fix bug
 2.0: Add some code validation commands
 1.9: Remove Kaorios Tool Box
