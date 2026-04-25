@@ -16,7 +16,9 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>
 <param name="rw_rom" label="'$label_rw_rom'" desc="'$string_text_2': vendor, mi_ext, system, system_ext, product, vendor_boot" type="bool" />
 <param name="delete_gms" label="'$label_delete_gms'" desc="'$string_text_2': product" type="bool" />
 <param name="home_poco" label="'$label_home_poco'" desc="'$desc_home_poco', system_ext, system" type="bool" />
-<set>'$pathsh' custom_patch</set>
+<set>
+'$pathsh' custom_patch
+</set>
 </action>
 </group>
 
