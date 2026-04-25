@@ -1,6 +1,9 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 
+# untested feature
+#<param name="rezetprop_patch" label="'$label_reset_prop'" desc="'$desc_reset_prop', system" type="bool" />
+
 home(){
 echo '<?xml version="1.0" encoding="UTF-8" ?>
 <group>
@@ -14,8 +17,6 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>
 <param name="delete_gms" label="'$label_delete_gms'" desc="'$string_text_2': product" type="bool" />
 <param name="home_poco" label="'$label_home_poco'" desc="'$desc_home_poco', system_ext, system" type="bool" />
 <set>'$pathsh' custom_patch</set>
-<param name="rezetprop_patch" label="'$label_reset_prop'" desc="'$desc_reset_prop', system" type="bool" />
-<set>'$pathsh' rezetprop_patch</set>
 </action>
 </group>
 
@@ -61,8 +62,8 @@ checktime
 </group>
 
 <group>
-<action title="'$title_ime'" warn="Note: MiuiSystemUI.apk (global)" summary="Xiaomi">
-<param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_key_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
+<action title="'$title_ime'" summary="Xiaomi">
+<param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_key_patch_os" multiple="true" desc="Note: MiuiSystemUI.apk (global)§'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
 <param name="ime_app" placeholder="com.google.android.inputmethod.latin" desc="'$desc_ime_app'" type="text" value-sh="glog ime_app" required="true"/>
 <param name="ime_color" placeholder="#f0f3f8" desc="'$desc_color_light'" type="text" value-sh="glog ime_color" required="true"/>
 <param name="ime_color_dark" placeholder="#1e1f21" desc="'$desc_color_dark'" type="text" value-sh="glog ime_color_dark" required="true"/>

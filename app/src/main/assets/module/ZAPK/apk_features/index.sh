@@ -23,9 +23,13 @@ export MPAT='$MPAT'
 </lock>
 <set>
     echo "'$fs_text_4' /data"
-    fstrim /data;
+    echo
+    fstrim -v /data;
+    echo
     echo "'$fs_text_4' /cache"
-    fstrim /cache
+    echo
+    fstrim -v /cache
+    echo
     echo "'$fs_text_4' auto"
     echo
     sm fstrim
