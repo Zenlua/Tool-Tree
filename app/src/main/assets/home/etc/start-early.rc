@@ -22,7 +22,6 @@ if checkonline; then
     elif [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]];then
         if [[ "$websum" != "$(checksum "$PATH_APK")" ]] && [[ -n $websum ]];then
             if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
-            showtoast --am "$update_text_6"
             echo "$tagname" > $TEMP/update
             fi
         else
@@ -30,10 +29,10 @@ if checkonline; then
         fi
     else
         if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
-        showtoast --am "$update_text_6"
         echo "$tagname" > $TEMP/update
         fi
     fi
+    [ -f $TEMP/update ] && showtoast --am "$update_text_6"
 fi
 ) &
 

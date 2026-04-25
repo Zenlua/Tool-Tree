@@ -65,6 +65,7 @@ elif [[ "${vv##*/}" == *ThemeManager* ]];then
     Thayvc 0 '.method .*. isAdValid(Lcom/android/thememanager/basemodule/ad/model/AdInfo;)Z' $oi/smali/classes*/com/android/thememanager/basemodule/ad/model/AdInfoResponse.smali
     Thayvc 0 '.method .*. isAuthorizedResource()Z' $oi/smali/classes*/com/android/thememanager/basemodule/resource/model/Resource.smali
     Thayvc 0 '.method .*. themeManagerSupportPaidWidget(Landroid/content/Context;)Z' $oi/smali/classes*/com/miui/maml/widget/edit/MamlutilKt.smali
+    unset IFS
     Thaythe '>DRM_ERROR_UNKNOWN' '>DRM_SUCCESS' "$(Timkiem DRM_ERROR_UNKNOWN $oi/smali)"
     fi
 elif [[ "${vv##*/}" == *PersonalAssistant* ]];then
@@ -311,12 +312,14 @@ elif [ "${vv##*/}" == "Settings.apk" ];then
     
         # thông tin
         if [ "$(grep -cm1 device_description_cpu "$oi/resources/package_1/res/values/strings.xml")" != 1 ];then
-            smurl1="$(find $oi/smali/classes*/com/android/settings/device/DeviceParamsInitHelper.smali -type f)"
+            smurl1="$(Timkiem langType $oi/smali/classes*/com/android/settings/device)"
             if [ -f "$smurl1" ];then
                 IFS=$'\n'
                 for vnl in $(grep -B 2 -n "langType" "$smurl1" | tac | grep 'move-result-object'); do
+                echo "Patch: langType ${vnl##*/}"
                 sed -i "$(echo "$vnl" | cut -d- -f1)a\ const-string $(echo "$vnl" | awk '{print $3}'), \"enUS\"" "$smurl1"
                 done
+                unset IFS
             fi
             Timueelnd="$(find $oi/smali/classes*/com/android/settings/device/DeviceBasicInfoPresenter.smali -type f)"
             if [ -f "$Timueelnd" ];then
