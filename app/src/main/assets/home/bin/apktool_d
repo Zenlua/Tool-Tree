@@ -106,7 +106,7 @@ ktfw="-t $api2"
 fi
 
 # apktool
-eval 'apktool d --match-original '$ktfw' -f '$rdex' -o '"$Tout"' '"$ptpk"' || killtree '"$apke_text_1"' '
+eval "apktool d --match-original $ktfw -f $rdex -o \"$Tout\" \"$ptpk\" || killtree \"$apke_text_1\" "
 mkdir -p "$Tout/.cache"
 
 # giải mã smali
@@ -119,7 +119,7 @@ if [ "$DECODEX" == 2 ];then
     kout="$(basename $vkn .dex | sed 's|classes|smali|')"
     mkdir -p "$Tout/$kout"
     API=$(dexupdater -g "$vkn" -printApi | awk '/API/ {print $2}')
-    eval 'baksmali d '$hhhhfdr' --bootclasspath '"$BOOTCLASSPATH"' --api '$API' '"$vkn"' -o '"$Tout/$kout"' '
+    eval "baksmali d $hhhhfdr --bootclasspath \"$BOOTCLASSPATH\" --api $API \"$vkn\" -o \"$Tout/$kout\" "
     check_changes.py "$Tout/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
     done
 fi

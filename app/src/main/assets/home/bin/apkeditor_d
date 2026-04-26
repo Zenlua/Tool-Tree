@@ -98,7 +98,7 @@ echo "$replag_text_1..."
 echo
 
 # apkeditor
-eval 'apkeditor d -f -t '"$TYPEAPK"' '$setkkh' -i '"$ptpk"' -o '"$Tout"' ' 2>&1 | sed -E \
+eval "apkeditor d -f -t \"$TYPEAPK\" $setkkh -i \"$ptpk\" -o \"$Tout\" " 2>&1 | sed -E \
     -e '1,/__/d' \
     -e '/Delete:/d' \
     -e '/Saved to:/d' \
@@ -116,7 +116,7 @@ if [ "$DECODEX" == "smali" ];then
     kout="$(basename $vkn .dex)"
     mkdir -p "$Tout/smali/$kout"
     API=$(dexupdater -g "$vkn" -printApi | awk '/API/ {print $2}')
-    eval 'baksmali d '$hhhhfdr' --bootclasspath '"$BOOTCLASSPATH"' --api '$API' '"$vkn"' -o '"$Tout/smali/$kout"' '
+    eval "baksmali d $hhhhfdr --bootclasspath \"$BOOTCLASSPATH\" --api '$API' \"$vkn\" -o \"$Tout/smali/$kout\" "
     check_changes.py "$Tout/smali/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
     done
 fi
