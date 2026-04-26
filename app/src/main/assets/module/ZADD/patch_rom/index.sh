@@ -98,7 +98,7 @@ checktime
 </action>
 
 <action title="'$title_app_patch'" summary="Xiaomi">
-<param name="FILE" option-sh="'$pathsh' search *ThemeManager.apk *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk MIUIGallery.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
+<param name="FILE" option-sh="'$pathsh' search *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk MIUIGallery.apk *ThemeManager.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
 <param name="fix_themes" label="'$label_fix_themes'" desc="'$required_files_text': ThemeManager.apk" type="bool" />
 <param name="fix_appvault" label="'$label_fix_appvault'" desc="'$required_files_text': PersonalAssistant.apk" type="bool" />
 <param name="fix_thoit" label="'$label_fix_thoit'" desc="'$required_files_text': MIUIWeather.apk" type="bool" />
