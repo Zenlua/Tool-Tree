@@ -2,7 +2,7 @@
 if [ -e $MPAT/auto.prop ]; then
 source $MPAT/auto.prop
 else
-eval "$(sed '1,/root=/d' $MPAT/addon.prop)"
+eval "$(grep '="' "$MPAT/addon.prop")"
 fi
 
 bDeviceLifeTimeEstA=""

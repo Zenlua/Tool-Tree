@@ -90,6 +90,13 @@ echo
 
 [ "$REDIVIS" == 1 ] && redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
 
+# Tạo dex
+for vcxs in $INPUT/smali/*; do
+if [ -d "$vcxs" ]; then
+[ -f "$INPUT/dex/${vcxs##*/}.dex" ] || echo > "$INPUT/dex/${vcxs##*/}.dex"
+fi
+done
+
 # xây dựng smali
 if [ -f "$INPUT/dex/classes.dex" ] && [ -d "$INPUT/smali" ];then
 for vkn in "$INPUT"/dex/classes*.dex; do

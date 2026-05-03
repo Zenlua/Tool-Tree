@@ -22,13 +22,14 @@ export MPAT='$MPAT'
 [ "$ROT" == 0 ] && echo "'$fs_text_3'" || echo 0
 </lock>
 <set>
-    echo "'$fs_text_4' /data"
+    echo "'$fs_text_4'"
     echo
-    fstrim -v /data;
-    echo
-    echo "'$fs_text_4' /cache"
-    echo
+    fstrim -v /vendor
+    fstrim -v /system
+    fstrim -v /system_ext
+    fstrim -v /product
     fstrim -v /cache
+    fstrim -v /data
     echo
     echo "'$fs_text_4' auto"
     echo

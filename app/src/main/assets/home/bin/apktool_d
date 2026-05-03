@@ -116,7 +116,8 @@ if [ "$DECODEX" == 2 ];then
     [ -f "$vkn" ] || continue
     Dex=$(dexupdater -g "$vkn" -printApi | awk '/Dex/ {print $2}')
     echo "I: Baksmali: V$Dex ${vkn##*/}..."
-    kout="$(basename $vkn .dex | sed 's|classes|smali|')"
+    [ "${vkn##*/}" == "classes.dex" ] && thyedkm="smali" || thyedkm="smali_classes"
+    kout="$(basename $vkn .dex | sed "s|classes|$thyedkm|")"
     mkdir -p "$Tout/$kout"
     API=$(dexupdater -g "$vkn" -printApi | awk '/API/ {print $2}')
     eval "baksmali d $hhhhfdr --bootclasspath \"$BOOTCLASSPATH\" --api $API \"$vkn\" -o \"$Tout/$kout\" "

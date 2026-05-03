@@ -106,6 +106,30 @@ if [ "${vv##*/}" == "miui-services.jar" ];then
     [ "$fix_window" == 1 ] && Thayvc 6 '.method .*. getMaxMiuiFreeFormStackCount(Ljava' $oi/smali/classes*/com/android/server/wm/MiuiFreeFormStackDisplayStrategy.smali
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
     [ "$fix_reset_theme" == 1 ] && Thayvc -v '.method .*. validateTheme(Landroid' $oi/smali/classes/miui/drm/ThemeReceiver.smali
+    if [ "$fix_window" == 1 ]; then
+    Thayme '.method public static blacklist getFreeformBlackList()Ljava/util/List;
+    .registers 1
+        sget-object v0, Landroid/util/MiuiMultiWindowAdapter;->sEmptyList:Ljava/util/List;
+        return-object v0
+    .end method' $oi/smali/classes/android/util/MiuiMultiWindowAdapter.smali
+    Thayme '.method public static blacklist getFreeformBlackListFromCloud(Landroid/content/Context;)Ljava/util/List;
+    .registers 7
+        .annotation system Ldalvik/annotation/Signature;
+            value = {
+                "(",
+                "Landroid/content/Context;",
+                ")",
+                "Ljava/util/List<",
+                "Ljava/lang/String;",
+                ">;"
+            }
+        .end annotation
+        const-string v0, "MiuiMultiWindowAdapter"
+        new-instance v1, Ljava/util/ArrayList;
+        invoke-direct {v1}, Ljava/util/ArrayList;-><init>()V
+        return-object v1
+    .end method' $oi/smali/classes/android/util/MiuiMultiWindowAdapter.smali
+    fi
 elif [ "${vv##*/}" == "services.jar" ];then
     if [ "$fix_screen" == 1 ]; then
     Thayvc 0 '.method isSecureLocked()Z' $oi/smali/classes*/com/android/server/wm/WindowState.smali
@@ -219,6 +243,9 @@ elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
     "$oi/smali/classes*/com/android/systemui/statusbar/notification/utils/NotificationUtil.smali
     $oi/smali/classes*/com/miui/systemui/notification/MiuiBaseNotifUtil.smali
     $oi/smali/classes*/com/miui/systemui/notification/NotificationSettingsManager.smali
+    $oi/smali/classes*/com/android/systemui/statusbar/notification/InCallUtils.smali
+    $oi/smali/classes*/com/android/systemui/statusbar/notification/NotificationSettingsManager.smali
+    $oi/smali/classes*/com/android/systemui/statusbar/notification/interruption/MiuiNotificationInterruptStateProviderImpl.smali
     $oi/smali/classes*/com/android/systemui/statusbar/notification/interruption/MiuiNotificationInterruptStateProviderImpl.smali"
     Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isTrue:Z' "$oi/smali/classes*/com/miui/keyguard/biometrics/fod/MiuiGxzwQuickOpenUtil.smali
     $oi/smali/classes*/com/android/systemui/assist/PhoneStateMonitor.smali"
@@ -395,7 +422,8 @@ elif [ "${vv##*/}" == "Settings.apk" ];then
 fi
 # End patch smali
 echo
-apkeditor_b -i "$oi" -o "${vv%/*}" -d 1
+[ "${vv##*/}" == "MiuiSystemUI.apk" ] && resvv=1 || resvv=0
+apkeditor_b -i "$oi" -o "${vv%/*}" -d 1 -r $resvv
 echo
 done
 }

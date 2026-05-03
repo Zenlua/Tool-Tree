@@ -13,7 +13,7 @@ google_text="Currently using google translate"
 fs_text_1="Run fstrim to clean up blocks"
 fs_text_2="Clean block"
 fs_text_3="Root access is required"
-fs_text_4="Clean blocks:"
+fs_text_4="Clean blocks"
 
 ufs_text_1="EOL status:"
 ufs_text_2="Unknown"
