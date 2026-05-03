@@ -89,17 +89,21 @@ fi
 
 echo "$replag_text_2..."
 echo
-[ "$REDIVIS" == 1 ] && redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
+
+if [ "$REDIVIS" == 1 ] && [ ! -f "$INPUT/.cache/redivision.log" ]; then
+redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
+fi
 
 # Tạo dex
 for vcxs in $INPUT/smali_*; do
 if [ -d "$vcxs" ]; then
 ksbdhch="$(echo ${vcxs##*/} | sed 's|smali_||')"
-[ -f "$INPUT/$ksbdhch.dex" ] || echo > "$INPUT/$ksbdhch.dex"
+[ -f "$INPUT/$ksbdhch.dex" ] || touch "$INPUT/$ksbdhch.dex"
 fi
 done
 
 if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ];then
+API=$(dexupdater -g "$INPUT/classes.dex" -printApi 2>/dev/null | awk '/API/ {print $2}')
 for vkn in "$INPUT"/classes*.dex; do
     [ -f "$vkn" ] || continue
     [ "${vkn##*/}" == "classes.dex" ] && thyedkm="smali" || thyedkm="smali_classes"
@@ -108,14 +112,18 @@ for vkn in "$INPUT"/classes*.dex; do
     cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
     dkfjff="$(check_changes.py "$INPUT/$kout" "$INPUT/.cache/2hash_$kout.json")"
     rm -fr "$INPUT/.cache/2hash_$kout.json"
+    else
+    dkfjff="$(check_changes.py "$INPUT/$kout" "$INPUT/.cache/hash_$kout.json" )"
     fi
     if [ -n "$dkfjff" ];then
-    API=$(dexupdater -g "$vkn" -printApi | awk '/API/ {print $2}')
-    smali a --api $API -o "$INPUT/$kout.dex" $(echo "$dkfjff" | grep -e "new:" -e "fixed:" | awk '{print "'$INPUT/$kout'/"$2}')
-    dexupdater -g "$vkn" -e "$INPUT/$kout.dex" -o "$INPUT/${kout}_s.dex" -api $API -delete $(echo "$dkfjff" | grep "deleted:" | awk '{print $2}' | sed "s|\.smali||g") > "$INPUT/.cache/build_$kout.log"
-        if [ -f "$INPUT/${kout}_s.dex" ];then
-        mv "$INPUT/${kout}_s.dex" "$vkn"
-        rm -fr "$INPUT/$kout.dex"
+    add_fixsmali="$(echo "$dkfjff" | grep -e "new:" -e "fixed:" | awk '{print "'$INPUT/$kout'/"$2}')"
+    [ -n "$add_fixsmali" ] && smali a --api $API -o "$INPUT/$kout.dex" $add_fixsmali
+        if [ -s "$vkn" ]; then
+            dexupdater -g "$vkn" -e "$INPUT/$kout.dex" -o "$INPUT/${kout}_s.dex" -api $API -delete $(echo "$dkfjff" | grep "deleted:" | awk '{print $2}' | sed "s|\.smali||g") > "$INPUT/.cache/build_$kout.log"
+            [ -f "$INPUT/${kout}_s.dex" ] && mv "$INPUT/${kout}_s.dex" "$vkn" || killtree "Dex update error: $kout"
+            rm -fr "$INPUT/$kout.dex"
+        else
+            mv "$INPUT/$kout.dex" "$vkn"
         fi
     fi
 done
