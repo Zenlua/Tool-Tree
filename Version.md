@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.4.3 (3-5-2026)**
+
++ Fix some non-working features
++ Fix code
+
 **Version: 1.4.2 (25-4-2026)**
 
 + Fix bootloop add-on patch-rom A14 ↓
