@@ -103,7 +103,8 @@ eval "apkeditor d -f -t \"$TYPEAPK\" $setkkh -i \"$ptpk\" -o \"$Tout\" " 2>&1 | 
     -e '/Delete:/d' \
     -e '/Saved to:/d' \
     -e 's|I: \[DECOMPILE\] ||' \
-    -e 's/^[0-9]+\.[0-9]+[[:space:]]+/I: /'
+    -e 's/^[0-9:.]+[[:space:]]+/I: /'
+    
 mkdir -p "$Tout/.cache"
 
 # giải mã smali
