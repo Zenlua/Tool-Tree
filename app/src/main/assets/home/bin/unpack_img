@@ -322,7 +322,6 @@ mkdir -p "$in_name" $OUTPUT/config
             echo "$type_unp" > cache/type_$unp
             [ "$type_unp" == 'dtb' ] && split_dtb.py $unp >$TMP/split_dtb.log
             [ "$type_unp" == 'dtbo' ] && dtbo dump $unp -b $unp >$TMP/dtbo_boot.log
-            rm $unp
             fi
         fi
         done
@@ -330,9 +329,9 @@ mkdir -p "$in_name" $OUTPUT/config
             echo "Decode: $unsl > dts_$unsl"
             dtc -q -@ -I dtb -O dts -o dts_$unsl $unsl
             [ "$?" != 0 ] && killtree "$unpack_text_5 $unsl"
-            mv $unsl cache/$unsl
-            checksum dts_$unsl > cache/md5_$unsl
+            rm $unsl
         done
+        cat dts_* | checksum > cache/md5_dts
         # unpack cpio
         for vch in $(ls -1d *.cpio vendor_ramdisk/*.cpio 2>/dev/null); do
             mkdir -p "${vch%.*}" "cache"
@@ -352,15 +351,16 @@ mkdir -p "$in_name" $OUTPUT/config
     elif [ "$dang_file" == 'dtbo' ];then
         echo "$dang_file" > $info
         cd "$in_name"
-        dtbo dump "$file_img" -b dtb &>$TMP/dtbo.log
+        cp -f "$file_img" "$in_name/dtbo.img"
+        dtbo dump "$file_img" -b dtb >$TMP/dtbo_decode.log
         mkdir -p cache
         for dtbo in $(ls -t dtb.* | sort -n -t . -k 2);do
             echo "Decode: $dtbo"
             dtc -q -@ -I dtb -O dts -o dts.${dtbo##*.} $dtbo
             [ "$?" != 0 ] && killtree "$unpack_text_5 $dtbo"
-            mv $dtbo cache/$dtbo
-            checksum dts.${dtbo##*.} > cache/md5_dts.${dtbo##*.}
+            rm $dtbo
         done
+        cat dts.* | checksum > cache/md5_dts
         echo
     elif [ "$dang_file" == 'squashfs' ];then
         [ "$ROT" == 0 ] && killtree "Error Unpack: squashfs, $root_warning_text"

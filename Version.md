@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.4.4 (6-5-2026)**
+
++ Fix DTBO decoding errors, boot errors.
+
 **Version: 1.4.3 (3-5-2026)**
 
 + Fix some non-working features

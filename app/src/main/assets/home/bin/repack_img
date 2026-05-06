@@ -212,25 +212,23 @@ elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
     done
     # xây dựng dtb
     cd "$INPUT"
-    for redts in $(ls -1d dts_*.+([0-9]) 2>/dev/null | sort -n -t . -k 2); do
+    if [ "$(cat dts_* | checksum)" != "$(cat cache/md5_dts)" ]; then
+        for redts in $(ls -1d dts_*.+([0-9]) 2>/dev/null | grep -v "\.bak$" | sort -n -t . -k 2); do
         nrep="${redts/dts_/}"
-        if [ "$(checksum $redts)" == "$(cat cache/md5_$nrep)" ];then
-        cp -f cache/${nrep} ${nrep}
-        else
         echo "Build DTB: $redts"
         dtc -q -I dts -O dtb -@ -o ${nrep} $redts
         [ "$?" != 0 ] && killtree "Error: Build DTB"
-        fi
-    done
-    for bdts in $(ls -1d cache/type_* 2>/dev/null); do
-        nedts="${bdts/cache\/type_/}"
-        tydbs="$(cat $bdts)"
-        if [ "$tydbs" == 'dtb' ] || [ "$tydbs" == 'dtbo' ];then
-        [ "$tydbs" == 'dtb' ] && merge_dtb.py $nedts $(ls -1d $nedts.* | sort -n -t . -k 2) >/dev/null
-        [ "$tydbs" == 'dtbo' ] && dtbo create $nedts $(ls -1d $nedts.* | sort -n -t . -k 2) >/dev/null
-        fi
-        rm -f $nedts.*
-    done
+        done
+        for bdts in $(ls -1d cache/type_* 2>/dev/null); do
+            nedts="${bdts/cache\/type_/}"
+            tydbs="$(cat $bdts)"
+            if [ "$tydbs" == 'dtb' ] || [ "$tydbs" == 'dtbo' ];then
+            [ "$tydbs" == 'dtb' ] && merge_dtb.py $nedts $(ls -1d $nedts.* | sort -n -t . -k 2) >/dev/null
+            [ "$tydbs" == 'dtbo' ] && dtbo create $nedts $(ls -1d $nedts.* | sort -n -t . -k 2) >/dev/null
+            fi
+            rm -f $nedts.*
+        done
+    fi
     # xây dựng boot
     magiskboot repack "${INPUT##*/}.img" "$saved" 2>&1
     echo
@@ -243,20 +241,17 @@ elif [ "$partition" = "logo" ];then
     echo
 elif [ "$partition" = "dtbo" ];then
     cd "$INPUT"
-    for dtbo in $(ls -1d dts.* | sort -n -t . -k 2); do
-        if [ "$(checksum $dtbo)" == "$(cat cache/md5_$dtbo 2>/dev/null)" ];then
-        echo "Copy raw: dtb.${dtbo##*.}"
-        cp -f cache/dtb.${dtbo##*.} dtb.${dtbo##*.}
-        else
+    if [ "$(cat dts.* | checksum)" != "$(cat cache/md5_dts)" ]; then
+        for dtbo in $(ls -1d dts.* | grep -v "\.bak$" | sort -n -t . -k 2); do
         echo "Build dtb: $dtbo"
         dtc -q -I dts -O dtb -@ -o dtb.${dtbo##*.} $dtbo
         [ "$?" != 0 ] && killtree "Error: Build dtb"
-        fi
-    done
-    dtbo create dtbo.img $(ls -1d dtb.* | sort -n -t . -k 2) >/dev/null
+        done
+    dtbo create dtbo.img $(ls -1d dtb.* | sort -n -t . -k 2) >$TMP/dtbo_create.log
     rm -fr dtb.*
-    cp -f dtbo.img "$saved"
     echo
+    fi
+    cp -f dtbo.img "$saved"
 elif [ "$partition" == "squashfs" ];then
     [ "$ROT" == 0 ] && killtree "Error build: squashfs, $root_warning_text"
     loai_nen="$(grep '^Compression' "$fs_options" | awk '{print $2}')"

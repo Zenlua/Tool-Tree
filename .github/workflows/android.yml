@@ -59,13 +59,15 @@ jobs:
           echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
           if [ "$UPTG" == "true" ];then
           echo "Telegram"
-          chat_tg="https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER
+          chat_tg="🎉 Release new version Tool-Tree
           
-          🎉 Release new version Tool-Tree
+          https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER
           
           • Notes: <a href=\"https://zenlua.github.io/Tool-Tree/Version.html\">Changelog</a>
-          • Version: $VER"
-          # tooltree
+          • Version: $VER
+          
+          #release @tooltree"
+          
           curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
           -d chat_id="$CHAT_ID" -d parse_mode="HTML" \
           --data-urlencode text="$chat_tg"
