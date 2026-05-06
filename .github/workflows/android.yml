@@ -66,7 +66,7 @@ jobs:
           • Notes: <a href=\"https://zenlua.github.io/Tool-Tree/Version.html\">Changelog</a>
           • Version: $VER
           
-          #release @tooltree"
+          @tooltree #release@tool_tree"
           
           curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
           -d chat_id="$CHAT_ID" -d parse_mode="HTML" \
