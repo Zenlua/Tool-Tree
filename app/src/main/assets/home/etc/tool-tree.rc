@@ -188,7 +188,7 @@ case "$menu_id" in
   hide) slog settadd 1 ;;
   xoa) slog settadd 2 ;;
   home) slog settadd 0 ;;
-  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Addon.html]" ;;
+  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/website/Addon.html]" ;;
   file) installadd "$file" "$AON"; slog settadd 0 ;;
 esac
 </handler>
@@ -304,7 +304,7 @@ case "$menu_id" in
   hide) slog settadd2 1 ;;
   xoa) slog settadd2 2 ;;
   home) slog settadd2 0 ;;
-  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/add-on/Apkon.html]" ;;
+  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/website/Apkon.html]" ;;
   file) installadd "$file" "$AOK"; slog settadd2 0 ;;
 esac
 </handler>
