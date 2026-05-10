@@ -1,0 +1,13 @@
+# Kakathic
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+$TERMUX/bin/img2simg --help
+exit 1
+fi
+
+if [ -n "$1" ] && [ -z "$2" ];then
+$TERMUX/bin/img2simg "$1" "${1}_r"
+[ -f "${1}_r" ] && mv "${1}_r" "$1" || abort "Convert img file img2simg error"
+else
+$TERMUX/bin/img2simg "$@"
+fi

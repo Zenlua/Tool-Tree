@@ -1,5 +1,9 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.4.5 (11-5-2026)**
+
++ Fix missing img2simg and simg2img commands.
+
 **Version: 1.4.4 (6-5-2026)**
 
 + Fix DTBO decoding errors, boot errors.

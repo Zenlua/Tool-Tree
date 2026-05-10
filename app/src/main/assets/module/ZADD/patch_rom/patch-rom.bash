@@ -581,7 +581,10 @@ fi
 
 del_app(){
 for vcdel in $@; do
-[ -n "$vcdel" ] && find $SDH/$PTSH -name "$vcdel" -print -exec rm -rf {} +
+if [ -n "$vcdel" ]; then
+cd $SDH/$PTSH
+find -name "$vcdel" -print -exec rm -rf {} +
+fi
 done
 }
 
