@@ -26,7 +26,7 @@ elif [ "${vv##*/}" == "Joyose.apk" ];then
     patgpu="$(Timkiem GPUTUNER_SWITCH $oi/smali/classes)"
     sed -i "`grep -nA2 GPUTUNER_SWITCH $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: GPUTUNER_SWITCH"
     sed -i "`grep -nA2 SUPPORT_UGD $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: SUPPORT_UGD"
-    Thayvc -v 'method public run()V' $(Timkiem "job exist, sync local" $oi/smali)
+    #Thayvc -v '.method public run()V' $(Timkiem "job exist, sync local" $oi/smali)
     fi
 elif [ "${vv##*/}" == "MIUIWeather.apk" ];then
     if [ "$fix_thoit" == 1 ];then
@@ -720,9 +720,13 @@ fi
 }
 
 Thaycn(){
+if [ "$4" ]; then
 urlsmali="$(find $4 -type f -print -quit 2>/dev/null)"
 vcv="$(echo "$1" | head -n1 | sed 's|/|\\/|g')"
 [ -f "$urlsmali" ] && sed -i "/$vcv/,/\.end method/ s|sget-boolean \(.*\), $2|sget-boolean \1, $3|" "$urlsmali" && echo "Patch: ${urlsmali##*/}" || about "Error: $urlsmali"
+else
+about "Warning: Path not found: $4"
+fi
 }
 
 Thayme(){
@@ -735,8 +739,12 @@ done
 }
 
 Themme(){
+if [ "$2" ]; then
 urlsmali="$(find $2 -type f -print -quit 2>/dev/null)"
 [ -f "$urlsmali" ] && echo "$1" >> "$urlsmali" && echo "Patch: ${urlsmali##*/}" || about "Error: $urlsmali"
+else
+about "Warning: Path not found: $2"
+fi
 }
 
 Thaythe(){
@@ -768,6 +776,7 @@ done
 }
 
 Thayivo(){
+if [ "$3" ]; then
 urlsmali="$(find $3 -type f -print -quit 2>/dev/null)"
 if [ "$1" == 1 ];then
 textvbs='invoke-static {}, Lcom/xBuild;->isOne()Z'
@@ -775,6 +784,9 @@ else
 textvbs='invoke-static {}, Lcom/xBuild;->isZero()Z'
 fi
 [ -f "$urlsmali" ] && sed -i "s|${2//\[/\\[}|$textvbs|" "$urlsmali" && echo "Patch: ${urlsmali##*/}" || about "Error: $urlsmali"
+else
+about "Warning: Path not found: $3"
+fi
 }
 
 # hiện tại
