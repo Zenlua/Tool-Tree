@@ -94,6 +94,7 @@ if [ "$REDIVIS" == 1 ] && [ ! -f "$INPUT/.cache/redivision.log" ]; then
 redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
 fi
 
+if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ];then
 # Tạo dex
 for vcxs in $INPUT/smali_*; do
 if [ -d "$vcxs" ]; then
@@ -101,8 +102,6 @@ ksbdhch="$(echo ${vcxs##*/} | sed 's|smali_||')"
 [ -f "$INPUT/$ksbdhch.dex" ] || touch "$INPUT/$ksbdhch.dex"
 fi
 done
-
-if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ];then
 API=$(dexupdater -g "$INPUT/classes.dex" -printApi 2>/dev/null | awk '/API/ {print $2}')
 for vkn in "$INPUT"/classes*.dex; do
     [ -f "$vkn" ] || continue

@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/python3
+#!/data/data/com.tool.tree/files/home/termux/bin/python
 
 import os
 import sys
@@ -8,7 +8,7 @@ import multiprocessing
 import json
 from concurrent.futures import ProcessPoolExecutor
 
-DEFAULT_LIMIT = 45000
+DEFAULT_LIMIT = 50000
 
 CLASS_DEF = re.compile(r'^\.class\b.*?\s+(L[^;\s]+;)')
 METHOD_DEF = re.compile(r'^\.method\b.*?\s+([^\s(]+)\(([^)]*)\)(\S+)')
@@ -123,14 +123,14 @@ def parse_smali(path):
                 if m:
                     current_class = m.group(1)
                     types.add(current_class)
-                    strings.add(current_class)
+                    # strings.add(current_class)
                     continue
 
                 m = FIELD_DEF.match(line)
                 if m and current_class:
                     name, ftype = m.groups()
                     fields.add(f"{current_class}->{name}:{ftype}")
-                    strings.add(name)
+                    # strings.add(name)
                     for t in extract_types(ftype):
                         types.add(t)
                     continue
@@ -142,7 +142,7 @@ def parse_smali(path):
 
                     methods.add(f"{current_class}->{name}{proto}")
                     protos.add(proto)
-                    strings.add(name)
+                    # strings.add(name)
 
                     for t in extract_types(params):
                         types.add(t)

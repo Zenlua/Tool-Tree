@@ -15,6 +15,12 @@ if [ "${vv##*/}" == "MIUIGallery.apk" ];then
     Thayvc 0 'method .*. checkMapAvailable()Z' $oi/smali/classes*/com/miui/gallery/map/utils/MapInitializerImpl.smali
     Thaythe 'Lcom/miui/gallery/util/BuildUtil;->isGlobal()Z' 'Lcom/xBuild;->isOne()Z' $oi/smali/classes*/com/miui/gallery/ui/featured/type/ItemTypeSortManager.smali
     fi
+elif [ "${vv##*/}" == "Provision.apk" ];then
+    if [ "$fix_gmscn" == 1 ];then
+    patch_smali "$oi/smali/classes/miuix/os/xBuild.smali"
+    Thaycn '.method public static setGmsAppEnabledStateForCn(Landroid/content/Context;I)V' 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isTrue:Z' $oi/smali/classes*/com/android/provision/Utils.smali
+    sed -i '/setGmsAppEnabledStateForCn/,/.end method/ { /getApplicationEnabledSetting/,/if-eq/ s/if-eq/if-ne/ }' $oi/smali/classes*/com/android/provision/Utils.smali
+    fi
 elif [ "${vv##*/}" == "Joyose.apk" ];then
     if [ "$fix_joyose" == 1 ];then
     patgpu="$(Timkiem GPUTUNER_SWITCH $oi/smali/classes)"
@@ -249,6 +255,7 @@ elif [ "${vv##*/}" == "MiuiSystemUI.apk" ];then
     $oi/smali/classes*/com/android/systemui/statusbar/notification/interruption/MiuiNotificationInterruptStateProviderImpl.smali"
     Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isTrue:Z' "$oi/smali/classes*/com/miui/keyguard/biometrics/fod/MiuiGxzwQuickOpenUtil.smali
     $oi/smali/classes*/com/android/systemui/assist/PhoneStateMonitor.smali"
+    Thayvc 1 '.method .*. shouldSuppressFold()Z' $oi/smali/classes*/com/android/systemui/statusbar/notification/NotificationUtil.smali
     fi
 elif [ "${vv##*/}" == "Settings.apk" ];then
     if [ "$fix_global" == 1 ];then

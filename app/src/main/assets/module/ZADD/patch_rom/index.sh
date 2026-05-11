@@ -98,12 +98,13 @@ checktime
 </action>
 
 <action title="'$title_app_patch'" summary="Xiaomi">
-<param name="FILE" option-sh="'$pathsh' search *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk MIUIGallery.apk *ThemeManager.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
+<param name="FILE" option-sh="'$pathsh' search *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk Provision.apk MIUIGallery.apk *ThemeManager.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
 <param name="fix_themes" label="'$label_fix_themes'" desc="'$required_files_text': ThemeManager.apk" type="bool" />
 <param name="fix_appvault" label="'$label_fix_appvault'" desc="'$required_files_text': PersonalAssistant.apk" type="bool" />
 <param name="fix_thoit" label="'$label_fix_thoit'" desc="'$required_files_text': MIUIWeather.apk" type="bool" />
 <param name="fix_joyose" label="'$label_fix_joyose'" desc="'$required_files_text': Joyose.apk" type="bool" />
 <param name="fix_mapcn" label="'$label_fix_mapcn'" desc="'$required_files_text': MIUIGallery.apk" type="bool" />
+<param name="fix_gmscn" label="'$label_fix_gmscn'" desc="'$required_files_text': Provision.apk" type="bool" />
 <set>
 slog fix_manyo_patch_os "$FILE"
 '$pathsh' fixapps "$FILE"

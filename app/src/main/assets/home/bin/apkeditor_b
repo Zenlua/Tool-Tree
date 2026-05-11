@@ -92,15 +92,14 @@ if [ "$REDIVIS" == 1 ] && [ ! -f "$INPUT/.cache/redivision.log" ]; then
 redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
 fi
 
+# xây dựng smali
+if [ -f "$INPUT/dex/classes.dex" ] && [ -d "$INPUT/smali" ];then
 # Tạo dex
 for vcxs in $INPUT/smali/*; do
 if [ -d "$vcxs" ]; then
 [ -f "$INPUT/dex/${vcxs##*/}.dex" ] || touch "$INPUT/dex/${vcxs##*/}.dex"
 fi
 done
-
-# xây dựng smali
-if [ -f "$INPUT/dex/classes.dex" ] && [ -d "$INPUT/smali" ];then
 API="$(dexupdater -g "$INPUT/dex/classes.dex" -printApi 2>/dev/null | awk '/API/ {print $2}')"
 for vkn in "$INPUT"/dex/classes*.dex; do
     [ -f "$vkn" ] || continue
@@ -126,7 +125,6 @@ for vkn in "$INPUT"/dex/classes*.dex; do
 done
 [ -d "$INPUT/smali" ] && mv "$INPUT/smali" "$INPUT/smali_bak"
 fi
-
 
 # xoá bak
 find "$INPUT" -type f -name "*.bak" -delete >/dev/null
