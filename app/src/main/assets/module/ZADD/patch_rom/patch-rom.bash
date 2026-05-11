@@ -221,7 +221,8 @@ if [ "${vv##*/}" == "miui-services.jar" ];then
     $oi/smali/classes*/com/android/server/am/ProcessManagerService.smali
     $oi/smali/classes*/com/android/server/am/BroadcastQueueModernStubImpl.smali"
     if [ "$fix_global" == 1 ];then
-    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isTrue:Z' "$oi/smali/classes/com/android/server/ForceDarkAppListManager.smali"
+    Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isTrue:Z' "$oi/smali/classes/com/android/server/ForceDarkAppListManager.smali
+    $oi/smali/classes/com/android/server/clipboard/ClipboardServiceStubImpl.smali"
     fi
 elif [ "${vv##*/}" == "PowerKeeper.apk" ];then
     [ "$fix_noti" == 1 ] && Thaythe 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z' 'Lcom/xBuild;->isTrue:Z' "$oi/smali/classes*/com/miui/powerkeeper/statemachine/PhoneSleepModeController\$SleepHandler.smali
