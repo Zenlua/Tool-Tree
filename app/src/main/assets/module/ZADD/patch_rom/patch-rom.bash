@@ -23,10 +23,12 @@ elif [ "${vv##*/}" == "Provision.apk" ];then
     fi
 elif [ "${vv##*/}" == "Joyose.apk" ];then
     if [ "$fix_joyose" == 1 ];then
-    patgpu="$(Timkiem GPUTUNER_SWITCH $oi/smali/classes)"
-    sed -i "`grep -nA2 GPUTUNER_SWITCH $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: GPUTUNER_SWITCH"
-    sed -i "`grep -nA2 SUPPORT_UGD $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: SUPPORT_UGD"
-    #Thayvc -v '.method public run()V' $(Timkiem "job exist, sync local" $oi/smali)
+        patgpu="$(Timkiem GPUTUNER_SWITCH $oi/smali/classes)"
+        if [ "$patgpu" ]; then
+        toybox sed -i "`grep -nA2 GPUTUNER_SWITCH $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: GPUTUNER_SWITCH"
+        toybox sed -i "`grep -nA2 SUPPORT_UGD $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: SUPPORT_UGD"
+        #Thayvc -v '.method public run()V' $(Timkiem "job exist, sync local" $oi/smali)
+        fi
     fi
 elif [ "${vv##*/}" == "MIUIWeather.apk" ];then
     if [ "$fix_thoit" == 1 ];then
