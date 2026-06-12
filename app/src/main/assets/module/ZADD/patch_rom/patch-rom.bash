@@ -25,9 +25,11 @@ elif [ "${vv##*/}" == "Joyose.apk" ];then
     if [ "$fix_joyose" == 1 ];then
         patgpu="$(Timkiem GPUTUNER_SWITCH $oi/smali/classes)"
         if [ "$patgpu" ]; then
-        toybox sed -i "`grep -nA2 GPUTUNER_SWITCH $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: GPUTUNER_SWITCH"
-        toybox sed -i "`grep -nA2 SUPPORT_UGD $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: SUPPORT_UGD"
-        #Thayvc -v '.method public run()V' $(Timkiem "job exist, sync local" $oi/smali)
+            if [ "$(grep -A2 SUPPORT_UGD $patgpu | grep -cm1 "const/4 .*. 0x1")" == 0 ]; then
+            toybox sed -i "`grep -nA2 GPUTUNER_SWITCH $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: GPUTUNER_SWITCH"
+            toybox sed -i "`grep -nA2 SUPPORT_UGD $patgpu | grep -m1 getString | cut -d- -f1`i\ const/4 v0, 0x1 \n return v0" $patgpu || about "Error: SUPPORT_UGD"
+            #Thayvc -v '.method public run()V' $(Timkiem "job exist, sync local" $oi/smali)
+            fi
         fi
     fi
 elif [ "${vv##*/}" == "MIUIWeather.apk" ];then
@@ -111,7 +113,7 @@ echo
 # patch method
 if [ "${vv##*/}" == "miui-services.jar" ];then
     [ "$fix_screen" == 1 ] && Thayvc 0 '.method .*. notAllowCaptureDisplay(Lcom' $oi/smali/classes*/com/android/server/wm/WindowManagerServiceImpl.smali
-    [ "$fix_window" == 1 ] && Thayvc 6 '.method .*. getMaxMiuiFreeFormStackCount(Ljava' $oi/smali/classes*/com/android/server/wm/MiuiFreeFormStackDisplayStrategy.smali
+    [ "$fix_window" == 1 ] && Thayvc 4 '.method .*. getMaxMiuiFreeFormStackCount(Ljava' $oi/smali/classes*/com/android/server/wm/MiuiFreeFormStackDisplayStrategy.smali
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
     [ "$fix_reset_theme" == 1 ] && Thayvc -v '.method .*. validateTheme(Landroid' $oi/smali/classes/miui/drm/ThemeReceiver.smali
     if [ "$fix_window" == 1 ]; then
