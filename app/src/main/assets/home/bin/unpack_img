@@ -164,7 +164,7 @@ if [ "$dang_tep" == 'zstd' ] || [ "$dang_tep" == 'gz' ] || [ "$dang_tep" == 'xz'
     else
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     fi
-    zstd --progress -f -d -k "$INPUT" -o "$file_img" &>"$TMP/unzstd.log" || killtree "File extraction error: $INPUT"
+    zstd --progress -f -d -k "$INPUT" -o "$file_img" &>"$TMP/unzstd.log" || killtree "File extraction error log: $TMP/unzstd.log"
     #process_count "$size_zstd" "$TMP/unzstd.log"
 elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
     tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
@@ -176,7 +176,7 @@ elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
     else
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     fi
-    sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" &>$TMP/sdat2img_extra.log || killtree "File extraction error: $INPUT"
+    sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" &>$TMP/sdat2img_extra.log || killtree "File extraction error log: $TMP/sdat2img_extra.log"
 elif [ "$dang_tep" == 'sparse' ];then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     if [ "$NODECO" == 1 ]; then
@@ -192,7 +192,7 @@ elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
     else
     file_img_tmp="$TMP"
     fi
-    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" &>"$TMP/payload_extract.log" || killtree "Payload unpack error" &
+    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" &>"$TMP/payload_extract.log" || killtree "Payload unpack error log: $TMP/payload_extract.log" &
     process_payload "$TMP/payload_extract.log"
     file_img="$file_img_tmp/$PVUGBIN.img"
 elif [ "$dang_tep" == 'super' ];then
