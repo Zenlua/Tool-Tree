@@ -106,8 +106,9 @@ fi
 echo -e "$unpack_text_0 (${file_img##*/}) ➠ ($CONVER)...\n"
 
 # chuyển đổi
-if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
-    zstd --progress -f -$LEVEL --format=$CONVER --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" &>>$logcv || killtree "Error: $unpack_text_2 $logcv" &
+if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'zst' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
+    [ "$CONVER" == 'zst' ] && FORMATS='zstd' || FORMATS="$CONVER"
+    zstd --progress -f -$LEVEL --format=$FORMATS --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" &>>$logcv || killtree "Error: $unpack_text_2 $logcv" &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
     if [ -f "$logcv" ];then

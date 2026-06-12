@@ -911,6 +911,7 @@ checktime
 <option value="raw">File.img (raw)</option>
 <option value="sparse">File.img (sparse)</option>
 <option value="zstd">File.img.zstd</option>
+<option value="zst">File.img.zst</option>
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
@@ -991,6 +992,7 @@ checktime
 <option value="raw">File.img (raw)</option>
 <option value="sparse">File.img (sparse)</option>
 <option value="zstd">File.img.zstd</option>
+<option value="zst">File.img.zst</option>
 <option value="lzma">File.img.lzma</option>
 <option value="lz4">File.img.lz4</option>
 <option value="xz">File.img.xz</option>

@@ -353,12 +353,13 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]];then
     echo -e "$unpack_text_0 ${INPUT##*/} (raw) ➠ ($CONVER)..."
     echo
     fi
-    if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
-    zstd --progress -f -$lvnen --format=$CONVER --compress "$saved" -o "${out_saved%.*}.img.$CONVER" &>"$TMP/repzstd.log" || killtree "Cover zstd error" & process_zstd $TMP/repzstd.log
+    if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'zst' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
+    [ "$CONVER" == 'zst' ] && FORMATS='zstd' || FORMATS="$CONVER"
+    zstd --progress -f -$lvnen --format=$FORMATS --compress "$saved" -o "${out_saved%.*}.img.$CONVER" &>"$TMP/repzstd.log" || killtree "conver $FORMATS error" & process_zstd $TMP/repzstd.log
     elif [ "$CONVER" == 'dat' ] || [ "$CONVER" == 'br' ];then
     img2simg "$saved" >$TMP/img2simg.log
     img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p "${INPUT##*/}" &>$TMP/img2sdat.log
-    [ -f "$OUTPUT/out/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed !!!"
+    [ -f "$OUTPUT/out/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed log: $TMP/img2sdat.log"
         if [ "$CONVER" == 'br' ];then
         LEVEL="$(echo "$lvnen / 2" | bc)"
         brotli -fq "$LEVEL" "$OUTPUT/out/${INPUT##*/}.new.dat" -o "$OUTPUT/out/${INPUT##*/}.new.dat.br" >$TMP/brotli.log && rm -f "$OUTPUT/out/${INPUT##*/}.new.dat"
