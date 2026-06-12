@@ -18,7 +18,7 @@ case "$1" in
     for vv in $(checktype); do
       file="${vv%%:*}"; type="${vv##*:}"
       [[ -s "$file" && -f "$file" && ! "$type" =~ ^(zip|payload)$ ]] || continue
-      echo "$file|$file ($type)"
+      echo "$file|$file ($type)" | grep -v -E '\(unknown\)'
     done
     ;;
 
@@ -39,7 +39,7 @@ case "$1" in
           [ -n "$Listzipne" ] && echo "$Listzipne"
           ;;
         *)
-          echo "$file|$file ($type)"
+          echo "$file|$file ($type)" | grep -v -E '\(unknown\)'
           ;;
       esac
     done
