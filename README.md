@@ -54,5 +54,5 @@
 
 - References and source code
 
-- **[Kr-Script](https://github.com/helloklf/kr-scripts), [Termux](https://github.com/termux/termux-app)**
+- **[Kr-Script](https://github.com/helloklf/kr-scripts), [Termux](https://github.com/termux/termux-app), [Other](https://zenlua.github.io/Tool-Tree/website/Other.html)**
 
