@@ -1,5 +1,11 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.4.6 (19-6-2026)**
+
++ Fix the reported bug
++ Fix code
++ Update some commands
+
 **Version: 1.4.5 (11-5-2026)**
 
 + Fix code
