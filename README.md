@@ -2,6 +2,12 @@
 
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/tool-tree.jpg" alt="1" style="width:100%;">
 
+- Unpack: boot, dtbo, ext4, erofs, f2fs, payload, super, zip, apk, apks, apex, capex, ...
+
+- Pack: boot, dtbo, ext4, erofs, f2fs, payload, super, amlogic, apk, apex, capex, ...
+
+- There are many other features, discover them for yourself
+
 - Supports both `root` or `no-root` versions and is only for `arm64-bit`
 
 - 📲 Download: **[Release](https://github.com/Zenlua/Tool-Tree/releases/latest)** or **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
