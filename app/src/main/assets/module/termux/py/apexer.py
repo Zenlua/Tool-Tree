@@ -476,7 +476,7 @@ def AddLoggingParent(android_manifest, logging_parent_value):
         indent = get_indent(application.previousSibling, 1)
         application.appendChild(doc.createTextNode(indent))
 
-    with tempfile.NamedTemporaryFile(delete=False, mode='w') as temp:
+    with tempfile.NamedTemporaryFile(delete=False, mode='wb') as temp:
         write_xml(temp, doc)
         return temp.name
 

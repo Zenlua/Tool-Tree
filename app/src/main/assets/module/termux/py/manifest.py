@@ -121,6 +121,6 @@ def get_indent(element, default_level):
 
 
 def write_xml(f, doc):
-  f.write('<?xml version="1.0" encoding="utf-8"?>\n')
+  f.write(b'<?xml version="1.0" encoding="utf-8"?>\n')
   for node in doc.childNodes:
-    f.write(node.toxml(encoding='utf-8') + '\n')
+    f.write(node.toxml(encoding='utf-8') + b'\n')
