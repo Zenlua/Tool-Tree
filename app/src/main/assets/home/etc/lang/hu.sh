@@ -43,6 +43,9 @@ config_text="Konfiguráció"
 time_text="Idő"
 dissblur_text="Elmosódás effektus kikapcsolása"
 tool_unpack_text="Dekódoló eszköz"
+tool_repack_text="Csomagolóeszköz"
+customize_tools_text="Eszközök testreszabása"
+convert_img_text="Az átalakítás a fordítás befejezése után folytatódik"
 
 # Home
 home_text_1="Alkalmazásinformációk és funkciók"
@@ -135,7 +138,7 @@ decode_text_3="Kombinált dekódolás .br .dat .img .zst .zstd payload.bin fájl
 
 # Build
 builds_text_1="Korábban dekódolt projektek létrehozása"
-builds_text_2="Partícióformátum és építési eszközök"
+builds_text_2="Csomagolási módszer és partícióformátum"
 builds_text_3="erofs tömörítési módszer"
 builds_text_4="Tömörítési szint"
 builds_text_5="erofs tömörítési szint"

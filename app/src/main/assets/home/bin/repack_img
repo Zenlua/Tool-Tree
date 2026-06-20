@@ -20,14 +20,10 @@ show_help() {
   echo "  -s    default: 0, free size calculated by mb for example 100mb free only works in ext4, f2fs"
   echo "  -k    build default: 0"
   echo "          0: auto detect partition"
-  echo "          1: ro-erofs, (mkfs.erofs)"
-  echo "          2: rw-ext4, (make_ext4fs)"
-  echo "          3: rw-ext4, (e2fsdroid)"
-  echo "          4: ro-f2fs, (make_f2fs)"
-  echo "          5: rw-f2fs, (make_f2fs)"
-  echo "          6: ro-erofs, (imgkit_scuti)"
-  echo "          7: rw-ext4, (imgkit_scuti)"
-  echo "          8: ro-erofs, (mkfs.erofs.old)"
+  echo "          1: ro-erofs"
+  echo "          2: rw-ext4"
+  echo "          3: ro-f2fs"
+  echo "          4: rw-f2fs"
   echo "  -d    delete folder after build: 1"
   echo "          0: false"
   echo "          1: true"
@@ -106,19 +102,27 @@ fi
 # Xoá file cũ nếu tồn tại
 [ -f "$saved" ] && rm -fr "$saved"
 
+# Tool build
+tool_ext="$(glog tool_ext)"
+[ -z "$tool_ext" ] && tool_ext="0"
+tool_erofs="$(glog tool_erofs)"
+[ -z "$tool_erofs" ] && tool_erofs="0"
+tool_f2fs="$(glog tool_f2fs)"
+[ -z "$tool_f2fs" ] && tool_f2fs="0"
+
 # Chọn định dạng tệp phân vùng
-if [ "$TTBUILDI" == 1 ] || [ "$TTBUILDI" == 6 ] || [ "$TTBUILDI" == 8 ];then
+if [ "$TTBUILDI" == 1 ]; then
 partition='erofs'
-elif [ "$TTBUILDI" == 2 ] || [ "$TTBUILDI" == 3 ] || [ "$TTBUILDI" == 7 ];then
+elif [ "$TTBUILDI" == 2 ]; then
 partition='ext'
-elif [ "$TTBUILDI" == 4 ] || [ "$TTBUILDI" == 5 ];then
+elif [ "$TTBUILDI" == 3 ] || [ "$TTBUILDI" == 4 ]; then
 partition='f2fs'
 else
 partition="$info_type"
 fi
 
 if [ "$NENEROFS" == "lz4" ];then
-[ "$TTBUILDI" == 6 ] && zlsize=',0' || zlsize=''
+[ "$tool_erofs" == 1 ] && zlsize=',0' || zlsize=''
 elif [ "$NENEROFS" == "lz4hc" ];then
 [ "$LVLNEN" -gt 12 ] && zlsize=",12" || zlsize=",$LVLNEN"
 elif [ "$NENEROFS" == "deflate" ] || [ "$NENEROFS" == "lzma" ];then
@@ -195,9 +199,9 @@ progress -1/0
 
 if [ "$partition" == "erofs" ];then
     [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
-    if [ "$TTBUILDI" == 6 ];then
+    if [ "$tool_erofs" == 1 ];then
     imgkit_scuti pack --type erofs -s "$INPUT" -o "$saved" --compress $NENEROFS --compress-level ${zlsize/,/} --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" &>$TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti:\n\n$(cat $TMP/imgkit_repack.log)" "$saved"
-    elif [ "$TTBUILDI" == 8 ];then
+    elif [ "$tool_erofs" == 2 ];then
     $TERMUX/lib/theft/mkfs.erofs -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" &>$TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs:\n\n$(cat $TMP/mkfs_erofs.log)" "$saved" &
     process_erofss $TMP/mkfs_erofs.log
     else
@@ -284,9 +288,9 @@ elif [ "$partition" == "f2fs" ];then
     mount_dir="/${INPUT##*/}"
     fi
     if [ "$TTBUILDI" == 0 ];then
-    [ "$(cat "$fs_options" 2>/dev/null | grep 'superblock features' | grep -cm1 ro)" == 1 ] && TTBUILDI=4 || TTBUILDI=5
+    [ "$(cat "$fs_options" 2>/dev/null | grep 'superblock features' | grep -cm1 ro)" == 1 ] && TTBUILDI=3 || TTBUILDI=4
     fi
-    if [ "$TTBUILDI" == 5 ];then
+    if [ "$TTBUILDI" == 4 ];then
     make_f2fs -g android -O compression,extra_attr -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real &>$TMP/make_f2fs.log || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
     sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" -c "$saved" 2>&1 | tee $TMP/sload_f2fs.log | sed -e "/Free segments:/d" -e "/Not enough space/d"
     else
@@ -306,11 +310,11 @@ elif [ "$partition" == "ext" ];then
     size_orig="$(echo "$size_orig * 1.1" | bc | cut -d. -f1)"
     fi
     if [ "$SAINEN" == 0 ] && [ "$info_type" == "ext" ] && [ -f "$info_size" ];then
-        if [ "$TTBUILDI" == 3 ];then
+        if [ "$tool_ext" == 1 ];then
         size="$(echo "$size_real / 4096" | bc)";
         mke2fs -O ^has_journal -t ext4 -b 4096 -m 0 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
         e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
-        elif [ "$TTBUILDI" == 7 ];then
+        elif [ "$tool_ext" == 2 ];then
         imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z $size_real --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" &>$TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti:\n\n$(cat $TMP/imgkit_repack.log)" "$saved"
         else
         make_ext4fs -J -T -1 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
@@ -318,11 +322,11 @@ elif [ "$partition" == "ext" ];then
         echo
         fi
     else
-        if [ "$TTBUILDI" == 3 ];then
+        if [ "$tool_ext" == 1 ];then
         size="$(echo "$size_orig / 4096" | bc)";
         mke2fs -O ^has_journal -t ext4 -b 4096 -m 0 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
         e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
-        elif [ "$TTBUILDI" == 7 ];then
+        elif [ "$tool_ext" == 2 ];then
         imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z $size_orig --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" &>$TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti:\n\n$(cat $TMP/imgkit_repack.log)" "$saved"
         else
         make_ext4fs -J -T -1 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &

@@ -45,6 +45,9 @@ pin_text="置顶"
 unpin_text="取消置顶"
 dissblur_text="关闭模糊效果"
 tool_unpack_text="解码工具"
+tool_repack_text="打包工具"
+customize_tools_text="自定义工具"
+convert_img_text="构建完成后将继续转换"
 
 # Home
 home_text_1="应用信息与功能"
@@ -137,7 +140,7 @@ decode_text_3="汇总解码 .br .dat .img .zst .zstd payload.bin 等文件"
 
 # Build
 builds_text_1="构建此前已反编译的项目"
-builds_text_2="分区格式与构建工具"
+builds_text_2="打包方法与分区格式"
 builds_text_3="erofs 压缩方式"
 builds_text_4="压缩级别"
 builds_text_5="erofs 压缩等级"

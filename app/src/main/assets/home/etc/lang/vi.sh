@@ -45,6 +45,9 @@ pin_text="Ghim add-on"
 unpin_text="Bỏ ghim"
 dissblur_text="Tắt hiệu ứng mờ"
 tool_unpack_text="Công cụ giải mã"
+tool_repack_text="Công cụ xây dựng"
+customize_tools_text="Tùy chỉnh công cụ"
+convert_img_text="Sau khi xây dựng xong sẽ tiếp tục chuyển đổi"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"
@@ -137,7 +140,7 @@ decode_text_3="Danh sách các tệp đầu vào .br .dat .img .zst .zstd .bin .
 
 # Build
 builds_text_1="Xây dựng các dự án đã giải mã trước đó"
-builds_text_2="Định dạng phân vùng và công cụ xây dựng"
+builds_text_2="Phương pháp đóng gói và định dạng phân vùng"
 builds_text_3="Phương pháp nén erofs"
 builds_text_4="Mức nén"
 builds_text_5="Cấp độ nén erofs"

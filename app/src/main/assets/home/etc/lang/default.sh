@@ -45,6 +45,9 @@ pin_text="Pin add-on"
 unpin_text="Unpin add-on"
 dissblur_text="Turn off blur effect"
 tool_unpack_text="Decoding tool"
+tool_repack_text="Build tool"
+customize_tools_text="Customize tools"
+convert_img_text="Conversion will continue after the build is complete"
 
 # Home
 home_text_1="App information and features"
@@ -137,7 +140,7 @@ decode_text_3="Combined decode for .br .dat .img .zst .zstd payload.bin files"
 
 # Build
 builds_text_1="Build previously decoded projects"
-builds_text_2="Partition format and build tools"
+builds_text_2="Packaging method and partition format"
 builds_text_3="erofs compression method"
 builds_text_4="Compression level"
 builds_text_5="erofs compression level"
