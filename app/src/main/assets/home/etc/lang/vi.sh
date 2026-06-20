@@ -140,8 +140,8 @@ decode_text_3="Danh sách các tệp đầu vào .br .dat .img .zst .zstd .bin .
 
 # Build
 builds_text_1="Xây dựng các dự án đã giải mã trước đó"
-builds_text_2="Phương pháp đóng gói và định dạng phân vùng"
-builds_text_3="Phương pháp nén erofs"
+builds_text_2="Định dạng phân vùng và phương pháp đóng gói"
+builds_text_3="Phương pháp nén của erofs"
 builds_text_4="Mức nén"
 builds_text_5="Cấp độ nén erofs"
 builds_text_6="Cấp độ"
