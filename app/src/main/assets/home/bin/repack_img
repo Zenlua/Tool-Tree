@@ -86,6 +86,9 @@ kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
 dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
 lvnen="$(glog nen_br 4)"
 info_type="$(cat "$info" 2>/dev/null)"
+tool_ext="$(glog re_tool_ext4)"
+tool_erofs="$(glog re_tool_erofs)"
+tool_f2fs="$(glog re_tool_f2fs)"
 
 # Ép build mặc định đối với định dạng sau
 if [[ "$info_type" =~ ^(vendor_boot|logo|squashfs|boot|vbmeta|vbmeta_system|dtbo)$ ]];then
@@ -101,14 +104,6 @@ fi
 
 # Xoá file cũ nếu tồn tại
 [ -f "$saved" ] && rm -fr "$saved"
-
-# Tool build
-tool_ext="$(glog tool_ext)"
-[ -z "$tool_ext" ] && tool_ext="0"
-tool_erofs="$(glog tool_erofs)"
-[ -z "$tool_erofs" ] && tool_erofs="0"
-tool_f2fs="$(glog tool_f2fs)"
-[ -z "$tool_f2fs" ] && tool_f2fs="0"
 
 # Chọn định dạng tệp phân vùng
 if [ "$TTBUILDI" == 1 ]; then
