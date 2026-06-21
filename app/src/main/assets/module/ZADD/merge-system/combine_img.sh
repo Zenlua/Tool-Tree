@@ -24,7 +24,7 @@ done
 
 echo "$merge_partition_4: $SDH/$PTSH"
 
-if [ "$dang_file" != 4 ];then
+if [ "$dang_file" != 3 ];then
 echo
 repack_img -i "$SDH/$PTSH/system" -o "$MPAT/out" -k $dang_file -d $1
 echo "$save_text $PTSD/out"
