@@ -7,6 +7,7 @@ import android.widget.TextView
 import com.tool.tree.R
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.NodeInfoBase
+import java.util.regex.Pattern
 
 open class ListItemView(private val context: Context,
                         layoutId: Int,
@@ -67,31 +68,39 @@ open class ListItemView(private val context: Context,
             return config.index
         }
 
-    // Hàm bổ trợ hỗ trợ cả @string/ và @string:
-    private fun resolveString(value: String): String {
-        // Kiểm tra xem chuỗi có chứa @string/ hoặc @string: không
-        if (value.contains("@string/") || value.contains("@string:")) {
-            // Tách lấy phần tên resource đứng sau dấu / hoặc dấu :
-            val stringName = value.substringAfter("@string/").substringAfter("@string:")
+    // Hàm bổ trợ đã cải tiến bằng Regex để tự dọn rác và cắt chuỗi chính xác tuyệt đối
+    private fun resolveString(value: String?): String {
+        if (value == null) return ""
+        
+        // Loại bỏ khoảng trắng hoặc ký tự xuống dòng thừa ở hai đầu
+        val cleanedValue = value.trim()
+
+        // Sử dụng Regex để tìm mẫu @string/tên hoặc @string:tên
+        // Mẫu này sẽ bắt trích xuất chính xác phần tên resource phía sau
+        val pattern = Pattern.compile("@string[/:](\\w+)")
+        val matcher = pattern.matcher(cleanedValue)
+
+        if (matcher.find()) {
+            // matcher.group(1) sẽ là phần tên thuần túy (ví dụ: script_action_check_ext4_image)
+            val stringName = matcher.group(1)
             
-            // Tìm ID của Resource từ tên đã bóc tách
             val resId = context.resources.getIdentifier(stringName, "string", context.packageName)
             if (resId != 0) {
                 return context.getString(resId)
             }
         }
-        return value
+        return cleanedValue
     }
 
     open fun updateViewByShell() {
         if (config.descSh.isNotEmpty()) {
             config.desc = ScriptEnvironmen.executeResultRoot(context, config.descSh, config)
-            desc = config.desc
+            desc = resolveString(config.desc)
         }
 
         if (config.summarySh.isNotEmpty()) {
             config.summary = ScriptEnvironmen.executeResultRoot(context, config.summarySh, config)
-            summary = config.summary
+            summary = resolveString(config.summary)
         }
     }
 
