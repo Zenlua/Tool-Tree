@@ -67,6 +67,22 @@ open class ListItemView(private val context: Context,
             return config.index
         }
 
+    // Hàm bổ trợ hỗ trợ cả @string/ và @string:
+    private fun resolveString(value: String): String {
+        // Kiểm tra xem chuỗi có chứa @string/ hoặc @string: không
+        if (value.contains("@string/") || value.contains("@string:")) {
+            // Tách lấy phần tên resource đứng sau dấu / hoặc dấu :
+            val stringName = value.substringAfter("@string/").substringAfter("@string:")
+            
+            // Tìm ID của Resource từ tên đã bóc tách
+            val resId = context.resources.getIdentifier(stringName, "string", context.packageName)
+            if (resId != 0) {
+                return context.getString(resId)
+            }
+        }
+        return value
+    }
+
     open fun updateViewByShell() {
         if (config.descSh.isNotEmpty()) {
             config.desc = ScriptEnvironmen.executeResultRoot(context, config.descSh, config)
@@ -84,8 +100,8 @@ open class ListItemView(private val context: Context,
     }
 
     init {
-        title = config.title
-        desc = config.desc
-        summary = config.summary
+        title = resolveString(config.title)
+        desc = resolveString(config.desc)
+        summary = resolveString(config.summary)
     }
 }
