@@ -33,7 +33,7 @@ checktime
 </action>
 
 <action title="'$title_delete'" >
-<param name="del_app_patch" type="text" value-sh="glog del_app_patch" required="true" placeholder="VoiceAssist Sogou"/>
+<param name="del_app_patch" type="text" value-sh="glog del_app_patch" required="true" desc="'$text_del_file'" placeholder="VoiceAssist Sogou"/>
 <set>
 slog del_app_patch "$del_app_patch"
 '$pathsh' del_app "$del_app_patch"
