@@ -45,4 +45,6 @@ cover_app_text_1="Chuyển đổi data-app sang app"
 cover_app_text_2="Việc chuyển đổi tệp apk ở trong data-app sang app cần can thiệp vào tệp apk có thể làm hỏng chữ ký"
 label_reset_prop="Thêm resetprop"
 desc_reset_prop="Thêm lệnh resetprop và tệp rezetprop.sh,rc"
+label_fix_fps_cam="Loại bỏ giới hạn 60Hz trong Camera"
+label_fix_off_10s="Loại bỏ đếm 10s ở bảo mật"
 fi

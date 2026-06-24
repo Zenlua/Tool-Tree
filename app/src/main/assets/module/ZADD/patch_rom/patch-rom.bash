@@ -113,7 +113,15 @@ echo
 # patch method
 if [ "${vv##*/}" == "miui-services.jar" ];then
     [ "$fix_screen" == 1 ] && Thayvc 0 '.method .*. notAllowCaptureDisplay(Lcom' $oi/smali/classes*/com/android/server/wm/WindowManagerServiceImpl.smali
+    [ "$fix_fpscam" == 1 ] && Thayvc 1 '.method .*. shouldDisableAospCameraPolicy(Lcom' $oi/smali/classes*/com/android/server/wm/MiuiRefreshRatePolicy.smali
     [ "$fix_window" == 1 ] && Thayvc 4 '.method .*. getMaxMiuiFreeFormStackCount(Ljava' $oi/smali/classes*/com/android/server/wm/MiuiFreeFormStackDisplayStrategy.smali
+elif [[ "${vv##*/}" == *SecurityCenter* ]];then
+    if [ "$fix_off_10s" == 1 ]; then
+        urlhdddasx="$oi/smali/classes*/com/miui/permcenter/privacymanager/InterceptPermissionFragment.smali"
+        if [ "$(grep -cm1 "const/16 v0, 0xa" $urlhdddasx)" == 1 ];then
+        Thaythe "const/16 v0, 0xa" "const/4 v0, 0x0" $urlhdddasx
+        fi
+    fi
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
     [ "$fix_reset_theme" == 1 ] && Thayvc -v '.method .*. validateTheme(Landroid' $oi/smali/classes/miui/drm/ThemeReceiver.smali
     if [ "$fix_window" == 1 ]; then
