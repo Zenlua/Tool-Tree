@@ -42,6 +42,17 @@ slog del_app_patch "$del_app_patch"
 </group>
 
 <group>
+<action title="'$title_boot_patch'" warn="'$title_boot_patch2'" >
+<param name="FOLDER" option-sh="findfile 0 $SDH/$PTSH | grep boot" desc="'$string_text_2': vendor_boot, boot" label="'$select_text'" required="true"/>
+<param name="fix_fake_lock" label="'$title_boot_patch3'" desc="" type="bool" />
+<param name="fix_diselinux" label="'$title_boot_patch4'" desc="" type="bool" />
+<set>
+'$pathsh' patch_boot "$FOLDER"
+</set>
+</action>
+</group>
+
+<group>
 <action title="'$title_framework_patch'" summary="Android 12+">
 <param name="FILE" option-sh="'$pathsh' search framework.jar services.jar miui-services.jar" multiple="true" value-sh="glog toolbox_patch_os" required="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" />
 <param name="fix_apksign" label="'$label_fix_apksign'" desc="'$required_files_text': framework.jar, services.jar, (Xiaomi: miui-services.jar)" type="bool" />
@@ -114,6 +125,10 @@ checktime
 </set>
 </action>
 </group>
+
+<text><slices>
+<slice color="#C91A1A">'$reminder_notes'</slice>
+</slices></text>
 
 </group>' | sed -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g'
 }

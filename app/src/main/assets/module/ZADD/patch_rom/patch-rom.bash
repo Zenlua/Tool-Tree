@@ -2,6 +2,32 @@
 # Kakathic
 set -o pipefail
 
+patch_boot(){
+# file header
+path_boots="$SDH/$PTSH/$@/header"
+
+if [ "$fix_fake_lock" == 1 ]; then
+    if ! grep -q "androidboot.flash.locked" "$path_boots"; then
+    echo "Add: androidboot.flash.locked=1 androidboot.verifiedbootstate=green androidboot.vbmeta.device_state=locked"
+    sed -i 's/\(cmdline=.*\)/\1 androidboot.flash.locked=1 androidboot.verifiedbootstate=green androidboot.vbmeta.device_state=locked/' $path_boots
+    fi
+fi
+
+if [ "$fix_diselinux" == 1 ]; then
+    if ! grep -q "androidboot.selinux=permissive" "$path_boots"; then
+    echo "Add: androidboot.selinux=permissive"
+    echo
+    sed -i 's/\(cmdline=.*\)/\1 androidboot.selinux=permissive/' $path_boots
+    fi
+    echo "Hidden hints selinux: Add any to init/file.rc
+on property:ro.boot.selinux=permissive
+    chmod 440 /sys/fs/selinux/policy
+    write /sys/fs/selinux/enforce 1
+    chmod 640 /sys/fs/selinux/enforce"
+fi
+}
+
+
 fixapps(){
 for vv in $@; do
 [ ! -e "$vv" ] && { about "Item not found: $vv"; continue; }

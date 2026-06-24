@@ -331,7 +331,7 @@ mkdir -p "$in_name" $OUTPUT/config
             [ "$?" != 0 ] && killtree "$unpack_text_5 $unsl"
             rm $unsl
         done
-        cat dts_* | checksum > cache/md5_dts
+        cat dts_* 2>/dev/null | checksum > cache/md5_dts
         # unpack cpio
         for vch in $(ls -1d *.cpio vendor_ramdisk/*.cpio 2>/dev/null); do
             mkdir -p "${vch%.*}" "cache"
