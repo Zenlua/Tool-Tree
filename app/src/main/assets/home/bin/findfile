@@ -15,7 +15,7 @@ case "$1" in
     ;;
 
   1)
-    for vv in $(checktype); do
+    for vv in $(checktype | sort); do
       file="${vv%%:*}"; type="${vv##*:}"
       [[ -s "$file" && -f "$file" && ! "$type" =~ ^(zip|payload)$ ]] || continue
       echo "$file|$file ($type)" | grep -v -E '\(unknown\)'
@@ -23,7 +23,7 @@ case "$1" in
     ;;
 
   2)
-    for vv in $(checktype); do
+    for vv in $(checktype | sort); do
       file="${vv%%:*}"; type="${vv##*:}"
       [[ -s "$file" && -f "$file" ]] || continue
       case "$type" in
