@@ -1,5 +1,13 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.4.7 (25-6-2026)**
+
++ Optimized for a cleaner look
++ Re-create oat fix
++ Added some features in Patch ROM
++ Fix code
++ Update some commands
+
 **Version: 1.4.6 (19-6-2026)**
 
 + Fix the reported bug
