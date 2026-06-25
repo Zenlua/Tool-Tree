@@ -1,11 +1,23 @@
 # kakathic
 
-if [ "$1" == "-h" ] || [ "$1" == "--help" ];then
+if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ -z "$1" ]; then
 echo "listpayload path/payload.[bin/zip]"
 exit 1
 fi
 
-if [ "$1" == "-b" ] || [ "$1" == "--byte" ];then
+list_payinf="$(payload_info.py "$1")"
+
+(
+if echo "$list_payinf" | grep -q "Architecture: Virtual A/B"; then
+slog typeheh "VAB"
+else
+slog typeheh "AB"
+fi
+slog super_group "$(awk '/Group:/ {print $2}' <<< "$list_payinf")"
+slog super_sizedj "$(awk -F'[()]' '/Size:/ {printf "%.2f\n", $2/1024/1024/1024}' <<< "$list_payinf")"
+) &
+
+if [ "$1" == "-b" ] || [ "$1" == "--byte" ]; then
     shift
     payload_extract -p -i "$1" | awk '/^name:/{n=$2;s=$4;printf "%s (%sB)\n",n,s}'
 else
