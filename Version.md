@@ -1,5 +1,10 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: Beta**
+
++ Auto-populate super partition payload list
++ Update pip, protobuf
+
 **Version: 1.4.7 (25-6-2026)**
 
 + Optimized for a cleaner look
