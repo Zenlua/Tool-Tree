@@ -5,9 +5,8 @@ echo "listpayload path/payload.[bin/zip]"
 exit 1
 fi
 
-list_payinf="$(payload_info.py "$1")"
-
 (
+list_payinf="$(payload_info.py "$1")"
 if echo "$list_payinf" | grep -q "Architecture: Virtual A/B"; then
 slog typeheh "VAB"
 else
