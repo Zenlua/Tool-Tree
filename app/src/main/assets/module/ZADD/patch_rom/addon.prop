@@ -4,8 +4,8 @@ id=patch_rom
 name=Patch ROM
 author=Kakathic
 description=Quick ROM patch
-version=2.5
-versionCode=125
+version=2.6
+versionCode=126
 root=false
 
 # language
