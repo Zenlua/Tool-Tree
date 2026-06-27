@@ -39,9 +39,7 @@ slog del_app_patch "$del_app_patch"
 '$pathsh' del_app "$del_app_patch"
 </set>
 </action>
-</group>
 
-<group>
 <action title="'$title_boot_patch'" warn="'$title_boot_patch2'" >
 <param name="FOLDER" option-sh="findfile 0 $SDH/$PTSH | grep boot" desc="'$string_text_2': vendor_boot, boot" label="'$select_text'" required="true"/>
 <param name="fix_fake_lock" label="'$title_boot_patch3'" desc="" type="bool" />
@@ -52,7 +50,7 @@ slog del_app_patch "$del_app_patch"
 </action>
 </group>
 
-<group>
+<group title="'$reminder_notes'">
 <action title="'$title_framework_patch'" summary="Android 12+">
 <param name="FILE" option-sh="'$pathsh' search framework.jar services.jar miui-services.jar" multiple="true" value-sh="glog toolbox_patch_os" required="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" />
 <param name="fix_apksign" label="'$label_fix_apksign'" desc="'$required_files_text': framework.jar, services.jar, (Xiaomi: miui-services.jar)" type="bool" />
@@ -73,9 +71,7 @@ slog fix_noti_patch_os "$FILE"
 checktime
 </set>
 </action>
-</group>
 
-<group>
 <action title="'$title_ime'" summary="Xiaomi">
 <param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_key_patch_os" multiple="true" desc="Note: MiuiSystemUI.apk (global)§'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
 <param name="ime_app" placeholder="com.google.android.inputmethod.latin" desc="'$desc_ime_app'" type="text" value-sh="glog ime_app" required="true"/>
@@ -92,9 +88,7 @@ slog fix_key_patch_os "$FILE"
 checktime
 </set>
 </action>
-</group>
 
-<group>
 <action title="'$title_many_patch'" summary="Xiaomi, Android 12+">
 <param name="FILE" option-sh="'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar *SecurityCenter.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
 <param name="fix_screen" label="'$label_fix_screen'" desc="'$required_files_text': miui-services.jar, services.jar" type="bool" />
@@ -126,9 +120,22 @@ checktime
 </action>
 </group>
 
-<text><slices>
-<slice color="#C91A1A">'$reminder_notes'</slice>
-</slices></text>
+<group>
+<action title="'"$action_title"'" desc="'"$action_desc"'" warn="'"$action_warn"'" interruptible="false" >
+<lock>
+[ "$ROT" == 0 ] && echo "'$root_warrn'" || echo 0
+</lock>
+<param name="kill_apk_list" title="'"$param1_title"'" option-sh="'$pathsh' list_apk_file" value-sh="glog kill_apk_list" required="true" label="'"$param1_label"'" desc="'"$param1_desc"'" />
+<param name="dem_giay" value-sh="glog dem_giay 60" label="'"$param2_label"'" type="seekbar" min="60" max="300" desc="'"$param2_desc"'" />
+<param name="kill_customize" label="'"$param3_label"'" value-sh="glog kill_customize" type="text" placeholder="com.android.systemui" desc="'"$param3_desc"'" />
+<set>
+slog dem_giay $dem_giay
+slog kill_customize "$kill_customize"
+slog kill_apk_list "$kill_apk_list"
+'$pathsh' test_app "$kill_apk_list"
+</set>
+</action>
+</group>
 
 </group>' | sed -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g'
 }

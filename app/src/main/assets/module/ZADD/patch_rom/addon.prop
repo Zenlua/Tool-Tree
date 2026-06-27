@@ -4,8 +4,8 @@ id=patch_rom
 name=Patch ROM
 author=Kakathic
 description=Quick ROM patch
-version=2.4
-versionCode=124
+version=2.5
+versionCode=125
 root=false
 
 # language
@@ -58,9 +58,21 @@ label_reset_prop="Add resetprop"
 desc_reset_prop="Add the resetprop command to the resetprop.sh,rc file."
 label_fix_fps_cam="Remove the 60Hz limit in the camera"
 label_fix_off_10s="Remove 10s in Security"
-reminder_notes="Note: After patching the mod, it will replace the original file."
+reminder_notes="Note: After patching the mod, it will replace the original file"
 title_boot_patch="Patch, boot, vendor_boot"
 title_boot_patch2="If there are two boot options, just patch vendor_boot; for older Android versions, there's only one boot option, so just patch vendor_boot."
 title_boot_patch3="Add a fake lock to the bootloader"
 title_boot_patch4="Disable Selinux"
 text_del_file="Auto find folders and files to delete"
+
+action_title="Test Application"
+action_desc="Run the application without restarting"
+action_warn="Some applications are linked together, so both must be force-closed, e.g: Aod, App vault"
+param1_title="Modified Files"
+param1_label="Application"
+param1_desc="Select the modified application to test"
+param2_label="Waiting time"
+param2_desc="After the timeout, the application will revert to its original state; time is calculated in seconds"
+param3_label="Package Name"
+param3_desc="When a package is added, it will force-close both the selected application and the newly added package"
+root_warrn="Requires root to use feature"

@@ -53,4 +53,16 @@ title_boot_patch2="Nếu như có hai boot chỉ cần vá vendor_boot, đối v
 title_boot_patch3="Thêm fake lock"
 title_boot_patch4="Tắt selinux"
 text_del_file="Tự tìm thư mục, và tệp để xóa"
+
+action_title="Thử nghiệm ứng dụng"
+action_desc="Chạy ứng dụng mà không cần khởi động lại"
+action_warn="Một số ứng dụng liên kết với nhau vì vậy phải buộc dừng cả hai, ví dụ: Aod, App vault"
+param1_title="Tệp đã chỉnh sửa"
+param1_label="Ứng dụng"
+param1_desc="Chọn ứng dụng đã chỉnh sửa để thử nghiệm"
+param2_label="Thời gian"
+param2_desc="Sau khi hết thời gian chờ ứng dụng sẽ khôi phục lại ban đầu, thời gian tính bằng giây"
+param3_label="Tên gói app"
+param3_desc="Khi thêm package nó sẽ buộc dừng ứng dụng đã chọn và cả package vừa thêm"
+root_warrn="Yêu cầu root để sử dụng tính năng"
 fi
