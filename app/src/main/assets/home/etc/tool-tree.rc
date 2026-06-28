@@ -1467,7 +1467,20 @@ for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     pin_text_add="$pin_text"
-    [ -f "$dirvad/pin" ] && continue
+    if [ -f "$dirvad/pin" ] || [ ! -f "$dirvad/index.sh" ]; then
+        continue
+    fi
+    Vips
+done
+
+# load trang tải xuống
+for vadd in $PATHADD/*/addon.prop; do
+    [ -f "$vadd" ] || continue
+    dirvad="${vadd%/*}"
+    pin_text_add="$pin_text"
+    if [ -f "$dirvad/pin" ] || [ -f "$dirvad/index.sh" ]; then
+    continue
+    fi
     Vips
 done
 }
