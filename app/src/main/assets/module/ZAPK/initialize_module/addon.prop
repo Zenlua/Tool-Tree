@@ -1,0 +1,21 @@
+# Add-on
+
+id=initialize_module
+name=Initialize module
+author=Kakathic
+description=
+version=1.0
+versionCode=100
+root=true
+
+# language
+google_text="Currently using google translate"
+lang_action_warn="This add-on copies the selected files into Magisk, KSU, APatch modules, etc., to create a new module. After rebooting, it will be applied to the system just like any other module."
+lang_title="Import files"
+lang_summary_path="Path: "
+lang_desc_adb="Enter the file path. If left blank, it will automatically search for a filename that matches the system"
+lang_desc_prop="Add prop to module"
+lang_save_at="Saved at: "
+lang_searching="Searching for path..."
+lang_not_found="File not found: "
+lang_input_notice=", please enter a path to create a new one"
