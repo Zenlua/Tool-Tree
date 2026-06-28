@@ -1334,12 +1334,12 @@ farooot='<lock>
 </lock>'
 fi
 xml_print '<group>
-<action warn="'$use_network_text'" >
+<action warn="'$use_network_text'" icon="'`urladd icon`'" reload="true">
 <title>'$(gprop name $vadd2)'</title>
 <desc>'$(gprop version $vadd2)' '$(gprop author $vadd2)' | '$(gprop description $vadd2)'</desc>
 '"$farooot"'
 <set>
-taive "'$(gprop url $vadd2)'" $TMP/addon.add
+taive "'$(gprop url $vadd2)'" $TMP/addon.add 2>&1
 echo
 if [ -f $TMP/addon.add ]; then
 installadd $TMP/addon.add "'${diradd%/*}'"
