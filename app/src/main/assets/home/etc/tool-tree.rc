@@ -1323,20 +1323,21 @@ rm -fr "$TMP/signatures_dir"
 }
 
 Addon(){
-
 # Tính năng
 
 Download(){
-farooot='';
+farooot=''; description_text=''; text_desc=''
 if [ "$(gprop root $vadd)" == 'true' ];then
 farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
 fi
+description_text="$(gprop description $vadd)"
+[ "$description_text" ] && text_desc=" | $description_text"
 xml_print '<group>
 <action warn="'$use_network_text'" icon="'`urladd icon`'" reload="true">
 <title>'$(gprop name $vadd)'</title>
-<desc>'$(gprop version $vadd)' '$(gprop author $vadd)' | '$(gprop description $vadd)'</desc>
+<desc>'$(gprop version $vadd)' '$(gprop author $vadd)$text_desc'</desc>
 '"$farooot"'
 <set>
 taive "'$(gprop url $vadd)'" $TMP/addon.add 2>&1
@@ -1352,10 +1353,13 @@ fi
 }
 
 Features(){
+description_text=''; text_desc=''
 [ "$1" == "status" ] && addon_textxx="$addon_text_10" || addon_textxx="$addon_text_2"
+description_text="$(gprop description $vadd)"
+[ "$description_text" ] && text_desc=" | $description_text"
 xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_textxx'">
 <title>'$(gprop name $vadd)'</title>
-<desc>'$(gprop version $vadd)' '$(gprop author $vadd)' | '$(gprop description $vadd)'</desc>
+<desc>'$(gprop version $vadd)' '$(gprop author $vadd)$text_desc'</desc>
 <get>cat '$dirvad'/'$1'</get>
 <set>echo "$state" > '$dirvad'/'$1'</set>
 </switch>
@@ -1364,8 +1368,8 @@ xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_te
 
 Homeadd(){
 # Hủy bỏ biến
-pagesh=''; code_menu=''; farooot=''; google_trankk='';
-google_tran_shellkk=''; code_shell=''; code_option=''; summss='';
+pagesh=''; code_menu=''; farooot=''; google_trankk=''; description_text=''
+google_tran_shellkk=''; code_shell=''; code_option=''; summss=''; text_desc=''
 
 # Load index
 if [ -f "$dirvad/index.sh" ];then
@@ -1389,13 +1393,15 @@ if [ "$(gprop root $vadd)" == 'true' ];then
 farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
+description_text="$(gprop description $vadd)"
+[ "$description_text" ] && text_desc=" | $description_text"
     if [ "$ROT" == 0 ]; then
         desc_tec="$(gprop version $vadd) $(gprop author $vadd) | $root_warning_text_1"
     else
-        desc_tec="$(gprop version $vadd) $(gprop author $vadd) | $(gprop description $vadd)"
+        desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
     fi
 else
-    desc_tec="$(gprop version $vadd) $(gprop author $vadd) | $(gprop description $vadd)"
+    desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
 fi
 
 # phát hiện tag
@@ -1411,6 +1417,7 @@ google_trankk='<option type="default" id="v1" auto-off="true" reload="true" inte
 google_tran_shellkk='elif [ "$menu_id" == "v1" ];then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
 fi
+
 xml_print '<group>
 <page id="'${dirvad##*/}'" icon="'`urladd icon`'" '$pagesh'>
 <title>'$(gprop name $vadd)'</title>
