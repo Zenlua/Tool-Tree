@@ -3,7 +3,7 @@
 id=initialize_module
 name=Initialize module
 author=Kakathic
-description=
+description=Customize module
 version=1.0
 versionCode=100
 root=true
