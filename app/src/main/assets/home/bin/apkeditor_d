@@ -98,7 +98,7 @@ echo "$replag_text_1..."
 echo
 
 # apkeditor
-eval "apkeditor d -f -t \"$TYPEAPK\" $setkkh -i \"$ptpk\" -o \"$Tout\" " 2>&1 | sed -E \
+eval "apkeditor d -f -t \"$TYPEAPK\" $setkkh -i \"$ptpk\" -o \"$Tout\" " 2>&1 | sed -u -E \
     -e '1,/__/d' \
     -e '/Delete:/d' \
     -e '/Saved to:/d' \

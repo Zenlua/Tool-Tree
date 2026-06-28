@@ -19,7 +19,7 @@ show_help() {
   exit 1
 }
 
-Xoa(){ sed 's/\[[^]]*\]//g'; }
+Xoa(){ sed -u 's/\[[^]]*\]//g'; }
 if [[ $# -eq 0 || "$1" != -* ]]; then
 show_help
 fi

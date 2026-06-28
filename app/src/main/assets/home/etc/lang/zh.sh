@@ -284,7 +284,7 @@ framework_auto_text="自动框架导入"
 # Tính năng
 feature_hide_text="启用/禁用隐藏功能"
 use_apktool_text="Apktool 编辑器"
-use_network_text="需要使用数据网络才能继续更新"
+use_network_text="需要连接网络以继续下载。"
 root_warning_text="请 root 后使用此功能"
 root_warning_text_1="需要root权限才能使用。"
 deleted_file_text="完成后删除原始文件"

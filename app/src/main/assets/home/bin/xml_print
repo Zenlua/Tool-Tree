@@ -6,7 +6,7 @@ exit
 fi
 
 if [ -f "$1" ]; then
-    sed -z -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g' < "$1"
+    sed -u -z -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g' < "$1"
 else
-    echo "$@" | sed -z -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g'
+    echo "$@" | sed -u -z -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g'
 fi

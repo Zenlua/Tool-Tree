@@ -208,7 +208,7 @@ elif [ "$dang_tep" == 'super' ];then
 elif [ "$dang_tep" == 'amlogic' ];then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ (unpack)...\n"
     ten_paion="$(echo "${INPUT##*/}" | cut -d. -f1)"
-    ampack unpack "$INPUT" "${INPUT%/*}/${ten_paion}_amlogic" >$TMP/ampack_unpack.log && sed -i $'s/\033\\[[0-9;]*m//g' "$TMP/ampack_unpack.log"
+    ampack unpack "$INPUT" "${INPUT%/*}/${ten_paion}_amlogic" >$TMP/ampack_unpack.log && sed -u -i $'s/\033\\[[0-9;]*m//g' "$TMP/ampack_unpack.log"
     for vck in ${INPUT%/*}/${ten_paion}_amlogic/*.PARTITION; do
     echo "mv: ${vck##*/} ➠ $(echo "${vck##*/}" | sed 's|\.PARTITION$|\.img|')"
     mv "$vck" "${vck%.*}.img"
@@ -274,10 +274,10 @@ mkdir -p "$in_name" $OUTPUT/config
             imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
             process_imgkit "$TMP/imgkit_scuti.log"
         elif [ "$(glog un_tool_erofs)" == 2 ];then
-            $TERMUX/lib/theft/extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
+            $TERMUX/lib/theft/extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -u -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
             process_unerrofs "$TMP/extract_erofs.log"
         else
-            extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
+            extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -u -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
             process_unerrofs "$TMP/extract_erofs.log"
         fi
         if [ -f $OUTPUT/config/exception.log ];then

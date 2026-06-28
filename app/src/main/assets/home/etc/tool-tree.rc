@@ -854,9 +854,8 @@ mv "$vv" "${vv%.*}.PARTITION"
 done
 echo
 fi
-ampack pack --verify --out-ver $amlogic_ver --out-align $amlogic_align "$PTSD/$FOLDER" "$PTSD/out/$FOLDER.img" >$TMP/amlogic_pack.log
+ampack pack --verify --out-ver $amlogic_ver --out-align $amlogic_align "$PTSD/$FOLDER" "$PTSD/out/$FOLDER.img" | tee $TMP/amlogic_pack.log | sed -u $'"'s/\033\\[[0-9;]*m//g'"'
 [ "$?" == 1 ] && bug_rom=1 || bug_rom=0
-sed -i $'"'s/\033\\[[0-9;]*m//g'"' "$TMP/amlogic_pack.log"
 for vv in $(ls -1d $PTSD/$FOLDER/*.PARTITION 2>/dev/null); do
 mv "$vv" "${vv%.*}.img"
 done
@@ -1267,7 +1266,7 @@ IFS=$'"'\n'"'
 for v in $FILE; do
 echo "'$more_text_4' $FILE"
 echo
-apkeditor p -skip-manifest -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -e "1,/__/d"
+apkeditor p -skip-manifest -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -u -e "1,/__/d"
 echo
 done
 checktime
@@ -1282,7 +1281,7 @@ IFS=$'"'\n'"'
 for v in $FILE; do
 echo "'$more_text_4' $FILE"
 echo
-apkeditor x -fix-types -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -e "1,/__/d"
+apkeditor x -fix-types -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -u -e "1,/__/d"
 echo
 done
 checktime
@@ -1298,7 +1297,7 @@ IFS=$'"'\n'"'
 for v in $FILE; do
 echo "'$more_text_4' $FILE"
 echo
-apkeditor m -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -e "1,/__/d"
+apkeditor m -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -u -e "1,/__/d"
 echo
 done
 checktime
@@ -1326,6 +1325,32 @@ rm -fr "$TMP/signatures_dir"
 Addon(){
 
 # Tính năng
+
+Download(){
+farooot='';
+if [ "$(gprop root $vadd)" == 'true' ];then
+farooot='<lock>
+[ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
+</lock>'
+fi
+xml_print '<group>
+<action warn="'$use_network_text'" >
+<title>'$(gprop name $vadd2)'</title>
+<desc>'$(gprop version $vadd2)' '$(gprop author $vadd2)' | '$(gprop description $vadd2)'</desc>
+'"$farooot"'
+<set>
+taive "'$(gprop url $vadd2)'" $TMP/addon.add
+echo
+if [ -f $TMP/addon.add ]; then
+installadd $TMP/addon.add "'${diradd%/*}'"
+else
+echo "Add-on download failed !" >&2
+fi
+</set>
+</action>
+</group>'
+}
+
 Features(){
 [ "$1" == "status" ] && addon_textxx="$addon_text_10" || addon_textxx="$addon_text_2"
 xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_textxx'">
@@ -1438,6 +1463,14 @@ for vadd in $PATHADD/*/addon.prop; do
     pin_text_add="$pin_text"
     [ -f "$dirvad/pin" ] && continue
     Vips
+done
+
+# Load trang tải add-on
+for vadd2 in $PATHADD/*/download.prop; do
+    [ -f "$vadd2" ] || continue
+    diradd="${vadd2%/*}"
+    [ -f "${vadd2%/*}/addon.prop" ] && continue
+    Download
 done
 }
 

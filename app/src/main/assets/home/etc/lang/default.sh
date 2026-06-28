@@ -286,7 +286,7 @@ framework_auto_text="Auto framework import"
 # Tính năng
 feature_hide_text="Hidden features on/off"
 use_apktool_text="Apktool editor"
-use_network_text="Data network usage required, to continue updating"
+use_network_text="Data network usage required, to continue download"
 root_warning_text="Please root the device to use this feature"
 root_warning_text_1="Root access is required to use"
 deleted_file_text="Delete original file after completion"

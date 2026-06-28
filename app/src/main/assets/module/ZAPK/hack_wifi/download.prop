@@ -1,0 +1,10 @@
+# Add-on
+
+id=hack_wifi
+name=Hack WIFI
+author=Kakathic
+description=WIFI hacking tool
+version=1.0
+versionCode=100
+root=true
+url=https://github.com/Zenlua/Tool-Tree/releases/download/V1/hack_wifi.add

@@ -284,7 +284,7 @@ framework_auto_text="Automatikus keretrendszer-importálás"
 # Tính năng
 feature_hide_text="Rejtett funkciók engedélyezése/letiltása"
 use_apktool_text="Apktool szerkesztő"
-use_network_text="A frissítés folytatásához adatforgalmi hálózat használata szükséges."
+use_network_text="A letöltés folytatásához hálózati kapcsolat szükséges."
 root_warning_text="Kérjük, rootolja az eszközt a funkció használatához"
 deleted_file_text="Az eredeti fájl törlése a befejezés után"
 root_warning_text_1="Root hozzáférés szükséges a használatához"
