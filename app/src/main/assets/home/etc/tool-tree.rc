@@ -1388,20 +1388,22 @@ if [ -f "$dirvad/menu.sh" ];then
     fi
 fi
 
+# load description
+description_text="$(gprop description $vadd)"
+[ "$description_text" ] && text_desc=" | $description_text"
+
 # Phát hiện root
 if [ "$(gprop root $vadd)" == 'true' ];then
 farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
-description_text="$(gprop description $vadd)"
-[ "$description_text" ] && text_desc=" | $description_text"
-    if [ "$ROT" == 0 ]; then
-        desc_tec="$(gprop version $vadd) $(gprop author $vadd) | $root_warning_text_1"
-    else
-        desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
-    fi
+if [ "$ROT" == 0 ]; then
+    desc_tec="$(gprop version $vadd) $(gprop author $vadd) | $root_warning_text_1"
 else
     desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
+fi
+else
+desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
 fi
 
 # phát hiện tag
