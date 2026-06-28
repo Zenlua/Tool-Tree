@@ -1335,14 +1335,14 @@ farooot='<lock>
 fi
 xml_print '<group>
 <action warn="'$use_network_text'" icon="'`urladd icon`'" reload="true">
-<title>'$(gprop name $vadd2)'</title>
-<desc>'$(gprop version $vadd2)' '$(gprop author $vadd2)' | '$(gprop description $vadd2)'</desc>
+<title>'$(gprop name $vadd)'</title>
+<desc>'$(gprop version $vadd)' '$(gprop author $vadd)' | '$(gprop description $vadd)'</desc>
 '"$farooot"'
 <set>
-taive "'$(gprop url $vadd2)'" $TMP/addon.add 2>&1
+taive "'$(gprop url $vadd)'" $TMP/addon.add 2>&1
 echo
 if [ -f $TMP/addon.add ]; then
-installadd $TMP/addon.add "'${diradd%/*}'"
+installadd $TMP/addon.add "'${dirvad%/*}'"
 else
 echo "Add-on download failed !" >&2
 fi
@@ -1415,8 +1415,8 @@ xml_print '<group>
 <page id="'${dirvad##*/}'" icon="'`urladd icon`'" '$pagesh'>
 <title>'$(gprop name $vadd)'</title>
 <desc>'$desc_tec'</desc>
-'$summss'
-'$farooot'
+'"$summss"'
+'"$farooot"'
 <option type="default" id="v2" auto-finish="true" auto-off="true" interruptible="false">'$pin_text_add'</option>
 '"$google_trankk"'
 '"$code_option"'
@@ -1443,7 +1443,13 @@ if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ];then
     elif [ "$index_adds" == 2 ];then
     Features delete
     else
-    [ "$(cat $dirvad/status 2>/dev/null)" == 1 ] || Homeadd
+    if [ "$(cat $dirvad/status 2>/dev/null)" != 1 ]; then
+        if [ -f "$dirvad/index.sh" ]; then
+            Homeadd
+        elif [ -f "$dirvad/addon.prop" ]; then
+            Download
+        fi
+    fi
 fi
 }
 
@@ -1463,14 +1469,6 @@ for vadd in $PATHADD/*/addon.prop; do
     pin_text_add="$pin_text"
     [ -f "$dirvad/pin" ] && continue
     Vips
-done
-
-# Load trang tải add-on
-for vadd2 in $PATHADD/*/download.prop; do
-    [ -f "$vadd2" ] || continue
-    diradd="${vadd2%/*}"
-    [ -f "${vadd2%/*}/addon.prop" ] && continue
-    Download
 done
 }
 
