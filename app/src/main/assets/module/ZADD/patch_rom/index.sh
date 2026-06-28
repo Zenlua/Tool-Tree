@@ -6,7 +6,7 @@
 #<param name="fix_window" label="'$label_fix_window'" desc="'$required_files_text': miui-services.jar" type="bool" />
 
 home(){
-echo '<?xml version="1.0" encoding="UTF-8" ?>
+xml_print '<?xml version="1.0" encoding="UTF-8" ?>
 <group>
 
 <group title="'$google_text'">
@@ -137,7 +137,7 @@ slog kill_apk_list "$kill_apk_list"
 </action>
 </group>
 
-</group>' | sed -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g'
+</group>'
 }
 
 # điền dữ liệu mặc định

@@ -6,7 +6,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?><page>'
 # lấy dữ liệu ngôn ngữ
 source $MPAT/language.sh
 
-echo '<group>
+xml_print '<group>
 <action>
 <title>'$name_text'</title>
 <set>
@@ -20,7 +20,7 @@ checktime
 <param name="MUTIIMG" label="'$option_text'" options-sh="findfile 6 $PTSD" desc="'$merge_partition_3'" required="true" />
 <param name="IMAGE" options-sh="findfile 3 $PTSD | sed '"'/system\./d'"'" desc="'$merge_partition_5'" required="true" multiple="true"/>
 </action>
-</group>' | sed -z -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g'
+</group>'
 
 # kết thúc
 echo '</page>'

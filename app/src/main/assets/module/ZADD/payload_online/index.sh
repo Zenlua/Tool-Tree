@@ -3,8 +3,7 @@
 
 home(){
 # index
-echo '
-<group title="'$google_text'">
+xml_print '<group title="'$google_text'">
 <action shell="hidden" reload="true">
 <title>'$payload_text_1'</title>
 <summary>'$payload_text_2' '"http://...$(glog url_text_payload | tail -c 25)"'</summary>
@@ -30,7 +29,7 @@ echo
 checktime
 </set>
 </action>
-</group>' | sed -z -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g'
+</group>'
 }
 
 # Thư mục hiện tại
