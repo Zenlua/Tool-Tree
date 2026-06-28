@@ -1,8 +1,11 @@
 
-if [ -e $MPAT/auto.prop ]; then
-source $MPAT/auto.prop
-else
+# Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop")"
+[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
+
+# Google dịch
+if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
+[ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
 fi
 
 bDeviceLifeTimeEstA=""

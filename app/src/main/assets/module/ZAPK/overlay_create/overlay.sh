@@ -1,9 +1,12 @@
 # kakathic
 MPAT="${0%/*}"
-if [ -f $MPAT/auto.prop ] && [ "$(glog auto_trans_text_${MPAT##*/})" == 1 ];then
-source $MPAT/auto.prop
-else
-eval "$(grep "=\"" $MPAT/addon.prop)"
+# Ngôn ngữ mặc định
+eval "$(grep '="' "$MPAT/addon.prop")"
+[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
+
+# Google dịch
+if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
+[ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
 fi
 
 [ -d "$overlay_folder" ] || killtree "$overlay_text_1"

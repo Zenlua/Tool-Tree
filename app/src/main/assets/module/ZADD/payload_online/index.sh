@@ -47,6 +47,8 @@ fi
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
+[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
+
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
 trans_add "$MPAT"

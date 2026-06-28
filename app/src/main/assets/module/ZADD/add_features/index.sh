@@ -2,8 +2,7 @@
 # kakathic
 
 # home
-home(){ xml_print '
-<group title="'$google_text'">
+home(){ xml_print '<group title="'$google_text'">
 <action warn="'$oat_text_1'">
 <title>'$oat_text_3'</title>
 <desc>'$oat_text_4'</desc>
@@ -124,6 +123,8 @@ MPAT="${0%/*}"
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
+[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
+
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
 trans_add "$MPAT"
