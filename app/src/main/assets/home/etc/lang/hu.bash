@@ -46,6 +46,7 @@ tool_unpack_text="Dekódoló eszköz"
 tool_repack_text="Csomagolóeszköz"
 customize_tools_text="Eszközök testreszabása"
 convert_img_text="Az átalakítás a fordítás befejezése után folytatódik"
+list_partition_text="Dekódolt partíciólista"
 
 # Home
 home_text_1="Alkalmazásinformációk és funkciók"

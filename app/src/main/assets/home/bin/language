@@ -1,13 +1,13 @@
 # Kakathic
 
 # ngôn ngữ English
-source $ETC/lang/default.sh
+source $ETC/lang/default.bash
 
 # Chạy file ngôn ngữ có sẵn
-if [ -f "$ETC/lang/${LANGUAGE}-${COUNTRY}.sh" ];then
-source "$ETC/lang/${LANGUAGE}-${COUNTRY}.sh"
-elif [ -f "$ETC/lang/$LANGUAGE.sh" ];then
-source "$ETC/lang/$LANGUAGE.sh"
+if [ -f "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash" ];then
+source "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash"
+elif [ -f "$ETC/lang/$LANGUAGE.bash" ];then
+source "$ETC/lang/$LANGUAGE.bash"
 fi
 
 # chạy google dịch

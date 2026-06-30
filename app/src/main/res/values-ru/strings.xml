@@ -128,4 +128,12 @@
     <string name="theme_wallpaper_light">Обои + Светлый</string>
     <string name="theme_text">Темы</string>
     <string name="open_in_browser">Открыть в браузере</string>
+
+    <string name="update_text">Обновить</string>
+    <string name="warning_root_text">Для использования этой функции требуются права root!</string>
+    <string name="refresh_text">Обновить</string>
+    <string name="translation_text">Google Переводчик</string>
+    <string name="options_text">Параметры</string>
+    <string name="save_text">Сохранить в</string>
+    
 </resources>

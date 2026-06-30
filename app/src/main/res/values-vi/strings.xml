@@ -130,4 +130,11 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="theme_wallpaper_light">Hình nền sáng</string>
     <string name="theme_text">Chủ đề</string>
     <string name="open_in_browser">Mở bằng trình duyệt</string>
+    
+    <string name="update_text">Cập nhật</string>
+    <string name="warning_root_text">Tính năng cần quyền (root) để sử dụng !</string>
+    <string name="refresh_text">Làm mới</string>
+    <string name="translation_text">Google dịch</string>
+    <string name="options_text">Lựa chọn</string>
+    <string name="save_text">Lưu ở</string>
 </resources>

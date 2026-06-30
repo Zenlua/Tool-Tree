@@ -48,6 +48,7 @@ tool_unpack_text="Công cụ giải mã"
 tool_repack_text="Công cụ xây dựng"
 customize_tools_text="Tùy chỉnh công cụ"
 convert_img_text="Sau khi xây dựng xong sẽ tiếp tục chuyển đổi"
+list_partition_text="Danh sách phân vùng đã giải mã"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"

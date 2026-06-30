@@ -59,22 +59,6 @@ fi
 </action>'
 }
 
-show_config(){
-# thời gian build rom
-time_riviu="$(date -d "@`glog build_times 1230768000`")"
-xml_print '<action icon="'`urlpng config`'" shell="hidden" reload="true">
-<title>'$config_text'</title>
-<param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" title="'$builds_text_5'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar"/>
-<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" title="'$convert_text_1'" desc="'$convert_text_2'"/>
-<param name="build_times" label="'$time_text'" value-sh="glog build_times" type="number" title="'$build_time_text_1'" desc="'$build_time_text_2' '$time_riviu'" required="required" />
-<set>
-slog muc_nen "$muc_nen"
-slog nen_br "$nen_br"
-slog build_times "$build_times"
-</set>
-</action>'
-}
-
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ];then
 [ -f $ETC/lang/$LANGUAGE.sh ] && texgg="$LANGUAGE.sh" || texgg=vi.sh
@@ -143,14 +127,11 @@ fi
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' ROM</option>
-<option type="default" id="v4" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $config_text'</option>
 <option type="default" id="v2" auto-off="true" interruptible="false" >'$open_activity_text' ROM</option>
 <option type="default" id="v3" auto-off="true" interruptible="false" >'$open_activity_text' (data-root)</option>
 <handler>
 if [ "$menu_id" == "v1" ];then
 [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
-elif [ "$menu_id" == "v4" ];then
-[ "$(glog hide_show_config)" == 1 ] && slog hide_show_config 0 || slog hide_show_config 1
 elif [ "$menu_id" == "v2" ];then
 echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTSD#$SDCARD_PATH}']"
 elif [ "$menu_id" == "v3" ];then
@@ -501,13 +482,9 @@ rm -fr "$vl"
 done
 </set>
 </action>
-</group>'
+</group>
 
-echo "<group>"
-show_config
-echo "</group>"
-
-xml_print '<group>
+<group>
 <action icon="'`urlpng list_tool`'" shell="hidden" reload="true">
 <title>'$customize_tools_text'</title>
 <param name="un_tool_ext4" value-sh="glog un_tool_ext4 0" label="'$option_text'" title="'$tool_unpack_text' ext4" options-sh="echo -e '"'0|imgextractor\n1|imgkit_scuti'"' "/>
@@ -872,20 +849,15 @@ checktime
 
 Utilities(){
 [ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null &
+time_riviu="$(date -d "@`glog build_times 1230768000`")"
 
 if [ "$(glog hide_show 1)" == 1 ];then
     echo "<group>"
     show_sett
-    [ "$(glog hide_show_config 1)" == 1 ] && show_config
     echo "</group>"
 else
     desc_rom="$folder_text: $(glog PTSD | sed "s|$SDCARD_PATH|\/sdcard|")"
     desc_rom1="$projects_text: $PTSH"
-    if [ "$(glog hide_show_config 1)" == 1 ];then
-    echo "<group>"
-    show_config
-    echo "</group>"
-    fi
 fi
 
 xml_print '<group>
@@ -917,9 +889,10 @@ checktime
 <action icon="'`urlpng build`'" desc="'$desc_rom1'">
 <title>'$build_text'</title>
 <param name="boolbox" value-sh="glog boolboxdjh" label="'$deleted_project_text'" type="checkbox" />
-<param name="IMAGES" desc="'$builds_text_1'" multiple="true" options-sh="findfile 0 $SDH/$PTSH" required="true"/>
+<param name="IMAGES" title="'$list_partition_text'" desc="'$builds_text_1'" multiple="true" options-sh="findfile 0 $SDH/$PTSH" required="true"/>
 <param name="dinh_dang" value-sh="glog dinh_dang 0" label="'$build_text'" desc="'$builds_text_2'" options-sh="echo -e '"'0|$default_text\n1|RO (EROFS)\n2|RW (EXT4)\n3|RO (F2FS)\n4|RW (F2FS)'"'"/>
 <param name="dang_nen" value-sh="glog dang_nen lz4hc" label="'$option_text'" desc="'$builds_text_3'" options-sh="echo -e '"'lz4hc\nlz4\nlzma\ndeflate\nzstd'"'"/>
+<param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar"/>
 <param name="format_img" value-sh="glog format_imgs raw" label="'$convert_text'" desc="'$convert_img_text'" >
 <option value="raw">File.img (raw)</option>
 <option value="sparse">File.img (sparse)</option>
@@ -928,8 +901,10 @@ checktime
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
+<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'"/>
+<param name="build_times" label="'$time_text'" value-sh="glog build_times" type="number" desc="'$build_time_text_1': '$time_riviu'" required="required" />
 <param name="offfscontex" value-sh="glog offfscontex 1" label="'$patch_text_fscontex'" type="switch" />
-<param name="build_size" label="Megabit" value-sh="glog build_size 0" type="number" desc="'$builds_text_7'" required="required" />
+<param name="build_size" label="'$sizes_text'" value-sh="glog build_size 0" type="number" desc="'$builds_text_7'" required="required" />
 <set>
 slog dang_nen "$dang_nen"
 slog format_imgs "$format_img"
@@ -937,8 +912,11 @@ slog boolboxdjh "$boolbox"
 slog dinh_dang "$dinh_dang"
 slog build_size "$build_size"
 slog offfscontex "$offfscontex"
+slog muc_nen "$muc_nen"
+slog nen_br "$nen_br"
+slog build_times "$build_times"
 for vkl in $IMAGES; do
-repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD" -n "$dang_nen" -l $(glog muc_nen 8) -k $dinh_dang -s $build_size -d $boolbox -c $format_img -p "$offfscontex"
+repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD" -n "$dang_nen" -l $muc_nen -k $dinh_dang -s $build_size -d $boolbox -c $format_img -p "$offfscontex"
 done
 echo "'$save_text' $PTSD/out"
 echo
@@ -1001,7 +979,7 @@ checktime
 <action icon="'`urlpng convert_file`'" >
 <title>'$convert_text_1'</title>
 <param name="cboxk" value-sh="glog cboxksbhd" label="'$deleted_file_text'" type="checkbox" />
-<param name="format_img" value-sh="glog format_img raw" required="true">
+<param name="format_img" value-sh="glog format_img raw" required="true" label="'$option_text'" >
 <option value="raw">File.img (raw)</option>
 <option value="sparse">File.img (sparse)</option>
 <option value="zstd">File.img.zstd</option>

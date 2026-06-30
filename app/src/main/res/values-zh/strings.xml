@@ -129,4 +129,12 @@
     <string name="theme_wallpaper_light">壁纸 + 浅色</string>
     <string name="theme_text">主题</string>
     <string name="open_in_browser">使用浏览器打开</string>
+
+    <string name="update_text">更新</string>
+    <string name="warning_root_text">此功能需要 Root 权限才能使用！</string>
+    <string name="refresh_text">刷新</string>
+    <string name="translation_text">谷歌翻译</string>
+    <string name="options_text">选项</string>
+    <string name="save_text">保存至</string>
+    
 </resources>
