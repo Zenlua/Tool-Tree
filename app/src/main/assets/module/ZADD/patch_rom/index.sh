@@ -42,7 +42,7 @@ slog del_app_patch "$del_app_patch"
 
 <action title="'$title_boot_patch'" warn="'$title_boot_patch2'" >
 <param name="FOLDER" option-sh="findfile 0 $SDH/$PTSH | grep boot" desc="'$string_text_2': vendor_boot, boot" label="'$select_text'" required="true"/>
-<param name="fix_fake_lock" label="'$title_boot_patch3'" desc="" type="bool" />
+<param name="fix_fake_lock" label="'$title_boot_patch3'" desc="'$title_boot_patch3_desc'" type="bool" />
 <param name="fix_diselinux" label="'$title_boot_patch4'" desc="" type="bool" />
 <set>
 '$pathsh' patch_boot "$FOLDER"

@@ -64,6 +64,7 @@ title_boot_patch2="If there are two boot options, just patch vendor_boot; for ol
 title_boot_patch3="Add a fake lock to the bootloader"
 title_boot_patch4="Disable Selinux"
 text_del_file="Auto find folders and files to delete"
+title_boot_patch3_desc="It should not be used on MTK devices"
 
 action_title="Test Application"
 action_desc="Run the application without restarting"

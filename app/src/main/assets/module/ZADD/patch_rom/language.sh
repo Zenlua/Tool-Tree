@@ -53,6 +53,7 @@ title_boot_patch2="Nếu như có hai boot chỉ cần vá vendor_boot, đối v
 title_boot_patch3="Thêm fake lock"
 title_boot_patch4="Tắt selinux"
 text_del_file="Tự tìm thư mục, và tệp để xóa"
+title_boot_patch3_desc="Nó không nên được sử dụng trên các thiết bị MTK"
 
 action_title="Thử nghiệm ứng dụng"
 action_desc="Chạy ứng dụng mà không cần khởi động lại"
