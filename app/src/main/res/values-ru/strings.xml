@@ -135,5 +135,6 @@
     <string name="translation_text">Google Переводчик</string>
     <string name="options_text">Параметры</string>
     <string name="save_text">Сохранить в</string>
+    <string name="remove_text">Удалять</string>
     
 </resources>

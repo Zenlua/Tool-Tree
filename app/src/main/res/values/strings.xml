@@ -151,5 +151,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="translation_text">Google Translate</string>
     <string name="options_text">Options</string>
     <string name="save_text">Save to</string>
+    <string name="remove_text">Remove</string>
 
 </resources>

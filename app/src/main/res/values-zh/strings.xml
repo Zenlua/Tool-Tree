@@ -136,5 +136,6 @@
     <string name="translation_text">谷歌翻译</string>
     <string name="options_text">选项</string>
     <string name="save_text">保存至</string>
+    <string name="remove_text">消除</string>
     
 </resources>

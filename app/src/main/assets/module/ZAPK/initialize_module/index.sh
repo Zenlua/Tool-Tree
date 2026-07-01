@@ -9,7 +9,7 @@ xml_print '<group title="'$google_text'">
 <action warn="'$lang_action_warn'" >
 <title>'$lang_title'</title>
 <summary>'$lang_summary_path''$path_modun'</summary>
-<param name="uri_file_modun" value-sh="glog uri_file_modun" type="file" required="required" />
+<param name="uri_file_modun" value-sh="glog uri_file_modun" options-sh="findfile files $PTAD" required="required" label="@string/options_text" multiple="true"/>
 <param name="uri_adb_moduls" desc="'$lang_desc_adb'" placeholder="/system_ext/priv-app/Settings/Settings.apk" value-sh="glog uri_adb_moduls" type="text" />
 <param name="prop_modunls" desc="'$lang_desc_prop'" placeholder="ro.control_privapp_permissions=log" value-sh="cat '$path_modun'/system.prop 2>/dev/null" type="text" />
 <set>
@@ -18,24 +18,26 @@ slog uri_file_modun "$uri_file_modun"
 [ -f '$path_modun'/remove ] && rm -fr '$path_modun'/remove
 mkdir -p '$path_modun' '$path_modun2'
 echo "$prop_modunls" > '$path_modun2'/system.prop
+for vcc in $uri_file_modun; do
 if [ "$uri_adb_moduls" ]; then
 mkdir -p "'$path_modun2'${uri_adb_moduls%/*}"
-cp -rf "$uri_file_modun" "'$path_modun2'$uri_adb_moduls"
+cp -rf "$PTAD/$vcc" "'$path_modun2'$uri_adb_moduls"
 echo "'$lang_save_at''$path_modun2'$uri_adb_moduls"
 echo
 else
 echo "'$lang_searching'"
 echo
-link_find_file="$(find -L /system -name "${uri_file_modun##*/}" -print -quit)"
+link_find_file="$(find -L /system -name "$vcc" -type f -print -quit)"
     if [ "$link_find_file" ]; then
     mkdir -p "'$path_modun2'${link_find_file%/*}"
-    cp -rf "$uri_file_modun" "'$path_modun2'$link_find_file"
+    cp -rf "$PTAD/$vcc" "'$path_modun2'$link_find_file"
     echo "'$lang_save_at''$path_modun2'$link_find_file"
     echo
     else
-    echo "'$lang_not_found'\${uri_file_modun##*/}'$lang_input_notice'"
+    echo "'$lang_not_found'\$vcc'$lang_input_notice'"
     fi
 fi
+done
 echo "id=Tool-Tree
 name=Tool-Tree Module
 version=1.0
@@ -45,6 +47,20 @@ description=Modified system files" | tee '$path_modun'/module.prop
 chmod 644 '$path_modun'/module.prop '$path_modun2'/system.prop
 touch '$path_modun'/update
 set_permis -R -o 0:0 -c u:object_r:system_file:s0 '$path_modun2'/system
+</set>
+</action>
+</group>
+
+<group>
+<action>
+<title>'$lang_del_tile'</title>
+<desc>'$lang_del_desc'</desc>
+<param name="del_file_modun" desc="'$lang_del_desc2' '$path_modun2'" value-sh="glog del_file_modun" label="@string/options_text" options-sh="[ -d '$path_modun2' ] && find '$path_modun2'/system -type f -printf '"'%p|%f\n'"'" required="required" multiple="true"/>
+<set>
+for vcx in $del_file_modun; do
+echo "Delete file: $vcx"
+[ -f "$vcx" ] && rm -fr "$vcx"
+done
 </set>
 </action>
 </group>'
