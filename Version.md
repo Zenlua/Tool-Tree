@@ -1,7 +1,8 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: 1.4.8 (30-6-2026)**
+**Version: 1.4.8 (1-7-2026)**
 
++ Fix add-on initialize module
 + Update many other things
 + Speed optimization
 + Auto-populate super partition payload list

@@ -15,7 +15,6 @@ xml_print '<group title="'$google_text'">
 <set>
 slog uri_adb_moduls "$uri_adb_moduls"
 slog uri_file_modun "$uri_file_modun"
-[ -d '$path_modun2' ] && rm -fr '$path_modun2'
 [ -f '$path_modun'/remove ] && rm -fr '$path_modun'/remove
 mkdir -p '$path_modun' '$path_modun2'
 echo "$prop_modunls" > '$path_modun2'/system.prop
