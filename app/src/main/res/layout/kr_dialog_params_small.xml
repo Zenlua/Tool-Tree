@@ -2,32 +2,45 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/dialogRoot"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:orientation="vertical" 
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/krscript_item_ripple_kon"
-        android:orientation="vertical">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdge="vertical"
+        android:overScrollMode="never"
+        android:scrollbars="none">
 
-        <TextView
-            android:id="@+id/title"
-            style="@style/dialogTitle" />
-        <TextView
-            android:id="@+id/desc"
-            style="@style/dialogDesc" />
-        <TextView
-            android:id="@+id/warn"
-            style="@style/dialogWarn" />
-
-        <FrameLayout
-            android:id="@+id/kr_params_center"
-            android:layout_margin="16dp"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical" />
-    </LinearLayout>
+            android:layout_marginTop="6dp"
+            android:background="@drawable/krscript_item_ripple_kon"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/title"
+                style="@style/dialogTitle" />
+            <TextView
+                android:id="@+id/desc"
+                style="@style/dialogDesc" />
+            <TextView
+                android:id="@+id/warn"
+                style="@style/dialogWarn" />
+
+            <FrameLayout
+                android:id="@+id/kr_params_center"
+                android:layout_margin="16dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+    </ScrollView>
 
     <LinearLayout
         android:layout_width="match_parent"

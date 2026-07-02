@@ -5,6 +5,5 @@
     android:fadingEdge="vertical"
     android:overScrollMode="never"
     android:scrollbars="none"
-    android:scrollbarSize="0dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />
