@@ -18,6 +18,7 @@ show_help() {
   echo "            34: Android 14"
   echo "            35: Android 15"
   echo "            36: Android 16"
+  echo "            37: Android 17"
   echo "  -c    compress apex into capex: 0"
   echo "            0: uncompressed"
   echo "            1: compressed"
