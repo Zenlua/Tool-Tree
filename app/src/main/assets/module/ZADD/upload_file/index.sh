@@ -5,7 +5,7 @@
 home(){ xml_print '<group title="'$google_text'">
 <action>
 <title>Upload Gofile</title>
-<param name="FILE" type="file" required="true"/>
+<param name="FILE" type="file" required="true" desc="https://gofile.io"/>
 <set>
 set -o pipefail
 if [ -f "$FILE" ];then
@@ -28,7 +28,7 @@ fi
 
 <action>
 <title>Upload Pixeldrain</title>
-<param name="FILE" type="file" required="true"/>
+<param name="FILE" type="file" required="true" desc="https://pixeldrain.com"/>
 <param name="TEXT" label="Token" desc="Token: xxx-xxx-xxx-xxx-xxx" value-sh="glog tocken_key_upload_free" type="text"/>
 <set>
 set -o pipefail

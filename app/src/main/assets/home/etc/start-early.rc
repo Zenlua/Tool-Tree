@@ -2,7 +2,8 @@
 source language 2>/dev/null
 
 # Dọn dẹp tmp
-rm -fr $TMPDIR/* $HOME/cache/* $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
+[ -d "$TMPDIR" ] && rm -fr $TMPDIR/* &
+rm -fr $HOME/cache/* $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
 
 (
 if checkonline; then
@@ -14,7 +15,11 @@ if checkonline; then
     fi
 
     # Thông báo cập nhật
-    websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
+    if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
+        websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/beta)"
+    else
+        websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
+    fi
     websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
     tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
     if [[ ${PACKAGE_VERSION_NAME//./} -gt $tagname ]];then
