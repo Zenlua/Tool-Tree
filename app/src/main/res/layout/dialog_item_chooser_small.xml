@@ -71,7 +71,7 @@
         android:background="@drawable/krscript_item_ripple_kon"
         android:paddingEnd="5dp"
         android:id="@+id/item_list"
-        android:scrollbars="none"
+        android:scrollbarSize="0dp"
         android:divider="@null"
         android:fastScrollEnabled="true"
         android:scrollbarStyle="insideOverlay"

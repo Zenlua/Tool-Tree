@@ -14,7 +14,7 @@
         android:requiresFadingEdge="vertical"
         android:fadingEdge="vertical"
         android:overScrollMode="never"
-        android:scrollbars="none">
+        android:scrollbarSize="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"

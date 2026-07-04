@@ -36,7 +36,7 @@
             android:layout_height="match_parent"
             android:requiresFadingEdge="vertical"
             android:fadingEdge="vertical"
-            android:scrollbars="none"
+            android:scrollbarSize="0dp"
             android:layout_above="@+id/bottom_actions"
             android:padding="16dp" />
 

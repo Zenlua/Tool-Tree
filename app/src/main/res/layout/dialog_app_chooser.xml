@@ -61,7 +61,7 @@
 
     <ListView
         android:id="@+id/app_list"
-        android:scrollbars="none"
+        android:scrollbarSize="0dp"
         android:layout_weight="1"
         android:divider="@null"
         android:fastScrollEnabled="true"
