@@ -16,7 +16,7 @@ if checkonline; then
 
     # Thông báo cập nhật
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
-        websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/beta)"
+        websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/beta)"
     else
         websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
     fi
