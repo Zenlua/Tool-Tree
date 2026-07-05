@@ -132,7 +132,7 @@ checktime
 slog dem_giay $dem_giay
 slog kill_customize "$kill_customize"
 slog kill_apk_list "$kill_apk_list"
-'$pathsh' test_app "$kill_apk_list"
+'$MPAT'/index.sh test_app "$kill_apk_list"
 </set>
 </action>
 </group>
@@ -199,6 +199,31 @@ fi
 else
     killtree "$network_text"
 fi
+}
+
+test_app(){
+echo "File detection: $@"
+echo
+package_apk="$(apkeditor info -package -i "$@" | cut -d '"' -f2)"
+echo "Package name: $package_apk"
+echo
+urlapk="$(pm path $package_apk | cut -d: -f2)"
+su -mm -c umount -l "${urlapk%/*}" 2>/dev/null
+chcon -R u:object_r:system_file:s0 "${@%/*}" >/dev/null 2>&1
+su -mm -c mount --bind "${@%/*}" "${urlapk%/*}"
+pkill -f $package_apk >/dev/null 2>&1
+[ "$kill_customize" ] && pkill -f $kill_customize >/dev/null 2>&1
+while [ $dem_giay -gt 0 ]
+do
+    echo "Boot time: ${dem_giay}s"
+    sleep 1
+    ((dem_giay--))
+done
+echo
+echo "Finish, restore the application."
+su -mm -c umount -l "${urlapk%/*}" 2>/dev/null
+killall $package_apk >/dev/null 2>&1
+[ "$kill_customize" ] && killall $kill_customize >/dev/null 2>&1
 }
 
 # index
