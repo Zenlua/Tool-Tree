@@ -66,4 +66,8 @@ param2_desc="Sau khi hết thời gian chờ ứng dụng sẽ khôi phục lạ
 param3_label="Tên gói app"
 param3_desc="Khi thêm package nó sẽ buộc dừng ứng dụng đã chọn và cả package vừa thêm"
 root_warrn="Yêu cầu root để sử dụng tính năng"
+test_app_text_1="Phát hiện tập tin:"
+test_app_text_2="Tên gói:"
+test_app_text_3="Thời gian khởi động:"
+test_app_text_4="Hoàn tất, khôi phục ứng dụng"
 fi

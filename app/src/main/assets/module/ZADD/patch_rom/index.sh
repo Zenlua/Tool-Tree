@@ -202,10 +202,10 @@ fi
 }
 
 test_app(){
-echo "File detection: $@"
+echo "$test_app_text_1 $@"
 echo
 package_apk="$(apkeditor info -package -i "$@" | cut -d '"' -f2)"
-echo "Package name: $package_apk"
+echo "$test_app_text_2 $package_apk"
 echo
 urlapk="$(pm path $package_apk | cut -d: -f2)"
 su -mm -c umount -l "${urlapk%/*}" 2>/dev/null
@@ -215,12 +215,12 @@ pkill -f $package_apk >/dev/null 2>&1
 [ "$kill_customize" ] && pkill -f $kill_customize >/dev/null 2>&1
 while [ $dem_giay -gt 0 ]
 do
-    echo "Boot time: ${dem_giay}s"
+    echo "$test_app_text_3 ${dem_giay}s"
     sleep 1
     ((dem_giay--))
 done
 echo
-echo "Finish, restore the application."
+echo "$test_app_text_4"
 su -mm -c umount -l "${urlapk%/*}" 2>/dev/null
 killall $package_apk >/dev/null 2>&1
 [ "$kill_customize" ] && killall $kill_customize >/dev/null 2>&1

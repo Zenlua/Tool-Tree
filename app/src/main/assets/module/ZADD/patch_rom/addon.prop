@@ -77,3 +77,7 @@ param2_desc="After the timeout, the application will revert to its original stat
 param3_label="Package Name"
 param3_desc="When a package is added, it will force-close both the selected application and the newly added package"
 root_warrn="Requires root to use feature"
+test_app_text_1="File detection:"
+test_app_text_2="Package name:"
+test_app_text_3="Boot time:"
+test_app_text_4="Finish, restore the application"
