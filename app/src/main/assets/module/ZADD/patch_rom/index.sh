@@ -126,7 +126,7 @@ checktime
 [ "$ROT" == 0 ] && echo "'$root_warrn'" || echo 0
 </lock>
 <param name="kill_apk_list" title="'"$param1_title"'" option-sh="'$pathsh' list_apk_file" value-sh="glog kill_apk_list" required="true" label="'"$param1_label"'" desc="'"$param1_desc"'" />
-<param name="dem_giay" value-sh="glog dem_giay 60" label="'"$param2_label"'" type="seekbar" min="60" max="300" desc="'"$param2_desc"'" />
+<param name="dem_giay" value-sh="glog dem_giay 60" label="'"$param2_label"'" type="seekbar" min="5" max="300" desc="'"$param2_desc"'" />
 <param name="kill_customize" label="'"$param3_label"'" value-sh="glog kill_customize" type="text" placeholder="com.android.systemui" desc="'"$param3_desc"'" />
 <set>
 slog dem_giay $dem_giay

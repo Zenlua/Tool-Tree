@@ -57,7 +57,7 @@ jobs:
           cp -rf app/build/outputs/apk/*/*.apk "Up/Tool-Tree.$VER.apk"
           cp -rf app/build/outputs/apk/*/*.apk "Beta/Tool-Tree-beta.apk"
           ls Up
-          echo -e "- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
+          echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
           if [ "$UPTG" == "true" ];then
           echo "Telegram"
           chat_tg="🎉 Release new version Tool-Tree
