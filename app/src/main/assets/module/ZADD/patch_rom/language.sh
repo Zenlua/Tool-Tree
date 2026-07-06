@@ -70,4 +70,7 @@ test_app_text_1="Phát hiện tập tin:"
 test_app_text_2="Tên gói:"
 test_app_text_3="Thời gian khởi động:"
 test_app_text_4="Hoàn tất, khôi phục ứng dụng"
+add_another_app_text="Thêm ứng dụng khác"
+add_another_app_text_2="Nó sẽ thay thế tệp tin PackageInstaller.apk, GooglePackageInstaller.apk nếu có sẵn"
+add_another_app_text_3="Thêm Safetycore làm app hệ thống"
 fi

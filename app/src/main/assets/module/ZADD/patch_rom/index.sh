@@ -73,7 +73,7 @@ checktime
 </action>
 
 <action title="'$title_ime'" summary="Xiaomi">
-<param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_key_patch_os" multiple="true" desc="Note: MiuiSystemUI.apk (global)§'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
+<param name="FILE" option-sh="'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk" value-sh="glog fix_key_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK§Note: MiuiSystemUI.apk (global)" required="true"/>
 <param name="ime_app" placeholder="com.google.android.inputmethod.latin" desc="'$desc_ime_app'" type="text" value-sh="glog ime_app" required="true"/>
 <param name="ime_color" placeholder="#f0f3f8" desc="'$desc_color_light'" type="text" value-sh="glog ime_color" required="true"/>
 <param name="ime_color_dark" placeholder="#1e1f21" desc="'$desc_color_dark'" type="text" value-sh="glog ime_color_dark" required="true"/>
@@ -133,6 +133,17 @@ slog dem_giay $dem_giay
 slog kill_customize "$kill_customize"
 slog kill_apk_list "$kill_apk_list"
 '$MPAT'/index.sh test_app "$kill_apk_list"
+</set>
+</action>
+</group>
+
+<group>
+<action title="'$add_another_app_text'" summary="Xiaomi">
+<param name="add_app" label="InstallerX Revived" desc="'$add_another_app_text_2'" type="bool" />
+<param name="add_app_2" label="Safetycore" desc="'$add_another_app_text_3'" type="bool" />
+<set>
+'$pathsh' fixkey "$FILE"
+checktime
 </set>
 </action>
 </group>
