@@ -21,7 +21,7 @@ xml_print '<group title="'$google_text'">
 echo "Downloading..." | trans -b $LANGUAGE-$COUNTRY
 echo
 for vv in $partition; do
-'$MPAT'/payload.sh $vv
+'$MPAT'/payload.bash $vv
 done
 echo
 echo "'$payload_text_4' $PTSD"
@@ -46,7 +46,7 @@ fi
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
-[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
+[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
 
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then

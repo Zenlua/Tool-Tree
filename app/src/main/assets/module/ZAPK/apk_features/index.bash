@@ -11,7 +11,7 @@ xml_print '<group title="'$google_text'">
 </lock>
 <set>
 export MPAT='$MPAT'
-'$MPAT'/scrip/ufs.sh
+'$MPAT'/scrip/ufs.bash
 </set>
 </action>
 </group>
@@ -54,7 +54,7 @@ MPAT="${0%/*}"
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
-[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
+[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
 
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then

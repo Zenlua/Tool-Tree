@@ -28,7 +28,7 @@ xml_print '<?xml version="1.0" encoding="UTF-8" ?>
 <action shell="hidden" reload="true">
 <title>'$clean_text_1'</title>
 <summary>'$clean_text_2' '"$path_clean"'</summary>
-<param name="project" label="'$select_text_1'" options-sh="'$MPAT'/index.sh search_pro" value-sh="glog project_apk_clean" required="true" />
+<param name="project" label="'$select_text_1'" options-sh="'$MPAT'/index.bash search_pro" value-sh="glog project_apk_clean" required="true" />
 <set>slog project_apk_clean "$project"</set>
 </action>
 </group>
@@ -36,7 +36,7 @@ xml_print '<?xml version="1.0" encoding="UTF-8" ?>
 <group>
 <action reload="true" visible="echo '$show_clean'">
 <title>'$clean_text_3'</title>
-<param name="LIST" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.sh search_values"/>
+<param name="LIST" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_values"/>
 <set>
 for vv in $LIST; do
 echo "'$clean_text_5' $vv"
@@ -57,7 +57,7 @@ home(){
 xml_print '<?xml version="1.0" encoding="UTF-8" ?>
 <group>
 <group title="'$google_text'">
-<page title="'$home_text_1'" config-sh="'$MPAT'/index.sh clean"/>
+<page title="'$home_text_1'" config-sh="'$MPAT'/index.bash clean"/>
 </group>
 </group>'
 }
@@ -67,7 +67,7 @@ MPAT="${0%/*}"
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
-[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
+[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
 
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then

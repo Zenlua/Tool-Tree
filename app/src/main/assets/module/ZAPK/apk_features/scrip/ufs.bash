@@ -1,7 +1,7 @@
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop")"
-[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
+[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
 
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then

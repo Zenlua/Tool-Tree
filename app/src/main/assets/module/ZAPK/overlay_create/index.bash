@@ -9,7 +9,7 @@ xml_print '<group title="'$google_text'">
 <param desc="'$home_text_7'" name="overlay_folder" type="folder" value-sh="glog overlay_folder" required="true" editable="true"/>
 <set>
 slog overlay_folder "$overlay_folder"
-'$MPAT'/overlay.sh
+'$MPAT'/overlay.bash
 </set>
 </action>
 
@@ -19,7 +19,7 @@ slog overlay_folder "$overlay_folder"
 <set>
 slog extract_folder_lang "$extract_folder_lang"
 slog extract_folder_lang_text "$extract_folder_lang_text"
-'$MPAT'/extract.sh
+'$MPAT'/extract.bash
 </set>
 </action>
 
@@ -31,7 +31,7 @@ MPAT="${0%/*}"
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
-[ -f "$MPAT/language.sh" ] && source "$MPAT/language.sh"
+[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
 
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
