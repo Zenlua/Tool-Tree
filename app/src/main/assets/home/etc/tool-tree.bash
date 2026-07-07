@@ -1403,8 +1403,9 @@ google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
 fi
 
+#id="'${dirvad##*/}'"
 xml_print '<group>
-<page id="'${dirvad##*/}'" icon="'`urladd icon`'" '$pagesh'>
+<page icon="'`urladd icon`'" '$pagesh'>
 <title>'$(gprop name $vadd)'</title>
 <desc>'$desc_tec'</desc>
 '"$summss"'
@@ -1455,7 +1456,9 @@ for vadd in $PATHADD/*/addon.prop; do
     dirvad="${vadd%/*}"
     pin_text_add="$unpin_text"
     [ -f "$dirvad/pin" ] || continue
-    Vips
+    if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.xml" ]]; then
+        Vips
+    fi
 done
 
 # load trang không có pin
@@ -1463,18 +1466,18 @@ for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     pin_text_add="$pin_text"
-    if [ -f "$dirvad/pin" ] || [ ! -f "$dirvad/index.sh" ] || [ ! -f "$dirvad/index.xml" ]; then
-        continue
+    [ -f "$dirvad/pin" ] && continue
+    if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.xml" ]]; then
+        Vips
     fi
-    Vips
 done
 
-# load trang tải xuống
+# load trang tải xuống ở dưới cùng
 for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     pin_text_add="$pin_text"
-    if [ -f "$dirvad/pin" ] || [ -f "$dirvad/index.sh" ] || [ -f "$dirvad/index.xml" ]; then
+    if [[ -f "$dirvad/pin" || -f "$dirvad/index.sh" || -f "$dirvad/index.xml" ]]; then
         continue
     fi
     Vips
