@@ -2,16 +2,16 @@
 # Kakathic
 
 urlpng(){
-if [ "$(glog Ticon)" != 1 ];then
+if [ "$(glog Ticon)" != 1 ]; then
 [ -f "$ETC/icon/$1.png" ] && echo "$ETC/icon/$1.png" || echo "$ETC/icon/$1_$DARK_MODE.png";
 fi
 }
 
 urladd(){
-if [ "$(glog Ticon)" != 1 ];then
-    if [ -f "$dirvad/$1.png" ];then
+if [ "$(glog Ticon)" != 1 ]; then
+    if [ -f "$dirvad/$1.png" ]; then
     echo "$dirvad/$1.png"
-    elif [ -f "$dirvad/$1_$DARK_MODE.png" ];then
+    elif [ -f "$dirvad/$1_$DARK_MODE.png" ]; then
     echo "$dirvad/$1_$DARK_MODE.png";
     else
     echo "$ETC/icon/icon.png"
@@ -27,11 +27,11 @@ xml_print '
 <param name="Name" desc="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
 <param name="Folder" desc="'$config_text_2'" value-sh="glog PTSD" type="folder" editable="true" required="true"/>
 <set>
-if [ ! -d "$Folder" ] || [ ! -d "$SDH/${Folder##*/}" ];then
+if [ ! -d "$Folder" ] || [ ! -d "$SDH/${Folder##*/}" ]; then
 slog PTSD "$Folder"
 slog PTSH "${Folder##*/}"
 mkdir -p "$SDH/${Folder##*/}" "$Folder/out"
-elif [ -d "$SDH/$Name" ];then
+elif [ -d "$SDH/$Name" ]; then
 slog PTSH "$Name"
 slog PTSD "$SDC/$Name"
 fi
@@ -47,11 +47,11 @@ xml_print '
 <param name="Name" desc="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $APK" value-sh="glog PTAH"/>
 <param name="Folder" desc="'$config_text_2'" value-sh="glog PTAD" type="folder" editable="true" required="true"/>
 <set>
-if [ ! -d "$Folder" ] || [ ! -d "$APK/${Folder##*/}" ];then
+if [ ! -d "$Folder" ] || [ ! -d "$APK/${Folder##*/}" ]; then
 slog PTAD "$Folder"
 slog PTAH "${Folder##*/}"
 mkdir -p "$APK/${Folder##*/}" "$Folder/out"
-elif [ -d "$APK/$Name" ];then
+elif [ -d "$APK/$Name" ]; then
 slog PTAH "$Name"
 slog PTAD "$SDC/$Name"
 fi
@@ -60,10 +60,10 @@ fi
 }
 
 # Tạo ngôn ngữ tự động
-if [ "$(glog language_kkts)" == 'auto' ];then
+if [ "$(glog language_kkts)" == 'auto' ]; then
 [ -f $ETC/lang/$LANGUAGE.sh ] && texgg="$LANGUAGE.sh" || texgg=vi.sh
 sum_md5_kk="$(checksum $ETC/lang/$texgg)"
-    if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]] || [[ "$(grep -cm1 '=""' $ETC/lang/auto.sh)" == 1 ]] || [[ ! -f $ETC/lang/auto.sh ]];then
+    if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]] || [[ "$(grep -cm1 '=""' $ETC/lang/auto.sh)" == 1 ]] || [[ ! -f $ETC/lang/auto.sh ]]; then
     source $ETC/lang/$texgg
     [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
     for vc in $(grep "=" $ETC/lang/$texgg | cut -d= -f1); do
@@ -75,7 +75,7 @@ sum_md5_kk="$(checksum $ETC/lang/$texgg)"
     done
     wait
     error_txxt_bug="$(echo "Translation error detected:" | trans -b $LANGUAGE-$COUNTRY)"
-      if [ "$(grep -cm1 '=""' $ETC/lang/auto.sh)" == 1 ];then
+      if [ "$(grep -cm1 '=""' $ETC/lang/auto.sh)" == 1 ]; then
       showtoast "$error_txxt_bug $(grep -c '=""' $ETC/lang/auto.sh)"
       sed -i '/=""/d' $ETC/lang/auto.sh
       fi
@@ -111,11 +111,11 @@ xml_print '<group>
 <option type="default" id="v2" auto-off="true" interruptible="false" >'$permis_text_4'</option>
 <option type="default" id="v3" auto-off="true" interruptible="false" >'$setting_text_5'</option>
 <handler>
-if [ "$menu_id" == "v1" ];then
+if [ "$menu_id" == "v1" ]; then
 echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
-elif [ "$menu_id" == "v2" ];then
+elif [ "$menu_id" == "v2" ]; then
 echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
-elif [ "$menu_id" == "v3" ];then
+elif [ "$menu_id" == "v3" ]; then
 echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
 fi
 </handler>
@@ -130,11 +130,11 @@ fi
 <option type="default" id="v2" auto-off="true" interruptible="false" >'$open_activity_text' ROM</option>
 <option type="default" id="v3" auto-off="true" interruptible="false" >'$open_activity_text' (data-root)</option>
 <handler>
-if [ "$menu_id" == "v1" ];then
+if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
-elif [ "$menu_id" == "v2" ];then
+elif [ "$menu_id" == "v2" ]; then
 echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTSD#$SDCARD_PATH}']"
-elif [ "$menu_id" == "v3" ];then
+elif [ "$menu_id" == "v3" ]; then
 echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$SDH'/'$PTSH']"
 fi
 </handler>
@@ -210,11 +210,11 @@ xml_print '<group>
 <option type="default" id="v2" auto-off="true" interruptible="false" >'$permis_text_4'</option>
 <option type="default" id="v3" auto-off="true" interruptible="false" >'$setting_text_5'</option>
 <handler>
-if [ "$menu_id" == "v1" ];then
+if [ "$menu_id" == "v1" ]; then
 echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
-elif [ "$menu_id" == "v2" ];then
+elif [ "$menu_id" == "v2" ]; then
 echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
-elif [ "$menu_id" == "v3" ];then
+elif [ "$menu_id" == "v3" ]; then
 echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
 fi
 </handler>
@@ -234,22 +234,22 @@ xml_print '<group>
 <option type="default" id="v4" auto-off="true" interruptible="false" >'$open_activity_text' APK</option>
 <option type="default" id="v5" auto-off="true" interruptible="false" >'$open_activity_text' (data-root)</option>
 <handler>
-if [ "$menu_id" == "v1" ];then
+if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show2)" == 1 ] && slog hide_show2 0 || slog hide_show2 1
-elif [ "$menu_id" == "v2" ];then
+elif [ "$menu_id" == "v2" ]; then
 echo "'$more_text_4' $file"
 echo
 [ "$(unzip -ql "$file" | grep -cm1 ".x509.pem")" == 1 ] || killtree "'$more_text_5' .x509.pem"
 [ "$(unzip -ql "$file" | grep -cm1 ".pk8")" == 1 ] || killtree "'$more_text_5' .pk8"
 unzip -o "$file" *.x509.pem *.pk8 -d "$ETC/key"
-elif [ "$menu_id" == "v3" ];then
+elif [ "$menu_id" == "v3" ]; then
 echo "'$more_text_4' $file"
 echo
 cp -rf "$file" $ETC/apkeditor.jar || killtree "File copy error"
-elif [ "$menu_id" == "v4" ];then
+elif [ "$menu_id" == "v4" ]; then
 [ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
 echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTAD#$SDCARD_PATH}']"
-elif [ "$menu_id" == "v5" ];then
+elif [ "$menu_id" == "v5" ]; then
 [ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
 echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$APK'/'$PTAH']"
 fi
@@ -351,7 +351,7 @@ fi
 <param name="language_kkt" label="'$option_text'" option-sh="echo -e '"'|$default_text\nauto|$google_translate_text\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian'"' " value-sh="glog language_kkts" />
 <set>
 slog language_kkts "$language_kkt"
-if [ "$language_kkt" == "auto" ];then
+if [ "$language_kkt" == "auto" ]; then
 sum_md5_kk="$(checksum $ETC/lang/vi.sh)"
   source $ETC/lang/vi.sh
   [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
@@ -363,7 +363,7 @@ sum_md5_kk="$(checksum $ETC/lang/vi.sh)"
   ) &
   done
   wait
-  if [ "$(grep -cm1 '""' $ETC/lang/auto.sh)" == 1 ];then
+  if [ "$(grep -cm1 '""' $ETC/lang/auto.sh)" == 1 ]; then
   error_txxt_bug="$(echo "Translation error detected:" | trans -b $LANGUAGE-$COUNTRY)"
   killtree "\n$error_txxt_bug $(grep -c '""' $ETC/lang/auto.sh)" >&2
   slog language ""
@@ -435,17 +435,17 @@ data_json="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
 fi
 websum="$(echo "$data_json" | jq -r .assets[0].digest | cut -d: -f2)"
 name_apk="$(echo "$data_json" | jq -r .name)"
-if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]];then
+if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
 openfile "$TMP/Tool-Tree.apk"
 exit
 fi
-if [[ "$websum" != "$(checksum "$PATH_APK")" ]];then
+if [[ "$websum" != "$(checksum "$PATH_APK")" ]]; then
 sleep 1
 showtoast "'$update_text_3'"
 sleep 2
 downloadb "$(echo "$data_json" | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true 2>/dev/null
 sleep 1
-    if [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]];then
+    if [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
     cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
     showtoast "'$save_text' $SDCARD_PATH/Download/${name_apk}.apk"
     sleep 1
@@ -583,7 +583,7 @@ xml_print '<group>
 <lock>[ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0</lock>
 <set>
 for kkh in $IMG_NAME; do
-if [ "$(ls $SDH/raw/${kkh%.*} 2>/dev/null)" ];then
+if [ "$(ls $SDH/raw/${kkh%.*} 2>/dev/null)" ]; then
 su -mm -c umount -l $SDH/raw/${kkh%.*}
 fi
 mkdir -p $SDH/raw/${kkh%.*}
@@ -604,9 +604,9 @@ echo "'$save_text' $SDH/raw"
 for kkh in $IMG_NAME; do
 su -mm -c umount -l $SDH/raw/$kkh
 rm -fr $SDH/raw/$kkh
-    if [ "$(checktype $PTSD/${kkh}.img)" == "ext" ];then
+    if [ "$(checktype $PTSD/${kkh}.img)" == "ext" ]; then
     [ -f $PTSD/${kkh}.img ] && e2fsck -yf $PTSD/${kkh}.img &>/dev/null
-    elif [ "$(checktype $PTSD/${kkh}.img)" == "f2fs" ];then
+    elif [ "$(checktype $PTSD/${kkh}.img)" == "f2fs" ]; then
     [ -f $PTSD/${kkh}.img ] && fsck.f2fs -yf $PTSD/${kkh}.img &>/dev/null
     fi
 done
@@ -630,7 +630,7 @@ Extract=$PTSD/backup
 for i in $IMG; do
     e=${i##*/}
     File="$Extract/${e}.img"
-    if [[ ! -L $i ]];then
+    if [[ ! -L $i ]]; then
     echo "'$backup_text_3' $e" >&2
     else
     echo "'$backup_text_4' $e"
@@ -655,12 +655,12 @@ echo "'$save_text' $Extract"
 <param name="Brush_in" type="file" suffix="img" editable="true" required="true" title="'$flash_text_6'" desc="'$flash_text_7'" required="true"/>
 <set>
 e=${IMG##*/}
-if [ "$e" = "vendor" ] || [ "$e" = "system" ] || [ "$e" = "super" ];then
+if [ "$e" = "vendor" ] || [ "$e" = "system" ] || [ "$e" = "super" ]; then
 killtree "($e) '$flash_text_8'"
 fi
 echo "'$more_text_4' $Brush_in"
 echo
-if [ "$(checktype "$Brush_in")" == "space" ];then
+if [ "$(checktype "$Brush_in")" == "space" ]; then
 simg2img "$Brush_in"
 fi
     if [[ -f "$Brush_in" ]]; then
@@ -707,7 +707,7 @@ xml_print '<group>
 <param name="bools" label="'$dexopt_app_text_2'" desc="'$dexopt_app_text_3'" type="checkbox" />
 <param name="apps" type="app" multiple="multiple" desc="'$dexopt_app_text_1'" options-sh="pm list package -3 | cut -f2 -d:" />
 <set>
-if [ "$bools" == 1 ];then
+if [ "$bools" == 1 ]; then
 pm compile -v -a -m $name_dex_list
 echo
 checktime
@@ -733,13 +733,13 @@ patk22="$(pm path "$v" | cut -f2 -d: | head -n1)"
 pathvv="${patk22%/*}"
 hcdf="$(echo "$patk" | grep -c "\.apk"$)"
 paptn="$(echo "$patk" | grep "base\.apk"$)"
-    if [[ -n "$paptn" ]];then
+    if [[ -n "$paptn" ]]; then
     infor="$(apkeditor info -i "$paptn")"
     nameapk="$(echo "$infor" | grep -m1 "AppName" | cut -d\" -f2)"
     else
     nameapk="${pathvv##*/}"
     fi
-    if [ "$hcdf" -ge 2 ];then
+    if [ "$hcdf" -ge 2 ]; then
     zip -j -r "$PTAD/${nameapk}.apks" $patk
     echo "'$save_text' $PTAD/${nameapk}.apks"
     else
@@ -754,7 +754,7 @@ done
 
 Generate(){
 # thêm ẩn
-if [ "$(glog hide_show_generate)" == 1 ];then
+if [ "$(glog hide_show_generate)" == 1 ]; then
     echo "<group>"
     show_sett
     echo "</group>"
@@ -823,12 +823,12 @@ slog amlogic_boolbox "$amlogic_boolbox"
 slog amlogic_ver "$amlogic_ver"
 echo "'$apkb_text_1' $PTSD/$FOLDER"
 echo
-if [ "$(checktype "$PTSD/$FOLDER/super.img")" == "super" ];then
+if [ "$(checktype "$PTSD/$FOLDER/super.img")" == "super" ]; then
 echo "'$unpack_text_0' super(raw) ➠ super(sparse)..."
 img2simg "$PTSD/$FOLDER/super.img"
 echo
 fi
-if [ -n "$(ls -1d $PTSD/$FOLDER/*.img 2>/dev/null)" ];then
+if [ -n "$(ls -1d $PTSD/$FOLDER/*.img 2>/dev/null)" ]; then
 for vv in $PTSD/$FOLDER/*.img; do
 echo "mv: ${vv##*/} ➠ $(echo "${vv##*/}" | sed "s|\.img$|\.PARTITION|")"
 mv "$vv" "${vv%.*}.PARTITION"
@@ -855,7 +855,7 @@ Utilities(){
 [ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null &
 time_riviu="$(date -d "@`glog build_times 1230768000`")"
 
-if [ "$(glog hide_show 1)" == 1 ];then
+if [ "$(glog hide_show 1)" == 1 ]; then
     echo "<group>"
     show_sett
     echo "</group>"
@@ -880,7 +880,7 @@ slog dkhdh "$cboxk"
 for vkl in $IMAGES; do
 tppq1="${vkl%%=*}"
 tppq2="${vkl#*=}"
-if [ -f "$PTSD/$tppq2" ];then
+if [ -f "$PTSD/$tppq2" ]; then
 unpack_img -i "$PTSD/$tppq2" -p "$tppq1" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb
 else
 unpack_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb
@@ -934,7 +934,7 @@ checktime
 <title>'$synthetic_text'</title>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' ROM</option>
 <handler>
-if [ "$menu_id" == "v1" ];then
+if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show_generate)" == 1 ] && slog hide_show_generate 0 || slog hide_show_generate 1
 fi
 </handler>
@@ -1013,7 +1013,7 @@ checktime
 }
 
 Apktools(){
-if [ "$(glog hide_show_apktool)" == 1 ];then
+if [ "$(glog hide_show_apktool)" == 1 ]; then
     echo "<group>"
     show_apkset
     echo "</group>"
@@ -1074,7 +1074,7 @@ checktime
 }
 
 Apex(){
-if [ "$(glog hide_show_apex)" == 1 ];then
+if [ "$(glog hide_show_apex)" == 1 ]; then
     echo "<group>"
     show_apkset
     echo "</group>"
@@ -1130,7 +1130,7 @@ checktime
 Utiliapk(){
 [ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null &
 
-if [ "$(glog hide_show2 1)" == 1 ];then
+if [ "$(glog hide_show2 1)" == 1 ]; then
     echo "<group>"
     show_apkset
     echo "</group>"
@@ -1200,9 +1200,9 @@ checktime
 <option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apktool.jar</option>
 <option type="file" id="v4" suffix="apk" auto-off="true">'$more_text_10' framework</option>
 <handler>
-if [ "$menu_id" == "v1" ];then
+if [ "$menu_id" == "v1" ]; then
     [ "$(glog hide_show_apktool)" == 1 ] && slog hide_show_apktool 0 || slog hide_show_apktool 1
-elif [ "$menu_id" == "v2" ];then
+elif [ "$menu_id" == "v2" ]; then
     echo "Looking for system apk..."
     for mm in $(pm list package -s | cut -f2 -d:); do
     cggdccg="$(pm path $mm | cut -f2 -d:)"
@@ -1211,7 +1211,7 @@ elif [ "$menu_id" == "v2" ];then
     rm -fr $HOME/.local/share/apktool/framework/1.apk
     echo
     checktime
-elif [ "$menu_id" == "v3" ];then
+elif [ "$menu_id" == "v3" ]; then
     echo "'$more_text_4' $file"
     echo
     unzip -oq $ETC/apktool.jar prebuilt/linux/aapt2 -d $TMP
@@ -1220,7 +1220,7 @@ elif [ "$menu_id" == "v3" ];then
     zip -qr apktool.jar prebuilt/*
     mv apktool.jar $ETC/apktool.jar
     rm -fr prebuilt
-elif [ "$menu_id" == "v4" ];then
+elif [ "$menu_id" == "v4" ]; then
     echo "'$more_text_4' $file"
     echo
     apktool if "$file"
@@ -1233,7 +1233,7 @@ fi
 <title>'$apex_text'</title>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
 <handler>
-if [ "$menu_id" == "v1" ];then
+if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show_apex)" == 1 ] && slog hide_show_apex 0 || slog hide_show_apex 1
 fi
 </handler>
@@ -1309,11 +1309,12 @@ Addon(){
 
 Download(){
 farooot=''; description_text=''; text_desc=''
-if [ "$(gprop root $vadd)" == 'true' ];then
+if grep -q 'root=true' $vadd; then
 farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
 fi
+if grep -q 'url=.' $vadd; then
 description_text="$(gprop description $vadd)"
 [ "$description_text" ] && text_desc=" | $description_text"
 xml_print '<group>
@@ -1332,6 +1333,7 @@ fi
 </set>
 </action>
 </group>'
+fi
 }
 
 Features(){
@@ -1354,20 +1356,18 @@ pagesh=''; code_menu=''; farooot=''; google_trankk=''; description_text=''
 google_tran_shellkk=''; code_shell=''; code_option=''; summss=''; text_desc=''
 
 # Load index
-if [ -f "$dirvad/index.sh" ];then
+if [ -f "$dirvad/index.sh" ]; then
 pagesh='config-sh="'$dirvad'/index.sh home"'
-elif [ -f "$dirvad/index.xml" ];then
+elif [ -f "$dirvad/index.xml" ]; then
 pagesh='config="'$dirvad'/index.xml"'
 else
 pagesh='config="'$ETC'/error.xml"'
 fi
 
 # Load menu
-if [ -f "$dirvad/menu.sh" ];then
-    if [ "$(grep -cm1 code_option "$dirvad/menu.sh")" == 1 ];then
+if grep -q code_option "$dirvad/menu.sh"; then
     code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
     code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
-    fi
 fi
 
 # load description
@@ -1375,7 +1375,7 @@ description_text="$(gprop description $vadd)"
 [ "$description_text" ] && text_desc=" | $description_text"
 
 # Phát hiện root
-if [ "$(gprop root $vadd)" == 'true' ];then
+if grep -q 'root=true' $vadd; then
 farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
@@ -1389,16 +1389,17 @@ desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
 fi
 
 # phát hiện tag
-if [ "$(gprop summary $vadd)" ];then
+if [ "$(gprop summary $vadd)" ]; then
 summss='<desc>'"$(gprop summary $vadd)"'</desc>'
 fi
 
 # Load trang
-if [ -n "$(gprop name $vadd)" ];then
+if grep -q 'name=.' $vadd; then
+
 # Xác nhận có google dịch
-if [ "$(grep -cm1 trans_add "$dirvad/index.sh")" == 1 ];then
+if grep -q trans_add "$dirvad/index.sh"; then
 google_trankk='<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
-google_tran_shellkk='elif [ "$menu_id" == "v1" ];then
+google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
 fi
 
@@ -1412,7 +1413,7 @@ xml_print '<group>
 '"$google_trankk"'
 '"$code_option"'
 <handler>
-if [ "$menu_id" == "v2" ];then
+if [ "$menu_id" == "v2" ]; then
 [ -f "'$dirvad'/pin" ] && rm -f "'$dirvad'/pin" || echo > "'$dirvad'/pin"
 '"$google_tran_shellkk"'
 fi
@@ -1426,16 +1427,20 @@ fi
 Vips(){
 index_adds=""; # Bỏ giá trị cũ tránh lưu
 [ "$PATHADD" == "$AON" ] && index_adds="$(glog settadd)" || index_adds="$(glog settadd2)"
-if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ];then
+if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
+    if grep -q 'url=.' $vadd; then
+    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'addon.prop' -exec rm -rf {} +
+    else
     rm -rf "$dirvad"
-    elif [ "$index_adds" == 1 ];then
+    fi
+    elif [ "$index_adds" == 1 ]; then
     Features status
-    elif [ "$index_adds" == 2 ];then
+    elif [ "$index_adds" == 2 ]; then
     Features delete
     else
     if [ "$(cat $dirvad/status 2>/dev/null)" != 1 ]; then
-        if [ -f "$dirvad/index.sh" ]; then
+        if [ -f "$dirvad/index.sh" ] || [ -f "$dirvad/index.xml" ]; then
             Homeadd
         elif [ -f "$dirvad/addon.prop" ]; then
             Download
@@ -1458,20 +1463,7 @@ for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     pin_text_add="$pin_text"
-    if [ -f "$dirvad/pin" ] || [ ! -f "$dirvad/index.sh" ]; then
-        continue
-    fi
-    Vips
-done
-
-# load trang tải xuống
-for vadd in $PATHADD/*/addon.prop; do
-    [ -f "$vadd" ] || continue
-    dirvad="${vadd%/*}"
-    pin_text_add="$pin_text"
-    if [ -f "$dirvad/pin" ] || [ -f "$dirvad/index.sh" ]; then
-    continue
-    fi
+    [ -f "$dirvad/pin" ] && continue
     Vips
 done
 }

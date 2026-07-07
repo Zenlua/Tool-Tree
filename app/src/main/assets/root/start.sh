@@ -1,1 +1,1 @@
-exec $ETC/boot.rc
+exec $ETC/boot
