@@ -3,7 +3,7 @@
 id=patch_rom
 name=Patch ROM
 author=Kakathic
-description=Quick ROM patch
+description=ROM quick patch tool
 version=1.0
 versionCode=100
 root=false

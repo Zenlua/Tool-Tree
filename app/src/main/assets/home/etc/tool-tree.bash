@@ -1431,7 +1431,7 @@ index_adds=""; # Bỏ giá trị cũ tránh lưu
 if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
     if grep -q 'url=.' $vadd; then
-    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'addon.prop' -exec rm -rf {} +
+    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
     else
     rm -rf "$dirvad"
     fi
@@ -1443,7 +1443,7 @@ if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     if [ "$(cat $dirvad/status 2>/dev/null)" != 1 ]; then
         if [ -f "$dirvad/index.sh" ] || [ -f "$dirvad/index.xml" ]; then
             Homeadd
-        elif [ -f "$dirvad/addon.prop" ]; then
+        elif [ -f "$dirvad/download.prop" ]; then
             Download
         fi
     fi
@@ -1473,7 +1473,7 @@ for vadd in $PATHADD/*/addon.prop; do
 done
 
 # load trang tải xuống ở dưới cùng
-for vadd in $PATHADD/*/addon.prop; do
+for vadd in $PATHADD/*/download.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     pin_text_add="$pin_text"
