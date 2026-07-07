@@ -12,15 +12,26 @@ echo
 
 if [ -f "$1" ]; then
 loadmd="$(7z x "$1" addon.prop -so 2>/dev/null)"
+    if [ -z "$loadmd" ]; then
+    echo "Add-on incompatibility error !" >&2
+    exit 1
+    fi
 else
 taive "$1" "$TMP/addon.add"
 loadmd="$(7z x "$TMP/addon.add" addon.prop -so 2>/dev/null)"
+    if [ -z "$loadmd" ]; then
+    echo "Download add-on error !" >&2
+    exit 1
+    fi
 fi
 
-[ -z "$loadmd" ] && killtree "Error extract add-on"
 gprop(){ echo "$loadmd" | awk -F= -v k="$1" '$1==k{print $2; exit}'; }
 loadid="$(gprop id)"
-[ -z "$loadid" ] && killtree "ID not found in addon.prop"
+
+if [ -z "$loadid" ]; then
+echo "ID not found in addon.prop" >&2
+exit 1
+fi
 
 echo "$name_text: $(gprop name) $(gprop version)"
 echo
@@ -39,8 +50,10 @@ echo
 
 if [ -f "$1" ]; then
     7z x "$1" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
+    slog "check_sum_addon_$loadid" "$(checksum $1)"
 else
     7z x "$TMP/addon.add" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
+    slog "check_sum_addon_$loadid" "$(checksum $TMP/addon.add)"
 fi
 
 echo 0 > "$2/$loadid/status"

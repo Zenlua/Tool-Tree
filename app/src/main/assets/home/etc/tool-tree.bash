@@ -1438,7 +1438,7 @@ if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     elif [ "$index_adds" == 1 ]; then
     Features status
     elif [ "$index_adds" == 2 ]; then
-    Features delete
+    [ -f $dirvad/nodelete ] || Features delete
     else
     if [ "$(cat $dirvad/status 2>/dev/null)" != 1 ]; then
         if [ -f "$dirvad/index.sh" ] || [ -f "$dirvad/index.xml" ]; then
