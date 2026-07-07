@@ -1368,7 +1368,10 @@ pagesh='config="'$ETC'/error.xml"'
 fi
 
 # Load menu
-if grep -q code_option "$dirvad/menu.sh" 2>/dev/null; then
+if grep -q code_option "$dirvad/menu.bash" 2>/dev/null; then
+    code_option="$($dirvad/menu.bash code_option 2>/dev/null)"
+    code_shell="$($dirvad/menu.bash code_shell 2>/dev/null)"
+elif grep -q code_option "$dirvad/menu.sh" 2>/dev/null; then
     code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
     code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
 fi
@@ -1382,18 +1385,13 @@ if grep -q 'root=true' $vadd 2>/dev/null; then
 farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
-if [ "$ROT" == 0 ]; then
-    desc_tec="$(gprop version $vadd) $(gprop author $vadd) | $root_warning_text_1"
-else
-    desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
-fi
 else
 desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
 fi
 
 # phát hiện tag
-if [ "$(gprop summary $vadd)" ]; then
-summss='<desc>'"$(gprop summary $vadd)"'</desc>'
+if grep -q 'summary=.' $vadd 2>/dev/null; then
+summss='<summary>'"$(gprop summary $vadd)"'</summary>'
 fi
 
 # Load trang
