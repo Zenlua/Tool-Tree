@@ -84,8 +84,10 @@ sum_md5_kk="$(checksum $ETC/lang/$texgg)"
 fi
 
 # Tạo thư mục
-[ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null &
-[ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null &
+(
+[ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null
+[ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null
+) &
 
 # Ngôn ngữ
 source language 2>/dev/null
@@ -321,6 +323,7 @@ xml_print '<group>
 <title>'$setting_text_1'</title>
 <desc>'$setting_text_2'</desc>
 <option type="default" id="share" auto-off="true" interruptible="false" >'$share_text'</option>
+<option type="refresh" style="fab" icon="'$ETC'/icon/Loading.png" />
 <handler>
 progress 0.02 10 &
 if [ "$menu_id" == "share" ]; then
@@ -424,10 +427,11 @@ xml_print '<group>
 </group>
 
 <group>
-<action shell="hidden" icon="'`urlpng update`'" warning="'$use_network_text'" visible="echo '$show_update'">
+<action icon="'`urlpng update`'" warning="'$use_network_text'" visible="echo '$show_update'">
 <title>'$update_text'</title>
 <set>
-showtoast "'$update_text_2'"
+echo "'$update_text_2'"
+echo
 if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
 data_json="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/beta)"
 else
@@ -440,19 +444,16 @@ openfile "$TMP/Tool-Tree.apk"
 exit
 fi
 if [[ "$websum" != "$(checksum "$PATH_APK")" ]]; then
-sleep 1
-showtoast "'$update_text_3'"
-sleep 2
-downloadb "$(echo "$data_json" | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true 2>/dev/null
-sleep 1
+echo "'$update_text_3'"
+echo
+taive "$(echo "$data_json" | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true 2>&1
     if [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
     cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
-    showtoast "'$save_text' $SDCARD_PATH/Download/${name_apk}.apk"
-    sleep 1
+    echo "'$save_text' $SDCARD_PATH/Download/${name_apk}.apk"
     openfile "$TMP/Tool-Tree.apk"
     fi
 else
-showtoast "'$update_text_4'"
+echo "'$update_text_4'"
 fi
 </set>
 </action>
@@ -1309,12 +1310,12 @@ Addon(){
 
 Download(){
 farooot=''; description_text=''; text_desc=''
-if grep -q 'root=true' $vadd; then
+if grep -q 'root=true' $vadd 2>/dev/null; then
 farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
 fi
-if grep -q 'url=.' $vadd; then
+if grep -q 'url=.' $vadd 2>/dev/null; then
 description_text="$(gprop description $vadd)"
 [ "$description_text" ] && text_desc=" | $description_text"
 xml_print '<group>
@@ -1356,7 +1357,9 @@ pagesh=''; code_menu=''; farooot=''; google_trankk=''; description_text=''
 google_tran_shellkk=''; code_shell=''; code_option=''; summss=''; text_desc=''
 
 # Load index
-if [ -f "$dirvad/index.sh" ]; then
+if [ -f "$dirvad/index.bash" ]; then
+pagesh='config-sh="'$dirvad'/index.bash home"'
+elif [ -f "$dirvad/index.sh" ]; then
 pagesh='config-sh="'$dirvad'/index.sh home"'
 elif [ -f "$dirvad/index.xml" ]; then
 pagesh='config="'$dirvad'/index.xml"'
@@ -1365,7 +1368,7 @@ pagesh='config="'$ETC'/error.xml"'
 fi
 
 # Load menu
-if grep -q code_option "$dirvad/menu.sh"; then
+if grep -q code_option "$dirvad/menu.sh" 2>/dev/null; then
     code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
     code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
 fi
@@ -1375,7 +1378,7 @@ description_text="$(gprop description $vadd)"
 [ "$description_text" ] && text_desc=" | $description_text"
 
 # Phát hiện root
-if grep -q 'root=true' $vadd; then
+if grep -q 'root=true' $vadd 2>/dev/null; then
 farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
@@ -1394,10 +1397,10 @@ summss='<desc>'"$(gprop summary $vadd)"'</desc>'
 fi
 
 # Load trang
-if grep -q 'name=.' $vadd; then
+if grep -q 'name=.' $vadd 2>/dev/null; then
 
 # Xác nhận có google dịch
-if grep -q trans_add "$dirvad/index.sh"; then
+if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null || grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
 google_trankk='<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
 google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
@@ -1430,7 +1433,7 @@ index_adds=""; # Bỏ giá trị cũ tránh lưu
 [ "$PATHADD" == "$AON" ] && index_adds="$(glog settadd)" || index_adds="$(glog settadd2)"
 if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
-    if grep -q 'url=.' $vadd; then
+    if grep -q 'url=.' $vadd 2>/dev/null; then
     find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
     else
     rm -rf "$dirvad"
@@ -1441,7 +1444,7 @@ if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f $dirvad/nodelete ] || Features delete
     else
     if [ "$(cat $dirvad/status 2>/dev/null)" != 1 ]; then
-        if [ -f "$dirvad/index.sh" ] || [ -f "$dirvad/index.xml" ]; then
+        if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
             Homeadd
         elif [ -f "$dirvad/download.prop" ]; then
             Download
@@ -1456,7 +1459,7 @@ for vadd in $PATHADD/*/addon.prop; do
     dirvad="${vadd%/*}"
     pin_text_add="$unpin_text"
     [ -f "$dirvad/pin" ] || continue
-    if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.xml" ]]; then
+    if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
         Vips
     fi
 done
@@ -1467,7 +1470,7 @@ for vadd in $PATHADD/*/addon.prop; do
     dirvad="${vadd%/*}"
     pin_text_add="$pin_text"
     [ -f "$dirvad/pin" ] && continue
-    if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.xml" ]]; then
+    if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
         Vips
     fi
 done
@@ -1477,7 +1480,7 @@ for vadd in $PATHADD/*/download.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     pin_text_add="$pin_text"
-    if [[ -f "$dirvad/pin" || -f "$dirvad/index.sh" || -f "$dirvad/index.xml" ]]; then
+    if [[ -f "$dirvad/pin" || -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
         continue
     fi
     Vips
