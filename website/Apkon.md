@@ -2,12 +2,6 @@
 
 - List of add-ons in utilities tab
 
-#### Hack WIFI
-
-- Auto wifi hacking tool (root)
-
-- [Download](https://github.com/Zenlua/Tool-Tree/releases/download/V1/hack_wifi.add)
-
 #### Jre21 Lite
 
 - update Java 21 jre

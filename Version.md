@@ -1,5 +1,11 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.4.9 (8-7-2026)**
+
++ Fix add-on update errors
++ Change add-on logic
++ Update ROM patch code and fix bugs
+
 **Version: 1.4.8 (1-7-2026)**
 
 + Fix add-on initialize module
