@@ -104,7 +104,7 @@ Home(){
 [ -z "$Vip_text_infor" ] || xml_print '<group><text summary="'"$Vip_text_infor"'"/></group>'
 
 xml_print '<group>
-<page icon="'`urlpng settings`'" config-sh="$ETC/tool-tree.rc Info">
+<page icon="'`urlpng settings`'" config-sh="$ETC/tool-tree.bash Info">
 <title>'$setting_text'</title>
 <desc>'$home_text_1'</desc>
 <option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
@@ -123,7 +123,7 @@ fi
 </group>
 
 <group>
-<page icon="'`urlpng utilities`'" config-sh="$ETC/tool-tree.rc Utilities">
+<page icon="'`urlpng utilities`'" config-sh="$ETC/tool-tree.bash Utilities">
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' ROM</option>
@@ -142,14 +142,14 @@ fi
 </group>
 
 <group>
-<page icon="'`urlpng tools`'" config-sh="$ETC/tool-tree.rc Root">
+<page icon="'`urlpng tools`'" config-sh="$ETC/tool-tree.bash Root">
 <title>'$tools_text'</title>
 <desc>'$home_text_3'</desc>
 </page>
 </group>
 
 <group>
-<page icon="'`urlpng addon`'" config-sh="PATHADD='$AON' $ETC/tool-tree.rc Addon">
+<page icon="'`urlpng addon`'" config-sh="PATHADD='$AON' $ETC/tool-tree.bash Addon">
 <title>'$addon_text'</title>
 <desc>'$home_text_4'</desc>
 <option type="refresh">'$refresh_text'</option>
@@ -203,7 +203,7 @@ More(){
 [ -z "$Vip_text_infor" ] || xml_print '<group><text summary="'"$Vip_text_infor"'"/></group>'
 xml_print '<group>
 <group>
-<page icon="'`urlpng settings`'" config-sh="$ETC/tool-tree.rc Info">
+<page icon="'`urlpng settings`'" config-sh="$ETC/tool-tree.bash Info">
 <title>'$setting_text'</title>
 <desc>'$home_text_1'</desc>
 <option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
@@ -222,7 +222,7 @@ fi
 </group>'
 
 xml_print '<group>
-<page icon="'`urlpng apk_utility`'" config-sh="$ETC/tool-tree.rc Utiliapk">
+<page icon="'`urlpng apk_utility`'" config-sh="$ETC/tool-tree.bash Utiliapk">
 <title>'$utilities_text'</title>
 <desc>'$more_text_6'</desc>
 <lock>
@@ -258,14 +258,14 @@ fi
 </group>
 
 <group>
-<page icon="'`urlpng tool_apk`'" config-sh="$ETC/tool-tree.rc Troot">
+<page icon="'`urlpng tool_apk`'" config-sh="$ETC/tool-tree.bash Troot">
 <title>'$tools_text'</title>
 <desc>'$more_text_7'</desc>
 </page>
 </group>
 
 <group>
-<page icon="'`urlpng apk_addon`'" config-sh="PATHADD='$AOK' $ETC/tool-tree.rc Addon">
+<page icon="'`urlpng apk_addon`'" config-sh="PATHADD='$AOK' $ETC/tool-tree.bash Addon">
 <title>'$addon_text'</title>
 <desc>'$more_text_8'</desc>
 <option type="refresh">'$refresh_text'</option>
@@ -317,7 +317,7 @@ $shells5"
 
 Info(){
 xml_print '<group>
-<page icon="'`urlpng info`'" config-sh="$ETC/tool-tree.rc Update" >
+<page icon="'`urlpng info`'" config-sh="$ETC/tool-tree.bash Update" >
 <title>'$setting_text_1'</title>
 <desc>'$setting_text_2'</desc>
 <option type="default" id="share" auto-off="true" interruptible="false" >'$share_text'</option>
@@ -331,14 +331,14 @@ fi
 </group>
 
 <group>
-<page config-sh="$ETC/tool-tree.rc Project" icon="'`urlpng project`'" >
+<page config-sh="$ETC/tool-tree.bash Project" icon="'`urlpng project`'" >
 <title>'$setting_text_3'</title>
 <desc>'$setting_text_4'</desc>
 </page>
 </group>
 
 <group>
-<page config-sh="$ETC/tool-tree.rc Feature" icon="'`urlpng feature`'" >
+<page config-sh="$ETC/tool-tree.bash Feature" icon="'`urlpng feature`'" >
 <title>'$setting_text_7'</title>
 <desc>'$setting_text_8'</desc>
 </page>
@@ -930,7 +930,7 @@ checktime
 </group>
 
 <group>
-<page icon="'`urlpng generate`'" config-sh="$ETC/tool-tree.rc Generate">
+<page icon="'`urlpng generate`'" config-sh="$ETC/tool-tree.bash Generate">
 <title>'$synthetic_text'</title>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' ROM</option>
 <handler>
@@ -1193,7 +1193,7 @@ checktime
 </action></group>
 
 <group>
-<page icon="'`urlpng apktool`'" config-sh="$ETC/tool-tree.rc Apktools" >
+<page icon="'`urlpng apktool`'" config-sh="$ETC/tool-tree.bash Apktools" >
 <title>'$use_apktool_text'</title>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
 <option type="default" id="v2" >'$framework_auto_text'</option>
@@ -1229,7 +1229,7 @@ fi
 </page></group>
 
 <group>
-<page icon="'`urlpng apex`'" config-sh="$ETC/tool-tree.rc Apex" >
+<page icon="'`urlpng apex`'" config-sh="$ETC/tool-tree.bash Apex" >
 <title>'$apex_text'</title>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
 <handler>
@@ -1463,7 +1463,20 @@ for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     pin_text_add="$pin_text"
-    [ -f "$dirvad/pin" ] && continue
+    if [ -f "$dirvad/pin" ] || [ ! -f "$dirvad/index.sh" ] || [ ! -f "$dirvad/index.xml" ]; then
+        continue
+    fi
+    Vips
+done
+
+# load trang tải xuống
+for vadd in $PATHADD/*/addon.prop; do
+    [ -f "$vadd" ] || continue
+    dirvad="${vadd%/*}"
+    pin_text_add="$pin_text"
+    if [ -f "$dirvad/pin" ] || [ -f "$dirvad/index.sh" ] || [ -f "$dirvad/index.xml" ]; then
+        continue
+    fi
     Vips
 done
 }
