@@ -47,6 +47,7 @@ tool_repack_text="Csomagolóeszköz"
 customize_tools_text="Eszközök testreszabása"
 convert_img_text="Az átalakítás a fordítás befejezése után folytatódik"
 list_partition_text="Dekódolt partíciólista"
+updating_text="Frissítés"
 
 # Home
 home_text_1="Alkalmazásinformációk és funkciók"

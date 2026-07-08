@@ -49,6 +49,7 @@ tool_repack_text="Инструмент сборки"
 customize_tools_text="Настройка инструментов"
 convert_img_text="Конвертация продолжится после завершения сборки"
 list_partition_text="Список расшифрованных разделов"
+updating_text="Обновление"
 
 # Home
 home_text_1="Информация и функции приложения"

@@ -49,6 +49,7 @@ tool_repack_text="Build tool"
 customize_tools_text="Customize tools"
 convert_img_text="Conversion will continue after the build is complete"
 list_partition_text="Decrypted partition list"
+updating_text="Updating"
 
 # Home
 home_text_1="App information and features"

@@ -1,4 +1,4 @@
-#!/data/data/com.tool.tree/files/home/bin/bash
+#!/data/data/com.tool.tree/files/home/termux/bin/bash
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # xzgrep -- a wrapper around a grep program that decompresses files as needed
@@ -19,6 +19,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+# shellcheck shell=sh disable=SC1003,SC2016
+
 
 #SET_PATH - This line is a placeholder to ease patching this script.
 
@@ -35,7 +37,7 @@ case ${0##*/} in
   *)       prog=xzgrep; grep=${GREP:-grep};;
 esac
 
-version="$prog (XZ Utils) 5.8.1"
+version="$prog (XZ Utils) 5.8.3"
 
 usage="Usage: ${0##*/} [OPTION]... [-e] PATTERN [FILE]...
 Look for instances of PATTERN in the input FILEs, using their

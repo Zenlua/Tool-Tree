@@ -49,6 +49,7 @@ tool_repack_text="打包工具"
 customize_tools_text="自定义工具"
 convert_img_text="构建完成后将继续转换"
 list_partition_text="已解密分区列表"
+updating_text="正在更新"
 
 # Home
 home_text_1="应用信息与功能"
