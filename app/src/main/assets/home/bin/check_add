@@ -1,0 +1,13 @@
+# Kakathic
+
+if checkonline; then
+echo "Start checking for updates: $(gprop name $1/download.prop)"
+echo
+file_name="$(gprop url $1/download.prop)"
+check_sum_onl="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/V1 | jq -r --arg name "$file_name" '.assets[] | select(.name == $name) | .digest' | cut -d: -f2)"
+if [[ "$check_sum_onl" != "$(glog check_sum_addon_${1##*/})" ]]; then
+installadd "$(gprop url $1/download.prop)" "${1%/*}" 2>&1
+fi
+else
+echo "Network error"
+fi

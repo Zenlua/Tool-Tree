@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "base_prefix": "/data/data/com.termux/files/usr",
+  "base_interpreter": "/data/data/com.termux/files/usr/bin/python3.14",
+  "platform": "android-24-arm64_v8a",
+  "language": {
+    "version": "3.14",
+    "version_info": {
+      "major": 3,
+      "minor": 14,
+      "micro": 6,
+      "releaselevel": "final",
+      "serial": 0
+    }
+  },
+  "implementation": {
+    "name": "cpython",
+    "cache_tag": "cpython-314",
+    "version": {
+      "major": 3,
+      "minor": 14,
+      "micro": 6,
+      "releaselevel": "final",
+      "serial": 0
+    },
+    "hexversion": 51250928,
+    "_multiarch": "aarch64-linux-android",
+    "supports_isolated_interpreters": true
+  },
+  "abi": {
+    "flags": [],
+    "extension_suffix": ".cpython-314-aarch64-linux-android.so",
+    "stable_abi_suffix": ".abi3.so"
+  },
+  "suffixes": {
+    "source": [
+      ".py"
+    ],
+    "bytecode": [
+      ".pyc"
+    ],
+    "extensions": [
+      ".cpython-314-x86_64-linux-gnu.so",
+      ".abi3.so",
+      ".so"
+    ]
+  },
+  "libpython": {
+    "dynamic": "/data/data/com.termux/files/usr/lib/libpython3.14.so",
+    "dynamic_stableabi": "/data/data/com.termux/files/usr/lib/libpython3.so",
+    "link_extensions": true,
+    "static": "/data/data/com.termux/files/usr/lib/libpython3.14.a"
+  },
+  "c_api": {
+    "headers": "/data/data/com.termux/files/usr/include/python3.14",
+    "pkgconfig_path": "/data/data/com.termux/files/usr/lib/pkgconfig"
+  }
+}

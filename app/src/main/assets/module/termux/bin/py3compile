@@ -1,4 +1,4 @@
-#!/data/data/com.tool.tree/files/home/termux/bin/python3.13
+#! /data/data/com.termux/files/usr/bin/python3.14
 # vim: et ts=4 sw=4
 
 # Copyright © 2010-2012 Piotr Ożarowski <piotr@debian.org>
@@ -30,7 +30,7 @@ import sys
 from os import environ, listdir, mkdir
 from os.path import dirname, exists, isdir, join
 from subprocess import PIPE, Popen
-sys.path.insert(1, '/data/data/com.termux/files/usr/lib/python3.13/')
+sys.path.insert(1, '/data/data/com.termux/files/usr/lib/python3.14/')
 from debpython.version import SUPPORTED, debsorted, vrepr, \
     get_requested_versions, parse_vrange, getver
 from debpython import files as dpf, PUBLIC_DIR_RE, memoize
@@ -224,7 +224,7 @@ def compile(files, versions, force, optimize, e_patterns=None):
 def main():
     usage = '%prog [-V [X.Y][-][A.B]] DIR_OR_FILE [-X REGEXPR]\n' +\
         '       %prog -p PACKAGE'
-    parser = optparse.OptionParser(usage, version='%prog 3.13.13-1',
+    parser = optparse.OptionParser(usage, version='%prog 3.14.6-1',
                                    option_class=Option)
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='turn verbose mode on')

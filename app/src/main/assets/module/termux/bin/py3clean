@@ -1,4 +1,4 @@
-#!/data/data/com.tool.tree/files/home/termux/bin/python3.13
+#! /data/data/com.termux/files/usr/bin/python3.14
 # vim: et ts=4 sw=4
 
 # Copyright © 2010-2012 Piotr Ożarowski <piotr@debian.org>
@@ -27,7 +27,7 @@ import sys
 from glob import glob
 from os import environ, remove, rmdir
 from os.path import dirname, basename, exists, join, splitext
-sys.path.insert(1, '/data/data/com.termux/files/usr/lib/python3.13/')
+sys.path.insert(1, '/data/data/com.termux/files/usr/lib/python3.14/')
 from debpython import files as dpf
 from debpython.interpreter import Interpreter
 from debpython.version import SUPPORTED, getver, vrepr
@@ -146,7 +146,7 @@ def destroyer(magic_tag=None):  # ;-)
 
 def main():
     usage = '%prog [-V VERSION] [-p PACKAGE] [DIR_OR_FILE]'
-    parser = optparse.OptionParser(usage, version='%prog 3.13.13-1')
+    parser = optparse.OptionParser(usage, version='%prog 3.14.6-1')
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='turn verbose mode on')
     parser.add_option('-q', '--quiet', action='store_false', dest='verbose',
