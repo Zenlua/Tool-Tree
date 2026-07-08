@@ -1,5 +1,6 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 source language 2>/dev/null
+unset shell_progres
 
 # Dọn dẹp tmp
 [ -d "$TMPDIR" ] && rm -fr $TMPDIR/* &
@@ -27,28 +28,28 @@ if checkonline; then
     echo "Tag: $tagname"
     echo "Sum online: $websum"
     echo "Sum apk: $filesum"
-    if [[ ${PACKAGE_VERSION_NAME//./} -gt $tagname ]];then
+    if [[ ${PACKAGE_VERSION_NAME//./} -gt $tagname ]]; then
         [ -f $TEMP/update ] && rm -f $TEMP/update
-    elif [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]];then
-        if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]];then
-            if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
+    elif [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
+        if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
+            if [ ! -f $TEMP/update ] && [ -n "$tagname" ]; then
             echo "$tagname" > $TEMP/update
             fi
         else
             [ -f $TEMP/update ] && rm -f $TEMP/update
         fi
     else
-        if [ ! -f $TEMP/update ] && [ -n "$tagname" ];then
+        if [ ! -f $TEMP/update ] && [ -n "$tagname" ]; then
         echo "$tagname" > $TEMP/update
         fi
     fi
-    [ -f $TEMP/update ] && showtoast --am "$update_text_6"
+    [ -f $TEMP/update ] && showtoast "$update_text_6"
 fi
 ) &
 
 (
 # Cấp quyền tự động nếu đã root
-if [ "$ROT" == 1 ];then
+if [ "$ROT" == 1 ]; then
     chown -R 0:0 $HOME/.cache
     # Tạo link home
     [ -e /data/local/TOOL ] || ln -sf $APK /data/local/TOOL
@@ -75,12 +76,12 @@ fi
 # Khởi động các file shell ở add-on
 set_permis $AON/*/* $AOK/*/* &>/dev/null
 for vadd in $AON/* $AOK/*; do
-    if [ -f "$vadd/early_start.bash" ];then
+    if [ -f "$vadd/early_start.bash" ]; then
     (
     echo "Run shell: $vadd/early_start.bash"
     $vadd/early_start.bash
     ) &
-    elif [ -f "$vadd/early_start.sh" ];then
+    elif [ -f "$vadd/early_start.sh" ]; then
     (
     echo "Run shell: $vadd/early_start.sh"
     $vadd/early_start.sh
