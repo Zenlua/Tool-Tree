@@ -1,6 +1,14 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
-[ "$2" ] && file_props="$2" || file_props="addon.prop"
+
+if [ -f "$1/english.prop" ]; then
+file_props="english.prop"
+elif [ -f "$1/default.prop" ]; then
+file_props="default.prop"
+else
+file_props="addon.prop"
+fi
+
 [ -f "$1/$file_props" ] && eval "$(grep '="' "$1/$file_props")" || exit 1
 sum_md5="$(sha256sum "$1/$file_props" | awk '{print $1}')"
 if [ "$sum_md5" != "$(glog "sum_md5_${1##*/}")" ] || [ ! -f "$1/auto.sh" ] || [ "$(grep -cm1 '=""' "$1/auto.sh")" == 1 ];then

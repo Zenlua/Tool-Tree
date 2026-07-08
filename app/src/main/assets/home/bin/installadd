@@ -42,7 +42,9 @@ echo
 echo "$author_text: $(gprop author)"
 echo
 
+[ -d "$2/$loadid" ] && rm -fr "$2/$loadid"
 mkdir -p "$2/$loadid"
+
 echo "$addon_text_3"
 echo
 

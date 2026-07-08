@@ -14,7 +14,7 @@ slog typeheh "AB"
 fi
 slog super_group "$(awk '/Group:/ {print $2}' <<< "$list_payinf")"
 slog super_sizedj "$(awk -F'[()]' '/Size:/ {printf "%.2f\n", $2/1024/1024/1024}' <<< "$list_payinf")"
-) &
+) >/dev/null 2>&1 & disown
 
 if [ "$1" == "-b" ] || [ "$1" == "--byte" ]; then
     shift

@@ -29,7 +29,7 @@ slog check_super_type_ab 1
 fi
 
 slog super_group "$(awk '/Group:/ {sub(/_[ab]$/,"",$2); print $2; exit}' <<< "$config_super")"
-) &
+) >/dev/null 2>&1 & disown
 
 echo "$config_super" | awk '/super:/ {
     start = $2
