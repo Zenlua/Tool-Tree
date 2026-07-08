@@ -74,11 +74,16 @@ if [ "$ROT" == 1 ];then
 fi
 # Khởi động các file shell ở add-on
 set_permis $AON/*/* $AOK/*/* &>/dev/null
-for vadd in $AON/*/early_start.sh $AOK/*/early_start.sh; do
-    if [ -f "$vadd" ];then
+for vadd in $AON/* $AOK/*; do
+    if [ -f "$vadd/early_start.bash" ];then
     (
-    echo "run shell: $vadd"
-    $vadd
+    echo "Run shell: $vadd/early_start.bash"
+    $vadd/early_start.bash
+    ) &
+    elif [ -f "$vadd/early_start.sh" ];then
+    (
+    echo "Run shell: $vadd/early_start.sh"
+    $vadd/early_start.sh
     ) &
     fi
 done

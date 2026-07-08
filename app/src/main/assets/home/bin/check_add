@@ -11,7 +11,6 @@ file_name="$(gprop url $1/download.prop)"
 check_sum_onl="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/V1 | jq -r --arg name "${file_name##*/}" '.assets[] | select(.name == $name) | .digest' | cut -d: -f2)"
 if [[ "$check_sum_onl" != "$(glog check_sum_addon_${1##*/})" ]]; then
 showtoast "$updating_text add-on: $name_add"
-sleep 1
 installadd "$file_name" "${1%/*}" 2>&1 && showtoast "$flash_text_12 $name_add" || showtoast "$load_text_2 $name_add"
 fi
 else

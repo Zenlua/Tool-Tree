@@ -1432,7 +1432,7 @@ index_adds=""; # Bỏ giá trị cũ tránh lưu
 if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
     if grep -q 'url=.' $vadd 2>/dev/null; then
-    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
+    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' ! -name 'early_start.sh' ! -name 'firstly_start.sh' ! -name 'early_start.bash' ! -name 'firstly_start.bash' -exec rm -rf {} +
     else
     rm -rf "$dirvad"
     fi
