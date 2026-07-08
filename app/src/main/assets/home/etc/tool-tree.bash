@@ -449,6 +449,7 @@ echo
 taive "$(echo "$data_json" | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true 2>&1
     if [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
     cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
+    echo
     echo "'$save_text' $SDCARD_PATH/Download/${name_apk}.apk"
     openfile "$TMP/Tool-Tree.apk"
     fi
