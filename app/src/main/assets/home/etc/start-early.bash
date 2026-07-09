@@ -17,14 +17,14 @@ if checkonline; then
 
     # Thông báo cập nhật
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
-        websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/beta)"
-        tagname="${PACKAGE_VERSION_NAME//./}"
+        local websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/beta)"
+        local tagname="${PACKAGE_VERSION_NAME//./}"
     else
-        websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
-        tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
+        local websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
+        local tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
     fi
-    websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
-    filesum="$(checksum "$PATH_APK")"
+    local websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
+    local filesum="$(checksum "$PATH_APK")"
     echo "Tag: $tagname"
     echo "Sum online: $websum"
     echo "Sum apk: $filesum"

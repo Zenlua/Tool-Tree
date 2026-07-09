@@ -68,9 +68,8 @@ sum_md5_kk="$(checksum $ETC/lang/$texgg)"
     [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
     for vc in $(grep "=" $ETC/lang/$texgg | cut -d= -f1); do
     (
-    xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
+    local xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
     echo "${vc}=\"${xfhtfvgf^}\" # ${!vc}" >>$ETC/lang/auto.sh
-    unset xfhtfvgf
     ) &
     done
     wait
@@ -360,9 +359,8 @@ sum_md5_kk="$(checksum $ETC/lang/vi.sh)"
   [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
   for vc in $(grep "=" $ETC/lang/vi.sh | cut -d= -f1); do
   (
-  xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
+  local xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
   echo "${vc}=\"${xfhtfvgf^}\" # ${!vc}" | tee -a $ETC/lang/auto.sh
-  xfhtfvgf="";
   ) &
   done
   wait
@@ -730,16 +728,16 @@ fi
 <param label="'$backups_text_3'" name="Sapp" type="app" multiple="multiple"/>
 <set>
 for v in $Sapp; do
-patk="$(pm path $v | cut -f2 -d:)"
-patk22="$(pm path "$v" | cut -f2 -d: | head -n1)"
-pathvv="${patk22%/*}"
-hcdf="$(echo "$patk" | grep -c "\.apk"$)"
-paptn="$(echo "$patk" | grep "base\.apk"$)"
+local patk="$(pm path $v | cut -f2 -d:)"
+local patk22="$(pm path "$v" | cut -f2 -d: | head -n1)"
+local pathvv="${patk22%/*}"
+local hcdf="$(echo "$patk" | grep -c "\.apk"$)"
+local paptn="$(echo "$patk" | grep "base\.apk"$)"
     if [[ -n "$paptn" ]]; then
-    infor="$(apkeditor info -i "$paptn")"
-    nameapk="$(echo "$infor" | grep -m1 "AppName" | cut -d\" -f2)"
+    local infor="$(apkeditor info -i "$paptn")"
+    local nameapk="$(echo "$infor" | grep -m1 "AppName" | cut -d\" -f2)"
     else
-    nameapk="${pathvv##*/}"
+    local nameapk="${pathvv##*/}"
     fi
     if [ "$hcdf" -ge 2 ]; then
     zip -j -r "$PTAD/${nameapk}.apks" $patk
@@ -880,8 +878,8 @@ slog xoa_oat_boot "$xoa_oat_boot"
 slog dkjdj "$nounpak"
 slog dkhdh "$cboxk"
 for vkl in $IMAGES; do
-tppq1="${vkl%%=*}"
-tppq2="${vkl#*=}"
+local tppq1="${vkl%%=*}"
+local tppq2="${vkl#*=}"
 if [ -f "$PTSD/$tppq2" ]; then
 unpack_img -i "$PTSD/$tppq2" -p "$tppq1" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb
 else
@@ -1207,7 +1205,7 @@ if [ "$menu_id" == "v1" ]; then
 elif [ "$menu_id" == "v2" ]; then
     echo "Looking for system apk..."
     for mm in $(pm list package -s | cut -f2 -d:); do
-    cggdccg="$(pm path $mm | cut -f2 -d:)"
+    local cggdccg="$(pm path $mm | cut -f2 -d:)"
     [ -f "$cggdccg" ] && apktool if "$cggdccg" 2>/dev/null | sed "/127.apk/d"
     done
     rm -fr $HOME/.local/share/apktool/framework/1.apk
@@ -1310,15 +1308,14 @@ Addon(){
 # Tính năng
 
 Download(){
-farooot=''; description_text=''; text_desc=''
 if grep -q 'root=true' $vadd 2>/dev/null; then
-farooot='<lock>
+local farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
 fi
 if grep -q 'url=.' $vadd 2>/dev/null; then
-description_text="$(gprop description $vadd)"
-[ "$description_text" ] && text_desc=" | $description_text"
+local description_text="$(gprop description $vadd)"
+[ "$description_text" ] && local text_desc=" | $description_text"
 xml_print '<group>
 <action warn="'$use_network_text'" icon="'`urladd icon`'" reload="true">
 <title>'$(gprop name $vadd)'</title>
@@ -1339,10 +1336,13 @@ fi
 }
 
 Features(){
-description_text=''; text_desc=''
-[ "$1" == "status" ] && addon_textxx="$addon_text_10" || addon_textxx="$addon_text_2"
-description_text="$(gprop description $vadd)"
-[ "$description_text" ] && text_desc=" | $description_text"
+if [ "$1" == "status" ]; then
+local addon_textxx="$addon_text_10"
+else
+local addon_textxx="$addon_text_2"
+fi
+local description_text="$(gprop description $vadd)"
+[ "$description_text" ] && local text_desc=" | $description_text"
 xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_textxx'">
 <title>'$(gprop name $vadd)'</title>
 <desc>'$(gprop version $vadd)' '$(gprop author $vadd)$text_desc'</desc>
@@ -1353,46 +1353,42 @@ xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_te
 }
 
 Homeadd(){
-# Hủy bỏ biến
-pagesh=''; code_menu=''; farooot=''; google_trankk=''; description_text=''
-google_tran_shellkk=''; code_shell=''; code_option=''; summss=''; text_desc=''
-
 # Load index
 if [ -f "$dirvad/index.bash" ]; then
-pagesh='config-sh="'$dirvad'/index.bash home"'
+local pagesh='config-sh="'$dirvad'/index.bash home"'
 elif [ -f "$dirvad/index.sh" ]; then
-pagesh='config-sh="'$dirvad'/index.sh home"'
+local pagesh='config-sh="'$dirvad'/index.sh home"'
 elif [ -f "$dirvad/index.xml" ]; then
-pagesh='config="'$dirvad'/index.xml"'
+local pagesh='config="'$dirvad'/index.xml"'
 else
-pagesh='config="'$ETC'/error.xml"'
+local pagesh='config="'$ETC'/error.xml"'
 fi
 
 # Load menu
 if grep -q code_option "$dirvad/menu.bash" 2>/dev/null; then
-    code_option="$($dirvad/menu.bash code_option 2>/dev/null)"
-    code_shell="$($dirvad/menu.bash code_shell 2>/dev/null)"
+    local code_option="$($dirvad/menu.bash code_option 2>/dev/null)"
+    local code_shell="$($dirvad/menu.bash code_shell 2>/dev/null)"
 elif grep -q code_option "$dirvad/menu.sh" 2>/dev/null; then
-    code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
-    code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
+    local code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
+    local code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
 fi
 
 # load description
-description_text="$(gprop description $vadd)"
-[ "$description_text" ] && text_desc=" | $description_text"
+local description_text="$(gprop description $vadd)"
+[ "$description_text" ] && local text_desc=" | $description_text"
 
 # Phát hiện root
 if grep -q 'root=true' $vadd 2>/dev/null; then
-farooot='<lock>
+local farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
 else
-desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
+local desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
 fi
 
 # phát hiện tag
 if grep -q 'summary=.' $vadd 2>/dev/null; then
-summss='<summary>'"$(gprop summary $vadd)"'</summary>'
+local summss='<summary>'"$(gprop summary $vadd)"'</summary>'
 fi
 
 # Load trang
@@ -1400,14 +1396,18 @@ if grep -q 'name=.' $vadd 2>/dev/null; then
 
 # Xác nhận có google dịch
 if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null || grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
-google_trankk='<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
-google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
+local google_trankk='<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
+local google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
+fi
+
+if grep -q 'shortcut=true' $vadd 2>/dev/null; then
+local shortcut='id="'${dirvad##*/}'"'
 fi
 
 #id="'${dirvad##*/}'"
 xml_print '<group>
-<page icon="'`urladd icon`'" '$pagesh'>
+<page '$shortcut' icon="'`urladd icon`'" '$pagesh'>
 <title>'$(gprop name $vadd)'</title>
 <desc>'$desc_tec'</desc>
 '"$summss"'
@@ -1428,8 +1428,11 @@ fi
 }
 
 Vips(){
-index_adds=""; # Bỏ giá trị cũ tránh lưu
-[ "$PATHADD" == "$AON" ] && index_adds="$(glog settadd)" || index_adds="$(glog settadd2)"
+if [ "$PATHADD" == "$AON" ]; then
+local index_adds="$(glog settadd)"
+else
+local index_adds="$(glog settadd2)"
+fi
 if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
     if grep -q 'url=.' $vadd 2>/dev/null; then
@@ -1455,8 +1458,8 @@ fi
 # Load trang add-on có pin trước
 for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
-    dirvad="${vadd%/*}"
-    pin_text_add="$unpin_text"
+    local dirvad="${vadd%/*}"
+    local pin_text_add="$unpin_text"
     [ -f "$dirvad/pin" ] || continue
     if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
         Vips
@@ -1466,8 +1469,8 @@ done
 # load trang không có pin
 for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
-    dirvad="${vadd%/*}"
-    pin_text_add="$pin_text"
+    local dirvad="${vadd%/*}"
+    local pin_text_add="$pin_text"
     [ -f "$dirvad/pin" ] && continue
     if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
         Vips
@@ -1477,8 +1480,8 @@ done
 # load trang tải xuống ở dưới cùng
 for vadd in $PATHADD/*/download.prop; do
     [ -f "$vadd" ] || continue
-    dirvad="${vadd%/*}"
-    pin_text_add="$pin_text"
+    local dirvad="${vadd%/*}"
+    local pin_text_add="$pin_text"
     if [[ -f "$dirvad/pin" || -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
         continue
     fi
