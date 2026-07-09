@@ -1,11 +1,11 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
 if [ "$1" == '-b' ];then
-local backup_text=1
+backup_text=1
 shift
 fi
 
-local TARGET_LANG="$1"
+TARGET_LANG="$1"
 if [ -z "$TARGET_LANG" ] || [ "$TARGET_LANG" = "-h" ] || [ "$TARGET_LANG" = "--help" ]; then
     echo "Usage:"
     echo "  ${0##*/} [-b] vi \"hello world\""
@@ -16,15 +16,15 @@ shift
 
 # ---- LẤY TEXT (giữ newline) ----
 if [ "$#" -gt 0 ]; then
-    local TEXT="$*"
+    TEXT="$*"
 else
-    local TEXT="$(cat)"
+    TEXT="$(cat)"
 fi
 
 [ -z "$TEXT" ] && exit 0
 
 # ---- GỌI API ----
-local RESULT="$(curl -s -G -L \
+RESULT="$(curl -s -G -L \
   "https://translate.googleapis.com/translate_a/single" \
   --data-urlencode "client=gtx" \
   --data-urlencode "sl=auto" \
@@ -34,7 +34,7 @@ local RESULT="$(curl -s -G -L \
 )"
 
 # ---- TRÍCH KẾT QUẢ ----
-local OUT="$(echo "$RESULT" | jq -r '.[0] | map(.[0]) | join("")' 2>/dev/null)"
+OUT="$(echo "$RESULT" | jq -r '.[0] | map(.[0]) | join("")' 2>/dev/null)"
 
 # ---- FALLBACK ----
 if [ -z "$OUT" ]; then
