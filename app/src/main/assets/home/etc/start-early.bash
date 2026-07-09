@@ -13,7 +13,7 @@ if checkonline; then
     timeout 20 taive 'https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/Version.md' $TEMP/Version.md
     
     if [ -f $TEMP/Version.md ]; then
-    sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=6 {printf "Version:%s", $0}' | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/version.txt
+    sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=7 {printf "Version:%s", $0}' | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/version.txt
     fi
 
     # Thông báo cập nhật

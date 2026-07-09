@@ -413,7 +413,25 @@ $shella5"
 }
 
 Update(){
-[ -f "$TEMP/update" ] && show_update=1
+# Thông báo cập nhật
+link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
+if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
+websums="$(xem $link_url/tags/beta)"
+tagname="${PACKAGE_VERSION_NAME//./}"
+else
+websums="$(xem $link_url/latest)"
+tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
+fi
+websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
+filesum="$(checksum "$PATH_APK")"
+if [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
+    if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
+    [ -n "$tagname" ] && show_update=1
+    fi
+else
+    [ -n "$tagname" ] && show_update=1
+fi
+
 xml_print '<group>
 <page icon="'`urlpng like`'" html="https://zenlua.github.io/Tool-Tree/website/Information.html" >
 <title>'$author_text'</title>
@@ -433,9 +451,9 @@ xml_print '<group>
 echo "'$update_text_2'"
 echo
 if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
-data_json="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/beta)"
+data_json="$(xem '$link_url'/tags/beta)"
 else
-data_json="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
+data_json="$(xem '$link_url'/latest)"
 fi
 websum="$(echo "$data_json" | jq -r .assets[0].digest | cut -d: -f2)"
 name_apk="$(echo "$data_json" | jq -r .name)"
