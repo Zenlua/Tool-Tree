@@ -15,7 +15,11 @@ if checkonline; then
     if [ -f $TEMP/Version.md ]; then
     sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=7 {printf "Version:%s", $0}' | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/version.txt
     fi
+fi
+) &
 
+(
+if checkonline; then
     # Thông báo cập nhật
     link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
