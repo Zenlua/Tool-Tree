@@ -11,20 +11,22 @@ if checkonline; then
     # Tải về nhật ký
     echo -e "Download the log and the latest version..."
     timeout 20 taive 'https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/Version.md' $TEMP/Version.md
+    
     if [ -f $TEMP/Version.md ]; then
     sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=6 {printf "Version:%s", $0}' | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/version.txt
     fi
 
     # Thông báo cập nhật
+    link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
-        local websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/beta)"
-        local tagname="${PACKAGE_VERSION_NAME//./}"
+    websums="$(xem $link_url/tags/beta)"
+    tagname="${PACKAGE_VERSION_NAME//./}"
     else
-        local websums="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/latest)"
-        local tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
+    websums="$(xem $link_url/latest)"
+    tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
     fi
-    local websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
-    local filesum="$(checksum "$PATH_APK")"
+    websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
+    filesum="$(checksum "$PATH_APK")"
     echo "Tag: $tagname"
     echo "Sum online: $websum"
     echo "Sum apk: $filesum"
