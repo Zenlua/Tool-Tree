@@ -68,8 +68,9 @@ class MainActivity : AppCompatActivity() {
             startService(Intent(this@MainActivity, WakeLockService::class.java).apply {
                 action = WakeLockService.ACTION_END_WAKELOCK
             })
-            isEnabled = false
-            onBackPressedDispatcher.onBackPressed()
+            // isEnabled = false
+            // onBackPressedDispatcher.onBackPressed()
+            finish()
         }
     }
 
