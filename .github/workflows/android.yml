@@ -78,7 +78,7 @@ jobs:
       - name: Beta APK
         uses: softprops/action-gh-release@v2
         with:
-          name: "Tool-Tree ${{ env.VER }} Beta"
+          name: "Tool-Tree ${{ env.VER }} beta"
           tag_name: "beta"
           files: Beta/*
           prerelease: true
