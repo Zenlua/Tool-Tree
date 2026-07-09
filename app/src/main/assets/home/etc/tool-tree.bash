@@ -68,8 +68,9 @@ sum_md5_kk="$(checksum $ETC/lang/$texgg)"
     [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
     for vc in $(grep "=" $ETC/lang/$texgg | cut -d= -f1); do
     (
-    local xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
+    xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
     echo "${vc}=\"${xfhtfvgf^}\" # ${!vc}" >>$ETC/lang/auto.sh
+    unset xfhtfvgf
     ) &
     done
     wait
@@ -359,8 +360,9 @@ sum_md5_kk="$(checksum $ETC/lang/vi.sh)"
   [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
   for vc in $(grep "=" $ETC/lang/vi.sh | cut -d= -f1); do
   (
-  local xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
+  xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
   echo "${vc}=\"${xfhtfvgf^}\" # ${!vc}" | tee -a $ETC/lang/auto.sh
+  unset xfhtfvgf
   ) &
   done
   wait
@@ -728,16 +730,16 @@ fi
 <param label="'$backups_text_3'" name="Sapp" type="app" multiple="multiple"/>
 <set>
 for v in $Sapp; do
-local patk="$(pm path $v | cut -f2 -d:)"
-local patk22="$(pm path "$v" | cut -f2 -d: | head -n1)"
-local pathvv="${patk22%/*}"
-local hcdf="$(echo "$patk" | grep -c "\.apk"$)"
-local paptn="$(echo "$patk" | grep "base\.apk"$)"
+patk="$(pm path $v | cut -f2 -d:)"
+patk22="$(pm path "$v" | cut -f2 -d: | head -n1)"
+pathvv="${patk22%/*}"
+hcdf="$(echo "$patk" | grep -c "\.apk"$)"
+paptn="$(echo "$patk" | grep "base\.apk"$)"
     if [[ -n "$paptn" ]]; then
-    local infor="$(apkeditor info -i "$paptn")"
-    local nameapk="$(echo "$infor" | grep -m1 "AppName" | cut -d\" -f2)"
+    infor="$(apkeditor info -i "$paptn")"
+    nameapk="$(echo "$infor" | grep -m1 "AppName" | cut -d\" -f2)"
     else
-    local nameapk="${pathvv##*/}"
+    nameapk="${pathvv##*/}"
     fi
     if [ "$hcdf" -ge 2 ]; then
     zip -j -r "$PTAD/${nameapk}.apks" $patk
@@ -878,10 +880,8 @@ slog xoa_oat_boot "$xoa_oat_boot"
 slog dkjdj "$nounpak"
 slog dkhdh "$cboxk"
 for vkl in $IMAGES; do
-local tppq1="${vkl%%=*}"
-local tppq2="${vkl#*=}"
-if [ -f "$PTSD/$tppq2" ]; then
-unpack_img -i "$PTSD/$tppq2" -p "$tppq1" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb
+if [ -f "$PTSD/${vkl#*=}" ]; then
+unpack_img -i "$PTSD/${vkl#*=}" -p "${vkl%%=*}" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb
 else
 unpack_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb
 fi
@@ -1205,7 +1205,7 @@ if [ "$menu_id" == "v1" ]; then
 elif [ "$menu_id" == "v2" ]; then
     echo "Looking for system apk..."
     for mm in $(pm list package -s | cut -f2 -d:); do
-    local cggdccg="$(pm path $mm | cut -f2 -d:)"
+    cggdccg="$(pm path $mm | cut -f2 -d:)"
     [ -f "$cggdccg" ] && apktool if "$cggdccg" 2>/dev/null | sed "/127.apk/d"
     done
     rm -fr $HOME/.local/share/apktool/framework/1.apk
@@ -1458,8 +1458,8 @@ fi
 # Load trang add-on có pin trước
 for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
-    local dirvad="${vadd%/*}"
-    local pin_text_add="$unpin_text"
+    dirvad="${vadd%/*}"
+    pin_text_add="$unpin_text"
     [ -f "$dirvad/pin" ] || continue
     if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
         Vips
@@ -1469,8 +1469,8 @@ done
 # load trang không có pin
 for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
-    local dirvad="${vadd%/*}"
-    local pin_text_add="$pin_text"
+    dirvad="${vadd%/*}"
+    pin_text_add="$pin_text"
     [ -f "$dirvad/pin" ] && continue
     if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
         Vips
@@ -1480,8 +1480,8 @@ done
 # load trang tải xuống ở dưới cùng
 for vadd in $PATHADD/*/download.prop; do
     [ -f "$vadd" ] || continue
-    local dirvad="${vadd%/*}"
-    local pin_text_add="$pin_text"
+    dirvad="${vadd%/*}"
+    pin_text_add="$pin_text"
     if [[ -f "$dirvad/pin" || -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
         continue
     fi
