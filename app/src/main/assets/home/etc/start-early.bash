@@ -83,15 +83,11 @@ fi
 set_permis $AON/*/* $AOK/*/* &>/dev/null
 for vadd in $AON/* $AOK/*; do
     if [ -f "$vadd/early_start.bash" ]; then
-    (
     echo "Run shell: $vadd/early_start.bash"
-    $vadd/early_start.bash
-    ) &
+    $vadd/early_start.bash &
     elif [ -f "$vadd/early_start.sh" ]; then
-    (
     echo "Run shell: $vadd/early_start.sh"
-    $vadd/early_start.sh
-    ) &
+    $vadd/early_start.sh &
     fi
 done
 ) &

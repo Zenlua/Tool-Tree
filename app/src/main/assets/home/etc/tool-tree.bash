@@ -1329,21 +1329,22 @@ Addon(){
 # Tính năng
 
 Download(){
-if grep -q 'root=true' $vadd 2>/dev/null; then
-local farooot='<lock>
+if [ "$(gprop root)" == "true" ]; then
+farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
 fi
-if grep -q 'url=.' $vadd 2>/dev/null; then
-local description_text="$(gprop description $vadd)"
-[ "$description_text" ] && local text_desc=" | $description_text"
+if [ "$(gprop url)" ]; then
+[ "$(gprop description)" ] && description_text=" | $(gprop description)"
 xml_print '<group>
 <action warn="'$use_network_text'" icon="'`urladd icon`'" reload="true">
-<title>'$(gprop name $vadd)'</title>
-<desc>'$(gprop version $vadd)' '$(gprop author $vadd)$text_desc'</desc>
+<title>'$(gprop name)'</title>
+<desc>'$(gprop version)' '$(gprop author)$description_text'</desc>
 '"$farooot"'
 <set>
-taive "'$(gprop url $vadd)'" $TMP/addon.add 2>&1
+echo "'$update_text_3'"
+echo
+taive "'$(gprop url)'" $TMP/addon.add 2>&1
 echo
 if [ -f $TMP/addon.add ]; then
 installadd $TMP/addon.add "'${dirvad%/*}'"
@@ -1358,15 +1359,14 @@ fi
 
 Features(){
 if [ "$1" == "status" ]; then
-local addon_textxx="$addon_text_10"
+addon_textxx="$addon_text_10"
 else
-local addon_textxx="$addon_text_2"
+addon_textxx="$addon_text_2"
 fi
-local description_text="$(gprop description $vadd)"
-[ "$description_text" ] && local text_desc=" | $description_text"
+[ "$(gprop description)" ] && description_text=" | $(gprop description)"
 xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_textxx'">
-<title>'$(gprop name $vadd)'</title>
-<desc>'$(gprop version $vadd)' '$(gprop author $vadd)$text_desc'</desc>
+<title>'$(gprop name)'</title>
+<desc>'$(gprop version)' '$(gprop author)$description_text'</desc>
 <get>cat '$dirvad'/'$1'</get>
 <set>echo "$state" > '$dirvad'/'$1'</set>
 </switch>
@@ -1374,63 +1374,53 @@ xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_te
 }
 
 Homeadd(){
+
 # Load index
 if [ -f "$dirvad/index.bash" ]; then
-local pagesh='config-sh="'$dirvad'/index.bash home"'
+pagesh='config-sh="'$dirvad'/index.bash home"'
 elif [ -f "$dirvad/index.sh" ]; then
-local pagesh='config-sh="'$dirvad'/index.sh home"'
+pagesh='config-sh="'$dirvad'/index.sh home"'
 elif [ -f "$dirvad/index.xml" ]; then
-local pagesh='config="'$dirvad'/index.xml"'
+pagesh='config="'$dirvad'/index.xml"'
 else
-local pagesh='config="'$ETC'/error.xml"'
+pagesh='config="'$ETC'/error.xml"'
 fi
 
 # Load menu
 if grep -q code_option "$dirvad/menu.bash" 2>/dev/null; then
-    local code_option="$($dirvad/menu.bash code_option 2>/dev/null)"
-    local code_shell="$($dirvad/menu.bash code_shell 2>/dev/null)"
+    code_option="$($dirvad/menu.bash code_option 2>/dev/null)"
+    code_shell="$($dirvad/menu.bash code_shell 2>/dev/null)"
 elif grep -q code_option "$dirvad/menu.sh" 2>/dev/null; then
-    local code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
-    local code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
+    code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
+    code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
 fi
-
-# load description
-local description_text="$(gprop description $vadd)"
-[ "$description_text" ] && local text_desc=" | $description_text"
 
 # Phát hiện root
-if grep -q 'root=true' $vadd 2>/dev/null; then
-local farooot='<lock>
+if [ "$(gprop root)" == "true" ]; then
+farooot='<lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>'
-else
-local desc_tec="$(gprop version $vadd) $(gprop author $vadd)$text_desc"
-fi
-
-# phát hiện tag
-if grep -q 'summary=.' $vadd 2>/dev/null; then
-local summss='<summary>'"$(gprop summary $vadd)"'</summary>'
 fi
 
 # Load trang
-if grep -q 'name=.' $vadd 2>/dev/null; then
+if [ "$(gprop name)" ]; then
 
 # Xác nhận có google dịch
 if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null || grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
-local google_trankk='<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
-local google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
+google_trankk='<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
+google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
 fi
 
-if grep -q 'shortcut=true' $vadd 2>/dev/null; then
-local shortcut='id="'${dirvad##*/}'"'
-fi
+# phát hiện tag
+[ "$(gprop summary)" ] && summss='<summary>'"$(gprop summary)"'</summary>'
+[ "$(gprop shortcut)" == "true" ] && shortcut='id="'${dirvad##*/}'"'
+[ "$(gprop description)" ] && description_text=" | $(gprop description)"
 
-#id="'${dirvad##*/}'"
 xml_print '<group>
 <page '$shortcut' icon="'`urladd icon`'" '$pagesh'>
-<title>'$(gprop name $vadd)'</title>
-<desc>'$desc_tec'</desc>
+<title>'$(gprop name)'</title>
+<desc>'$(gprop version) $(gprop author)$description_text'</desc>
 '"$summss"'
 '"$farooot"'
 <option type="default" id="v2" auto-finish="true" auto-off="true" interruptible="false">'$pin_text_add'</option>
@@ -1445,15 +1435,23 @@ fi
 </handler>
 </page>
 </group>'
+
 fi
 }
 
 Vips(){
+# Xoá giá trị cũ
+code_option=''; code_shell=''; description_text=''; farooot='';
+summss=''; google_trankk=''; google_tran_shellkk=''; shortcut='';
+addon_textxx=''; index_adds='';
 if [ "$PATHADD" == "$AON" ]; then
-local index_adds="$(glog settadd)"
+index_adds="$(glog settadd)"
 else
-local index_adds="$(glog settadd2)"
+index_adds="$(glog settadd2)"
 fi
+gprop(){
+cat "$vadd" 2>/dev/null | awk -F= -v k="$1" '$1==k{print $2; exit}'
+}
 if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
     if grep -q 'url=.' $vadd 2>/dev/null; then
