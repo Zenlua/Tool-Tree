@@ -42,7 +42,7 @@ echo
 echo "$author_text: $(gprop author)"
 echo
 
-[ -d "$2/$loadid" ] && rm -fr "$2/$loadid"
+[ -d "$2/$loadid" ] && find "$2/$loadid" -maxdepth 1 ! -path "$2/$loadid" ! -name 'download.prop' -exec rm -rf {} +
 mkdir -p "$2/$loadid"
 
 echo "$addon_text_3"

@@ -190,7 +190,7 @@ echo "$shell
 $shell2
 $shell3
 $shell4
-$shell5" >> $TMP/shell_history.bash
+$shell5" | grep -v "^$" >> $TMP/shell_history.bash
 eval "$shell
 $shell2
 $shell3
@@ -306,7 +306,7 @@ echo "$shells
 $shells2
 $shells3
 $shells4
-$shells5" >> $TMP/shell_history.bash
+$shells5" | grep -v "^$" >> $TMP/shell_history.bash
 eval "$shells
 $shells2
 $shells3
@@ -401,7 +401,7 @@ echo "$shella
 $shella2
 $shella3
 $shella4
-$shella5" >> $TMP/shell_history.bash
+$shella5" | grep -v "^$" >> $TMP/shell_history.bash
 eval "$shella
 $shella2
 $shella3
