@@ -2,7 +2,6 @@
 # Kakathic
 
 source language
-loadmd=''; loadid='';
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
 echo "installadd [file.add|http://file.add] folder_ouput"
@@ -19,8 +18,9 @@ loadmd="$(7z x "$1" addon.prop -so 2>/dev/null)"
     exit 1
     fi
 else
-taive "$1" "$TMP/addon.add"
-loadmd="$(7z x "$TMP/addon.add" addon.prop -so 2>/dev/null)"
+file_random="addon_$RANDOM.add"
+taive "$1" "$TMP/$file_random"
+loadmd="$(7z x "$TMP/$file_random" addon.prop -so 2>/dev/null)"
     if [ -z "$loadmd" ]; then
     echo "Download add-on error !" >&2
     exit 1
@@ -54,8 +54,8 @@ if [ -f "$1" ]; then
     7z x "$1" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
     slog "check_sum_addon_$loadid" "$(checksum $1)"
 else
-    7z x "$TMP/addon.add" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
-    slog "check_sum_addon_$loadid" "$(checksum $TMP/addon.add)"
+    7z x "$TMP/$file_random" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
+    slog "check_sum_addon_$loadid" "$(checksum $TMP/$file_random)"
 fi
 
 echo 0 > "$2/$loadid/status"
