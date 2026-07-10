@@ -53,7 +53,7 @@ xml_print '<?xml version="1.0" encoding="UTF-8" ?>
 <title>'$clean_text_3'</title>
 <param name="LIST" title="strings" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_values"/>
 <param name="LIST2" title="arrays" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_array"/>
-<param name="LIST3" title="arrays" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_plurals"/>
+<param name="LIST3" title="plurals" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_plurals"/>
 <set>
 IFS=$'"'\n'"'
 for vv in $LIST $LIST2 $LIST3; do
