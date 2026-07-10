@@ -4,7 +4,7 @@
 # home
 home(){ xml_print '<group title="'$google_text'">
 <action>
-<title>'$name_text'</title>
+<title>'$mage_name_text'</title>
 <desc>'$merge_partition_text'</desc>
 <set>
 slog silencekd "$silence"

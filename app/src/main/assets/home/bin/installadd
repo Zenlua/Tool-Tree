@@ -56,6 +56,7 @@ if [ -f "$1" ]; then
 else
     7z x "$TMP/$file_random" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
     slog "check_sum_addon_$loadid" "$(checksum $TMP/$file_random)"
+    rm -f $TMP/$file_random
 fi
 
 echo 0 > "$2/$loadid/status"
