@@ -1,5 +1,6 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
+sum_md5='';
 
 if [ -f "$1/english.prop" ]; then
 file_props="english.prop"

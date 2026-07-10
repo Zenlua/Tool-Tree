@@ -1,6 +1,8 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
+
 source language
+loadmd=''; loadid='';
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
 echo "installadd [file.add|http://file.add] folder_ouput"
