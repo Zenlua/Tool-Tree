@@ -1,9 +1,10 @@
 # Add-on
 
 id=hack_wifi
-name=Hack WIFI
+name=Hack Wi-Fi
 author=Kakathic
-description=WIFI hacking tool
+description=Wi-Fi hacking tool
+description_vi=Công cụ hack Wi-Fi
 version=1.0
 versionCode=100
 root=true

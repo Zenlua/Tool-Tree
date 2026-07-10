@@ -3,6 +3,7 @@ id=overlay_create
 name=Create overlay
 author=Kakathic
 description=Create overlay language
+description_vi=Tạo ngôn ngữ lớp phủ
 version=1.0
 versionCode=100
 root=false

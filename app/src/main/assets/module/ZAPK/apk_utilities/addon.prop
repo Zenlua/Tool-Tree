@@ -2,7 +2,8 @@
 id=apk_utilities
 name=Apk patch
 author=Kakathic
-description=Many small amenities
+description=Multiple APK patches
+description_vi=Nhiều bản vá apk
 version=1.0
 versionCode=100
 root=false

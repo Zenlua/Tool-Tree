@@ -3,6 +3,7 @@ id=apk_features
 name=Utility
 author=Kakathic
 description=Many small amenities
+description_vi=Nhiều tiện ích nhỏ
 version=1.0
 versionCode=100
 root=false

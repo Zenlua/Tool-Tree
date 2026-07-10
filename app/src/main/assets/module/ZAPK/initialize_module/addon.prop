@@ -4,6 +4,7 @@ id=initialize_module
 name=Initialize module
 author=Kakathic
 description=Customize module
+description_vi=Tùy chỉnh mô-đun
 version=1.0
 versionCode=100
 root=true

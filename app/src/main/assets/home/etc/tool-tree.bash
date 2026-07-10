@@ -1333,13 +1333,7 @@ Addon(){
 # Tính năng
 
 Download(){
-if [ "$(gprop root)" == "true" ]; then
-farooot='<lock>
-[ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
-</lock>'
-fi
 if [ "$(gprop url)" ]; then
-[ "$(gprop description)" ] && description_text=" | $(gprop description)"
 xml_print '<group>
 <action warn="'$use_network_text'" icon="'`urladd icon`'" reload="true">
 <title>'$(gprop name)'</title>
@@ -1362,13 +1356,8 @@ fi
 }
 
 Features(){
-if [ "$1" == "status" ]; then
-addon_textxx="$addon_text_10"
-else
-addon_textxx="$addon_text_2"
-fi
-[ "$(gprop description)" ] && description_text=" | $(gprop description)"
-xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_textxx'">
+[ "$1" == "status" ] && atextx="$addon_text_10" || atextx="$addon_text_2"
+xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$atextx'">
 <title>'$(gprop name)'</title>
 <desc>'$(gprop version)' '$(gprop author)$description_text'</desc>
 <get>cat '$dirvad'/'$1'</get>
@@ -1378,7 +1367,6 @@ xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$addon_te
 }
 
 Homeadd(){
-
 # Load index
 if [ -f "$dirvad/index.bash" ]; then
 pagesh='config-sh="'$dirvad'/index.bash home"'
@@ -1399,16 +1387,8 @@ elif grep -q code_option "$dirvad/menu.sh" 2>/dev/null; then
     code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
 fi
 
-# Phát hiện root
-if [ "$(gprop root)" == "true" ]; then
-farooot='<lock>
-[ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
-</lock>'
-fi
-
 # Load trang
 if [ "$(gprop name)" ]; then
-
 # Xác nhận có google dịch
 if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null || grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
 google_trankk='<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
@@ -1416,10 +1396,9 @@ google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
 fi
 
-# phát hiện tag
+# phát hiện tính năng
 [ "$(gprop summary)" ] && summss='<summary>'"$(gprop summary)"'</summary>'
 [ "$(gprop shortcut)" == "true" ] && shortcut='id="'${dirvad##*/}'"'
-[ "$(gprop description)" ] && description_text=" | $(gprop description)"
 
 xml_print '<group>
 <page '$shortcut' icon="'`urladd icon`'" '$pagesh'>
@@ -1439,7 +1418,6 @@ fi
 </handler>
 </page>
 </group>'
-
 fi
 }
 
@@ -1447,15 +1425,34 @@ Vips(){
 # Xoá giá trị cũ
 code_option=''; code_shell=''; description_text=''; farooot='';
 summss=''; google_trankk=''; google_tran_shellkk=''; shortcut='';
-addon_textxx=''; index_adds='';
+atextx=''; index_adds='';
 if [ "$PATHADD" == "$AON" ]; then
 index_adds="$(glog settadd)"
 else
 index_adds="$(glog settadd2)"
 fi
+
+# getprop
 gprop(){
 cat "$vadd" 2>/dev/null | awk -F= -v k="$1" '$1==k{print $2; exit}'
 }
+
+# Phát hiện root
+if [ "$(gprop root)" == "true" ]; then
+farooot='<lock>
+[ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
+</lock>'
+fi
+
+# Desc ngôn ngữ
+if [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ]; then
+[ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ] && description_text=" | $(gprop 'description_'$LANGUAGE'_'$COUNTRY'')"
+elif [ "$(gprop 'description_'$LANGUAGE'')" ]; then
+[ "$(gprop description_$LANGUAGE)" ] && description_text=" | $(gprop description_$LANGUAGE)"
+else
+[ "$(gprop description)" ] && description_text=" | $(gprop description)"
+fi
+
 if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
     if grep -q 'url=.' $vadd 2>/dev/null; then
@@ -1469,11 +1466,11 @@ if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f $dirvad/nodelete ] || Features delete
     else
     if [ "$(cat $dirvad/status 2>/dev/null)" != 1 ]; then
-        if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
-            Homeadd
-        elif [ -f "$dirvad/download.prop" ]; then
-            Download
-        fi
+    if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
+        Homeadd
+    elif [ -f "$dirvad/download.prop" ]; then
+        Download
+    fi
     fi
 fi
 }
