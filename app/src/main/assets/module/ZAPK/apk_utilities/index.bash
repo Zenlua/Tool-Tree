@@ -31,10 +31,6 @@ fi
 
 # home
 home(){
-if [ -n "$(glog project_apk_clean)" ];then
-show_clean=1
-path_clean="$(glog project_apk_clean)"
-fi
 xml_print '<?xml version="1.0" encoding="UTF-8" ?>
 <group>
 <group title="'$google_text'">
@@ -73,6 +69,7 @@ done
 # Thư mục hiện tại
 MPAT="${0%/*}"
 path_clean="$(glog project_apk_clean)"
+[ "$(glog project_apk_clean)" ] && show_clean=1
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
