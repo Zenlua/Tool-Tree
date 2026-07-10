@@ -5,6 +5,7 @@
 home(){ xml_print '<group title="'$google_text'">
 <action>
 <title>'$name_text'</title>
+<desc>'$merge_partition_text'</desc>
 <set>
 slog silencekd "$silence"
 slog dang_filehd "$dang_file"

@@ -81,6 +81,7 @@ sum_md5_kk="$(checksum $ETC/lang/$texgg)"
       fi
     slog sum_md5_kk "$sum_md5_kk"
     fi
+error_txxt_bug=''; texgg=''; sum_md5_kk='';
 fi
 
 # Tạo thư mục
@@ -88,6 +89,10 @@ fi
 [ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null
 [ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null
 ) &
+
+# Tạm thời xử lý
+[ -d "$HOME/log" ] && mv $HOME/log $HOME/usr
+[ -d $AON/merge-system ] && rm -fr $AON/merge-system
 
 # Ngôn ngữ
 source language 2>/dev/null
