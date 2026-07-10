@@ -1,5 +1,15 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: Beta**
+
++ Revise the add-on structure
++ Fix some code errors
++ Fix the super repack so that no errors appear
++ Update add-ons and Patch ROM
++ Optimize the code add-on
++ Update Python commands to version 3.14
++ Updated some other commands as well
+
 **Version: 1.4.9 (8-7-2026)**
 
 + Fix add-on update errors

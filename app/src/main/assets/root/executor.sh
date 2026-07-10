@@ -32,7 +32,7 @@ export HOME="$({TOOLKIT})"
 export TERMUX="$HOME/termux"
 export ETC="$HOME/etc"
 export BIN="$HOME/bin"
-export LOG="$HOME/log"
+export LOG="$HOME/usr/log"
 export SDH="$HOME/TREE"
 export APK="$HOME/TOOL"
 export AON="$HOME/ZADD"
@@ -64,6 +64,7 @@ export ROT=1
 else
 export ROT=0
 export xu=xu
+export show_root_text="ROOT"
 fi
 
 if [ "$CPU_ABI" != 'arm64-v8a' ];then

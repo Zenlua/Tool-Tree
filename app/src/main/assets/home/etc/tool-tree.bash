@@ -98,9 +98,6 @@ text_id_2="\"$(glog show_infor_text_2 '$trademark_text: $ANDROID_BRAND  |  $devi
 [ "$text_id_2" == '""' ] || text_id_3="§§"
 Vip_text_infor="$(eval echo "${text_id_1}${text_id_3}${text_id_2}")"
 
-# Check root
-[ "$ROT" == 0 ] && show_root="ROOT"
-
 # Văn bản
 Home(){
 [ -z "$Vip_text_infor" ] || xml_print '<group><text summary="'"$Vip_text_infor"'"/></group>'
@@ -604,7 +601,7 @@ Root(){
 xml_print '<group>
 <action icon="'`urlpng mount`'" interruptible="false">
 <title>'$mount_text_1'</title>
-<summary>'$show_root'</summary>
+<summary>'$show_root_text'</summary>
 <lock>[ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0</lock>
 <set>
 for kkh in $IMG_NAME; do
@@ -621,7 +618,7 @@ echo "'$save_text' $SDH/raw"
 
 <action icon="'`urlpng umount`'" interruptible="false">
 <title>'$umount_text_1'</title>
-<summary>'$show_root'</summary>
+<summary>'$show_root_text'</summary>
 <lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>
@@ -644,7 +641,7 @@ echo "'$umount_text_2'"
 <group>
 <action icon="'`urlpng backup`'" interruptible="false">
 <title>'$backup_text_1'</title>
-<summary>'$show_root'</summary>
+<summary>'$show_root_text'</summary>
 <lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>
@@ -670,7 +667,7 @@ echo "'$save_text' $Extract"
 
 <action icon="'`urlpng flash`'">
 <title>'$flash_text_1'</title>
-<summary>'$show_root'</summary>
+<summary>'$show_root_text'</summary>
 <lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>
@@ -727,7 +724,7 @@ xml_print '<group>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>
 <title>'$dexopt_app_text'</title>
-<summary>'$show_root'</summary>
+<summary>'$show_root_text'</summary>
 <param name="name_dex_list" label="'$option_text'" options-sh="echo -e '"'everything\nspeed\nspeed-profile\nverify'"'" value="speed-profile"/>
 <param name="bools" label="'$dexopt_app_text_2'" desc="'$dexopt_app_text_3'" type="checkbox" />
 <param name="apps" type="app" multiple="multiple" desc="'$dexopt_app_text_1'" options-sh="pm list package -3 | cut -f2 -d:" />
