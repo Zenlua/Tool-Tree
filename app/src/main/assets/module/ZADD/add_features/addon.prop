@@ -8,7 +8,7 @@ versionCode=102
 root=false
 
 # language
-config_text_1="Convert existing projects"
+config_text_1="List of existing projects"
 setting_text_3="Projects"
 input_text="Input file"
 folder_text="Folder containing:"
@@ -33,7 +33,7 @@ oat_text_9="Enter the classpath for the application. Some applications require a
 splitapp_desc_text="Extract images from UPDATE.APP"
 pac_desc_text="Extract files from a pac file"
 oat_text_10="Select only the APKs that have been modified with classes*.dex"
-name_text="Merge partition system"
+name_text="Merge partition"
 option_text="Option"
 default_text="Default"
 save_text="Save in:"

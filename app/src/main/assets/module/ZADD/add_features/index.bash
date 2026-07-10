@@ -23,7 +23,7 @@ checktime
 <action warn="'$oat_text_1'">
 <title>'$oat_text_3'</title>
 <desc>'$oat_text_4'</desc>
-<param name="PTSH" desc="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
+<param name="PTSH" title="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
 <param name="framework_switch" value-sh="glog framework_switch 1" label="'$oat_text_5'" type="switch" />
 <param name="services_switch" value-sh="glog services_switch 1" label="'$oat_text_6'" type="switch" />
 <param name="features_oat" value-sh="glog features_oat default" label="'$oat_text_7'" placeholder="default" type="text"/>

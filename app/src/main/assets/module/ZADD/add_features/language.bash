@@ -1,5 +1,6 @@
 
-if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ];then
+if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ]; then
+config_text_1="Danh sách các dự án hiện có"
 setting_text_3="Dự án"
 input_text="Nhập tệp tin"
 folder_text="Thư mục chứa:"
@@ -23,7 +24,7 @@ oat_text_9="Nhập classpath cho ứng dụng. Một số ứng dụng yêu cầ
 splitapp_desc_text="Trích xuất hình ảnh từ UPDATE.APP"
 pac_desc_text="Trích xuất tệp tin từ tệp tin .pac"
 oat_text_10="Chỉ chọn các APK đã được chỉnh sửa có chứa classes*.dex"
-name_text="Hợp nhất phân vùng system"
+name_text="Hợp nhất phân vùng"
 default_text="Mặc định"
 delete_text="Xoá tệp tin gốc sau khi hoàn thành"
 merge_partition_1="Định dạng lưu file"
