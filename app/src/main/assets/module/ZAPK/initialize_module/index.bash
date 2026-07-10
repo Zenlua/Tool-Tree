@@ -63,7 +63,9 @@ echo "Delete file: $vcx"
 done
 </set>
 </action>
-</group>'
+</group>
+
+<text desc="'$list_modul'" summary-sh="find '$path_modun' -type f" />'
 }
 
 # Thư mục hiện tại

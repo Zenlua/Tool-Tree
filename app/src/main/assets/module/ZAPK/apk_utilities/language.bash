@@ -1,7 +1,5 @@
 
 if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ];then
-home_text_1="Vá APK"
-select_text_1="Tùy chọn"
 clean_text_1="Dự án"
 clean_text_2="Hiện tại:"
 clean_text_3="Xóa ngôn ngữ"

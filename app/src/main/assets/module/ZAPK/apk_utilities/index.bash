@@ -9,36 +9,54 @@ fi
 }
 
 search_values(){
-path_clean="$(glog project_apk_clean)"
 if [ -e "$APK/$PTAH/$path_clean" ];then
 cd "$APK/$PTAH/$path_clean"
 ls -1d resources/package_1/res/values-*/strings.xml res/values-*/strings.xml 2>/dev/null | sed -e 's|resources/package_1/||' -e 's|res/||' -e 's|/strings.xml||'
 fi
 }
 
-# clean
-clean(){
+search_array(){
+if [ -e "$APK/$PTAH/$path_clean" ];then
+cd "$APK/$PTAH/$path_clean"
+ls -1d resources/package_1/res/values-*/arrays.xml res/values-*/arrays.xml 2>/dev/null | sed -e 's|resources/package_1/||' -e 's|res/||' -e 's|/arrays.xml||'
+fi
+}
+
+search_plurals(){
+if [ -e "$APK/$PTAH/$path_clean" ];then
+cd "$APK/$PTAH/$path_clean"
+ls -1d resources/package_1/res/values-*/plurals.xml res/values-*/plurals.xml 2>/dev/null | sed -e 's|resources/package_1/||' -e 's|res/||' -e 's|/plurals.xml||'
+fi
+}
+
+# home
+home(){
 if [ -n "$(glog project_apk_clean)" ];then
 show_clean=1
 path_clean="$(glog project_apk_clean)"
 fi
 xml_print '<?xml version="1.0" encoding="UTF-8" ?>
 <group>
-<group>
-<action shell="hidden" reload="true">
+<group title="'$google_text'">
+<picker options-sh="'$MPAT'/index.bash search_pro" shell="hidden" reload="true">
 <title>'$clean_text_1'</title>
 <summary>'$clean_text_2' '"$path_clean"'</summary>
-<param name="project" label="'$select_text_1'" options-sh="'$MPAT'/index.bash search_pro" value-sh="glog project_apk_clean" required="true" />
-<set>slog project_apk_clean "$project"</set>
-</action>
+<get>glog project_apk_clean</get>
+<set>
+[ "$state" ] && slog project_apk_clean "$state"
+</set>
+</picker>
 </group>
 
 <group>
 <action reload="true" visible="echo '$show_clean'">
 <title>'$clean_text_3'</title>
-<param name="LIST" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_values"/>
+<param name="LIST" title="strings" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_values"/>
+<param name="LIST2" title="arrays" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_array"/>
+<param name="LIST3" title="arrays" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_plurals"/>
 <set>
-for vv in $LIST; do
+IFS=$'"'\n'"'
+for vv in $LIST $LIST2 $LIST3; do
 echo "'$clean_text_5' $vv"
 if [ -d "$APK/$PTAH/'$path_clean'/resources/package_1/res" ];then
 rm -fr "$APK/$PTAH/'$path_clean'/resources/package_1/res/$vv"
@@ -52,18 +70,9 @@ done
 </group>'
 }
 
-# home
-home(){
-xml_print '<?xml version="1.0" encoding="UTF-8" ?>
-<group>
-<group title="'$google_text'">
-<page title="'$home_text_1'" config-sh="'$MPAT'/index.bash clean"/>
-</group>
-</group>'
-}
-
 # Thư mục hiện tại
 MPAT="${0%/*}"
+path_clean="$(glog project_apk_clean)"
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"

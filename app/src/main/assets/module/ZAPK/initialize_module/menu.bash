@@ -10,6 +10,6 @@ elif [ "$1" == "code_shell" ];then
 echo 'if [ "$menu_id" == "vip123" ]; then
 [ -d '$path_modun' ] && touch '$path_modun'/remove
 [ -d '$path_modun2' ] && rm -fr '$path_modun2'
-echo "The module will be removed after the device restarts."
+echo "The module will be removed after the device restarts." | trans -b $LANGUAGE
 fi'
 fi

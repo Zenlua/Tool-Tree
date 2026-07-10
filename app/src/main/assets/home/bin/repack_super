@@ -66,7 +66,7 @@ argvs+="--metadata-slots 2 --device super:${super_sizek}:$first_sector --group $
 fi
 
 for i in $MIMGPA; do
-echo "$i" | grep -q "-cow" && continue
+echo "$i" | grep -q "\-cow" && continue
 i1=$(echo "$i" | sed 's/.img$//')
 i2=$(echo "$i" | sed -e 's/_a.img$//' -e 's/_b.img$//' -e 's/.img$//')
 info=$(checktype "$INPUT/$i1.img")
@@ -93,10 +93,9 @@ fi
 
 mkdir -p out
 echo "lpmake ${argvs}-F --output $INPUT/out/super.img" | sed -z 's| --|\n--|g'
-lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.log
-
-if [ $? == 1 ]; then
-killtree "\n$supers_text_1" "$INPUT/out/super.img"
-else
+lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.txt
+if [ $? == 0 ]; then
 echo -e "\n$supers_text_2"
+else
+killtree "\n$supers_text_1\n\n$(cat $TMP/super_log.txt 2>/dev/null)" "$INPUT/out/super.img"
 fi

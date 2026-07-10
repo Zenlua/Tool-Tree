@@ -1,5 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
+TARGET_LANG=''; backup_text=''; TEXT=''; RESULT=''; OUT='';
+
 if [ "$1" == '-b' ];then
 backup_text=1
 shift
