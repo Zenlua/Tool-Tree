@@ -23,4 +23,12 @@ oat_text_9="Nhập classpath cho ứng dụng. Một số ứng dụng yêu cầ
 splitapp_desc_text="Trích xuất hình ảnh từ UPDATE.APP"
 pac_desc_text="Trích xuất tệp tin từ tệp tin .pac"
 oat_text_10="Chỉ chọn các APK đã được chỉnh sửa có chứa classes*.dex"
+name_text="Hợp nhất partition system"
+default_text="Mặc định"
+delete_text="Xoá tệp tin gốc sau khi hoàn thành"
+merge_partition_1="Định dạng lưu file"
+merge_partition_3="Chọn system để các phân vùng khác gộp vào"
+merge_partition_5="Chọn các phân vùng để gộp vào system"
+pack_img_text="Không đóng gói"
+merge_partition_4="Hợp nhất xong"
 fi

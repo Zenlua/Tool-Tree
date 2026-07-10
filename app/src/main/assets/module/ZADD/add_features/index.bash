@@ -3,6 +3,22 @@
 
 # home
 home(){ xml_print '<group title="'$google_text'">
+<action>
+<title>'$name_text'</title>
+<set>
+slog silencekd "$silence"
+slog dang_filehd "$dang_file"
+'$MPAT'/bin/combine_img $silence $dang_file "$MUTIIMG" "$IMAGE"
+checktime
+</set>
+<param name="silence" value-sh="glog silencekd" label="'$delete_text'" type="checkbox" />
+<param name="dang_file" value-sh="glog dang_filehd" label="'$select_text'" desc="'$merge_partition_1'" options-sh="echo -e '"'0|$default_text\n1|erofs\n2|ext4\n3|$pack_img_text'"'"/>
+<param name="MUTIIMG" label="'$select_text'" options-sh="findfile 6 $PTSD" desc="'$merge_partition_3'" required="true" />
+<param name="IMAGE" options-sh="findfile 3 $PTSD | sed '"'/system\./d'"'" desc="'$merge_partition_5'" required="true" multiple="true"/>
+</action>
+</group>
+
+<group>
 <action warn="'$oat_text_1'">
 <title>'$oat_text_3'</title>
 <desc>'$oat_text_4'</desc>

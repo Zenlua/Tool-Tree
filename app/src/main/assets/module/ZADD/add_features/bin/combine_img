@@ -1,7 +1,16 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 [[ -z "$1" ]] && exit 1
+
 MPAT="${0%/*}"
-source $MPAT/language.sh
+# Ngôn ngữ mặc định
+eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
+[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
+
+# Google dịch
+if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
+trans_add "$MPAT"
+[ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
+fi
 
 # Run code
 for v in $3 $4; do

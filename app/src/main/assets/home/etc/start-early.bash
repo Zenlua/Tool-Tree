@@ -76,6 +76,8 @@ if [ "$ROT" == 1 ]; then
     [ "$API" -ge 30 ] && cmd appops set $PACKAGE_NAME QUERY_ALL_PACKAGES allow
     # Phím tắt màn hình chính
     cmd appops set $PACKAGE_NAME 10017 allow
+    # Loaded sẵn danh sách img
+    search_image &>/dev/null
 fi
 # Khởi động các file shell ở add-on
 set_permis $AON/*/* $AOK/*/* &>/dev/null
