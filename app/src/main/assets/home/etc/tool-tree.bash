@@ -91,7 +91,10 @@ fi
 ) &
 
 # Tạm thời xử lý
-[ -d "$HOME/log" ] && mv $HOME/log $HOME/usr
+if [ -d "$HOME/log" ]; then
+cp -rf $HOME/log $HOME/usr
+rm -fr $HOME/log
+fi
 [ -d $AON/merge-system ] && rm -fr $AON/merge-system
 
 # Ngôn ngữ
