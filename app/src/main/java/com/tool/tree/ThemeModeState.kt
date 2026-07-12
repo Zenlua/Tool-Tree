@@ -27,7 +27,7 @@ object ThemeModeState {
      * Đường dẫn đầy đủ sẽ là: /data/user/0/com.tool.tree/files/home/log/dissblur
      */
     private fun isBlurDisabled(activity: Activity): Boolean {
-        val file = File(activity.filesDir, "home/log/dissblur")
+        val file = File(activity.filesDir, "home/usr/log/dissblur")
         return try {
             if (file.exists()) {
                 file.readText().trim() == "1"

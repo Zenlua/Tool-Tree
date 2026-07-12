@@ -2,6 +2,7 @@
 
 **Version: 1.5.0 (12-7-2026)**
 
++ Fix language change error
 + Revise the add-on structure
 + Fix some code errors
 + Fix the super repack so that no errors appear

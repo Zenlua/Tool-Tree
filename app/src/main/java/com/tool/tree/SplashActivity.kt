@@ -194,7 +194,7 @@ class SplashActivity : AppCompatActivity() {
 
     private fun applyAppLanguage() {
         runCatching {
-            val langFile = File(filesDir, "home/log/language")
+            val langFile = File(filesDir, "home/usr/log/language")
             val lang = langFile.takeIf { it.exists() }?.readText()?.trim()?.takeIf { it.isNotEmpty() } ?: return
             val locale = Locale.forLanguageTag(lang.replace("_", "-"))
             if (Locale.getDefault() != locale) {

@@ -15,7 +15,7 @@ class ShellTranslation(val context: Context) {
 
     private val appResources: Resources by lazy {
         runCatching {
-            val langFile = File(context.filesDir, "home/log/language")
+            val langFile = File(context.filesDir, "home/usr/log/language")
             val lang = langFile
                 .takeIf { it.exists() }
                 ?.readText()
