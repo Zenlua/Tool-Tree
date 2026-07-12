@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-**Version: Beta**
+**Version: 1.5.0 (12-7-2026)**
 
 + Revise the add-on structure
 + Fix some code errors
