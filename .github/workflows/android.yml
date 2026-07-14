@@ -60,12 +60,11 @@ jobs:
           echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
           if [ "$UPTG" == "true" ];then
           echo "Telegram"
-          chat_tg="🎉 Release new version Tool-Tree
+          chat_tg="🎉 New Version Tool-Tree $VER
           
-          https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER
-          
-          • Notes: <a href=\"https://zenlua.github.io/Tool-Tree/Version.html\">Changelog</a>
+          • Download: <a href=\"https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER\">Github</a>
           • Version: $VER
+          • Notes: <a href=\"https://zenlua.github.io/Tool-Tree/Version.html\">Changelog</a>
           • Group: @tooltree
           
           #release@tool_tree"

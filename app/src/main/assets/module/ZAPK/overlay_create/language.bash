@@ -19,4 +19,5 @@ overlay_text_7="Đã bỏ qua"
 overlay_text_8="Lỗi xây dựng overlay, kiểm tra log:"
 overlay_text_9="Lưu tại:"
 overlay_text_10="Lỗi giải mã (decode) APK, xem log:"
+overlay_text_11="Đang nhập framework..."
 fi
