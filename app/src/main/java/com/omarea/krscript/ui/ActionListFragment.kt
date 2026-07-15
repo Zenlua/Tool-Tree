@@ -62,7 +62,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         if (isClickLocked) return false
         isClickLocked = true
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            delay(500)
+            delay(1000)
             isClickLocked = false
         }
         return true
