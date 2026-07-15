@@ -3,9 +3,10 @@
 **Version: 1.5.1 (15-7-2026)**
 
 + Minor update
-+ Add a shortcut for the add-on patch ROM in the ROM utility.
++ Add shortcut add-on patch ROM in the ROM utility.
 + Fix some Python-related bugs.
 + Update the add-on code to create an overlay
++ Fix add-on wifi hacking errors
 
 **Version: 1.5.0 (12-7-2026)**
 
