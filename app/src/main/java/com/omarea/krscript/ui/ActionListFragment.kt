@@ -150,6 +150,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onSwitchClick(item: SwitchNode, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             val toValue = !item.checked
             if (item.confirm) {
@@ -170,6 +171,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onPageClick(item: PageNode, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             if (context != null && item.link.isNotEmpty()) {
                 try {
@@ -206,8 +208,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onPickerClick(item: PickerNode, onCompleted: Runnable) {
-        if (!checkAndLockClick()) return // Chặn click nhanh liên tục
-
+        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { pickerExecute(item, onCompleted) })
@@ -270,8 +271,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
-        if (!checkAndLockClick()) return // Chặn click nhanh liên tục
-
+        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted) })
