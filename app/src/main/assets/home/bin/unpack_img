@@ -65,9 +65,9 @@ process_count(){
 PIDK=$!
 num1="$1"; num2="$2";
 while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$num2" ];then
+if [ -f "$num2" ]; then
     num3=$(tr '\r' '\n' < "$num2" | awk '/ : /{v=$3} END{print v}')
-    if [ "${num3:-0}" != 0 ];then
+    if [ "${num3:-0}" != 0 ]; then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
     num4="$num3"
     fi
@@ -81,9 +81,9 @@ process_payload(){
 PIDK=$!
 num1="$1";
 while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$num1" ];then
+if [ -f "$num1" ]; then
     num3=$(tr '\r' '\n' < "$num1" | grep -o '[0-9]\+%' | tail -n1 | tr -d '%')
-    if [ "${num3:-0}" != 0 ];then
+    if [ "${num3:-0}" != 0 ]; then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$num3/100"
     num4="$num3"
     fi
@@ -96,9 +96,9 @@ progress -1/0
 process_imgkit(){
 PIDK=$!
 while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$1" ];then
+if [ -f "$1" ]; then
     number_kk="$(sed -E 's/[\r\t]/\n/g; s/.*\[([0-9]+\/[0-9]+)\].*/\1/p; d' "$1" | tail -n1)"
-    if [ "$number_kk" ];then
+    if [ "$number_kk" ]; then
     [ "${number_kk:-0}" == "${save_num:-1}" ] || progress "$number_kk"
     save_num="$number_kk"
     fi
@@ -111,9 +111,9 @@ progress -1/0
 process_unsquashfs(){
 PIDK=$!
 while kill -0 $PIDK 2>/dev/null; do
-if [ -f $1 ];then
+if [ -f $1 ]; then
 number_kk="$(sed 's/[\r\t]/\n/g' $1 | sed -n 's/.* \([0-9]\+\)%$/\1/p' | tail -n 1)"
-    if [ "${number_kk:-0}" != 0 ];then
+    if [ "${number_kk:-0}" != 0 ]; then
     [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
     save_num="$number_kk"
     fi
@@ -126,9 +126,9 @@ progress -1/0
 process_unerrofs(){
 PIDK=$!
 while kill -0 $PIDK 2>/dev/null; do
-if [ -f $1 ];then
+if [ -f $1 ]; then
     number_kk="$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$1" | grep -E 'Extract: \[[^]]+\]' | tail -n 1 | awk '{print $3}' | cut -d\. -f1)"
-    if [ "${number_kk:-0}" != 0 ];then
+    if [ "${number_kk:-0}" != 0 ]; then
     [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
     save_num="$number_kk"
     fi
@@ -140,16 +140,16 @@ progress -1/0
 }
 
 # xử lý zip
-if [ "$dang_tep" == 'zip' ];then
+if [ "$dang_tep" == 'zip' ]; then
 xacnhatpay="$(listpayload "$INPUT")"
-    if [ -z "$xacnhatpay" ];then
+    if [ -z "$xacnhatpay" ]; then
     echo -e "$unpack_text_1 $PVUGBIN...\n"
     xoazip=1
     tenpjag="$(echo "${PVUGBIN##*/}")"
     unzip -qo "$INPUT" $PVUGBIN ${PVUGBIN%/*}/${tenpjag%%.*}.transfer.list ${tenpjag%%.*}.transfer.list -d $TMP 2>/dev/null
     INPUT="$TMP/$PVUGBIN";
     dang_tep="$(checktype "$INPUT")"
-        if [ "$dang_tep" == 'super' ];then
+        if [ "$dang_tep" == 'super' ]; then
         echo -e "$unpack_text_7\n" >&2
         mv "$INPUT" "$PTSD"
         exit
@@ -157,7 +157,7 @@ xacnhatpay="$(listpayload "$INPUT")"
     fi
 fi
 
-if [ "$dang_tep" == 'zstd' ] || [ "$dang_tep" == 'gz' ] || [ "$dang_tep" == 'xz' ] || [ "$dang_tep" == 'lz4' ] || [ "$dang_tep" == 'lzma' ];then
+if [ "$dang_tep" == 'zstd' ] || [ "$dang_tep" == 'gz' ] || [ "$dang_tep" == 'xz' ] || [ "$dang_tep" == 'lz4' ] || [ "$dang_tep" == 'lzma' ]; then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     if [ "$NODECO" == 1 ]; then
     file_img="$PTSD/out/$(echo "${INPUT##*/}" | cut -d. -f1).img"
@@ -166,7 +166,7 @@ if [ "$dang_tep" == 'zstd' ] || [ "$dang_tep" == 'gz' ] || [ "$dang_tep" == 'xz'
     fi
     zstd --progress -f -d -k "$INPUT" -o "$file_img" &>"$TMP/unzstd.log" || killtree "File extraction error log: $TMP/unzstd.log"
     #process_count "$size_zstd" "$TMP/unzstd.log"
-elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
+elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ]; then
     tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
     [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || killtree "$more_text_5 $tenpjanvung.transfer.list"
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
@@ -177,7 +177,7 @@ elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ];then
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     fi
     sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" &>$TMP/sdat2img_extra.log || killtree "File extraction error log: $TMP/sdat2img_extra.log"
-elif [ "$dang_tep" == 'sparse' ];then
+elif [ "$dang_tep" == 'sparse' ]; then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     if [ "$NODECO" == 1 ]; then
     file_img="$PTSD/out/$(echo "${INPUT##*/}" | cut -d. -f1).img"
@@ -185,7 +185,7 @@ elif [ "$dang_tep" == 'sparse' ];then
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     fi
     simg2img "$INPUT" "$file_img" || killtree "File conversion error: $INPUT"
-elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
+elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ]; then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
     if [ "$NODECO" == 1 ]; then
     file_img_tmp="$PTSD/out"
@@ -195,7 +195,7 @@ elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ];then
     payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" &>"$TMP/payload_extract.log" || killtree "Payload unpack error log: $TMP/payload_extract.log" &
     process_payload "$TMP/payload_extract.log"
     file_img="$file_img_tmp/$PVUGBIN.img"
-elif [ "$dang_tep" == 'super' ];then
+elif [ "$dang_tep" == 'super' ]; then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
     if [ "$NODECO" == 1 ]; then
     file_img_tmp="$PTSD/out"
@@ -205,7 +205,7 @@ elif [ "$dang_tep" == 'super' ];then
     lpunpack -p "$PVUGBIN" "$INPUT" "$file_img_tmp" || killtree "Extract $PVUGBIN super error"
     [[ $PVUGBIN == *_a ]] && mv "$file_img_tmp/$PVUGBIN.img" "$file_img_tmp/${PVUGBIN%_a}.img"
     file_img="$file_img_tmp/${PVUGBIN%_a}.img"
-elif [ "$dang_tep" == 'amlogic' ];then
+elif [ "$dang_tep" == 'amlogic' ]; then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ (unpack)...\n"
     ten_paion="$(echo "${INPUT##*/}" | cut -d. -f1)"
     ampack unpack "$INPUT" "${INPUT%/*}/${ten_paion}_amlogic" >$TMP/ampack_unpack.log && sed -u -i $'s/\033\\[[0-9;]*m//g' "$TMP/ampack_unpack.log"
@@ -220,7 +220,7 @@ else
 fi
 
 # phòng hờ
-if [ "$(checktype "$file_img")" == 'sparse' ];then
+if [ "$(checktype "$file_img")" == 'sparse' ]; then
 simg2img "$file_img" >$TMP/simg2img.log
 fi
 
@@ -233,7 +233,7 @@ file_contexts="$OUTPUT/config/${namepv##*/}_file_contexts"
 fs_options="$OUTPUT/config/${namepv##*/}_fs_options"
 info_size="$OUTPUT/config/${namepv##*/}_size.txt"
 
-if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [ "$dang_file" != "super" ];then
+if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [ "$dang_file" != "super" ]; then
 
 echo -e "$decompile_text: ${file_img##*/} ($dang_file)...\n"
 # xoá cũ
@@ -242,24 +242,24 @@ rm -fr "$in_name" "$info" "$file_contexts" "$fs_config" "$fs_options" "$info_siz
 # tạo thư mục
 mkdir -p "$in_name" $OUTPUT/config
 
-    if [ "$dang_file" == 'ext' ];then
-        if [ "$(glog un_tool_ext4)" == 1 ];then
+    if [ "$dang_file" == 'ext' ]; then
+        if [ "$(glog un_tool_ext4)" == 1 ]; then
         imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
         process_imgkit "$TMP/imgkit_scuti.log"
         else
         imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
         fi
         echo "$dang_file" > "$info"
-    elif [ "$dang_file" == 'f2fs' ];then
-        if [ "$(glog un_tool_f2fs)" == 1 ];then
+    elif [ "$dang_file" == 'f2fs' ]; then
+        if [ "$(glog un_tool_f2fs)" == 1 ]; then
             imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
             process_imgkit "$TMP/imgkit_scuti.log"
         else
             extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
-            if [ -f "$fs_config" ];then
+            if [ -f "$fs_config" ]; then
             luu_contexts="$(sed -e "s|s0/|s0\n/|g" "$file_contexts" | sort)"
             luu_config="$(cat "$fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
-            if [ -f "$in_name/system/build.prop" ];then
+            if [ -f "$in_name/system/build.prop" ]; then
             luu_contexts="$(echo "$luu_contexts" | sed -e "s|^/${namepv##*/} u|/${namepv##*/}/ u|")"
             fi
             echo "$luu_config" > "$fs_config"
@@ -269,40 +269,43 @@ mkdir -p "$in_name" $OUTPUT/config
         echo "$(stat -c%s "$file_img")" > "$info_size"
         echo "$dang_file" > "$info"
         fsck.f2fs -a "$file_img" &> "$fs_options"
-    elif [ "$dang_file" == 'erofs' ];then
-        if [ "$(glog un_tool_erofs)" == 1 ];then
+    elif [ "$dang_file" == 'erofs' ]; then
+        if [ "$(glog un_tool_erofs)" == 1 ]; then
             imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
             process_imgkit "$TMP/imgkit_scuti.log"
-        elif [ "$(glog un_tool_erofs)" == 2 ];then
+        elif [ "$(glog un_tool_erofs)" == 2 ]; then
             $TERMUX/lib/theft/extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -u -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
             process_unerrofs "$TMP/extract_erofs.log"
         else
             extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -u -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
             process_unerrofs "$TMP/extract_erofs.log"
         fi
-        if [ -f $OUTPUT/config/exception.log ];then
+        if [ -f $OUTPUT/config/exception.log ]; then
         cat $OUTPUT/config/exception.log >&2
         killtree "\nIncomplete file error please check hash" $OUTPUT/config/exception.log
         fi
         echo "$dang_file" > "$info"
-    elif [ "$dang_file" == 'logo' ];then
+    elif [ "$dang_file" == 'logo' ]; then
         logo_dumper.py --out "$in_name" "$file_img" unpack
         echo "$dang_file" > "$info"
         cp -f "$file_img" "$in_name/logo.img"
         echo
-    elif [ "$dang_file" == 'vbmeta' ] || [ "$dang_file" == 'vbmeta_system' ];then
+    elif [ "$dang_file" == 'vbmeta' ] || [ "$dang_file" == 'vbmeta_system' ]; then
         cp -f "$file_img" "$in_name"
-        [ "$AVBIMG" == 1 ] && magiskboot hexpatch "$in_name" 0000000000000000617662746F6F6C20 0000000200000000617662746F6F6C20
+        if [ "$AVBIMG" == 1 ]; then
+        magiskboot hexpatch "$in_name/${file_img##*/}" 0000000000000000617662746F6F6C20 0000000200000000617662746F6F6C20 2>&1 || killtree "Avb Failure !"
+        echo
+        fi
         echo "$dang_file" > $info
-    elif [ "$dang_file" == 'boot' ] || [ "$dang_file" == 'vendor_boot' ];then
+    elif [ "$dang_file" == 'boot' ] || [ "$dang_file" == 'vendor_boot' ]; then
         cd "$in_name"
         cp -f "$file_img" "$in_name"
         magiskboot unpack -h "$file_img" 2>&1
-        if [ "$?" = '1' ];then
+        if [ "$?" = '1' ]; then
             rm -rf "$in_name"
             killtree "$unpack_text_3"
         else
-        if [ "$AVBIMG" == 1 ];then
+        if [ "$AVBIMG" == 1 ]; then
         for dt in dtb kernel_dtb extra; do
           if [ -f $dt ]; then
             if magiskboot dtb $dt test; then
@@ -316,8 +319,8 @@ mkdir -p "$in_name" $OUTPUT/config
         # unpack dtb, dtbo
         for unp in $(ls -1d * 2>/dev/null | sort -n -t . -k 2); do
         type_unp="$(checktype $unp)"
-        if [ -f $unp ];then
-            if [ "$type_unp" == 'dtb' ] || [ "$type_unp" == 'dtbo' ];then
+        if [ -f $unp ]; then
+            if [ "$type_unp" == 'dtb' ] || [ "$type_unp" == 'dtbo' ]; then
             mkdir -p cache
             echo "$type_unp" > cache/type_$unp
             [ "$type_unp" == 'dtb' ] && split_dtb.py $unp >$TMP/split_dtb.log
@@ -338,7 +341,7 @@ mkdir -p "$in_name" $OUTPUT/config
             echo "$vch" >> cache/cpio
             cd "${vch%.*}"
             EXTRACT_UNSAFE_SYMLINKS=1 cpio -d -F "$in_name/$vch" -i 2>&1
-            if [ "$?" != 0 -o ! "$(ls)" ];then
+            if [ "$?" != 0 -o ! "$(ls)" ]; then
             killtree "$unpack_text_4"
             else
             rm -f "$in_name/$vch"
@@ -348,7 +351,7 @@ mkdir -p "$in_name" $OUTPUT/config
         echo "$dang_file" > $info
         echo
         fi
-    elif [ "$dang_file" == 'dtbo' ];then
+    elif [ "$dang_file" == 'dtbo' ]; then
         echo "$dang_file" > $info
         cd "$in_name"
         cp -f "$file_img" "$in_name/dtbo.img"
@@ -362,7 +365,7 @@ mkdir -p "$in_name" $OUTPUT/config
         done
         cat dts.* | checksum > cache/md5_dts
         echo
-    elif [ "$dang_file" == 'squashfs' ];then
+    elif [ "$dang_file" == 'squashfs' ]; then
         [ "$ROT" == 0 ] && killtree "Error Unpack: squashfs, $root_warning_text"
         unsquashfs -f -d "$in_name" "$file_img" >$TMP/unsquashfs.log || killtree "\nunsquashfs error: ${namepv##*/}" "$in_name" &
         process_unsquashfs $TMP/unsquashfs.log
@@ -374,9 +377,9 @@ mkdir -p "$in_name" $OUTPUT/config
     fi
     [ -d "$in_name" ] && echo -e "$save_text $in_name\n"
 else
-    if [ "$dang_file" == "super" ];then
+    if [ "$dang_file" == "super" ]; then
         echo -e "$unpack_text_7\n"
-        if [ "$dang_tep" == 'amlogic' ];then
+        if [ "$dang_tep" == 'amlogic' ]; then
         echo -e "$save_text ${INPUT%/*}/${ten_paion}_amlogic\n"
         else
         mv "$file_img" "$INPUT"
@@ -384,7 +387,7 @@ else
         fi
     fi
     echo -e "$unpack_text_6 ${file_img##*/} ($dang_file)\n"
-    if [ "$NODECO" == 1 ];then
+    if [ "$NODECO" == 1 ]; then
     [ "$file_img" == "$PTSD/out/${file_img##*/}" ] || mv "$file_img" "$PTSD/out/${file_img##*/}"
     echo -e "$save_text $PTSD/out\n"
     fi
@@ -393,13 +396,13 @@ fi
 # patch fstab
 if [ "$AVBIMG" == 1 ] && [ "$NODECO" != 1 ]; then
 for rec in $in_name/bin/install-recovery.sh $in_name/etc/init/vendor_flash_recovery.rc $in_name/recovery-from-boot.p $in_name/verity_key; do
-    if [ -f "$rec" ];then
+    if [ -f "$rec" ]; then
     echo "Delete file: $rec"
     rm -fr "$rec"
     fi
 done
 for fstab in $(find "$in_name" -type f -name "fstab.*" 2>/dev/null); do
-   if [ -f "$fstab" ];then
+   if [ -f "$fstab" ]; then
        if grep -Eqi 'avb=|avb_keys=|avb,|,avb' "$fstab"; then
        sed -i "s/,avb=[^,]*//g; s/,avb_keys=[^,]*//g; s/avb,//g; s/,avb//g; s/,,/,/g" "$fstab"
        echo "Deleted avb in fstab: ${fstab##*/}"
@@ -427,14 +430,14 @@ find "$in_name" -type f -name "*.odex" -delete -print
 } &>$TMP/delete_oat.log
 fi
 
-if [[ "$dang_tep" =~ ^(sparse|zstd|dat|br|payload|super|zip)$ ]];then
+if [[ "$dang_tep" =~ ^(sparse|zstd|dat|br|payload|super|zip)$ ]]; then
     [ "$xoazip" == 1 ] && rm -rf "$INPUT" "$TMP/*.transfer.list"
-    if [ "$NODECO" != 1 ];then
+    if [ "$NODECO" != 1 ]; then
     [ -f "$file_img" ] && rm -f "$file_img"
     [ "$dang_tep" == "br" ] && rm -f "${file_img%.*}.new.dat"
     fi
 fi
 
-if [ "$XOAIMG" = 1 ];then
+if [ "$XOAIMG" = 1 ]; then
 rm -f "$INPUT" "${INPUT%/*}/$(echo "${INPUT##*/}" | cut -d. -f1).new.dat" "${INPUT%/*}/$(echo "${INPUT##*/}" | cut -d. -f1).transfer.list"
 fi
