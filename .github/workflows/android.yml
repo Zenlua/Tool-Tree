@@ -60,9 +60,9 @@ jobs:
           echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
           if [ "$UPTG" == "true" ]; then
           echo "Telegram"
-          chat_tg="🎉 New version Tool-Tree
+          chat_tg="https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER
           
-          https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER
+          🎉 New version Tool-Tree
           
           • Version: $VER
           • Notes: <a href=\"https://zenlua.github.io/Tool-Tree/Version.html\">Changelog</a>
@@ -73,8 +73,7 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
           -d chat_id="$CHAT_ID" \
           -d parse_mode="HTML" \
-          --data-urlencode text="$chat_tg" \
-          --data-urlencode link_preview_options="{\"is_disabled\": false, \"url\": \"https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER\", \"show_above_text\": true}"
+          --data-urlencode text="$chat_tg"
           fi
 
       - name: Beta APK

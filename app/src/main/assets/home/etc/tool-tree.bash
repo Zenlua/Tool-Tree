@@ -83,7 +83,7 @@ fi
 
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ]; then
-[ -f $ETC/lang/$LANGUAGE.sh ] && texgg="$LANGUAGE.sh" || texgg=vi.sh
+[ -f $ETC/lang/$LANGUAGE.bash ] && texgg="$LANGUAGE.bash" || texgg=vi.bash
 sum_md5_kk="$(checksum $ETC/lang/$texgg)"
     if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]] || [[ "$(grep -cm1 '=""' $ETC/lang/auto.sh)" == 1 ]] || [[ ! -f $ETC/lang/auto.sh ]]; then
     source $ETC/lang/$texgg
@@ -378,10 +378,10 @@ fi
 <set>
 slog language_kkts "$language_kkt"
 if [ "$language_kkt" == "auto" ]; then
-sum_md5_kk="$(checksum $ETC/lang/vi.sh)"
-  source $ETC/lang/vi.sh
+sum_md5_kk="$(checksum $ETC/lang/vi.bash)"
+  source $ETC/lang/vi.bash
   [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
-  for vc in $(grep "=" $ETC/lang/vi.sh | cut -d= -f1); do
+  for vc in $(grep "=" $ETC/lang/vi.bash | cut -d= -f1); do
   (
   xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
   echo "${vc}=\"${xfhtfvgf^}\" # ${!vc}" | tee -a $ETC/lang/auto.sh
@@ -1480,6 +1480,7 @@ fi
 
 if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
+    [ -f "$dirvad/uninstall.bash" ] && $dirvad/uninstall.bash
     if grep -q 'url=.' $vadd 2>/dev/null; then
     find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
     else
