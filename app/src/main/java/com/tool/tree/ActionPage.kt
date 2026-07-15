@@ -157,16 +157,9 @@ class ActionPage : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val config = currentPageConfig ?: return false
-        
-        // 1. Xóa sạch các menu cũ trên Action Bar/Toolbar trước khi vẽ lại
         menu?.clear() 
-        // Nếu bạn có thêm FAB (Floating Action Button), hãy xóa/ẩn các FAB cũ tại đây
-        // removeAllFabs() 
-    
-        // 2. Luôn luôn gọi load() để chạy lại script lấy dữ liệu mới nhất
+        menuOptions = null 
         menuOptions = PageMenuLoader(applicationContext, config).load()
-    
-        // 3. Tiến hành add các tùy chọn menu mới
         menuOptions?.forEachIndexed { index, option ->
             if (option.isFab) {
                 addFab(option)
@@ -176,7 +169,6 @@ class ActionPage : AppCompatActivity() {
         }
         return true
     }
-
 
     private fun addFab(menuOption: PageMenuOption) {
         binding.actionPageFab.apply {
@@ -248,6 +240,7 @@ class ActionPage : AppCompatActivity() {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
                     updateActionList(items, showLoading)
+                    invalidateOptionsMenu() 
                 } else {
                     handleLoadError(config)
                 }
