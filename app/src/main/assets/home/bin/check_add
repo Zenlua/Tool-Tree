@@ -1,17 +1,20 @@
 # Kakathic
 
-if checkonline; then
-source language 2>/dev/null
+name_add=''; file_name=''; check_sum_onl='';
 
-name_add="$(gprop name $1/download.prop)"
-echo "Start checking for updates: $name_add"
-echo
-file_name="$(gprop url $1/download.prop)"
-check_sum_onl="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/V1 | jq -r --arg name "${file_name##*/}" '.assets[] | select(.name == $name) | .digest' | cut -d: -f2)"
-if [[ "$check_sum_onl" != "$(glog check_sum_addon_${1##*/})" ]]; then
-showtoast "$updating_text add-on: $name_add"
-installadd "$file_name" "${1%/*}" 2>&1 && showtoast "$update_text $flash_text_12: $name_add" || showtoast "$load_text_2 $name_add"
-fi
+if checkonline; then
+    source language 2>/dev/null
+    name_add="$(gprop name $1/download.prop)"
+    echo "Start checking for updates: $name_add"
+    echo
+    file_name="$(gprop url $1/download.prop)"
+    check_sum_onl="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/V1 | jq -r --arg name "${file_name##*/}" '.assets[] | select(.name == $name) | .digest' | cut -d: -f2)"
+    if [ "$check_sum_onl" ]; then
+        if [[ "$check_sum_onl" != "$(glog check_sum_addon_${1##*/})" ]]; then
+        showtoast "$updating_text add-on: $name_add"
+        installadd "$file_name" "${1%/*}" 2>&1 && showtoast "$update_text $flash_text_12: $name_add" || showtoast "$load_text_2 $name_add"
+        fi
+    fi
 else
-echo "Network error $name_add"
+    echo "Network error $name_add"
 fi

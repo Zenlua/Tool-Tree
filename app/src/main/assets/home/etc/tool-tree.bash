@@ -112,13 +112,6 @@ fi
 [ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null
 ) &
 
-# Tạm thời xử lý
-if [ -d "$HOME/log" ]; then
-cp -rf $HOME/log $HOME/usr
-rm -fr $HOME/log
-fi
-[ -d $AON/merge-system ] && rm -fr $AON/merge-system
-
 # Ngôn ngữ
 source language 2>/dev/null
 
