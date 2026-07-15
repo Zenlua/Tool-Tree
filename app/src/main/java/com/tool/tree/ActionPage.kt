@@ -377,7 +377,6 @@ class ActionPage : AppCompatActivity() {
     }
 
     fun _openPage(pageNode: PageNode) {
-        if (openedSubPage) return
         openedSubPage = true
         OpenPageHelper(this).openPage(pageNode)
     }
