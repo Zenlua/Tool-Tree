@@ -79,6 +79,9 @@ if [ "$ROT" == 1 ]; then
     # Loaded sẵn danh sách img
     search_image &>/dev/null
 fi
+) &
+
+(
 # Khởi động các file shell ở add-on
 set_permis $AON/*/* $AOK/*/* &>/dev/null
 for vadd in $AON/* $AOK/*; do

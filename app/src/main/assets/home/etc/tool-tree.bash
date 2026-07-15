@@ -59,6 +59,28 @@ fi
 </action>'
 }
 
+showaddon(){
+local dirvad="$1"
+gprop(){
+cat "$dirvad/addon.prop" 2>/dev/null | awk -F= -v k="$1" '$1==k{print $2; exit}';
+}
+xml_print '<group>
+<page id="patch_rom" icon="'`urladd icon`'" config-sh="'$dirvad'/index.bash home">
+<title>'$(gprop name)'</title>
+<option type="default" id="v1" auto-off="true" reload="true" interruptible="false">'$google_translate_text'</option>
+<option type="refresh">'$refresh_text'</option>
+<option type="default" auto-finish="true" id="123">'$update_text' add-on</option>
+<handler>
+if [ "$menu_id" == "v1" ]; then
+[ "$(glog auto_trans_text_patch_rom)" == 1 ] && slog auto_trans_text_patch_rom 0 || slog auto_trans_text_patch_rom 1
+elif [ "$menu_id" == "123" ]; then
+'$dirvad'/index.bash update_addon
+fi
+</handler>
+</page>
+</group>'
+}
+
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ]; then
 [ -f $ETC/lang/$LANGUAGE.sh ] && texgg="$LANGUAGE.sh" || texgg=vi.sh
@@ -134,11 +156,14 @@ fi
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' ROM</option>
+<option type="default" id="v4" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text' Patch ROM</option>
 <option type="default" id="v2" auto-off="true" interruptible="false" >'$open_activity_text' ROM</option>
 <option type="default" id="v3" auto-off="true" interruptible="false" >'$open_activity_text' (data-root)</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
+elif [ "$menu_id" == "v4" ]; then
+[ "$(glog hide_show_patch_rom)" == 1 ] && slog hide_show_patch_rom 0 || slog hide_show_patch_rom 1
 elif [ "$menu_id" == "v2" ]; then
 echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTSD#$SDCARD_PATH}']"
 elif [ "$menu_id" == "v3" ]; then
@@ -163,7 +188,7 @@ fi
 <option type="default" id="hide" auto-off="true" reload="true" interruptible="false" >'$hide_add_text'</option>
 <option type="default" id="taive" auto-off="true" reload="true" interruptible="false" >'$download_text'</option>
 <option type="default" id="xoa" auto-off="true" reload="true" interruptible="false" >'$deleted_text'</option>
-<option id="file" suffix="add" interruptible="false" auto-off="false" type="file" style="fab" reload="true">'$input_add_text'</option>
+<option id="file" suffix="add" auto-off="false" type="file" style="fab" reload="true">'$input_add_text'</option>
 <option type="default" id="home" auto-off="true" reload="true" interruptible="false" >'$home_text'</option>
 <handler>
 case "$menu_id" in
@@ -279,7 +304,7 @@ fi
 <option type="default" id="hide" auto-off="true" reload="true" interruptible="false" >'$hide_add_text'</option>
 <option type="default" id="taive" auto-off="true" reload="true" interruptible="false" >'$download_text'</option>
 <option type="default" id="xoa" auto-off="true" reload="true" interruptible="false" >'$deleted_text'</option>
-<option id="file" suffix="add" interruptible="false" auto-off="false" type="file" style="fab" reload="true">'$input_add_text'</option>
+<option id="file" suffix="add" auto-off="false" type="file" style="fab" reload="true">'$input_add_text'</option>
 <option type="default" id="home" auto-off="true" reload="true" interruptible="false" >'$home_text'</option>
 <handler>
 case "$menu_id" in
@@ -1038,6 +1063,10 @@ checktime
 </set>
 </action>
 </group>'
+
+if [ "$(glog hide_show_patch_rom 1)" == 1 ]; then
+[ -f "$AON/patch_rom/addon.prop" ] && showaddon "$AON/patch_rom"
+fi
 }
 
 Apktools(){
