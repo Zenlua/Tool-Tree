@@ -232,6 +232,9 @@ class ActionPage : AppCompatActivity() {
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.afterRead, config)
             }
 
+            kotlinx.coroutines.delay(150) 
+            val freshMenu = PageMenuLoader(applicationContext, config).load()
+
             withContext(Dispatchers.Main) {
                 if (!isActive || isFinishing) return@withContext
                 
@@ -240,10 +243,12 @@ class ActionPage : AppCompatActivity() {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
                     updateActionList(items, showLoading)
-                    invalidateOptionsMenu() 
+                    
                 } else {
                     handleLoadError(config)
                 }
+                menuOptions = freshMenu
+                invalidateOptionsMenu()
                 progressBarDialog.hideDialog()
             }
         }
