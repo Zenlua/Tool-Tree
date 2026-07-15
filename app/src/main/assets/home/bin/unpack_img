@@ -308,8 +308,8 @@ mkdir -p "$in_name" $OUTPUT/config
         if [ "$AVBIMG" == 1 ]; then
         for dt in dtb kernel_dtb extra; do
           if [ -f $dt ]; then
-            if magiskboot dtb $dt test; then
-              if magiskboot dtb $dt patch; then
+            if magiskboot dtb $dt test 2>&1; then
+              if magiskboot dtb $dt patch 2>&1; then
                 echo "- Patch dtb in boot image $dt"
               fi
             fi
@@ -411,6 +411,7 @@ for fstab in $(find "$in_name" -type f -name "fstab.*" 2>/dev/null); do
        sed -i 's/fileencryption=[^,]*,//g; s/,fileencryption=[^,]*//g; s/keydirectory=[^,]*,//g; s/,keydirectory=[^,]*//g; s/metadata_encryption=[^,]*,//g; s/,metadata_encryption=[^,]*//g; s/fileencryption/encryptable/g; s/,,/,/g' "$fstab"
        echo "Decrypted data: ${fstab##*/}"
        fi
+   echo
    fi
 done
 fi
