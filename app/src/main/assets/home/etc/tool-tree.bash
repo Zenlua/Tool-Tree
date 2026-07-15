@@ -374,7 +374,7 @@ fi
 <action icon="'`urlpng language`'" shell="hiddens" warning="'$permis_text_3'" auto-kill="true" auto-off="true">
 <title>'$permis_text_2'</title>
 <desc>'$permis_text_5'</desc>
-<param name="language_kkt" label="'$option_text'" option-sh="echo -e '"'|$default_text\nauto|$google_translate_text\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian'"' " value-sh="glog language_kkts" />
+<param name="language_kkt" label="'$option_text'" option-sh="echo -e '"'|$default_text\nauto|$google_translate_text\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia'"' " value-sh="glog language_kkts" />
 <set>
 slog language_kkts "$language_kkt"
 if [ "$language_kkt" == "auto" ]; then
