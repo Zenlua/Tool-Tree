@@ -1,5 +1,12 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.5.1 (15-7-2026)**
+
++ Minor update
++ Add a shortcut for the add-on patch ROM in the ROM utility.
++ Fix some Python-related bugs.
++ Update the add-on code to create an overlay
+
 **Version: 1.5.0 (12-7-2026)**
 
 + Fix language change error
