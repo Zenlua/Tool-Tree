@@ -7,6 +7,7 @@
 + Fix some Python-related bugs.
 + Update the add-on code to create an overlay
 + Fix add-on wifi hacking errors
++ Repair the Google language settings
 
 **Version: 1.5.0 (12-7-2026)**
 
