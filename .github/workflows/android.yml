@@ -65,7 +65,7 @@ jobs:
           🎉 New version Tool-Tree
           
           • Version: $VER
-          • Notes: <a href=\"https://zenlua.github.io/Tool-Tree/Version.html\">Changelog</a>
+          • Notes: <a href=\"https://github.com/Zenlua/Tool-Tree/blob/main/Version.md\">Changelog</a>
           • Group: @tooltree
           
           #release@tool_tree"
