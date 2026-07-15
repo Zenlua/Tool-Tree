@@ -50,6 +50,24 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private var pageLayoutRender: PageLayoutRender? = null
     private lateinit var rootGroup: ListItemGroup
 
+    // Biến cờ bảo vệ chống nhấp đúp/nhấp liên tiếp
+    private var isClickLocked = false
+
+    /**
+     * Kiểm tra trạng thái cờ click.
+     * Nếu chưa bị khóa, hàm sẽ khóa lại và tự động mở khóa sau 500 mili-giây.
+     * @return true nếu click hợp lệ và được phép thực thi, false nếu bị chặn do click quá nhanh.
+     */
+    private fun checkAndLockClick(): Boolean {
+        if (isClickLocked) return false
+        isClickLocked = true
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+            delay(500)
+            isClickLocked = false
+        }
+        return true
+    }
+
     private fun setListData(
         actionInfos: ArrayList<NodeInfoBase>?,
         krScriptActionHandler: KrScriptActionHandler? = null,
@@ -188,6 +206,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onPickerClick(item: PickerNode, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return // Chặn click nhanh liên tục
+
         if (nodeUnlocked(item)) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { pickerExecute(item, onCompleted) })
@@ -250,6 +270,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return // Chặn click nhanh liên tục
+
         if (nodeUnlocked(item)) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted) })

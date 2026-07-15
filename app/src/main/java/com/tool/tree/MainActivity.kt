@@ -223,6 +223,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onSubPageClick(pageNode: PageNode) {
+                if (openedSubPage) return
                 openedSubPage = true
                 OpenPageHelper(this@MainActivity).openPage(pageNode)
             }
