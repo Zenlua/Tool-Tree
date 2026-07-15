@@ -86,7 +86,7 @@ jobs:
           prerelease: true
 
       - name: Release APK
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.UPAPK == true }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.UPAPK == truek }}
         uses: softprops/action-gh-release@v2
         with:
           name: "Tool-Tree ${{ env.VER }}"
