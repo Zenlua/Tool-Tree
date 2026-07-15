@@ -92,7 +92,7 @@ sum_md5_kk="$(checksum $ETC/lang/$texgg)"
     (
     xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
     echo "${vc}=\"${xfhtfvgf^}\" # ${!vc}" >>$ETC/lang/auto.sh
-    unset xfhtfvgf
+    xfhtfvgf="";
     ) &
     done
     wait
@@ -371,13 +371,13 @@ fi
 </group>
 
 <group>
-<action icon="'`urlpng language`'" shell="hiddens" warning="'$permis_text_3'" auto-kill="true" auto-off="true">
+<picker icon="'`urlpng language`'" warning="'$permis_text_3'" auto-kill="true" auto-off="true" option-sh="echo -e '"'|$default_text\nauto|$google_translate_text\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia'"' ">
 <title>'$permis_text_2'</title>
 <desc>'$permis_text_5'</desc>
-<param name="language_kkt" label="'$option_text'" option-sh="echo -e '"'|$default_text\nauto|$google_translate_text\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia'"' " value-sh="glog language_kkts" />
+<get>glog language_kkts</get>
 <set>
-slog language_kkts "$language_kkt"
-if [ "$language_kkt" == "auto" ]; then
+slog language_kkts "$state"
+if [ "$state" == "auto" ]; then
 sum_md5_kk="$(checksum $ETC/lang/vi.bash)"
   source $ETC/lang/vi.bash
   [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
@@ -385,23 +385,23 @@ sum_md5_kk="$(checksum $ETC/lang/vi.bash)"
   (
   xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
   echo "${vc}=\"${xfhtfvgf^}\" # ${!vc}" | tee -a $ETC/lang/auto.sh
-  unset xfhtfvgf
+  xfhtfvgf="";
   ) &
   done
   wait
-  if [ "$(grep -cm1 '""' $ETC/lang/auto.sh)" == 1 ]; then
+  if [ "$(grep -q "=\"\"" $ETC/lang/auto.sh)" ]; then
   error_txxt_bug="$(echo "Translation error detected:" | trans -b $LANGUAGE-$COUNTRY)"
-  killtree "\n$error_txxt_bug $(grep -c '""' $ETC/lang/auto.sh)" >&2
+  killtree "\n$error_txxt_bug $(grep -c "=\"\"" $ETC/lang/auto.sh)" >&2
   slog language ""
   else
   slog sum_md5_kk "$sum_md5_kk"
   fi
 else
 [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
-slog language "$language_kkt"
+slog language "$state"
 fi
 </set>
-</action>
+</picker>
 </group>
 
 <group>
