@@ -120,18 +120,11 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Hàm tập trung xử lý tải lại trang từ file XML gốc mới nhất
-    private fun reloadCurrentPageConfig() {
-        actionsLoaded = false // Reset cờ trạng thái để ép buộc vẽ lại Fragment mới
-        loadPageConfig(true)  // Đọc lại XML
-    }
-
     private val actionShortClickHandler = object : KrScriptActionHandler {
         override fun onActionCompleted(runnableNode: RunnableNode) {
             when {
                 runnableNode.autoFinish -> finishAndRemoveTask()
-                // THAY ĐỔI: Sử dụng hàm reload tập trung khi hành động yêu cầu reloadPage
-                runnableNode.reloadPage -> reloadCurrentPageConfig()
+                runnableNode.reloadPage -> loadPageConfig(true)
                 runnableNode.autoKill -> killApp()
                 runnableNode.autoRestart -> restartApp()
             }
@@ -201,8 +194,7 @@ class ActionPage : AppCompatActivity() {
 
     private fun onMenuItemClick(menuOption: PageMenuOption) {
         when(menuOption.type) {
-            // THAY ĐỔI: Sử dụng hàm reload tập trung khi nhấn làm mới trên menu
-            "refresh", "reload" -> reloadCurrentPageConfig()
+            "refresh", "reload" -> recreate()
             "restart" -> restartApp()
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
@@ -308,8 +300,7 @@ class ActionPage : AppCompatActivity() {
         val onDismiss = Runnable {
             when {
                 menuOption.autoFinish -> finish()
-                // THAY ĐỔI: Chuyển đổi từ recreate() sang reloadCurrentPageConfig() khi menuOption yêu cầu reloadPage
-                menuOption.reloadPage -> reloadCurrentPageConfig()
+                menuOption.reloadPage -> recreate()
                 menuOption.autoKill -> killApp()
                 menuOption.autoRestart -> restartApp()
             }

@@ -23,6 +23,7 @@ import com.omarea.krscript.model.ShellHandlerBase
 import android.content.DialogInterface
 import com.tool.tree.R
 import java.lang.ref.WeakReference
+import com.tool.tree.AnsiColorParser
 
 class DialogLogFragment : DialogFragment() {
 
@@ -196,14 +197,23 @@ class DialogLogFragment : DialogFragment() {
             }
         }
 
-        override fun onReader(msg: Any) = updateLog(msg, basicColor)
-        override fun onWrite(msg: Any) = updateLog(msg, scriptColor)
+        override fun onReader(msg: Any) {
+            updateLog(msg.toString())
+        }
+
+        override fun onWrite(msg: Any) {
+            updateLog(msg.toString())
+        }
+
         override fun onError(msg: Any) {
             hasError = true
             updateLog(msg, errorColor)
         }
 
         override fun onStart(forceStop: Runnable?) {
+            // Đưa trạng thái màu ANSI về ban đầu khi bắt đầu tiến trình log mới
+            AnsiColorParser.reset()
+            logViewRef.get()?.text = ""
             actionEventHandler?.onStart(forceStop)
         }
 
@@ -237,23 +247,48 @@ class DialogLogFragment : DialogFragment() {
         }
 
         override fun onStart(msg: Any?) {
+            AnsiColorParser.reset()
             logViewRef.get()?.text = ""
         }
 
         override fun onExit(msg: Any?) {
             val code = (msg as? Int) ?: -1
             if (!hasError && code == 0) actionEventHandler?.onSuccess()
-            updateLog(context.getString(R.string.kr_shell_completed), endColor)
+            updateLog(context.getString(R.string.kr_shell_completed))
             actionEventHandler?.onCompleted()
         }
 
-        override fun updateLog(msg: SpannableString?) {
+        // Hàm xử lý chuỗi log tập trung, biên dịch màu sắc và tối ưu hóa bộ nhớ
+        private fun updateLog(text: String) {
             val logView = logViewRef.get() ?: return
-            msg?.let {
-                logView.post {
-                    logView.append(it)
-                    (logView.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
+            
+            // Loại bỏ các ký tự di chuyển con trỏ thừa gây ô vuông rác màn hình
+            val cleanString = text.replace("\r", "")
+            
+            // Chuyển mã ANSI sang văn bản màu hiển thị được trên Android
+            val parsedLog = AnsiColorParser.parse(cleanString)
+            
+            logView.post {
+                // Đẩy dòng text mới vào
+                logView.append(parsedLog)
+                
+                // Giới hạn bộ nhớ TextView tối đa 50,000 ký tự (tránh đơ màn hình)
+                val maxChars = 50000
+                val currentText = logView.text
+                if (currentText.length > maxChars) {
+                    val keepIndex = currentText.length - maxChars
+                    logView.text = currentText.subSequence(keepIndex, currentText.length)
                 }
+                
+                // Tự động cuộn xuống dòng cuối cùng theo tiến trình
+                (logView.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
+            }
+        }
+
+        // Override hàm của thư viện gốc để bảo vệ tính tương thích ngược
+        override fun updateLog(msg: SpannableString?) {
+            msg?.let {
+                updateLog(it.toString())
             }
         }
     }
@@ -278,6 +313,7 @@ class DialogLogFragment : DialogFragment() {
     override fun onDestroyView() {
         currentHandler?.release()
         currentHandler = null
+        AnsiColorParser.reset() // Dọn dẹp trạng thái màu tĩnh khi thoát giao diện
         super.onDestroyView()
         _binding = null
     }
