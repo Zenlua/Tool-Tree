@@ -79,18 +79,18 @@ progress -1/0
 
 process_payload(){
 PIDK=$!
-num1="$1";
 while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$num1" ]; then
-    num3=$(tr '\r' '\n' < "$num1" | grep -o '[0-9]\+%' | tail -n1 | tr -d '%')
+if [ -f "$1" ]; then
+    num3=$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$1" | grep -o '[0-9]\+%' | tail -n1 | tr -d '%')
     if [ "${num3:-0}" != 0 ]; then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$num3/100"
     num4="$num3"
     fi
 fi
-sleep 1
+sleep 0.01
 done
 progress -1/0
+[ -f $1 ] && sed -i 's/\x1b\[[^m]*m//g' $1
 }
 
 process_imgkit(){
@@ -164,8 +164,9 @@ if [ "$dang_tep" == 'zstd' ] || [ "$dang_tep" == 'gz' ] || [ "$dang_tep" == 'xz'
     else
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     fi
-    zstd --progress -f -d -k "$INPUT" -o "$file_img" &>"$TMP/unzstd.log" || killtree "File extraction error log: $TMP/unzstd.log"
+    zstd --progress -f -d -k "$INPUT" -o "$file_img" 2>&1 | tee "$TMP/unzstd.log" || killtree "File extraction error log: $TMP/unzstd.log" #&
     #process_count "$size_zstd" "$TMP/unzstd.log"
+    echo
 elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ]; then
     tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
     [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || killtree "$more_text_5 $tenpjanvung.transfer.list"
@@ -192,7 +193,8 @@ elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ]; then
     else
     file_img_tmp="$TMP"
     fi
-    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" #&>"$TMP/payload_extract.log" || killtree "Payload unpack error log: $TMP/payload_extract.log" #&process_payload "$TMP/payload_extract.log"
+    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" | tee "$TMP/payload_extract.log" || killtree "Payload unpack error log: \n\n$(cat $TMP/payload_extract.log)" & process_payload "$TMP/payload_extract.log"
+    echo
     file_img="$file_img_tmp/$PVUGBIN.img"
 elif [ "$dang_tep" == 'super' ]; then
     echo -e "$unpack_text_1 (${INPUT##*/}) ➠ ($PVUGBIN)...\n"
@@ -243,16 +245,18 @@ mkdir -p "$in_name" $OUTPUT/config
 
     if [ "$dang_file" == 'ext' ]; then
         if [ "$(glog un_tool_ext4)" == 1 ]; then
-        imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
+        imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
         process_imgkit "$TMP/imgkit_scuti.log"
         else
         imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
         fi
         echo "$dang_file" > "$info"
+        echo
     elif [ "$dang_file" == 'f2fs' ]; then
         if [ "$(glog un_tool_f2fs)" == 1 ]; then
-            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
+            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
             process_imgkit "$TMP/imgkit_scuti.log"
+            echo
         else
             extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
             if [ -f "$fs_config" ]; then
@@ -276,14 +280,15 @@ mkdir -p "$in_name" $OUTPUT/config
             $TERMUX/lib/theft/extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -u -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
             process_unerrofs "$TMP/extract_erofs.log"
         else
-            extract.erofs -x -i "$file_img" -o "$OUTPUT" #&>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -u -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
-            #process_unerrofs "$TMP/extract_erofs.log"
+            extract.erofs -x -i "$file_img" -o "$OUTPUT" | tee $TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -u -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &
+            process_unerrofs "$TMP/extract_erofs.log"
         fi
         if [ -f $OUTPUT/config/exception.log ]; then
         cat $OUTPUT/config/exception.log >&2
         killtree "\nIncomplete file error please check hash" $OUTPUT/config/exception.log
         fi
         echo "$dang_file" > "$info"
+        echo
     elif [ "$dang_file" == 'logo' ]; then
         logo_dumper.py --out "$in_name" "$file_img" unpack
         echo "$dang_file" > "$info"
