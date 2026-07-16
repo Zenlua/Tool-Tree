@@ -157,16 +157,10 @@ class ActionPage : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val config = currentPageConfig ?: return false
-        menu?.clear() 
-        
-        // Nếu chưa có dữ liệu menu được nạp sẵn
         if (menuOptions == null) {
-            // Nạp dữ liệu một cách bất đồng bộ qua luồng phụ
-            loadPageConfig(false)
-            return true
+            menuOptions = PageMenuLoader(applicationContext, config).load()
         }
-    
-        // Tiến hành add các tùy chọn menu đã được chuẩn bị sẵn từ trước
+
         menuOptions?.forEachIndexed { index, option ->
             if (option.isFab) {
                 addFab(option)
@@ -176,7 +170,6 @@ class ActionPage : AppCompatActivity() {
         }
         return true
     }
-
 
     private fun addFab(menuOption: PageMenuOption) {
         binding.actionPageFab.apply {
@@ -201,10 +194,7 @@ class ActionPage : AppCompatActivity() {
 
     private fun onMenuItemClick(menuOption: PageMenuOption) {
         when(menuOption.type) {
-            "refresh", "reload" -> {
-            menuOptions = null
-            loadPageConfig(true)
-            }
+            "refresh", "reload" -> recreate()
             "restart" -> restartApp()
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
@@ -243,9 +233,6 @@ class ActionPage : AppCompatActivity() {
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.afterRead, config)
             }
 
-            kotlinx.coroutines.delay(150) 
-            val freshMenu = PageMenuLoader(applicationContext, config).load()
-
             withContext(Dispatchers.Main) {
                 if (!isActive || isFinishing) return@withContext
                 
@@ -254,12 +241,9 @@ class ActionPage : AppCompatActivity() {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
                     updateActionList(items, showLoading)
-                    
                 } else {
                     handleLoadError(config)
                 }
-                menuOptions = freshMenu
-                invalidateOptionsMenu()
                 progressBarDialog.hideDialog()
             }
         }

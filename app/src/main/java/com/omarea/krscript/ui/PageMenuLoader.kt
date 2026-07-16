@@ -6,12 +6,11 @@ import com.omarea.krscript.model.PageMenuOption
 import com.omarea.krscript.model.PageNode
 
 class PageMenuLoader(private val applicationContext: Context, private val pageNode: PageNode) {
-
-    // Không cần dùng biến menuOptions ở đây nữa để tránh giữ lại trạng thái cũ
+    private var menuOptions:ArrayList<PageMenuOption>? = null
 
     fun load(): ArrayList<PageMenuOption>? {
+        if (menuOptions != null) return menuOptions
         val resultList = ArrayList<PageMenuOption>()
-        
         // Ưu tiên script
         if (pageNode.pageMenuOptionsSh.isNotEmpty()) {
             val result = ScriptEnvironmen.executeResultRoot(
@@ -39,11 +38,13 @@ class PageMenuLoader(private val applicationContext: Context, private val pageNo
             }
         }
     
-        // Quyết định kết quả trả về trực tiếp (fallback)
-        return if (resultList.isEmpty() && pageNode.pageMenuOptions != null) {
-            pageNode.pageMenuOptions
+        // fallback
+        if (resultList.isEmpty() && pageNode.pageMenuOptions != null) {
+            menuOptions = pageNode.pageMenuOptions
         } else {
-            resultList
+            menuOptions = resultList
         }
+    
+        return menuOptions
     }
 }
