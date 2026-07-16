@@ -157,6 +157,11 @@ class ActionPage : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val config = currentPageConfig ?: return false
+        // Xoá menu cũ trước khi vẽ lại, tránh bị cộng dồn item khi hàm này
+        // được gọi nhiều lần (ví dụ sau invalidateOptionsMenu()).
+        menu?.clear()
+        binding.actionPageFab.visibility = View.GONE
+
         if (menuOptions == null) {
             menuOptions = PageMenuLoader(applicationContext, config).load()
         }
@@ -169,6 +174,18 @@ class ActionPage : AppCompatActivity() {
             }
         }
         return true
+    }
+
+    /**
+     * Xoá cache menuOptions và yêu cầu hệ thống vẽ lại toolbar menu.
+     * Gọi sau khi loadPageConfig() tải xong dữ liệu mới (menu có thể phụ thuộc
+     * pageMenuOptionsSh - một shell script sinh menu động theo trạng thái máy),
+     * để menu luôn phản ánh đúng trạng thái mới nhất thay vì bị đứng ở lần đầu
+     * onCreateOptionsMenu được gọi.
+     */
+    private fun refreshMenu() {
+        menuOptions = null
+        invalidateOptionsMenu()
     }
 
     private fun addFab(menuOption: PageMenuOption) {
@@ -241,6 +258,7 @@ class ActionPage : AppCompatActivity() {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
                     updateActionList(items, showLoading)
+                    refreshMenu()
                 } else {
                     handleLoadError(config)
                 }
