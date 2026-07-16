@@ -269,8 +269,10 @@ class DialogLogFragment : DialogFragment() {
 
         override fun onExit(msg: Any?) {
             val code = (msg as? Int) ?: -1
-            if (!hasError && code == 0) actionEventHandler?.onSuccess()
             updateLogWithColor(context.getString(R.string.kr_shell_completed), endColor)
+            if (!hasError && code == 0) {
+                actionEventHandler?.onSuccess()
+            }
             actionEventHandler?.onCompleted()
         }
 

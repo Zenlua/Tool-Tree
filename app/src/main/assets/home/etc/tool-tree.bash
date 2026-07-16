@@ -1480,12 +1480,12 @@ else
 fi
 
 if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
-    [ -f "$dirvad/uninstall.sh" ] && $dirvad/uninstall.sh
-    [ -f "$dirvad/uninstall.bash" ] && $dirvad/uninstall.bash
-    if grep -q 'url=.' $vadd 2>/dev/null; then
-    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
-    else
-    rm -rf "$dirvad"
+        if [ -f "$dirvad/uninstall.sh" ]; then
+        $dirvad/uninstall.sh
+        elif [ -f "$dirvad/uninstall.bash" ]; then
+        $dirvad/uninstall.bash
+        fi
+        find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
     fi
     elif [ "$index_adds" == 1 ]; then
     Features status
