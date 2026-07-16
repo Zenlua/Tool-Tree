@@ -131,7 +131,7 @@ public class ScriptEnvironmen {
 
     private static String createShellCache(Context context, String script) {
         String md5 = md5(script);
-        String outputPath = "home/.cache/" + md5 + ".sh";
+        String outputPath = "home/root/" + md5 + ".sh";
         if (new File(outputPath).exists()) {
             return outputPath;
         }
