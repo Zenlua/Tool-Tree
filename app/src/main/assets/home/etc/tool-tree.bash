@@ -439,6 +439,7 @@ Update(){
 
 # Thông báo cập nhật
 if checkonline; then
+    if [ ! -f $TEMP/update ]; then
     link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
     websums="$(xem $link_url/tags/beta)"
@@ -451,11 +452,14 @@ if checkonline; then
     filesum="$(checksum "$PATH_APK")"
     websize="$(echo "$websums" | jq -r '.assets[0].size')"
     if [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
-        if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
-        [ -n "$tagname" ] && show_update=1
-        fi
+    if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
+    [ -n "$tagname" ] && show_update=1
+    fi
     else
-        [ -n "$tagname" ] && show_update=1
+    [ -n "$tagname" ] && show_update=1
+    fi
+    else
+    show_update=1
     fi
 fi
 
