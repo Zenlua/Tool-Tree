@@ -126,7 +126,6 @@ class DialogLogFragment : DialogFragment() {
         binding.desc.text = if (nodeInfo.desc.isNotEmpty()) nodeInfo.desc else { binding.desc.visibility = View.GONE; "" }
         binding.actionProgress.isIndeterminate = true
 
-        // Sử dụng requireContext().applicationContext đảm bảo không bị lỗi Nullable Context
         val handler = MyShellHandler(requireContext().applicationContext, object : IActionEventHandler {
             override fun onStart(forceStop: Runnable?) {
                 running = true
@@ -166,8 +165,7 @@ class DialogLogFragment : DialogFragment() {
         fun onCompleted()
     }
 
-    // THAY ĐỔI: Thêm từ khóa "inner" để cho phép truy cập tài nguyên lớp ngoài một cách an toàn
-    inner class MyShellHandler(
+    class MyShellHandler(
         context: Context,
         private var actionEventHandler: IActionEventHandler?,
         logView: TextView?,
@@ -185,6 +183,7 @@ class DialogLogFragment : DialogFragment() {
         private var lineCount = 0
 
         private val logBuffer = SpannableStringBuilder()
+        // Vị trí bắt đầu của dòng đang "chờ ghi đè" (do message trước kết thúc bằng \r), -1 nếu không có
         private var overwriteStart = -1
 
         init {
@@ -192,19 +191,11 @@ class DialogLogFragment : DialogFragment() {
         }
 
         private fun getColor(resId: Int): Int {
-            // Sử dụng requireContext() của Fragment bên ngoài để truy xuất tài nguyên một cách an toàn
-            val safeContext = contextRef.get() ?: requireContext()
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                safeContext.getColor(resId)
-            } else {
-                @Suppress("DEPRECATION")
-                safeContext.resources.getColor(resId)
-            }
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) context.getColor(resId) else context.resources.getColor(resId)
         }
 
         private fun dpToPx(dp: Float): Int {
-            val safeContext = contextRef.get() ?: requireContext()
-            return (dp * safeContext.resources.displayMetrics.density).toInt()
+            return (dp * context.resources.displayMetrics.density).toInt()
         }
 
         fun release() {
@@ -277,10 +268,9 @@ class DialogLogFragment : DialogFragment() {
         }
 
         override fun onExit(msg: Any?) {
-            val safeContext = contextRef.get() ?: requireContext()
             val code = (msg as? Int) ?: -1
             if (!hasError && code == 0) actionEventHandler?.onSuccess()
-            updateLogWithColor(safeContext.getString(R.string.kr_shell_completed), endColor)
+            updateLogWithColor(context.getString(R.string.kr_shell_completed), endColor)
             actionEventHandler?.onCompleted()
         }
 
@@ -312,6 +302,9 @@ class DialogLogFragment : DialogFragment() {
             val logView = logViewRef.get() ?: return
 
             logView.post {
+                // Mỗi message giờ chỉ kết thúc bằng TỐI ĐA một trong hai ký tự: \r (dòng đang
+                // được ghi đè, ví dụ tiến trình tải %) hoặc \n (dòng đã hoàn tất). Ta tự quản lý
+                // việc xuống dòng dựa vào ký tự kết thúc đó, thay vì tách chuỗi theo \r.
                 val endsWithCR = formattedText.isNotEmpty() && formattedText.last() == '\r'
                 val endsWithLF = formattedText.isNotEmpty() && formattedText.last() == '\n'
 
@@ -321,6 +314,8 @@ class DialogLogFragment : DialogFragment() {
                     formattedText
                 }
 
+                // Nếu dòng trước đó đang chờ bị ghi đè (message trước kết thúc bằng \r),
+                // xoá nó đi trước khi ghi nội dung mới vào đúng vị trí đó.
                 if (overwriteStart in 0..logBuffer.length) {
                     logBuffer.delete(overwriteStart, logBuffer.length)
                 }
@@ -330,6 +325,8 @@ class DialogLogFragment : DialogFragment() {
 
                 when {
                     endsWithCR -> {
+                        // Ghi nhớ vị trí dòng này để lần cập nhật tiếp theo ghi đè lên đúng chỗ,
+                        // không tự thêm \n nên dòng vẫn "đứng yên" trên UI.
                         overwriteStart = insertStart
                     }
                     endsWithLF -> {
@@ -342,6 +339,7 @@ class DialogLogFragment : DialogFragment() {
                     }
                 }
 
+                // Giới hạn log tối đa 5000 dòng để tránh tràn bộ nhớ
                 if (lineCount > 5000) {
                     var deleteEndIndex = 0
                     var linesToTemplate = lineCount - 5000

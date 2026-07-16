@@ -8,14 +8,12 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 
 import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -23,16 +21,16 @@ import java.util.regex.Pattern;
 
 /**
  * Created by Hello on 2018/04/01.
- * Optimized for performance, memory-safety, dynamic patterns, and reliability.
+ * Optimized for performance, regex flexbility, and safety without breaking the base context.
  */
 public abstract class ShellHandlerBase extends Handler {
     public static final int EVENT_START = 0;
-    public static final int EVENT_REDE = 2; // Giữ nguyên typo để tránh breaking-change
+    public static final int EVENT_REDE = 2; // Giữ nguyên typo cũ của gốc để tránh break-change
     public static final int EVENT_READ_ERROR = 4;
     public static final int EVENT_WRITE = 6;
     public static final int EVENT_EXIT = -2;
 
-    // Compile sẵn các Pattern Regex tĩnh để tối ưu hiệu năng xử lý chuỗi log liên tục
+    // Compile sẵn các Pattern tĩnh giúp tăng tốc độ xử lý luồng log liên tục
     private static final Pattern ANSI_ESCAPE_PATTERN = Pattern.compile("\\x1B\\[[0-9;]*[a-zA-Z]");
     private static final Pattern AM_PATTERN = Pattern.compile("am:\\[(.*?)\\]");
     private static final Pattern PROGRESS_PATTERN = Pattern.compile("progress:\\[(.*?)\\]");
@@ -43,12 +41,11 @@ public abstract class ShellHandlerBase extends Handler {
     protected abstract void onExit(Object msg);
     protected abstract void updateLog(final SpannableString msg);
 
-    // Sử dụng WeakReference để ngăn ngừa rò rỉ bộ nhớ (Memory Leak)
-    protected final WeakReference<Context> contextRef;
+    // GIỮ NGUYÊN GỐC: Context truyền thống để tránh lỗi biên dịch của các lớp con bên ngoài
+    protected Context context;
 
     public ShellHandlerBase(Context context) {
-        super(Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper());
-        this.contextRef = new WeakReference<>(context);
+        this.context = context;
     }
 
     @Override
@@ -73,28 +70,27 @@ public abstract class ShellHandlerBase extends Handler {
         }
     }
 
-    @Override
     protected void onReaderMsg(Object msg) {
         if (msg == null) return;
         
         String log = msg.toString();
         
-        // 1. Loại bỏ mã màu ANSI trước khi xử lý
+        // 1. Loại bỏ các mã màu ANSI bằng Pattern tĩnh (tốc độ xử lý vượt trội so với replaceAll thô)
         String cleanLog = ANSI_ESCAPE_PATTERN.matcher(log).replaceAll("");
         
-        // 2. Tìm và xử lý lệnh AM ở bất kỳ vị trí nào trong dòng log
+        // 2. Lọc AM Parser linh hoạt ở bất kỳ vị trí nào trong dòng log (Ví dụ: "123am:[...]")
         Matcher amMatcher = AM_PATTERN.matcher(cleanLog);
         if (amMatcher.find()) {
-            String args = amMatcher.group(1).trim(); 
+            String args = amMatcher.group(1).trim();
             if (args.equalsIgnoreCase("help")) {
                 updateLog(new SpannableString(getAmHelp()));
             } else if (!args.isEmpty()) {
                 onAm(args);
             }
-            return; // Ngăn không in dòng log thô chứa lệnh này lên màn hình
+            return;
         }
         
-        // 3. Tìm và xử lý tiến trình Progress ở bất kỳ vị trí nào trong dòng log
+        // 3. Lọc Progress Parser linh hoạt ở bất kỳ vị trí nào trong dòng log (Ví dụ: "123progress:[...]")
         Matcher progressMatcher = PROGRESS_PATTERN.matcher(cleanLog);
         if (progressMatcher.find()) {
             try {
@@ -102,18 +98,19 @@ public abstract class ShellHandlerBase extends Handler {
                 int slashIdx = content.indexOf('/');
                 
                 if (slashIdx > 0) {
+                    // Trích xuất số tiến trình thực tế bất kể chuỗi bọc xung quanh ra sao
                     int start = Integer.parseInt(content.substring(0, slashIdx).trim());
                     int total = Integer.parseInt(content.substring(slashIdx + 1).trim());
                     onProgress(start, total);
-                    return; // Ngăn không in dòng log thô chứa lệnh này lên màn hình
+                    return;
                 }
             } catch (NumberFormatException e) {
+                // Xuất lỗi cảnh báo định dạng ra màn hình giúp lập trình viên sửa script thuận tiện
                 updateLog("Format error: " + cleanLog, "#ff0000");
                 return;
             }
         }
         
-        // Nếu là log thông thường, hiển thị bình thường
         onReader(msg);
     }
 
@@ -148,9 +145,6 @@ public abstract class ShellHandlerBase extends Handler {
     }
 
     private void onAm(String args) {
-        Context context = contextRef.get();
-        if (context == null) return;
-
         ArrayList<String> tokens = splitArgs(args);
         if (tokens.isEmpty()) return;
 
