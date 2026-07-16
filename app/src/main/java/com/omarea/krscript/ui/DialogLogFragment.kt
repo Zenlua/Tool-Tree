@@ -234,8 +234,8 @@ class DialogLogFragment : DialogFragment() {
                         visibility = View.VISIBLE
                         isIndeterminate = true
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = dpToPx(6)
-                            params.topMargin = dpToPx(8)
+                            params.height = dpToPx(4)
+                            params.topMargin = dpToPx(22)
                             layoutParams = params
                         }
                     }
@@ -246,8 +246,8 @@ class DialogLogFragment : DialogFragment() {
                         max = total
                         progress = current
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = dpToPx(4)
-                            params.topMargin = dpToPx(10)
+                            params.height = dpToPx(8)
+                            params.topMargin = dpToPx(12.5)
                             layoutParams = params
                         }
                     }
