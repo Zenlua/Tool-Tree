@@ -158,6 +158,7 @@ class DialogLogFragment : DialogFragment() {
         return handler
     }
 
+    @FunctionalInterface
     interface IActionEventHandler {
         fun onStart(forceStop: Runnable?)
         fun onSuccess()
@@ -196,21 +197,20 @@ class DialogLogFragment : DialogFragment() {
         }
 
         override fun handleMessage(msg: Message) {
-            // Rút gọn: Sử dụng trực tiếp logic phân phối của lớp cha ShellHandlerBase
             super.handleMessage(msg)
         }
 
         override fun onReader(msg: Any) {
-            updateLog(msg.toString(), basicColor)
+            updateLogWithColor(msg.toString(), basicColor)
         }
 
         override fun onWrite(msg: Any) {
-            updateLog(msg.toString(), scriptColor)
+            updateLogWithColor(msg.toString(), scriptColor)
         }
 
         override fun onError(msg: Any) {
             hasError = true
-            updateLog(msg.toString(), errorColor)
+            updateLogWithColor(msg.toString(), errorColor)
         }
 
         override fun onStart(forceStop: Runnable?) {
@@ -241,7 +241,7 @@ class DialogLogFragment : DialogFragment() {
                         progress = current
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
                             params.height = dpToPx(8)
-                            params.topMargin = dpToPx(12.5)
+                            params.topMargin = dpToPx(12) // Sửa lỗi biên dịch Double -> Int
                             layoutParams = params
                         }
                     }
@@ -258,24 +258,25 @@ class DialogLogFragment : DialogFragment() {
         override fun onExit(msg: Any?) {
             val code = (msg as? Int) ?: -1
             if (!hasError && code == 0) actionEventHandler?.onSuccess()
-            updateLog(context.getString(R.string.kr_shell_completed), endColor)
+            updateLogWithColor(context.getString(R.string.kr_shell_completed), endColor)
             actionEventHandler?.onCompleted()
         }
 
-        // Override hàm này để giữ nguyên định dạng SpannableString từ lớp cha chuyển sang
+        // Ghi đè phương thức nhận SpannableString từ lớp cha Java, giữ nguyên định dạng màu sắc
         override fun updateLog(msg: SpannableString?) {
             msg?.let {
                 dispatchLogUpdate(it)
             }
         }
 
-        private fun updateLog(text: String, forcedColor: Int?) {
+        // Đổi tên hàm thành updateLogWithColor để tránh xung đột overload với lớp cha Java
+        private fun updateLogWithColor(text: String, forcedColor: Int?) {
             val cleanString = text.replace("\r", "")
             
-            // Bước A: Phân tích mã màu ANSI (Xử lý ngay trên luồng background hiện tại)
+            // Bước A: Phân tích mã màu ANSI ngay trên background thread
             var parsedLog: CharSequence = AnsiColorParser.parse(cleanString)
             
-            // Bước B: Áp dụng màu mặc định nếu không có mã ANSI đặc trưng
+            // Bước B: Áp dụng lưới bảo hiểm màu nếu chuỗi không chứa mã màu ANSI đặc trưng
             if (forcedColor != null && !cleanString.contains("\u001B[")) {
                 val spannable = SpannableString(parsedLog)
                 spannable.setSpan(
@@ -299,7 +300,7 @@ class DialogLogFragment : DialogFragment() {
                 editable.append(formattedText)
                 lineCount += newLines
 
-                // Cắt bớt log cũ nếu vượt quá 5000 dòng
+                // Cắt bớt log cũ tối ưu hơn nếu vượt quá 5000 dòng
                 if (lineCount > 5000) {
                     var deleteEndIndex = 0
                     var linesToTemplate = lineCount - 5000
@@ -322,7 +323,7 @@ class DialogLogFragment : DialogFragment() {
 
                 logView.text = editable
                 
-                // Cuộn xuống đáy tối ưu hơn
+                // Tự động cuộn xuống đáy một cách mượt mà và chính xác
                 (logView.parent as? ScrollView)?.let { scrollView ->
                     scrollView.post {
                         scrollView.fullScroll(ScrollView.FOCUS_DOWN)
