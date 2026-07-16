@@ -4,7 +4,7 @@ unset shell_progres
 
 # Dọn dẹp tmp
 [ -d "$TMPDIR" ] && rm -fr $TMPDIR/* &
-rm -fr $HOME/cache/* $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
+rm -fr $HOME/.cache/*.sh $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
 
 (
 if checkonline; then
