@@ -249,7 +249,7 @@ class DialogLogFragment : DialogFragment() {
                         max = total
                         progress = current
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = dpToPx(1.8f)
+                            params.height = dpToPx(1.6f)
                             params.topMargin = dpToPx(16f)
                             layoutParams = params
                         }
