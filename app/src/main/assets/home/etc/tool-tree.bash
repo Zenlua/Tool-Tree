@@ -1486,7 +1486,6 @@ if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
         $dirvad/uninstall.bash
         fi
         find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
-    fi
     elif [ "$index_adds" == 1 ]; then
     Features status
     elif [ "$index_adds" == 2 ]; then
