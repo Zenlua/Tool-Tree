@@ -7,7 +7,11 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
+import android.text.Editable
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -176,6 +180,7 @@ class DialogLogFragment : DialogFragment() {
         private val scriptColor = getColor(R.color.kr_shell_log_script)
         private val endColor = getColor(R.color.kr_shell_log_end)
         private var hasError = false
+        private var lineCount = 0 // Biến đếm dòng phụ trợ để tránh split() liên tục
 
         private fun getColor(resId: Int): Int {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) context.getColor(resId) else context.resources.getColor(resId)
@@ -195,28 +200,28 @@ class DialogLogFragment : DialogFragment() {
             when (msg.what) {
                 EVENT_EXIT -> onExit(msg.obj)
                 EVENT_START -> onStart(msg.obj)
-                EVENT_REDE -> onReaderMsg(msg.obj)
+                EVENT_REDE -> onReader(msg.obj) // Sửa lỗi: Gọi đúng hàm đồng bộ dữ liệu ra luồng
                 EVENT_READ_ERROR -> onError(msg.obj)
                 EVENT_WRITE -> onWrite(msg.obj)
             }
         }
 
         override fun onReader(msg: Any) {
-            updateLog(msg.toString())
+            updateLog(msg.toString(), basicColor)
         }
 
         override fun onWrite(msg: Any) {
-            updateLog(msg.toString())
+            updateLog(msg.toString(), scriptColor)
         }
 
         override fun onError(msg: Any) {
             hasError = true
-            updateLog(msg.toString())
+            updateLog(msg.toString(), errorColor)
         }
 
         override fun onStart(forceStop: Runnable?) {
-            // Đưa trạng thái màu ANSI về ban đầu khi bắt đầu tiến trình log mới
             AnsiColorParser.reset()
+            lineCount = 0
             logViewRef.get()?.text = ""
             actionEventHandler?.onStart(forceStop)
         }
@@ -252,34 +257,78 @@ class DialogLogFragment : DialogFragment() {
 
         override fun onStart(msg: Any?) {
             AnsiColorParser.reset()
+            lineCount = 0
             logViewRef.get()?.text = ""
         }
 
         override fun onExit(msg: Any?) {
             val code = (msg as? Int) ?: -1
             if (!hasError && code == 0) actionEventHandler?.onSuccess()
-            updateLog(context.getString(R.string.kr_shell_completed))
+            updateLog(context.getString(R.string.kr_shell_completed), endColor)
             actionEventHandler?.onCompleted()
         }
 
-        // Hàm xử lý chuỗi log tập trung, biên dịch màu sắc và tối ưu hóa bộ nhớ
         private fun updateLog(text: String) {
+            updateLog(text, null)
+        }
+
+        private fun updateLog(text: String, forcedColor: Int?) {
             val logView = logViewRef.get() ?: return
             val cleanString = text.replace("\r", "")
-            val parsedLog = AnsiColorParser.parse(cleanString)
+            
+            // Bước A: Phân tích mã màu ANSI
+            var parsedLog = AnsiColorParser.parse(cleanString)
+            
+            // Bước B: Áp dụng lưới bảo hiểm màu nếu không chứa mã màu ANSI đặc trưng
+            if (forcedColor != null && !cleanString.contains("\u001B[")) {
+                val spannable = SpannableString(parsedLog)
+                spannable.setSpan(
+                    ForegroundColorSpan(forcedColor),
+                    0,
+                    spannable.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                parsedLog = spannable
+            }
+            
+            // Tính số dòng mới chuẩn bị chèn vào
+            val newLines = cleanString.count { it == '\n' } + 1
+
             logView.post {
-                logView.append(parsedLog)
-                val currentText = logView.text
-                val lines = currentText.split("\n")
-                if (lines.size > 5000) {
-                    val keepLines = lines.takeLast(5000)
-                    logView.setText(keepLines.joinToString("\n"))
+                // Ép kiểu sang Editable để thao tác thêm/xóa vùng văn bản trực tiếp
+                val editable = logView.text as? Editable ?: SpannableStringBuilder(logView.text)
+                editable.append(parsedLog)
+                lineCount += newLines
+
+                // Cắt log tối ưu: Giữ lại màu và cấu trúc Spannable mà không cần gọi split()
+                if (lineCount > 5000) {
+                    var deleteEndIndex = 0
+                    var linesToTemplate = lineCount - 5000
+                    val currentCharSequence = editable.toString()
+                    
+                    // Tìm vị trí ký tự xuống dòng thích hợp để cắt phần đầu thừa đi
+                    for (i in currentCharSequence.indices) {
+                        if (currentCharSequence[i] == '\n') {
+                            linesToTemplate--
+                            if (linesToTemplate <= 0) {
+                                deleteEndIndex = i + 1
+                                break
+                            }
+                        }
+                    }
+                    if (deleteEndIndex > 0) {
+                        editable.delete(0, deleteEndIndex)
+                        lineCount = 5000
+                    }
                 }
+
+                logView.text = editable
+                
+                // Tự động cuộn xuống đáy
                 (logView.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
             }
         }
 
-        // Override hàm của thư viện gốc để bảo vệ tính tương thích ngược
         override fun updateLog(msg: SpannableString?) {
             msg?.let {
                 updateLog(it.toString())
@@ -307,7 +356,7 @@ class DialogLogFragment : DialogFragment() {
     override fun onDestroyView() {
         currentHandler?.release()
         currentHandler = null
-        AnsiColorParser.reset() // Dọn dẹp trạng thái màu tĩnh khi thoát giao diện
+        AnsiColorParser.reset()
         super.onDestroyView()
         _binding = null
     }
