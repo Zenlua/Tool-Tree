@@ -13,10 +13,10 @@ mkdir -p "${vnk%.*}®${vnk##*.}_7zv1"
 rm -fr "$vnk"
 done
 
-mkdir -p lib log root tmp TREE/ROM TOOL/APK usr
+mkdir -p lib root tmp TREE/ROM TOOL/APK usr/log
 
 # -snh -snl
-7z a -t7z -mx=9 -y ../module.7z .local/* ./sh *
+7z a -t7z -mx=9 -y ../module.7z
 rm -fr ../module
 mv ../module.7z ../module
 ls -lh ../module
