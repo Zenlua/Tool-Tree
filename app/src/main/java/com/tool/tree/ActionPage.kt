@@ -120,11 +120,18 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
+    // Hàm tập trung xử lý tải lại trang từ file XML gốc mới nhất
+    private fun reloadCurrentPageConfig() {
+        actionsLoaded = false // Reset cờ trạng thái để ép buộc vẽ lại Fragment mới
+        loadPageConfig(true)  // Đọc lại XML
+    }
+
     private val actionShortClickHandler = object : KrScriptActionHandler {
         override fun onActionCompleted(runnableNode: RunnableNode) {
             when {
                 runnableNode.autoFinish -> finishAndRemoveTask()
-                runnableNode.reloadPage -> loadPageConfig(true)
+                // THAY ĐỔI: Sử dụng hàm reload tập trung khi hành động yêu cầu reloadPage
+                runnableNode.reloadPage -> reloadCurrentPageConfig()
                 runnableNode.autoKill -> killApp()
                 runnableNode.autoRestart -> restartApp()
             }
@@ -156,42 +163,19 @@ class ActionPage : AppCompatActivity() {
     private var menuOptions: ArrayList<PageMenuOption>? = null
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        // Chỉ bật cơ chế menu ở đây; việc build nội dung được chuyển hết sang
-        // onPrepareOptionsMenu() để luôn chạy lại mỗi lần menu chuẩn bị hiển thị.
-        return currentPageConfig != null
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         val config = currentPageConfig ?: return false
-
-        // onPrepareOptionsMenu() được hệ thống gọi lại MỖI LẦN menu sắp hiển thị
-        // (kể cả lần đầu tiên, ngay sau onCreateOptionsMenu), khác với
-        // onCreateOptionsMenu chỉ chạy đúng 1 lần rồi bị cache. Nên đây là nơi
-        // đúng để luôn nạp lại PageMenuLoader mới -> luôn chạy lại
-        // pageMenuOptionsSh -> luôn lấy đúng output hiện tại của máy tại thời
-        // điểm người dùng mở menu, không phụ thuộc dữ liệu cũ từ lần trước.
-        menuOptions = PageMenuLoader(applicationContext, config).load()
-
-        menu.clear()
-        binding.actionPageFab.visibility = View.GONE
+        if (menuOptions == null) {
+            menuOptions = PageMenuLoader(applicationContext, config).load()
+        }
 
         menuOptions?.forEachIndexed { index, option ->
             if (option.isFab) {
                 addFab(option)
             } else {
-                menu.add(-1, index, index, option.title)
+                menu?.add(-1, index, index, option.title)
             }
         }
         return true
-    }
-
-    /**
-     * Yêu cầu hệ thống vẽ lại toolbar menu ngay (áp dụng cho các item hiển thị
-     * trực tiếp trên toolbar, ví dụ FAB) sau khi loadPageConfig() tải xong dữ
-     * liệu mới, thay vì phải đợi người dùng tự tay mở menu ra mới thấy cập nhật.
-     */
-    private fun refreshMenu() {
-        invalidateOptionsMenu()
     }
 
     private fun addFab(menuOption: PageMenuOption) {
@@ -217,7 +201,8 @@ class ActionPage : AppCompatActivity() {
 
     private fun onMenuItemClick(menuOption: PageMenuOption) {
         when(menuOption.type) {
-            "refresh", "reload" -> recreate()
+            // THAY ĐỔI: Sử dụng hàm reload tập trung khi nhấn làm mới trên menu
+            "refresh", "reload" -> reloadCurrentPageConfig()
             "restart" -> restartApp()
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
@@ -264,7 +249,6 @@ class ActionPage : AppCompatActivity() {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
                     updateActionList(items, showLoading)
-                    refreshMenu()
                 } else {
                     handleLoadError(config)
                 }
@@ -324,17 +308,10 @@ class ActionPage : AppCompatActivity() {
         val onDismiss = Runnable {
             when {
                 menuOption.autoFinish -> finish()
-                menuOption.reloadPage -> recreate()
+                // THAY ĐỔI: Chuyển đổi từ recreate() sang reloadCurrentPageConfig() khi menuOption yêu cầu reloadPage
+                menuOption.reloadPage -> reloadCurrentPageConfig()
                 menuOption.autoKill -> killApp()
                 menuOption.autoRestart -> restartApp()
-                else -> {
-                    // Không có cờ đặc biệt nào: đây thường là 1 hành động đổi trạng thái
-                    // tại chỗ (ví dụ nút toggle Ghim/Bỏ ghim). Vì pageMenuOptionsSh
-                    // luôn được PageMenuLoader chạy lại mỗi khi menu được build, chỉ
-                    // cần yêu cầu vẽ lại là text/icon sẽ tự đúng theo trạng thái mới -
-                    // không cần đợi người dùng mở menu ra lần nữa hay tải lại cả trang.
-                    refreshMenu()
-                }
             }
         }
         val config = currentPageConfig ?: return
