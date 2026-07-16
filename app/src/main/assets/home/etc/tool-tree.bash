@@ -492,7 +492,7 @@ fi
 if [[ "$websum" != "$(checksum "$PATH_APK")" ]]; then
 echo "'$update_text_3'"
 echo
-taive "$(echo "$data_json" | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" true 2>&1
+downloadb "$(echo "$data_json" | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" false 2>&1
     if [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
     cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
     echo
@@ -1367,7 +1367,7 @@ xml_print '<group>
 <set>
 echo "'$update_text_3'"
 echo
-taive "'$(gprop url)'" $TMP/addon.add 2>&1
+downloadb "'$(gprop url)'" $TMP/addon.add false 2>&1
 echo
 if [ -f $TMP/addon.add ]; then
 installadd $TMP/addon.add "'${dirvad%/*}'"
