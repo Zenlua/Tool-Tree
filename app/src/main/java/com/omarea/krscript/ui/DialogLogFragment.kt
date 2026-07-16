@@ -181,6 +181,10 @@ class DialogLogFragment : DialogFragment() {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) context.getColor(resId) else context.resources.getColor(resId)
         }
 
+        private fun dpToPx(dp: Int): Int {
+            return (dp * context.resources.displayMetrics.density).toInt()
+        }
+
         fun release() {
             logViewRef.clear()
             progressRef.clear()
@@ -207,7 +211,7 @@ class DialogLogFragment : DialogFragment() {
 
         override fun onError(msg: Any) {
             hasError = true
-            updateLog(msg, errorColor)
+            updateLog(msg.toString())
         }
 
         override fun onStart(forceStop: Runnable?) {
@@ -225,8 +229,8 @@ class DialogLogFragment : DialogFragment() {
                         visibility = View.VISIBLE
                         isIndeterminate = true
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = 22
-                            params.topMargin = 34
+                            params.height = dpToPx(6)
+                            params.topMargin = dpToPx(8)
                             layoutParams = params
                         }
                     }
@@ -237,8 +241,8 @@ class DialogLogFragment : DialogFragment() {
                         max = total
                         progress = current
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = 4
-                            params.topMargin = 43
+                            params.height = dpToPx(4)
+                            params.topMargin = dpToPx(10)
                             layoutParams = params
                         }
                     }
@@ -261,26 +265,16 @@ class DialogLogFragment : DialogFragment() {
         // Hàm xử lý chuỗi log tập trung, biên dịch màu sắc và tối ưu hóa bộ nhớ
         private fun updateLog(text: String) {
             val logView = logViewRef.get() ?: return
-            
-            // Loại bỏ các ký tự di chuyển con trỏ thừa gây ô vuông rác màn hình
             val cleanString = text.replace("\r", "")
-            
-            // Chuyển mã ANSI sang văn bản màu hiển thị được trên Android
             val parsedLog = AnsiColorParser.parse(cleanString)
-            
             logView.post {
-                // Đẩy dòng text mới vào
                 logView.append(parsedLog)
-                
-                // Giới hạn bộ nhớ TextView tối đa 50,000 ký tự (tránh đơ màn hình)
-                val maxChars = 50000
                 val currentText = logView.text
-                if (currentText.length > maxChars) {
-                    val keepIndex = currentText.length - maxChars
-                    logView.text = currentText.subSequence(keepIndex, currentText.length)
+                val lines = currentText.split("\n")
+                if (lines.size > 5000) {
+                    val keepLines = lines.takeLast(5000)
+                    logView.setText(keepLines.joinToString("\n"))
                 }
-                
-                // Tự động cuộn xuống dòng cuối cùng theo tiến trình
                 (logView.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
             }
         }

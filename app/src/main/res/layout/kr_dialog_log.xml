@@ -3,7 +3,9 @@
     style="@style/dialogRoot"
     android:animateLayoutChanges="true"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <ImageButton
         android:id="@+id/btn_hide"
@@ -14,14 +16,15 @@
         android:layout_marginStart="8dp"
         android:scaleType="centerInside"
         android:padding="7dp"
-        android:src="@drawable/kr_hide" />
+        android:src="@drawable/kr_hide"
+        android:contentDescription="@null" />
 
     <LinearLayout
         android:id="@+id/top_bar"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_toStartOf="@id/btn_hide"
-        android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <TextView
@@ -40,7 +43,9 @@
 
     </LinearLayout>
 
+    <!-- Thay đổi: Đồng bộ lại layout_below để tránh đè lên ProgressBar nếu cần -->
     <ScrollView
+        android:id="@+id/log_scroll_view"
         android:layout_marginTop="16dp"
         android:background="@drawable/krscript_item_ripple_kon"
         android:layout_width="match_parent"
@@ -53,7 +58,7 @@
         <TextView
             android:id="@+id/shell_output"
             android:breakStrategy="simple"
-            android:textIsSelectable="true"
+            android:textIsSelectable="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
@@ -73,27 +78,37 @@
         <Button
             android:id="@+id/btn_copy"
             style="@style/dialogCancelBtn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/btn_copy_output" />
 
         <Button
             android:id="@+id/btn_cancel"
             style="@style/dialogWarningBtn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/btn_cancel" />
 
         <Button
             android:id="@+id/btn_exit"
             style="@style/dialogConfirmBtn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/btn_exit" />
 
     </LinearLayout>
 
+    <!-- SỬA TẠI ĐÂY: Thay đổi toàn bộ px sang dp để đồng bộ cơ chế hiển thị -->
     <ProgressBar
         android:id="@+id/action_progress"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_below="@id/top_bar"
         android:layout_width="match_parent"
-        android:layout_height="8dp"
-        android:layout_marginTop="34px"
+        android:layout_height="4dp" 
+        android:layout_marginTop="8dp"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
         android:indeterminate="true"
