@@ -241,8 +241,6 @@ class ActionPage : AppCompatActivity() {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
                     updateActionList(items, showLoading)
-                    menuOptions = null          // xoá cache
-                    invalidateOptionsMenu()   
                 } else {
                     handleLoadError(config)
                 }

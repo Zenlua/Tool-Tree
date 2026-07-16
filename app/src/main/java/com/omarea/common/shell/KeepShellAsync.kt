@@ -9,6 +9,7 @@ import java.io.BufferedWriter
 import java.io.IOException
 import java.io.InputStreamReader
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Created by Hello on 2018/01/23.
@@ -70,18 +71,18 @@ class KeepShellAsync(private var context: Context?, private var rootMode: Boolea
 
     //尝试退出命令行程序
     fun tryExit() {
-        try {
-            if (out != null)
-                out!!.close()
+        mLock.withLock {
+            try {
+                out?.close()
+            } catch (ex: Exception) {
+            }
             out = null
-        } catch (ex: Exception) {
+            try {
+                p?.destroy()
+            } catch (ex: Exception) {
+            }
+            p = null
         }
-        out = null
-        try {
-            p!!.destroy()
-        } catch (ex: Exception) {
-        }
-        p = null
     }
 
     //获取ROOT超时时间
@@ -90,102 +91,115 @@ class KeepShellAsync(private var context: Context?, private var rootMode: Boolea
     private var cmdsCache = StringBuilder()
 
     private fun getRuntimeShell(cmd: String?, error: Runnable?) {
-        if (threadStarted) {
-            cmdsCache.append(cmd)
-            cmdsCache.append("\n\n")
-            return
+        // Kiểm tra + đặt cờ threadStarted phải là 1 thao tác nguyên tử (atomic),
+        // nếu không 2 thread gọi doCmd() gần như đồng thời có thể cùng vượt qua
+        // check "threadStarted == false" và cùng khởi động 1 luồng mở shell,
+        // dẫn tới 2 tiến trình su chồng nhau.
+        val shouldStartThread = mLock.withLock {
+            if (threadStarted) {
+                if (cmd != null) {
+                    cmdsCache.append(cmd)
+                    cmdsCache.append("\n\n")
+                }
+                false
+            } else {
+                threadStarted = true
+                true
+            }
         }
+        if (!shouldStartThread) return
+
         val thread = Thread {
+            var errorReported = false
+            fun reportError() {
+                if (!errorReported) {
+                    errorReported = true
+                    error?.run()
+                }
+            }
+
             try {
                 tryExit()
-                p =
+                val newProcess =
                     if (rootMode) ShellExecutor.getSuperUserRuntime() else ShellExecutor.getRuntime()
+
+                mLock.withLock { p = newProcess }
 
                 if (processHandler != null) {
                     processHandler!!.sendMessage(processHandler!!.obtainMessage(PROCESS_EVENT_STAR))
                 }
-                if (p != null) {
+                if (newProcess != null) {
                     Thread {
-                        val bufferedreader = BufferedReader(InputStreamReader(p!!.inputStream))
+                        val bufferedreader = BufferedReader(InputStreamReader(newProcess.inputStream))
                         try {
                             while (true) {
-                                val line = bufferedreader.readLine()
-                                if (line != null) {
-                                    if (processHandler != null) {
-                                        processHandler!!.sendMessage(
-                                            processHandler!!.obtainMessage(
-                                                PROCESS_EVENT_CONTENT,
-                                                line
-                                            )
-                                        )
-                                    }
-                                } else {
-                                    break
-                                }
+                                val line = bufferedreader.readLine() ?: break
+                                processHandler?.sendMessage(
+                                    processHandler!!.obtainMessage(PROCESS_EVENT_CONTENT, line)
+                                )
                             }
                         } catch (ex: Exception) {
                         } finally {
-                            bufferedreader.close()
+                            try { bufferedreader.close() } catch (ex: Exception) {}
                         }
-                    }.start()
+                    }.apply { isDaemon = true }.start()
                     Thread {
-                        val bufferedreader = BufferedReader(InputStreamReader(p!!.errorStream))
+                        val bufferedreader = BufferedReader(InputStreamReader(newProcess.errorStream))
                         try {
                             while (true) {
-                                val line = bufferedreader.readLine()
-                                if (line != null) {
-                                    if (processHandler != null) {
-                                        processHandler!!.sendMessage(
-                                            processHandler!!.obtainMessage(
-                                                PROCESS_EVENT_ERROR_CONTENT,
-                                                line
-                                            )
-                                        )
-                                    }
-                                } else {
-                                    break
-                                }
+                                val line = bufferedreader.readLine() ?: break
+                                processHandler?.sendMessage(
+                                    processHandler!!.obtainMessage(PROCESS_EVENT_ERROR_CONTENT, line)
+                                )
                             }
                         } catch (ex: Exception) {
                         } finally {
-                            bufferedreader.close()
+                            try { bufferedreader.close() } catch (ex: Exception) {}
                         }
-                    }.start()
-                }
-                out = p!!.outputStream.bufferedWriter()
-                if (out == null) {
-                    error?.run()
-                } else if (cmd != null) {
-                    out!!.write(cmd)
-                    out!!.write("\n\n")
-                    if (cmdsCache.isNotEmpty()) {
-                        out!!.write(cmdsCache.toString())
-                        cmdsCache = StringBuilder()
+                    }.apply { isDaemon = true }.start()
+
+                    val newOut = newProcess.outputStream.bufferedWriter()
+                    mLock.withLock { out = newOut }
+
+                    if (cmd != null) {
+                        mLock.withLock {
+                            out?.write(cmd)
+                            out?.write("\n\n")
+                            if (cmdsCache.isNotEmpty()) {
+                                out?.write(cmdsCache.toString())
+                                cmdsCache = StringBuilder()
+                            }
+                            out?.flush()
+                        }
                     }
-                    out!!.flush()
+                } else {
+                    // Không lấy được process (ví dụ bị từ chối quyền root)
+                    reportError()
                 }
             } catch (e: Exception) {
-                if (out == null) {
-                    error?.run()
+                val hasOut = mLock.withLock { out } != null
+                if (!hasOut) {
+                    reportError()
                 } else {
                     showMsg("Failed to obtain ROOT privileges!")
                 }
             } finally {
-                threadStarted = false
+                mLock.withLock { threadStarted = false }
             }
         }
+        thread.isDaemon = true
         thread.start()
-        threadStarted = true
         handler.postDelayed({
-            if (p == null && thread.isAlive && !thread.isInterrupted) {
+            val stillNoProcess = mLock.withLock { p == null }
+            if (stillNoProcess && thread.isAlive && !thread.isInterrupted) {
                 thread.interrupt()
                 tryExit()
+                mLock.withLock { threadStarted = false }
                 if (error != null) {
                     error.run()
                 } else {
                     showMsg("Root access granted timed out!")
                 }
-                threadStarted = false
             }
         }, GET_ROOT_TIMEOUT)
     }
@@ -193,22 +207,24 @@ class KeepShellAsync(private var context: Context?, private var rootMode: Boolea
     //执行脚本
     fun doCmd(cmd: String, isRedo: Boolean = false) {
         try {
-            //tryExit()
-            if (p == null || isRedo || out == null) {
+            val needNewShell = mLock.withLock { p == null || isRedo || out == null }
+            if (needNewShell) {
                 getRuntimeShell(cmd) {
-                    //重试一次
+                    //重试一次 (thử lại 1 lần)
                     if (!isRedo)
                         doCmd(cmd, true)
                     else
                         showMsg("Failed execution action!\nError message : Unable to obtain Root permissions\n\n\ncommand : \r\n$cmd")
                 }
             } else {
-                out!!.write(cmd)
-                out!!.write("\n\n")
-                out!!.flush()
+                mLock.withLock {
+                    out?.write(cmd)
+                    out?.write("\n\n")
+                    out?.flush()
+                }
             }
         } catch (e: IOException) {
-            //重试一次
+            //重试一次 (thử lại 1 lần)
             if (!isRedo)
                 doCmd(cmd, true)
             else
