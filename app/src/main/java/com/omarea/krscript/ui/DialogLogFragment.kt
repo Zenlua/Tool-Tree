@@ -186,7 +186,8 @@ class DialogLogFragment : DialogFragment() {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) context.getColor(resId) else context.resources.getColor(resId)
         }
 
-        private fun dpToPx(dp: Int): Int {
+        // Nhận vào kiểu Float thay vì Int
+        private fun dpToPx(dp: Float): Int {
             return (dp * context.resources.displayMetrics.density).toInt()
         }
 
@@ -228,8 +229,8 @@ class DialogLogFragment : DialogFragment() {
                         visibility = View.VISIBLE
                         isIndeterminate = true
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = dpToPx(4)
-                            params.topMargin = dpToPx(22)
+                            params.height = dpToPx(4f)
+                            params.topMargin = dpToPx(22f)
                             layoutParams = params
                         }
                     }
@@ -240,8 +241,8 @@ class DialogLogFragment : DialogFragment() {
                         max = total
                         progress = current
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = dpToPx(8)
-                            params.topMargin = dpToPx(12) // Sửa lỗi biên dịch Double -> Int
+                            params.height = dpToPx(8f)
+                            params.topMargin = dpToPx(12.5f) // Sửa lỗi biên dịch Double -> Int
                             layoutParams = params
                         }
                     }
