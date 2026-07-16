@@ -158,7 +158,6 @@ class DialogLogFragment : DialogFragment() {
         return handler
     }
 
-    @FunctionalInterface
     interface IActionEventHandler {
         fun onStart(forceStop: Runnable?)
         fun onSuccess()
@@ -180,7 +179,7 @@ class DialogLogFragment : DialogFragment() {
         private val scriptColor = getColor(R.color.kr_shell_log_script)
         private val endColor = getColor(R.color.kr_shell_log_end)
         private var hasError = false
-        private var lineCount = 0 // Biến đếm dòng phụ trợ để tránh split() liên tục
+        private var lineCount = 0
 
         private fun getColor(resId: Int): Int {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) context.getColor(resId) else context.resources.getColor(resId)
@@ -197,13 +196,8 @@ class DialogLogFragment : DialogFragment() {
         }
 
         override fun handleMessage(msg: Message) {
-            when (msg.what) {
-                EVENT_EXIT -> onExit(msg.obj)
-                EVENT_START -> onStart(msg.obj)
-                EVENT_REDE -> onReader(msg.obj) // Sửa lỗi: Gọi đúng hàm đồng bộ dữ liệu ra luồng
-                EVENT_READ_ERROR -> onError(msg.obj)
-                EVENT_WRITE -> onWrite(msg.obj)
-            }
+            // Rút gọn: Sử dụng trực tiếp logic phân phối của lớp cha ShellHandlerBase
+            super.handleMessage(msg)
         }
 
         override fun onReader(msg: Any) {
@@ -268,18 +262,20 @@ class DialogLogFragment : DialogFragment() {
             actionEventHandler?.onCompleted()
         }
 
-        private fun updateLog(text: String) {
-            updateLog(text, null)
+        // Override hàm này để giữ nguyên định dạng SpannableString từ lớp cha chuyển sang
+        override fun updateLog(msg: SpannableString?) {
+            msg?.let {
+                dispatchLogUpdate(it)
+            }
         }
 
         private fun updateLog(text: String, forcedColor: Int?) {
-            val logView = logViewRef.get() ?: return
             val cleanString = text.replace("\r", "")
             
-            // Bước A: Phân tích mã màu ANSI
-            var parsedLog = AnsiColorParser.parse(cleanString)
+            // Bước A: Phân tích mã màu ANSI (Xử lý ngay trên luồng background hiện tại)
+            var parsedLog: CharSequence = AnsiColorParser.parse(cleanString)
             
-            // Bước B: Áp dụng lưới bảo hiểm màu nếu không chứa mã màu ANSI đặc trưng
+            // Bước B: Áp dụng màu mặc định nếu không có mã ANSI đặc trưng
             if (forcedColor != null && !cleanString.contains("\u001B[")) {
                 val spannable = SpannableString(parsedLog)
                 spannable.setSpan(
@@ -291,22 +287,24 @@ class DialogLogFragment : DialogFragment() {
                 parsedLog = spannable
             }
             
-            // Tính số dòng mới chuẩn bị chèn vào
-            val newLines = cleanString.count { it == '\n' } + 1
+            dispatchLogUpdate(parsedLog)
+        }
+
+        private fun dispatchLogUpdate(formattedText: CharSequence) {
+            val logView = logViewRef.get() ?: return
+            val newLines = formattedText.count { it == '\n' } + 1
 
             logView.post {
-                // Ép kiểu sang Editable để thao tác thêm/xóa vùng văn bản trực tiếp
                 val editable = logView.text as? Editable ?: SpannableStringBuilder(logView.text)
-                editable.append(parsedLog)
+                editable.append(formattedText)
                 lineCount += newLines
 
-                // Cắt log tối ưu: Giữ lại màu và cấu trúc Spannable mà không cần gọi split()
+                // Cắt bớt log cũ nếu vượt quá 5000 dòng
                 if (lineCount > 5000) {
                     var deleteEndIndex = 0
                     var linesToTemplate = lineCount - 5000
                     val currentCharSequence = editable.toString()
                     
-                    // Tìm vị trí ký tự xuống dòng thích hợp để cắt phần đầu thừa đi
                     for (i in currentCharSequence.indices) {
                         if (currentCharSequence[i] == '\n') {
                             linesToTemplate--
@@ -324,14 +322,12 @@ class DialogLogFragment : DialogFragment() {
 
                 logView.text = editable
                 
-                // Tự động cuộn xuống đáy
-                (logView.parent as? ScrollView)?.fullScroll(ScrollView.FOCUS_DOWN)
-            }
-        }
-
-        override fun updateLog(msg: SpannableString?) {
-            msg?.let {
-                updateLog(it.toString())
+                // Cuộn xuống đáy tối ưu hơn
+                (logView.parent as? ScrollView)?.let { scrollView ->
+                    scrollView.post {
+                        scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+                    }
+                }
             }
         }
     }
