@@ -1,19 +1,28 @@
 package com.tool.tree
 
 import android.graphics.Color
+import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
+import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
+import android.text.style.UnderlineSpan
 import java.util.regex.Pattern
 
 object AnsiColorParser {
-    // Regex chuẩn để bóc tách chính xác mã ANSI ESC [ ... m
     private val ANSI_PATTERN = Pattern.compile("\\u001B\\[([\\d;]*)m")
     
     private const val DEFAULT_FOREGROUND = Color.LTGRAY 
-    private var currentFgColor = DEFAULT_FOREGROUND
+    private const val DEFAULT_BACKGROUND = Color.TRANSPARENT // Mặc định không có màu nền
 
-    // Bảng 16 màu ANSI cơ bản và màu sáng (Bright) cho chữ
+    // Cấu trúc lưu trữ trạng thái định dạng hiện tại của luồng log
+    private var currentFgColor = DEFAULT_FOREGROUND
+    private var currentBgColor = DEFAULT_BACKGROUND
+    private var isBold = false
+    private var isUnderline = false
+
+    // Bảng 16 màu ANSI cơ bản (cho cả Foreground và Background)
     private val ANSI_16_COLORS = intArrayOf(
         Color.BLACK,              // 0 - Black
         Color.RED,                // 1 - Red
@@ -63,7 +72,7 @@ object AnsiColorParser {
     }
 
     /**
-     * Chỉ áp dụng duy nhất ForegroundColorSpan (màu chữ) cho đoạn văn bản
+     * Thêm chuỗi văn bản và áp dụng tất cả cấu hình span đang hoạt động
      */
     private fun appendStyledText(builder: SpannableStringBuilder, text: String) {
         val spanStart = builder.length
@@ -72,21 +81,51 @@ object AnsiColorParser {
 
         if (spanStart == spanEnd) return
 
-        // Chỉ gán màu chữ hiện tại lên đoạn text
+        // 1. Áp dụng màu chữ (Foreground)
         builder.setSpan(
             ForegroundColorSpan(currentFgColor),
             spanStart,
             spanEnd,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
+
+        // 2. Áp dụng màu nền (Background) nếu có thiết lập màu khác trong suốt
+        if (currentBgColor != Color.TRANSPARENT) {
+            builder.setSpan(
+                BackgroundColorSpan(currentBgColor),
+                spanStart,
+                spanEnd,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        // 3. Áp dụng kiểu chữ in đậm (Bold)
+        if (isBold) {
+            builder.setSpan(
+                StyleSpan(Typeface.BOLD),
+                spanStart,
+                spanEnd,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        // 4. Áp dụng kiểu chữ gạch chân (Underline)
+        if (isUnderline) {
+            builder.setSpan(
+                UnderlineSpan(),
+                spanStart,
+                spanEnd,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
     }
 
     /**
-     * Parse chuỗi tham số ANSI để chỉ cập nhật màu chữ (Foreground)
+     * Parse chuỗi tham số ANSI để cập nhật trạng thái định dạng (in đậm, màu chữ, màu nền,...)
      */
     private fun parseAnsiParameters(paramsStr: String) {
         if (paramsStr.isEmpty() || paramsStr == "0") {
-            currentFgColor = DEFAULT_FOREGROUND
+            resetToDefault()
             return
         }
 
@@ -97,38 +136,64 @@ object AnsiColorParser {
             val code = tokens[i].toIntOrNull() ?: 0
             when {
                 // Reset định dạng về mặc định
-                code == 0 || code == 39 -> currentFgColor = DEFAULT_FOREGROUND
+                code == 0 -> resetToDefault()
+
+                // Kiểu chữ (Style)
+                code == 1 -> isBold = true
+                code == 4 -> isUnderline = true
+                code == 21 -> isBold = false // Tắt in đậm (Double underline hoặc bold off tùy terminal)
+                code == 22 -> isBold = false // Tắt in đậm thông thường
+                code == 24 -> isUnderline = false // Tắt gạch chân
+
+                // Màu chữ mặc định (Default Foreground)
+                code == 39 -> currentFgColor = DEFAULT_FOREGROUND
+
+                // Màu nền mặc định (Default Background)
+                code == 49 -> currentBgColor = DEFAULT_BACKGROUND
 
                 // Màu chữ cơ bản (30 - 37) và màu chữ sáng (90 - 97)
                 code in 30..37 -> currentFgColor = ANSI_16_COLORS[code - 30]
                 code in 90..97 -> currentFgColor = ANSI_16_COLORS[code - 90 + 8]
+
+                // Màu nền cơ bản (40 - 47) và màu nền sáng (100 - 107)
+                code in 40..47 -> currentBgColor = ANSI_16_COLORS[code - 40]
+                code in 100..107 -> currentBgColor = ANSI_16_COLORS[code - 100 + 8]
 
                 // Chế độ màu chữ mở rộng (38;5;ID hoặc 38;2;R;G;B)
                 code == 38 -> {
                     if (i + 1 < tokens.size) {
                         val mode = tokens[i + 1].toIntOrNull() ?: 0
                         if (mode == 5 && i + 2 < tokens.size) {
-                            // 256 màu: 38;5;ID
                             val colorId = tokens[i + 2].toIntOrNull() ?: 0
                             currentFgColor = get256Color(colorId)
                             i += 2
                         } else if (mode == 2 && i + 4 < tokens.size) {
-                            // TrueColor RGB: 38;2;R;G;B
                             val r = tokens[i + 2].toIntOrNull() ?: 0
                             val g = tokens[i + 3].toIntOrNull() ?: 0
                             val b = tokens[i + 4].toIntOrNull() ?: 0
-                            currentFgColor = Color.rgb(
-                                r.coerceIn(0, 255), 
-                                g.coerceIn(0, 255), 
-                                b.coerceIn(0, 255)
-                            )
+                            currentFgColor = Color.rgb(r.coerceIn(0, 255), g.coerceIn(0, 255), b.coerceIn(0, 255))
                             i += 4
                         }
                     }
                 }
-                
-                // Mọi mã màu nền (40-47, 48, 100-107) hay in đậm (1), gạch chân (4) 
-                // đều được bỏ qua ở đây (Không xử lý)
+
+                // Chế độ màu nền mở rộng (48;5;ID hoặc 48;2;R;G;B)
+                code == 48 -> {
+                    if (i + 1 < tokens.size) {
+                        val mode = tokens[i + 1].toIntOrNull() ?: 0
+                        if (mode == 5 && i + 2 < tokens.size) {
+                            val colorId = tokens[i + 2].toIntOrNull() ?: 0
+                            currentBgColor = get256Color(colorId)
+                            i += 2
+                        } else if (mode == 2 && i + 4 < tokens.size) {
+                            val r = tokens[i + 2].toIntOrNull() ?: 0
+                            val g = tokens[i + 3].toIntOrNull() ?: 0
+                            val b = tokens[i + 4].toIntOrNull() ?: 0
+                            currentBgColor = Color.rgb(r.coerceIn(0, 255), g.coerceIn(0, 255), b.coerceIn(0, 255))
+                            i += 4
+                        }
+                    }
+                }
             }
             i++
         }
@@ -152,7 +217,14 @@ object AnsiColorParser {
         }
     }
 
-    fun reset() {
+    private fun resetToDefault() {
         currentFgColor = DEFAULT_FOREGROUND
+        currentBgColor = DEFAULT_BACKGROUND
+        isBold = false
+        isUnderline = false
+    }
+
+    fun reset() {
+        resetToDefault()
     }
 }
