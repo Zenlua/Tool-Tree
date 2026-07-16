@@ -15,7 +15,7 @@ fi
 [ "$extract_folder_lang_text" ] && text_filters="$(echo "$extract_folder_lang_text" | tr ',' ' ')"
 
 # nhập fw
-if [ ! -f $HOME/.local/share/apktool/framework/18.apk ]; then
+if [[ ! -f $HOME/.local/share/apktool/framework/18.apk ]]; then
     echo "$overlay_text_11"
     echo
     unset IFS

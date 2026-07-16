@@ -1371,6 +1371,7 @@ taive "'$(gprop url)'" $TMP/addon.add 2>&1
 echo
 if [ -f $TMP/addon.add ]; then
 installadd $TMP/addon.add "'${dirvad%/*}'"
+rm -fr TMP/addon.add
 else
 echo "Add-on download failed !" >&2
 fi
