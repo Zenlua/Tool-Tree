@@ -247,18 +247,19 @@ mkdir -p "$in_name" $OUTPUT/config
         if [ "$(glog un_tool_ext4)" == 1 ]; then
         imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
         process_imgkit "$TMP/imgkit_scuti.log"
+        echo
         else
         imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
         fi
         echo "$dang_file" > "$info"
-        echo
     elif [ "$dang_file" == 'f2fs' ]; then
         if [ "$(glog un_tool_f2fs)" == 1 ]; then
             imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
             process_imgkit "$TMP/imgkit_scuti.log"
             echo
         else
-            extract.f2fs "$file_img" "$OUTPUT" &>$TMP/unpack_f2fs.log || killtree "Extracting f2fs failed, check log: $TMP/unpack_f2fs.log";
+            extract.f2fs "$file_img" "$OUTPUT" | tee $TMP/unpack_f2fs.log || killtree "Extracting f2fs failed !";
+            echo
             if [ -f "$fs_config" ]; then
             luu_contexts="$(sed -e "s|s0/|s0\n/|g" "$file_contexts" | sort)"
             luu_config="$(cat "$fs_config" | awk '{print "'${namepv##*/}'"$0}' | sort | sed -e "s|^${namepv##*/}/ 0 2000 0755|${namepv##*/}/ 0 0 0755|" -e "s|^${namepv##*/} 0 0 0755|/ 0 0 0755|")"
@@ -274,7 +275,7 @@ mkdir -p "$in_name" $OUTPUT/config
         fsck.f2fs -a "$file_img" &> "$fs_options"
     elif [ "$dang_file" == 'erofs' ]; then
         if [ "$(glog un_tool_erofs)" == 1 ]; then
-            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" &>$TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
+            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
             process_imgkit "$TMP/imgkit_scuti.log"
         elif [ "$(glog un_tool_erofs)" == 2 ]; then
             $TERMUX/lib/theft/extract.erofs -x -i "$file_img" -o "$OUTPUT" &>$TMP/extract_erofs.log || killtree "extract.erofs error:\n\n$(sed -u -E 's/\x1b\[[0-9;]*m//g; /Extract: /d' "$TMP/extract_erofs.log")" &

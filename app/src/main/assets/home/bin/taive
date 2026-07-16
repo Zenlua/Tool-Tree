@@ -1,8 +1,21 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
-echo "taive http://file.zip path/save.zip"
-exit
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
+    echo "Syntax: taive [-#] http://file.zip [path/save.zip]"
+    exit 0
 fi
 
-curl -L -H "$WEBS" "$1" -o "$2"
+PROGRESS_FLAG=""
+
+if [ "$1" == '-#' ]; then
+    PROGRESS_FLAG="-#"
+    shift
+fi
+
+SAVE_PATH="${2:-${1##*/}}"
+
+if [ -z "$SAVE_PATH" ]; then
+    SAVE_PATH="downloaded_file"
+fi
+
+curl $PROGRESS_FLAG -L -H "$WEBS" "$1" -o "$SAVE_PATH"

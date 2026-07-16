@@ -23,10 +23,7 @@ if [ "$?" == 0 ];then
         [ "$taive_name" ] && taive_path_kk="$taive_name" || taive_path_kk="download.bin"
         taive_path_file="$(checkname "$taive_path_kk")"
         fi
-    {
-    taive "$1" "$taive_path_file"
-    [ "$?" == 0 ] || checkdone="$?"
-    } &
+    curl -L -H "$WEBS" "$1" -o "$taive_path_file" 2>/dev/null || checkdone="1" &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
     if [ -f "$taive_path_file" ];then
