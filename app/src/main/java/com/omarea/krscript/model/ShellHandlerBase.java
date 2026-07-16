@@ -64,13 +64,15 @@ public abstract class ShellHandlerBase extends Handler {
 
     protected void onReaderMsg(Object msg) {
         if (msg == null) return;
-
+    
         String log = msg.toString();
-        String trimmed = log.trim();
-
-        // ===== 1. AM PARSER =====
-        if (trimmed.startsWith("am:[") && trimmed.endsWith("]")) {
-            String args = trimmed.substring(4, trimmed.length() - 1).trim();
+        
+        // 1. Loại bỏ các mã màu ANSI (nếu có) để tránh làm hỏng cấu trúc so sánh start/end
+        String cleanLog = log.replaceAll("\\x1B\\[[0-9;]*[a-zA-Z]", "").trim();
+    
+        // 2. Lọc AM Parser một cách linh hoạt hơn
+        if (cleanLog.startsWith("am:[") && cleanLog.endsWith("]")) {
+            String args = cleanLog.substring(4, cleanLog.length() - 1).trim();
             if (args.equalsIgnoreCase("help")) {
                 updateLog(new SpannableString(getAmHelp()));
             } else if (!args.isEmpty()) {
@@ -78,26 +80,29 @@ public abstract class ShellHandlerBase extends Handler {
             }
             return;
         }
-
-        // ===== 2. PROGRESS PARSER (Tối ưu hóa bỏ RegEx) =====
-        if (trimmed.startsWith("progress:[") && trimmed.endsWith("]")) {
+    
+        // 3. Lọc Progress Parser
+        if (cleanLog.startsWith("progress:[") && cleanLog.endsWith("]")) {
             try {
                 int contentStart = "progress:[".length();
-                int contentEnd = trimmed.indexOf(']');
-                String content = trimmed.substring(contentStart, contentEnd);
+                int contentEnd = cleanLog.indexOf(']');
+                String content = cleanLog.substring(contentStart, contentEnd).trim();
                 int slashIdx = content.indexOf('/');
                 
                 if (slashIdx > 0) {
-                    int start = Integer.parseInt(content.substring(0, slashIdx));
-                    int total = Integer.parseInt(content.substring(slashIdx + 1));
+                    // Thêm .trim() cho từng phần số để tránh NumberFormatException do khoảng trắng dư thừa
+                    int start = Integer.parseInt(content.substring(0, slashIdx).trim());
+                    int total = Integer.parseInt(content.substring(slashIdx + 1).trim());
                     onProgress(start, total);
                     return;
                 }
             } catch (NumberFormatException e) {
-                // Nếu parse lỗi thì bỏ qua, coi như log thường
+                // Log lỗi ra màn hình để lập trình viên dễ debug khi viết sai cú pháp trong script
+                updateLog("Format error: " + cleanLog, "#ff0000");
+                return;
             }
         }
-
+    
         onReader(msg);
     }
 
