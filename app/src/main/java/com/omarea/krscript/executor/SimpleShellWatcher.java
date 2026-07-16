@@ -24,12 +24,28 @@ public class SimpleShellWatcher {
         final InputStream inputStream = process.getInputStream();
         final InputStream errorStream = process.getErrorStream();
         final Thread reader = new Thread(() -> {
-            String line;
             try {
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-                while ((line = bufferedReader.readLine()) != null) {
+                InputStreamReader isr = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                StringBuilder buffer = new StringBuilder();
+                int ch;
+                // Đọc từng ký tự thay vì dùng BufferedReader.readLine(), vì readLine()
+                // coi cả '\r' đơn lẻ là dấu kết thúc dòng và sẽ xoá mất nó, khiến các dòng
+                // progress dùng "\r" để ghi đè (vd: "\rĐang tải 10%") bị tách thành nhiều
+                // dòng log riêng biệt và mất luôn thông tin \r để UI gộp dòng.
+                while ((ch = isr.read()) != -1) {
+                    char c = (char) ch;
+                    buffer.append(c);
+                    if (c == '\n' || c == '\r') {
+                        String segment = buffer.toString();
+                        shellHandlerBase.sendMessage(
+                            shellHandlerBase.obtainMessage(ShellHandlerBase.EVENT_REDE, shellTranslation.resolveRow(segment))
+                        );
+                        buffer.setLength(0);
+                    }
+                }
+                if (buffer.length() > 0) {
                     shellHandlerBase.sendMessage(
-                        shellHandlerBase.obtainMessage(ShellHandlerBase.EVENT_REDE, shellTranslation.resolveRow(line) + "\n")
+                        shellHandlerBase.obtainMessage(ShellHandlerBase.EVENT_REDE, shellTranslation.resolveRow(buffer.toString()) + "\n")
                     );
                 }
             } catch (Exception ignored) {
