@@ -229,7 +229,7 @@ class DialogLogFragment : DialogFragment() {
                         isIndeterminate = true
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
                             params.height = dpToPx(7f)
-                            params.topMargin = dpToPx(12.5f)
+                            params.topMargin = dpToPx(13f)
                             layoutParams = params
                         }
                     }
@@ -240,7 +240,7 @@ class DialogLogFragment : DialogFragment() {
                         max = total
                         progress = current
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = dpToPx(2f)
+                            params.height = dpToPx(1.8f)
                             params.topMargin = dpToPx(16f)
                             layoutParams = params
                         }
