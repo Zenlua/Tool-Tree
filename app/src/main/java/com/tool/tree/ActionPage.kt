@@ -156,35 +156,41 @@ class ActionPage : AppCompatActivity() {
     private var menuOptions: ArrayList<PageMenuOption>? = null
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        val config = currentPageConfig ?: return false
-        // Xoá menu cũ trước khi vẽ lại, tránh bị cộng dồn item khi hàm này
-        // được gọi nhiều lần (ví dụ sau invalidateOptionsMenu()).
-        menu?.clear()
-        binding.actionPageFab.visibility = View.GONE
+        // Chỉ bật cơ chế menu ở đây; việc build nội dung được chuyển hết sang
+        // onPrepareOptionsMenu() để luôn chạy lại mỗi lần menu chuẩn bị hiển thị.
+        return currentPageConfig != null
+    }
 
-        if (menuOptions == null) {
-            menuOptions = PageMenuLoader(applicationContext, config).load()
-        }
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        val config = currentPageConfig ?: return false
+
+        // onPrepareOptionsMenu() được hệ thống gọi lại MỖI LẦN menu sắp hiển thị
+        // (kể cả lần đầu tiên, ngay sau onCreateOptionsMenu), khác với
+        // onCreateOptionsMenu chỉ chạy đúng 1 lần rồi bị cache. Nên đây là nơi
+        // đúng để luôn nạp lại PageMenuLoader mới -> luôn chạy lại
+        // pageMenuOptionsSh -> luôn lấy đúng output hiện tại của máy tại thời
+        // điểm người dùng mở menu, không phụ thuộc dữ liệu cũ từ lần trước.
+        menuOptions = PageMenuLoader(applicationContext, config).load()
+
+        menu.clear()
+        binding.actionPageFab.visibility = View.GONE
 
         menuOptions?.forEachIndexed { index, option ->
             if (option.isFab) {
                 addFab(option)
             } else {
-                menu?.add(-1, index, index, option.title)
+                menu.add(-1, index, index, option.title)
             }
         }
         return true
     }
 
     /**
-     * Xoá cache menuOptions và yêu cầu hệ thống vẽ lại toolbar menu.
-     * Gọi sau khi loadPageConfig() tải xong dữ liệu mới (menu có thể phụ thuộc
-     * pageMenuOptionsSh - một shell script sinh menu động theo trạng thái máy),
-     * để menu luôn phản ánh đúng trạng thái mới nhất thay vì bị đứng ở lần đầu
-     * onCreateOptionsMenu được gọi.
+     * Yêu cầu hệ thống vẽ lại toolbar menu ngay (áp dụng cho các item hiển thị
+     * trực tiếp trên toolbar, ví dụ FAB) sau khi loadPageConfig() tải xong dữ
+     * liệu mới, thay vì phải đợi người dùng tự tay mở menu ra mới thấy cập nhật.
      */
     private fun refreshMenu() {
-        menuOptions = null
         invalidateOptionsMenu()
     }
 
@@ -321,6 +327,14 @@ class ActionPage : AppCompatActivity() {
                 menuOption.reloadPage -> recreate()
                 menuOption.autoKill -> killApp()
                 menuOption.autoRestart -> restartApp()
+                else -> {
+                    // Không có cờ đặc biệt nào: đây thường là 1 hành động đổi trạng thái
+                    // tại chỗ (ví dụ nút toggle Ghim/Bỏ ghim). Vì pageMenuOptionsSh
+                    // luôn được PageMenuLoader chạy lại mỗi khi menu được build, chỉ
+                    // cần yêu cầu vẽ lại là text/icon sẽ tự đúng theo trạng thái mới -
+                    // không cần đợi người dùng mở menu ra lần nữa hay tải lại cả trang.
+                    refreshMenu()
+                }
             }
         }
         val config = currentPageConfig ?: return
