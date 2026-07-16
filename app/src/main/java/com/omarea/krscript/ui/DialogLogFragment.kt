@@ -182,9 +182,11 @@ class DialogLogFragment : DialogFragment() {
         private var hasError = false
         private var lineCount = 0
 
+        // Tạo một bộ đệm Editable toàn cục để tối ưu hiệu năng ghi log
         private val logBuffer = SpannableStringBuilder()
 
         init {
+            // Thiết lập TextView sử dụng bộ đệm động (Editable) ngay từ đầu để tránh ép kiểu lỗi
             logView?.setText(logBuffer, TextView.BufferType.EDITABLE)
         }
 
@@ -278,8 +280,11 @@ class DialogLogFragment : DialogFragment() {
 
         private fun updateLogWithColor(text: String, forcedColor: Int?) {
             val cleanString = text
+            
+            // Bước A: Phân tích mã màu ANSI
             var parsedLog: CharSequence = AnsiColorParser.parse(cleanString)
             
+            // Bước B: Áp dụng màu mặc định nếu chuỗi không chứa mã màu ANSI đặc trưng
             if (forcedColor != null && !cleanString.contains("\u001B[")) {
                 val spannable = SpannableString(parsedLog)
                 spannable.setSpan(
@@ -300,42 +305,23 @@ class DialogLogFragment : DialogFragment() {
             logView.post {
                 val textStr = formattedText.toString()
                 
-                // --- PHẦN SỬA ĐỔI CHÍNH Ở ĐÂY ---
-                // Quét tìm \r linh hoạt thay vì chỉ dùng startsWith()
-                if (textStr.contains("\r")) {
-                    // Cắt chuỗi theo ký tự \r
-                    val parts = textStr.split("\r")
-                    
-                    // Xóa dòng cuối cùng trong bộ đệm hiện tại
+                // Nếu chuỗi log mới bắt đầu bằng Carriage Return (\r) -> Xóa dòng cuối cùng trước khi ghi đè
+                if (textStr.startsWith("\r") || textStr.startsWith("\r\n")) {
+                    val cleanText = formattedText.subSequence(1, formattedText.length)
                     val lastNewLine = logBuffer.lastIndexOf('\n')
                     if (lastNewLine != -1) {
                         logBuffer.delete(lastNewLine + 1, logBuffer.length)
                     } else {
                         logBuffer.clear()
                     }
-                    
-                    // Lấy phần text mới nhất sau dấu \r cuối cùng để ghi đè lên dòng cuối
-                    val replacementText = parts.last()
-                    
-                    // Lọc bỏ ký tự xuống dòng dư thừa ở đầu text thay thế nếu có
-                    val cleanReplacement = if (replacementText.startsWith("\n")) {
-                        replacementText.substring(1)
-                    } else if (replacementText.startsWith("\r\n")) {
-                        replacementText.substring(2)
-                    } else {
-                        replacementText
-                    }
-                    
-                    logBuffer.append(cleanReplacement)
+                    logBuffer.append(cleanText)
                 } else {
-                    // Nếu không có \r, thêm văn bản vào như bình thường
                     logBuffer.append(formattedText)
                     val newLines = formattedText.count { it == '\n' }
                     lineCount += newLines
                 }
-                // --- KẾT THÚC PHẦN SỬA ĐỔI ---
 
-                // Giới hạn log tối đa 5000 dòng để tránh tràn bộ nhớ
+                // Cắt bớt log cũ nếu vượt quá giới hạn 5000 dòng
                 if (lineCount > 5000) {
                     var deleteEndIndex = 0
                     var linesToTemplate = lineCount - 5000
@@ -356,8 +342,11 @@ class DialogLogFragment : DialogFragment() {
                     }
                 }
 
+                // Vì TextView đã được liên kết với logBuffer (Editable) từ trước,
+                // ta chỉ cần gọi ép buộc cập nhật lại văn bản hiển thị mà không cần tạo mới instance.
                 logView.text = logBuffer
                 
+                // Tự động cuộn xuống đáy một cách mượt mà và chính xác
                 (logView.parent as? ScrollView)?.let { scrollView ->
                     scrollView.post {
                         scrollView.fullScroll(ScrollView.FOCUS_DOWN)
