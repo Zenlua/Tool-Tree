@@ -158,8 +158,15 @@ class ActionPage : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val config = currentPageConfig ?: return false
         menu?.clear() 
-        menuOptions = null 
-        menuOptions = PageMenuLoader(applicationContext, config).load()
+        
+        // Nếu chưa có dữ liệu menu được nạp sẵn
+        if (menuOptions == null) {
+            // Nạp dữ liệu một cách bất đồng bộ qua luồng phụ
+            loadPageConfig(false)
+            return true
+        }
+    
+        // Tiến hành add các tùy chọn menu đã được chuẩn bị sẵn từ trước
         menuOptions?.forEachIndexed { index, option ->
             if (option.isFab) {
                 addFab(option)
@@ -169,6 +176,7 @@ class ActionPage : AppCompatActivity() {
         }
         return true
     }
+
 
     private fun addFab(menuOption: PageMenuOption) {
         binding.actionPageFab.apply {
@@ -193,7 +201,10 @@ class ActionPage : AppCompatActivity() {
 
     private fun onMenuItemClick(menuOption: PageMenuOption) {
         when(menuOption.type) {
-            "refresh", "reload" -> recreate()
+            "refresh", "reload" -> {
+            menuOptions = null
+            loadPageConfig(true)
+            }
             "restart" -> restartApp()
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
