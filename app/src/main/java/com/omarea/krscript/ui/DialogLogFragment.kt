@@ -186,7 +186,6 @@ class DialogLogFragment : DialogFragment() {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) context.getColor(resId) else context.resources.getColor(resId)
         }
 
-        // Nhận vào kiểu Float thay vì Int
         private fun dpToPx(dp: Float): Int {
             return (dp * context.resources.displayMetrics.density).toInt()
         }
@@ -229,7 +228,7 @@ class DialogLogFragment : DialogFragment() {
                         visibility = View.VISIBLE
                         isIndeterminate = true
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                            params.height = dpToPx(8f)
+                            params.height = dpToPx(7f)
                             params.topMargin = dpToPx(12.5f)
                             layoutParams = params
                         }
@@ -242,7 +241,7 @@ class DialogLogFragment : DialogFragment() {
                         progress = current
                         (layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
                             params.height = dpToPx(2f)
-                            params.topMargin = dpToPx(12f) // Sửa lỗi biên dịch Double -> Int
+                            params.topMargin = dpToPx(16f)
                             layoutParams = params
                         }
                     }
@@ -263,21 +262,20 @@ class DialogLogFragment : DialogFragment() {
             actionEventHandler?.onCompleted()
         }
 
-        // Ghi đè phương thức nhận SpannableString từ lớp cha Java, giữ nguyên định dạng màu sắc
         override fun updateLog(msg: SpannableString?) {
             msg?.let {
                 dispatchLogUpdate(it)
             }
         }
 
-        // Đổi tên hàm thành updateLogWithColor để tránh xung đột overload với lớp cha Java
         private fun updateLogWithColor(text: String, forcedColor: Int?) {
-            val cleanString = text.replace("\r", "")
+            // Giữ lại ký tự \r thô để phục vụ xử lý ghi đè dòng trong dispatchLogUpdate
+            val cleanString = text
             
-            // Bước A: Phân tích mã màu ANSI ngay trên background thread
+            // Bước A: Phân tích mã màu ANSI
             var parsedLog: CharSequence = AnsiColorParser.parse(cleanString)
             
-            // Bước B: Áp dụng lưới bảo hiểm màu nếu chuỗi không chứa mã màu ANSI đặc trưng
+            // Bước B: Áp dụng màu mặc định nếu chuỗi không chứa mã màu ANSI đặc trưng
             if (forcedColor != null && !cleanString.contains("\u001B[")) {
                 val spannable = SpannableString(parsedLog)
                 spannable.setSpan(
@@ -294,14 +292,32 @@ class DialogLogFragment : DialogFragment() {
 
         private fun dispatchLogUpdate(formattedText: CharSequence) {
             val logView = logViewRef.get() ?: return
-            val newLines = formattedText.count { it == '\n' } + 1
 
             logView.post {
                 val editable = logView.text as? Editable ?: SpannableStringBuilder(logView.text)
-                editable.append(formattedText)
-                lineCount += newLines
+                val textStr = formattedText.toString()
+                
+                // Nếu chuỗi log mới bắt đầu bằng Carriage Return (\r) -> Xóa dòng cuối cùng trước khi ghi đè
+                if (textStr.startsWith("\r") || textStr.startsWith("\r\n")) {
+                    val cleanText = formattedText.subSequence(1, formattedText.length)
+                    
+                    val lastNewLine = editable.lastIndexOf('\n')
+                    if (lastNewLine != -1) {
+                        // Cắt bỏ phần nội dung từ sau ký tự xuống dòng cuối cùng đến hết độ dài hiện tại
+                        editable.delete(lastNewLine + 1, editable.length)
+                    } else {
+                        // Nếu chưa có bất kỳ dòng nào, xóa sạch toàn bộ buffer
+                        editable.clear()
+                    }
+                    editable.append(cleanText)
+                } else {
+                    // Xử lý ghi dòng mới bình thường
+                    editable.append(formattedText)
+                    val newLines = formattedText.count { it == '\n' }
+                    lineCount += newLines
+                }
 
-                // Cắt bớt log cũ tối ưu hơn nếu vượt quá 5000 dòng
+                // Cắt bớt log cũ nếu vượt quá giới hạn 5000 dòng
                 if (lineCount > 5000) {
                     var deleteEndIndex = 0
                     var linesToTemplate = lineCount - 5000
