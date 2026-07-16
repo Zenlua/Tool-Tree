@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.DialogInterface
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
@@ -16,16 +17,15 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
 import android.view.WindowManager
+import android.widget.*
 import androidx.fragment.app.DialogFragment
 import com.omarea.common.ui.DialogHelper
 import com.tool.tree.databinding.KrDialogLogBinding
 import com.omarea.krscript.executor.ShellExecutor
+import com.tool.tree.R
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
-import android.content.DialogInterface
-import com.tool.tree.R
 import java.lang.ref.WeakReference
 import com.tool.tree.AnsiColorParser
 
@@ -182,6 +182,14 @@ class DialogLogFragment : DialogFragment() {
         private var hasError = false
         private var lineCount = 0
 
+        // Tạo một bộ đệm Editable toàn cục để tối ưu hiệu năng ghi log
+        private val logBuffer = SpannableStringBuilder()
+
+        init {
+            // Thiết lập TextView sử dụng bộ đệm động (Editable) ngay từ đầu để tránh ép kiểu lỗi
+            logView?.setText(logBuffer, TextView.BufferType.EDITABLE)
+        }
+
         private fun getColor(resId: Int): Int {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) context.getColor(resId) else context.resources.getColor(resId)
         }
@@ -216,7 +224,8 @@ class DialogLogFragment : DialogFragment() {
         override fun onStart(forceStop: Runnable?) {
             AnsiColorParser.reset()
             lineCount = 0
-            logViewRef.get()?.text = ""
+            logBuffer.clear()
+            logViewRef.get()?.text = logBuffer
             actionEventHandler?.onStart(forceStop)
         }
 
@@ -252,7 +261,8 @@ class DialogLogFragment : DialogFragment() {
         override fun onStart(msg: Any?) {
             AnsiColorParser.reset()
             lineCount = 0
-            logViewRef.get()?.text = ""
+            logBuffer.clear()
+            logViewRef.get()?.text = logBuffer
         }
 
         override fun onExit(msg: Any?) {
@@ -269,7 +279,6 @@ class DialogLogFragment : DialogFragment() {
         }
 
         private fun updateLogWithColor(text: String, forcedColor: Int?) {
-            // Giữ lại ký tự \r thô để phục vụ xử lý ghi đè dòng trong dispatchLogUpdate
             val cleanString = text
             
             // Bước A: Phân tích mã màu ANSI
@@ -294,25 +303,20 @@ class DialogLogFragment : DialogFragment() {
             val logView = logViewRef.get() ?: return
 
             logView.post {
-                val editable = logView.text as? Editable ?: SpannableStringBuilder(logView.text)
                 val textStr = formattedText.toString()
                 
                 // Nếu chuỗi log mới bắt đầu bằng Carriage Return (\r) -> Xóa dòng cuối cùng trước khi ghi đè
                 if (textStr.startsWith("\r") || textStr.startsWith("\r\n")) {
                     val cleanText = formattedText.subSequence(1, formattedText.length)
-                    
-                    val lastNewLine = editable.lastIndexOf('\n')
+                    val lastNewLine = logBuffer.lastIndexOf('\n')
                     if (lastNewLine != -1) {
-                        // Cắt bỏ phần nội dung từ sau ký tự xuống dòng cuối cùng đến hết độ dài hiện tại
-                        editable.delete(lastNewLine + 1, editable.length)
+                        logBuffer.delete(lastNewLine + 1, logBuffer.length)
                     } else {
-                        // Nếu chưa có bất kỳ dòng nào, xóa sạch toàn bộ buffer
-                        editable.clear()
+                        logBuffer.clear()
                     }
-                    editable.append(cleanText)
+                    logBuffer.append(cleanText)
                 } else {
-                    // Xử lý ghi dòng mới bình thường
-                    editable.append(formattedText)
+                    logBuffer.append(formattedText)
                     val newLines = formattedText.count { it == '\n' }
                     lineCount += newLines
                 }
@@ -321,7 +325,7 @@ class DialogLogFragment : DialogFragment() {
                 if (lineCount > 5000) {
                     var deleteEndIndex = 0
                     var linesToTemplate = lineCount - 5000
-                    val currentCharSequence = editable.toString()
+                    val currentCharSequence = logBuffer.toString()
                     
                     for (i in currentCharSequence.indices) {
                         if (currentCharSequence[i] == '\n') {
@@ -333,12 +337,14 @@ class DialogLogFragment : DialogFragment() {
                         }
                     }
                     if (deleteEndIndex > 0) {
-                        editable.delete(0, deleteEndIndex)
+                        logBuffer.delete(0, deleteEndIndex)
                         lineCount = 5000
                     }
                 }
 
-                logView.text = editable
+                // Vì TextView đã được liên kết với logBuffer (Editable) từ trước,
+                // ta chỉ cần gọi ép buộc cập nhật lại văn bản hiển thị mà không cần tạo mới instance.
+                logView.text = logBuffer
                 
                 // Tự động cuộn xuống đáy một cách mượt mà và chính xác
                 (logView.parent as? ScrollView)?.let { scrollView ->
