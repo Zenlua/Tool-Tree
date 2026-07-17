@@ -431,9 +431,20 @@ class DialogLogFragment : DialogFragment() {
 
                 logView.text = logBuffer
                 
+                // Thực hiện cuộn và giữ focus cho ô nhập liệu
                 (logView.parent as? ScrollView)?.let { scrollView ->
                     scrollView.post {
+                        // 1. Cuộn ScrollView xuống cuối cùng
                         scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+                        
+                        // 2. Nếu ô nhập liệu đang hiện, ép hệ thống giữ con trỏ tại đây
+                        val inputRow = inputRowRef.get()
+                        val input = shellInputRef.get()
+                        if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
+                            input.post {
+                                input.requestFocus()
+                            }
+                        }
                     }
                 }
             }
