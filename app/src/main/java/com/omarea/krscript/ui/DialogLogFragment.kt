@@ -31,6 +31,7 @@ import com.omarea.krscript.model.ShellHandlerBase
 import java.lang.ref.WeakReference
 import com.tool.tree.AnsiColorParser
 import java.io.File
+import android.widget.HorizontalScrollView
 
 class DialogLogFragment : DialogFragment() {
 
@@ -77,6 +78,7 @@ class DialogLogFragment : DialogFragment() {
         }
 
         enableHorizontalScroll = checkHorizontalScrollEnabled()
+        applyHorizontalScrollSetting()
 
         nodeInfo?.let { node ->
             if (node.reloadPage) {
@@ -94,6 +96,26 @@ class DialogLogFragment : DialogFragment() {
                 shellHandler
             )
         } ?: dismissAllowingStateLoss()
+    }
+
+
+    private fun applyHorizontalScrollSetting() {
+        val hsv = binding.horizontalLogScroll
+        val textView = binding.shellOutput
+
+        if (enableHorizontalScroll) {
+            textView.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+            textView.setHorizontallyScrolling(true)
+            hsv?.isHorizontalScrollBarEnabled = true
+            hsv?.isEnabled = true
+        } else {
+            textView.layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            textView.setHorizontallyScrolling(false)
+            hsv?.isHorizontalScrollBarEnabled = false
+            hsv?.isEnabled = false
+        }
+        textView.requestLayout()
+        hsv?.requestLayout()
     }
 
     private fun openExecutor(nodeInfo: RunnableNode): ShellHandlerBase {
@@ -244,7 +266,6 @@ class DialogLogFragment : DialogFragment() {
 
         init {
             logView?.setText(logBuffer, TextView.BufferType.EDITABLE)
-            logView?.setHorizontallyScrolling(true)
         }
 
         private fun getColor(resId: Int): Int {
@@ -385,9 +406,6 @@ class DialogLogFragment : DialogFragment() {
             val logView = logViewRef.get() ?: return
 
             logView.post {
-                // Mỗi message giờ chỉ kết thúc bằng TỐI ĐA một trong hai ký tự: \r (dòng đang
-                // được ghi đè, ví dụ tiến trình tải %) hoặc \n (dòng đã hoàn tất). Ta tự quản lý
-                // việc xuống dòng dựa vào ký tự kết thúc đó, thay vì tách chuỗi theo \r.
                 val endsWithCR = formattedText.isNotEmpty() && formattedText.last() == '\r'
                 val endsWithLF = formattedText.isNotEmpty() && formattedText.last() == '\n'
 
@@ -397,8 +415,6 @@ class DialogLogFragment : DialogFragment() {
                     formattedText
                 }
 
-                // Nếu dòng trước đó đang chờ bị ghi đè (message trước kết thúc bằng \r),
-                // xoá nó đi trước khi ghi nội dung mới vào đúng vị trí đó.
                 if (overwriteStart in 0..logBuffer.length) {
                     logBuffer.delete(overwriteStart, logBuffer.length)
                 }
@@ -408,8 +424,6 @@ class DialogLogFragment : DialogFragment() {
 
                 when {
                     endsWithCR -> {
-                        // Ghi nhớ vị trí dòng này để lần cập nhật tiếp theo ghi đè lên đúng chỗ,
-                        // không tự thêm \n nên dòng vẫn "đứng yên" trên UI.
                         overwriteStart = insertStart
                     }
                     endsWithLF -> {
@@ -422,7 +436,6 @@ class DialogLogFragment : DialogFragment() {
                     }
                 }
 
-                // Giới hạn log tối đa 5000 dòng để tránh tràn bộ nhớ
                 if (lineCount > 5000) {
                     var deleteEndIndex = 0
                     var linesToTemplate = lineCount - 5000
@@ -446,21 +459,20 @@ class DialogLogFragment : DialogFragment() {
                     }
                 }
 
-                // logView.text = logBuffer
                 (logView.editableText ?: return@post).replace(
                     0,
                     logView.editableText.length,
                     logBuffer
                 )
 
+                // Refresh layout để horizontal scroll hoạt động đúng
                 logView.requestLayout()
+                (logView.parent as? HorizontalScrollView)?.requestLayout()
 
                 (logView.parent as? ScrollView)?.let { scrollView ->
                     scrollView.post {
-                        // 1. Cuộn ScrollView xuống cuối cùng
                         scrollView.fullScroll(ScrollView.FOCUS_DOWN)
                         
-                        // 2. Nếu ô nhập liệu đang hiện, ép hệ thống giữ con trỏ tại đây
                         val inputRow = inputRowRef.get()
                         val input = shellInputRef.get()
                         if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
