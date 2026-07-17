@@ -242,7 +242,8 @@ class DialogLogFragment : DialogFragment() {
         fun onCompleted()
     }
 
-    class MyShellHandler(
+    // Đã thêm từ khóa "inner" để sửa lỗi không gọi được biến của lớp cha DialogLogFragment
+    inner class MyShellHandler(
         context: Context,
         private var actionEventHandler: IActionEventHandler?,
         logView: TextView?,
