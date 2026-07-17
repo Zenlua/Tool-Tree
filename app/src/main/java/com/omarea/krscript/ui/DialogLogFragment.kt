@@ -429,7 +429,12 @@ class DialogLogFragment : DialogFragment() {
                     }
                 }
 
-                logView.text = logBuffer
+                // logView.text = logBuffer
+                (logView.editableText ?: return@post).replace(
+                    0,
+                    logView.editableText.length,
+                    logBuffer
+                )
                 
                 // Thực hiện cuộn và giữ focus cho ô nhập liệu
                 (logView.parent as? ScrollView)?.let { scrollView ->
