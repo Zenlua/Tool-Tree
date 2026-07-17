@@ -38,7 +38,7 @@ public abstract class ShellHandlerBase extends Handler {
     private static final Pattern AM_PATTERN = Pattern.compile("am:\\[(.*?)\\]");
     private static final Pattern PROGRESS_PATTERN = Pattern.compile("progress:\\[(.*?)\\]");
     private static final Pattern INPUT_PATTERN = Pattern.compile("input:\\[(.*?)\\]");
-
+    protected boolean autoNeedInput = false;
     protected abstract void onProgress(int current, int total);
     protected abstract void onStart(Object msg);
     public abstract void onStart(Runnable forceStop);
@@ -132,7 +132,9 @@ public abstract class ShellHandlerBase extends Handler {
     
         // === TỰ ĐỘNG PHÁT HIỆN PROMPT CẦN INPUT ===
         if (shouldShowInputPrompt(cleanLog)) {
-            onInputRequest(cleanLog);   // Gọi để DialogLogFragment hiển thị ô nhập
+            autoNeedInput = true;
+            onInputRequest(cleanLog);
+            // Gọi để DialogLogFragment hiển thị ô nhập
             return;
         }
     
@@ -182,22 +184,15 @@ public abstract class ShellHandlerBase extends Handler {
         if (line == null || line.trim().isEmpty()) return false;
         
         String lower = line.toLowerCase(Locale.getDefault()).trim();
-        String original = line.trim();
-    
         return 
             lower.contains("y/n") ||
-            lower.contains("(y/n)") ||
             lower.contains("yes/no") ||
-            lower.contains("confirm") ||
-            lower.contains("password:") ||
-            lower.contains("nhập") ||
-            lower.contains("enter") ||
-            lower.endsWith(":") || 
-            lower.endsWith("?") ||
-            original.endsWith("：") ||           // dấu hai chấm tiếng Trung
-            Pattern.compile(".*[?：:]$").matcher(original).matches() ||
-            Pattern.compile("read ").matcher(lower).find() ||
             lower.contains("input:[");
+    }
+
+    // Thêm getter để ShellExecutor lấy được
+    public boolean isAutoNeedInput() {
+        return autoNeedInput;
     }
 
     protected void onReader(Object msg) {
