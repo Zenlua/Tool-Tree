@@ -1,12 +1,12 @@
 # Kakathic
 
-if [ -n "$shell_progres" ];then
+if [ -n "$shell_progres" ]; then
     if [ "$2" ];then
     while true; do
         bodem=$((bodem + 1))
-        echo "progress:[$bodem/$2]"
+        echo -e "\nprogress:[$bodem/$2]"
         if [ "$bodem" -ge $2 ]; then
-        echo "progress:[-1/0]"
+        echo -e "\nprogress:[-1/0]"
         break
         fi
         sleep $1

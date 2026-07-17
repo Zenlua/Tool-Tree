@@ -4,77 +4,185 @@ import os
 import sys
 import multiprocessing as mp
 
-formats = ([b'PK', "zip"], [b'\x10\x20\xF5\xF2', 'f2fs', 1024],
-           [b'\x53\xef', 'ext', 1080], [b'\x3a\xff\x26\xed', "sparse"],
-           [b'\x67\x44\x6c\x61', 'super', 4096], [b"AVB0", "vbmeta"],
-           [b'\xe2\xe1\xf5\xe0', "erofs", 1024], [b"CrAU", "payload"],
-           [b'\xd7\xb7\xab\x1e', "dtbo"], [b'\xd0\x0d\xfe\xed', "dtb"],
-           [b"MZ", "exe"], [b".ELF", 'elf'], [b"ANDROID!", "boot"],
-           [b"VNDRBOOT", "vendor_boot"], [b'\x28\xb5\x2f\xfd', 'zstd'],
-           [b"sqsh", "squashfs"], [b'hsqs', 'squashfs'], [b"NTPI", 'NTPI'],
-           [b'\xfa\xff\xfa\xff', 'pac', 2116], [b'RKFW','rkfw'],[b'RKAF','rkaf'],
-           [b'\x56\x19\xb5\x27', 'amlogic', 8], [b"-rom1fs-", 'romfs'],
-           [b'(\x05\x00\x00$8"%', 'kdz'], [b"\x32\x96\x18\x74", 'dz'],
-           [b'OPPOENCRYPT!', "ozip"], [b'7z', "7z"], [b'\x1f\x8b', "gzip"],
-           [b'AVBf', "avb_foot"], [b'BZh', "bzip2"], [b'\x89PNG', 'png'],
-           [b'CHROMEOS', 'chrome'], [b"LOGO!!!!", 'logo', 16384],
-           [b'\x1f\x9e', "gzip"], [b'\x02\x21\x4c\x18', "lz4_legacy"],
-           [b'\x03\x21\x4c\x18', 'lz4'], [b'\x04\x22\x4d\x18', 'lz4'],
-           [b'\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\x03', "zopfli"],
-           [b'\xfd7zXZ', 'xz'], [b'\x7fELF', 'elf'], [b'\x5d\x00', 'lzma'],
-           [b']\x00\x00\x00\x04\xff\xff\xff\xff\xff\xff\xff\xff', 'lzma'],
-           [b'\x02!L\x18', 'lz4_lg'], [b'UBI#', "ubi"], [b"\x85\x19", "jffs2"])
+formats = (
+    (b'PK', "zip"),
+    (b'\x10\x20\xF5\xF2', 'f2fs', 1024),
+    (b'\x53\xef', 'ext', 1080),
+    (b'\x3a\xff\x26\xed', "sparse"),
+    (b'\x67\x44\x6c\x61', 'super', 4096),
+    (b"AVB0", "vbmeta"),
+    (b'\xe2\xe1\xf5\xe0', "erofs", 1024),
+    (b"CrAU", "payload"),
+    (b'\xd7\xb7\xab\x1e', "dtbo"),
+    (b'\xd0\x0d\xfe\xed', "dtb"),
+    (b"MZ", "exe"),
+    (b".ELF", 'elf'),
+    (b"ANDROID!", "boot"),
+    (b"VNDRBOOT", "vendor_boot"),
+    (b'\x28\xb5\x2f\xfd', 'zstd'),
+    (b"sqsh", "squashfs"),
+    (b'hsqs', 'squashfs'),
+    (b"NTPI", 'NTPI'),
+    (b'\xfa\xff\xfa\xff', 'pac', 2116),
+    (b'RKFW', 'rkfw'),
+    (b'RKAF', 'rkaf'),
+    (b'\x56\x19\xb5\x27', 'amlogic', 8),
+    (b"-rom1fs-", 'romfs'),
+    (b'(\x05\x00\x00$8"%', 'kdz'),
+    (b"\x32\x96\x18\x74", 'dz'),
+    (b'OPPOENCRYPT!', "ozip"),
+    (b'7z', "7z"),
+    (b'\x1f\x8b', "gzip"),
+    (b'AVBf', "avb_foot"),
+    (b'BZh', "bzip2"),
+    (b'\x89PNG', 'png'),
+    (b'CHROMEOS', 'chrome'),
+    (b"LOGO!!!!", 'logo', 16384),
+    (b'\x1f\x9e', "gzip"),
+    (b'\x02\x21\x4c\x18', "lz4_legacy"),
+    (b'\x03\x21\x4c\x18', 'lz4'),
+    (b'\x04\x22\x4d\x18', 'lz4'),
+    (b'\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\x03', "zopfli"),
+    (b'\xfd7zXZ', 'xz'),
+    (b'\x7fELF', 'elf'),
+    (b'\x5d\x00', 'lzma'),
+    (b']\x00\x00\x00\x04\xff\xff\xff\xff\xff\xff\xff\xff', 'lzma'),
+    (b'\x02!L\x18', 'lz4_lg'),
+    (b'UBI#', "ubi"),
+    (b"\x85\x19", "jffs2"),
+)
 
 def get_max_offset():
     return max((entry[2] if len(entry) == 3 else 0) + len(entry[0]) for entry in formats)
 
 MAX_OFFSET = get_max_offset()
-def gettype(file):
-    if not os.path.exists(file):
-        return file, "fne"
-    if os.path.getsize(file) == 0:
-        return file, "empty"
-    ext = os.path.splitext(file)[1].lower().lstrip(".")
-    if ext in ("dat", "br"):
-        return file, ext
+HOME = os.environ.get("HOME", os.path.expanduser("~"))
+CACHE_DIR = os.path.join(HOME, "tmp")
+CACHE_FILE = os.path.join(CACHE_DIR, "file_type.log")
+
+def load_cache():
+    cache = {}
+    if not os.path.exists(CACHE_FILE):
+        return cache
 
     try:
-        with open(file, 'rb') as f:
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.rstrip("\n")
+                if not line:
+                    continue
+                parts = line.split("|", 2)
+                if len(parts) != 3:
+                    continue
+                name, typ, mtime_ns = parts
+                try:
+                    cache[name] = (typ, int(mtime_ns))
+                except:
+                    continue
+    except:
+        pass
+
+    return cache
+
+
+def save_cache(cache):
+    os.makedirs(CACHE_DIR, exist_ok=True)
+
+    tmp_file = CACHE_FILE + ".tmp"
+
+    with open(tmp_file, "w", encoding="utf-8") as f:
+        for name in sorted(cache):
+            typ, mtime_ns = cache[name]
+            f.write(f"{name}|{typ}|{mtime_ns}\n")
+
+    os.replace(tmp_file, CACHE_FILE)
+
+
+def cleanup_cache(cache, valid_names):
+    for name in list(cache.keys()):
+        if name not in valid_names:
+            cache.pop(name, None)
+
+
+def gettype(args):
+    file, cache = args
+    name = os.path.basename(file)
+
+    if not os.path.exists(file):
+        return file, "fne", 0
+
+    try:
+        st = os.stat(file)
+        mtime_ns = st.st_mtime_ns
+    except:
+        return file, "err", 0
+
+    old = cache.get(name)
+    if old and old[1] == mtime_ns:
+        return file, old[0], mtime_ns
+
+    if os.path.getsize(file) == 0:
+        return file, "empty", mtime_ns
+
+    ext = os.path.splitext(file)[1].lower().lstrip(".")
+    if ext in ("dat", "br"):
+        return file, ext, mtime_ns
+
+    try:
+        with open(file, "rb") as f:
             data = f.read(MAX_OFFSET)
     except:
-        return file, "err"
+        return file, "err", mtime_ns
 
-    for f_ in formats:
-        sig = f_[0]
-        if len(f_) == 2:
+    for item in formats:
+        sig = item[0]
+        if len(item) == 2:
             if data.startswith(sig):
-                return file, f_[1]
-        elif len(f_) == 3:
-            offset = f_[2]
+                return file, item[1], mtime_ns
+        else:
+            offset = item[2]
             if len(data) >= offset + len(sig) and data[offset:offset + len(sig)] == sig:
-                return file, f_[1]
-    return file, "unknown"
+                return file, item[1], mtime_ns
+
+    return file, "unknown", mtime_ns
+
 
 def collect_files(path):
     if os.path.isfile(path):
-        return [path]
+        return [os.path.abspath(path)]
+
     files = []
     for n in os.listdir(path):
-        full = os.path.join(path, n)
+        full = os.path.abspath(os.path.join(path, n))
         if os.path.isfile(full):
             files.append(full)
     return files
 
+
 def main(path):
+    path = os.path.abspath(path)
+    cache = load_cache()
+
     if os.path.isfile(path):
-        _, typ = gettype(path)
+        _, typ, mtime_ns = gettype((path, cache))
+        cache[os.path.basename(path)] = (typ, mtime_ns)
+        save_cache(cache)
         print(typ)
         return
+
     files = collect_files(path)
+    valid_names = {os.path.basename(f) for f in files}
     cpu = min(mp.cpu_count(), 4)
+
     with mp.Pool(cpu) as pool:
-        for file, typ in pool.imap_unordered(gettype, files):
+        args = [(f, cache) for f in files]
+        for file, typ, mtime_ns in pool.imap_unordered(gettype, args):
+            cache[os.path.basename(file)] = (typ, mtime_ns)
             print(f"{os.path.basename(file)}:{typ}")
+
+    cleanup_cache(cache, valid_names)
+    save_cache(cache)
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

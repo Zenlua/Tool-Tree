@@ -38,7 +38,7 @@ public abstract class ShellHandlerBase extends Handler {
     private static final Pattern AM_PATTERN = Pattern.compile("am:\\[(.*?)\\]");
     private static final Pattern PROGRESS_PATTERN = Pattern.compile("progress:\\[(.*?)\\]");
     private static final Pattern INPUT_PATTERN = Pattern.compile("input:\\[(.*?)\\]");
-    protected boolean autoNeedInput = false;
+
     protected abstract void onProgress(int current, int total);
     protected abstract void onStart(Object msg);
     public abstract void onStart(Runnable forceStop);
@@ -132,7 +132,6 @@ public abstract class ShellHandlerBase extends Handler {
     
         // === TỰ ĐỘNG PHÁT HIỆN PROMPT CẦN INPUT ===
         if (shouldShowInputPrompt(cleanLog)) {
-            autoNeedInput = true;
             onInputRequest(cleanLog);
             // Gọi để DialogLogFragment hiển thị ô nhập
             return;
@@ -186,12 +185,9 @@ public abstract class ShellHandlerBase extends Handler {
         String lower = line.toLowerCase(Locale.getDefault()).trim();
         return 
             lower.contains("y/n") ||
+            lower.contains("enter: ") ||
+            lower.contains("choice: ") ||
             lower.contains("yes/no");
-    }
-
-    // Thêm getter để ShellExecutor lấy được
-    public boolean isAutoNeedInput() {
-        return autoNeedInput;
     }
 
     protected void onReader(Object msg) {
