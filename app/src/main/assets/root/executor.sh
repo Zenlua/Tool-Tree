@@ -44,37 +44,31 @@ export SDC="$SDCARD_PATH/TREE"
 export JAVA_HOME="$TERMUX"
 export PYTHONHOME="$TERMUX"
 export PIP_ROOT_USER_ACTION=ignore
-# export LD_LIBRARY_PATH="$LIB"
-
-if [ ! -f $LOG/PATH ]; then
+export COLORTERM=truecolor
 export PATH="$BIN:$TERMUX/bin:$TERMUX/py:$PATH"
-else
-source $LOG/PATH
-fi
-
+# export LD_LIBRARY_PATH="$LIB"
 export PTSD="$(glog PTSD $SDC/ROM 2>/dev/null)"; # $PTSD
 export PTSH="$(glog PTSH ROM 2>/dev/null)"; # $SDH/$PTSH
 export PTAD="$(glog PTAD $SDC/APK 2>/dev/null)"; # $PTAD
 export PTAH="$(glog PTAH APK 2>/dev/null)"; # $APK/$PTAH
-
 export WEBS="User-Agent: Mozilla/5.0 (Linux; Android $ANDROID_RELEASE; $ANDROID_MANUFACTURER $ANDROID_MODEL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
 
 if [ "$ROOT" == 'true' ];then
-export ROT=1
-else
-export ROT=0
-export xu=xu
-export show_root_text="ROOT"
+    export ROT=1
+    else
+    export ROT=0
+    export xu=xu
+    export show_root_text="ROOT"
 fi
 
 if [ "$CPU_ABI" != 'arm64-v8a' ];then
-text_error="Only arm64-v8a devices supported"
-showtoast --am "$text_error"
-echo "$text_error" >&2
-sleep 10
-exit 1
-else
-export ARCH=arm64
+    text_error="Only arm64-v8a devices supported"
+    showtoast --am "$text_error"
+    echo "$text_error" >&2
+    sleep 10
+    exit 1
+    else
+    export ARCH=arm64
 fi
 
 # Giới hạn cpu
@@ -89,12 +83,12 @@ if command -v taskset &>/dev/null; then
 fi
 
 if [ -f "$1" ]; then
-chmod 755 "$1" 2>/dev/null
-export shell_progres="$2";
-cd "$HOME";
-source "$1";
-rm -f "$1";
-else
+    chmod 755 "$1" 2>/dev/null
+    export shell_progres="$2";
+    cd "$HOME";
+    source "$1";
+    rm -f "$1";
+    else
     if [ "$1" ]; then
     echo "Error file" >&2
     sleep 5
