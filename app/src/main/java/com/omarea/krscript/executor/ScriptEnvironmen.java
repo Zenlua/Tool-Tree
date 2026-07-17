@@ -131,71 +131,20 @@ public class ScriptEnvironmen {
 
     private static String createShellCache(Context context, String script) {
         String md5 = md5(script);
-        String outputPath = "root/" + md5 + ".sh";
-        if (new File(outputPath).exists()) {
-            return outputPath;
+        String relativePath = "root/" + md5 + ".sh";
+        String absolutePath = FileWrite.INSTANCE.getPrivateFilePath(context, relativePath);
+        if (new File(absolutePath).exists()) {
+            return absolutePath;
         }
-
-        String normalizedScript = script
-                .replace("\r\n", "\n")
-                .replace("\r", "\n");
-
-        String readWrapper =
-                "read() {\n" +
-                "  local __kr_prompt=\"\"\n" +
-                "  local __kr_args=()\n" +
-                "  while [ \"$#\" -gt 0 ]; do\n" +
-                "    case \"$1\" in\n" +
-                "      -p)\n" +
-                "        __kr_args+=(\"$1\")\n" +
-                "        shift\n" +
-                "        if [ \"$#\" -gt 0 ]; then\n" +
-                "          __kr_prompt=\"$1\"\n" +
-                "          __kr_args+=(\"$1\")\n" +
-                "        fi\n" +
-                "        ;;\n" +
-                "      --)\n" +
-                "        __kr_args+=(\"$1\")\n" +
-                "        shift\n" +
-                "        while [ \"$#\" -gt 0 ]; do\n" +
-                "          __kr_args+=(\"$1\")\n" +
-                "          shift\n" +
-                "        done\n" +
-                "        break\n" +
-                "        ;;\n" +
-                "      *)\n" +
-                "        __kr_args+=(\"$1\")\n" +
-                "        ;;\n" +
-                "    esac\n" +
-                "    shift\n" +
-                "  done\n" +
-                "  if [ -z \"$__kr_prompt\" ]; then\n" +
-                "    __kr_prompt=\"Nhập dữ liệu\"\n" +
-                "  fi\n" +
-                "  printf 'input:[%s]\\n' \"$__kr_prompt\"\n" +
-                "  builtin read \"${__kr_args[@]}\"\n" +
-                "}\n\n";
-
-        String doneTrap =
-                "\n__krscript_done() {\n" +
-                "  printf '__KR_SCRIPT_DONE__:%s\\n' \"$1\"\n" +
-                "}\n" +
-                "trap '__krscript_done $?' EXIT\n";
-
-        byte[] bytes = ("#!/data/data/com.tool.tree/files/home/bin/bash\n\n" +
-                readWrapper +
-                normalizedScript +
-                doneTrap)
-                .getBytes(StandardCharsets.UTF_8);
-
-        if (FileWrite.INSTANCE.writePrivateFile(bytes, outputPath, context)) {
-            return FileWrite.INSTANCE.getPrivateFilePath(context, outputPath);
+        byte[] bytes = ("#!/data/data/com.tool.tree/files/home/bin/bash\n\n" + script).getBytes();
+        
+        if (FileWrite.INSTANCE.writePrivateFile(bytes, relativePath, context)) {
+            return absolutePath;
         }
         return "";
     }
 
     private static String extractScript(Context context, String fileName) {
-
         if (fileName.startsWith(ASSETS_FILE)) {
             fileName = fileName.substring(ASSETS_FILE.length());
         }
@@ -405,8 +354,6 @@ public class ScriptEnvironmen {
             params = new HashMap<>();
         }
 
-        boolean scriptHasInput = needInput || (cmds != null && cmds.matches("(?s).*\\bread\\b.*"));
-
         if (nodeInfo != null) {
             String parentPageConfigDir = nodeInfo.getPageConfigDir();
             String currentPageConfigPath = nodeInfo.getCurrentPageConfigPath();
@@ -443,7 +390,7 @@ public class ScriptEnvironmen {
 
             dataOutputStream.write(getExecuteScript(context, cmds, tag).getBytes(StandardCharsets.UTF_8));
 
-            if (scriptHasInput) {
+            if (needInput) {
                 // "exit" nối cùng dòng lệnh (";") -> được phân tích cùng lúc với dòng hiện tại,
                 // không phải dữ liệu chờ sẵn trên stdin, nên không bị `read` trong script nuốt nhầm.
                 dataOutputStream.writeBytes("; sleep 0.2; exit\n");
