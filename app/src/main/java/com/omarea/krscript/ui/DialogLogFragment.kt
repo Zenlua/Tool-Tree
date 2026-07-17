@@ -112,6 +112,8 @@ class DialogLogFragment : DialogFragment() {
             }
             if (currentHandler?.writeInput(text) == true) {
                 binding.shellInput.setText("")
+                binding.shellInput.hint = getString(R.string.input_hint_default)
+                binding.inputRow.visibility = View.GONE
             } else {
                 Toast.makeText(requireContext(), getString(R.string.input_send_fail), Toast.LENGTH_SHORT).show()
             }
@@ -258,6 +260,8 @@ class DialogLogFragment : DialogFragment() {
                 if (input != null) {
                     if (prompt.isNotEmpty()) {
                         input.hint = prompt
+                    } else {
+                        input.hint = context.getString(R.string.input_hint_default)
                     }
                     input.requestFocus()
                     val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager

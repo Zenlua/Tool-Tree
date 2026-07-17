@@ -153,6 +153,19 @@ public abstract class ShellHandlerBase extends Handler {
             return;
         }
 
+        // Wrapper read() phát ra marker này để UI hiện ô nhập và Java đóng shell khi script đã xong.
+        Matcher doneMatcher = SCRIPT_DONE_PATTERN.matcher(cleanLog);
+        if (doneMatcher.find()) {
+            writeInput("exit");
+            return;
+        }
+
+        // Heuristic nhẹ cho prompt kiểu y/n, [y/N], (Y/n) nếu script in prompt ra stdout.
+        if (YN_PROMPT_PATTERN.matcher(cleanLog).matches()) {
+            onInputRequest(cleanLog.trim());
+            return;
+        }
+
         // 3. Lọc Progress Parser linh hoạt ở bất kỳ vị trí nào trong dòng log (Ví dụ: "123progress:[...]")
         Matcher progressMatcher = PROGRESS_PATTERN.matcher(cleanLog);
         if (progressMatcher.find()) {

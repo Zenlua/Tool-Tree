@@ -136,11 +136,104 @@ public class ScriptEnvironmen {
             return outputPath;
         }
 
-        byte[] bytes = ("#!/data/data/com.tool.tree/files/home/bin/bash\n\n" + script)
-                .replaceAll("\r\n", "\n")
-                .replaceAll("\r\t", "\t")
-                .replaceAll("\r", "\n")
-                .getBytes();
+        String normalizedScript = script
+                .replaceAll("
+", "
+")
+                .replaceAll("	", "	")
+                .replaceAll("", "
+");
+
+        String readWrapper =
+                "read() {
+" +
+                "  local __kr_prompt=\"\"
+" +
+                "  local __kr_args=()
+" +
+                "  while [ \"$#\" -gt 0 ]; do
+" +
+                "    case \"$1\" in
+" +
+                "      -p)
+" +
+                "        __kr_args+=(\"$1\")
+" +
+                "        shift
+" +
+                "        if [ \"$#\" -gt 0 ]; then
+" +
+                "          __kr_prompt=\"$1\"
+" +
+                "          __kr_args+=(\"$1\")
+" +
+                "        fi
+" +
+                "        ;;
+" +
+                "      --)
+" +
+                "        __kr_args+=(\"$1\")
+" +
+                "        shift
+" +
+                "        while [ \"$#\" -gt 0 ]; do
+" +
+                "          __kr_args+=(\"$1\")
+" +
+                "          shift
+" +
+                "        done
+" +
+                "        break
+" +
+                "        ;;
+" +
+                "      *)
+" +
+                "        __kr_args+=(\"$1\")
+" +
+                "        ;;
+" +
+                "    esac
+" +
+                "    shift
+" +
+                "  done
+" +
+                "  if [ -z \"$__kr_prompt\" ]; then
+" +
+                "    __kr_prompt=\"Nhập dữ liệu\"
+" +
+                "  fi
+" +
+                "  printf 'input:[%s]\n' \"$__kr_prompt\"
+" +
+                "  builtin read \"${__kr_args[@]}\"
+" +
+                "}
+
+";
+
+        String doneTrap =
+                "
+__krscript_done() {
+" +
+                "  printf '__KR_SCRIPT_DONE__:%s\n' \"$1\"
+" +
+                "}
+" +
+                "trap '__krscript_done $?' EXIT
+";
+
+        byte[] bytes = ("#!/data/data/com.tool.tree/files/home/bin/bash
+
+" +
+                readWrapper +
+                normalizedScript +
+                doneTrap)
+                .getBytes(StandardCharsets.UTF_8);
+
         if (FileWrite.INSTANCE.writePrivateFile(bytes, outputPath, context)) {
             return FileWrite.INSTANCE.getPrivateFilePath(context, outputPath);
         }
@@ -148,6 +241,7 @@ public class ScriptEnvironmen {
     }
 
     private static String extractScript(Context context, String fileName) {
+
         if (fileName.startsWith(ASSETS_FILE)) {
             fileName = fileName.substring(ASSETS_FILE.length());
         }
