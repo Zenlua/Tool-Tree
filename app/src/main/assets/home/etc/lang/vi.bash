@@ -50,7 +50,7 @@ customize_tools_text="Tùy chỉnh công cụ"
 convert_img_text="Sau khi xây dựng xong sẽ tiếp tục chuyển đổi"
 list_partition_text="Danh sách phân vùng đã giải mã"
 updating_text="Đang cập nhật"
-scroll_ngang_text="Tắt soft wrap"
+scroll_ngang_text="Tắt soft wrap log"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"
