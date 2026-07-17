@@ -102,14 +102,17 @@ class DialogLogFragment : DialogFragment() {
     private fun applyHorizontalScrollSetting() {
         val hsv = binding.horizontalLogScroll
         val textView = binding.shellOutput
-
+    
         if (enableHorizontalScroll) {
             textView.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
             textView.setHorizontallyScrolling(true)
             hsv?.isHorizontalScrollBarEnabled = true
             hsv?.isEnabled = true
         } else {
+            // Khi TẮT: Ép cả TextView lẫn HorizontalScrollView tuân thủ chiều ngang MATCH_PARENT của thiết bị
             textView.layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            hsv?.layoutParams?.width = ViewGroup.LayoutParams.MATCH_PARENT
+            
             textView.setHorizontallyScrolling(false)
             hsv?.isHorizontalScrollBarEnabled = false
             hsv?.isEnabled = false
@@ -465,20 +468,28 @@ class DialogLogFragment : DialogFragment() {
                     logBuffer
                 )
 
-                // Refresh layout để horizontal scroll hoạt động đúng
+                // 1. Cập nhật lại Layout của TextView và HorizontalScrollView (cha trực tiếp)
                 logView.requestLayout()
-                (logView.parent as? HorizontalScrollView)?.requestLayout()
+                val hsv = logView.parent as? HorizontalScrollView
+                hsv?.requestLayout()
 
-                (logView.parent as? ScrollView)?.let { scrollView ->
-                    scrollView.post {
-                        scrollView.fullScroll(ScrollView.FOCUS_DOWN)
-                        
-                        val inputRow = inputRowRef.get()
-                        val input = shellInputRef.get()
-                        if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
-                            input.post {
-                                input.requestFocus()
-                            }
+                // 2. Tìm chính xác ScrollView dọc (là cha của HorizontalScrollView)
+                val scrollView = hsv?.parent as? ScrollView
+                scrollView?.post {
+                    // Luôn tự động cuộn dọc xuống dòng mới nhất khi có log mới
+                    scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+                    
+                    // Nếu tắt cuộn ngang, ép HorizontalScrollView giữ nguyên vị trí gốc, không cho dịch chuyển
+                    if (!enableHorizontalScroll) {
+                        hsv?.scrollTo(0, 0)
+                    }
+                    
+                    // Giữ tiêu điểm (focus) cho ô nhập liệu nếu hàng nhập liệu đang hiển thị
+                    val inputRow = inputRowRef.get()
+                    val input = shellInputRef.get()
+                    if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
+                        input.post {
+                            input.requestFocus()
                         }
                     }
                 }

@@ -60,7 +60,7 @@
             android:id="@+id/horizontal_log_scroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fillViewport="true"
+            android:fillViewport="false"
             android:scrollbars="horizontal">
 
             <TextView
