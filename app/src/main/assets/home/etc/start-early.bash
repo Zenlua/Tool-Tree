@@ -30,23 +30,25 @@ if checkonline; then
     tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
     fi
     websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
+    websize="$(echo "$websums" | jq -r '.assets[0].size')"
     filesum="$(checksum "$PATH_APK")"
     echo "Tag: $tagname"
     echo "Sum online: $websum"
     echo "Sum apk: $filesum"
+    echo "Size: $websize"
     if [[ ${PACKAGE_VERSION_NAME//./} -gt $tagname ]]; then
         [ -f $TEMP/update ] && rm -f $TEMP/update
     elif [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
         if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
             if [ ! -f $TEMP/update ] && [ -n "$tagname" ]; then
-            echo "$tagname" > $TEMP/update
+            echo "$websize" > $TEMP/update
             fi
         else
             [ -f $TEMP/update ] && rm -f $TEMP/update
         fi
     else
         if [ ! -f $TEMP/update ] && [ -n "$tagname" ]; then
-        echo "$tagname" > $TEMP/update
+        echo "$websize" > $TEMP/update
         fi
     fi
     [ -f $TEMP/update ] && showtoast "$update_text_6"

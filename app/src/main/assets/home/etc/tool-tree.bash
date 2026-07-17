@@ -438,9 +438,12 @@ $shella5"
 Update(){
 
 # Thông báo cập nhật
+link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
 if checkonline; then
-    if [ ! -f $TEMP/update ]; then
-    link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
+    if [ -f $TEMP/update ]; then
+    show_update=1
+    websize="$(cat $TEMP/update)"
+    else
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
     websums="$(xem $link_url/tags/beta)"
     tagname="${PACKAGE_VERSION_NAME//./}"
@@ -451,15 +454,13 @@ if checkonline; then
     websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
     filesum="$(checksum "$PATH_APK")"
     websize="$(echo "$websums" | jq -r '.assets[0].size')"
-    if [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
-    if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
-    [ -n "$tagname" ] && show_update=1
-    fi
-    else
-    [ -n "$tagname" ] && show_update=1
-    fi
-    else
-    show_update=1
+        if [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
+            if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
+            [ -n "$tagname" ] && show_update=1
+            fi
+        else
+        [ -n "$tagname" ] && show_update=1
+        fi
     fi
 fi
 
