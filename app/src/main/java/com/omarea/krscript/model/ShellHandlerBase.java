@@ -186,8 +186,7 @@ public abstract class ShellHandlerBase extends Handler {
         String lower = line.toLowerCase(Locale.getDefault()).trim();
         return 
             lower.contains("y/n") ||
-            lower.contains("yes/no") ||
-            lower.contains("input:[");
+            lower.contains("yes/no");
     }
 
     // Thêm getter để ShellExecutor lấy được
