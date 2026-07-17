@@ -247,8 +247,6 @@ class DialogLogFragment : DialogFragment() {
             actionEventHandler = null
         }
 
-        // Script chủ động báo yêu cầu nhập liệu (echo "input:[gợi ý]"; read x) -> hiện ô nhập,
-        // đặt gợi ý (nếu có) và focus bàn phím để người dùng gõ ngay.
         override fun onInputRequest(prompt: String) {
             val logView = logViewRef.get()
             val row = inputRowRef.get() ?: return
@@ -259,9 +257,13 @@ class DialogLogFragment : DialogFragment() {
                     if (prompt.isNotEmpty()) {
                         input.hint = prompt
                     }
-                    input.requestFocus()
-                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-                    imm?.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
+                    input.post {
+                        input.isFocusable = true
+                        input.isFocusableInTouchMode = true
+                        input.requestFocus()
+                        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                        imm?.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
+                    }
                 }
             }
         }
