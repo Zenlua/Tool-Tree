@@ -448,6 +448,7 @@ class DialogLogFragment : DialogFragment() {
                 (logView.parent as? ScrollView)?.let { scrollView ->
                     scrollView.post {
                         scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+                        val inputRow = inputRowRef.get()
                         val input = shellInputRef.get()
                         if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
                             input.post {
