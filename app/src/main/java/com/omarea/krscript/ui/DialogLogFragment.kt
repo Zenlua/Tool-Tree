@@ -100,17 +100,21 @@ class DialogLogFragment : DialogFragment() {
 
         binding.shellOutput.apply {
             if (horizontalEnabled) {
-                // Bật chế độ không ngắt dòng + cuộn ngang
                 setHorizontallyScrolling(true)
                 setSingleLine(false)
                 maxLines = Integer.MAX_VALUE
                 movementMethod = android.text.method.ScrollingMovementMethod.getInstance()
-                // Tăng độ rộng tối thiểu để dễ cuộn ngang
-                minWidth = 2000
+                isHorizontalFadingEdgeEnabled = true
+                isVerticalFadingEdgeEnabled = true
+                setFadingEdgeLength(20)
+                layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+                minWidth = resources.displayMetrics.widthPixels * 2
+                
+                isHorizontalScrollBarEnabled = true
             } else {
-                // Mặc định: ngắt dòng tự động
                 setHorizontallyScrolling(false)
                 maxLines = Integer.MAX_VALUE
+                layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
             }
         }
         // ================================================================
