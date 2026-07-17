@@ -51,6 +51,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:overScrollMode="never"
+        android:descendantFocusability="blocksDescendants"
         android:clipToOutline="true"
         android:layout_above="@id/input_row"
         android:layout_below="@+id/top_bar">
