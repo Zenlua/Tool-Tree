@@ -72,7 +72,7 @@
                 android:fontFamily="monospace"
                 android:textSize="12sp"
                 android:padding="12dp"
-                android:scrollHorizontally="true" />
+                android:scrollHorizontally="false" />
 
         </HorizontalScrollView>
     </ScrollView>

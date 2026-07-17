@@ -50,6 +50,7 @@ customize_tools_text="Kustomisasi tool"
 convert_img_text="Konversi akan dilanjutkan setelah build selesai"
 list_partition_text="Daftar partisi yang sudah didekripsi"
 updating_text="Memperbarui"
+scroll_ngang_text="Nonaktifkan Word Wrap"
 
 # Home
 home_text_1="Informasi aplikasi dan fitur"

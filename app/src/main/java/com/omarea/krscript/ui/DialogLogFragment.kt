@@ -58,7 +58,9 @@ class DialogLogFragment : DialogFragment() {
     }
 
     private fun checkHorizontalScrollEnabled(): Boolean {
-        val file = File("/data/user/0/com.tool.tree/files/home/usr/log/scroll_ngang")
+        val filesDir = requireContext().applicationContext.getFilesDir()
+        val file = File(filesDir, "home/usr/log/scroll_ngang")
+        
         if (!file.exists()) return false
         return try {
             file.readText().trim() == "1"
