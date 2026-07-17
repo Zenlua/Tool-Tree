@@ -8,6 +8,7 @@ import android.content.DialogInterface
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
+import android.text.Editable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -448,8 +449,10 @@ class DialogLogFragment : DialogFragment() {
                     scrollView.post {
                         scrollView.fullScroll(ScrollView.FOCUS_DOWN)
                         val input = shellInputRef.get()
-                        if (input?.parent?.parent?.visibility == View.VISIBLE) {
-                            input.requestFocus()
+                        if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
+                            input.post {
+                                input.requestFocus()
+                            }
                         }
                     }
                 }
