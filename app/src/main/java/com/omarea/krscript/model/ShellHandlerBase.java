@@ -38,6 +38,10 @@ public abstract class ShellHandlerBase extends Handler {
     private static final Pattern AM_PATTERN = Pattern.compile("am:\\[(.*?)\\]");
     private static final Pattern PROGRESS_PATTERN = Pattern.compile("progress:\\[(.*?)\\]");
     private static final Pattern INPUT_PATTERN = Pattern.compile("input:\\[(.*?)\\]");
+    private static final Pattern SCRIPT_DONE_PATTERN = Pattern.compile("__KR_SCRIPT_DONE__:(\\d+)");
+    private static final Pattern YN_PROMPT_PATTERN = Pattern.compile(
+            "(?i).*(\\[y/n\\]|\\[y/N\\]|\\[Y/n\\]|\\[Y/N\\]|\\(y/n\\)|\\(y/N\\)|\\(Y/n\\)|\\(Y/N\\)|\\by/n\\b).*"
+    );
 
     protected abstract void onProgress(int current, int total);
     protected abstract void onStart(Object msg);

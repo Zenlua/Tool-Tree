@@ -137,98 +137,52 @@ public class ScriptEnvironmen {
         }
 
         String normalizedScript = script
-                .replaceAll("
-", "
-")
-                .replaceAll("	", "	")
-                .replaceAll("", "
-");
+                .replace("\r\n", "\n")
+                .replace("\r", "\n");
 
         String readWrapper =
-                "read() {
-" +
-                "  local __kr_prompt=\"\"
-" +
-                "  local __kr_args=()
-" +
-                "  while [ \"$#\" -gt 0 ]; do
-" +
-                "    case \"$1\" in
-" +
-                "      -p)
-" +
-                "        __kr_args+=(\"$1\")
-" +
-                "        shift
-" +
-                "        if [ \"$#\" -gt 0 ]; then
-" +
-                "          __kr_prompt=\"$1\"
-" +
-                "          __kr_args+=(\"$1\")
-" +
-                "        fi
-" +
-                "        ;;
-" +
-                "      --)
-" +
-                "        __kr_args+=(\"$1\")
-" +
-                "        shift
-" +
-                "        while [ \"$#\" -gt 0 ]; do
-" +
-                "          __kr_args+=(\"$1\")
-" +
-                "          shift
-" +
-                "        done
-" +
-                "        break
-" +
-                "        ;;
-" +
-                "      *)
-" +
-                "        __kr_args+=(\"$1\")
-" +
-                "        ;;
-" +
-                "    esac
-" +
-                "    shift
-" +
-                "  done
-" +
-                "  if [ -z \"$__kr_prompt\" ]; then
-" +
-                "    __kr_prompt=\"Nhập dữ liệu\"
-" +
-                "  fi
-" +
-                "  printf 'input:[%s]\n' \"$__kr_prompt\"
-" +
-                "  builtin read \"${__kr_args[@]}\"
-" +
-                "}
-
-";
+                "read() {\n" +
+                "  local __kr_prompt=\"\"\n" +
+                "  local __kr_args=()\n" +
+                "  while [ \"$#\" -gt 0 ]; do\n" +
+                "    case \"$1\" in\n" +
+                "      -p)\n" +
+                "        __kr_args+=(\"$1\")\n" +
+                "        shift\n" +
+                "        if [ \"$#\" -gt 0 ]; then\n" +
+                "          __kr_prompt=\"$1\"\n" +
+                "          __kr_args+=(\"$1\")\n" +
+                "        fi\n" +
+                "        ;;\n" +
+                "      --)\n" +
+                "        __kr_args+=(\"$1\")\n" +
+                "        shift\n" +
+                "        while [ \"$#\" -gt 0 ]; do\n" +
+                "          __kr_args+=(\"$1\")\n" +
+                "          shift\n" +
+                "        done\n" +
+                "        break\n" +
+                "        ;;\n" +
+                "      *)\n" +
+                "        __kr_args+=(\"$1\")\n" +
+                "        ;;\n" +
+                "    esac\n" +
+                "    shift\n" +
+                "  done\n" +
+                "  if [ -z \"$__kr_prompt\" ]; then\n" +
+                "    __kr_prompt=\"Nhập dữ liệu\"\n" +
+                "  fi\n" +
+                "  printf 'input:[%s]\\n' \"$__kr_prompt\"\n" +
+                "  builtin read \"${__kr_args[@]}\"\n" +
+                "}\n\n";
 
         String doneTrap =
-                "
-__krscript_done() {
-" +
-                "  printf '__KR_SCRIPT_DONE__:%s\n' \"$1\"
-" +
-                "}
-" +
-                "trap '__krscript_done $?' EXIT
-";
+                "\n__krscript_done() {\n" +
+                "  printf '__KR_SCRIPT_DONE__:%s\\n' \"$1\"\n" +
+                "}\n" +
+                "trap '__krscript_done $?' EXIT\n";
 
-        byte[] bytes = ("#!/data/data/com.tool.tree/files/home/bin/bash
-
-" +
+        byte[] bytes = ("#!/data/data/com.tool.tree/files/home/bin/bash\n\n" +
                 readWrapper +
                 normalizedScript +
                 doneTrap)
@@ -451,6 +405,8 @@ __krscript_done() {
             params = new HashMap<>();
         }
 
+        boolean scriptHasInput = needInput || (cmds != null && cmds.matches("(?s).*\\bread\\b.*"));
+
         if (nodeInfo != null) {
             String parentPageConfigDir = nodeInfo.getPageConfigDir();
             String currentPageConfigPath = nodeInfo.getCurrentPageConfigPath();
@@ -487,7 +443,7 @@ __krscript_done() {
 
             dataOutputStream.write(getExecuteScript(context, cmds, tag).getBytes(StandardCharsets.UTF_8));
 
-            if (needInput) {
+            if (scriptHasInput) {
                 // "exit" nối cùng dòng lệnh (";") -> được phân tích cùng lúc với dòng hiện tại,
                 // không phải dữ liệu chờ sẵn trên stdin, nên không bị `read` trong script nuốt nhầm.
                 dataOutputStream.writeBytes("; sleep 0.2; exit\n");
