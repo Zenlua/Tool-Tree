@@ -133,7 +133,7 @@ if [ -f $1 ]; then
     save_num="$number_kk"
     fi
 fi
-sleep 1
+sleep 0.01
 done
 progress -1/0
 [ -f $1 ] && sed -i 's/\x1b\[[^m]*m//g' $1
@@ -193,7 +193,8 @@ elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ]; then
     else
     file_img_tmp="$TMP"
     fi
-    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" | tee "$TMP/payload_extract.log" || killtree "Payload extract error." & process_payload "$TMP/payload_extract.log"
+    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" | tee "$TMP/payload_extract.log" || killtree "Payload extract error." &
+    process_payload "$TMP/payload_extract.log"
     echo
     file_img="$file_img_tmp/$PVUGBIN.img"
 elif [ "$dang_tep" == 'super' ]; then
@@ -245,8 +246,8 @@ mkdir -p "$in_name" $OUTPUT/config
 
     if [ "$dang_file" == 'ext' ]; then
         if [ "$(glog un_tool_ext4)" == 1 ]; then
-        imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
-        process_imgkit "$TMP/imgkit_scuti.log"
+        imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" 2>&1 | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error"
+        #process_imgkit "$TMP/imgkit_scuti.log"
         echo
         else
         imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
@@ -254,8 +255,8 @@ mkdir -p "$in_name" $OUTPUT/config
         echo "$dang_file" > "$info"
     elif [ "$dang_file" == 'f2fs' ]; then
         if [ "$(glog un_tool_f2fs)" == 1 ]; then
-            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error" &
-            process_imgkit "$TMP/imgkit_scuti.log"
+            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" 2>&1 | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error"
+            #process_imgkit "$TMP/imgkit_scuti.log"
             echo
         else
             extract.f2fs "$file_img" "$OUTPUT" || killtree "Extracting f2fs failed !";
@@ -275,8 +276,8 @@ mkdir -p "$in_name" $OUTPUT/config
         fsck.f2fs -a "$file_img" &> "$fs_options"
     elif [ "$dang_file" == 'erofs' ]; then
         if [ "$(glog un_tool_erofs)" == 1 ]; then
-            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti extract error" &
-            process_imgkit "$TMP/imgkit_scuti.log"
+            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" 2>&1 | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti extract error"
+            #process_imgkit "$TMP/imgkit_scuti.log"
         elif [ "$(glog un_tool_erofs)" == 2 ]; then
             $TERMUX/lib/theft/extract.erofs -x -i "$file_img" -o "$OUTPUT" | tee $TMP/extract_erofs.log || killtree "extract.erofs extract error" &
             process_unerrofs "$TMP/extract_erofs.log"
@@ -372,8 +373,8 @@ mkdir -p "$in_name" $OUTPUT/config
         echo
     elif [ "$dang_file" == 'squashfs' ]; then
         [ "$ROT" == 0 ] && killtree "Error Unpack: squashfs, $root_warning_text"
-        unsquashfs -f -d "$in_name" "$file_img" | tee $TMP/unsquashfs.log || killtree "\nunsquashfs unpack error: ${namepv##*/}" "$in_name" &
-        process_unsquashfs $TMP/unsquashfs.log
+        unsquashfs -f -d "$in_name" "$file_img" | tee $TMP/unsquashfs.log || killtree "\nunsquashfs unpack error: ${namepv##*/}" "$in_name"
+        #process_unsquashfs $TMP/unsquashfs.log
         echo "$dang_file" > $info
         unsquashfs -s "$file_img" &> "$fs_options"
         echo
