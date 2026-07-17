@@ -328,19 +328,6 @@ public class ScriptEnvironmen {
         executeShell(context, dataOutputStream, cmds, params, nodeInfo, tag, false);
     }
 
-    /**
-     * @param needInput Nếu true, script sẽ chủ động dùng lệnh `read` để yêu cầu người dùng nhập
-     *                   liệu trong lúc chạy.
-     *                   Bình thường, "sleep 0.2;\nexit\nexit\n" được ghi trên các DÒNG RIÊNG kế
-     *                   tiếp trong cùng pipe stdin với script; nếu script có lệnh `read`, nó có
-     *                   thể đọc nhầm luôn các byte "exit" đã nằm sẵn trong pipe thay vì đợi
-     *                   người dùng gõ thật. Để tránh việc này, khi needInput=true, lệnh
-     *                   "exit" được nối ngay trên CÙNG một dòng với lệnh chạy script (phân tách
-     *                   bằng ";"), nên nó được shell cha phân tích như một phần của dòng lệnh
-     *                   hiện tại (đã nhận đủ) chứ không phải dữ liệu dòng kế tiếp trên stdin —
-     *                   nhờ đó `read` bên trong script sẽ luôn chờ đúng dữ liệu người dùng nhập
-     *                   qua {@link com.omarea.krscript.model.ShellHandlerBase#writeInput(String)}.
-     */
     public static void executeShell(
             Context context,
             DataOutputStream dataOutputStream,
@@ -392,12 +379,11 @@ public class ScriptEnvironmen {
             if (executeScript == null || executeScript.isEmpty()) {
                 return;
             }
-
-            // Ghi phần thoát shell trên CÙNG một dòng với lệnh chạy script để stdin của
-            // script không vô tình đọc nhầm các byte "exit" khi nó đang chờ nhập liệu.
-            // Việc này giúp các prompt như y/n, yes/no hoặc input:[...] không bị nuốt mất
-            // dù chúng xuất hiện sau khi shell đã bắt đầu chạy.
-            dataOutputStream.write((executeScript + "; sleep 0.2; exit\n").getBytes(StandardCharsets.UTF_8));
+            if (needInput) {
+                dataOutputStream.write((executeScript + "; sleep 0.2; exit\n").getBytes(StandardCharsets.UTF_8));
+            } else {
+                dataOutputStream.write((executeScript + "\n\nsleep 0.2; exit; exit;\n").getBytes(StandardCharsets.UTF_8));
+            }
             dataOutputStream.flush();
         } catch (Exception ignored) {
         }

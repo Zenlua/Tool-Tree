@@ -196,7 +196,7 @@ esac
 </group>'
 
 [ "$(glog shellc)" == 1 ] && xml_print '<group>
-<action icon="'`urlpng shell`'" title="'$home_text_5'" desc="'$home_text_7'">
+<action icon="'`urlpng shell`'" title="'$home_text_5'" desc="'$home_text_7'" need-input="true">
 <param name="shell" value-sh="glog shell" type="text" placeholder="#!/system/bin/sh"/>
 <param name="shell2" value-sh="glog shell2" type="text" placeholder="#!/system/bin/sh"/>
 <param name="shell3" value-sh="glog shell3" type="text" placeholder="#!/system/bin/sh"/>
@@ -312,7 +312,7 @@ esac
 </group>'
 
 [ "$(glog shellc)" == 1 ] && xml_print '<group>
-<action icon="'`urlpng shell`'" title="'$home_text_5'" desc="'$more_text_9'">
+<action icon="'`urlpng shell`'" title="'$home_text_5'" desc="'$more_text_9'" need-input="true">
 <param name="shells" value-sh="glog shells" type="text" placeholder="#!/system/bin/sh"/>
 <param name="shells2" value-sh="glog shells2" type="text" placeholder="#!/system/bin/sh"/>
 <param name="shells3" value-sh="glog shells3" type="text" placeholder="#!/system/bin/sh"/>
@@ -405,7 +405,7 @@ fi
 </group>
 
 <group>
-<action id="shell" icon="'`urlpng shella`'" >
+<action id="shell" icon="'`urlpng shella`'" need-input="true">
 <title>'$home_text_5'</title>
 <desc>'$home_text_6'</desc>
 <param name="shella" value-sh="glog shella" type="text" placeholder="#!/system/bin/sh"/>
