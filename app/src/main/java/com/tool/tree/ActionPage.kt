@@ -192,9 +192,19 @@ class ActionPage : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    /**
+     * ✅ PATCH 1 APPLIED
+     * Khi reload: clear menu cache + load XML + refresh menu
+     * → Shell script menu sẽ chạy lại → State cập nhật (ghim → bỏ ghim)
+     */
     private fun onMenuItemClick(menuOption: PageMenuOption) {
         when(menuOption.type) {
-            "refresh", "reload" -> recreate()
+            "refresh", "reload" -> {
+                // ✅ Clear cached menu options
+                menuOptions = null
+                // ✅ Reload page config (XML + menu script)
+                loadPageConfig(true)
+            }
             "restart" -> restartApp()
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
@@ -269,6 +279,12 @@ class ActionPage : AppCompatActivity() {
                 .commitAllowingStateLoss()
         }
         actionsLoaded = true
+        
+        // ✅ PATCH 2 APPLIED
+        // Trigger menu recreation → onCreateOptionsMenu() called again
+        // Since menuOptions = null, PageMenuLoader will load fresh from XML
+        // → Menu script runs again → State updates
+        invalidateOptionsMenu()
     }
 
     private fun handleLoadError(config: PageNode) {
@@ -300,7 +316,12 @@ class ActionPage : AppCompatActivity() {
         val onDismiss = Runnable {
             when {
                 menuOption.autoFinish -> finish()
-                menuOption.reloadPage -> recreate()
+                menuOption.reloadPage -> {
+                    // ✅ PATCH 3 APPLIED
+                    // Same as menu reload: clear cache + load fresh config
+                    menuOptions = null
+                    loadPageConfig(false)  // false: no loading dialog (action dialog is visible)
+                }
                 menuOption.autoKill -> killApp()
                 menuOption.autoRestart -> restartApp()
             }
