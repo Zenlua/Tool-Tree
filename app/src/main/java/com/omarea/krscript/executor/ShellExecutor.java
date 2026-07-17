@@ -96,9 +96,6 @@ public class ShellExecutor {
                 dataOutputStream.writeBytes("sleep 0.2;\n");
 
                 boolean needInput = nodeInfo != null && nodeInfo.getNeedInput();
-                if (!needInput && shellHandlerBase.isAutoNeedInput()) {
-                    needInput = true;
-                }
                 ScriptEnvironmen.executeShell(context, dataOutputStream, cmds, params, nodeInfo, sessionTag, needInput);
             } catch (Exception ex) {
                 process.destroy();

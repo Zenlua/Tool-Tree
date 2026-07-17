@@ -388,18 +388,16 @@ public class ScriptEnvironmen {
         try {
             dataOutputStream.write(envpCmds.toString().getBytes(StandardCharsets.UTF_8));
 
-            dataOutputStream.write(getExecuteScript(context, cmds, tag).getBytes(StandardCharsets.UTF_8));
-
-            if (needInput) {
-                // "exit" nối cùng dòng lệnh (";") -> được phân tích cùng lúc với dòng hiện tại,
-                // không phải dữ liệu chờ sẵn trên stdin, nên không bị `read` trong script nuốt nhầm.
-                dataOutputStream.writeBytes("; sleep 0.2; exit\n");
-            } else {
-                dataOutputStream.writeBytes("\n\n");
-                dataOutputStream.writeBytes("sleep 0.2;\n");
-                dataOutputStream.writeBytes("exit\n");
-                dataOutputStream.writeBytes("exit\n");
+            String executeScript = getExecuteScript(context, cmds, tag);
+            if (executeScript == null || executeScript.isEmpty()) {
+                return;
             }
+
+            // Ghi phần thoát shell trên CÙNG một dòng với lệnh chạy script để stdin của
+            // script không vô tình đọc nhầm các byte "exit" khi nó đang chờ nhập liệu.
+            // Việc này giúp các prompt như y/n, yes/no hoặc input:[...] không bị nuốt mất
+            // dù chúng xuất hiện sau khi shell đã bắt đầu chạy.
+            dataOutputStream.write((executeScript + "; sleep 0.2; exit\n").getBytes(StandardCharsets.UTF_8));
             dataOutputStream.flush();
         } catch (Exception ignored) {
         }
