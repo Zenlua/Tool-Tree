@@ -38,10 +38,6 @@ public abstract class ShellHandlerBase extends Handler {
     private static final Pattern AM_PATTERN = Pattern.compile("am:\\[(.*?)\\]");
     private static final Pattern PROGRESS_PATTERN = Pattern.compile("progress:\\[(.*?)\\]");
     private static final Pattern INPUT_PATTERN = Pattern.compile("input:\\[(.*?)\\]");
-    private static final Pattern SCRIPT_DONE_PATTERN = Pattern.compile("__KR_SCRIPT_DONE__:(\\d+)");
-    private static final Pattern YN_PROMPT_PATTERN = Pattern.compile(
-            "(?i).*(\\[y/n\\]|\\[y/N\\]|\\[Y/n\\]|\\[Y/N\\]|\\(y/n\\)|\\(y/N\\)|\\(Y/n\\)|\\(Y/N\\)|\\by/n\\b).*"
-    );
 
     protected abstract void onProgress(int current, int total);
     protected abstract void onStart(Object msg);
@@ -132,11 +128,15 @@ public abstract class ShellHandlerBase extends Handler {
         if (msg == null) return;
         
         String log = msg.toString();
-        
-        // 1. Loại bỏ các mã màu ANSI bằng Pattern tĩnh (tốc độ xử lý vượt trội so với replaceAll thô)
-        String cleanLog = ANSI_ESCAPE_PATTERN.matcher(log).replaceAll("");
-        
-        // 2. Lọc AM Parser linh hoạt ở bất kỳ vị trí nào trong dòng log (Ví dụ: "123am:[...]")
+        String cleanLog = ANSI_ESCAPE_PATTERN.matcher(log).replaceAll("").trim();
+    
+        // === TỰ ĐỘNG PHÁT HIỆN PROMPT CẦN INPUT ===
+        if (shouldShowInputPrompt(cleanLog)) {
+            onInputRequest(cleanLog);   // Gọi để DialogLogFragment hiển thị ô nhập
+            return;
+        }
+    
+        // Parser cũ giữ nguyên
         Matcher amMatcher = AM_PATTERN.matcher(cleanLog);
         if (amMatcher.find()) {
             String args = amMatcher.group(1).trim();
@@ -147,51 +147,57 @@ public abstract class ShellHandlerBase extends Handler {
             }
             return;
         }
-        
-        // 2b. Lọc Input Parser: script chủ động báo yêu cầu người dùng nhập liệu
-        // (Ví dụ: echo "input:[Nhập tên của bạn]"; read name)
+    
         Matcher inputMatcher = INPUT_PATTERN.matcher(cleanLog);
         if (inputMatcher.find()) {
             String prompt = inputMatcher.group(1).trim();
             onInputRequest(prompt);
             return;
         }
-
-        // Wrapper read() phát ra marker này để UI hiện ô nhập và Java đóng shell khi script đã xong.
-        Matcher doneMatcher = SCRIPT_DONE_PATTERN.matcher(cleanLog);
-        if (doneMatcher.find()) {
-            writeInput("exit");
-            return;
-        }
-
-        // Heuristic nhẹ cho prompt kiểu y/n, [y/N], (Y/n) nếu script in prompt ra stdout.
-        if (YN_PROMPT_PATTERN.matcher(cleanLog).matches()) {
-            onInputRequest(cleanLog.trim());
-            return;
-        }
-
-        // 3. Lọc Progress Parser linh hoạt ở bất kỳ vị trí nào trong dòng log (Ví dụ: "123progress:[...]")
+    
         Matcher progressMatcher = PROGRESS_PATTERN.matcher(cleanLog);
         if (progressMatcher.find()) {
             try {
                 String content = progressMatcher.group(1).trim();
                 int slashIdx = content.indexOf('/');
-                
                 if (slashIdx > 0) {
-                    // Trích xuất số tiến trình thực tế bất kể chuỗi bọc xung quanh ra sao
                     int start = Integer.parseInt(content.substring(0, slashIdx).trim());
                     int total = Integer.parseInt(content.substring(slashIdx + 1).trim());
                     onProgress(start, total);
                     return;
                 }
-            } catch (NumberFormatException e) {
-                // Xuất lỗi cảnh báo định dạng ra màn hình giúp lập trình viên sửa script thuận tiện
+            } catch (Exception e) {
                 updateLog("Format error: " + cleanLog, "#ff0000");
                 return;
             }
         }
         
         onReader(msg);
+    }
+    
+    /**
+     * Tự động phát hiện prompt cần người dùng nhập
+     */
+    private boolean shouldShowInputPrompt(String line) {
+        if (line == null || line.trim().isEmpty()) return false;
+        
+        String lower = line.toLowerCase(Locale.getDefault()).trim();
+        String original = line.trim();
+    
+        return 
+            lower.contains("y/n") ||
+            lower.contains("(y/n)") ||
+            lower.contains("yes/no") ||
+            lower.contains("confirm") ||
+            lower.contains("password:") ||
+            lower.contains("nhập") ||
+            lower.contains("enter") ||
+            lower.endsWith(":") || 
+            lower.endsWith("?") ||
+            original.endsWith("：") ||           // dấu hai chấm tiếng Trung
+            Pattern.compile(".*[?：:]$").matcher(original).matches() ||
+            Pattern.compile("read ").matcher(lower).find() ||
+            lower.contains("input:[");
     }
 
     protected void onReader(Object msg) {
