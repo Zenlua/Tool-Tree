@@ -95,9 +95,7 @@
         <Button
             android:id="@+id/btn_send_input"
             style="@style/dialogConfirmBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_weight="1.0"
             android:text="@string/btn_send_input" />
 
     </LinearLayout>
@@ -113,24 +111,18 @@
         <Button
             android:id="@+id/btn_copy"
             style="@style/dialogCancelBtn"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/btn_copy_output" />
 
         <Button
             android:id="@+id/btn_cancel"
             style="@style/dialogWarningBtn"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/btn_cancel" />
 
         <Button
             android:id="@+id/btn_exit"
             style="@style/dialogConfirmBtn"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/btn_exit" />
 

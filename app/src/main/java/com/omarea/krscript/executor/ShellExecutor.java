@@ -12,6 +12,7 @@ import java.io.DataOutputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Created by Hello on 2018/04/01.
@@ -19,12 +20,30 @@ import java.util.Objects;
 public class ShellExecutor {
     private boolean started = false;
     private String sessionTag = "pio_" + System.currentTimeMillis();
+    private static final Pattern READ_COMMAND_PATTERN = Pattern.compile("(?m)(?:^|[;\\n])\\s*read\\b");
+
     private void killProcess(Context context) {
         ScriptEnvironmen.executeResultRoot(
                 context,
-                String.format("shell_progres=\'%s\' killtree", sessionTag),
+                String.format("shell_progres='%s' killtree", sessionTag),
                 null);
         // KeepShellPublic.INSTANCE.doCmdSync(String.format("kill -s 1 `pgrep -f %s`", sessionTag));
+    }
+
+    private boolean shouldKeepShellOpenForInput(RunnableNode nodeInfo, String cmds) {
+        if (nodeInfo != null && nodeInfo.getNeedInput()) {
+            return true;
+        }
+        if (cmds == null || cmds.isEmpty()) {
+            return false;
+        }
+
+        String normalized = cmds.replace("\r\n", "\n").replace('\r', '\n');
+        if (READ_COMMAND_PATTERN.matcher(normalized).find()) {
+            return true;
+        }
+
+        return normalized.contains("input:[");
     }
 
     /**
@@ -95,7 +114,7 @@ public class ShellExecutor {
                 shellHandlerBase.onStart(forceStopRunnable);
                 dataOutputStream.writeBytes("sleep 0.2;\n");
 
-                boolean needInput = nodeInfo != null && nodeInfo.getNeedInput();
+                boolean needInput = shouldKeepShellOpenForInput(nodeInfo, cmds);
                 ScriptEnvironmen.executeShell(context, dataOutputStream, cmds, params, nodeInfo, sessionTag, needInput);
             } catch (Exception ex) {
                 process.destroy();
