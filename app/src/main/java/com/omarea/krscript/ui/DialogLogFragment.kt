@@ -30,6 +30,7 @@ import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
 import java.lang.ref.WeakReference
 import com.tool.tree.AnsiColorParser
+import java.io.File
 
 class DialogLogFragment : DialogFragment() {
 
@@ -45,6 +46,7 @@ class DialogLogFragment : DialogFragment() {
     private var themeResId: Int = 0
     private var onDismissRunnable: Runnable? = null
     private var currentHandler: MyShellHandler? = null
+    private var enableHorizontalScroll = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = KrDialogLogBinding.inflate(inflater, container, false)
@@ -55,12 +57,24 @@ class DialogLogFragment : DialogFragment() {
         return Dialog(requireActivity(), if (themeResId != 0) themeResId else R.style.kr_full_screen_dialog_light)
     }
 
+    private fun checkHorizontalScrollEnabled(): Boolean {
+        val file = File("/data/user/0/com.tool.tree/files/home/usr/log/scroll_ngang")
+        if (!file.exists()) return false
+        return try {
+            file.readText().trim() == "1"
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         dialog?.window?.let { window ->
             DialogHelper.setWindowBlurBg(window, requireActivity())
         }
+
+        enableHorizontalScroll = checkHorizontalScrollEnabled()
 
         nodeInfo?.let { node ->
             if (node.reloadPage) {
@@ -228,6 +242,7 @@ class DialogLogFragment : DialogFragment() {
 
         init {
             logView?.setText(logBuffer, TextView.BufferType.EDITABLE)
+            logView?.setHorizontallyScrolling(true)
         }
 
         private fun getColor(resId: Int): Int {
@@ -435,8 +450,9 @@ class DialogLogFragment : DialogFragment() {
                     logView.editableText.length,
                     logBuffer
                 )
-                
-                // Thực hiện cuộn và giữ focus cho ô nhập liệu
+
+                logView.requestLayout()
+
                 (logView.parent as? ScrollView)?.let { scrollView ->
                     scrollView.post {
                         // 1. Cuộn ScrollView xuống cuối cùng

@@ -55,16 +55,26 @@
         android:layout_above="@id/input_row"
         android:layout_below="@+id/top_bar">
 
-        <TextView
-            android:id="@+id/shell_output"
-            android:breakStrategy="simple"
-            android:textIsSelectable="true"
-            android:layout_width="match_parent"
+        <!-- Horizontal Scroll cho log -->
+        <HorizontalScrollView
+            android:id="@+id/horizontal_log_scroll"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textSize="12sp"
-            android:padding="12dp" />
+            android:fillViewport="true"
+            android:scrollbars="horizontal">
 
+            <TextView
+                android:id="@+id/shell_output"
+                android:breakStrategy="simple"
+                android:textIsSelectable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="12sp"
+                android:padding="12dp"
+                android:scrollHorizontally="true" />
+
+        </HorizontalScrollView>
     </ScrollView>
 
     <LinearLayout
