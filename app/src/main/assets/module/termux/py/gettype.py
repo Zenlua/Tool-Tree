@@ -56,11 +56,17 @@ def get_max_offset():
     return max((entry[2] if len(entry) == 3 else 0) + len(entry[0]) for entry in formats)
 
 MAX_OFFSET = get_max_offset()
+
 HOME = os.environ.get("HOME", os.path.expanduser("~"))
-CACHE_DIR = os.path.join(HOME, "tmp")
+CACHE_DIR = os.path.join(HOME, "root")
 CACHE_FILE = os.path.join(CACHE_DIR, "file_type.log")
 
+
 def load_cache():
+    """
+    Cache format:
+        root_dir|relative_path|type|mtime_ns
+    """
     cache = {}
     if not os.path.exists(CACHE_FILE):
         return cache
@@ -71,14 +77,18 @@ def load_cache():
                 line = line.rstrip("\n")
                 if not line:
                     continue
-                parts = line.split("|", 2)
-                if len(parts) != 3:
+
+                parts = line.split("|", 3)
+                if len(parts) != 4:
                     continue
-                name, typ, mtime_ns = parts
+
+                root, relpath, typ, mtime_ns = parts
                 try:
-                    cache[name] = (typ, int(mtime_ns))
+                    mtime_ns = int(mtime_ns)
                 except:
                     continue
+
+                cache.setdefault(root, {})[relpath] = (typ, mtime_ns)
     except:
         pass
 
@@ -87,64 +97,76 @@ def load_cache():
 
 def save_cache(cache):
     os.makedirs(CACHE_DIR, exist_ok=True)
-
     tmp_file = CACHE_FILE + ".tmp"
 
     with open(tmp_file, "w", encoding="utf-8") as f:
-        for name in sorted(cache):
-            typ, mtime_ns = cache[name]
-            f.write(f"{name}|{typ}|{mtime_ns}\n")
+        for root in sorted(cache.keys()):
+            entries = cache[root]
+            for relpath in sorted(entries.keys()):
+                typ, mtime_ns = entries[relpath]
+                f.write(f"{root}|{relpath}|{typ}|{mtime_ns}\n")
 
     os.replace(tmp_file, CACHE_FILE)
 
 
-def cleanup_cache(cache, valid_names):
-    for name in list(cache.keys()):
-        if name not in valid_names:
-            cache.pop(name, None)
+def cleanup_cache(cache, root, valid_relpaths):
+    """
+    Chỉ dọn cache của đúng thư mục gốc đang quét.
+    Không đụng vào cache của thư mục khác.
+    """
+    if root not in cache:
+        return
+
+    entries = cache[root]
+    for relpath in list(entries.keys()):
+        if relpath not in valid_relpaths:
+            entries.pop(relpath, None)
+
+    if not entries:
+        cache.pop(root, None)
 
 
 def gettype(args):
-    file, cache = args
-    name = os.path.basename(file)
+    file, root, root_cache = args
+    relpath = os.path.relpath(file, root)
 
     if not os.path.exists(file):
-        return file, "fne", 0
+        return file, relpath, "fne", 0
 
     try:
         st = os.stat(file)
         mtime_ns = st.st_mtime_ns
     except:
-        return file, "err", 0
+        return file, relpath, "err", 0
 
-    old = cache.get(name)
+    old = root_cache.get(relpath)
     if old and old[1] == mtime_ns:
-        return file, old[0], mtime_ns
+        return file, relpath, old[0], mtime_ns
 
     if os.path.getsize(file) == 0:
-        return file, "empty", mtime_ns
+        return file, relpath, "empty", mtime_ns
 
     ext = os.path.splitext(file)[1].lower().lstrip(".")
     if ext in ("dat", "br"):
-        return file, ext, mtime_ns
+        return file, relpath, ext, mtime_ns
 
     try:
         with open(file, "rb") as f:
             data = f.read(MAX_OFFSET)
     except:
-        return file, "err", mtime_ns
+        return file, relpath, "err", mtime_ns
 
     for item in formats:
         sig = item[0]
         if len(item) == 2:
             if data.startswith(sig):
-                return file, item[1], mtime_ns
+                return file, relpath, item[1], mtime_ns
         else:
             offset = item[2]
             if len(data) >= offset + len(sig) and data[offset:offset + len(sig)] == sig:
-                return file, item[1], mtime_ns
+                return file, relpath, item[1], mtime_ns
 
-    return file, "unknown", mtime_ns
+    return file, relpath, "unknown", mtime_ns
 
 
 def collect_files(path):
@@ -163,24 +185,35 @@ def main(path):
     path = os.path.abspath(path)
     cache = load_cache()
 
+    # Thư mục gốc đang chạy
     if os.path.isfile(path):
-        _, typ, mtime_ns = gettype((path, cache))
-        cache[os.path.basename(path)] = (typ, mtime_ns)
+        root = os.path.dirname(path)
+        root = os.path.abspath(root)
+        files = [path]
+    else:
+        root = path
+        files = collect_files(path)
+
+    root_cache = cache.get(root, {})
+
+    if os.path.isfile(path):
+        file, relpath, typ, mtime_ns = gettype((path, root, root_cache))
+        cache.setdefault(root, {})[relpath] = (typ, mtime_ns)
         save_cache(cache)
         print(typ)
         return
 
-    files = collect_files(path)
-    valid_names = {os.path.basename(f) for f in files}
-    cpu = min(mp.cpu_count(), 4)
+    valid_relpaths = set()
 
+    cpu = min(mp.cpu_count(), 4)
     with mp.Pool(cpu) as pool:
-        args = [(f, cache) for f in files]
-        for file, typ, mtime_ns in pool.imap_unordered(gettype, args):
-            cache[os.path.basename(file)] = (typ, mtime_ns)
+        args = [(f, root, root_cache) for f in files]
+        for file, relpath, typ, mtime_ns in pool.imap_unordered(gettype, args):
+            valid_relpaths.add(relpath)
+            cache.setdefault(root, {})[relpath] = (typ, mtime_ns)
             print(f"{os.path.basename(file)}:{typ}")
 
-    cleanup_cache(cache, valid_names)
+    cleanup_cache(cache, root, valid_relpaths)
     save_cache(cache)
 
 
