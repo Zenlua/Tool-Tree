@@ -444,6 +444,8 @@ class PageConfigReader {
                     "auto-restart" -> clickableNode.autoRestart = (attrValue == "auto-restart" || attrValue == "true" || attrValue == "1")
                     "interruptible", "interruptable" -> clickableNode.interruptable = (
                             attrValue.isEmpty() || attrValue == "interruptable" || attrValue == "interruptable" || attrValue == "true" || attrValue == "1")
+                    "need-input", "needs-input", "require-input" -> clickableNode.needInput = (
+                            attrValue.isEmpty() || attrValue == "need-input" || attrValue == "true" || attrValue == "1")
                     "reload-page" -> {
                         if (attrValue == "reload-page" || attrValue == "reload" || attrValue == "page" || attrValue == "true" || attrValue == "1") {
                             clickableNode.reloadPage = true

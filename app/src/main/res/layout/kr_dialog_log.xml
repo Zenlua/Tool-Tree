@@ -53,7 +53,7 @@
         android:layout_height="match_parent"
         android:overScrollMode="never"
         android:clipToOutline="true"
-        android:layout_above="@id/bottom_actions"
+        android:layout_above="@id/input_row"
         android:layout_below="@+id/top_bar">
 
         <TextView
@@ -67,6 +67,40 @@
             android:padding="12dp" />
 
     </ScrollView>
+
+    <!-- Ô nhập liệu hiển thị khi shell script yêu cầu người dùng nhập dữ liệu (đọc bằng lệnh read) -->
+    <LinearLayout
+        android:id="@+id/input_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bottom_actions"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/shell_input"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/hint_shell_input"
+            android:imeOptions="actionSend"
+            android:inputType="text"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:fontFamily="monospace"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btn_send_input"
+            style="@style/dialogConfirmBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/btn_send_input" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/bottom_actions"

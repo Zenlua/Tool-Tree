@@ -328,6 +328,30 @@ public class ScriptEnvironmen {
             HashMap<String, String> params,
             NodeInfoBase nodeInfo,
             String tag) {
+        executeShell(context, dataOutputStream, cmds, params, nodeInfo, tag, false);
+    }
+
+    /**
+     * @param needInput Nếu true, script sẽ chủ động dùng lệnh `read` để yêu cầu người dùng nhập
+     *                   liệu trong lúc chạy.
+     *                   Bình thường, "sleep 0.2;\nexit\nexit\n" được ghi trên các DÒNG RIÊNG kế
+     *                   tiếp trong cùng pipe stdin với script; nếu script có lệnh `read`, nó có
+     *                   thể đọc nhầm luôn các byte "exit" đã nằm sẵn trong pipe thay vì đợi
+     *                   người dùng gõ thật. Để tránh việc này, khi needInput=true, lệnh
+     *                   "exit" được nối ngay trên CÙNG một dòng với lệnh chạy script (phân tách
+     *                   bằng ";"), nên nó được shell cha phân tích như một phần của dòng lệnh
+     *                   hiện tại (đã nhận đủ) chứ không phải dữ liệu dòng kế tiếp trên stdin —
+     *                   nhờ đó `read` bên trong script sẽ luôn chờ đúng dữ liệu người dùng nhập
+     *                   qua {@link com.omarea.krscript.model.ShellHandlerBase#writeInput(String)}.
+     */
+    public static void executeShell(
+            Context context,
+            DataOutputStream dataOutputStream,
+            String cmds,
+            HashMap<String, String> params,
+            NodeInfoBase nodeInfo,
+            String tag,
+            boolean needInput) {
 
         if (params == null) {
             params = new HashMap<>();
@@ -369,10 +393,16 @@ public class ScriptEnvironmen {
 
             dataOutputStream.write(getExecuteScript(context, cmds, tag).getBytes(StandardCharsets.UTF_8));
 
-            dataOutputStream.writeBytes("\n\n");
-            dataOutputStream.writeBytes("sleep 0.2;\n");
-            dataOutputStream.writeBytes("exit\n");
-            dataOutputStream.writeBytes("exit\n");
+            if (needInput) {
+                // "exit" nối cùng dòng lệnh (";") -> được phân tích cùng lúc với dòng hiện tại,
+                // không phải dữ liệu chờ sẵn trên stdin, nên không bị `read` trong script nuốt nhầm.
+                dataOutputStream.writeBytes("; sleep 0.2; exit\n");
+            } else {
+                dataOutputStream.writeBytes("\n\n");
+                dataOutputStream.writeBytes("sleep 0.2;\n");
+                dataOutputStream.writeBytes("exit\n");
+                dataOutputStream.writeBytes("exit\n");
+            }
             dataOutputStream.flush();
         } catch (Exception ignored) {
         }

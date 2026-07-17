@@ -84,6 +84,9 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_shell_finish_error">Execution finished, but errors occurred</string>
     <string name="script_losted">Script resources are missing\n</string>
     <string name="btn_copy_output">Copy</string>
+    <string name="hint_shell_input">Enter text and send to the script</string>
+    <string name="btn_send_input">Send</string>
+    <string name="input_send_fail">Unable to send, the script has ended</string>
     <string name="copy_fail">Copy failed</string>
     <string name="do_not_empty">Cannot be empty</string>
     <string name="kr_param_load">Get status\u0020</string>

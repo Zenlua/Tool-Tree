@@ -18,6 +18,8 @@ open class RunnableNode(currentConfigXml: String) : ClickableNode(currentConfigX
     var autoFinish = false
     var autoKill = false
     var autoRestart = false
+    // Script có yêu cầu người dùng nhập dữ liệu qua bàn phím trong lúc chạy hay không (dùng lệnh `read` bên trong script)
+    var needInput: Boolean = false
 
     // 交互界面（default、bg-task、hidden）
     var shell = shellModeDefault

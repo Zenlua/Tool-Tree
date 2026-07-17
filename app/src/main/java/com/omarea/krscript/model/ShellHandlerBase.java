@@ -13,7 +13,10 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -34,6 +37,7 @@ public abstract class ShellHandlerBase extends Handler {
     private static final Pattern ANSI_ESCAPE_PATTERN = Pattern.compile("\\x1B\\[[0-9;]*[a-zA-Z]");
     private static final Pattern AM_PATTERN = Pattern.compile("am:\\[(.*?)\\]");
     private static final Pattern PROGRESS_PATTERN = Pattern.compile("progress:\\[(.*?)\\]");
+    private static final Pattern INPUT_PATTERN = Pattern.compile("input:\\[(.*?)\\]");
 
     protected abstract void onProgress(int current, int total);
     protected abstract void onStart(Object msg);
@@ -44,8 +48,58 @@ public abstract class ShellHandlerBase extends Handler {
     // GIỮ NGUYÊN GỐC: Context truyền thống để tránh lỗi biên dịch của các lớp con bên ngoài
     protected Context context;
 
+    // Tham chiếu tới luồng ghi (stdin) của tiến trình shell đang chạy. Đây là tham chiếu MẠNH
+    // (không dùng WeakReference) vì ShellExecutor không giữ biến này ở nơi nào khác — nếu dùng
+    // weak reference, DataOutputStream sẽ có thể bị GC gần như ngay sau khi execute() trả về,
+    // khiến ô nhập liệu mất tác dụng. Việc giải phóng được thực hiện chủ động qua unbindStdin()
+    // (gọi từ release() khi dialog bị huỷ) để không giữ rác sau khi không cần nữa.
+    private DataOutputStream stdin;
+
     public ShellHandlerBase(Context context) {
         this.context = context;
+    }
+
+    /**
+     * Gắn luồng stdin của process shell hiện tại, để UI (ô nhập liệu) có thể ghi dữ liệu
+     * người dùng gõ vào ngay trong lúc script đang chạy (phục vụ lệnh `read` trong script).
+     */
+    public void bindStdin(DataOutputStream stdin) {
+        this.stdin = stdin;
+    }
+
+    public void unbindStdin() {
+        this.stdin = null;
+    }
+
+    /**
+     * Ghi một dòng văn bản do người dùng nhập vào stdin của shell (kèm ký tự xuống dòng để
+     * lệnh `read` trong script coi đây là một dòng nhập hoàn chỉnh).
+     * Dùng UTF-8 thay vì writeBytes() (chỉ ghi byte thấp) để hỗ trợ đúng tiếng Việt có dấu.
+     */
+    public boolean writeInput(String text) {
+        DataOutputStream stdin = this.stdin;
+        if (stdin == null || text == null) {
+            return false;
+        }
+        try {
+            stdin.write(text.getBytes(StandardCharsets.UTF_8));
+            stdin.writeBytes("\n");
+            stdin.flush();
+            return true;
+        } catch (IOException e) {
+            // Stream đã đóng (script đã kết thúc / bị huỷ) -> tự huỷ tham chiếu để tránh gọi lại vô ích
+            this.stdin = null;
+            return false;
+        }
+    }
+
+    /**
+     * Được gọi khi script chủ động báo hiệu cần người dùng nhập liệu, thông qua cú pháp
+     * "input:[gợi ý hiển thị]" trong output (tương tự am:[...] / progress:[...]).
+     * Mặc định không làm gì; lớp con (ví dụ DialogLogFragment.MyShellHandler) override để
+     * hiện ô nhập kèm gợi ý (prompt).
+     */
+    protected void onInputRequest(String prompt) {
     }
 
     @Override
@@ -90,6 +144,15 @@ public abstract class ShellHandlerBase extends Handler {
             return;
         }
         
+        // 2b. Lọc Input Parser: script chủ động báo yêu cầu người dùng nhập liệu
+        // (Ví dụ: echo "input:[Nhập tên của bạn]"; read name)
+        Matcher inputMatcher = INPUT_PATTERN.matcher(cleanLog);
+        if (inputMatcher.find()) {
+            String prompt = inputMatcher.group(1).trim();
+            onInputRequest(prompt);
+            return;
+        }
+
         // 3. Lọc Progress Parser linh hoạt ở bất kỳ vị trí nào trong dòng log (Ví dụ: "123progress:[...]")
         Matcher progressMatcher = PROGRESS_PATTERN.matcher(cleanLog);
         if (progressMatcher.find()) {

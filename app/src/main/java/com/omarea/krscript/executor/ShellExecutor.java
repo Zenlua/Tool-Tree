@@ -86,13 +86,17 @@ public class ShellExecutor {
 
             final OutputStream outputStream = process.getOutputStream();
             DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+            // Gắn stdin của process vào shellHandlerBase để ô nhập liệu trên UI (DialogLogFragment)
+            // có thể ghi trực tiếp dữ liệu người dùng gõ vào trong lúc script đang chạy.
+            shellHandlerBase.bindStdin(dataOutputStream);
             try {
                 shellHandlerBase.sendMessage(shellHandlerBase.obtainMessage(ShellHandlerBase.EVENT_START, "shell@android:\n"));
                 shellHandlerBase.sendMessage(shellHandlerBase.obtainMessage(ShellHandlerBase.EVENT_START, cmds + "\n\n"));
                 shellHandlerBase.onStart(forceStopRunnable);
                 dataOutputStream.writeBytes("sleep 0.2;\n");
 
-                ScriptEnvironmen.executeShell(context, dataOutputStream, cmds, params, nodeInfo, sessionTag);
+                boolean needInput = nodeInfo != null && nodeInfo.getNeedInput();
+                ScriptEnvironmen.executeShell(context, dataOutputStream, cmds, params, nodeInfo, sessionTag, needInput);
             } catch (Exception ex) {
                 process.destroy();
             }

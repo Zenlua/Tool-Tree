@@ -18,6 +18,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.fragment.app.DialogFragment
 import com.omarea.common.ui.DialogHelper
@@ -103,6 +105,30 @@ class DialogLogFragment : DialogFragment() {
             closeView()
         }
 
+        fun sendUserInput() {
+            val text = binding.shellInput.text?.toString().orEmpty()
+            if (text.isEmpty()) {
+                return
+            }
+            if (currentHandler?.writeInput(text) == true) {
+                binding.shellInput.setText("")
+            } else {
+                Toast.makeText(requireContext(), getString(R.string.input_send_fail), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.btnSendInput.setOnClickListener { sendUserInput() }
+        binding.shellInput.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEND ||
+                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
+            ) {
+                sendUserInput()
+                true
+            } else {
+                false
+            }
+        }
+
         binding.btnCopy.setOnClickListener {
             try {
                 val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -134,6 +160,7 @@ class DialogLogFragment : DialogFragment() {
                 dialog?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 binding.btnExit.visibility = View.GONE
                 binding.btnCancel.visibility = if (nodeInfo.interruptable && forceStop != null) View.VISIBLE else View.GONE
+                binding.inputRow.visibility = View.GONE
             }
 
             override fun onSuccess() {
@@ -149,13 +176,22 @@ class DialogLogFragment : DialogFragment() {
                     b.btnCancel.visibility = View.GONE
                     b.btnExit.visibility = View.VISIBLE
                     b.actionProgress.visibility = View.GONE
+                    b.inputRow.visibility = View.GONE
+                    hideKeyboard(b.shellInput)
                 }
                 isCancelable = true
             }
-        }, binding.shellOutput, binding.actionProgress)
+        }, binding.shellOutput, binding.actionProgress, binding.inputRow, binding.shellInput)
 
         this.currentHandler = handler
         return handler
+    }
+
+    private fun hideKeyboard(view: View) {
+        try {
+            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        } catch (ex: Exception) {}
     }
 
     @FunctionalInterface
@@ -169,11 +205,15 @@ class DialogLogFragment : DialogFragment() {
         context: Context,
         private var actionEventHandler: IActionEventHandler?,
         logView: TextView?,
-        shellProgress: ProgressBar?
+        shellProgress: ProgressBar?,
+        inputRow: View? = null,
+        shellInput: EditText? = null
     ) : ShellHandlerBase(context) {
 
         private val logViewRef = WeakReference(logView)
         private val progressRef = WeakReference(shellProgress)
+        private val inputRowRef = WeakReference(inputRow)
+        private val shellInputRef = WeakReference(shellInput)
 
         private val errorColor = getColor(R.color.kr_shell_log_error)
         private val basicColor = getColor(R.color.kr_shell_log_basic)
@@ -201,7 +241,29 @@ class DialogLogFragment : DialogFragment() {
         fun release() {
             logViewRef.clear()
             progressRef.clear()
+            inputRowRef.clear()
+            shellInputRef.clear()
+            unbindStdin()
             actionEventHandler = null
+        }
+
+        // Script chủ động báo yêu cầu nhập liệu (echo "input:[gợi ý]"; read x) -> hiện ô nhập,
+        // đặt gợi ý (nếu có) và focus bàn phím để người dùng gõ ngay.
+        override fun onInputRequest(prompt: String) {
+            val logView = logViewRef.get()
+            val row = inputRowRef.get() ?: return
+            val input = shellInputRef.get()
+            (logView ?: row).post {
+                row.visibility = View.VISIBLE
+                if (input != null) {
+                    if (prompt.isNotEmpty()) {
+                        input.hint = prompt
+                    }
+                    input.requestFocus()
+                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                    imm?.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
         }
 
         override fun handleMessage(msg: Message) {
