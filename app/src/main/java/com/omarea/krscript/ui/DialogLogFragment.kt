@@ -30,7 +30,6 @@ import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
 import java.lang.ref.WeakReference
 import com.tool.tree.AnsiColorParser
-import java.io.File
 
 class DialogLogFragment : DialogFragment() {
 
@@ -81,44 +80,10 @@ class DialogLogFragment : DialogFragment() {
         } ?: dismissAllowingStateLoss()
     }
 
-    /** Kiểm tra flag bật cuộn ngang */
-    private fun isHorizontalScrollEnabled(): Boolean {
-        return try {
-            val flagFile = File(requireContext().filesDir, "home/usr/log/scroll_ngang")
-            flagFile.exists() && flagFile.readText().trim() == "1"
-        } catch (e: Exception) {
-            false
-        }
-    }
-
     private fun openExecutor(nodeInfo: RunnableNode): ShellHandlerBase {
         var forceStopRunnable: Runnable? = null
         canceled = false
         uiVisible = true
-
-        // ====================== CẤU HÌNH CUỘN NGANG ======================
-        val horizontalEnabled = isHorizontalScrollEnabled()
-
-        binding.shellOutput.apply {
-            if (horizontalEnabled) {
-                setHorizontallyScrolling(true)
-                setSingleLine(false)
-                maxLines = Integer.MAX_VALUE
-                movementMethod = android.text.method.ScrollingMovementMethod.getInstance()
-                isHorizontalFadingEdgeEnabled = true
-                isVerticalFadingEdgeEnabled = true
-                setFadingEdgeLength(20)
-                layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-                minWidth = resources.displayMetrics.widthPixels * 2
-                
-                isHorizontalScrollBarEnabled = true
-            } else {
-                setHorizontallyScrolling(false)
-                maxLines = Integer.MAX_VALUE
-                layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
-            }
-        }
-        // ================================================================
 
         binding.btnHide.setOnClickListener {
             uiVisible = false
@@ -142,7 +107,9 @@ class DialogLogFragment : DialogFragment() {
 
         fun sendUserInput() {
             val text = binding.shellInput.text?.toString().orEmpty()
-            if (text.isEmpty()) return
+            if (text.isEmpty()) {
+                return
+            }
             if (currentHandler?.writeInput(text) == true) {
                 binding.shellInput.setText("")
             } else {
@@ -157,7 +124,9 @@ class DialogLogFragment : DialogFragment() {
             ) {
                 sendUserInput()
                 true
-            } else false
+            } else {
+                false
+            }
         }
 
         binding.btnCopy.setOnClickListener {
@@ -232,7 +201,6 @@ class DialogLogFragment : DialogFragment() {
         fun onCompleted()
     }
 
-    // Phần MyShellHandler giữ nguyên (không thay đổi)
     class MyShellHandler(
         context: Context,
         private var actionEventHandler: IActionEventHandler?,
@@ -255,6 +223,7 @@ class DialogLogFragment : DialogFragment() {
         private var lineCount = 0
 
         private val logBuffer = SpannableStringBuilder()
+        // Vị trí bắt đầu của dòng đang "chờ ghi đè" (do message trước kết thúc bằng \r), -1 nếu không có
         private var overwriteStart = -1
 
         init {
@@ -372,7 +341,9 @@ class DialogLogFragment : DialogFragment() {
         }
 
         override fun updateLog(msg: SpannableString?) {
-            msg?.let { dispatchLogUpdate(it) }
+            msg?.let {
+                dispatchLogUpdate(it)
+            }
         }
 
         private fun updateLogWithColor(text: String, forcedColor: Int?) {
@@ -389,6 +360,7 @@ class DialogLogFragment : DialogFragment() {
                 )
                 parsedLog = spannable
             }
+            
             dispatchLogUpdate(parsedLog)
         }
 
@@ -396,13 +368,20 @@ class DialogLogFragment : DialogFragment() {
             val logView = logViewRef.get() ?: return
 
             logView.post {
+                // Mỗi message giờ chỉ kết thúc bằng TỐI ĐA một trong hai ký tự: \r (dòng đang
+                // được ghi đè, ví dụ tiến trình tải %) hoặc \n (dòng đã hoàn tất). Ta tự quản lý
+                // việc xuống dòng dựa vào ký tự kết thúc đó, thay vì tách chuỗi theo \r.
                 val endsWithCR = formattedText.isNotEmpty() && formattedText.last() == '\r'
                 val endsWithLF = formattedText.isNotEmpty() && formattedText.last() == '\n'
 
                 val content: CharSequence = if (endsWithCR || endsWithLF) {
                     formattedText.subSequence(0, formattedText.length - 1)
-                } else formattedText
+                } else {
+                    formattedText
+                }
 
+                // Nếu dòng trước đó đang chờ bị ghi đè (message trước kết thúc bằng \r),
+                // xoá nó đi trước khi ghi nội dung mới vào đúng vị trí đó.
                 if (overwriteStart in 0..logBuffer.length) {
                     logBuffer.delete(overwriteStart, logBuffer.length)
                 }
@@ -411,20 +390,27 @@ class DialogLogFragment : DialogFragment() {
                 logBuffer.append(content)
 
                 when {
-                    endsWithCR -> overwriteStart = insertStart
+                    endsWithCR -> {
+                        // Ghi nhớ vị trí dòng này để lần cập nhật tiếp theo ghi đè lên đúng chỗ,
+                        // không tự thêm \n nên dòng vẫn "đứng yên" trên UI.
+                        overwriteStart = insertStart
+                    }
                     endsWithLF -> {
                         logBuffer.append('\n')
                         lineCount++
                         overwriteStart = -1
                     }
-                    else -> overwriteStart = -1
+                    else -> {
+                        overwriteStart = -1
+                    }
                 }
 
+                // Giới hạn log tối đa 5000 dòng để tránh tràn bộ nhớ
                 if (lineCount > 5000) {
-                    // Giới hạn log (giữ nguyên logic cũ)
                     var deleteEndIndex = 0
                     var linesToTemplate = lineCount - 5000
                     val currentCharSequence = logBuffer.toString()
+                    
                     for (i in currentCharSequence.indices) {
                         if (currentCharSequence[i] == '\n') {
                             linesToTemplate--
@@ -443,11 +429,20 @@ class DialogLogFragment : DialogFragment() {
                     }
                 }
 
-                (logView.editableText ?: return@post).replace(0, logView.editableText.length, logBuffer)
-
+                // logView.text = logBuffer
+                (logView.editableText ?: return@post).replace(
+                    0,
+                    logView.editableText.length,
+                    logBuffer
+                )
+                
+                // Thực hiện cuộn và giữ focus cho ô nhập liệu
                 (logView.parent as? ScrollView)?.let { scrollView ->
                     scrollView.post {
+                        // 1. Cuộn ScrollView xuống cuối cùng
                         scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+                        
+                        // 2. Nếu ô nhập liệu đang hiện, ép hệ thống giữ con trỏ tại đây
                         val inputRow = inputRowRef.get()
                         val input = shellInputRef.get()
                         if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {

@@ -589,7 +589,7 @@ xml_print '<group>
 <set>slog shellc $state</set>
 </switch>
 
-<switch icon="'`urlpng log_ngang`'" shell="hidden">
+<switch icon="'`urlpng log_ngang`'" shell="hidden" visible="echo 0">
 <title>'$scroll_ngang_text'</title>
 <get>glog scroll_ngang</get>
 <set>slog scroll_ngang $state</set>
