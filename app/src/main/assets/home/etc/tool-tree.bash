@@ -454,12 +454,19 @@ if checkonline; then
     websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
     filesum="$(checksum "$PATH_APK")"
     websize="$(echo "$websums" | jq -r '.assets[0].size')"
+    text_desc_size="$sizes_text: $(coverbyte $websize 2>/dev/null)"
         if [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
             if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
-            [ -n "$tagname" ] && show_update=1
+                if [ -n "$tagname" ]; then
+                show_update=1
+                echo "$websize" >$TEMP/update
+                fi
             fi
         else
-        [ -n "$tagname" ] && show_update=1
+            if [ -n "$tagname" ]; then
+            show_update=1
+            echo "$websize" >$TEMP/update
+            fi
         fi
     fi
 fi
@@ -479,7 +486,7 @@ xml_print '<group>
 <group>
 <action icon="'`urlpng update`'" warning="'$use_network_text'" visible="echo '$show_update'">
 <title>'$update_text'</title>
-<desc>'$sizes_text': '$(coverbyte $websize)'</desc>
+<desc>'$text_desc_size'</desc>
 <set>
 echo "'$update_text_2'"
 echo

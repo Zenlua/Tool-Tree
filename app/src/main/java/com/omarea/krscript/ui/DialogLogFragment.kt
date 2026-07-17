@@ -30,8 +30,6 @@ import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
 import java.lang.ref.WeakReference
 import com.tool.tree.AnsiColorParser
-import java.io.File
-import android.widget.HorizontalScrollView
 
 class DialogLogFragment : DialogFragment() {
 
@@ -47,7 +45,6 @@ class DialogLogFragment : DialogFragment() {
     private var themeResId: Int = 0
     private var onDismissRunnable: Runnable? = null
     private var currentHandler: MyShellHandler? = null
-    private var enableHorizontalScroll = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = KrDialogLogBinding.inflate(inflater, container, false)
@@ -58,27 +55,12 @@ class DialogLogFragment : DialogFragment() {
         return Dialog(requireActivity(), if (themeResId != 0) themeResId else R.style.kr_full_screen_dialog_light)
     }
 
-    private fun checkHorizontalScrollEnabled(): Boolean {
-        val filesDir = requireContext().applicationContext.getFilesDir()
-        val file = File(filesDir, "home/usr/log/scroll_ngang")
-        
-        if (!file.exists()) return false
-        return try {
-            file.readText().trim() == "1"
-        } catch (e: Exception) {
-            false
-        }
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         dialog?.window?.let { window ->
             DialogHelper.setWindowBlurBg(window, requireActivity())
         }
-
-        enableHorizontalScroll = checkHorizontalScrollEnabled()
-        applyHorizontalScrollSetting()
 
         nodeInfo?.let { node ->
             if (node.reloadPage) {
@@ -96,29 +78,6 @@ class DialogLogFragment : DialogFragment() {
                 shellHandler
             )
         } ?: dismissAllowingStateLoss()
-    }
-
-
-    private fun applyHorizontalScrollSetting() {
-        val hsv = binding.horizontalLogScroll
-        val textView = binding.shellOutput
-    
-        if (enableHorizontalScroll) {
-            textView.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-            textView.setHorizontallyScrolling(true)
-            hsv?.isHorizontalScrollBarEnabled = true
-            hsv?.isEnabled = true
-        } else {
-            // Khi TẮT: Ép cả TextView lẫn HorizontalScrollView tuân thủ chiều ngang MATCH_PARENT của thiết bị
-            textView.layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
-            hsv?.layoutParams?.width = ViewGroup.LayoutParams.MATCH_PARENT
-            
-            textView.setHorizontallyScrolling(false)
-            hsv?.isHorizontalScrollBarEnabled = false
-            hsv?.isEnabled = false
-        }
-        textView.requestLayout()
-        hsv?.requestLayout()
     }
 
     private fun openExecutor(nodeInfo: RunnableNode): ShellHandlerBase {
@@ -242,8 +201,7 @@ class DialogLogFragment : DialogFragment() {
         fun onCompleted()
     }
 
-    // Đã thêm từ khóa "inner" để sửa lỗi không gọi được biến của lớp cha DialogLogFragment
-    inner class MyShellHandler(
+    class MyShellHandler(
         context: Context,
         private var actionEventHandler: IActionEventHandler?,
         logView: TextView?,
@@ -410,6 +368,9 @@ class DialogLogFragment : DialogFragment() {
             val logView = logViewRef.get() ?: return
 
             logView.post {
+                // Mỗi message giờ chỉ kết thúc bằng TỐI ĐA một trong hai ký tự: \r (dòng đang
+                // được ghi đè, ví dụ tiến trình tải %) hoặc \n (dòng đã hoàn tất). Ta tự quản lý
+                // việc xuống dòng dựa vào ký tự kết thúc đó, thay vì tách chuỗi theo \r.
                 val endsWithCR = formattedText.isNotEmpty() && formattedText.last() == '\r'
                 val endsWithLF = formattedText.isNotEmpty() && formattedText.last() == '\n'
 
@@ -419,6 +380,8 @@ class DialogLogFragment : DialogFragment() {
                     formattedText
                 }
 
+                // Nếu dòng trước đó đang chờ bị ghi đè (message trước kết thúc bằng \r),
+                // xoá nó đi trước khi ghi nội dung mới vào đúng vị trí đó.
                 if (overwriteStart in 0..logBuffer.length) {
                     logBuffer.delete(overwriteStart, logBuffer.length)
                 }
@@ -428,6 +391,8 @@ class DialogLogFragment : DialogFragment() {
 
                 when {
                     endsWithCR -> {
+                        // Ghi nhớ vị trí dòng này để lần cập nhật tiếp theo ghi đè lên đúng chỗ,
+                        // không tự thêm \n nên dòng vẫn "đứng yên" trên UI.
                         overwriteStart = insertStart
                     }
                     endsWithLF -> {
@@ -440,6 +405,7 @@ class DialogLogFragment : DialogFragment() {
                     }
                 }
 
+                // Giới hạn log tối đa 5000 dòng để tránh tràn bộ nhớ
                 if (lineCount > 5000) {
                     var deleteEndIndex = 0
                     var linesToTemplate = lineCount - 5000
@@ -463,34 +429,26 @@ class DialogLogFragment : DialogFragment() {
                     }
                 }
 
+                // logView.text = logBuffer
                 (logView.editableText ?: return@post).replace(
                     0,
                     logView.editableText.length,
                     logBuffer
                 )
-
-                // 1. Cập nhật lại Layout của TextView và HorizontalScrollView (cha trực tiếp)
-                logView.requestLayout()
-                val hsv = logView.parent as? HorizontalScrollView
-                hsv?.requestLayout()
-
-                // 2. Tìm chính xác ScrollView dọc (là cha của HorizontalScrollView)
-                val scrollView = hsv?.parent as? ScrollView
-                scrollView?.post {
-                    // Luôn tự động cuộn dọc xuống dòng mới nhất khi có log mới
-                    scrollView.fullScroll(ScrollView.FOCUS_DOWN)
-                    
-                    // Nếu tắt cuộn ngang, ép HorizontalScrollView giữ nguyên vị trí gốc, không cho dịch chuyển
-                    if (!enableHorizontalScroll) {
-                        hsv?.scrollTo(0, 0)
-                    }
-                    
-                    // Giữ tiêu điểm (focus) cho ô nhập liệu nếu hàng nhập liệu đang hiển thị
-                    val inputRow = inputRowRef.get()
-                    val input = shellInputRef.get()
-                    if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
-                        input.post {
-                            input.requestFocus()
+                
+                // Thực hiện cuộn và giữ focus cho ô nhập liệu
+                (logView.parent as? ScrollView)?.let { scrollView ->
+                    scrollView.post {
+                        // 1. Cuộn ScrollView xuống cuối cùng
+                        scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+                        
+                        // 2. Nếu ô nhập liệu đang hiện, ép hệ thống giữ con trỏ tại đây
+                        val inputRow = inputRowRef.get()
+                        val input = shellInputRef.get()
+                        if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
+                            input.post {
+                                input.requestFocus()
+                            }
                         }
                     }
                 }
