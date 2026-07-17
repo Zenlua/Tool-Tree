@@ -442,7 +442,7 @@ link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
 if checkonline; then
     if [ -f $TEMP/update ]; then
     show_update=1
-    websize="$(cat $TEMP/update)"
+    text_desc_size="$sizes_text: $(cat $TEMP/update | coverbyte)"
     else
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
     websums="$(xem $link_url/tags/beta)"
