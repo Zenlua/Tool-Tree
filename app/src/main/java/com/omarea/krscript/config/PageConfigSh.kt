@@ -52,10 +52,10 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
     }
 
     fun execute(): ArrayList<NodeInfoBase>? {
-        val script = pageConfigSh.trim()
-        if (script.isEmpty()) {
-            return null
-        }
+        // val script = pageConfigSh.trim()
+        // if (script.isEmpty()) {
+            // return null
+        // }
 
         // Nếu script được khai báo là 1 đường dẫn tệp cụ thể nhưng tệp đó không tồn tại
         // thì dừng ngay tại đây, không chạy root/shell -> tránh tốn thời gian cho tab không có tệp thật.
