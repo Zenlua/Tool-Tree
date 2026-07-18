@@ -63,11 +63,13 @@ class DialogLogFragment : DialogFragment() {
         }
 
         nodeInfo?.let { node ->
+            val shellHandler = openExecutor(node)
+
+            // Đặt sau openExecutor() để không bị ghi đè bởi logic hiển thị btnHide
+            // dựa theo nodeInfo.interruptable bên trong openExecutor().
             if (node.reloadPage) {
                 binding.btnHide.visibility = View.GONE
             }
-
-            val shellHandler = openExecutor(node)
 
             ShellExecutor().execute(
                 requireContext().applicationContext,
@@ -223,8 +225,12 @@ class DialogLogFragment : DialogFragment() {
         private var lineCount = 0
 
         private val logBuffer = SpannableStringBuilder()
-        // Vị trí bắt đầu của dòng đang "chờ ghi đè" (do message trước kết thúc bằng \r), -1 nếu không có
-        private var overwriteStart = -1
+
+        // Vị trí bắt đầu của dòng hiện tại (dòng chưa kết thúc bằng \n) trong logBuffer.
+        private var lineStart = 0
+        // true nếu vừa gặp \r và đang chờ nội dung tiếp theo ghi đè lên dòng hiện tại
+        // (bắt đầu từ lineStart) thay vì nối thêm vào cuối.
+        private var pendingOverwrite = false
 
         init {
             logView?.setText(logBuffer, TextView.BufferType.EDITABLE)
@@ -285,12 +291,17 @@ class DialogLogFragment : DialogFragment() {
             updateLogWithColor(msg.toString(), errorColor)
         }
 
-        override fun onStart(forceStop: Runnable?) {
+        private fun resetLogState() {
             AnsiColorParser.reset()
             lineCount = 0
-            overwriteStart = -1
+            lineStart = 0
+            pendingOverwrite = false
             logBuffer.clear()
             logViewRef.get()?.text = logBuffer
+        }
+
+        override fun onStart(forceStop: Runnable?) {
+            resetLogState()
             actionEventHandler?.onStart(forceStop)
         }
 
@@ -324,11 +335,7 @@ class DialogLogFragment : DialogFragment() {
         }
 
         override fun onStart(msg: Any?) {
-            AnsiColorParser.reset()
-            lineCount = 0
-            overwriteStart = -1
-            logBuffer.clear()
-            logViewRef.get()?.text = logBuffer
+            resetLogState()
         }
 
         override fun onExit(msg: Any?) {
@@ -347,91 +354,92 @@ class DialogLogFragment : DialogFragment() {
         }
 
         private fun updateLogWithColor(text: String, forcedColor: Int?) {
-            val cleanString = text
-            var parsedLog: CharSequence = AnsiColorParser.parse(cleanString)
-            
-            if (forcedColor != null && !cleanString.contains("\u001B[")) {
-                // Kiểm tra xem chuỗi có kết thúc bằng \r hoặc \n không
-                val endsWithCR = parsedLog.isNotEmpty() && parsedLog.last() == '\r'
-                val endsWithLF = parsedLog.isNotEmpty() && parsedLog.last() == '\n'
-                
-                // Tách phần text thực tế cần tô màu ra riêng
-                val mainContent = if (endsWithCR || endsWithLF) {
-                    parsedLog.subSequence(0, parsedLog.length - 1)
-                } else {
-                    parsedLog
-                }
-                
-                val spannable = SpannableStringBuilder(mainContent)
+            var parsedLog: CharSequence = AnsiColorParser.parse(text)
+
+            if (forcedColor != null && !text.contains("\u001B[")) {
+                // Tô màu toàn bộ nội dung; các ký tự điều khiển \r/\n (nếu có, ở bất kỳ vị trí
+                // nào trong chuỗi) sẽ được dispatchLogUpdate xử lý riêng, không bị vấn đề vì
+                // ForegroundColorSpan không ảnh hưởng đến cách ngắt dòng.
+                val spannable = SpannableStringBuilder(parsedLog)
                 spannable.setSpan(
                     ForegroundColorSpan(forcedColor),
                     0,
-                    spannable.length, // Chỉ áp màu lên phần chữ thực tế
+                    spannable.length,
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
-                
-                // Trả lại ký tự điều khiển gốc về cuối chuỗi (không bị dính màu)
-                if (endsWithCR) spannable.append('\r')
-                if (endsWithLF) spannable.append('\n')
-                
                 parsedLog = spannable
             }
-            
+
             dispatchLogUpdate(parsedLog)
         }
 
+        /**
+         * Ghi nội dung mới vào logBuffer, xử lý đúng ngữ nghĩa \r (ghi đè dòng hiện tại,
+         * dùng cho progress %) và \n (xuống dòng thật), kể cả khi các ký tự này nằm
+         * ở giữa chuỗi chứ không chỉ ở cuối.
+         */
         private fun dispatchLogUpdate(formattedText: CharSequence) {
             val logView = logViewRef.get() ?: return
 
             logView.post {
-                // Mỗi message giờ chỉ kết thúc bằng TỐI ĐA một trong hai ký tự: \r (dòng đang
-                // được ghi đè, ví dụ tiến trình tải %) hoặc \n (dòng đã hoàn tất). Ta tự quản lý
-                // việc xuống dòng dựa vào ký tự kết thúc đó, thay vì tách chuỗi theo \r.
-                val endsWithCR = formattedText.isNotEmpty() && formattedText.last() == '\r'
-                val endsWithLF = formattedText.isNotEmpty() && formattedText.last() == '\n'
+                var i = 0
+                val len = formattedText.length
 
-                val content: CharSequence = if (endsWithCR || endsWithLF) {
-                    formattedText.subSequence(0, formattedText.length - 1)
-                } else {
-                    formattedText
-                }
+                while (i < len) {
+                    // Tìm ký tự điều khiển (\r hoặc \n) gần nhất kể từ i
+                    var j = i
+                    while (j < len && formattedText[j] != '\r' && formattedText[j] != '\n') j++
 
-                // Nếu dòng trước đó đang chờ bị ghi đè (message trước kết thúc bằng \r),
-                // xoá nó đi trước khi ghi nội dung mới vào đúng vị trí đó.
-                if (overwriteStart in 0..logBuffer.length) {
-                    logBuffer.delete(overwriteStart, logBuffer.length)
-                }
-
-                val insertStart = logBuffer.length
-                logBuffer.append(content)
-
-                when {
-                    endsWithCR -> {
-                        // Ghi nhớ vị trí dòng này để lần cập nhật tiếp theo ghi đè lên đúng chỗ,
-                        // không tự thêm \n nên dòng vẫn "đứng yên" trên UI.
-                        overwriteStart = insertStart
+                    // Phần nội dung thuần trước ký tự điều khiển (hoặc tới hết chuỗi)
+                    if (j > i) {
+                        val segment = formattedText.subSequence(i, j)
+                        if (pendingOverwrite) {
+                            if (lineStart in 0..logBuffer.length) {
+                                logBuffer.delete(lineStart, logBuffer.length)
+                            }
+                            pendingOverwrite = false
+                        }
+                        logBuffer.append(segment)
                     }
-                    endsWithLF -> {
-                        logBuffer.append('\n')
-                        lineCount++
-                        overwriteStart = -1
+
+                    if (j < len) {
+                        when (formattedText[j]) {
+                            '\r' -> {
+                                // \r\n (CRLF chuẩn) chỉ là xuống dòng bình thường, bỏ qua \r
+                                val isCRLF = j + 1 < len && formattedText[j + 1] == '\n'
+                                if (!isCRLF) {
+                                    // Đánh dấu: nội dung tiếp theo sẽ ghi đè từ đầu dòng hiện tại
+                                    pendingOverwrite = true
+                                }
+                            }
+                            '\n' -> {
+                                // Nếu đang chờ ghi đè mà gặp \n ngay (không có nội dung mới sau \r)
+                                // thì coi như dòng đó bị xoá trước khi xuống dòng thật
+                                if (pendingOverwrite && lineStart in 0..logBuffer.length) {
+                                    logBuffer.delete(lineStart, logBuffer.length)
+                                    pendingOverwrite = false
+                                }
+                                logBuffer.append('\n')
+                                lineCount++
+                                lineStart = logBuffer.length
+                            }
+                        }
+                        j++
                     }
-                    else -> {
-                        overwriteStart = -1
-                    }
+                    i = j
                 }
 
                 // Giới hạn log tối đa 5000 dòng để tránh tràn bộ nhớ
                 if (lineCount > 5000) {
                     var deleteEndIndex = 0
-                    var linesToTemplate = lineCount - 5000
+                    var linesToTrim = lineCount - 5000
                     val currentCharSequence = logBuffer.toString()
-                    
-                    for (i in currentCharSequence.indices) {
-                        if (currentCharSequence[i] == '\n') {
-                            linesToTemplate--
-                            if (linesToTemplate <= 0) {
-                                deleteEndIndex = i + 1
+
+                    for (k in currentCharSequence.indices) {
+                        if (currentCharSequence[k] == '\n') {
+                            linesToTrim--
+                            if (linesToTrim <= 0) {
+                                deleteEndIndex = k + 1
                                 break
                             }
                         }
@@ -439,25 +447,22 @@ class DialogLogFragment : DialogFragment() {
                     if (deleteEndIndex > 0) {
                         logBuffer.delete(0, deleteEndIndex)
                         lineCount = 5000
-                        if (overwriteStart != -1) {
-                            overwriteStart = (overwriteStart - deleteEndIndex).coerceAtLeast(0)
-                        }
+                        lineStart = (lineStart - deleteEndIndex).coerceAtLeast(0)
                     }
                 }
 
-                // logView.text = logBuffer
                 (logView.editableText ?: return@post).replace(
                     0,
                     logView.editableText.length,
                     logBuffer
                 )
-                
+
                 // Thực hiện cuộn và giữ focus cho ô nhập liệu
                 (logView.parent as? ScrollView)?.let { scrollView ->
                     scrollView.post {
                         // 1. Cuộn ScrollView xuống cuối cùng
                         scrollView.fullScroll(ScrollView.FOCUS_DOWN)
-                        
+
                         // 2. Nếu ô nhập liệu đang hiện, ép hệ thống giữ con trỏ tại đây
                         val inputRow = inputRowRef.get()
                         val input = shellInputRef.get()
