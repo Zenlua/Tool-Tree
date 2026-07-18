@@ -1,7 +1,6 @@
-# Tool-Tree
+# Tool-Tree [![Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=)](https://github.com/Zenlua/Tool-Tree/releases/latest)
 ### Android ROM & APK Toolkit
 
-[![Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=Release)](https://github.com/Zenlua/Tool-Tree/releases/latest)
 [![GitHub](https://img.shields.io/github/stars/Zenlua/Tool-Tree?style=flat)](https://github.com/Zenlua/Tool-Tree)
 [![License](https://img.shields.io/github/license/Zenlua/Tool-Tree)](https://github.com/Zenlua/Tool-Tree)
 
