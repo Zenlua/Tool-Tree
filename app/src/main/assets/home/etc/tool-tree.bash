@@ -128,8 +128,8 @@ fi
 <page icon="'`urlpng utilities`'" config-sh="$ETC/tool-tree.bash Utilities">
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
-'$vdbfbfsn'
 <option type="checkbox" id="v1" box="glog hide_show" silent="true" reload="true" >'$folder_text' ROM</option>
+'$vdbfbfsn'
 <option type="default" id="v2" silent="true">'$open_activity_text' ROM</option>
 <option type="default" id="v3" silent="true">'$open_activity_text' (data-root)</option>
 <handler>
