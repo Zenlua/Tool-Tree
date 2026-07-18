@@ -20,7 +20,7 @@ fi
 }
 
 show_sett(){
-xml_print '
+echo '
 <action icon="'`urlpng folder_rom`'" shell="hidden" reload="true">
 <title>'$project_text_1'</title>
 <summary>'$folder_text': '${PTSD/$SDCARD_PATH/\/sdcard}'</summary>
@@ -40,7 +40,7 @@ fi
 }
 
 show_apkset(){
-xml_print '
+echo '
 <action icon="'`urlpng folder_apk`'" shell="hidden" reload="true">
 <title>'$project_text_2'</title>
 <summary>'$folder_text': '${PTAD/$SDCARD_PATH/\/sdcard}'</summary>
@@ -64,7 +64,7 @@ local dirvad="$1"
 gprop(){
 cat "$dirvad/addon.prop" 2>/dev/null | awk -F= -v k="$1" '$1==k{print $2; exit}';
 }
-xml_print '<group>
+echo '<group>
 <page id="patch_rom" icon="'`urladd icon`'" config-sh="'$dirvad'/index.bash home">
 <title>'$(gprop name)'</title>
 <option type="default" id="v1" auto-off="true" reload="true" interruptible="false">'$google_translate_text'</option>
@@ -123,22 +123,22 @@ Vip_text_infor="$(eval echo "${text_id_1}${text_id_3}${text_id_2}")"
 
 # Văn bản
 Home(){
-[ -z "$Vip_text_infor" ] || xml_print '<group><text summary="'"$Vip_text_infor"'"/></group>'
+[ -z "$Vip_text_infor" ] || echo '<group><text summary="'"$Vip_text_infor"'"/></group>'
 
-xml_print '<group>
+echo '<group>
 <page icon="'`urlpng settings`'" config-sh="$ETC/tool-tree.bash Info">
 <title>'$setting_text'</title>
 <desc>'$home_text_1'</desc>
-<option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
-<option type="default" id="v2" auto-off="true" interruptible="false" >'$permis_text_4'</option>
-<option type="default" id="v3" auto-off="true" interruptible="false" >'$setting_text_5'</option>
+<option type="default" id="v1" silent="true">'$permis_text_1'</option>
+<option type="default" id="v2" silent="true">'$permis_text_4'</option>
+<option type="default" id="v3" silent="true">'$setting_text_5'</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
-echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
+am start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree
 elif [ "$menu_id" == "v2" ]; then
-echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
+am start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree
 elif [ "$menu_id" == "v3" ]; then
-echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
+am start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree
 fi
 </handler>
 </page>
@@ -148,19 +148,19 @@ fi
 <page icon="'`urlpng utilities`'" config-sh="$ETC/tool-tree.bash Utilities">
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' ROM</option>
-<option type="default" id="v4" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text' Patch ROM</option>
-<option type="default" id="v2" auto-off="true" interruptible="false" >'$open_activity_text' ROM</option>
-<option type="default" id="v3" auto-off="true" interruptible="false" >'$open_activity_text' (data-root)</option>
+<option type="checkbox" id="v1" box="glog hide_show" silent="true" reload="true" >'$folder_text' ROM</option>
+<option type="checkbox" id="v4" box="glog hide_show_patch_rom" silent="true" reload="true">Patch ROM</option>
+<option type="default" id="v2" silent="true">'$open_activity_text' ROM</option>
+<option type="default" id="v3" silent="true">'$open_activity_text' (data-root)</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
 elif [ "$menu_id" == "v4" ]; then
 [ "$(glog hide_show_patch_rom)" == 1 ] && slog hide_show_patch_rom 0 || slog hide_show_patch_rom 1
 elif [ "$menu_id" == "v2" ]; then
-echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTSD#$SDCARD_PATH}']"
+am start -a android.intent.action.SEND -t '"'*/*'"' -d "content://'$PACKAGE_NAME'.provider/external_files${PTSD#$SDCARD_PATH}"
 elif [ "$menu_id" == "v3" ]; then
-echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$SDH'/'$PTSH']"
+am start -a android.intent.action.SEND -t '"'*/*'"' -d "content://'$PACKAGE_NAME'.provider/root$SDH/$PTSH"
 fi
 </handler>
 </page>
@@ -178,24 +178,23 @@ fi
 <title>'$addon_text'</title>
 <desc>'$home_text_4'</desc>
 <option type="refresh">'$refresh_text'</option>
-<option type="default" id="hide" auto-off="true" reload="true" interruptible="false" >'$hide_add_text'</option>
-<option type="default" id="taive" auto-off="true" reload="true" interruptible="false" >'$download_text'</option>
-<option type="default" id="xoa" auto-off="true" reload="true" interruptible="false" >'$deleted_text'</option>
-<option id="file" suffix="add" auto-off="false" type="file" style="fab" reload="true">'$input_add_text'</option>
-<option type="default" id="home" auto-off="true" reload="true" interruptible="false" >'$home_text'</option>
+<option type="default" id="hide" silent="true" reload="true">'$hide_add_text'</option>
+<option type="default" link="https://zenlua.github.io/Tool-Tree/website/Addon.html" silent="true">'$download_text'</option>
+<option type="default" id="xoa" silent="true" reload="true">'$deleted_text'</option>
+<option id="file" suffix="add" type="file" style="fab" reload="true">'$input_add_text'</option>
+<option type="default" id="home" silent="true" reload="true">'$home_text'</option>
 <handler>
 case "$menu_id" in
   hide) slog settadd 1 ;;
   xoa) slog settadd 2 ;;
   home) slog settadd 0 ;;
-  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/website/Addon.html]" ;;
   file) installadd "$file" "$AON"; slog settadd 0 ;;
 esac
 </handler>
 </page>
 </group>'
 
-[ "$(glog shellc)" == 1 ] && xml_print '<group>
+[ "$(glog shellc)" == 1 ] && echo '<group>
 <action icon="'`urlpng shell`'" title="'$home_text_5'" desc="'$home_text_7'" need-input="true">
 <param name="shell" value-sh="glog shell" type="text" placeholder="#!/system/bin/sh"/>
 <param name="shell2" value-sh="glog shell2" type="text" placeholder="#!/system/bin/sh"/>
@@ -225,39 +224,39 @@ $shell5"
 }
 
 More(){
-[ -z "$Vip_text_infor" ] || xml_print '<group><text summary="'"$Vip_text_infor"'"/></group>'
-xml_print '<group>
+[ -z "$Vip_text_infor" ] || echo '<group><text summary="'"$Vip_text_infor"'"/></group>'
+echo '<group>
 <group>
 <page icon="'`urlpng settings`'" config-sh="$ETC/tool-tree.bash Info">
 <title>'$setting_text'</title>
 <desc>'$home_text_1'</desc>
-<option type="default" id="v1" auto-off="true" interruptible="false" >'$permis_text_1'</option>
-<option type="default" id="v2" auto-off="true" interruptible="false" >'$permis_text_4'</option>
-<option type="default" id="v3" auto-off="true" interruptible="false" >'$setting_text_5'</option>
+<option type="default" id="v1" silent="true">'$permis_text_1'</option>
+<option type="default" id="v2" silent="true">'$permis_text_4'</option>
+<option type="default" id="v3" silent="true">'$setting_text_5'</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
-echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
+am start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree
 elif [ "$menu_id" == "v2" ]; then
-echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
+am start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree
 elif [ "$menu_id" == "v3" ]; then
-echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
+am start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree
 fi
 </handler>
 </page>
-</group>'
+</group>
 
-xml_print '<group>
+<group>
 <page icon="'`urlpng apk_utility`'" config-sh="$ETC/tool-tree.bash Utiliapk">
 <title>'$utilities_text'</title>
 <desc>'$more_text_6'</desc>
 <lock>
 [ -f $LOG/javaww ] && echo "'$boot_text_1'" || echo 0
 </lock>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
+<option type="checkbox" id="v1" box="glog hide_show2" silent="true" reload="true">'$folder_text' APK</option>
 <option type="file" id="v2" suffix="zip" auto-off="true">'$more_text_3'</option>
 <option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apkeditor.jar</option>
-<option type="default" id="v4" auto-off="true" interruptible="false" >'$open_activity_text' APK</option>
-<option type="default" id="v5" auto-off="true" interruptible="false" >'$open_activity_text' (data-root)</option>
+<option type="default" id="v4" silent="true">'$open_activity_text' APK</option>
+<option type="default" id="v5" silent="true">'$open_activity_text' (data-root)</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show2)" == 1 ] && slog hide_show2 0 || slog hide_show2 1
@@ -272,11 +271,9 @@ echo "'$more_text_4' $file"
 echo
 cp -rf "$file" $ETC/apkeditor.jar || killtree "File copy error"
 elif [ "$menu_id" == "v4" ]; then
-[ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
-echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files'${PTAD#$SDCARD_PATH}']"
+am start -a android.intent.action.SEND -t '"'*/*'"' -d "content://'$PACKAGE_NAME'.provider/external_files${PTAD#$SDCARD_PATH}"
 elif [ "$menu_id" == "v5" ]; then
-[ "$(pm path bin.mt.plus)" ] && mttttt="-n bin.mt.plus/bin.mt.plus.Main"
-echo "am:[start $mttttt -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root'$APK'/'$PTAH']"
+am start -a android.intent.action.SEND -t '"'*/*'"' -d "content://'$PACKAGE_NAME'.provider/root$APK/$PTAH"
 fi
 </handler>
 </page>
@@ -294,24 +291,23 @@ fi
 <title>'$addon_text'</title>
 <desc>'$more_text_8'</desc>
 <option type="refresh">'$refresh_text'</option>
-<option type="default" id="hide" auto-off="true" reload="true" interruptible="false" >'$hide_add_text'</option>
-<option type="default" id="taive" auto-off="true" reload="true" interruptible="false" >'$download_text'</option>
-<option type="default" id="xoa" auto-off="true" reload="true" interruptible="false" >'$deleted_text'</option>
-<option id="file" suffix="add" auto-off="false" type="file" style="fab" reload="true">'$input_add_text'</option>
-<option type="default" id="home" auto-off="true" reload="true" interruptible="false" >'$home_text'</option>
+<option type="default" id="hide" silent="true" reload="true">'$hide_add_text'</option>
+<option type="default" link="https://zenlua.github.io/Tool-Tree/website/Apkon.html" silent="true">'$download_text'</option>
+<option type="default" id="xoa" silent="true" reload="true">'$deleted_text'</option>
+<option id="file" suffix="add" type="file" style="fab" reload="true">'$input_add_text'</option>
+<option type="default" id="home" silent="true" reload="true">'$home_text'</option>
 <handler>
 case "$menu_id" in
   hide) slog settadd2 1 ;;
   xoa) slog settadd2 2 ;;
   home) slog settadd2 0 ;;
-  taive) echo "am:[start -a android.intent.action.VIEW -d https://zenlua.github.io/Tool-Tree/website/Apkon.html]" ;;
   file) installadd "$file" "$AOK"; slog settadd2 0 ;;
 esac
 </handler>
 </page>
 </group>'
 
-[ "$(glog shellc)" == 1 ] && xml_print '<group>
+[ "$(glog shellc)" == 1 ] && echo '<group>
 <action icon="'`urlpng shell`'" title="'$home_text_5'" desc="'$more_text_9'" need-input="true">
 <param name="shells" value-sh="glog shells" type="text" placeholder="#!/system/bin/sh"/>
 <param name="shells2" value-sh="glog shells2" type="text" placeholder="#!/system/bin/sh"/>
@@ -341,16 +337,16 @@ $shells5"
 }
 
 Info(){
-xml_print '<group>
+echo '<group>
 <page icon="'`urlpng info`'" config-sh="$ETC/tool-tree.bash Update" >
 <title>'$setting_text_1'</title>
 <desc>'$setting_text_2'</desc>
-<option type="default" id="share" auto-off="true" interruptible="false" >'$share_text'</option>
+<option type="default" id="share" silent="true">'$share_text'</option>
 <option type="refresh" style="fab" icon="'$ETC'/icon/Loading.png" />
 <handler>
 progress 0.02 10 &
 if [ "$menu_id" == "share" ]; then
-echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
+am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree
 fi
 </handler>
 </page>
@@ -471,7 +467,7 @@ if checkonline; then
     fi
 fi
 
-xml_print '<group>
+echo '<group>
 <page icon="'`urlpng like`'" html="https://zenlua.github.io/Tool-Tree/website/Information.html" >
 <title>'$author_text'</title>
 </page>
@@ -535,7 +531,7 @@ show_sett
 show_apkset
 echo "</group>"
 
-xml_print '<group>
+echo '<group>
 <action icon="'`urlpng cleanup`'" warning="'$project_text_4'" auto-off="true" >
 <title>'$project_text_3'</title>
 <param name="dels" label="'$option_text'" option-sh="findfile folders $SDH/$PTSH; findfile folders $APK/$PTAH" multiple="multiple"/>
@@ -570,7 +566,7 @@ slog re_tool_f2fs "$re_tool_f2fs"
 }
 
 Feature(){
-xml_print '<group>
+echo '<group>
 <switch icon="'`urlpng set_home`'" shell="hidden">
 <title>'$project_text_5'</title>
 <get>glog Tset</get>
@@ -642,7 +638,7 @@ set_permis "$ETC/wallpaper.jpg" &>/dev/null
 }
 
 Root(){
-xml_print '<group>
+echo '<group>
 <action icon="'`urlpng mount`'" interruptible="false">
 <title>'$mount_text_1'</title>
 <summary>'$show_root_text'</summary>
@@ -762,7 +758,7 @@ echo "'$flash_text_12'"
 }
 
 Troot(){
-xml_print '<group>
+echo '<group>
 <action icon="'`urlpng dexopt_app`'">
 <lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
@@ -826,7 +822,7 @@ if [ "$(glog hide_show_generate)" == 1 ]; then
     echo "</group>"
 fi
 
-xml_print '<group>
+echo '<group>
 <action icon="'`urlpng build_super`'">
 <title>'$generate_text' Super</title>
 <param name="type" label="'$super_text_2'" value-sh="glog typeheh">
@@ -901,7 +897,7 @@ mv "$vv" "${vv%.*}.PARTITION"
 done
 echo
 fi
-ampack pack --verify --out-ver $amlogic_ver --out-align $amlogic_align "$PTSD/$FOLDER" "$PTSD/out/$FOLDER.img" | tee $TMP/amlogic_pack.log | sed -u $'"'s/\033\\[[0-9;]*m//g'"'
+ampack pack --verify --out-ver $amlogic_ver --out-align $amlogic_align "$PTSD/$FOLDER" "$PTSD/out/$FOLDER.img" | tee $TMP/amlogic_pack.log
 [ "$?" == 1 ] && bug_rom=1 || bug_rom=0
 for vv in $(ls -1d $PTSD/$FOLDER/*.PARTITION 2>/dev/null); do
 mv "$vv" "${vv%.*}.img"
@@ -930,7 +926,7 @@ else
     desc_rom1="$projects_text: $PTSH"
 fi
 
-xml_print '<group>
+echo '<group>
 <action icon="'`urlpng decom`'" desc="'$desc_rom'">
 <title>'$decompile_text'</title>
 <param name="cboxk" value-sh="glog dkhdh" label="'$deleted_file_text'" type="checkbox" />
@@ -996,7 +992,7 @@ checktime
 <group>
 <page icon="'`urlpng generate`'" config-sh="$ETC/tool-tree.bash Generate">
 <title>'$synthetic_text'</title>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' ROM</option>
+<option type="checkbox" box="glog hide_show_generate" silent="true" id="v1" auto-off="true" reload="true">'$folder_text' ROM</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show_generate)" == 1 ] && slog hide_show_generate 0 || slog hide_show_generate 1
@@ -1090,7 +1086,7 @@ else
     desc_apk1="$projects_text: $PTAH"
 fi
 
-xml_print '<group>
+echo '<group>
 <action icon="'`urlpng decom`'">
 <title>'$decompile_text'</title>
 <desc>'$desc_apk'</desc>
@@ -1151,7 +1147,7 @@ else
     desc_apkd1="$projects_text: $PTAH"
 fi
 
-xml_print '
+echo '
 <group>
 <action icon="'`urlpng decom`'">
 <title>'$decompile_text'</title>
@@ -1207,7 +1203,7 @@ else
     desc_apks1="$projects_text: $PTAH"
 fi
 
-xml_print '<group>
+echo '<group>
 <action icon="'`urlpng decom`'">
 <title>'$decompile_text'</title>
 <desc>'$desc_apks'</desc>
@@ -1263,10 +1259,10 @@ checktime
 <group>
 <page icon="'`urlpng apktool`'" config-sh="$ETC/tool-tree.bash Apktools" >
 <title>'$use_apktool_text'</title>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
+<option type="checkbox" box="glog hide_show_apktool" id="v1" silent="true" reload="true">'$folder_text' APK</option>
 <option type="default" id="v2" >'$framework_auto_text'</option>
 <option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apktool.jar</option>
-<option type="file" id="v4" suffix="apk" auto-off="true">'$more_text_10' framework</option>
+<option type="file" id="v4" suffix="apk">'$more_text_10' framework</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
     [ "$(glog hide_show_apktool)" == 1 ] && slog hide_show_apktool 0 || slog hide_show_apktool 1
@@ -1299,7 +1295,7 @@ fi
 <group>
 <page icon="'`urlpng apex`'" config-sh="$ETC/tool-tree.bash Apex" >
 <title>'$apex_text'</title>
-<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$on_text'/'$off_text $folder_text' APK</option>
+<option type="checkbox" box="glog hide_show_apex" id="v1" silent="true" reload="true">'$folder_text' APK</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show_apex)" == 1 ] && slog hide_show_apex 0 || slog hide_show_apex 1
@@ -1377,7 +1373,7 @@ Addon(){
 
 Download(){
 if [ "$(gprop url)" ]; then
-xml_print '<group>
+echo '<group>
 <action warn="'$use_network_text'" icon="'`urladd icon`'" reload="true">
 <title>'$(gprop name)'</title>
 <desc>'$(gprop version)' '$(gprop author)$description_text'</desc>
@@ -1401,7 +1397,7 @@ fi
 
 Features(){
 [ "$1" == "status" ] && atextx="$addon_text_10" || atextx="$addon_text_2"
-xml_print '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$atextx'">
+echo '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$atextx'">
 <title>'$(gprop name)'</title>
 <desc>'$(gprop version)' '$(gprop author)$description_text'</desc>
 <get>cat '$dirvad'/'$1'</get>
@@ -1435,7 +1431,7 @@ fi
 if [ "$(gprop name)" ]; then
 # Xác nhận có google dịch
 if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null || grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
-google_trankk='<option type="default" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
+google_trankk='<option type="checkbox" box="glog auto_trans_text_'${dirvad##*/}'" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
 google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
 fi
@@ -1444,13 +1440,13 @@ fi
 [ "$(gprop summary)" ] && summss='<summary>'"$(gprop summary)"'</summary>'
 [ "$(gprop shortcut)" == "true" ] && shortcut='id="'${dirvad##*/}'"'
 
-xml_print '<group>
+echo '<group>
 <page '$shortcut' icon="'`urladd icon`'" '$pagesh'>
 <title>'$(gprop name)'</title>
 <desc>'$(gprop version) $(gprop author)$description_text'</desc>
 '"$summss"'
 '"$farooot"'
-<option type="default" id="v2" auto-finish="true" auto-off="true" interruptible="false">'$pin_text_add'</option>
+<option type="default" id="v2" silent="true">'$pin_text_add'</option>
 '"$google_trankk"'
 '"$code_option"'
 <handler>

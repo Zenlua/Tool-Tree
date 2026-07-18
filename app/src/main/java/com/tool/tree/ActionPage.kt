@@ -1,7 +1,6 @@
 package com.tool.tree
 
 import android.app.ActivityManager
-import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -39,7 +38,6 @@ class ActionPage : AppCompatActivity() {
     private var actionsLoaded = false
     private val handler = Handler(Looper.getMainLooper())
     
-    // Sử dụng nullable để kiểm tra an toàn thay vì lateinit
     private var currentPageConfig: PageNode? = null
     private var autoRunItemId = ""
     private lateinit var binding: ActivityActionPageBinding
@@ -48,7 +46,6 @@ class ActionPage : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Kiểm tra khởi tạo môi trường
         if (!ScriptEnvironmen.isInited()) {
             val initIntent = Intent(this.applicationContext, SplashActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
@@ -74,7 +71,6 @@ class ActionPage : AppCompatActivity() {
         }
         toolbar.setNavigationOnClickListener { finish() }
 
-        // Xử lý Intent và dữ liệu PageNode an toàn
         val extras = intent.extras
         if (extras != null) {
             currentPageConfig = if (extras.containsKey("page")) {
@@ -93,7 +89,6 @@ class ActionPage : AppCompatActivity() {
             return
         }
 
-        // Logic mở Activity hoặc Trang Web online
         if (config.activity.isNotEmpty()) {
             if (TryOpenActivity(this, config.activity).tryOpen()) {
                 finish()
@@ -162,30 +157,35 @@ class ActionPage : AppCompatActivity() {
             menuOptions = PageMenuLoader(applicationContext, config).load()
         }
 
+        // Xóa sạch menu cũ nếu có để tránh trùng lặp khi invalidateOptionsMenu() được gọi
+        menu?.clear()
+
         menuOptions?.forEachIndexed { index, option ->
             if (option.isFab) {
                 addFab(option)
             } else {
-                val menuItem = menu?.add(-1, index, index, option.title)
+                // SỬA: Gán chính xác Menu.NONE cho groupId, index cho itemId và order
+                val menuItem = menu?.add(Menu.NONE, index, index, option.title)
                 if (option.type == "checkbox") {
                     menuItem?.isCheckable = true
-                    menuItem?.isChecked = option.checked
                 }
             }
         }
         return true
     }
 
-    // Được Android gọi MỖI LẦN menu chuẩn bị hiển thị (khác onCreateOptionsMenu chỉ chạy 1 lần),
-    // nên đây mới là chỗ đúng để refresh trạng thái tích mỗi khi người dùng mở menu.
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        // Cập nhật giao diện tích (isChecked) trước khi Menu hiển thị ra cho người dùng
+        menuOptions?.forEachIndexed { index, option ->
+            if (!option.isFab && option.type == "checkbox") {
+                val menuItem = menu.findItem(index)
+                menuItem?.isChecked = option.checked
+            }
+        }
         refreshCheckboxMenuStates()
         return super.onPrepareOptionsMenu(menu)
     }
 
-    // Chạy các lệnh checked-sh ở nền (IO thread) để không làm treo UI mỗi lần mở menu.
-    // Chỉ rebuild lại menu (invalidateOptionsMenu) khi có ít nhất 1 trạng thái thực sự thay đổi,
-    // để tránh vòng lặp refresh vô tận (onPrepareOptionsMenu sẽ được gọi lại sau khi rebuild).
     private fun refreshCheckboxMenuStates() {
         val config = currentPageConfig ?: return
         val checkboxOptions = menuOptions?.filter { it.type == "checkbox" && it.checkedSh.isNotEmpty() }
@@ -226,16 +226,25 @@ class ActionPage : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val options = menuOptions ?: return false
-        if (item.itemId in options.indices) {
-            onMenuItemClick(options[item.itemId])
+        val index = item.itemId // itemId bây giờ lưu chính xác vị trí index của mảng
+
+        // SỬA: Đảm bảo kiểm tra index hợp lệ trong phạm vi của mảng options
+        if (index in options.indices) {
+            val option = options[index]
+            
+            // Nếu là Checkbox, đảo trạng thái ngay lập tức trên UI để người dùng thấy mượt mà
+            if (option.type == "checkbox") {
+                option.checked = !option.checked
+                item.isChecked = option.checked
+            }
+
+            onMenuItemClick(option)
             return true
         }
         return super.onOptionsItemSelected(item)
     }
 
     private fun onMenuItemClick(menuOption: PageMenuOption) {
-        // Nếu menu item được khai báo link/activity/html/config/config-sh -> mở giống 1 page/dòng
-        // bình thường trong danh sách, bỏ qua hoàn toàn việc chạy pageHandlerSh của menu.
         if (menuOption.link.isNotEmpty() || menuOption.activity.isNotEmpty() ||
             menuOption.onlineHtmlPage.isNotEmpty() || menuOption.pageConfigSh.isNotEmpty() ||
             menuOption.pageConfigPath.isNotEmpty()) {
@@ -259,9 +268,6 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Mở menu item giống hệt cách 1 dòng PageNode bình thường được mở (xem onPageClick trong
-    // ActionListFragment): link -> mở trình duyệt/app ngoài; activity -> mở activity chỉ định;
-    // còn lại (html/config-sh/config) -> chuyển thành PageNode rồi dùng lại OpenPageHelper.
     private fun openMenuOptionAsPage(menuOption: PageMenuOption) {
         if (menuOption.link.isNotEmpty()) {
             try {
@@ -291,8 +297,6 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Chạy script của menu item ở NỀN (IO thread), không hiện DialogLogFragment/không có output hiển thị.
-    // Vẫn tôn trọng các cờ auto-finish/reload-page/auto-kill/auto-restart sau khi script chạy xong.
     private fun menuItemExecuteSilent(menuOption: PageMenuOption) {
         val config = currentPageConfig ?: return
         val extraParams = hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key)
@@ -310,8 +314,6 @@ class ActionPage : AppCompatActivity() {
                     menuOption.autoKill -> killApp()
                     menuOption.autoRestart -> restartApp()
                 }
-                // Nếu là menu checkbox, cập nhật lại dấu tích ngay sau khi script chạy xong
-                // (không cần đợi người dùng mở lại menu).
                 if (menuOption.type == "checkbox") {
                     refreshCheckboxMenuStates()
                 }
@@ -323,7 +325,6 @@ class ActionPage : AppCompatActivity() {
         val config = currentPageConfig ?: return
 
         lifecycleScope.launch(Dispatchers.IO) {
-            // Thực hiện tác vụ tiền xử lý
             if (config.beforeRead.isNotEmpty()) {
                 withContext(Dispatchers.Main) { progressBarDialog.showDialog(getString(R.string.kr_page_before_load)) }
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.beforeRead, config)
@@ -333,7 +334,6 @@ class ActionPage : AppCompatActivity() {
                 withContext(Dispatchers.Main) { progressBarDialog.showDialog(getString(R.string.kr_page_loading)) }
             }
 
-            // Tải dữ liệu cấu hình
             var items: ArrayList<NodeInfoBase>? = null
             if (config.pageConfigSh.isNotEmpty()) {
                 items = PageConfigSh(this@ActionPage, config.pageConfigSh, config).execute()
@@ -342,7 +342,6 @@ class ActionPage : AppCompatActivity() {
                 items = PageConfigReader(applicationContext, config.pageConfigPath, config.pageConfigDir).readConfigXml()
             }
 
-            // Thực hiện tác vụ hậu xử lý
             if (config.afterRead.isNotEmpty()) {
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.afterRead, config)
             }
@@ -392,8 +391,6 @@ class ActionPage : AppCompatActivity() {
         Toast.makeText(this, getString(R.string.kr_page_load_fail), Toast.LENGTH_SHORT).show()
         finish()
     }
-
-    // --- Các hàm hỗ trợ khác (Restart, Kill, File Picker) ---
 
     private fun restartApp() {
         val intent = Intent(this, SplashActivity::class.java).apply {
