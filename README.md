@@ -55,7 +55,7 @@ Official website: **https://zenlua.github.io/Tool-Tree**
 | [User Guide](https://zenlua.github.io/Tool-Tree/website/Guide.html) | Beginner's guide, no-root |
 | [Version Changelog](https://zenlua.github.io/Tool-Tree/Version.html) | View the change log across versions |
 | [Add-on Development](https://zenlua.github.io/Tool-Tree/website/Instruct.html) | Basic add-on creation guide |
-| [Framework Development](https://zenlua.github.io/Tool-Tree/website/Information.html) | Project developer information |
+| [Information](https://zenlua.github.io/Tool-Tree/website/Information.html) | Project developer information |
 
 ---
 
