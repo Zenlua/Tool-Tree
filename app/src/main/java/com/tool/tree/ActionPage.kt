@@ -181,7 +181,7 @@ class ActionPage : AppCompatActivity() {
     
         // Chỉ refresh 1 lần sau khi menu được dựng xong
         handler.post {
-            requestCheckboxMenuRefresh()
+            refreshCheckboxMenuStates()
         }
     
         return true
@@ -198,7 +198,7 @@ class ActionPage : AppCompatActivity() {
         return super.onPrepareOptionsMenu(menu)
     }
 
-    private fun requestCheckboxMenuRefresh() {
+    private fun refreshCheckboxMenuStates() {
         val config = currentPageConfig ?: return
     
         val checkboxOptions = menuOptions?.filter { option ->
