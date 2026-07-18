@@ -157,14 +157,12 @@ class ActionPage : AppCompatActivity() {
             menuOptions = PageMenuLoader(applicationContext, config).load()
         }
 
-        // Xóa sạch menu cũ nếu có để tránh trùng lặp khi invalidateOptionsMenu() được gọi
         menu?.clear()
 
         menuOptions?.forEachIndexed { index, option ->
             if (option.isFab) {
                 addFab(option)
             } else {
-                // SỬA: Gán chính xác Menu.NONE cho groupId, index cho itemId và order
                 val menuItem = menu?.add(Menu.NONE, index, index, option.title)
                 if (option.type == "checkbox") {
                     menuItem?.isCheckable = true
@@ -175,7 +173,6 @@ class ActionPage : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        // Cập nhật giao diện tích (isChecked) trước khi Menu hiển thị ra cho người dùng
         menuOptions?.forEachIndexed { index, option ->
             if (!option.isFab && option.type == "checkbox") {
                 val menuItem = menu.findItem(index)
@@ -186,25 +183,34 @@ class ActionPage : AppCompatActivity() {
         return super.onPrepareOptionsMenu(menu)
     }
 
+    // SỬA LỖI LOẠN VỊ TRÍ: Ánh xạ chính xác bằng originalIndex gốc của mảng menuOptions
     private fun refreshCheckboxMenuStates() {
         val config = currentPageConfig ?: return
-        val checkboxOptions = menuOptions?.filter { it.type == "checkbox" && it.checkedSh.isNotEmpty() }
-        if (checkboxOptions.isNullOrEmpty() || menuCheckboxRefreshing) return
+        
+        // Tạo một danh sách Pair chứa cặp (Vị trí gốc trong menuOptions, Đối tượng Option)
+        val checkboxOptionsWithIndex = menuOptions?.mapIndexed { index, option -> index to option }
+            ?.filter { (_, option) -> option.type == "checkbox" && option.checkedSh.isNotEmpty() }
+
+        if (checkboxOptionsWithIndex.isNullOrEmpty() || menuCheckboxRefreshing) return
         menuCheckboxRefreshing = true
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val results = checkboxOptions.map { option ->
-                option to ScriptEnvironmen.executeResultRoot(this@ActionPage, option.checkedSh, config)?.trim()
+            // Thực thi script và giữ nguyên vị trí index gốc ban đầu
+            val results = checkboxOptionsWithIndex.map { (originalIndex, option) ->
+                val result = ScriptEnvironmen.executeResultRoot(this@ActionPage, option.checkedSh, config)?.trim()
+                Triple(originalIndex, option, result)
             }
 
             withContext(Dispatchers.Main) {
                 menuCheckboxRefreshing = false
                 var changed = false
-                results.forEach { (option, result) ->
+                
+                results.forEach { (originalIndex, option, result) ->
                     val newChecked = result == "1" || result?.lowercase() == "true"
                     if (option.checked != newChecked) changed = true
                     option.checked = newChecked
                 }
+                
                 if (changed && !isFinishing) {
                     invalidateOptionsMenu()
                 }
@@ -226,13 +232,11 @@ class ActionPage : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val options = menuOptions ?: return false
-        val index = item.itemId // itemId bây giờ lưu chính xác vị trí index của mảng
+        val index = item.itemId 
 
-        // SỬA: Đảm bảo kiểm tra index hợp lệ trong phạm vi của mảng options
         if (index in options.indices) {
             val option = options[index]
             
-            // Nếu là Checkbox, đảo trạng thái ngay lập tức trên UI để người dùng thấy mượt mà
             if (option.type == "checkbox") {
                 option.checked = !option.checked
                 item.isChecked = option.checked
