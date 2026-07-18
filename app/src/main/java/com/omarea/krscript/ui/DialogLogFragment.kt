@@ -351,13 +351,29 @@ class DialogLogFragment : DialogFragment() {
             var parsedLog: CharSequence = AnsiColorParser.parse(cleanString)
             
             if (forcedColor != null && !cleanString.contains("\u001B[")) {
-                val spannable = SpannableString(parsedLog)
+                // Kiểm tra xem chuỗi có kết thúc bằng \r hoặc \n không
+                val endsWithCR = parsedLog.isNotEmpty() && parsedLog.last() == '\r'
+                val endsWithLF = parsedLog.isNotEmpty() && parsedLog.last() == '\n'
+                
+                // Tách phần text thực tế cần tô màu ra riêng
+                val mainContent = if (endsWithCR || endsWithLF) {
+                    parsedLog.subSequence(0, parsedLog.length - 1)
+                } else {
+                    parsedLog
+                }
+                
+                val spannable = SpannableStringBuilder(mainContent)
                 spannable.setSpan(
                     ForegroundColorSpan(forcedColor),
                     0,
-                    spannable.length,
+                    spannable.length, // Chỉ áp màu lên phần chữ thực tế
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
+                
+                // Trả lại ký tự điều khiển gốc về cuối chuỗi (không bị dính màu)
+                if (endsWithCR) spannable.append('\r')
+                if (endsWithLF) spannable.append('\n')
+                
                 parsedLog = spannable
             }
             
