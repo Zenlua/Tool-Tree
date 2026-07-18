@@ -233,7 +233,7 @@ class DialogLogFragment : DialogFragment() {
         private var pendingOverwrite = false
 
         init {
-            logView?.text = Editable.Factory.getInstance().newEditable("")
+            logView?.setText(logBuffer, TextView.BufferType.EDITABLE)
         }
 
         private fun getColor(resId: Int): Int {
@@ -244,13 +244,13 @@ class DialogLogFragment : DialogFragment() {
             return (dp * context.resources.displayMetrics.density).toInt()
         }
 
-        fun release() {
-            logViewRef.clear()
-            progressRef.clear()
-            inputRowRef.clear()
-            shellInputRef.clear()
-            unbindStdin()
-            actionEventHandler = null
+        private fun resetLogState() {
+            AnsiColorParser.reset()
+            lineCount = 0
+            lineStart = 0
+            pendingOverwrite = false
+            logBuffer.clear()
+            logViewRef.get()?.text = logBuffer
         }
 
         override fun onInputRequest(prompt: String) {
@@ -382,64 +382,57 @@ class DialogLogFragment : DialogFragment() {
             val logView = logViewRef.get() ?: return
         
             logView.post {
-                val editable = logView.editableText ?: return@post
-        
-                var start = 0
                 var i = 0
                 val len = formattedText.length
         
                 while (i < len) {
-                    when (formattedText[i]) {
-                        '\r', '\n' -> {
+                    var j = i
+                    while (j < len) {
+                        val c = formattedText[j]
+                        if (c == '\r' || c == '\n') break
+                        j++
+                    }
         
-                            if (i > start) {
-                                if (pendingOverwrite) {
-                                    if (lineStart <= editable.length) {
-                                        editable.delete(lineStart, editable.length)
-                                    }
-                                    pendingOverwrite = false
-                                }
-        
-                                editable.append(formattedText, start, i)
+                    if (j > i) {
+                        if (pendingOverwrite) {
+                            val end = logBuffer.length
+                            if (lineStart <= end) {
+                                logBuffer.delete(lineStart, end)
                             }
+                            pendingOverwrite = false
+                        }
         
-                            if (formattedText[i] == '\r') {
-                                val isCRLF =
-                                    (i + 1 < len && formattedText[i + 1] == '\n')
+                        logBuffer.append(formattedText, i, j)
+                    }
         
-                                if (!isCRLF) {
+                    if (j < len) {
+                        when (formattedText[j]) {
+                            '\r' -> {
+                                if (j + 1 >= len || formattedText[j + 1] != '\n') {
                                     pendingOverwrite = true
                                 }
-                            } else {
+                            }
+        
+                            '\n' -> {
                                 if (pendingOverwrite) {
-                                    if (lineStart <= editable.length) {
-                                        editable.delete(lineStart, editable.length)
+                                    val end = logBuffer.length
+                                    if (lineStart <= end) {
+                                        logBuffer.delete(lineStart, end)
                                     }
                                     pendingOverwrite = false
                                 }
         
-                                editable.append('\n')
+                                logBuffer.append('\n')
                                 lineCount++
-                                lineStart = editable.length
+                                lineStart = logBuffer.length
                             }
-        
-                            start = i + 1
                         }
                     }
         
-                    i++
+                    i = j + 1
                 }
         
-                if (start < len) {
-                    if (pendingOverwrite) {
-                        if (lineStart <= editable.length) {
-                            editable.delete(lineStart, editable.length)
-                        }
-                        pendingOverwrite = false
-                    }
-        
-                    editable.append(formattedText, start, len)
-                }
+                logView.text = logBuffer
         
                 val scrollView = logView.parent as? ScrollView
                 if (scrollView != null) {
@@ -449,8 +442,8 @@ class DialogLogFragment : DialogFragment() {
                         val inputRow = inputRowRef.get()
                         val input = shellInputRef.get()
         
-                        if (inputRow?.visibility == View.VISIBLE && input != null) {
-                            input.requestFocus()
+                        if (inputRow?.visibility == View.VISIBLE) {
+                            input?.requestFocus()
                         }
                     }
                 }
