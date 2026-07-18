@@ -154,6 +154,7 @@ class ActionPage : AppCompatActivity() {
     private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
 
     private var menuOptions: ArrayList<PageMenuOption>? = null
+    private var menuCheckboxRefreshing = false
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val config = currentPageConfig ?: return false
@@ -165,10 +166,50 @@ class ActionPage : AppCompatActivity() {
             if (option.isFab) {
                 addFab(option)
             } else {
-                menu?.add(-1, index, index, option.title)
+                val menuItem = menu?.add(-1, index, index, option.title)
+                if (option.type == "checkbox") {
+                    menuItem?.isCheckable = true
+                    menuItem?.isChecked = option.checked
+                }
             }
         }
         return true
+    }
+
+    // Được Android gọi MỖI LẦN menu chuẩn bị hiển thị (khác onCreateOptionsMenu chỉ chạy 1 lần),
+    // nên đây mới là chỗ đúng để refresh trạng thái tích mỗi khi người dùng mở menu.
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        refreshCheckboxMenuStates()
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    // Chạy các lệnh checked-sh ở nền (IO thread) để không làm treo UI mỗi lần mở menu.
+    // Chỉ rebuild lại menu (invalidateOptionsMenu) khi có ít nhất 1 trạng thái thực sự thay đổi,
+    // để tránh vòng lặp refresh vô tận (onPrepareOptionsMenu sẽ được gọi lại sau khi rebuild).
+    private fun refreshCheckboxMenuStates() {
+        val config = currentPageConfig ?: return
+        val checkboxOptions = menuOptions?.filter { it.type == "checkbox" && it.checkedSh.isNotEmpty() }
+        if (checkboxOptions.isNullOrEmpty() || menuCheckboxRefreshing) return
+        menuCheckboxRefreshing = true
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val results = checkboxOptions.map { option ->
+                option to ScriptEnvironmen.executeResultRoot(this@ActionPage, option.checkedSh, config)?.trim()
+            }
+
+            withContext(Dispatchers.Main) {
+                menuCheckboxRefreshing = false
+                var changed = false
+                results.forEach { (option, result) ->
+                    val newChecked = result == "1" || result?.lowercase() == "true"
+                    if (option.checked != newChecked) changed = true
+                    option.checked = newChecked
+                }
+                if (changed && !isFinishing) {
+                    invalidateOptionsMenu()
+                }
+            }
+        }
     }
 
     private fun addFab(menuOption: PageMenuOption) {

@@ -436,6 +436,12 @@ class PageConfigReader {
                             "mime" -> {
                                 option.mime = parser.getAttributeValue(i).lowercase(getDefault())
                             }
+                            "checked-sh", "checkbox-sh", "check-sh" -> {
+                                // Chỉ dùng khi type="checkbox": lệnh shell sẽ được chạy lại mỗi lần
+                                // mở menu để xác định có hiện dấu tích hay không (KHÔNG dùng để ẩn/hiện
+                                // item như "visible"/"support" - đó là 2 cơ chế độc lập).
+                                option.checkedSh = parser.getAttributeValue(i)
+                            }
                         }
                     }
                     option.title = resolveStringRes(parser.nextText())

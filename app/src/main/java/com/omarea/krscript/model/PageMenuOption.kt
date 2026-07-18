@@ -11,4 +11,13 @@ class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) 
     var mime: String = ""
     // 文件后缀（仅限type=file有效）
     var suffix: String = ""
+
+    // Lệnh shell dùng để xác định trạng thái tích (checked) khi type = "checkbox".
+    // Được chạy lại mỗi lần menu chuẩn bị hiển thị (không chỉ 1 lần lúc load trang).
+    // Kết quả trả về "1" hoặc "true" => hiện dấu tích, ngược lại => bỏ tích.
+    var checkedSh: String = ""
+
+    // Trạng thái tích hiện tại - được cập nhật ở background thread (IO), chỉ đọc khi vẽ menu (Main thread).
+    @Volatile
+    var checked: Boolean = false
 }
