@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.util.Locale.getDefault
 import androidx.core.graphics.toColorInt
+import com.tool.tree.LanguageManager
 
 /**
  * Created by Hello on 2018/04/01.
@@ -45,19 +46,24 @@ class PageConfigReader {
         if (!text.contains("@string")) {
             return text
         }
+    
+        val res = LanguageManager.resources(context)
+    
         var result = text
         STRING_REF_REGEX.findAll(text).forEach { match ->
             val token = match.value
             val separator = if (token.contains(":")) ':' else '/'
             val name = token.substring(token.indexOf(separator) + 1)
+    
             try {
-                val id = context.resources.getIdentifier(name, "string", context.packageName)
+                val id = res.getIdentifier(name, "string", context.packageName)
                 if (id != 0) {
-                    result = result.replace(token, context.getString(id))
+                    result = result.replace(token, res.getString(id))
                 }
             } catch (_: Exception) {
             }
         }
+    
         return result
     }
 

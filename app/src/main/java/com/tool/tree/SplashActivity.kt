@@ -41,7 +41,7 @@ class SplashActivity : AppCompatActivity() {
     private var started = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        applyAppLanguage()
+        LanguageManager.init(this)
         super.onCreate(savedInstanceState)
         ThemeModeState.switchTheme(this)
         binding = ActivitySplashBinding.inflate(layoutInflater)
@@ -188,21 +188,6 @@ class SplashActivity : AppCompatActivity() {
             .edit()
             .putBoolean("agreed_permissions", true)
             .apply()
-    }
-
-    // =================== CÁC HÀM TIỆN ÍCH KHÁC ===================
-
-    private fun applyAppLanguage() {
-        runCatching {
-            val langFile = File(filesDir, "home/usr/log/language")
-            val lang = langFile.takeIf { it.exists() }?.readText()?.trim()?.takeIf { it.isNotEmpty() } ?: return
-            val locale = Locale.forLanguageTag(lang.replace("_", "-"))
-            if (Locale.getDefault() != locale) {
-                Locale.setDefault(locale)
-                val config = Configuration(resources.configuration).apply { setLocale(locale) }
-                resources.updateConfiguration(config, resources.displayMetrics)
-            }
-        }
     }
 
     private fun gotoHome() {
