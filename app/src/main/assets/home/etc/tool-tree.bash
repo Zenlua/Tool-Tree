@@ -67,7 +67,7 @@ cat "$dirvad/addon.prop" 2>/dev/null | awk -F= -v k="$1" '$1==k{print $2; exit}'
 echo '<group>
 <page id="patch_rom" icon="'`urladd icon`'" config-sh="'$dirvad'/index.bash home">
 <title>'$(gprop name)'</title>
-<option box="glog auto_trans_text_patch_rom" id="v1" type="checkbox" auto-off="true" reload="true" interruptible="false">'$google_translate_text'</option>
+<option type="checkbox" box="glog auto_trans_text_patch_rom" id="v1" auto-off="true" reload="true" interruptible="false">'$google_translate_text'</option>
 <option type="refresh">'$refresh_text'</option>
 <option type="default" auto-finish="true" id="123">'$update_text' add-on</option>
 <handler>

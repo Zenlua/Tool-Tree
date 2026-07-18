@@ -43,6 +43,9 @@ class ActionPage : AppCompatActivity() {
     private lateinit var binding: ActivityActionPageBinding
     private var openedSubPage = false
 
+    // Lưu danh sách các itemId (index) vừa mới được click để tạm chặn việc script ghi đè sai trạng thái
+    private val justClickedItems = HashSet<Int>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -183,19 +186,19 @@ class ActionPage : AppCompatActivity() {
         return super.onPrepareOptionsMenu(menu)
     }
 
-    // SỬA LỖI LOẠN VỊ TRÍ: Ánh xạ chính xác bằng originalIndex gốc của mảng menuOptions
     private fun refreshCheckboxMenuStates() {
         val config = currentPageConfig ?: return
         
-        // Tạo một danh sách Pair chứa cặp (Vị trí gốc trong menuOptions, Đối tượng Option)
         val checkboxOptionsWithIndex = menuOptions?.mapIndexed { index, option -> index to option }
-            ?.filter { (_, option) -> option.type == "checkbox" && option.checkedSh.isNotEmpty() }
+            ?.filter { (index, option) -> 
+                // SỬA: Nếu checkbox này vừa mới được click và đang đợi script chạy, TẠM THỜI bỏ qua không quét từ hệ thống nữa
+                option.type == "checkbox" && option.checkedSh.isNotEmpty() && !justClickedItems.contains(index)
+            }
 
         if (checkboxOptionsWithIndex.isNullOrEmpty() || menuCheckboxRefreshing) return
         menuCheckboxRefreshing = true
 
         lifecycleScope.launch(Dispatchers.IO) {
-            // Thực thi script và giữ nguyên vị trí index gốc ban đầu
             val results = checkboxOptionsWithIndex.map { (originalIndex, option) ->
                 val result = ScriptEnvironmen.executeResultRoot(this@ActionPage, option.checkedSh, config)?.trim()
                 Triple(originalIndex, option, result)
@@ -206,9 +209,12 @@ class ActionPage : AppCompatActivity() {
                 var changed = false
                 
                 results.forEach { (originalIndex, option, result) ->
-                    val newChecked = result == "1" || result?.lowercase() == "true"
-                    if (option.checked != newChecked) changed = true
-                    option.checked = newChecked
+                    // Kiểm tra lại một lần nữa trước khi ghi đè dữ liệu lên option nhằm tránh xung đột chạy song song
+                    if (!justClickedItems.contains(originalIndex)) {
+                        val newChecked = result == "1" || result?.lowercase() == "true"
+                        if (option.checked != newChecked) changed = true
+                        option.checked = newChecked
+                    }
                 }
                 
                 if (changed && !isFinishing) {
@@ -240,6 +246,14 @@ class ActionPage : AppCompatActivity() {
             if (option.type == "checkbox") {
                 option.checked = !option.checked
                 item.isChecked = option.checked
+
+                // Đánh dấu ô này vừa click xong để lock (khóa) trạng thái, tránh bị hàm check đồng bộ đè dữ liệu cũ lên
+                justClickedItems.add(index)
+                
+                // Mở khóa sau 1.5 giây - khoảng thời gian dư dả để lệnh Shell cũ thực thi xong hoàn toàn
+                handler.postDelayed({
+                    justClickedItems.remove(index)
+                }, 1500)
             }
 
             onMenuItemClick(option)
@@ -498,6 +512,7 @@ class ActionPage : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        handler.removeCallbacksAndMessages(null)
         setExcludeFromRecents()
         super.onDestroy()
     }
