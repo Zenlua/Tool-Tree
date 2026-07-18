@@ -59,28 +59,6 @@ fi
 </action>'
 }
 
-showaddon(){
-local dirvad="$1"
-gprop(){
-cat "$dirvad/addon.prop" 2>/dev/null | awk -F= -v k="$1" '$1==k{print $2; exit}';
-}
-echo '<group>
-<page id="patch_rom" icon="'`urladd icon`'" config-sh="'$dirvad'/index.bash home">
-<title>'$(gprop name)'</title>
-<option type="checkbox" box="glog auto_trans_text_patch_rom" id="v1" auto-off="true" reload="true" interruptible="false">'$google_translate_text'</option>
-<option type="refresh">'$refresh_text'</option>
-<option type="default" auto-finish="true" id="123">'$update_text' add-on</option>
-<handler>
-if [ "$menu_id" == "v1" ]; then
-[ "$(glog auto_trans_text_patch_rom)" == 1 ] && slog auto_trans_text_patch_rom 0 || slog auto_trans_text_patch_rom 1
-elif [ "$menu_id" == "123" ]; then
-'$dirvad'/index.bash update_addon
-fi
-</handler>
-</page>
-</group>'
-}
-
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ]; then
 [ -f $ETC/lang/$LANGUAGE.bash ] && texgg="$LANGUAGE.bash" || texgg=vi.bash
@@ -123,7 +101,9 @@ Vip_text_infor="$(eval echo "${text_id_1}${text_id_3}${text_id_2}")"
 
 # Văn bản
 Home(){
+
 [ -z "$Vip_text_infor" ] || echo '<group><text summary="'"$Vip_text_infor"'"/></group>'
+[ -f "$AON/patch_rom/addon.prop" ] && vdbfbfsn='<option type="checkbox" id="v4" box="glog hide_show_patch_rom" silent="true" reload="true">Patch ROM</option>'
 
 echo '<group>
 <page icon="'`urlpng settings`'" config-sh="$ETC/tool-tree.bash Info">
@@ -148,8 +128,8 @@ fi
 <page icon="'`urlpng utilities`'" config-sh="$ETC/tool-tree.bash Utilities">
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
+'$vdbfbfsn'
 <option type="checkbox" id="v1" box="glog hide_show" silent="true" reload="true" >'$folder_text' ROM</option>
-<option type="checkbox" id="v4" box="glog hide_show_patch_rom" silent="true" reload="true">Patch ROM</option>
 <option type="default" id="v2" silent="true">'$open_activity_text' ROM</option>
 <option type="default" id="v3" silent="true">'$open_activity_text' (data-root)</option>
 <handler>
@@ -1071,8 +1051,23 @@ checktime
 </action>
 </group>'
 
-if [ "$(glog hide_show_patch_rom 1)" == 1 ]; then
-[ -f "$AON/patch_rom/addon.prop" ] && showaddon "$AON/patch_rom"
+if [ "$(glog hide_show_patch_rom 1)" == 1 ] && [ -f "$AON/patch_rom/addon.prop" ]; then
+dirvad="$AON/patch_rom"
+echo '<group>
+<page id="patch_rom" icon="'`urladd icon`'" config-sh="'$dirvad'/index.bash home">
+<title>Patch ROM</title>
+<option type="checkbox" box="glog auto_trans_text_patch_rom" id="v1" auto-off="true" reload="true" interruptible="false">'$google_translate_text'</option>
+<option type="refresh">'$refresh_text'</option>
+<option type="default" auto-finish="true" id="123">'$update_text' add-on</option>
+<handler>
+if [ "$menu_id" == "v1" ]; then
+[ "$(glog auto_trans_text_patch_rom)" == 1 ] && slog auto_trans_text_patch_rom 0 || slog auto_trans_text_patch_rom 1
+elif [ "$menu_id" == "123" ]; then
+'$dirvad'/index.bash update_addon
+fi
+</handler>
+</page>
+</group>'
 fi
 }
 

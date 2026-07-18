@@ -43,8 +43,8 @@ class ActionPage : AppCompatActivity() {
     private lateinit var binding: ActivityActionPageBinding
     private var openedSubPage = false
 
-    // Lưu danh sách các itemId (index) vừa mới được click để tạm chặn việc script ghi đè sai trạng thái
-    private val justClickedItems = HashSet<Int>()
+    // Sử dụng HashCode của String ID để khóa trạng thái tạm thời, không sợ lệch index
+    private val justClickedItemIds = HashSet<Int>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -162,11 +162,13 @@ class ActionPage : AppCompatActivity() {
 
         menu?.clear()
 
-        menuOptions?.forEachIndexed { index, option ->
+        menuOptions?.forEach { option ->
             if (option.isFab) {
                 addFab(option)
             } else {
-                val menuItem = menu?.add(Menu.NONE, index, index, option.title)
+                // ĐỔI: Sử dụng hashCode của chuỗi ID duy nhất (option.key hoặc option.id) làm itemId cho Menu
+                val uniqueItemId = option.key.hashCode()
+                val menuItem = menu?.add(Menu.NONE, uniqueItemId, Menu.NONE, option.title)
                 if (option.type == "checkbox") {
                     menuItem?.isCheckable = true
                 }
@@ -176,9 +178,11 @@ class ActionPage : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menuOptions?.forEachIndexed { index, option ->
+        // Tìm và gán chính xác trạng thái checkbox theo uniqueId
+        menuOptions?.forEach { option ->
             if (!option.isFab && option.type == "checkbox") {
-                val menuItem = menu.findItem(index)
+                val uniqueItemId = option.key.hashCode()
+                val menuItem = menu.findItem(uniqueItemId)
                 menuItem?.isChecked = option.checked
             }
         }
@@ -189,28 +193,29 @@ class ActionPage : AppCompatActivity() {
     private fun refreshCheckboxMenuStates() {
         val config = currentPageConfig ?: return
         
-        val checkboxOptionsWithIndex = menuOptions?.mapIndexed { index, option -> index to option }
-            ?.filter { (index, option) -> 
-                // SỬA: Nếu checkbox này vừa mới được click và đang đợi script chạy, TẠM THỜI bỏ qua không quét từ hệ thống nữa
-                option.type == "checkbox" && option.checkedSh.isNotEmpty() && !justClickedItems.contains(index)
-            }
+        // Lọc danh sách checkbox dựa trên ID duy nhất
+        val checkboxOptions = menuOptions?.filter { option -> 
+            val uniqueItemId = option.key.hashCode()
+            option.type == "checkbox" && option.checkedSh.isNotEmpty() && !justClickedItemIds.contains(uniqueItemId)
+        }
 
-        if (checkboxOptionsWithIndex.isNullOrEmpty() || menuCheckboxRefreshing) return
+        if (checkboxOptions.isNullOrEmpty() || menuCheckboxRefreshing) return
         menuCheckboxRefreshing = true
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val results = checkboxOptionsWithIndex.map { (originalIndex, option) ->
+            val results = checkboxOptions.map { option ->
                 val result = ScriptEnvironmen.executeResultRoot(this@ActionPage, option.checkedSh, config)?.trim()
-                Triple(originalIndex, option, result)
+                option to result
             }
 
             withContext(Dispatchers.Main) {
                 menuCheckboxRefreshing = false
                 var changed = false
                 
-                results.forEach { (originalIndex, option, result) ->
-                    // Kiểm tra lại một lần nữa trước khi ghi đè dữ liệu lên option nhằm tránh xung đột chạy song song
-                    if (!justClickedItems.contains(originalIndex)) {
+                results.forEach { (option, result) ->
+                    val uniqueItemId = option.key.hashCode()
+                    // Khớp chính xác ID để tránh đè dữ liệu cũ trong khi lệnh shell click đang thực thi
+                    if (!justClickedItemIds.contains(uniqueItemId)) {
                         val newChecked = result == "1" || result?.lowercase() == "true"
                         if (option.checked != newChecked) changed = true
                         option.checked = newChecked
@@ -238,21 +243,20 @@ class ActionPage : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val options = menuOptions ?: return false
-        val index = item.itemId 
+        val targetItemId = item.itemId // Đây chính là hashCode của checkbox vừa click
 
-        if (index in options.indices) {
-            val option = options[index]
-            
+        // ĐỔI: Tìm option khớp với hashCode của ID thay vì dùng vị trí mảng index
+        val option = options.find { it.key.hashCode() == targetItemId }
+        
+        if (option != null) {
             if (option.type == "checkbox") {
                 option.checked = !option.checked
                 item.isChecked = option.checked
 
-                // Đánh dấu ô này vừa click xong để lock (khóa) trạng thái, tránh bị hàm check đồng bộ đè dữ liệu cũ lên
-                justClickedItems.add(index)
-                
-                // Mở khóa sau 1.5 giây - khoảng thời gian dư dả để lệnh Shell cũ thực thi xong hoàn toàn
+                // Khóa đồng bộ theo ID cụ thể
+                justClickedItemIds.add(targetItemId)
                 handler.postDelayed({
-                    justClickedItems.remove(index)
+                    justClickedItemIds.remove(targetItemId)
                 }, 1500)
             }
 
