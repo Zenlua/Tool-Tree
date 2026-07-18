@@ -12,19 +12,19 @@ import java.util.HashMap;
 public class KrScriptConfig {
     private static final String ASSETS_FILE = "file:///android_asset/";
 
-    private static final String TOOLKIT_DIR = "toolkit_dir";
-    private static final String TOOLKIT_DIR_DEFAULT = "file:///android_asset/home";
+    private final static String TOOLKIT_DIR = "toolkit_dir";
+    private final static String TOOLKIT_DIR_DEFAULT = "file:///android_asset/home";
 
-    private static final String EXECUTOR_CORE = "executor_core";
-    private static final String PAGE_LIST_CONFIG = "page_list_config";
-    private static final String PAGE_LIST_CONFIG_SH = "page_list_config_sh";
-    private static final String FAVORITE_CONFIG = "favorite_config";
-    private static final String FAVORITE_CONFIG_SH = "favorite_config_sh";
-    private static final String CUSTOM_TAB3_CONFIG = "custom_tab3_config";
-    private static final String CUSTOM_TAB3_CONFIG_SH = "custom_tab3_config_sh";
-    private static final String CUSTOM_TAB4_CONFIG = "custom_tab4_config";
-    private static final String CUSTOM_TAB4_CONFIG_SH = "custom_tab4_config_sh";
-    private static final String BEFORE_START_SH = "before_start_sh";
+    private final static String EXECUTOR_CORE = "executor_core";
+    private final static String PAGE_LIST_CONFIG = "page_list_config";
+    private final static String PAGE_LIST_CONFIG_SH = "page_list_config_sh";
+    private final static String FAVORITE_CONFIG = "favorite_config";
+    private final static String FAVORITE_CONFIG_SH = "favorite_config_sh";
+    private final static String CUSTOM_TAB3_CONFIG = "custom_tab3_config";
+    private final static String CUSTOM_TAB3_CONFIG_SH = "custom_tab3_config_sh";
+    private final static String CUSTOM_TAB4_CONFIG = "custom_tab4_config";
+    private final static String CUSTOM_TAB4_CONFIG_SH = "custom_tab4_config_sh";
+    private final static String BEFORE_START_SH = "before_start_sh";
 
     private static HashMap<String, String> configInfo;
 
@@ -39,6 +39,10 @@ public class KrScriptConfig {
         if (configInfo == null) {
             configInfo = new HashMap<>();
             configInfo.put(EXECUTOR_CORE, EXECUTOR_CORE_DEFAULT);
+            configInfo.put(PAGE_LIST_CONFIG, PAGE_LIST_CONFIG_DEFAULT);
+            configInfo.put(FAVORITE_CONFIG, FAVORITE_CONFIG_DEFAULT);
+            configInfo.put(CUSTOM_TAB3_CONFIG, CUSTOM_TAB3_DEFAULT);
+            configInfo.put(CUSTOM_TAB4_CONFIG, CUSTOM_TAB4_DEFAULT);
             configInfo.put(TOOLKIT_DIR, TOOLKIT_DIR_DEFAULT);
             configInfo.put(BEFORE_START_SH, BEFORE_START_SH_DEFAULT);
 
@@ -50,15 +54,14 @@ public class KrScriptConfig {
                 InputStream inputStream = context.getAssets().open(fileName);
                 byte[] bytes = new byte[inputStream.available()];
                 inputStream.read(bytes);
-                inputStream.close();
-
                 String[] rows = new String(bytes, Charset.defaultCharset()).split("\n");
                 for (String row : rows) {
                     String rowText = row.trim();
                     if (!rowText.startsWith("#") && rowText.contains("=")) {
-                        int separator = rowText.indexOf('=');
+                        int separator = rowText.indexOf("=");
                         String key = rowText.substring(0, separator).trim();
                         String value = rowText.substring(separator + 2, rowText.length() - 1).trim();
+                        configInfo.remove(key);
                         configInfo.put(key, value);
                     }
                 }
@@ -68,6 +71,7 @@ public class KrScriptConfig {
 
             ScriptEnvironmen.init(context, getExecutorCore(), getToolkitDir());
         }
+
         return this;
     }
 
@@ -76,33 +80,79 @@ public class KrScriptConfig {
     }
 
     private String getExecutorCore() {
-        return configInfo != null && configInfo.containsKey(EXECUTOR_CORE)
-                ? configInfo.get(EXECUTOR_CORE) : EXECUTOR_CORE_DEFAULT;
+        if (configInfo != null && configInfo.containsKey(EXECUTOR_CORE)) {
+            return configInfo.get(EXECUTOR_CORE);
+        }
+        return EXECUTOR_CORE_DEFAULT;
     }
 
     private String getToolkitDir() {
-        return configInfo != null && configInfo.containsKey(TOOLKIT_DIR)
-                ? configInfo.get(TOOLKIT_DIR) : TOOLKIT_DIR_DEFAULT;
+        if (configInfo != null && configInfo.containsKey(TOOLKIT_DIR)) {
+            return configInfo.get(TOOLKIT_DIR);
+        }
+        return TOOLKIT_DIR_DEFAULT;
     }
 
-    private PageNode getPage(String xmlKey, String shKey) {
-        if (configInfo == null) return null;
-        boolean hasXml = configInfo.containsKey(xmlKey);
-        boolean hasSh = configInfo.containsKey(shKey);
-        if (!hasXml && !hasSh) return null;
-        PageNode page = new PageNode("");
-        if (hasSh) page.setPageConfigSh(configInfo.get(shKey));
-        if (hasXml) page.setPageConfigPath(configInfo.get(xmlKey));
-        return page;
+    public PageNode getPageListConfig() {
+        if (configInfo != null) {
+            PageNode pageInfo = new PageNode("");
+            if (configInfo.containsKey(PAGE_LIST_CONFIG_SH)) {
+                pageInfo.setPageConfigSh(configInfo.get(PAGE_LIST_CONFIG_SH));
+            }
+            if (configInfo.containsKey(PAGE_LIST_CONFIG)) {
+                pageInfo.setPageConfigPath(configInfo.get(PAGE_LIST_CONFIG));
+            }
+            return pageInfo;
+        }
+        return null;
     }
 
-    public PageNode getPageListConfig() { return getPage(PAGE_LIST_CONFIG, PAGE_LIST_CONFIG_SH); }
-    public PageNode getFavoriteConfig() { return getPage(FAVORITE_CONFIG, FAVORITE_CONFIG_SH); }
-    public PageNode getCustomTab3Config() { return getPage(CUSTOM_TAB3_CONFIG, CUSTOM_TAB3_CONFIG_SH); }
-    public PageNode getCustomTab4Config() { return getPage(CUSTOM_TAB4_CONFIG, CUSTOM_TAB4_CONFIG_SH); }
+    public PageNode getFavoriteConfig() {
+        if (configInfo != null) {
+            PageNode pageInfo = new PageNode("");
+            if (configInfo.containsKey(FAVORITE_CONFIG_SH)) {
+                pageInfo.setPageConfigSh(configInfo.get(FAVORITE_CONFIG_SH));
+            }
+            if (configInfo.containsKey(FAVORITE_CONFIG)) {
+                pageInfo.setPageConfigPath(configInfo.get(FAVORITE_CONFIG));
+            }
+            return pageInfo;
+        }
+        return null;
+    }
+
+    public PageNode getCustomTab3Config() {
+        if (configInfo != null) {
+            PageNode pageInfo = new PageNode("");
+            if (configInfo.containsKey("custom_tab3_config_sh")) {
+                pageInfo.setPageConfigSh(configInfo.get("custom_tab3_config_sh"));
+            }
+            if (configInfo.containsKey(CUSTOM_TAB3_CONFIG)) {
+                pageInfo.setPageConfigPath(configInfo.get(CUSTOM_TAB3_CONFIG));
+            }
+            return pageInfo;
+        }
+        return null;
+    }
+    
+    public PageNode getCustomTab4Config() {
+        if (configInfo != null) {
+            PageNode pageInfo = new PageNode("");
+            if (configInfo.containsKey("custom_tab4_config_sh")) {
+                pageInfo.setPageConfigSh(configInfo.get("custom_tab4_config_sh"));
+            }
+            if (configInfo.containsKey(CUSTOM_TAB4_CONFIG)) {
+                pageInfo.setPageConfigPath(configInfo.get(CUSTOM_TAB4_CONFIG));
+            }
+            return pageInfo;
+        }
+        return null;
+    }
 
     public String getBeforeStartSh() {
-        return configInfo != null && configInfo.containsKey(BEFORE_START_SH)
-                ? configInfo.get(BEFORE_START_SH) : BEFORE_START_SH_DEFAULT;
+        if (configInfo != null && configInfo.containsKey(BEFORE_START_SH)) {
+            return configInfo.get(BEFORE_START_SH);
+        }
+        return BEFORE_START_SH_DEFAULT;
     }
 }
