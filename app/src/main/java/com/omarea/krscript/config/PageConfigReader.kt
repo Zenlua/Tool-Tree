@@ -62,14 +62,34 @@ class PageConfigReader {
     }
 
     private fun sanitizeXmlContent(raw: String): String {
-        return raw
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\"", "&quot;")
-            .replace("'", "&apos;")
-            .replace("§", "&#xA;")
-            .replace(Regex("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]"), "")
+        var result = raw
+    
+        // 1. Loại bỏ các ký tự không hợp lệ trong XML 1.0
+        // Giữ lại: TAB (\u0009), LF (\u000A), CR (\u000D)
+        result = result.replace(
+            Regex("[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\uD800-\\uDFFF\\uFFFE\\uFFFF]"),
+            ""
+        )
+    
+        // 2. Escape '&' nếu chưa phải entity hợp lệ
+        result = result.replace(
+            Regex("&(?!(?:amp|lt|gt|quot|apos|#[0-9]+|#x[0-9A-Fa-f]+);)"),
+            "&amp;"
+        )
+    
+        // 3. Escape '<' nếu không phải mở đầu markup XML hợp lệ
+        result = result.replace(
+            Regex("<(?!/?[A-Za-z_]|!|\\?)"),
+            "&lt;"
+        )
+    
+        // 4. Escape '>' chỉ khi tạo thành "]]>" ngoài CDATA
+        result = result.replace("]]>", "]]&gt;")
+    
+        // 5. Quy ước xuống dòng
+        result = result.replace("§", "&#xA;")
+    
+        return result
     }
 
     constructor(context: Context, pageConfig: String, parentDir: String?) {
