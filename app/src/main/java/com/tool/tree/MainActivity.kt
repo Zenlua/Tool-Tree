@@ -22,6 +22,7 @@ import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.ui.DialogHelper
 import com.omarea.common.ui.ProgressBarDialog
+import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.config.PageConfigReader
 import com.omarea.krscript.config.PageConfigSh
 import com.omarea.krscript.model.*
@@ -92,7 +93,7 @@ class MainActivity : AppCompatActivity() {
 
     // Thêm tab vào adapter nếu có dữ liệu. Icon/slot phải được ghi trước khi gọi adapter.addFragment
     // vì TabLayoutMediator sẽ đọc lại tabIcons ngay khi adapter báo có thay đổi.
-    private fun addTabIfPresent(slot: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, iconRes: Int, config: PageNode, isFav: Boolean, theme: Int) {
+    private fun addTabIfPresent(slot: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, iconRes: Int, config: PageNode, isFav: Boolean, theme: ThemeMode) {
         items?.takeIf { it.isNotEmpty() }?.let { data ->
             tabIcons.add(iconRes)
             tabSlotOrder.add(slot)
