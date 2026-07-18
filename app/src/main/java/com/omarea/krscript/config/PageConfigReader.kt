@@ -30,7 +30,6 @@ class PageConfigReader {
     private var pageConfigStream: InputStream? = null
     private var parentDir: String = ""
 
-    companion object {
     private fun sanitizeXmlContent(raw: String): String {
         var result = raw
     
