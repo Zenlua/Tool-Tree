@@ -131,15 +131,18 @@ public class ScriptEnvironmen {
 
     private static String createShellCache(Context context, String script) {
         String md5 = md5(script);
-        String relativePath = "root/" + md5 + ".sh";
-        String absolutePath = FileWrite.INSTANCE.getPrivateFilePath(context, relativePath);
-        if (new File(absolutePath).exists()) {
-            return absolutePath;
+        String outputPath = "root/" + md5 + ".sh";
+        if (new File(outputPath).exists()) {
+            return outputPath;
         }
-        byte[] bytes = ("#!/data/data/com.tool.tree/files/home/bin/bash\n\n" + script).getBytes();
-        
-        if (FileWrite.INSTANCE.writePrivateFile(bytes, relativePath, context)) {
-            return absolutePath;
+
+        byte[] bytes = ("#!/data/data/com.tool.tree/files/home/bin/bash\n\n" + script)
+                .replaceAll("\r\n", "\n")
+                .replaceAll("\r\t", "\t")
+                .replaceAll("\r", "\n")
+                .getBytes();
+        if (FileWrite.INSTANCE.writePrivateFile(bytes, outputPath, context)) {
+            return FileWrite.INSTANCE.getPrivateFilePath(context, outputPath);
         }
         return "";
     }
@@ -325,17 +328,6 @@ public class ScriptEnvironmen {
             HashMap<String, String> params,
             NodeInfoBase nodeInfo,
             String tag) {
-        executeShell(context, dataOutputStream, cmds, params, nodeInfo, tag, false);
-    }
-
-    public static void executeShell(
-            Context context,
-            DataOutputStream dataOutputStream,
-            String cmds,
-            HashMap<String, String> params,
-            NodeInfoBase nodeInfo,
-            String tag,
-            boolean needInput) {
 
         if (params == null) {
             params = new HashMap<>();
@@ -374,10 +366,13 @@ public class ScriptEnvironmen {
         }
         try {
             dataOutputStream.write(envpCmds.toString().getBytes(StandardCharsets.UTF_8));
-            String executeScript = getExecuteScript(context, cmds, tag);
-            if (executeScript == null || executeScript.isEmpty()) return
-            String suffix = needInput ? "; sleep 0.2; exit\n" : "\n\nsleep 0.2;\nexit\nexit\n";
-            dataOutputStream.write((executeScript + suffix).getBytes(StandardCharsets.UTF_8));
+
+            dataOutputStream.write(getExecuteScript(context, cmds, tag).getBytes(StandardCharsets.UTF_8));
+
+            dataOutputStream.writeBytes("\n\n");
+            dataOutputStream.writeBytes("sleep 0.2;\n");
+            dataOutputStream.writeBytes("exit\n");
+            dataOutputStream.writeBytes("exit\n");
             dataOutputStream.flush();
         } catch (Exception ignored) {
         }
