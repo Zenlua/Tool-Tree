@@ -42,7 +42,7 @@ Official website: **https://zenlua.github.io/Tool-Tree**
 
 
 + Stable: **[Latest release](https://github.com/Zenlua/Tool-Tree/releases/latest)**
-+ Beta: **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
++ Beta: **[Link](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
 
 ---
 
@@ -50,10 +50,10 @@ Official website: **https://zenlua.github.io/Tool-Tree**
 
 | Topic | Link |
 |------|------|
-| User Guide | https://zenlua.github.io/Tool-Tree/website/Guide.html |
-| Version Changelog | https://zenlua.github.io/Tool-Tree/Version.html |
-| Add-on Development | https://zenlua.github.io/Tool-Tree/website/Instruct.html |
-| Framework Development | https://zenlua.github.io/Tool-Tree/website/Information.html |
+| [User Guide](https://zenlua.github.io/Tool-Tree/website/Guide.html) | Beginner's guide, no-root |
+| [Version Changelog](https://zenlua.github.io/Tool-Tree/Version.html) | View the change log across versions |
+| [Add-on Development](https://zenlua.github.io/Tool-Tree/website/Instruct.html) | Basic add-on creation guide |
+| [Framework Development](https://zenlua.github.io/Tool-Tree/website/Information.html) | Project developer information |
 
 ---
 
