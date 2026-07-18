@@ -1,6 +1,6 @@
 # Tool-Tree [![Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=)](https://github.com/Zenlua/Tool-Tree/releases/latest)
 
-+ A great tool, with many benefits for you.
++ Great tool, with many benefits for you
 
 ### Android ROM & APK Toolkit
 
