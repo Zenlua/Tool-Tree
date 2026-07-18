@@ -22,7 +22,6 @@ import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.ui.DialogHelper
 import com.omarea.common.ui.ProgressBarDialog
-import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.config.PageConfigReader
 import com.omarea.krscript.config.PageConfigSh
 import com.omarea.krscript.model.*
@@ -32,9 +31,6 @@ import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.MainPagerAdapter
 import com.tool.tree.ui.TabIconHelper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,11 +47,6 @@ class MainActivity : AppCompatActivity() {
 
     private val ACTION_FILE_PATH_CHOOSER = 65400
     private lateinit var adapter: MainPagerAdapter
-    // Lưu icon tương ứng theo đúng vị trí tab THỰC TẾ đã được thêm vào adapter
-    // (vì một số tab có thể bị bỏ qua nếu không có dữ liệu, nên không thể dùng vị trí cố định 0..3 nữa)
-    private val tabIcons = ArrayList<Int>()
-    // 0 = favorites, 1 = pages, 2 = tab3, 3 = tab4 -> loại tab theo đúng thứ tự đã hiển thị thực tế
-    private val tabSlotOrder = ArrayList<Int>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,97 +82,58 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Thêm tab vào adapter nếu có dữ liệu. Icon/slot phải được ghi trước khi gọi adapter.addFragment
-    // vì TabLayoutMediator sẽ đọc lại tabIcons ngay khi adapter báo có thay đổi.
-    private fun addTabIfPresent(slot: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, iconRes: Int, config: PageNode, isFav: Boolean, theme: ThemeMode) {
-        items?.takeIf { it.isNotEmpty() }?.let { data ->
-            tabIcons.add(iconRes)
-            tabSlotOrder.add(slot)
-            val fragment = ActionListFragment.create(data, getKrScriptActionHandler(config, isFav), null, theme)
-            adapter.addFragment(fragment, getString(titleRes))
-        }
-    }
-
     private fun loadTabs() {
         progressBarDialog.showDialog(getString(R.string.please_wait))
-        tabIcons.clear()
-        tabSlotOrder.clear()
-
+        
         lifecycleScope.launch(Dispatchers.IO) {
-            // GIAI ĐOẠN 1: ưu tiên load 2 tab đầu (favorites, pages) trước, song song với nhau
-            val (favorites, pages) = coroutineScope {
-                val favoritesDeferred = async { getItems(krScriptConfig.favoriteConfig) }
-                val pagesDeferred = async { getItems(krScriptConfig.pageListConfig) }
-                listOf(favoritesDeferred, pagesDeferred).awaitAll()
-            }
+            val favorites = getItems(krScriptConfig.favoriteConfig)
+            val pages = getItems(krScriptConfig.pageListConfig)
+            val tab3Items = getItems(krScriptConfig.customTab3Config)
+            val tab4Items = getItems(krScriptConfig.customTab4Config)
 
             if (!isActive) return@launch
 
             withContext(Dispatchers.Main) {
-                // Ẩn dialog chờ và hiển thị ngay 2 tab đầu, không cần đợi 2 tab sau
                 progressBarDialog.hideDialog()
                 val theme = ThemeModeState.getThemeMode()
 
-                addTabIfPresent(0, favorites, R.string.tab_favorites, R.drawable.tab_favorites, krScriptConfig.favoriteConfig, true, theme)
-                addTabIfPresent(1, pages, R.string.tab_pages, R.drawable.tab_pages, krScriptConfig.pageListConfig, false, theme)
+                fun updateTab(pos: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, config: PageNode, isFav: Boolean) {
+                    items?.takeIf { it.isNotEmpty() }?.let { data ->
+                        val fragment = ActionListFragment.create(data, getKrScriptActionHandler(config, isFav), null, theme)
+                        if (adapter.getFragment(pos) == null) {
+                            adapter.addFragment(fragment, getString(titleRes))
+                        } else {
+                            adapter.replaceFragment(pos, fragment)
+                        }
+                    }
+                }
+
+                updateTab(0, favorites, R.string.tab_favorites, krScriptConfig.favoriteConfig, true)
+                updateTab(1, pages, R.string.tab_pages, krScriptConfig.pageListConfig, false)
+                updateTab(2, tab3Items, R.string.tab_custom3, krScriptConfig.customTab3Config, false)
+                updateTab(3, tab4Items, R.string.tab_custom4, krScriptConfig.customTab4Config, false)
 
                 setupTabs()
-            }
-
-            // GIAI ĐOẠN 2: load ngầm 2 tab còn lại (tab3, tab4), không chặn UI của 2 tab đầu
-            val (tab3Items, tab4Items) = coroutineScope {
-                val tab3Deferred = async { getItems(krScriptConfig.customTab3Config) }
-                val tab4Deferred = async { getItems(krScriptConfig.customTab4Config) }
-                listOf(tab3Deferred, tab4Deferred).awaitAll()
-            }
-
-            if (!isActive) return@launch
-
-            withContext(Dispatchers.Main) {
-                val theme = ThemeModeState.getThemeMode()
-                addTabIfPresent(2, tab3Items, R.string.tab_custom3, R.drawable.tab_custom3, krScriptConfig.customTab3Config, false, theme)
-                addTabIfPresent(3, tab4Items, R.string.tab_custom4, R.drawable.tab_custom4, krScriptConfig.customTab4Config, false, theme)
             }
         }
     }
 
     private fun reloadTabs() {
         lifecycleScope.launch(Dispatchers.IO) {
-            // Chạy song song thay vì tuần tự - giảm thời gian chờ khi reload
-            val (favorites, pages, tab3Items, tab4Items) = coroutineScope {
-                val favoritesDeferred = async { getItems(krScriptConfig.favoriteConfig) }
-                val pagesDeferred = async { getItems(krScriptConfig.pageListConfig) }
-                val tab3Deferred = async { getItems(krScriptConfig.customTab3Config) }
-                val tab4Deferred = async { getItems(krScriptConfig.customTab4Config) }
-                listOf(favoritesDeferred, pagesDeferred, tab3Deferred, tab4Deferred).awaitAll()
-            }
+            val favorites = getItems(krScriptConfig.favoriteConfig)
+            val pages = getItems(krScriptConfig.pageListConfig)
+            val tab3Items = getItems(krScriptConfig.customTab3Config)
+            val tab4Items = getItems(krScriptConfig.customTab4Config)
 
             if (!isActive) return@launch
 
             withContext(Dispatchers.Main) {
                 val theme = ThemeModeState.getThemeMode()
-
-                // Nếu số tab hiện có không còn khớp với dữ liệu mới (tab bị thêm/bớt do có/không có dữ liệu)
-                // thì load lại toàn bộ để đảm bảo tab rỗng không bị hiển thị và icon luôn đúng vị trí.
-                val newItemsBySlot = mapOf(0 to favorites, 1 to pages, 2 to tab3Items, 3 to tab4Items)
-                val newNonEmptySlots = newItemsBySlot.filterValues { !it.isNullOrEmpty() }.keys
-                if (newNonEmptySlots != tabSlotOrder.toSet()) {
-                    loadTabs()
-                    return@withContext
-                }
-
-                fun configFor(slot: Int) = when (slot) {
-                    0 -> krScriptConfig.favoriteConfig to true
-                    1 -> krScriptConfig.pageListConfig to false
-                    2 -> krScriptConfig.customTab3Config to false
-                    else -> krScriptConfig.customTab4Config to false
-                }
-
-                tabSlotOrder.forEachIndexed { position, slot ->
-                    val items = newItemsBySlot[slot] ?: return@forEachIndexed
-                    val (config, isFav) = configFor(slot)
-                    (adapter.getFragment(position) as? ActionListFragment)?.updateData(items, getKrScriptActionHandler(config, isFav), theme)
-                }
+                
+                favorites?.let { (adapter.getFragment(0) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), theme) }
+                pages?.let { (adapter.getFragment(1) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), theme) }
+                tab3Items?.let { (adapter.getFragment(2) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), theme) }
+                tab4Items?.let { (adapter.getFragment(3) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), theme) }
             }
         }
     }
@@ -192,7 +144,13 @@ class MainActivity : AppCompatActivity() {
         // Kết nối TabLayout và ViewPager2
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             val title = adapter.getTitle(position)
-            val iconRes = tabIcons.getOrElse(position) { R.drawable.tab_home }
+            val iconRes = when (position) {
+                0 -> R.drawable.tab_favorites
+                1 -> R.drawable.tab_pages
+                2 -> R.drawable.tab_custom3
+                3 -> R.drawable.tab_custom4
+                else -> R.drawable.tab_home
+            }
             tab.customView = tabHelper.createTabView(title, getDrawable(iconRes)!!, position == binding.viewPager.currentItem)
         }.attach()
 
