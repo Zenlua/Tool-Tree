@@ -1,64 +1,127 @@
-# [Tool-Tree](https://zenlua.github.io/Tool-Tree) ![GitHub Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=)
+# Tool-Tree
+### Android ROM & APK Toolkit
 
-<img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/tool-tree.jpg" alt="1" style="width:100%;">
+[![Release](https://img.shields.io/github/v/release/Zenlua/Tool-Tree?label=Release)](https://github.com/Zenlua/Tool-Tree/releases/latest)
+[![GitHub](https://img.shields.io/github/stars/Zenlua/Tool-Tree?style=flat)](https://github.com/Zenlua/Tool-Tree)
+[![License](https://img.shields.io/github/license/Zenlua/Tool-Tree)](https://github.com/Zenlua/Tool-Tree)
 
-- Unpack: `boot`, `dtbo`, `ext4`, `erofs`, `f2fs`, `payload`, `super`, `zip`, `apk`, `apks`, `apex`, `capex` ...
+Official website: **https://zenlua.github.io/Tool-Tree**
 
-- Pack: `boot`, `dtbo`, `ext4`, `erofs`, `f2fs`, `payload`, `super`, `amlogic`, `apk`, `apex`, `capex` ...
+<p align="center">
+<img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/tool-tree.jpg" width="100%">
+</p>
 
-- There are many other features, discover them for yourself
+## ✨ Features
 
-- Supports both `root` or `no-root` versions and is only for `arm64-bit`
+**📦 Unpack**
 
-- 📲 Download: **[Release](https://github.com/Zenlua/Tool-Tree/releases/latest)** or **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
+`boot` • `dtbo` • `ext4` • `erofs` • `f2fs` • `payload` • `super`
+`zip` • `apk` • `apks` • `apex` • `capex` • ...
 
-### See details
+**📥 Pack**
 
-- Instruct: **[Root & No-Root](https://zenlua.github.io/Tool-Tree/website/Guide.html)**
+`boot` • `dtbo` • `ext4` • `erofs` • `f2fs`
+`payload` • `super` • `amlogic`
+`apk` • `apex` • `capex` • ...
 
-- Input directory: `/sdcard/TREE` Contains `ROM` `APK`
+> And many more tools waiting to be discovered.
 
-- Root path:
+---
 
-    + APK: `/data/local/TOOL`
-    + ROM: `/data/local/TREE`
+## ✅ Requirements
 
-- Report: **[Issues](https://github.com/Zenlua/Tool-Tree/issues)** or **[Telegram](https://t.me/tooltree)**
+| Item | Support |
+|------|---------|
+| Architecture | ARM64 |
+| Root | ✅ Root |
+| No Root | ✅ Supported |
 
-### Version changelog
+---
 
-- **[See details](https://zenlua.github.io/Tool-Tree/Version.html)**
+## 📲 Download
 
-### Download add-ons
 
-- **[Addon](https://zenlua.github.io/Tool-Tree/website/Addon.html)**: The section for ROM editor
++ Stable: **[Latest release](https://github.com/Zenlua/Tool-Tree/releases/latest)**
++ Beta: **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
 
-- **[Apkon](https://zenlua.github.io/Tool-Tree/website/Apkon.html)**: The section for APK editor
+---
 
-### Create add-on
+## 📖 Documentation
 
-- **[See details](https://zenlua.github.io/Tool-Tree/website/Instruct.html)**
+| Topic | Link |
+|------|------|
+| User Guide | https://zenlua.github.io/Tool-Tree/website/Guide.html |
+| Version Changelog | https://zenlua.github.io/Tool-Tree/Version.html |
+| Add-on Development | https://zenlua.github.io/Tool-Tree/website/Instruct.html |
+| Framework Development | https://zenlua.github.io/Tool-Tree/website/Information.html |
 
-### Development
+---
 
-- **[See details](https://zenlua.github.io/Tool-Tree/website/Information.html)**
+## 📂 Working Directories
 
-### Language
+### Input
 
-- Help me translate your language
++ `/sdcard/TREE`
+- ROM
+- APK
 
-- **[App](https://github.com/Zenlua/Tool-Tree/tree/main/app/src/main/res), [Shell](https://github.com/Zenlua/Tool-Tree/tree/main/app/src/main/assets/home/etc/lang)**
+### Root Working Directory
 
-### Screenshot
+APK: `/data/local/TOOL`
 
-<img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/shell1.jpg" alt="1" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/shell2.jpg" alt="2" style="width:49%;">
-<img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/shell3.jpg" alt="3" style="width:49%;"> <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/shell4.jpg" alt="4" style="width:49%;">
+ROM: `/data/local/TREE`
 
-### Source code
+---
 
-- There are many other sources that cannot be listed, only the app framework source can be taken.
+## 🧩 Extensions
 
-- References and source code
+| Extension | Description |
+|-----------|-------------|
+| **[Addon](https://zenlua.github.io/Tool-Tree/website/Addon.html)** | ROM editor modules |
+| **[Apkon](https://zenlua.github.io/Tool-Tree/website/Apkon.html)** | APK editor modules |
 
-- **[Kr-Script](https://github.com/helloklf/kr-scripts), [Termux](https://github.com/termux/termux-app), [Other](https://zenlua.github.io/Tool-Tree/website/Other.html)**
+---
 
+## 🌍 Language
+
+Want to help translate Tool-Tree?
+
+- [App resources](https://github.com/Zenlua/Tool-Tree/tree/main/app/src/main/res)
+
+- [Shell language packs](https://github.com/Zenlua/Tool-Tree/tree/main/app/src/main/assets/home/etc/lang)
+
+Contributions are always welcome ❤️
+
+---
+
+## 🖼️ Screenshots
+
+<p align="center">
+<img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/shell1.jpg" width="49%">
+<img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/shell2.jpg" width="49%">
+</p>
+
+<p align="center">
+<img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/shell3.jpg" width="49%">
+<img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/shell4.jpg" width="49%">
+</p>
+
+---
+
+## 🐞 Report Issues
+
+- [GitHub Issues](https://github.com/Zenlua/Tool-Tree/issues)
+
+- [Telegram](https://t.me/tooltree)
+
+---
+
+## ❤️ Credits
+
+Tool-Tree incorporates or references several open-source projects.
+
+- [Kr-Script](https://github.com/helloklf/kr-scripts)
+
+- [Termux](https://github.com/termux/termux-app)
+
+- [Other references](https://zenlua.github.io/Tool-Tree/website/Other.html)
