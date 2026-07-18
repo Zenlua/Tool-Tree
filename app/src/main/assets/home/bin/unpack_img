@@ -171,13 +171,13 @@ elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ]; then
     tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
     [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || killtree "$more_text_5 $tenpjanvung.transfer.list"
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
-    [ "${INPUT##*.}" == 'br' ] && brotli -f -d "$INPUT" -o "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" &>/dev/null
+    [ "${INPUT##*.}" == 'br' ] && brotli -f -d "$INPUT" -o "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" >$TMP/brotli.log
     if [ "$NODECO" == 1 ]; then
     file_img="$PTSD/out/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     else
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     fi
-    sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" || killtree "File extraction error"
+    sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" >$TMP/sdat2img.log || killtree "File extraction error"
 elif [ "$dang_tep" == 'sparse' ]; then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     if [ "$NODECO" == 1 ]; then

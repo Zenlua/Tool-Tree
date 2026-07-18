@@ -233,7 +233,7 @@ class DialogLogFragment : DialogFragment() {
         private var pendingOverwrite = false
 
         init {
-            logView?.setText(logBuffer, TextView.BufferType.EDITABLE)
+            logView?.text = Editable.Factory.getInstance().newEditable("")
         }
 
         private fun getColor(resId: Int): Int {
@@ -297,7 +297,7 @@ class DialogLogFragment : DialogFragment() {
             lineStart = 0
             pendingOverwrite = false
             logBuffer.clear()
-            logViewRef.get()?.text = logBuffer
+            logViewRef.get()?.editableText?.clear()
         }
 
         override fun onStart(forceStop: Runnable?) {
@@ -380,96 +380,77 @@ class DialogLogFragment : DialogFragment() {
          */
         private fun dispatchLogUpdate(formattedText: CharSequence) {
             val logView = logViewRef.get() ?: return
-
+        
             logView.post {
+                val editable = logView.editableText ?: return@post
+        
+                var start = 0
                 var i = 0
                 val len = formattedText.length
-
+        
                 while (i < len) {
-                    // Tìm ký tự điều khiển (\r hoặc \n) gần nhất kể từ i
-                    var j = i
-                    while (j < len && formattedText[j] != '\r' && formattedText[j] != '\n') j++
-
-                    // Phần nội dung thuần trước ký tự điều khiển (hoặc tới hết chuỗi)
-                    if (j > i) {
-                        val segment = formattedText.subSequence(i, j)
-                        if (pendingOverwrite) {
-                            if (lineStart in 0..logBuffer.length) {
-                                logBuffer.delete(lineStart, logBuffer.length)
-                            }
-                            pendingOverwrite = false
-                        }
-                        logBuffer.append(segment)
-                    }
-
-                    if (j < len) {
-                        when (formattedText[j]) {
-                            '\r' -> {
-                                // \r\n (CRLF chuẩn) chỉ là xuống dòng bình thường, bỏ qua \r
-                                val isCRLF = j + 1 < len && formattedText[j + 1] == '\n'
-                                if (!isCRLF) {
-                                    // Đánh dấu: nội dung tiếp theo sẽ ghi đè từ đầu dòng hiện tại
-                                    pendingOverwrite = true
-                                }
-                            }
-                            '\n' -> {
-                                // Nếu đang chờ ghi đè mà gặp \n ngay (không có nội dung mới sau \r)
-                                // thì coi như dòng đó bị xoá trước khi xuống dòng thật
-                                if (pendingOverwrite && lineStart in 0..logBuffer.length) {
-                                    logBuffer.delete(lineStart, logBuffer.length)
+                    when (formattedText[i]) {
+                        '\r', '\n' -> {
+        
+                            if (i > start) {
+                                if (pendingOverwrite) {
+                                    if (lineStart <= editable.length) {
+                                        editable.delete(lineStart, editable.length)
+                                    }
                                     pendingOverwrite = false
                                 }
-                                logBuffer.append('\n')
+        
+                                editable.append(formattedText, start, i)
+                            }
+        
+                            if (formattedText[i] == '\r') {
+                                val isCRLF =
+                                    (i + 1 < len && formattedText[i + 1] == '\n')
+        
+                                if (!isCRLF) {
+                                    pendingOverwrite = true
+                                }
+                            } else {
+                                if (pendingOverwrite) {
+                                    if (lineStart <= editable.length) {
+                                        editable.delete(lineStart, editable.length)
+                                    }
+                                    pendingOverwrite = false
+                                }
+        
+                                editable.append('\n')
                                 lineCount++
-                                lineStart = logBuffer.length
+                                lineStart = editable.length
                             }
-                        }
-                        j++
-                    }
-                    i = j
-                }
-
-                // Giới hạn log tối đa 5000 dòng để tránh tràn bộ nhớ
-                if (lineCount > 5000) {
-                    var deleteEndIndex = 0
-                    var linesToTrim = lineCount - 5000
-                    val currentCharSequence = logBuffer.toString()
-
-                    for (k in currentCharSequence.indices) {
-                        if (currentCharSequence[k] == '\n') {
-                            linesToTrim--
-                            if (linesToTrim <= 0) {
-                                deleteEndIndex = k + 1
-                                break
-                            }
+        
+                            start = i + 1
                         }
                     }
-                    if (deleteEndIndex > 0) {
-                        logBuffer.delete(0, deleteEndIndex)
-                        lineCount = 5000
-                        lineStart = (lineStart - deleteEndIndex).coerceAtLeast(0)
-                    }
+        
+                    i++
                 }
-
-                (logView.editableText ?: return@post).replace(
-                    0,
-                    logView.editableText.length,
-                    logBuffer
-                )
-
-                // Thực hiện cuộn và giữ focus cho ô nhập liệu
-                (logView.parent as? ScrollView)?.let { scrollView ->
+        
+                if (start < len) {
+                    if (pendingOverwrite) {
+                        if (lineStart <= editable.length) {
+                            editable.delete(lineStart, editable.length)
+                        }
+                        pendingOverwrite = false
+                    }
+        
+                    editable.append(formattedText, start, len)
+                }
+        
+                val scrollView = logView.parent as? ScrollView
+                if (scrollView != null) {
                     scrollView.post {
-                        // 1. Cuộn ScrollView xuống cuối cùng
-                        scrollView.fullScroll(ScrollView.FOCUS_DOWN)
-
-                        // 2. Nếu ô nhập liệu đang hiện, ép hệ thống giữ con trỏ tại đây
+                        scrollView.scrollTo(0, scrollView.getChildAt(0).bottom)
+        
                         val inputRow = inputRowRef.get()
                         val input = shellInputRef.get()
-                        if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
-                            input.post {
-                                input.requestFocus()
-                            }
+        
+                        if (inputRow?.visibility == View.VISIBLE && input != null) {
+                            input.requestFocus()
                         }
                     }
                 }

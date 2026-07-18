@@ -357,11 +357,11 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]]; then
     zstd --progress -f -$lvnen --format=$FORMATS --compress "$saved" -o "${out_saved%.*}.img.$CONVER" 2>&1 | tee "$TMP/repzstd.log" || killtree "Conver $FORMATS error" & process_zstd $TMP/repzstd.log
     elif [ "$CONVER" == 'dat' ] || [ "$CONVER" == 'br' ]; then
     img2simg "$saved"
-    img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p "${INPUT##*/}"
+    img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p "${INPUT##*/}" >$TMP/img2sdat.log
     [ -f "$OUTPUT/out/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed"
         if [ "$CONVER" == 'br' ]; then
         LEVEL="$(echo "$lvnen / 2" | bc)"
-        brotli -fq "$LEVEL" "$OUTPUT/out/${INPUT##*/}.new.dat" -o "$OUTPUT/out/${INPUT##*/}.new.dat.br" >$TMP/brotli.log && rm -f "$OUTPUT/out/${INPUT##*/}.new.dat"
+        brotli -fq "$LEVEL" "$OUTPUT/out/${INPUT##*/}.new.dat" -o "$OUTPUT/out/${INPUT##*/}.new.dat.br" >$TMP/brotli_build.log && rm -f "$OUTPUT/out/${INPUT##*/}.new.dat"
         fi
     elif [ "$CONVER" == 'sparse' ]; then
     img2simg "$saved" "$out_saved" >/dev/null
