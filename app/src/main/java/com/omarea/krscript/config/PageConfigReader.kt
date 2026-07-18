@@ -41,11 +41,12 @@ class PageConfigReader {
      * Nếu không tìm thấy resource tương ứng thì giữ nguyên văn bản gốc.
      */
     private fun resolveStringRes(raw: String?): String {
-        if (raw.isNullOrEmpty() || !raw.contains("@string")) {
-            return raw ?: ""
+        val text = raw ?: return ""
+        if (!text.contains("@string")) {
+            return text
         }
-        var result = raw
-        STRING_REF_REGEX.findAll(raw).forEach { match ->
+        var result = text
+        STRING_REF_REGEX.findAll(text).forEach { match ->
             val token = match.value
             val separator = if (token.contains(":")) ':' else '/'
             val name = token.substring(token.indexOf(separator) + 1)
