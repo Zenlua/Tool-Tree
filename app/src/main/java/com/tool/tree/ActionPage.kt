@@ -164,9 +164,9 @@ class ActionPage : AppCompatActivity() {
         if (menuOptions == null) {
             menuOptions = PageMenuLoader(applicationContext, config).load()
         }
-
+    
         menu?.clear()
-
+    
         menuOptions?.forEach { option ->
             if (option.isFab) {
                 addFab(option)
@@ -178,69 +178,66 @@ class ActionPage : AppCompatActivity() {
                 }
             }
         }
+    
+        // Chỉ refresh 1 lần sau khi menu được dựng xong
+        handler.post {
+            requestCheckboxMenuRefresh()
+        }
+    
         return true
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        // Chỉ cập nhật trạng thái hiển thị từ dữ liệu hiện có, không chạy shell ở đây
+        // Chỉ cập nhật giao diện từ dữ liệu đã có sẵn, tuyệt đối không chạy shell ở đây
         menuOptions?.forEach { option ->
             if (!option.isFab && option.type == "checkbox") {
                 val uniqueItemId = option.key.hashCode()
-                val menuItem = menu.findItem(uniqueItemId)
-                menuItem?.isChecked = option.checked
+                menu.findItem(uniqueItemId)?.isChecked = option.checked
             }
         }
-
-        // Vẫn giữ hành vi cũ: menu sẵn sàng thì refresh checkbox
-        refreshCheckboxMenuStates()
         return super.onPrepareOptionsMenu(menu)
     }
 
-    private fun refreshCheckboxMenuStates() {
+    private fun requestCheckboxMenuRefresh() {
         val config = currentPageConfig ?: return
-
+    
         val checkboxOptions = menuOptions?.filter { option ->
-            val uniqueItemId = option.key.hashCode()
             option.type == "checkbox" &&
                     option.checkedSh.isNotEmpty() &&
-                    !justClickedItemIds.contains(uniqueItemId)
+                    !justClickedItemIds.contains(option.key.hashCode())
         }.orEmpty()
-
+    
         if (checkboxOptions.isEmpty() || menuCheckboxRefreshing) return
-
+    
         menuCheckboxRefreshing = true
         checkboxRefreshJob?.cancel()
-
+    
         checkboxRefreshJob = lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Chạy song song thay vì chạy nối tiếp từng item
-                val results = coroutineScope {
-                    checkboxOptions.map { option ->
-                        async {
-                            val result = ScriptEnvironmen.executeResultRoot(
-                                this@ActionPage,
-                                option.checkedSh,
-                                config
-                            )?.trim()
-                            option to result
-                        }
-                    }.awaitAll()
-                }
-
+                val results = checkboxOptions.map { option ->
+                    async {
+                        val result = ScriptEnvironmen.executeResultRoot(
+                            this@ActionPage,
+                            option.checkedSh,
+                            config
+                        )?.trim()
+                        option to result
+                    }
+                }.awaitAll()
+    
                 withContext(Dispatchers.Main) {
                     if (isFinishing || isDestroyed) return@withContext
-
+    
                     var changed = false
                     results.forEach { (option, result) ->
                         val uniqueItemId = option.key.hashCode()
-
                         if (!justClickedItemIds.contains(uniqueItemId)) {
                             val newChecked = result == "1" || result.equals("true", ignoreCase = true)
                             if (option.checked != newChecked) changed = true
                             option.checked = newChecked
                         }
                     }
-
+    
                     if (changed) {
                         invalidateOptionsMenu()
                     }
@@ -601,3 +598,4 @@ class ActionPage : AppCompatActivity() {
         }
     }
 }
+
