@@ -13,6 +13,7 @@ import com.omarea.krscript.executor.ExtractAssets
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.*
 import org.xmlpull.v1.XmlPullParser
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.util.Locale.getDefault
 import androidx.core.graphics.toColorInt
@@ -28,6 +29,63 @@ class PageConfigReader {
     private var pageConfigAbsPath: String = ""
     private var pageConfigStream: InputStream? = null
     private var parentDir: String = ""
+
+    companion object {
+        // Ví dụ: @string/update_text hoặc @string:update_text
+        private val STRING_REF_REGEX = Regex("@string[:/][_a-zA-Z][_a-zA-Z0-9]*")
+    }
+
+    /**
+     * Thay thế các tham chiếu dạng @string/ten_resource (hoặc @string:ten_resource) xuất hiện
+     * trong văn bản đọc từ XML bằng giá trị thật lấy từ strings.xml của ứng dụng.
+     * Nếu không tìm thấy resource tương ứng thì giữ nguyên văn bản gốc.
+     */
+    private fun resolveStringRes(raw: String?): String {
+        if (raw.isNullOrEmpty() || !raw.contains("@string")) {
+            return raw ?: ""
+        }
+        var result = raw
+        STRING_REF_REGEX.findAll(raw).forEach { match ->
+            val token = match.value
+            val separator = if (token.contains(":")) ':' else '/'
+            val name = token.substring(token.indexOf(separator) + 1)
+            try {
+                val id = context.resources.getIdentifier(name, "string", context.packageName)
+                if (id != 0) {
+                    result = result.replace(token, context.getString(id))
+                }
+            } catch (_: Exception) {
+            }
+        }
+        return result
+    }
+
+    /**
+     * Tự động "sửa" một số ký tự/chuỗi thường gây lỗi "not well-formed" khi người dùng viết tay
+     * file cấu hình (đặc biệt là chèn trực tiếp lệnh shell vào text/attribute của XML).
+     * Chỉ xử lý những trường hợp AN TOÀN, không đụng tới cấu trúc thẻ thật.
+     */
+    private fun sanitizeXmlContent(raw: String): String {
+        var result = raw
+
+        // 1) "&" không phải là mở đầu của một entity hợp lệ (&amp; &lt; &gt; &quot; &apos; &#123; &#xAF;)
+        //    -> escape thành &amp;. Ví dụ: "&&" trong shell -> "&amp;&amp;"
+        result = result.replace(Regex("&(?!amp;|lt;|gt;|quot;|apos;|#[0-9]+;|#x[0-9a-fA-F]+;)"), "&amp;")
+
+        // 2) "<" không phải là mở đầu 1 thẻ/markup thật (thẻ mở, thẻ đóng, comment, CDATA, khai báo...)
+        //    -> escape thành &lt;. Rất hay gặp khi script dùng "<" để redirect input: cmd < file.txt
+        result = result.replace(Regex("<(?![a-zA-Z/!?])"), "&lt;")
+
+        // 3) Ký hiệu § dùng thay cho ký tự xuống dòng, vì gõ xuống dòng thật bên trong thuộc tính
+        //    XML rất bất tiện / dễ bị trình soạn thảo xoá mất -> §  =>  &#xA;
+        result = result.replace("§", "&#xA;")
+
+        // 4) Loại bỏ các ký tự điều khiển không hợp lệ với XML 1.0 (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F),
+        //    tránh crash parser khi nội dung dán vào có lẫn mã màu ANSI / ký tự đặc biệt.
+        result = result.replace(Regex("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]"), "")
+
+        return result
+    }
 
     constructor(context: Context, pageConfig: String, parentDir: String?) {
         this.context = context
@@ -64,8 +122,13 @@ class PageConfigReader {
 
     private fun readConfigXml(fileInputStream: InputStream): ArrayList<NodeInfoBase>? {
         try {
+            // Đọc toàn bộ nội dung, sửa các ký tự dễ gây lỗi XML, rồi mới đưa vào trình phân tích
+            val rawText = fileInputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            val sanitizedText = sanitizeXmlContent(rawText)
+            val sanitizedStream = ByteArrayInputStream(sanitizedText.toByteArray(Charsets.UTF_8))
+
             val parser = Xml.newPullParser()// 获取xml解析器
-            parser.setInput(fileInputStream, "utf-8")// 参数分别为输入流和字符编码
+            parser.setInput(sanitizedStream, "utf-8")// 参数分别为输入流和字符编码
             var type = parser.eventType
             val mainList: ArrayList<NodeInfoBase> = ArrayList()
             var action: ActionNode? = null
@@ -222,7 +285,7 @@ class PageConfigReader {
     var actionParamInfo: ActionParamInfo? = null
     private fun tagStartInAction(action: ActionNode, parser: XmlPullParser) {
         if ("title" == parser.name) {
-            action.title = parser.nextText()
+            action.title = resolveStringRes(parser.nextText())
         } else if ("desc" == parser.name) {
             descNode(action, parser)
         } else if ("summary" == parser.name) {
@@ -307,7 +370,7 @@ class PageConfigReader {
                     option.value = parser.getAttributeValue(i)
                 }
             }
-            option.title = parser.nextText()
+            option.title = resolveStringRes(parser.nextText())
             if (option.value == null)
                 option.value = option.title
             actionParamInfo.options!!.add(option)
@@ -331,7 +394,7 @@ class PageConfigReader {
 
     private fun tagStartInPage(node: PageNode, parser: XmlPullParser) {
         when (parser.name) {
-            "title" -> node.title = parser.nextText()
+            "title" -> node.title = resolveStringRes(parser.nextText())
             "desc" -> descNode(node, parser)
             "summary" -> summaryNode(node, parser)
             "resource" -> resourceNode(parser)
@@ -364,7 +427,7 @@ class PageConfigReader {
                             }
                         }
                     }
-                    option.title = parser.nextText()
+                    option.title = resolveStringRes(parser.nextText())
                     if (option.key.isEmpty()) {
                         option.key = option.title
                     }
@@ -380,7 +443,7 @@ class PageConfigReader {
 
     private fun tagStartInSwitch(switchNode: SwitchNode, parser: XmlPullParser) {
         when (parser.name) {
-            "title" -> switchNode.title = parser.nextText()
+            "title" -> switchNode.title = resolveStringRes(parser.nextText())
             "desc" -> descNode(switchNode, parser)
             "summary" -> summaryNode(switchNode, parser)
             "get", "getstate" -> switchNode.getState = parser.nextText()
@@ -397,7 +460,7 @@ class PageConfigReader {
             val attrValue = parser.getAttributeValue(i)
             when (attrName) {
                 "key", "index", "id" -> groupInfo.key = attrValue.trim()
-                "title" -> groupInfo.title = attrValue
+                "title" -> groupInfo.title = resolveStringRes(attrValue)
                 "support", "visible" -> groupInfo.supported = executeResultRoot(context, attrValue) == "1"
             }
         }
@@ -553,7 +616,7 @@ class PageConfigReader {
             }
         }
         if (nodeInfoBase.desc.isEmpty())
-            nodeInfoBase.desc = parser.nextText()
+            nodeInfoBase.desc = resolveStringRes(parser.nextText())
     }
 
     private fun summaryNode(nodeInfoBase: NodeInfoBase, parser: XmlPullParser) {
@@ -565,7 +628,7 @@ class PageConfigReader {
             }
         }
         if (nodeInfoBase.summary.isEmpty())
-            nodeInfoBase.summary = parser.nextText()
+            nodeInfoBase.summary = resolveStringRes(parser.nextText())
     }
 
     private fun resourceNode(parser: XmlPullParser) {
@@ -595,7 +658,7 @@ class PageConfigReader {
     private fun tagStartInText(textNode: TextNode, parser: XmlPullParser) {
         when (parser.name) {
             "title" -> {
-                textNode.title = parser.nextText()
+                textNode.title = resolveStringRes(parser.nextText())
             }
             "desc" -> {
                 descNode(textNode, parser)
@@ -649,14 +712,14 @@ class PageConfigReader {
             } catch (ex: Exception) {
             }
         }
-        textRow.text = "" + parser.nextText()
+        textRow.text = resolveStringRes("" + parser.nextText())
         textNode.rows.add(textRow)
     }
 
     private fun tagStartInPicker(pickerNode: PickerNode, parser: XmlPullParser) {
         when (parser.name) {
             "title" -> {
-                pickerNode.title = parser.nextText()
+                pickerNode.title = resolveStringRes(parser.nextText())
             }
             "desc" -> {
                 descNode(pickerNode, parser)
@@ -675,7 +738,7 @@ class PageConfigReader {
                         option.value = parser.getAttributeValue(i)
                     }
                 }
-                option.title = parser.nextText()
+                option.title = resolveStringRes(parser.nextText())
                 if (option.value == null)
                     option.value = option.title
                 pickerNode.options!!.add(option)
