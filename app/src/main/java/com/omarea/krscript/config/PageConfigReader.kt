@@ -61,31 +61,15 @@ class PageConfigReader {
         return result
     }
 
-    /**
-     * Tự động "sửa" một số ký tự/chuỗi thường gây lỗi "not well-formed" khi người dùng viết tay
-     * file cấu hình (đặc biệt là chèn trực tiếp lệnh shell vào text/attribute của XML).
-     * Chỉ xử lý những trường hợp AN TOÀN, không đụng tới cấu trúc thẻ thật.
-     */
     private fun sanitizeXmlContent(raw: String): String {
-        var result = raw
-
-        // 1) "&" không phải là mở đầu của một entity hợp lệ (&amp; &lt; &gt; &quot; &apos; &#123; &#xAF;)
-        //    -> escape thành &amp;. Ví dụ: "&&" trong shell -> "&amp;&amp;"
-        result = result.replace(Regex("&(?!amp;|lt;|gt;|quot;|apos;|#[0-9]+;|#x[0-9a-fA-F]+;)"), "&amp;")
-
-        // 2) "<" không phải là mở đầu 1 thẻ/markup thật (thẻ mở, thẻ đóng, comment, CDATA, khai báo...)
-        //    -> escape thành &lt;. Rất hay gặp khi script dùng "<" để redirect input: cmd < file.txt
-        result = result.replace(Regex("<(?![a-zA-Z/!?])"), "&lt;")
-
-        // 3) Ký hiệu § dùng thay cho ký tự xuống dòng, vì gõ xuống dòng thật bên trong thuộc tính
-        //    XML rất bất tiện / dễ bị trình soạn thảo xoá mất -> §  =>  &#xA;
-        result = result.replace("§", "&#xA;")
-
-        // 4) Loại bỏ các ký tự điều khiển không hợp lệ với XML 1.0 (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F),
-        //    tránh crash parser khi nội dung dán vào có lẫn mã màu ANSI / ký tự đặc biệt.
-        result = result.replace(Regex("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]"), "")
-
-        return result
+        return raw
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&apos;")
+            .replace("§", "&#xA;")
+            .replace(Regex("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]"), "")
     }
 
     constructor(context: Context, pageConfig: String, parentDir: String?) {
