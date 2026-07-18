@@ -20,7 +20,9 @@ import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.shell.ShellExecutor
 import com.omarea.common.ui.DialogHelper
+import com.omarea.krscript.config.StringResRef
 import com.omarea.krscript.executor.ScriptEnvironmen
+import com.omarea.krscript.model.SilentShellOutputHandler
 import com.tool.tree.databinding.ActivitySplashBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -224,22 +226,41 @@ class SplashActivity : AppCompatActivity() {
     private val maxLines = 5
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
+    // Được tạo/truy cập LẦN ĐẦU tiên bên trong handler.post{} (tức luôn ở main thread) vì
+    // SilentShellOutputHandler kế thừa android.os.Handler, cần Looper của thread hiện tại khi khởi tạo.
+    private val splashLogHandler: SplashLogOutputHandler by lazy { SplashLogOutputHandler() }
+
+    // Nhận diện am:[...] (mở activity, ẩn khỏi log) và tự resolve @string/ten_resource cho các
+    // dòng log thông thường còn lại trước khi hiển thị lên màn hình splash.
+    private inner class SplashLogOutputHandler : SilentShellOutputHandler(this@SplashActivity) {
+        override fun onReader(msg: Any?) {
+            val line = msg?.toString() ?: return
+            onLogOutput(StringResRef.resolve(this@SplashActivity, line))
+        }
+    }
+
     private fun readStreamAsync(reader: BufferedReader) {
         try {
-            reader.forEachLine { line -> onLogOutput(line) }
+            reader.forEachLine { line -> handleRawLogLine(line) }
         } catch (e: Exception) {}
     }
 
-    private fun onLogOutput(log: String) {
+    // Luôn xử lý trên main thread: vừa để an toàn cho SilentShellOutputHandler (cần Looper),
+    // vừa vì onAm() bên trong có thể gọi startActivity().
+    private fun handleRawLogLine(line: String) {
         handler.post {
-            synchronized(rows) {
-                if (rows.size >= maxLines) {
-                    rows.removeAt(0)
-                    ignored = true
-                }
-                rows.add(log)
-                binding.startStateText.text = rows.joinToString("\n", if (ignored) "……\n" else "")
+            splashLogHandler.processOutput(line)
+        }
+    }
+
+    private fun onLogOutput(log: String) {
+        synchronized(rows) {
+            if (rows.size >= maxLines) {
+                rows.removeAt(0)
+                ignored = true
             }
+            rows.add(log)
+            binding.startStateText.text = rows.joinToString("\n", if (ignored) "……\n" else "")
         }
     }
 }

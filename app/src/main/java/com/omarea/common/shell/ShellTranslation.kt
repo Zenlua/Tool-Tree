@@ -1,64 +1,23 @@
 package com.omarea.common.shell
 
 import android.content.Context
-import com.tool.tree.LanguageManager
+import com.omarea.krscript.config.StringResRef
 
-// 从Resource解析字符串，实现输出内容多语言
+// Từ Resource解析字符串，实现输出内容多语言
 class ShellTranslation(private val context: Context) {
 
-    // 示例：
-    // @string:home_shell_01
-    private val resRegex =
-        Regex("@(string|dimen)[:/][_a-z][_0-9a-z]*", RegexOption.IGNORE_CASE)
-
-    fun resolveRow(originRow: String): String? {
-        var result = originRow
-        val res = LanguageManager.resources(context)
-
-        resRegex.findAll(originRow).forEach { match ->
-            val row = match.value
-            val separator = if (row.contains(":")) ':' else '/'
-            val type = row.substring(1, row.indexOf(separator))
-            val name = row.substring(row.indexOf(separator) + 1)
-
-            val id = res.getIdentifier(name, type, context.packageName)
-            if (id != 0) {
-                val value = when (type) {
-                    "string" -> res.getString(id)
-                    "dimen" -> res.getDimensionPixelSize(id).toString()
-                    else -> null
-                }
-                if (value != null) {
-                    result = result.replace(row, value)
-                }
-            }
-        }
-        return result
+    fun resolveRow(originRow: String): String {
+        return StringResRef.resolve(context, originRow)
     }
 
     fun resolveRows(rows: List<String>): String {
-        val builder = StringBuilder()
-        var first = true
-
-        for (row in rows) {
-            val resolved = resolveRow(row) ?: continue
-
-            if (!first) {
-                builder.append('\n')
-            }
-            builder.append(resolved)
-            first = false
+        return rows.joinToString("\n") {
+            resolveRow(it)
         }
-        return builder.toString()
     }
 
     fun getTranslatedResult(shellCommand: String, executor: KeepShell?): String {
         val shell = executor ?: KeepShellPublic.getDefaultInstance()
-        val rows = shell.doCmdSync(shellCommand).split("\n")
-        return if (rows.isNotEmpty()) {
-            resolveRows(rows)
-        } else {
-            ""
-        }
+        return resolveRows(shell.doCmdSync(shellCommand).split('\n'))
     }
 }

@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.text.SpannableString
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -33,7 +32,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -367,27 +365,6 @@ class ActionPage : AppCompatActivity() {
                 }
                 if (menuOption.type == "checkbox") {
                     refreshCheckboxMenuStates()
-                }
-            }
-        }
-    }
-
-    private class SilentShellOutputHandler(context: android.content.Context) : ShellHandlerBase(context) {
-        override fun onProgress(current: Int, total: Int) {
-            // Chạy ẩn không có UI để hiển thị tiến trình -> bỏ qua có chủ đích.
-        }
-
-        override fun onStart(msg: Any?) {}
-        override fun onStart(forceStop: Runnable?) {}
-        override fun onExit(msg: Any?) {}
-        override fun updateLog(msg: SpannableString?) {
-            // Chạy ẩn không có log view -> bỏ qua có chủ đích.
-        }
-
-        fun processOutput(output: String) {
-            output.lineSequence().forEach { line ->
-                if (line.isNotBlank()) {
-                    onReaderMsg(line)
                 }
             }
         }
