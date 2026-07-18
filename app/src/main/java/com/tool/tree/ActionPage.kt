@@ -193,28 +193,33 @@ class ActionPage : AppCompatActivity() {
     private fun refreshCheckboxMenuStates() {
         val config = currentPageConfig ?: return
         
-        // Lọc danh sách checkbox dựa trên ID duy nhất
+        // Lọc danh sách các checkbox hợp lệ
         val checkboxOptions = menuOptions?.filter { option -> 
             val uniqueItemId = option.key.hashCode()
             option.type == "checkbox" && option.checkedSh.isNotEmpty() && !justClickedItemIds.contains(uniqueItemId)
         }
-
+    
         if (checkboxOptions.isNullOrEmpty() || menuCheckboxRefreshing) return
         menuCheckboxRefreshing = true
-
+    
         lifecycleScope.launch(Dispatchers.IO) {
-            val results = checkboxOptions.map { option ->
-                val result = ScriptEnvironmen.executeResultRoot(this@ActionPage, option.checkedSh, config)?.trim()
-                option to result
+            // TỐI ƯU SONG SONG: Sử dụng async để phát TẤT CẢ các lệnh getprop đi CÙNG MỘT LÚC
+            val deferredResults = checkboxOptions.map { option ->
+                async {
+                    val result = ScriptEnvironmen.executeResultRoot(this@ActionPage, option.checkedSh, config)?.trim()
+                    option to result
+                }
             }
-
+    
+            // Đợi tất cả các ô trả về kết quả đầy đủ rồi mới xử lý tiếp
+            val results = deferredResults.awaitAll()
+    
             withContext(Dispatchers.Main) {
                 menuCheckboxRefreshing = false
                 var changed = false
                 
                 results.forEach { (option, result) ->
                     val uniqueItemId = option.key.hashCode()
-                    // Khớp chính xác ID để tránh đè dữ liệu cũ trong khi lệnh shell click đang thực thi
                     if (!justClickedItemIds.contains(uniqueItemId)) {
                         val newChecked = result == "1" || result?.lowercase() == "true"
                         if (option.checked != newChecked) changed = true
@@ -222,6 +227,7 @@ class ActionPage : AppCompatActivity() {
                     }
                 }
                 
+                // Chỉ vẽ lại và kích hoạt luồng reload khi TẤT CẢ dữ liệu đã sẵn sàng
                 if (changed && !isFinishing) {
                     invalidateOptionsMenu()
                 }
