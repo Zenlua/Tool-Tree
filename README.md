@@ -15,14 +15,14 @@ Official website: **https://zenlua.github.io/Tool-Tree**
 
 **📦 Unpack**
 
-`boot` • `dtbo` • `ext4` • `erofs` • `f2fs` • `payload` • `super`
-`zip` • `apk` • `apks` • `apex` • `capex` • ...
+`boot`, `dtbo`, `ext4`, `erofs`, `f2fs`, `payload`, `super`
+`zip`, `apk`, `apks`, `apex`, `capex`, ...
 
 **📥 Pack**
 
-`boot` • `dtbo` • `ext4` • `erofs` • `f2fs`
-`payload` • `super` • `amlogic`
-`apk` • `apex` • `capex` • ...
+`boot`, `dtbo`, `ext4`, `erofs`, `f2fs`
+`payload`, `super`, `amlogic`
+`apk`, `apex`, `capex`, ...
 
 > And many more tools waiting to be discovered.
 
@@ -48,7 +48,7 @@ Official website: **https://zenlua.github.io/Tool-Tree**
 
 ## 📖 Documentation
 
-| Topic | Link |
+| Topic | Summary |
 |------|------|
 | [User Guide](https://zenlua.github.io/Tool-Tree/website/Guide.html) | Beginner's guide, no-root |
 | [Version Changelog](https://zenlua.github.io/Tool-Tree/Version.html) | View the change log across versions |
