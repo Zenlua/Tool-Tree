@@ -234,6 +234,15 @@ class ActionPage : AppCompatActivity() {
     }
 
     private fun onMenuItemClick(menuOption: PageMenuOption) {
+        // Nếu menu item được khai báo link/activity/html/config/config-sh -> mở giống 1 page/dòng
+        // bình thường trong danh sách, bỏ qua hoàn toàn việc chạy pageHandlerSh của menu.
+        if (menuOption.link.isNotEmpty() || menuOption.activity.isNotEmpty() ||
+            menuOption.onlineHtmlPage.isNotEmpty() || menuOption.pageConfigSh.isNotEmpty() ||
+            menuOption.pageConfigPath.isNotEmpty()) {
+            openMenuOptionAsPage(menuOption)
+            return
+        }
+
         when(menuOption.type) {
             "refresh", "reload" -> recreate()
             "restart" -> restartApp()
@@ -247,6 +256,38 @@ class ActionPage : AppCompatActivity() {
                     menuItemExecute(menuOption, hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key))
                 }
             }
+        }
+    }
+
+    // Mở menu item giống hệt cách 1 dòng PageNode bình thường được mở (xem onPageClick trong
+    // ActionListFragment): link -> mở trình duyệt/app ngoài; activity -> mở activity chỉ định;
+    // còn lại (html/config-sh/config) -> chuyển thành PageNode rồi dùng lại OpenPageHelper.
+    private fun openMenuOptionAsPage(menuOption: PageMenuOption) {
+        if (menuOption.link.isNotEmpty()) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(menuOption.link))
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+            } catch (ex: Exception) {
+                Toast.makeText(this, getString(R.string.kr_slice_activity_fail), Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+
+        if (menuOption.activity.isNotEmpty()) {
+            TryOpenActivity(this, menuOption.activity).tryOpen()
+            return
+        }
+
+        if (menuOption.onlineHtmlPage.isNotEmpty() || menuOption.pageConfigSh.isNotEmpty() || menuOption.pageConfigPath.isNotEmpty()) {
+            val parentConfigPath = currentPageConfig?.currentPageConfigPath ?: ""
+            val page = PageNode(parentConfigPath).apply {
+                title = menuOption.title
+                onlineHtmlPage = menuOption.onlineHtmlPage
+                pageConfigSh = menuOption.pageConfigSh
+                pageConfigPath = menuOption.pageConfigPath
+            }
+            OpenPageHelper(this).openPage(page)
         }
     }
 

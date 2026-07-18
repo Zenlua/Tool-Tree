@@ -444,6 +444,14 @@ class PageConfigReader {
                                 val attrValue = parser.getAttributeValue(i)
                                 option.silent = attrValue.isEmpty() || attrValue == "silent" || attrValue == "hidden" || attrValue == "true" || attrValue == "1"
                             }
+                            // Cho phép menu item mở giống 1 "page" (như 1 dòng bình thường trong danh sách)
+                            // thay vì chạy pageHandlerSh - ưu tiên xử lý giống hệt onPageClick()/OpenPageHelper:
+                            // link > activity > html/config-sh/config
+                            "link", "href" -> option.link = parser.getAttributeValue(i)
+                            "activity", "a", "intent" -> option.activity = parser.getAttributeValue(i)
+                            "html" -> option.onlineHtmlPage = parser.getAttributeValue(i)
+                            "config" -> option.pageConfigPath = parser.getAttributeValue(i)
+                            "config-sh" -> option.pageConfigSh = parser.getAttributeValue(i)
                         }
                     }
                     option.title = resolveStringRes(parser.nextText())
@@ -529,12 +537,12 @@ class PageConfigReader {
                     "need-input", "needs-input", "require-input" -> clickableNode.needInput = (
                             attrValue.isEmpty() || attrValue == "need-input" || attrValue == "true" || attrValue == "1")
                     "reload-page" -> {
-                        if (attrValue == "reload-page" || attrValue == "reload" || attrValue == "page" || attrValue == "true" || attrValue == "1") {
+                        if (attrValue == "reload-page" || attrValue == "true" || attrValue == "1") {
                             clickableNode.reloadPage = true
                         }
                     }
                     "reload" -> {
-                        if (attrValue == "reload-page" || attrValue == "reload" || attrValue == "page" || attrValue == "true" || attrValue == "1") {
+                        if (attrValue == "reload" || attrValue == "true" || attrValue == "1") {
                             clickableNode.reloadPage = true
                         } else if (attrValue.isNotEmpty()) {
                             clickableNode.updateBlocks = attrValue.split(",").map { it.trim() }.dropLastWhile { it.isEmpty() }.toTypedArray()

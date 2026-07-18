@@ -22,4 +22,11 @@ class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) 
     var checked: Boolean = false
     // Nếu true: khi click, chạy script ẩn ở nền (không hiện dialog log/không cho người dùng thấy output)
     var silent: Boolean = false
+    // Cho phép menu item mở giống 1 "page" (như 1 dòng bình thường trong danh sách) thay vì chạy
+    // pageHandlerSh khi click. Thứ tự ưu tiên giống PageNode: link > activity > html/config-sh/config.
+    var link: String = ""
+    var activity: String = ""
+    var onlineHtmlPage: String = ""
+    var pageConfigPath: String = ""
+    var pageConfigSh: String = ""
 }
