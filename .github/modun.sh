@@ -1,5 +1,5 @@
 # Kakathic
-cd app/src/main/assets/module
+cd .github/module
 
 for vmk in $(find etc/*.jar .local/share/apktool/framework/*.apk -type f); do
 mkdir -p "${vmk%.*}®${vmk##*.}_7zv2"
@@ -17,6 +17,5 @@ mkdir -p lib root tmp TREE/ROM TOOL/APK usr/log
 
 # -snh -snl
 7z a -t7z -mx=9 -y ../module.7z
-rm -fr ../module
-mv ../module.7z ../module
-ls -lh ../module
+mv ../module.7z ../module.so
+ls -lh ../module.so

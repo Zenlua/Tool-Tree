@@ -1,0 +1,28 @@
+name: Module CI
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/module/**'
+
+permissions: write-all
+jobs:
+  build-release:
+    if: ${{ github.repository_owner == 'Zenlua' }}
+    runs-on: ubuntu-latest
+    environment: Stable
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build module
+        run: |
+          chmod +x ./.github/modun.sh
+          ./.github/modun.sh
+
+      - name: Upload module
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Tmp"
+          tag_name: "V1"
+          files: .github/module.so

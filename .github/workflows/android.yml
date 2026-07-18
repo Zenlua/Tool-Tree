@@ -12,9 +12,8 @@ on:
         type: boolean
         default: false
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    paths:
+      - 'app/**'
 permissions: write-all
 env:
     KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -46,8 +45,7 @@ jobs:
 
       - name: Build APK
         run: |
-          chmod +x ./gradlew ./.github/modun.sh
-          ./.github/modun.sh
+          chmod +x ./gradlew
           [ "$UPAPK" == "true" ] || echo 1 > app/src/main/assets/beta
           ./gradlew assembleRelease -x lint -x test
           VER=$(grep -m1 'versionName ' app/build.gradle | cut -d'"' -f2)
