@@ -1426,7 +1426,7 @@ fi
 if [ "$(gprop name)" ]; then
 # Xác nhận có google dịch
 if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null || grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
-google_trankk='<option type="checkbox" box="glog auto_trans_text_'${dirvad##*/}'" id="v1" auto-off="true" reload="true" interruptible="false" >'$google_translate_text'</option>'
+google_trankk='<option type="checkbox" box="glog auto_trans_text_'${dirvad##*/}'" id="v1" auto-off="true" reload="true" silent="true">'$google_translate_text'</option>'
 google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
 fi
@@ -1441,8 +1441,8 @@ echo '<group>
 <desc>'$(gprop version) $(gprop author)$description_text'</desc>
 '"$summss"'
 '"$farooot"'
-<option type="default" id="v2" silent="true">'$pin_text_add'</option>
 '"$google_trankk"'
+<option type="default" id="v2" auto-finish="true" silent="true">'$pin_text_add'</option>
 '"$code_option"'
 <handler>
 if [ "$menu_id" == "v2" ]; then
