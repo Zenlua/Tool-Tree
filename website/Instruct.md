@@ -11,7 +11,7 @@
 ```
 file.add
 └── (in file.add)
-    ├── download.prop       # link to download add-on
+    ├── download.prop        # link to download add-on
     ├── addon.prop           # add-on information
     ├── icon.png (200x200)   # is the icon of the add-on
     ├── menu.sh              # 3-dot menu button
