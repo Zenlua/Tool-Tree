@@ -114,11 +114,11 @@ echo '<group>
 <option type="default" id="v3" silent="true">'$setting_text_5'</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
-am start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree
+echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
 elif [ "$menu_id" == "v2" ]; then
-am start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree
+echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
 elif [ "$menu_id" == "v3" ]; then
-am start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree
+echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
 fi
 </handler>
 </page>
@@ -138,9 +138,9 @@ if [ "$menu_id" == "v1" ]; then
 elif [ "$menu_id" == "v4" ]; then
 [ "$(glog hide_show_patch_rom)" == 1 ] && slog hide_show_patch_rom 0 || slog hide_show_patch_rom 1
 elif [ "$menu_id" == "v2" ]; then
-am start -a android.intent.action.SEND -t '"'*/*'"' -d "content://'$PACKAGE_NAME'.provider/external_files${PTSD#$SDCARD_PATH}"
+echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTSD#$SDCARD_PATH}]"
 elif [ "$menu_id" == "v3" ]; then
-am start -a android.intent.action.SEND -t '"'*/*'"' -d "content://'$PACKAGE_NAME'.provider/root$SDH/$PTSH"
+echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$SDH/$PTSH]"
 fi
 </handler>
 </page>
@@ -215,11 +215,11 @@ echo '<group>
 <option type="default" id="v3" silent="true">'$setting_text_5'</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
-am start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree
+echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
 elif [ "$menu_id" == "v2" ]; then
-am start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree
+echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
 elif [ "$menu_id" == "v3" ]; then
-am start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree
+echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
 fi
 </handler>
 </page>
@@ -251,9 +251,9 @@ echo "'$more_text_4' $file"
 echo
 cp -rf "$file" $ETC/apkeditor.jar || killtree "File copy error"
 elif [ "$menu_id" == "v4" ]; then
-am start -a android.intent.action.SEND -t '"'*/*'"' -d "content://'$PACKAGE_NAME'.provider/external_files${PTAD#$SDCARD_PATH}"
+echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTAD#$SDCARD_PATH}]"
 elif [ "$menu_id" == "v5" ]; then
-am start -a android.intent.action.SEND -t '"'*/*'"' -d "content://'$PACKAGE_NAME'.provider/root$APK/$PTAH"
+echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$APK/$PTAH]"
 fi
 </handler>
 </page>
@@ -326,7 +326,7 @@ echo '<group>
 <handler>
 progress 0.02 10 &
 if [ "$menu_id" == "share" ]; then
-am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree
+echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
 fi
 </handler>
 </page>
