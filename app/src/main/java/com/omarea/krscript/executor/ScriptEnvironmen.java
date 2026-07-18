@@ -382,8 +382,11 @@ public class ScriptEnvironmen {
             if (needInput) {
                 dataOutputStream.write((executeScript + "; sleep 0.2; exit\n").getBytes(StandardCharsets.UTF_8));
             } else {
-                String finalCmds = executeScript + "\n\nsleep 0.2;\nexit\nexit\n";
-                dataOutputStream.write(finalCmds.getBytes(StandardCharsets.UTF_8));
+                dataOutputStream.write(getExecuteScript(context, cmds, tag).getBytes(StandardCharsets.UTF_8));
+                dataOutputStream.writeBytes("\n\n");
+                dataOutputStream.writeBytes("sleep 0.2;\n");
+                dataOutputStream.writeBytes("exit\n");
+                dataOutputStream.writeBytes("exit\n");
             }
             dataOutputStream.flush();
         } catch (Exception ignored) {
