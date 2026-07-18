@@ -374,20 +374,10 @@ public class ScriptEnvironmen {
         }
         try {
             dataOutputStream.write(envpCmds.toString().getBytes(StandardCharsets.UTF_8));
-
             String executeScript = getExecuteScript(context, cmds, tag);
-            if (executeScript == null || executeScript.isEmpty()) {
-                return;
-            }
-            if (needInput) {
-                dataOutputStream.write((executeScript + "; sleep 0.2; exit\n").getBytes(StandardCharsets.UTF_8));
-            } else {
-                dataOutputStream.write(getExecuteScript(context, cmds, tag).getBytes(StandardCharsets.UTF_8));
-                dataOutputStream.writeBytes("\n\n");
-                dataOutputStream.writeBytes("sleep 0.2;\n");
-                dataOutputStream.writeBytes("exit\n");
-                dataOutputStream.writeBytes("exit\n");
-            }
+            if (executeScript == null || executeScript.isEmpty()) return
+            String suffix = needInput ? "; sleep 0.2; exit\n" : "\n\nsleep 0.2;\nexit\nexit\n";
+            dataOutputStream.write((executeScript + suffix).getBytes(StandardCharsets.UTF_8));
             dataOutputStream.flush();
         } catch (Exception ignored) {
         }
