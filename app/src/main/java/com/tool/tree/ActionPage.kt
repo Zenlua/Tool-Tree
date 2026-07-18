@@ -29,24 +29,34 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.omarea.krscript.ui.PageMenuLoader
 import com.tool.tree.databinding.ActivityActionPageBinding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
     private var actionsLoaded = false
     private val handler = Handler(Looper.getMainLooper())
-    
+
     private var currentPageConfig: PageNode? = null
     private var autoRunItemId = ""
     private lateinit var binding: ActivityActionPageBinding
     private var openedSubPage = false
 
-    // Sử dụng HashCode của String ID để khóa trạng thái tạm thời, không sợ lệch index
+    // Khóa theo ID thật của item để không lệ thuộc vào vị trí trong mảng
     private val justClickedItemIds = HashSet<Int>()
+
+    private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
+    private val ACTION_FILE_PATH_CHOOSER = 65400
+    private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
+
+    private var menuOptions: ArrayList<PageMenuOption>? = null
+    private var menuCheckboxRefreshing = false
+    private var checkboxRefreshJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,7 +93,7 @@ class ActionPage : AppCompatActivity() {
             } else if (extras.containsKey("shortcutId")) {
                 ActionShortcutManager(this).getShortcutTarget(extras.getString("shortcutId") ?: "")
             } else null
-            
+
             autoRunItemId = extras.getString("autoRunItemId", "")
         }
 
@@ -149,13 +159,6 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
-    private val ACTION_FILE_PATH_CHOOSER = 65400
-    private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
-
-    private var menuOptions: ArrayList<PageMenuOption>? = null
-    private var menuCheckboxRefreshing = false
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val config = currentPageConfig ?: return false
         if (menuOptions == null) {
@@ -168,7 +171,6 @@ class ActionPage : AppCompatActivity() {
             if (option.isFab) {
                 addFab(option)
             } else {
-                // ĐỔI: Sử dụng hashCode của chuỗi ID duy nhất (option.key hoặc option.id) làm itemId cho Menu
                 val uniqueItemId = option.key.hashCode()
                 val menuItem = menu?.add(Menu.NONE, uniqueItemId, Menu.NONE, option.title)
                 if (option.type == "checkbox") {
@@ -180,7 +182,7 @@ class ActionPage : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        // Tìm và gán chính xác trạng thái checkbox theo uniqueId
+        // Chỉ cập nhật trạng thái hiển thị từ dữ liệu hiện có, không chạy shell ở đây
         menuOptions?.forEach { option ->
             if (!option.isFab && option.type == "checkbox") {
                 val uniqueItemId = option.key.hashCode()
@@ -188,50 +190,64 @@ class ActionPage : AppCompatActivity() {
                 menuItem?.isChecked = option.checked
             }
         }
+
+        // Vẫn giữ hành vi cũ: menu sẵn sàng thì refresh checkbox
         refreshCheckboxMenuStates()
         return super.onPrepareOptionsMenu(menu)
     }
 
     private fun refreshCheckboxMenuStates() {
         val config = currentPageConfig ?: return
-        
-        // Lọc danh sách các checkbox hợp lệ
-        val checkboxOptions = menuOptions?.filter { option -> 
+
+        val checkboxOptions = menuOptions?.filter { option ->
             val uniqueItemId = option.key.hashCode()
-            option.type == "checkbox" && option.checkedSh.isNotEmpty() && !justClickedItemIds.contains(uniqueItemId)
-        }
-    
-        if (checkboxOptions.isNullOrEmpty() || menuCheckboxRefreshing) return
+            option.type == "checkbox" &&
+                    option.checkedSh.isNotEmpty() &&
+                    !justClickedItemIds.contains(uniqueItemId)
+        }.orEmpty()
+
+        if (checkboxOptions.isEmpty() || menuCheckboxRefreshing) return
+
         menuCheckboxRefreshing = true
-    
-        lifecycleScope.launch(Dispatchers.IO) {
-            // TỐI ƯU SONG SONG: Sử dụng async để phát TẤT CẢ các lệnh getprop đi CÙNG MỘT LÚC
-            val deferredResults = checkboxOptions.map { option ->
-                async {
-                    val result = ScriptEnvironmen.executeResultRoot(this@ActionPage, option.checkedSh, config)?.trim()
-                    option to result
+        checkboxRefreshJob?.cancel()
+
+        checkboxRefreshJob = lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Chạy song song thay vì chạy nối tiếp từng item
+                val results = coroutineScope {
+                    checkboxOptions.map { option ->
+                        async {
+                            val result = ScriptEnvironmen.executeResultRoot(
+                                this@ActionPage,
+                                option.checkedSh,
+                                config
+                            )?.trim()
+                            option to result
+                        }
+                    }.awaitAll()
                 }
-            }
-    
-            // Đợi tất cả các ô trả về kết quả đầy đủ rồi mới xử lý tiếp
-            val results = deferredResults.awaitAll()
-    
-            withContext(Dispatchers.Main) {
-                menuCheckboxRefreshing = false
-                var changed = false
-                
-                results.forEach { (option, result) ->
-                    val uniqueItemId = option.key.hashCode()
-                    if (!justClickedItemIds.contains(uniqueItemId)) {
-                        val newChecked = result == "1" || result?.lowercase() == "true"
-                        if (option.checked != newChecked) changed = true
-                        option.checked = newChecked
+
+                withContext(Dispatchers.Main) {
+                    if (isFinishing || isDestroyed) return@withContext
+
+                    var changed = false
+                    results.forEach { (option, result) ->
+                        val uniqueItemId = option.key.hashCode()
+
+                        if (!justClickedItemIds.contains(uniqueItemId)) {
+                            val newChecked = result == "1" || result.equals("true", ignoreCase = true)
+                            if (option.checked != newChecked) changed = true
+                            option.checked = newChecked
+                        }
+                    }
+
+                    if (changed) {
+                        invalidateOptionsMenu()
                     }
                 }
-                
-                // Chỉ vẽ lại và kích hoạt luồng reload khi TẤT CẢ dữ liệu đã sẵn sàng
-                if (changed && !isFinishing) {
-                    invalidateOptionsMenu()
+            } finally {
+                withContext(Dispatchers.Main) {
+                    menuCheckboxRefreshing = false
                 }
             }
         }
@@ -242,26 +258,29 @@ class ActionPage : AppCompatActivity() {
             visibility = View.VISIBLE
             setOnClickListener { onMenuItemClick(menuOption) }
 
-            val iconRes = if (menuOption.type == "file" && menuOption.iconPath.isEmpty()) R.drawable.kr_folder else R.drawable.kr_fab
-            val customIcon = if (menuOption.iconPath.isNotEmpty()) IconPathAnalysis().loadLogo(context, menuOption, false) else null
-            
+            val iconRes = if (menuOption.type == "file" && menuOption.iconPath.isEmpty()) {
+                R.drawable.kr_folder
+            } else {
+                R.drawable.kr_fab
+            }
+            val customIcon = if (menuOption.iconPath.isNotEmpty()) {
+                IconPathAnalysis().loadLogo(context, menuOption, false)
+            } else null
+
             setImageDrawable(customIcon ?: ContextCompat.getDrawable(context, iconRes))
         }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val options = menuOptions ?: return false
-        val targetItemId = item.itemId // Đây chính là hashCode của checkbox vừa click
-
-        // ĐỔI: Tìm option khớp với hashCode của ID thay vì dùng vị trí mảng index
+        val targetItemId = item.itemId
         val option = options.find { it.key.hashCode() == targetItemId }
-        
+
         if (option != null) {
             if (option.type == "checkbox") {
                 option.checked = !option.checked
                 item.isChecked = option.checked
 
-                // Khóa đồng bộ theo ID cụ thể
                 justClickedItemIds.add(targetItemId)
                 handler.postDelayed({
                     justClickedItemIds.remove(targetItemId)
@@ -277,12 +296,13 @@ class ActionPage : AppCompatActivity() {
     private fun onMenuItemClick(menuOption: PageMenuOption) {
         if (menuOption.link.isNotEmpty() || menuOption.activity.isNotEmpty() ||
             menuOption.onlineHtmlPage.isNotEmpty() || menuOption.pageConfigSh.isNotEmpty() ||
-            menuOption.pageConfigPath.isNotEmpty()) {
+            menuOption.pageConfigPath.isNotEmpty()
+        ) {
             openMenuOptionAsPage(menuOption)
             return
         }
 
-        when(menuOption.type) {
+        when (menuOption.type) {
             "refresh", "reload" -> recreate()
             "restart" -> restartApp()
             "exit", "finish", "close" -> finish()
@@ -337,7 +357,7 @@ class ActionPage : AppCompatActivity() {
             if (!isActive) return@launch
 
             withContext(Dispatchers.Main) {
-                if (isFinishing) return@withContext
+                if (isFinishing || isDestroyed) return@withContext
                 when {
                     menuOption.autoFinish -> finish()
                     menuOption.reloadPage -> recreate()
@@ -356,12 +376,16 @@ class ActionPage : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             if (config.beforeRead.isNotEmpty()) {
-                withContext(Dispatchers.Main) { progressBarDialog.showDialog(getString(R.string.kr_page_before_load)) }
+                withContext(Dispatchers.Main) {
+                    progressBarDialog.showDialog(getString(R.string.kr_page_before_load))
+                }
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.beforeRead, config)
             }
 
             if (showLoading) {
-                withContext(Dispatchers.Main) { progressBarDialog.showDialog(getString(R.string.kr_page_loading)) }
+                withContext(Dispatchers.Main) {
+                    progressBarDialog.showDialog(getString(R.string.kr_page_loading))
+                }
             }
 
             var items: ArrayList<NodeInfoBase>? = null
@@ -378,12 +402,13 @@ class ActionPage : AppCompatActivity() {
 
             withContext(Dispatchers.Main) {
                 if (!isActive || isFinishing) return@withContext
-                
+
                 if (items != null && items.isNotEmpty()) {
                     if (config.loadSuccess.isNotEmpty()) {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
                     updateActionList(items, showLoading)
+                    refreshCheckboxMenuStates()
                 } else {
                     handleLoadError(config)
                 }
@@ -432,7 +457,9 @@ class ActionPage : AppCompatActivity() {
     }
 
     private fun killApp() {
-        startService(Intent(this, WakeLockService::class.java).apply { action = WakeLockService.ACTION_END_WAKELOCK })
+        startService(Intent(this, WakeLockService::class.java).apply {
+            action = WakeLockService.ACTION_END_WAKELOCK
+        })
         finishAffinity()
         System.exit(0)
     }
@@ -445,9 +472,21 @@ class ActionPage : AppCompatActivity() {
                 menuOption.autoKill -> killApp()
                 menuOption.autoRestart -> restartApp()
             }
+
+            if (menuOption.type == "checkbox") {
+                refreshCheckboxMenuStates()
+            }
         }
+
         val config = currentPageConfig ?: return
-        val dialog = DialogLogFragment.create(menuOption, {}, onDismiss, config.pageHandlerSh, params, ThemeModeState.getThemeMode().isDarkMode)
+        val dialog = DialogLogFragment.create(
+            menuOption,
+            {},
+            onDismiss,
+            config.pageHandlerSh,
+            params,
+            ThemeModeState.getThemeMode().isDarkMode
+        )
         dialog.show(supportFragmentManager, "")
         dialog.isCancelable = false
     }
@@ -457,27 +496,48 @@ class ActionPage : AppCompatActivity() {
             override fun onFileSelected(path: String?) {
                 path?.let {
                     handler.post {
-                        menuItemExecute(menuOption, hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key, "file" to it, "folder" to it))
+                        menuItemExecute(
+                            menuOption,
+                            hashMapOf(
+                                "state" to menuOption.key,
+                                "menu_id" to menuOption.key,
+                                "file" to it,
+                                "folder" to it
+                            )
+                        )
                     }
                 }
             }
+
             override fun mimeType() = menuOption.mime.ifEmpty { null }
             override fun suffix() = menuOption.suffix.ifEmpty { null }
-            override fun type() = if (menuOption.type == "folder") ParamsFileChooserRender.FileSelectedInterface.TYPE_FOLDER else ParamsFileChooserRender.FileSelectedInterface.TYPE_FILE
+            override fun type() = if (menuOption.type == "folder") {
+                ParamsFileChooserRender.FileSelectedInterface.TYPE_FOLDER
+            } else {
+                ParamsFileChooserRender.FileSelectedInterface.TYPE_FILE
+            }
         })
     }
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         return try {
             if (fileSelectedInterface.type() == ParamsFileChooserRender.FileSelectedInterface.TYPE_FOLDER) {
-                startActivityForResult(Intent(this, ActivityFileSelector::class.java).apply { putExtra("mode", ActivityFileSelector.MODE_FOLDER) }, ACTION_FILE_PATH_CHOOSER_INNER)
+                startActivityForResult(
+                    Intent(this, ActivityFileSelector::class.java).apply {
+                        putExtra("mode", ActivityFileSelector.MODE_FOLDER)
+                    },
+                    ACTION_FILE_PATH_CHOOSER_INNER
+                )
             } else {
                 val suffix = fileSelectedInterface.suffix()
                 if (!suffix.isNullOrEmpty()) {
-                    startActivityForResult(Intent(this, ActivityFileSelector::class.java).apply { 
-                        putExtra("extension", suffix)
-                        putExtra("mode", ActivityFileSelector.MODE_FILE) 
-                    }, ACTION_FILE_PATH_CHOOSER_INNER)
+                    startActivityForResult(
+                        Intent(this, ActivityFileSelector::class.java).apply {
+                            putExtra("extension", suffix)
+                            putExtra("mode", ActivityFileSelector.MODE_FILE)
+                        },
+                        ACTION_FILE_PATH_CHOOSER_INNER
+                    )
                 } else {
                     val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                         type = fileSelectedInterface.mimeType() ?: "*/*"
@@ -488,7 +548,9 @@ class ActionPage : AppCompatActivity() {
             }
             this.fileSelectedInterface = fileSelectedInterface
             true
-        } catch (_: Exception) { false }
+        } catch (_: Exception) {
+            false
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -524,6 +586,7 @@ class ActionPage : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
         setExcludeFromRecents()
         super.onDestroy()
