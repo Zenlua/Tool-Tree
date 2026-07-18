@@ -23,6 +23,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import android.provider.Settings;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -152,6 +153,12 @@ public class ScriptEnvironmen {
     }
 
     public static String executeResultRoot(Context context, String script, NodeInfoBase nodeInfoBase) {
+        return executeResultRoot(context, script, nodeInfoBase, null);
+    }
+
+    // Overload cho phép truyền thêm các biến môi trường tuỳ chỉnh (ví dụ: state, menu_id)
+    // - dùng khi cần chạy 1 lệnh/menu item với ngữ cảnh riêng mà không cần hiển thị dialog log.
+    public static String executeResultRoot(Context context, String script, NodeInfoBase nodeInfoBase, HashMap<String, String> extraParams) {
         if (!inited) {
             init(context);
         }
@@ -187,6 +194,13 @@ public class ScriptEnvironmen {
             } else {
                 stringBuilder.append("export PAGE_WORK_DIR='").append(parentPageConfigDir).append("'\n");
                 stringBuilder.append("export PAGE_WORK_FILE='").append(currentPageConfigPath).append("'\n");
+            }
+        }
+
+        if (extraParams != null) {
+            for (Map.Entry<String, String> entry : extraParams.entrySet()) {
+                String value = entry.getValue() == null ? "" : entry.getValue().replace("'", "'\\''");
+                stringBuilder.append("export ").append(entry.getKey()).append("='").append(value).append("'\n");
             }
         }
 

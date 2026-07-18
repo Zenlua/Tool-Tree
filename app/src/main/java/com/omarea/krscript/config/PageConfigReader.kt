@@ -436,11 +436,13 @@ class PageConfigReader {
                             "mime" -> {
                                 option.mime = parser.getAttributeValue(i).lowercase(getDefault())
                             }
-                            "checked-sh", "checkbox-sh", "check-sh" -> {
-                                // Chỉ dùng khi type="checkbox": lệnh shell sẽ được chạy lại mỗi lần
-                                // mở menu để xác định có hiện dấu tích hay không (KHÔNG dùng để ẩn/hiện
-                                // item như "visible"/"support" - đó là 2 cơ chế độc lập).
+                            "box", "visible", "check" -> {
                                 option.checkedSh = parser.getAttributeValue(i)
+                            }
+                            "silent", "hidden" -> {
+                                // Khi click, chạy script ẩn ở nền, không hiện dialog log cho người dùng thấy.
+                                val attrValue = parser.getAttributeValue(i)
+                                option.silent = attrValue.isEmpty() || attrValue == "silent" || attrValue == "hidden" || attrValue == "true" || attrValue == "1"
                             }
                         }
                     }

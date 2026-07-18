@@ -20,4 +20,6 @@ class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) 
     // Trạng thái tích hiện tại - được cập nhật ở background thread (IO), chỉ đọc khi vẽ menu (Main thread).
     @Volatile
     var checked: Boolean = false
+    // Nếu true: khi click, chạy script ẩn ở nền (không hiện dialog log/không cho người dùng thấy output)
+    var silent: Boolean = false
 }

@@ -241,7 +241,39 @@ class ActionPage : AppCompatActivity() {
             "killapp" -> killApp()
             "file" -> menuItemChooseFile(menuOption)
             else -> {
-                menuItemExecute(menuOption, hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key))
+                if (menuOption.silent) {
+                    menuItemExecuteSilent(menuOption)
+                } else {
+                    menuItemExecute(menuOption, hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key))
+                }
+            }
+        }
+    }
+
+    // Chạy script của menu item ở NỀN (IO thread), không hiện DialogLogFragment/không có output hiển thị.
+    // Vẫn tôn trọng các cờ auto-finish/reload-page/auto-kill/auto-restart sau khi script chạy xong.
+    private fun menuItemExecuteSilent(menuOption: PageMenuOption) {
+        val config = currentPageConfig ?: return
+        val extraParams = hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key)
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            ScriptEnvironmen.executeResultRoot(this@ActionPage, config.pageHandlerSh, config, extraParams)
+
+            if (!isActive) return@launch
+
+            withContext(Dispatchers.Main) {
+                if (isFinishing) return@withContext
+                when {
+                    menuOption.autoFinish -> finish()
+                    menuOption.reloadPage -> recreate()
+                    menuOption.autoKill -> killApp()
+                    menuOption.autoRestart -> restartApp()
+                }
+                // Nếu là menu checkbox, cập nhật lại dấu tích ngay sau khi script chạy xong
+                // (không cần đợi người dùng mở lại menu).
+                if (menuOption.type == "checkbox") {
+                    refreshCheckboxMenuStates()
+                }
             }
         }
     }
