@@ -90,44 +90,56 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Thêm tab vào adapter nếu có dữ liệu. Icon/slot phải được ghi trước khi gọi adapter.addFragment
+    // vì TabLayoutMediator sẽ đọc lại tabIcons ngay khi adapter báo có thay đổi.
+    private fun addTabIfPresent(slot: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, iconRes: Int, config: PageNode, isFav: Boolean, theme: Int) {
+        items?.takeIf { it.isNotEmpty() }?.let { data ->
+            tabIcons.add(iconRes)
+            tabSlotOrder.add(slot)
+            val fragment = ActionListFragment.create(data, getKrScriptActionHandler(config, isFav), null, theme)
+            adapter.addFragment(fragment, getString(titleRes))
+        }
+    }
+
     private fun loadTabs() {
         progressBarDialog.showDialog(getString(R.string.please_wait))
+        tabIcons.clear()
+        tabSlotOrder.clear()
 
         lifecycleScope.launch(Dispatchers.IO) {
-            // Chạy song song 4 tác vụ đọc/thực thi config thay vì tuần tự từng cái một
-            // => tổng thời gian chờ chỉ bằng tab chậm nhất, thay vì tổng của cả 4 tab
-            val (favorites, pages, tab3Items, tab4Items) = coroutineScope {
+            // GIAI ĐOẠN 1: ưu tiên load 2 tab đầu (favorites, pages) trước, song song với nhau
+            val (favorites, pages) = coroutineScope {
                 val favoritesDeferred = async { getItems(krScriptConfig.favoriteConfig) }
                 val pagesDeferred = async { getItems(krScriptConfig.pageListConfig) }
-                val tab3Deferred = async { getItems(krScriptConfig.customTab3Config) }
-                val tab4Deferred = async { getItems(krScriptConfig.customTab4Config) }
-                listOf(favoritesDeferred, pagesDeferred, tab3Deferred, tab4Deferred).awaitAll()
+                listOf(favoritesDeferred, pagesDeferred).awaitAll()
             }
 
             if (!isActive) return@launch
 
             withContext(Dispatchers.Main) {
+                // Ẩn dialog chờ và hiển thị ngay 2 tab đầu, không cần đợi 2 tab sau
                 progressBarDialog.hideDialog()
                 val theme = ThemeModeState.getThemeMode()
-                tabIcons.clear()
-                tabSlotOrder.clear()
 
-                fun addTabIfPresent(slot: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, iconRes: Int, config: PageNode, isFav: Boolean) {
-                    // Chỉ thêm tab khi thực sự có dữ liệu -> tab "rỗng" sẽ không xuất hiện ở main
-                    items?.takeIf { it.isNotEmpty() }?.let { data ->
-                        val fragment = ActionListFragment.create(data, getKrScriptActionHandler(config, isFav), null, theme)
-                        adapter.addFragment(fragment, getString(titleRes))
-                        tabIcons.add(iconRes)
-                        tabSlotOrder.add(slot)
-                    }
-                }
-
-                addTabIfPresent(0, favorites, R.string.tab_favorites, R.drawable.tab_favorites, krScriptConfig.favoriteConfig, true)
-                addTabIfPresent(1, pages, R.string.tab_pages, R.drawable.tab_pages, krScriptConfig.pageListConfig, false)
-                addTabIfPresent(2, tab3Items, R.string.tab_custom3, R.drawable.tab_custom3, krScriptConfig.customTab3Config, false)
-                addTabIfPresent(3, tab4Items, R.string.tab_custom4, R.drawable.tab_custom4, krScriptConfig.customTab4Config, false)
+                addTabIfPresent(0, favorites, R.string.tab_favorites, R.drawable.tab_favorites, krScriptConfig.favoriteConfig, true, theme)
+                addTabIfPresent(1, pages, R.string.tab_pages, R.drawable.tab_pages, krScriptConfig.pageListConfig, false, theme)
 
                 setupTabs()
+            }
+
+            // GIAI ĐOẠN 2: load ngầm 2 tab còn lại (tab3, tab4), không chặn UI của 2 tab đầu
+            val (tab3Items, tab4Items) = coroutineScope {
+                val tab3Deferred = async { getItems(krScriptConfig.customTab3Config) }
+                val tab4Deferred = async { getItems(krScriptConfig.customTab4Config) }
+                listOf(tab3Deferred, tab4Deferred).awaitAll()
+            }
+
+            if (!isActive) return@launch
+
+            withContext(Dispatchers.Main) {
+                val theme = ThemeModeState.getThemeMode()
+                addTabIfPresent(2, tab3Items, R.string.tab_custom3, R.drawable.tab_custom3, krScriptConfig.customTab3Config, false, theme)
+                addTabIfPresent(3, tab4Items, R.string.tab_custom4, R.drawable.tab_custom4, krScriptConfig.customTab4Config, false, theme)
             }
         }
     }
