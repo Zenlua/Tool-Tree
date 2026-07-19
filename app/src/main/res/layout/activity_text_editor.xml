@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="false">
@@ -20,20 +21,21 @@
             android:fillViewport="true"
             android:scrollbarStyle="insideOverlay">
 
-            <EditText
-                android:id="@+id/editor_content"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:gravity="top|start"
-                android:hint="@string/editor_hint_empty"
-                android:inputType="textMultiLine|textNoSuggestions"
-                android:imeOptions="flagNoExtractUi"
-                android:padding="16dp"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textColorHint="?android:attr/textColorSecondary"
-                android:textSize="14sp"
-                android:typeface="monospace" />
+        <EditText
+            android:id="@+id/editor_content"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:minWidth="100%"
+            android:background="@android:color/transparent"
+            android:gravity="top|start"
+            android:padding="16dp"
+            android:fontFamily="monospace"
+            android:textSize="14sp"
+            android:hint="@string/editor_hint_empty"
+            android:inputType="textMultiLine|textVisiblePassword|textNoSuggestions"
+            android:imeOptions="flagNoExtractUi"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorSecondary" />
 
         </HorizontalScrollView>
 
