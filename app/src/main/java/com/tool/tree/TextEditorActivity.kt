@@ -165,11 +165,26 @@ class TextEditorActivity : AppCompatActivity() {
     private fun applyWrapState() {
         val editText = binding.editorContent
         val horizontalScroll: HorizontalScrollView = binding.editorScrollHorizontal
+
+        // Lưu lại vị trí con trỏ và nội dung hiện tại trước khi đổi chế độ
+        val currentText = editText.text?.toString().orEmpty()
+        val cursorStart = editText.selectionStart.coerceIn(0, currentText.length)
+        val cursorEnd = editText.selectionEnd.coerceIn(0, currentText.length)
+
         editText.setHorizontallyScrolling(!wrapEnabled)
+
         val params = editText.layoutParams
         params.width = if (wrapEnabled) android.view.ViewGroup.LayoutParams.MATCH_PARENT else android.view.ViewGroup.LayoutParams.WRAP_CONTENT
         editText.layoutParams = params
+
+        // Chỉ đổi setHorizontallyScrolling()/layoutParams thôi thì TextView không tự dựng lại
+        // Layout nội bộ theo chiều rộng mới (văn bản đã dàn trang trước đó bị giữ nguyên), nên
+        // phải set lại text để buộc nó dựng lại layout rồi khôi phục vị trí con trỏ.
+        editText.setText(currentText)
+        editText.setSelection(cursorStart.coerceAtMost(currentText.length), cursorEnd.coerceAtMost(currentText.length))
+
         horizontalScroll.isHorizontalScrollBarEnabled = !wrapEnabled
+        horizontalScroll.scrollTo(0, 0)
     }
 
     private fun hasUnsavedChanges(): Boolean {
