@@ -11,6 +11,6 @@ class ListItemEditor(context: Context, config: EditorNode) : ListItemClickable(c
 
     init {
         widgetView?.visibility = View.VISIBLE
-        widgetView?.setImageDrawable(context.getDrawable(R.drawable.kr_script))
+        widgetView?.setImageDrawable(context.getDrawable(R.drawable.icon_edit))
     }
 }

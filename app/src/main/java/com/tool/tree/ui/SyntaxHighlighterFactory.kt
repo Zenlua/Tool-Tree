@@ -1,6 +1,8 @@
 package com.tool.tree.ui
 
 import android.graphics.Typeface
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.Spanned
 import android.text.TextWatcher
@@ -13,15 +15,7 @@ import java.util.Locale
 
 /**
  * Lightweight syntax highlighter for plain EditText.
- *
- * Supported by default:
- * - Shell scripts: .sh, .bash, .zsh, .ksh
- * - XML files: .xml
- * - build.prop / .prop / .properties
- *
- * Usage:
- *   val highlighter = SyntaxHighlighterFactory.create("sh", editText)
- *   highlighter?.attach()
+ * Fully optimized using Debounce mechanism and Combined Named-Group Regex.
  */
 object SyntaxHighlighterFactory {
     fun create(extension: String?, editText: EditText): SyntaxHighlighter? {
@@ -60,8 +54,13 @@ abstract class BaseSyntaxHighlighter(
     private var watcher: TextWatcher? = null
     private var isHighlighting = false
 
+    // Handler để điều phối bộ hoãn thực thi (Debounce)
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val highlightRunnable = Runnable { highlight() }
+
     companion object {
-        private const val MAX_HIGHLIGHT_LENGTH = 300_000
+        private const val MAX_HIGHLIGHT_LENGTH = 150_000 // Giới hạn an toàn để tránh lag UI
+        private const val DEBOUNCE_DELAY_MS = 150L       // Đợi 150ms sau khi dừng gõ mới tô màu
     }
 
     protected val editText: EditText?
@@ -78,14 +77,18 @@ abstract class BaseSyntaxHighlighter(
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
             override fun afterTextChanged(s: Editable?) {
                 if (isHighlighting || s == null) return
-                highlight()
+                
+                // Hủy lịch trình cũ, lên lịch trình mới để gom các phím gõ nhanh lại
+                mainHandler.removeCallbacks(highlightRunnable)
+                mainHandler.postDelayed(highlightRunnable, DEBOUNCE_DELAY_MS)
             }
         }
         et.addTextChangedListener(watcher)
-        highlight()
+        highlight() // Chạy lần đầu tiên ngay khi gắn vào
     }
 
     override fun detach() {
+        mainHandler.removeCallbacks(highlightRunnable)
         val et = editText ?: return
         watcher?.let { et.removeTextChangedListener(it) }
         watcher = null
@@ -97,8 +100,7 @@ abstract class BaseSyntaxHighlighter(
         if (isHighlighting) return
 
         if (text.length > MAX_HIGHLIGHT_LENGTH) {
-            // File quá lớn: tô màu lại toàn bộ trên mỗi lần gõ sẽ làm treo UI thread (ANR).
-            // Bỏ qua tô màu cú pháp cho các file lớn, người dùng vẫn gõ/sửa bình thường.
+            // File quá lớn: Bỏ qua để giữ hiệu năng gõ mượt mà cho người dùng
             return
         }
 
@@ -106,18 +108,22 @@ abstract class BaseSyntaxHighlighter(
         try {
             applyHighlight(text)
         } catch (_: Throwable) {
-            // Không để một lỗi ở bước tô màu cú pháp (vd. regex gặp nội dung bất thường)
-            // làm crash toàn bộ app — bỏ qua lần tô màu này là đủ, nội dung gõ vẫn giữ nguyên.
+            // Tránh crash ứng dụng nếu có lỗi phân tích cú pháp xảy ra ngoài ý muốn
         } finally {
             isHighlighting = false
         }
     }
 
     protected fun clearSpans(text: Editable) {
-        val spans = text.getSpans(0, text.length, Any::class.java)
-        for (span in spans) {
-            when (span) {
-                is ForegroundColorSpan, is StyleSpan -> text.removeSpan(span)
+        // Chỉ bóc tách đúng các loại Spans do hệ thống tô màu này định nghĩa
+        val colorSpans = text.getSpans(0, text.length, ForegroundColorSpan::class.java)
+        for (span in colorSpans) {
+            text.removeSpan(span)
+        }
+        val styleSpans = text.getSpans(0, text.length, StyleSpan::class.java)
+        for (span in styleSpans) {
+            if (span.style == Typeface.BOLD) {
+                text.removeSpan(span)
             }
         }
     }
@@ -176,64 +182,42 @@ class ShellSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
         "true", "false", "type", "command", "eval", "let"
     )
 
+    private val shellRegex = Regex(
+        "(?<COMMENT>(?m)#.*$)" +
+        "|(?<STRING>\"(?:\\\\.|[^\"\\\\])*\"|'(?:[^']*)'|`(?:\\\\.|[^`\\\\])*`)" +
+        "|(?<COMMAND>\\$\\((?:[^()]*|\\([^()]*\\))*\\))" +
+        "|(?<VARIABLE>\\$\\{[A-Za-z_][A-Za-z0-9_]*[^}]*\\}|\\$[A-Za-z_][A-Za-z0-9_]*)" +
+        "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_]))" +
+        "|(?<WORD>(?<![A-Za-z0-9_])[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_]))" +
+        "|(?<PUNCTUATION>&&|\\|\\||\\||;|\\(|\\)|\\{|\\}|\\[\\[|\\]\\]|<|>)"
+    )
+
     override fun applyHighlight(text: Editable) {
         clearSpans(text)
         val s = text.toString()
 
-        // Comments
-        Regex("""(?m)#.*$""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, commentColor())
-        }
+        shellRegex.findAll(s).forEach { result ->
+            val groups = result.groups
+            val start = result.range.first
+            val end = result.range.last + 1
 
-        // Strings: double quotes, single quotes, backticks
-        // Lưu ý: nhánh escape (\\.) và nhánh "mọi ký tự khác" phải KHÔNG được chồng lấn nhau
-        // (cả hai cùng khớp được ký tự '\') — nếu chồng lấn, một chuỗi chưa đóng (thiếu dấu
-        // đóng ") kèm nhiều dấu '\' sẽ khiến regex engine backtrack theo cấp số nhân và ném
-        // StackOverflowError, làm crash app ngay khi người dùng đang gõ dở. Loại bỏ '\\' khỏi
-        // lớp ký tự [^"\\] để hai nhánh không còn khớp trùng nhau nữa.
-        Regex(""""(?:\\.|[^"\\])*"""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, stringColor())
-        }
-        Regex("""'(?:[^']*)'""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, stringColor())
-        }
-        Regex("""`(?:\\.|[^`\\])*`""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, stringColor())
-        }
-
-        // Command substitution
-        Regex("""\$\((?:[^()]*|\([^()]*\))*\)""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, builtinColor())
-        }
-
-        // Variables
-        Regex("""\$\{[A-Za-z_][A-Za-z0-9_]*[^}]*}""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, numberColor())
-        }
-        Regex("""\$[A-Za-z_][A-Za-z0-9_]*""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, numberColor())
-        }
-
-        // Numbers
-        Regex("""(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_])""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, numberColor())
-        }
-
-        // Keywords / builtins
-        Regex("""(?<![A-Za-z0-9_])([A-Za-z_][A-Za-z0-9_]*)(?![A-Za-z0-9_])""").findAll(s).forEach {
-            val word = it.value
             when {
-                keywords.contains(word) -> {
-                    color(text, it.range.first, it.range.last + 1, keywordColor())
-                    bold(text, it.range.first, it.range.last + 1)
+                groups["COMMENT"] != null -> color(text, start, end, commentColor())
+                groups["STRING"] != null -> color(text, start, end, stringColor())
+                groups["COMMAND"] != null -> color(text, start, end, builtinColor())
+                groups["VARIABLE"] != null -> color(text, start, end, numberColor())
+                groups["NUMBER"] != null -> color(text, start, end, numberColor())
+                groups["PUNCTUATION"] != null -> color(text, start, end, punctuationColor())
+                groups["WORD"] != null -> {
+                    val word = result.value
+                    if (keywords.contains(word)) {
+                        color(text, start, end, keywordColor())
+                        bold(text, start, end)
+                    } else if (builtins.contains(word)) {
+                        color(text, start, end, builtinColor())
+                    }
                 }
-                builtins.contains(word) -> color(text, it.range.first, it.range.last + 1, builtinColor())
             }
-        }
-
-        // Punctuation/operators
-        Regex("""&&|\|\||\||;|\(|\)|\{|\}|\[\[|\]\]|<|>""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, punctuationColor())
         }
     }
 }
@@ -247,44 +231,47 @@ class XmlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
     numberColor = 0xFFAA66CC.toInt(),
     punctuationColor = 0xFF808080.toInt(),
 ) {
+    private val xmlRegex = Regex(
+        "(?<COMMENT>(?s)<!--.*?-->)" +
+        "|(?<CDATA>(?s)<!\\[CDATA\\[.*?\\]\\]>)" +
+        "|(?<TAG></?[A-Za-z_][A-Za-z0-9_:\\-\\.]*)" +
+        "|(?<ATTR>\\b[A-Za-z_][A-Za-z0-9_:\\-\\.]*(?=\\s*=))" +
+        "|(?<VALUE>\"(?:\\\\.|[^\"\\\\])*\")" +
+        "|(?<ENTITY>&(?:amp|lt|gt|apos|quot|#x?[0-9A-Fa-f]+);)" +
+        "|(?<PUNCTUATION></?|/>|>[^<]*)"
+    )
+
     override fun applyHighlight(text: Editable) {
         clearSpans(text)
         val s = text.toString()
 
-        // XML comments
-        Regex("""(?s)<!--.*?-->""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, commentColor())
-        }
+        xmlRegex.findAll(s).forEach { result ->
+            val groups = result.groups
+            val start = result.range.first
+            val end = result.range.last + 1
 
-        // CDATA
-        Regex("""(?s)<!\[CDATA\[.*?\]\]>""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, stringColor())
-        }
-
-        // Tags
-        Regex("""</?[A-Za-z_][A-Za-z0-9_:\-\.]*""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, keywordColor())
-            bold(text, it.range.first, it.range.last + 1)
-        }
-
-        // Attribute names (the part before =")
-        Regex("""\b[A-Za-z_][A-Za-z0-9_:\-\.]*(?=\s*=)""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, builtinColor())
-        }
-
-        // Attribute values (xem ghi chú về backtracking ở ShellSyntaxHighlighter phía trên)
-        Regex(""""(?:\\.|[^"\\])*"""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, stringColor())
-        }
-
-        // Entities
-        Regex("""&(?:amp|lt|gt|apos|quot|#x?[0-9A-Fa-f]+);""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, numberColor())
-        }
-
-        // Angle brackets / punctuation
-        Regex("""</?|/>|>""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, punctuationColor())
+            when {
+                groups["COMMENT"] != null -> color(text, start, end, commentColor())
+                groups["CDATA"] != null -> color(text, start, end, stringColor())
+                groups["TAG"] != null -> {
+                    color(text, start, end, keywordColor())
+                    bold(text, start, end)
+                }
+                groups["ATTR"] != null -> color(text, start, end, builtinColor())
+                groups["VALUE"] != null -> color(text, start, end, stringColor())
+                groups["ENTITY"] != null -> color(text, start, end, numberColor())
+                groups["PUNCTUATION"] != null -> {
+                    // Chỉ tô màu ký tự phân tách thực tế (<, >, />, </) không bao gồm phần text trần bên ngoài
+                    val rawValue = result.value
+                    val punctEnd = when {
+                        rawValue.startsWith("</") -> start + 2
+                        rawValue.startsWith("/>") -> start + 2
+                        rawValue.startsWith("<") || rawValue.startsWith(">") -> start + 1
+                        else -> end
+                    }
+                    color(text, start, punctEnd, punctuationColor())
+                }
+            }
         }
     }
 }
@@ -298,39 +285,38 @@ class PropSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
     numberColor = 0xFFAA66CC.toInt(),
     punctuationColor = 0xFF808080.toInt(),
 ) {
+    private val propRegex = Regex(
+        "(?<COMMENT>(?m)^\\s*[#!].*$)" +
+        "|(?<KEYVALUE>(?m)^\\s*([A-Za-z0-9_.-]+)(\\s*=))" +
+        "|(?<STRING>\"(?:\\\\.|[^\"\\\\])*\")" +
+        "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_]))" +
+        "|(?<SEPARATOR>=)"
+    )
+
     override fun applyHighlight(text: Editable) {
         clearSpans(text)
         val s = text.toString()
 
-        // Comments
-        Regex("""(?m)^\s*[#!].*$""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, commentColor())
-        }
+        propRegex.findAll(s).forEach { result ->
+            val groups = result.groups
+            val start = result.range.first
+            val end = result.range.last + 1
 
-        // Key = value
-        Regex("""(?m)^\s*([A-Za-z0-9_.-]+)(\s*=)""").findAll(s).forEach {
-            val line = it.value
-            val keyEnd = line.indexOf('=')
-            if (keyEnd > 0) {
-                color(text, it.range.first, it.range.first + keyEnd, keywordColor())
-                color(text, it.range.first + keyEnd, it.range.first + keyEnd + 1, punctuationColor())
-                bold(text, it.range.first, it.range.first + keyEnd)
+            when {
+                groups["COMMENT"] != null -> color(text, start, end, commentColor())
+                groups["KEYVALUE"] != null -> {
+                    val line = result.value
+                    val keyEnd = line.indexOf('=')
+                    if (keyEnd > 0) {
+                        color(text, start, start + keyEnd, keywordColor())
+                        color(text, start + keyEnd, start + keyEnd + 1, punctuationColor())
+                        bold(text, start, start + keyEnd)
+                    }
+                }
+                groups["STRING"] != null -> color(text, start, end, stringColor())
+                groups["NUMBER"] != null -> color(text, start, end, numberColor())
+                groups["SEPARATOR"] != null -> color(text, start, end, punctuationColor())
             }
-        }
-
-        // Quoted values (xem ghi chú về backtracking ở ShellSyntaxHighlighter phía trên)
-        Regex(""""(?:\\.|[^"\\])*"""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, stringColor())
-        }
-
-        // Numbers
-        Regex("""(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_])""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, numberColor())
-        }
-
-        // Separators
-        Regex("""=""").findAll(s).forEach {
-            color(text, it.range.first, it.range.last + 1, punctuationColor())
         }
     }
 }
