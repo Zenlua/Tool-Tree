@@ -102,11 +102,9 @@ class TextEditorActivity : AppCompatActivity() {
         absoluteFilePath = resolveAbsolutePath(configDir, filePath)
 
         val extraTitle = intent.getStringExtra(EXTRA_TITLE).orEmpty()
-        val extraDesc = intent.getStringExtra(EXTRA_DESC).orEmpty()
         wrapEnabled = intent.getBooleanExtra(EXTRA_WRAP, true)
 
         title = extraTitle.ifEmpty { File(absoluteFilePath).name }
-        supportActionBar?.subtitle = extraDesc.ifEmpty { null }
 
         applyWrapState()
         setupFab()
@@ -127,11 +125,15 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun setupFab() {
         val interpreter = RUNNABLE_EXTENSIONS[fileExtension()]
+        binding.editorFabRun.visibility = View.VISIBLE
         if (interpreter != null) {
-            binding.editorFabRun.visibility = View.VISIBLE
+            binding.editorFabRun.contentDescription = getString(R.string.editor_run_test)
+            binding.editorFabRun.setImageResource(R.drawable.kr_run)
             binding.editorFabRun.setOnClickListener { saveAndRun(interpreter) }
         } else {
-            binding.editorFabRun.visibility = View.GONE
+            binding.editorFabRun.contentDescription = getString(R.string.editor_save)
+            binding.editorFabRun.setImageResource(android.R.drawable.ic_menu_save)
+            binding.editorFabRun.setOnClickListener { saveFile() }
         }
     }
 
