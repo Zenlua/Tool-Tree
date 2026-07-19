@@ -2,20 +2,27 @@ package com.tool.tree
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.widget.ImageViewCompat
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shared.FileWrite
 import com.omarea.common.shell.KeepShellPublic
@@ -57,6 +64,11 @@ class TextEditorActivity : AppCompatActivity() {
             "bash" to "bash"
         )
 
+        // Số bước Undo tối đa được giữ lại, và thời gian tạm dừng gõ (ms) để "chốt" một bước
+        // Undo mới — gộp các ký tự gõ liên tục thành một bước duy nhất.
+        private const val UNDO_HISTORY_LIMIT = 200
+        private const val UNDO_DEBOUNCE_MS = 700L
+
         fun start(
             context: Context,
             file: String,
@@ -92,6 +104,20 @@ class TextEditorActivity : AppCompatActivity() {
     private var syntaxHighlighter: SyntaxHighlighter? = null
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
 
+    // --- Undo / Redo ---
+    // Lưu lại toàn bộ nội dung tại mỗi "đợt" chỉnh sửa (gộp các ký tự gõ liên tục thành một
+    // bước, thay vì lưu theo từng ký tự) để nút Undo/Redo hoạt động tự nhiên như trình soạn
+    // thảo thông thường. EditText mặc định của Android không có sẵn undo/redo công khai nên
+    // phải tự quản lý 2 stack này.
+    private val undoStack = ArrayDeque<String>()
+    private val redoStack = ArrayDeque<String>()
+    private var pendingUndoSnapshot: String? = null
+    private var isApplyingHistory = false
+    private var undoButton: ImageButton? = null
+    private var redoButton: ImageButton? = null
+    private val undoHandler = Handler(Looper.getMainLooper())
+    private val commitPendingUndoRunnable = Runnable { commitPendingUndoSnapshot() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ThemeModeState.switchTheme(this)
@@ -101,9 +127,12 @@ class TextEditorActivity : AppCompatActivity() {
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
-        supportActionBar?.setHomeButtonEnabled(true)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        toolbar.setNavigationOnClickListener { attemptClose() }
+        // Bỏ nút back (mũi tên) trên toolbar theo yêu cầu — việc thoát trang giờ thực hiện qua
+        // mục "Thoát" trong menu (xem onOptionsItemSelected). Nút back cứng/gesture của hệ
+        // thống vẫn hoạt động bình thường nhờ onBackPressedDispatcher bên dưới.
+        supportActionBar?.setHomeButtonEnabled(false)
+        supportActionBar?.setDisplayHomeAsUpEnabled(false)
+        setupUndoRedoButtons(toolbar)
 
         onBackPressedDispatcher.addCallback(this) { attemptClose() }
 
@@ -124,12 +153,14 @@ class TextEditorActivity : AppCompatActivity() {
 
         applyWrapState()
         setupCursorAutoScroll()
+        setupUndoRedoTracking()
         loadFileContent()
     }
 
     override fun onDestroy() {
         syntaxHighlighter?.detach()
         syntaxHighlighter = null
+        undoHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
 
@@ -227,6 +258,142 @@ class TextEditorActivity : AppCompatActivity() {
         syntaxHighlighter?.attach()
     }
 
+    /**
+     * Tạo 2 nút Undo/Redo và gắn vào bên trái của toolbar (thay cho vị trí nút back đã bỏ).
+     */
+    private fun setupUndoRedoButtons(toolbar: Toolbar) {
+        val tint = ColorStateList.valueOf(resolveThemeColor(android.R.attr.textColorPrimary))
+        val buttonSize = (48 * resources.displayMetrics.density).toInt()
+        val iconPadding = (12 * resources.displayMetrics.density).toInt()
+
+        fun makeButton(iconRes: Int, descRes: Int): ImageButton {
+            return ImageButton(this).apply {
+                setImageResource(iconRes)
+                contentDescription = getString(descRes)
+                setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
+                val outValue = TypedValue()
+                theme.resolveAttribute(
+                    android.R.attr.selectableItemBackgroundBorderless,
+                    outValue,
+                    true
+                )
+                setBackgroundResource(outValue.resourceId)
+                ImageViewCompat.setImageTintList(this, tint)
+                layoutParams = Toolbar.LayoutParams(buttonSize, buttonSize).apply {
+                    gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                }
+            }
+        }
+
+        undoButton = makeButton(R.drawable.ic_editor_undo, R.string.editor_undo).also {
+            it.setOnClickListener { performUndo() }
+            toolbar.addView(it)
+        }
+        redoButton = makeButton(R.drawable.ic_editor_redo, R.string.editor_redo).also {
+            it.setOnClickListener { performRedo() }
+            toolbar.addView(it)
+        }
+        refreshUndoRedoButtons()
+    }
+
+    private fun resolveThemeColor(attr: Int): Int {
+        val typedValue = TypedValue()
+        theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
+    }
+
+    /**
+     * Theo dõi nội dung để phục vụ Undo/Redo. Các thay đổi gõ liên tục (không dừng quá
+     * [UNDO_DEBOUNCE_MS]) được gộp thành một bước, để Undo/Redo hoạt động theo "đợt chỉnh sửa"
+     * thay vì theo từng ký tự.
+     */
+    private fun setupUndoRedoTracking() {
+        binding.editorContent.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                if (isApplyingHistory) return
+                if (pendingUndoSnapshot == null) {
+                    pendingUndoSnapshot = s?.toString().orEmpty()
+                }
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+
+            override fun afterTextChanged(s: Editable?) {
+                if (isApplyingHistory) return
+                redoStack.clear()
+                undoHandler.removeCallbacks(commitPendingUndoRunnable)
+                undoHandler.postDelayed(commitPendingUndoRunnable, UNDO_DEBOUNCE_MS)
+                refreshUndoRedoButtons()
+            }
+        })
+    }
+
+    private fun commitPendingUndoSnapshot() {
+        val snapshot = pendingUndoSnapshot ?: return
+        pendingUndoSnapshot = null
+        val current = binding.editorContent.text?.toString().orEmpty()
+        if (snapshot == current) return
+
+        if (undoStack.size >= UNDO_HISTORY_LIMIT) {
+            undoStack.removeFirst()
+        }
+        undoStack.addLast(snapshot)
+        refreshUndoRedoButtons()
+    }
+
+    private fun performUndo() {
+        undoHandler.removeCallbacks(commitPendingUndoRunnable)
+        val current = binding.editorContent.text?.toString().orEmpty()
+
+        val target: String
+        val pending = pendingUndoSnapshot
+        if (pending != null) {
+            // Đang có một đợt gõ chưa kịp "chốt" vào undoStack — hoàn tác thẳng về mốc đó.
+            target = pending
+            pendingUndoSnapshot = null
+        } else {
+            if (undoStack.isEmpty()) return
+            target = undoStack.removeLast()
+        }
+
+        redoStack.addLast(current)
+        applyHistoryText(target)
+        refreshUndoRedoButtons()
+    }
+
+    private fun performRedo() {
+        if (redoStack.isEmpty()) return
+        undoHandler.removeCallbacks(commitPendingUndoRunnable)
+        pendingUndoSnapshot = null
+
+        val current = binding.editorContent.text?.toString().orEmpty()
+        val target = redoStack.removeLast()
+
+        if (undoStack.size >= UNDO_HISTORY_LIMIT) {
+            undoStack.removeFirst()
+        }
+        undoStack.addLast(current)
+        applyHistoryText(target)
+        refreshUndoRedoButtons()
+    }
+
+    private fun applyHistoryText(text: String) {
+        isApplyingHistory = true
+        val editText = binding.editorContent
+        editText.setText(text)
+        editText.setSelection(text.length.coerceAtLeast(0))
+        isApplyingHistory = false
+    }
+
+    private fun refreshUndoRedoButtons() {
+        val canUndo = undoStack.isNotEmpty() || pendingUndoSnapshot != null
+        val canRedo = redoStack.isNotEmpty()
+        undoButton?.isEnabled = canUndo
+        undoButton?.alpha = if (canUndo) 1f else 0.4f
+        redoButton?.isEnabled = canRedo
+        redoButton?.alpha = if (canRedo) 1f else 0.4f
+    }
+
     private fun loadFileContent() {
         progressBarDialog.showDialog(getString(R.string.please_wait))
         lifecycleScope.launch(Dispatchers.IO) {
@@ -246,7 +413,14 @@ class TextEditorActivity : AppCompatActivity() {
                 progressBarDialog.hideDialog()
                 isNewFile = newFile
                 savedContent = content
+                isApplyingHistory = true
                 binding.editorContent.setText(content)
+                isApplyingHistory = false
+                undoHandler.removeCallbacks(commitPendingUndoRunnable)
+                pendingUndoSnapshot = null
+                undoStack.clear()
+                redoStack.clear()
+                refreshUndoRedoButtons()
                 binding.editorContent.hint = if (newFile) {
                     getString(R.string.editor_hint_new_file)
                 } else {
@@ -307,7 +481,11 @@ class TextEditorActivity : AppCompatActivity() {
         // Chỉ đổi setHorizontallyScrolling()/layoutParams thôi thì TextView không tự dựng lại
         // Layout nội bộ theo chiều rộng mới (văn bản đã dàn trang trước đó bị giữ nguyên), nên
         // phải set lại text để buộc nó dựng lại layout rồi khôi phục vị trí con trỏ.
+        // Đây không phải là một thao tác chỉnh sửa nội dung thật sự nên không được tính vào
+        // lịch sử Undo/Redo.
+        isApplyingHistory = true
         editText.setText(currentText)
+        isApplyingHistory = false
         editText.setSelection(
             cursorStart.coerceAtMost(currentText.length),
             cursorEnd.coerceAtMost(currentText.length)
@@ -364,6 +542,10 @@ class TextEditorActivity : AppCompatActivity() {
                 wrapEnabled = !wrapEnabled
                 item.isChecked = wrapEnabled
                 applyWrapState()
+                true
+            }
+            R.id.editor_menu_exit -> {
+                attemptClose()
                 true
             }
             android.R.id.home -> {

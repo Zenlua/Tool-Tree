@@ -60,6 +60,10 @@ abstract class BaseSyntaxHighlighter(
     private var watcher: TextWatcher? = null
     private var isHighlighting = false
 
+    companion object {
+        private const val MAX_HIGHLIGHT_LENGTH = 300_000
+    }
+
     protected val editText: EditText?
         get() = editTextRef.get()
 
@@ -92,9 +96,18 @@ abstract class BaseSyntaxHighlighter(
         val text = et.text ?: return
         if (isHighlighting) return
 
+        if (text.length > MAX_HIGHLIGHT_LENGTH) {
+            // File quá lớn: tô màu lại toàn bộ trên mỗi lần gõ sẽ làm treo UI thread (ANR).
+            // Bỏ qua tô màu cú pháp cho các file lớn, người dùng vẫn gõ/sửa bình thường.
+            return
+        }
+
         isHighlighting = true
         try {
             applyHighlight(text)
+        } catch (_: Throwable) {
+            // Không để một lỗi ở bước tô màu cú pháp (vd. regex gặp nội dung bất thường)
+            // làm crash toàn bộ app — bỏ qua lần tô màu này là đủ, nội dung gõ vẫn giữ nguyên.
         } finally {
             isHighlighting = false
         }
@@ -173,13 +186,18 @@ class ShellSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
         }
 
         // Strings: double quotes, single quotes, backticks
-        Regex(""""(?:\\.|[^"])*"""").findAll(s).forEach {
+        // Lưu ý: nhánh escape (\\.) và nhánh "mọi ký tự khác" phải KHÔNG được chồng lấn nhau
+        // (cả hai cùng khớp được ký tự '\') — nếu chồng lấn, một chuỗi chưa đóng (thiếu dấu
+        // đóng ") kèm nhiều dấu '\' sẽ khiến regex engine backtrack theo cấp số nhân và ném
+        // StackOverflowError, làm crash app ngay khi người dùng đang gõ dở. Loại bỏ '\\' khỏi
+        // lớp ký tự [^"\\] để hai nhánh không còn khớp trùng nhau nữa.
+        Regex(""""(?:\\.|[^"\\])*"""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
         Regex("""'(?:[^']*)'""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
-        Regex("""`(?:\\.|[^`])*`""").findAll(s).forEach {
+        Regex("""`(?:\\.|[^`\\])*`""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
 
@@ -254,8 +272,8 @@ class XmlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
             color(text, it.range.first, it.range.last + 1, builtinColor())
         }
 
-        // Attribute values
-        Regex(""""(?:\\.|[^"])*"""").findAll(s).forEach {
+        // Attribute values (xem ghi chú về backtracking ở ShellSyntaxHighlighter phía trên)
+        Regex(""""(?:\\.|[^"\\])*"""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
 
@@ -300,8 +318,8 @@ class PropSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
             }
         }
 
-        // Quoted values
-        Regex(""""(?:\\.|[^"])*"""").findAll(s).forEach {
+        // Quoted values (xem ghi chú về backtracking ở ShellSyntaxHighlighter phía trên)
+        Regex(""""(?:\\.|[^"\\])*"""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
 
