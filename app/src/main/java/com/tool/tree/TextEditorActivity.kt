@@ -3,9 +3,12 @@ package com.tool.tree
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -77,6 +80,8 @@ class TextEditorActivity : AppCompatActivity() {
     private var savedContent: String = ""
     private var isNewFile = false
     private var isSaving = false
+    private var noWrapContainer: HorizontalScrollView? = null
+    private var fabBaseMarginBottom = 0
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,6 +116,7 @@ class TextEditorActivity : AppCompatActivity() {
 
         applyWrapState()
         setupFab()
+        setupCursorAutoScroll()
         loadFileContent()
     }
 
@@ -118,23 +124,61 @@ class TextEditorActivity : AppCompatActivity() {
      * App đang dùng chế độ edge-to-edge (decorFitsSystemWindows = false) nên hệ thống sẽ
      * không tự đẩy layout lên khi hiện bàn phím dù có khai báo windowSoftInputMode="adjustResize"
      * trong manifest — phải tự lắng nghe inset của bàn phím (IME) rồi đệm (padding) đáy vùng
-     * nội dung lên tương ứng, đồng thời ẩn FAB đi để không bị bàn phím che mất/đè lên.
+     * nội dung lên tương ứng, đồng thời đẩy FAB lên theo để nó luôn nổi trên bàn phím thay vì
+     * bị che khuất hoặc biến mất.
      */
     private fun setupKeyboardInsets() {
         val scrollContainer = binding.mainList
+        val fabParams = binding.editorFabRun.layoutParams as ViewGroup.MarginLayoutParams
+        fabBaseMarginBottom = fabParams.bottomMargin
+
         ViewCompat.setOnApplyWindowInsetsListener(scrollContainer) { view, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val systemBarsInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
             val keyboardVisible = imeInset > systemBarsInset
 
             view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, maxOf(imeInset, systemBarsInset))
-            binding.editorFabRun.visibility = if (keyboardVisible) View.GONE else View.VISIBLE
+
+            val fabLp = binding.editorFabRun.layoutParams as ViewGroup.MarginLayoutParams
+            fabLp.bottomMargin = fabBaseMarginBottom + imeInset
+            binding.editorFabRun.layoutParams = fabLp
 
             if (keyboardVisible) {
-                view.post { scrollContainer.fullScroll(View.FOCUS_DOWN) }
+                view.post { scrollToCursor() }
             }
 
             insets
+        }
+    }
+
+    /**
+     * Đảm bảo con trỏ luôn được cuộn vào vùng nhìn thấy mỗi khi gõ chữ/xuống dòng, kể cả khi
+     * bàn phím đang chiếm một phần màn hình.
+     */
+    private fun setupCursorAutoScroll() {
+        binding.editorContent.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                binding.editorContent.post { scrollToCursor() }
+            }
+        })
+    }
+
+    private fun scrollToCursor() {
+        val editText = binding.editorContent
+        val layout = editText.layout ?: return
+        val scrollView = binding.mainList
+        val selection = editText.selectionEnd.coerceIn(0, editText.text?.length ?: 0)
+        val line = layout.getLineForOffset(selection)
+        val lineTop = layout.getLineTop(line) + editText.top + editText.paddingTop
+        val lineBottom = layout.getLineBottom(line) + editText.top
+        val visibleTop = scrollView.scrollY
+        val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
+
+        when {
+            lineBottom > visibleBottom -> scrollView.smoothScrollTo(0, lineBottom - scrollView.height + scrollView.paddingBottom)
+            lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
         }
     }
 
@@ -191,27 +235,52 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun applyWrapState() {
         val editText = binding.editorContent
-        val horizontalScroll: HorizontalScrollView = binding.editorScrollHorizontal
+        val scrollView = binding.mainList
 
         // Lưu lại vị trí con trỏ và nội dung hiện tại trước khi đổi chế độ
         val currentText = editText.text?.toString().orEmpty()
         val cursorStart = editText.selectionStart.coerceIn(0, currentText.length)
         val cursorEnd = editText.selectionEnd.coerceIn(0, currentText.length)
 
+        // Gỡ EditText ra khỏi cha hiện tại (có thể là ScrollView hoặc HorizontalScrollView)
+        (editText.parent as? ViewGroup)?.removeView(editText)
+        noWrapContainer?.let { scrollView.removeView(it) }
+
         editText.setHorizontallyScrolling(!wrapEnabled)
 
-        val params = editText.layoutParams
-        params.width = if (wrapEnabled) android.view.ViewGroup.LayoutParams.MATCH_PARENT else android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-        editText.layoutParams = params
+        if (wrapEnabled) {
+            // Ngắt dòng: EditText là con trực tiếp của ScrollView (dọc) -> chiều rộng bị giới hạn
+            // theo màn hình nên văn bản thực sự được ngắt dòng, chiều cao tự do để cuộn dọc.
+            editText.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            scrollView.addView(editText)
+        } else {
+            // Không ngắt dòng: bọc EditText trong một HorizontalScrollView -> chiều rộng không bị
+            // giới hạn nên các dòng dài sẽ kéo dài ra và cuộn ngang được, còn HorizontalScrollView
+            // đó vẫn là con trực tiếp của ScrollView (dọc) nên vẫn cuộn dọc bình thường.
+            val hsv = noWrapContainer ?: HorizontalScrollView(this).also {
+                it.isFillViewport = false
+                it.scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
+                noWrapContainer = it
+            }
+            editText.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            hsv.removeAllViews()
+            hsv.addView(editText)
+            hsv.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            hsv.scrollTo(0, 0)
+            scrollView.addView(hsv)
+        }
 
         // Chỉ đổi setHorizontallyScrolling()/layoutParams thôi thì TextView không tự dựng lại
         // Layout nội bộ theo chiều rộng mới (văn bản đã dàn trang trước đó bị giữ nguyên), nên
         // phải set lại text để buộc nó dựng lại layout rồi khôi phục vị trí con trỏ.
         editText.setText(currentText)
         editText.setSelection(cursorStart.coerceAtMost(currentText.length), cursorEnd.coerceAtMost(currentText.length))
-
-        horizontalScroll.isHorizontalScrollBarEnabled = !wrapEnabled
-        horizontalScroll.scrollTo(0, 0)
     }
 
     private fun hasUnsavedChanges(): Boolean {

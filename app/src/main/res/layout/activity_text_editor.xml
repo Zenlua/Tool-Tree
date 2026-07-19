@@ -13,29 +13,20 @@
         android:fillViewport="true"
         android:scrollbarStyle="insideOverlay">
 
-        <HorizontalScrollView
-            android:id="@+id/editor_scroll_horizontal"
+        <EditText
+            android:id="@+id/editor_content"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true"
-            android:scrollbarStyle="insideOverlay">
-
-            <EditText
-                android:id="@+id/editor_content"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:gravity="top|start"
-                android:hint="@string/editor_hint_empty"
-                android:inputType="textMultiLine|textNoSuggestions"
-                android:imeOptions="flagNoExtractUi"
-                android:padding="16dp"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textColorHint="?android:attr/textColorSecondary"
-                android:textSize="14sp"
-                android:typeface="monospace" />
-
-        </HorizontalScrollView>
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:gravity="top|start"
+            android:hint="@string/editor_hint_empty"
+            android:inputType="textMultiLine|textNoSuggestions"
+            android:imeOptions="flagNoExtractUi"
+            android:padding="16dp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorSecondary"
+            android:textSize="14sp"
+            android:typeface="monospace" />
 
     </ScrollView>
 
