@@ -262,7 +262,7 @@ class TextEditorActivity : AppCompatActivity() {
      * Tạo 2 nút Undo/Redo và gắn vào bên trái của toolbar (thay cho vị trí nút back đã bỏ).
      */
     private fun setupUndoRedoButtons(toolbar: Toolbar) {
-        val tint = ColorStateList.valueOf(resolveThemeColor(android.R.attr.textColorPrimary))
+        val tint = ColorStateList.valueOf(android.graphics.Color.WHITE)
         val buttonSize = (48 * resources.displayMetrics.density).toInt()
         val iconPadding = (12 * resources.displayMetrics.density).toInt()
 
