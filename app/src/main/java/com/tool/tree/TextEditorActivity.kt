@@ -81,6 +81,8 @@ class TextEditorActivity : AppCompatActivity() {
     private var isNewFile = false
     private var isSaving = false
     private var noWrapContainer: HorizontalScrollView? = null
+    private var mainListBaseBottomMargin = 0
+    private var fabBaseBottomMargin = 0
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,23 +124,36 @@ class TextEditorActivity : AppCompatActivity() {
     /**
      * App đang dùng chế độ edge-to-edge (decorFitsSystemWindows = false) nên hệ thống sẽ
      * không tự đẩy layout lên khi hiện bàn phím dù có khai báo windowSoftInputMode="adjustResize"
-     * trong manifest — phải tự lắng nghe inset của bàn phím (IME) rồi tự đẩy.
+     * trong manifest — phải tự lắng nghe inset của bàn phím (IME) rồi tự xử lý.
      *
-     * Thay vì chỉ đệm (padding) đáy vùng cuộn — vốn phụ thuộc vào cách ScrollView tự tính vùng
-     * cuộn được nên không phải lúc nào cũng chắc chắn tránh được bàn phím — cách này dịch chuyển
-     * (translationY) thẳng toàn bộ vùng nội dung bên dưới thanh tiêu đề (gồm cả FAB) lên trên
-     * đúng bằng phần chiều cao bị bàn phím che, đảm bảo con trỏ/văn bản luôn nổi lên trên bàn
-     * phím chứ không bị che.
+     * Dùng translationY (chỉ dịch hình ảnh) từng gây lỗi không kéo lên đầu được, vì vùng chạm/
+     * cuộn vẫn được tính theo kích thước View cũ (translation không đổi kích thước/measurement
+     * thật). Ở đây đổi sang tăng bottomMargin thật của vùng nội dung và FAB — tương đương
+     * cách adjustResize thật sự hoạt động — nên kích thước, vùng cuộn và vùng chạm đều được
+     * tính lại chính xác theo không gian còn trống phía trên bàn phím. Có thêm một khoảng đệm
+     * dư ra để văn bản/con trỏ không dính sát vào mép bàn phím.
      */
     private fun setupKeyboardInsets() {
+        val mainListParams = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
+        mainListBaseBottomMargin = mainListParams.bottomMargin
+        val fabParams = binding.editorFabRun.layoutParams as ViewGroup.MarginLayoutParams
+        fabBaseBottomMargin = fabParams.bottomMargin
+        val extraGapPx = (48 * resources.displayMetrics.density).toInt()
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val systemBarsInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            val pushUp = (imeInset - systemBarsInset).coerceAtLeast(0).toFloat()
-            val keyboardVisible = pushUp > 0
+            val keyboardHeight = (imeInset - systemBarsInset).coerceAtLeast(0)
+            val keyboardVisible = keyboardHeight > 0
+            val extraGap = if (keyboardVisible) extraGapPx else 0
 
-            binding.mainList.animate().translationY(-pushUp).setDuration(120).start()
-            binding.editorFabRun.animate().translationY(-pushUp).setDuration(120).start()
+            val mlp = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
+            mlp.bottomMargin = mainListBaseBottomMargin + keyboardHeight + extraGap
+            binding.mainList.layoutParams = mlp
+
+            val flp = binding.editorFabRun.layoutParams as ViewGroup.MarginLayoutParams
+            flp.bottomMargin = fabBaseBottomMargin + keyboardHeight + extraGap
+            binding.editorFabRun.layoutParams = flp
 
             if (keyboardVisible) {
                 binding.mainList.post { scrollToCursor() }
