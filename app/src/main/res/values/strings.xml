@@ -156,4 +156,17 @@ If you agree, press the confirm button to continue."</string>
     <string name="save_text">Save to</string>
     <string name="remove_text">Remove</string>
 
+    <string name="editor_file_missing">No file path was provided</string>
+    <string name="editor_hint_empty">Empty file</string>
+    <string name="editor_hint_new_file">This file does not exist yet — it will be created when you save</string>
+    <string name="editor_unsaved_title">Unsaved changes</string>
+    <string name="editor_unsaved_message">This file has unsaved changes. Save before leaving?</string>
+    <string name="editor_save">Save</string>
+    <string name="editor_discard">Discard</string>
+    <string name="editor_saving">Saving…</string>
+    <string name="editor_save_success">File saved</string>
+    <string name="editor_save_fail">Failed to save the file</string>
+    <string name="editor_toggle_wrap">Word wrap</string>
+    <string name="editor_run_test">Run test</string>
+
 </resources>

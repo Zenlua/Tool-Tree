@@ -94,6 +94,12 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".TextEditorActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="keyboardHidden|orientation|layoutDirection|screenLayout|colorMode|fontScale|smallestScreenSize|density|keyboard|screenSize|touchscreen" />
+        <activity
             android:theme="@style/AppThemeDark"
             android:name=".CrashLogActivity"
             android:exported="false"

@@ -111,6 +111,7 @@ class PageConfigReader {
             var group: GroupNode? = null
             var page: PageNode? = null
             var text: TextNode? = null
+            var editor: EditorNode? = null
             var isRootNode = true
             while (type != XmlPullParser.END_DOCUMENT) { // 如果事件不等于文档结束事件就继续循环
                 when (type) {
@@ -141,6 +142,11 @@ class PageConfigReader {
                                 }
                             } else if ("text" == parser.name) {
                                 text = mainNode(TextNode(pageConfigAbsPath), parser) as TextNode?
+                            } else if ("editor" == parser.name) {
+                                editor = clickbleNode(EditorNode(pageConfigAbsPath), parser) as EditorNode?
+                                if (editor != null) {
+                                    editor = editorNode(editor, parser)
+                                }
                             } else if (page != null) {
                                 tagStartInPage(page, parser)
                             } else if (action != null) {
@@ -200,6 +206,12 @@ class PageConfigReader {
                                     }
                                     text = null
                                 }
+                                "editor" -> {
+                                    if (editor != null) {
+                                        group.children.add(editor)
+                                    }
+                                    editor = null
+                                }
                             }
                         } else {
                             when (parser.name) {
@@ -237,6 +249,12 @@ class PageConfigReader {
                                         mainList.add(text)
                                     }
                                     text = null
+                                }
+                                "editor" -> {
+                                    if (editor != null) {
+                                        mainList.add(editor)
+                                    }
+                                    editor = null
                                 }
                             }
                         }
@@ -595,6 +613,19 @@ class PageConfigReader {
                 }
             }
         }
+    }
+
+    // Đọc thuộc tính riêng của thẻ <editor file="" title="" desc="" wrap="" />
+    private fun editorNode(editor: EditorNode, parser: XmlPullParser): EditorNode {
+        for (attrIndex in 0 until parser.attributeCount) {
+            val attrName = parser.getAttributeName(attrIndex)
+            val attrValue = parser.getAttributeValue(attrIndex)
+            when (attrName) {
+                "file", "path" -> editor.file = attrValue.trim()
+                "wrap" -> editor.wrap = !(attrValue == "0" || attrValue == "false" || attrValue == "off" || attrValue == "no-wrap")
+            }
+        }
+        return editor
     }
 
     private fun descNode(nodeInfoBase: NodeInfoBase, parser: XmlPullParser) {

@@ -18,6 +18,7 @@ class PageLayoutRender(private val mContext: Context,
         fun onActionClick(item: ActionNode, onCompleted: Runnable)
         fun onSwitchClick(item: SwitchNode, onCompleted: Runnable)
         fun onPickerClick(item: PickerNode, onCompleted: Runnable)
+        fun onEditorClick(item: EditorNode, onCompleted: Runnable)
         fun onItemLongClick(clickableNode: ClickableNode)
     }
 
@@ -55,6 +56,7 @@ class PageLayoutRender(private val mContext: Context,
             is ActionNode -> clickListener.onActionClick(item, getCommonOnExitRunnable(item, listItemView))
             is PickerNode -> clickListener.onPickerClick(item, getCommonOnExitRunnable(item, listItemView))
             is SwitchNode -> clickListener.onSwitchClick(item, getCommonOnExitRunnable(item, listItemView))
+            is EditorNode -> clickListener.onEditorClick(item, getCommonOnExitRunnable(item, listItemView))
         }
     }
 
@@ -98,6 +100,8 @@ class PageLayoutRender(private val mContext: Context,
                     uiRender = createListItem(it)
                 } else if (it is TextNode) {
                     uiRender = if (parent.isRootGroup) createTextItem(it) else createTextItemWhite(it)
+                } else if (it is EditorNode) {
+                    uiRender = createEditorItem(it)
                 } else if (it is GroupNode) {
                     val subGroup = createItemGroup(it)
                     if (it.children.isNotEmpty()) {
@@ -141,6 +145,10 @@ class PageLayoutRender(private val mContext: Context,
 
     private fun createActionItem(node: ActionNode): ListItemView {
         return ListItemAction(mContext, node)
+    }
+
+    private fun createEditorItem(node: EditorNode): ListItemView {
+        return ListItemEditor(mContext, node)
     }
 
     private fun createItemGroup(node: GroupNode): ListItemGroup {
