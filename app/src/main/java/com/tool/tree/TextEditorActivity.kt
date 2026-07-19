@@ -26,6 +26,8 @@ import com.omarea.krscript.model.ActionNode
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.ui.DialogLogFragment
 import com.tool.tree.databinding.ActivityTextEditorBinding
+import com.tool.tree.ui.SyntaxHighlighter
+import com.tool.tree.ui.SyntaxHighlighterFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,9 +54,7 @@ class TextEditorActivity : AppCompatActivity() {
         // Các đuôi file được coi là script shell, cho phép "chạy thử nghiệm"
         private val RUNNABLE_EXTENSIONS = mapOf(
             "sh" to "sh",
-            "bash" to "bash",
-            "zsh" to "zsh",
-            "ksh" to "ksh"
+            "bash" to "bash"
         )
 
         fun start(
@@ -89,6 +89,7 @@ class TextEditorActivity : AppCompatActivity() {
     private var isSaving = false
     private var noWrapContainer: HorizontalScrollView? = null
     private var mainListBaseBottomMargin = 0
+    private var syntaxHighlighter: SyntaxHighlighter? = null
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,7 +113,6 @@ class TextEditorActivity : AppCompatActivity() {
             finish()
             return
         }
-
         filePath = extraFile
         configDir = intent.getStringExtra(EXTRA_DIR).orEmpty()
         absoluteFilePath = resolveAbsolutePath(configDir, filePath)
@@ -125,6 +125,12 @@ class TextEditorActivity : AppCompatActivity() {
         applyWrapState()
         setupCursorAutoScroll()
         loadFileContent()
+    }
+
+    override fun onDestroy() {
+        syntaxHighlighter?.detach()
+        syntaxHighlighter = null
+        super.onDestroy()
     }
 
     /**
@@ -215,6 +221,12 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun runnableInterpreter(): String? = RUNNABLE_EXTENSIONS[fileExtension()]
 
+    private fun setupSyntaxHighlighting() {
+        syntaxHighlighter?.detach()
+        syntaxHighlighter = SyntaxHighlighterFactory.createForPath(absoluteFilePath, binding.editorContent)
+        syntaxHighlighter?.attach()
+    }
+
     private fun loadFileContent() {
         progressBarDialog.showDialog(getString(R.string.please_wait))
         lifecycleScope.launch(Dispatchers.IO) {
@@ -240,6 +252,8 @@ class TextEditorActivity : AppCompatActivity() {
                 } else {
                     getString(R.string.editor_hint_empty)
                 }
+
+                setupSyntaxHighlighting()
             }
         }
     }
