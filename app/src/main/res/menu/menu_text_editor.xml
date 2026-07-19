@@ -9,7 +9,7 @@
     <item
         android:id="@+id/editor_menu_run"
         android:orderInCategory="15"
-        android:icon="@drawable/kr_script"
+        android:icon="@drawable/ic_editor_run"
         android:title="@string/editor_run_test"
         app:showAsAction="ifRoom" />
     <item
