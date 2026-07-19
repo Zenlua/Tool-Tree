@@ -92,9 +92,9 @@ Want to help translate Tool-Tree?
 
 - [Shell language packs](https://github.com/Zenlua/Tool-Tree/tree/main/app/src/main/assets/home/etc/lang)
 
-- [Addon](https://github.com/Zenlua/Tool-Tree/tree/main/.github/module/ZADD)
+- [Addon language](https://github.com/Zenlua/Tool-Tree/tree/main/.github/module/ZADD)
 
-- [Apkon](https://github.com/Zenlua/Tool-Tree/tree/main/.github/module/ZAPK)
+- [Apkon language](https://github.com/Zenlua/Tool-Tree/tree/main/.github/module/ZAPK)
 
 + For language utilities, they are usually located in the language.bash file within the directories.
 
