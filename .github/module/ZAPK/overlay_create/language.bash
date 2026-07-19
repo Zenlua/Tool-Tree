@@ -1,5 +1,5 @@
 
-if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ];then
+if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ]; then
 home_text_1="Tạo overlay"
 home_text_2="Tạo một overlay từ thư mục ngôn ngữ"
 home_text_3="Trích xuất ngôn ngữ"
@@ -20,4 +20,25 @@ overlay_text_8="Lỗi xây dựng overlay, kiểm tra log:"
 overlay_text_9="Lưu tại:"
 overlay_text_10="Lỗi giải mã (decode) APK, xem log:"
 overlay_text_11="Đang nhập framework..."
+elif [ "$LANGUAGE-$COUNTRY" == "hu-HU" ]; then
+home_text_1="Hozz létre egy átfedést (overlay)"
+home_text_2="H hozzon létre overlay-t a nyelvi könyvtárból"
+home_text_3="Nyelvkinyerés"
+home_text_4="Nyelvi fájlok kinyerése APK-fájlból overlay létrehozásához"
+home_text_5="Nyelv"
+home_text_6="Csak a megadott nyelveket bontsa ki; ha üresen hagyja, az összes nyelv benne lesz: values-vi, values-zh-rCN"
+home_text_7="A könyvtárnak tartalmaznia kell egy nyelvi könyvtárstruktúrát, például: App/res/values-hu/strings.xml"
+home_text_8="A könyvtárnak tartalmaznia kell egy APK-fájlt"
+
+overlay_text_1="A könyvtár nem található"
+overlay_text_2="Overlay-lista létrehozva. Kérjük, adja hozzá a csomagot a listához:"
+overlay_text_3="Üres mappa"
+overlay_text_4="Átfedés létrehozása folyamatban..."
+overlay_text_5="Létrehozás"
+overlay_text_6="Már létezik"
+overlay_text_7="Kihagyva"
+overlay_text_8="Hiba az overlay összeállítása során, ellenőrizze a naplót:"
+overlay_text_9="Mentve ide:"
+overlay_text_10="APK-dekódolási hiba, ellenőrizze a naplót:"
+overlay_text_11="framework betöltése..."
 fi

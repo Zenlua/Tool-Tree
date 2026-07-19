@@ -5,6 +5,8 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.view.LayoutInflater
+import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import com.tool.tree.R
@@ -80,6 +82,35 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
                 dialogs.remove(this)
             }
         }
+    }
+
+    /**
+     * Hiển thị dialog loading kèm nút Hủy.
+     * [onCancel] được gọi trên main thread khi người dùng bấm Hủy;
+     * dialog tự đóng ngay sau đó.
+     */
+    fun showDialogWithCancel(text: String, onCancel: () -> Unit): ProgressBarDialog {
+        val layoutInflater = LayoutInflater.from(context)
+        val dialog = layoutInflater.inflate(R.layout.dialog_loading, null)
+
+        textView = dialog.findViewById(R.id.dialog_text)
+        textView?.text = text
+
+        val cancelButton = dialog.findViewById<Button>(R.id.dialog_cancel_button)
+        cancelButton?.visibility = View.VISIBLE
+        cancelButton?.setOnClickListener {
+            hideDialog()
+            onCancel()
+        }
+
+        alert = DialogHelper.customDialog(context, dialog, false)
+
+        uniqueId?.run {
+            dialogs.remove(this)
+            alert?.let { dialogs[this] = it }
+        }
+
+        return this
     }
 
     fun showDialog(text: String = "Loading, please wait..."): ProgressBarDialog {

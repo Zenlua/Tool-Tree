@@ -1,5 +1,5 @@
 
-if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ];then
+if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ]; then
 lang_action_warn="Add-on này có tác dụng sao chép các tệp tin đã chọn vào module magisk, ksu, apatch v.v, để tạo ra module, sau khi khởi động lại nó sẽ được áp dụng vào hệ thống giống như các module khác."
 lang_title="Nhập tệp tin"
 lang_summary_path="Đường dẫn: "
@@ -13,4 +13,18 @@ lang_del_tile="Xoá tệp nhanh"
 lang_del_desc="Lựa chọn tệp tin bất kỳ trong module để xóa bỏ"
 lang_del_desc2="Xoá tệp tin bất kỳ trong:"
 list_modul="Danh sách tệp được áp dụng"
+elif [ "$LANGUAGE-$COUNTRY" == "hu-HU" ]; then
+lang_action_warn="Ez a kiegészítő a kijelölt fájlokat egy Magisk-, KSU- vagy APatch-modulba másolja; újraindítás után a modul ugyanúgy aktiválódik a rendszerben, mint bármely más modul."
+lang_title="Fájl importálása"
+lang_summary_path="Link: "
+lang_desc_adb="Adja meg a fájl elérési útját; ha üresen hagyja, a rendszer automatikusan megkeresi a rendszerben lévővel megegyező fájlnevet"
+lang_desc_prop="Adj hozzá egy tulajdonságot a modulhoz"
+lang_save_at="Mentés ide: "
+lang_searching="Útvonal keresése..."
+lang_not_found="A fájl nem található: "
+lang_input_notice=", adja meg az elérési utat egy új létrehozásához"
+lang_del_tile="Fájlok gyors törlése"
+lang_del_desc="Válassza ki a törölni kívánt fájlt a modulon belül"
+lang_del_desc2="Töröljön bármilyen fájlt a következő helyről:"
+list_modul="Alkalmazott fájlok listája"
 fi
