@@ -24,6 +24,7 @@ object SyntaxHighlighterFactory {
             "sh", "bash", "zsh", "ksh" -> ShellSyntaxHighlighter(editText)
             "xml" -> XmlSyntaxHighlighter(editText)
             "prop", "properties" -> PropSyntaxHighlighter(editText)
+            "py" -> PythonSyntaxHighlighter(editText) // Tích hợp bộ tô màu Python
             else -> null
         }
     }
@@ -54,13 +55,12 @@ abstract class BaseSyntaxHighlighter(
     private var watcher: TextWatcher? = null
     private var isHighlighting = false
 
-    // Handler để điều phối bộ hoãn thực thi (Debounce)
     private val mainHandler = Handler(Looper.getMainLooper())
     private val highlightRunnable = Runnable { highlight() }
 
     companion object {
-        private const val MAX_HIGHLIGHT_LENGTH = 150_000 // Giới hạn an toàn để tránh lag UI
-        private const val DEBOUNCE_DELAY_MS = 150L       // Đợi 150ms sau khi dừng gõ mới tô màu
+        private const val MAX_HIGHLIGHT_LENGTH = 150_000 
+        private const val DEBOUNCE_DELAY_MS = 150L       
     }
 
     protected val editText: EditText?
@@ -77,14 +77,12 @@ abstract class BaseSyntaxHighlighter(
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
             override fun afterTextChanged(s: Editable?) {
                 if (isHighlighting || s == null) return
-                
-                // Hủy lịch trình cũ, lên lịch trình mới để gom các phím gõ nhanh lại
                 mainHandler.removeCallbacks(highlightRunnable)
                 mainHandler.postDelayed(highlightRunnable, DEBOUNCE_DELAY_MS)
             }
         }
         et.addTextChangedListener(watcher)
-        highlight() // Chạy lần đầu tiên ngay khi gắn vào
+        highlight() 
     }
 
     override fun detach() {
@@ -99,23 +97,18 @@ abstract class BaseSyntaxHighlighter(
         val text = et.text ?: return
         if (isHighlighting) return
 
-        if (text.length > MAX_HIGHLIGHT_LENGTH) {
-            // File quá lớn: Bỏ qua để giữ hiệu năng gõ mượt mà cho người dùng
-            return
-        }
+        if (text.length > MAX_HIGHLIGHT_LENGTH) return
 
         isHighlighting = true
         try {
             applyHighlight(text)
         } catch (_: Throwable) {
-            // Tránh crash ứng dụng nếu có lỗi phân tích cú pháp xảy ra ngoài ý muốn
         } finally {
             isHighlighting = false
         }
     }
 
     protected fun clearSpans(text: Editable) {
-        // Chỉ bóc tách đúng các loại Spans do hệ thống tô màu này định nghĩa
         val colorSpans = text.getSpans(0, text.length, ForegroundColorSpan::class.java)
         for (span in colorSpans) {
             text.removeSpan(span)
@@ -167,7 +160,6 @@ class ShellSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
     numberColor = 0xFFAA66CC.toInt(),
     punctuationColor = 0xFF808080.toInt(),
 ) {
-
     private val keywords = setOf(
         "if", "then", "else", "elif", "fi",
         "for", "while", "until", "do", "done",
@@ -261,7 +253,6 @@ class XmlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
                 groups["VALUE"] != null -> color(text, start, end, stringColor())
                 groups["ENTITY"] != null -> color(text, start, end, numberColor())
                 groups["PUNCTUATION"] != null -> {
-                    // Chỉ tô màu ký tự phân tách thực tế (<, >, />, </) không bao gồm phần text trần bên ngoài
                     val rawValue = result.value
                     val punctEnd = when {
                         rawValue.startsWith("</") -> start + 2
@@ -316,6 +307,69 @@ class PropSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
                 groups["STRING"] != null -> color(text, start, end, stringColor())
                 groups["NUMBER"] != null -> color(text, start, end, numberColor())
                 groups["SEPARATOR"] != null -> color(text, start, end, punctuationColor())
+            }
+        }
+    }
+}
+
+/**
+ * Lớp tô màu cú pháp Python tối ưu hiệu năng qua Named-Group Regex.
+ */
+class PythonSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
+    editText = editText,
+    keywordColor = 0xFF3D8BFF.toInt(),      // Blue
+    builtinColor = 0xFFFFA000.toInt(),      // Orange
+    stringColor = 0xFF2EAD4B.toInt(),       // Green
+    commentColor = 0xFF8A8A8A.toInt(),      // Gray
+    numberColor = 0xFFAA66CC.toInt(),       // Purple
+    punctuationColor = 0xFF808080.toInt(),  // Dark Gray
+) {
+    private val keywords = setOf(
+        "False", "None", "True", "and", "as", "assert", "async", "await",
+        "break", "class", "continue", "def", "del", "elif", "else", "except",
+        "finally", "for", "from", "global", "if", "import", "in", "is", "lambda",
+        "nonlocal", "not", "or", "pass", "raise", "return", "try", "while", "with", "yield"
+    )
+
+    private val builtins = setOf(
+        "print", "input", "len", "type", "int", "float", "str", "list", "dict", "set",
+        "tuple", "range", "open", "abs", "max", "min", "sum", "sorted", "enumerate",
+        "zip", "isinstance", "map", "filter", "any", "all", "dir", "id", "help"
+    )
+
+    private val pythonRegex = Regex(
+        "(?<COMMENT>#.*$)" +
+        "|(?<STRING>\"\"\"(?s).*?\"\"\"|'''(?s).*?'''|\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*')" +
+        "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|\\d+\\.\\d+|\\d+)(?![A-Za-z0-9_]))" +
+        "|(?<DECORATOR>@[A-Za-z_][A-Za-z0-9_]*)" +
+        "|(?<WORD>(?<![A-Za-z0-9_])[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_]))" +
+        "|(?<PUNCTUATION>[:.,;()\\[\\]{}@+\\-*/%=<>!&|^~])"
+    )
+
+    override fun applyHighlight(text: Editable) {
+        clearSpans(text)
+        val s = text.toString()
+
+        pythonRegex.findAll(s).forEach { result ->
+            val groups = result.groups
+            val start = result.range.first
+            val end = result.range.last + 1
+
+            when {
+                groups["COMMENT"] != null -> color(text, start, end, commentColor())
+                groups["STRING"] != null -> color(text, start, end, stringColor())
+                groups["NUMBER"] != null -> color(text, start, end, numberColor())
+                groups["DECORATOR"] != null -> color(text, start, end, builtinColor())
+                groups["PUNCTUATION"] != null -> color(text, start, end, punctuationColor())
+                groups["WORD"] != null -> {
+                    val word = result.value
+                    if (keywords.contains(word)) {
+                        color(text, start, end, keywordColor())
+                        bold(text, start, end)
+                    } else if (builtins.contains(word)) {
+                        color(text, start, end, builtinColor())
+                    }
+                }
             }
         }
     }

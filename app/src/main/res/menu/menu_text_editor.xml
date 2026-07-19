@@ -18,9 +18,4 @@
         android:orderInCategory="20"
         android:title="@string/editor_toggle_wrap"
         app:showAsAction="never" />
-    <item
-        android:id="@+id/editor_menu_exit"
-        android:orderInCategory="30"
-        android:title="@string/editor_exit"
-        app:showAsAction="never" />
 </menu>

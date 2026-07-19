@@ -4,18 +4,27 @@ import os
 import sys
 import re
 import shutil
-import multiprocessing
 import json
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
-DEFAULT_LIMIT = 50000
+DEFAULT_LIMIT = 60000  # Safe threshold for 1 DEX file
 
+# --- DEFINITION REGEXES ---
 CLASS_DEF = re.compile(r'^\.class\b.*?\s+(L[^;\s]+;)')
 METHOD_DEF = re.compile(r'^\.method\b.*?\s+([^\s(]+)\(([^)]*)\)(\S+)')
 FIELD_DEF = re.compile(r'^\.field\b.*?\s+([^\s:]+):(\S+)')
-TYPE_PATTERN = re.compile(r'\[*L[^;]+;|\[*[ZBCSIFJDV]')
-STRING_PATTERN = re.compile(r'"((?:\\.|[^"\\])*)"')
 
+# --- REFERENCE REGEXES (ADVANCED SCANNING) ---
+# Captures method calls: invoke-xxx {v0, v1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
+INVOKE_REF = re.compile(r'\bephemeral_placeholder_if_needed\b|'
+                        r'(?:invoke-[^\s]+)\s+{[^}]+},\s*(L[^;]+;)->([^\s(]+)\(([^)]*)\)(\S+)')
+
+# Captures field accesses: iget-object, sput-boolean v0, Lcom/abc;->TAG:Ljava/lang/String;
+FIELD_REF = re.compile(r'(?:[is][gsp]et-[^\s]*)\s+[^,]+,\s*(L[^;]+;)->([^\s:]+):(\S+)')
+
+# Captures array or instance types appearing inside instructions (e.g., new-instance, check-cast)
+TYPE_PATTERN = re.compile(r'\[*L[^;\s]+;|\[*[ZBCSIFJDV]')
+STRING_PATTERN = re.compile(r'"((?:\\.|[^"\\])*)"')
 
 # -------------------------------------------------
 # Utils
@@ -23,7 +32,6 @@ STRING_PATTERN = re.compile(r'"((?:\\.|[^"\\])*)"')
 
 def extract_types(desc):
     return TYPE_PATTERN.findall(desc)
-
 
 def detect_mode(base):
     smali_dir = os.path.join(base, "smali")
@@ -33,23 +41,29 @@ def detect_mode(base):
         return "apkeditor"
     return "apktool"
 
-
 def get_dex_dir(base, mode, index):
     if mode == "apktool":
         return os.path.join(base, "smali" if index == 1 else f"smali_classes{index}")
-    else:
-        smali_base = os.path.join(base, "smali")
-        return os.path.join(smali_base, "classes" if index == 1 else f"classes{index}")
+    return os.path.join(base, "smali", "classes" if index == 1 else f"classes{index}")
 
-
-# -------------------------------------------------
-# APKEDITOR dex-file.json handler (GIỮ NGUYÊN)
-# -------------------------------------------------
+def scan_smali_files(folder):
+    result = []
+    stack = [folder]
+    while stack:
+        current = stack.pop()
+        try:
+            with os.scandir(current) as entries:
+                for entry in entries:
+                    if entry.is_dir():
+                        stack.append(entry.path)
+                    elif entry.name.endswith(".smali"):
+                        result.append(entry.path)
+        except:
+            pass
+    return result
 
 def handle_apkeditor_dex_json_latest(base, new_index):
-
     smali_dir = os.path.join(base, "smali")
-
     max_index = 1
     for name in os.listdir(smali_dir):
         if name.startswith("classes"):
@@ -64,10 +78,8 @@ def handle_apkeditor_dex_json_latest(base, new_index):
                 max_index = idx
 
     old_name = "classes" if max_index == 1 else f"classes{max_index}"
-    new_name = f"classes{new_index}"
-
     old_dir = os.path.join(smali_dir, old_name)
-    new_dir = os.path.join(smali_dir, new_name)
+    new_dir = os.path.join(smali_dir, f"classes{new_index}")
 
     old_json = os.path.join(old_dir, "dex-file.json")
     new_json = os.path.join(new_dir, "dex-file.json")
@@ -76,349 +88,232 @@ def handle_apkeditor_dex_json_latest(base, new_index):
         return
 
     version = 40
-
     try:
         with open(old_json, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            version = data.get("version", 40)
+            version = json.load(f).get("version", 40)
     except:
         pass
 
+    os.makedirs(new_dir, exist_ok=True)
     shutil.move(old_json, new_json)
-
     with open(old_json, "w", encoding="utf-8") as f:
         json.dump({"version": version}, f, indent=2)
 
-
 # -------------------------------------------------
-# Parse smali
+# Parse smali (Deep Scanning Logic)
 # -------------------------------------------------
 
 def parse_smali(path):
-    methods = set()
-    fields = set()
-    types = set()
-    protos = set()
-    strings = set()
+    methods, fields, types, protos, strings = set(), set(), set(), set(), set()
     current_class = None
-    instruction_count = 0
-    invoke_count = 0
-    const_string_count = 0
 
     try:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 line = line.strip()
-                
-                if line and not line.startswith(('.', ':', '#')):
-                    instruction_count += 1
+                if not line or line.startswith("#"):
+                    continue
 
+                # 1. SCAN DEFINITIONS
+                if line.startswith(".class"):
+                    m = CLASS_DEF.match(line)
+                    if m:
+                        current_class = m.group(1)
+                        types.add(current_class)
+                    continue
+
+                if line.startswith(".field") and current_class:
+                    m = FIELD_DEF.match(line)
+                    if m:
+                        name, ftype = m.groups()
+                        fields.add(f"{current_class}->{name}:{ftype}")
+                        types.update(extract_types(ftype))
+                    continue
+
+                if line.startswith(".method") and current_class:
+                    m = METHOD_DEF.match(line)
+                    if m:
+                        name, params, ret = m.groups()
+                        proto = f"({params}){ret}"
+                        methods.add(f"{current_class}->{name}{proto}")
+                        protos.add(proto)
+                        types.update(extract_types(params))
+                        types.update(extract_types(ret))
+                    continue
+
+                # 2. SCAN IMPLICIT REFERENCES
                 if line.startswith("invoke-"):
-                    invoke_count += 1
-
-                if line.startswith("const-string"):
-                    const_string_count += 1
-
-                m = CLASS_DEF.match(line)
-                if m:
-                    current_class = m.group(1)
-                    types.add(current_class)
-                    # strings.add(current_class)
+                    m = INVOKE_REF.match(line)
+                    if m:
+                        cls, name, params, ret = m.groups()
+                        proto = f"({params}){ret}"
+                        methods.add(f"{cls}->{name}{proto}")
+                        protos.add(proto)
+                        types.add(cls)
+                        types.update(extract_types(params))
+                        types.update(extract_types(ret))
                     continue
 
-                m = FIELD_DEF.match(line)
-                if m and current_class:
-                    name, ftype = m.groups()
-                    fields.add(f"{current_class}->{name}:{ftype}")
-                    # strings.add(name)
-                    for t in extract_types(ftype):
-                        types.add(t)
+                if line.startswith(("iget", "iput", "sget", "sput")):
+                    m = FIELD_REF.match(line)
+                    if m:
+                        cls, name, ftype = m.groups()
+                        fields.add(f"{cls}->{name}:{ftype}")
+                        types.add(cls)
+                        types.update(extract_types(ftype))
                     continue
 
-                m = METHOD_DEF.match(line)
-                if m and current_class:
-                    name, params, ret = m.groups()
-                    proto = f"({params}){ret}"
-
-                    methods.add(f"{current_class}->{name}{proto}")
-                    protos.add(proto)
-                    # strings.add(name)
-
-                    for t in extract_types(params):
-                        types.add(t)
-                    for t in extract_types(ret):
-                        types.add(t)
-                    continue
-
-                if line.startswith("const-string"):
+                if "const-string" in line:
                     m = STRING_PATTERN.search(line)
                     if m:
                         strings.add(m.group(1))
+                    continue
+
+                # Fallback catch for inline type initialization opcodes
+                if any(x in line for x in ["new-instance", "check-cast", "instance-of", "new-array"]):
+                    types.update(extract_types(line))
 
     except:
         pass
 
-    weight = max(
-        len(methods),
-        len(fields),
-        len(types),
-        len(protos),
-        len(strings)
-    )
-
+    weight = max(len(methods), len(fields), len(types), len(protos), len(strings))
     return path, methods, fields, types, protos, strings, weight
 
-
 # -------------------------------------------------
-# Collect dex data
+# Collect & Optimize Rebalance Logic
 # -------------------------------------------------
 
 def collect_dex_data(base, mode):
     dex_data = {}
     file_cache = {}
-
     index = 1
-    cpu = min(4, max(1, multiprocessing.cpu_count() - 1))
-    
+    cpu = min(32, max(4, (os.cpu_count() or 4) * 2))
+
     while True:
         dex_dir = get_dex_dir(base, mode, index)
         if not os.path.isdir(dex_dir):
             break
 
-        smali_files = []
-        for root, _, files in os.walk(dex_dir):
-            for f in files:
-                if f.endswith(".smali"):
-                    smali_files.append(os.path.join(root, f))
+        smali_files = scan_smali_files(dex_dir)
+        methods, fields, types, protos, strings = set(), set(), set(), set(), set()
 
-        methods = set()
-        fields = set()
-        types = set()
-        protos = set()
-        strings = set()
-
-        with ProcessPoolExecutor(max_workers=cpu) as executor:
-            results = executor.map(parse_smali, smali_files, chunksize=100)
-            for path, m, f, t, p, s, w in results:
-                methods.update(m)
-                fields.update(f)
-                types.update(t)
-                protos.update(p)
-                strings.update(s)
-
-                file_cache[path] = {
-                    "methods": m,
-                    "fields": f,
-                    "types": t,
-                    "protos": p,
-                    "strings": s,
-                    "weight": w
-                }
+        if smali_files:
+            with ThreadPoolExecutor(max_workers=cpu) as executor:
+                results = executor.map(parse_smali, smali_files)
+                for path, m, f, t, p, s, w in results:
+                    methods.update(m)
+                    fields.update(f)
+                    types.update(t)
+                    protos.update(p)
+                    strings.update(s)
+                    file_cache[path] = {"methods": m, "fields": f, "types": t, "protos": p, "strings": s, "weight": w}
 
         dex_data[index] = {
-            "dir": dex_dir,
-            "files": smali_files,
-            "methods": methods,
-            "fields": fields,
-            "types": types,
-            "protos": protos,
-            "strings": strings
+            "dir": dex_dir, "files": smali_files,
+            "methods": methods, "fields": fields, "types": types, "protos": protos, "strings": strings
         }
-
         index += 1
 
     return dex_data, file_cache
 
-
-# -------------------------------------------------
-# Stats
-# -------------------------------------------------
-
 def get_count(dex):
-    return max(
-        len(dex["methods"]),
-        len(dex["fields"]),
-        len(dex["types"]),
-        len(dex["protos"]),
-        len(dex["strings"])
-    )
-
+    return max(len(dex["methods"]), len(dex["fields"]), len(dex["types"]), len(dex["protos"]), len(dex["strings"]))
 
 def print_stats(dex_data):
     for i in sorted(dex_data.keys()):
         dex = dex_data[i]
-        print(
-            f"DEX{i}: max:{get_count(dex)} "
-            f"m:{len(dex['methods'])} "
-            f"f:{len(dex['fields'])} "
-            f"t:{len(dex['types'])} "
-            f"p:{len(dex['protos'])} "
-            f"s:{len(dex['strings'])}"
-        )
-
-# -------------------------------------------------
-# Move file
-# -------------------------------------------------
-
-def move_file(file_path, src_index, dst_index,
-              dex_data, file_cache, base, mode):
-
-    src_dir = dex_data[src_index]["dir"]
-    dst_dir = get_dex_dir(base, mode, dst_index)
-    os.makedirs(dst_dir, exist_ok=True)
-
-    rel = os.path.relpath(file_path, src_dir)
-    dst_path = os.path.join(dst_dir, rel)
-    os.makedirs(os.path.dirname(dst_path), exist_ok=True)
-
-    shutil.move(file_path, dst_path)
-
-    data = file_cache[file_path]
-
-    dex_data[src_index]["files"].remove(file_path)
-    dex_data[dst_index]["files"].append(dst_path)
-
-    for key in ["methods", "fields", "types", "protos", "strings"]:
-        dex_data[src_index][key] -= data[key]
-        dex_data[dst_index][key] |= data[key]
-
-    file_cache[dst_path] = data
-    del file_cache[file_path]
-
-# -------------------------------------------------
-# Rebalance – chuẩn Android
-# Không dex nào được vượt limit
-# Tự tạo thêm dex nếu cần
-# -------------------------------------------------
+        print(f"DEX{i}: max:{get_count(dex)} | m:{len(dex['methods'])} f:{len(dex['fields'])} t:{len(dex['types'])} p:{len(dex['protos'])} s:{len(dex['strings'])}")
 
 def rebalance_overflow_only(base, mode, limit):
-
     dex_data, file_cache = collect_dex_data(base, mode)
-    print("Overflow before rebalance:\n")
+    print("Stats before optimization (Including Deep References):")
     print_stats(dex_data)
 
-    overflow_exists = any(
-        get_count(dex_data[i]) > limit
-        for i in dex_data
-    )
-
-    if not overflow_exists:
+    overflow_indices = [i for i in dex_data if get_count(dex_data[i]) > limit]
+    if not overflow_indices:
+        print("\nCongratulations! All DEX structures are normalized and well within limits.")
         return
 
     next_index = max(dex_data.keys()) + 1
-    printed_newline = False
+    move_plan = []
 
-    def create_new_dex():
-        nonlocal next_index, printed_newline
+    virtual_dex = {
+        i: {k: set(dex_data[i][k]) for k in ["methods", "fields", "types", "protos", "strings"]}
+        for i in dex_data
+    }
 
-        if not printed_newline:
-            print()
-            printed_newline = True
+    for idx in sorted(overflow_indices):
+        files_in_dex = sorted(dex_data[idx]["files"], key=lambda f: file_cache[f]["weight"], reverse=True)
+        current_dst_dex = None
 
-        new_dir = get_dex_dir(base, mode, next_index)
-        os.makedirs(new_dir, exist_ok=True)
-
-        dex_data[next_index] = {
-            "dir": new_dir,
-            "files": [],
-            "methods": set(),
-            "fields": set(),
-            "types": set(),
-            "protos": set(),
-            "strings": set()
-        }
-
-        if mode == "apkeditor":
-            handle_apkeditor_dex_json_latest(base, next_index)
-
-        print(f"Created DEX {next_index}")
-
-        next_index += 1
-        return next_index - 1
-
-    current_new_dex = None
-
-    for index in sorted(list(dex_data.keys())):
-
-        while any(len(dex_data[index][k]) > limit
-            for k in ["methods", "fields", "types", "protos", "strings"]
-        ):
-
-            files_sorted = sorted(
-                dex_data[index]["files"],
-                key=lambda f: file_cache[f]["weight"],
-                reverse=True
-            )
-
-            if not files_sorted:
+        for f_path in files_in_dex:
+            v_max = max(len(virtual_dex[idx][k]) for k in ["methods", "fields", "types", "protos", "strings"])
+            if v_max <= limit:
                 break
 
-            moved = False
+            f_data = file_cache[f_path]
 
-            for f in files_sorted:
+            if current_dst_dex is None:
+                current_dst_dex = next_index
+                virtual_dex[current_dst_dex] = {k: set() for k in ["methods", "fields", "types", "protos", "strings"]}
+                next_index += 1
 
-                file_weight = file_cache[f]["weight"]
+            temp_counts = []
+            for k in ["methods", "fields", "types", "protos", "strings"]:
+                temp_counts.append(len(virtual_dex[current_dst_dex][k] | f_data[k]))
+            
+            if max(temp_counts) > limit:
+                current_dst_dex = next_index
+                virtual_dex[current_dst_dex] = {k: set() for k in ["methods", "fields", "types", "protos", "strings"]}
+                next_index += 1
 
-                # nếu file lớn hơn limit → vẫn phải move 1 lần duy nhất
-                if file_weight > limit:
-                    if current_new_dex is None:
-                        current_new_dex = create_new_dex()
+            for k in ["methods", "fields", "types", "protos", "strings"]:
+                virtual_dex[idx][k] -= f_data[k]
+                virtual_dex[current_dst_dex][k].update(f_data[k])
 
-                    move_file(
-                        f,
-                        index,
-                        current_new_dex,
-                        dex_data,
-                        file_cache,
-                        base,
-                        mode
-                    )
-                    moved = True
-                    break
+            move_plan.append((f_path, idx, current_dst_dex))
 
-                # nếu chưa có dex mới
-                if current_new_dex is None:
-                    current_new_dex = create_new_dex()
+    if not move_plan:
+        return
 
-                # nếu dex mới không đủ chỗ → tạo dex mới khác
-                if get_count(dex_data[current_new_dex]) + file_weight > limit:
-                    current_new_dex = create_new_dex()
+    print(f"\nStarting migration plan for {len(move_plan)} smali files...")
+    created_dex_indices = set()
 
-                move_file(
-                    f,
-                    index,
-                    current_new_dex,
-                    dex_data,
-                    file_cache,
-                    base,
-                    mode
-                )
+    for src_path, src_idx, dst_idx in move_plan:
+        src_dir = dex_data[src_idx]["dir"]
+        dst_dir = get_dex_dir(base, mode, dst_idx)
 
-                moved = True
-                break
+        if dst_idx not in created_dex_indices:
+            os.makedirs(dst_dir, exist_ok=True)
+            if mode == "apkeditor":
+                handle_apkeditor_dex_json_latest(base, dst_idx)
+            created_dex_indices.add(dst_idx)
 
-            if not moved:
-                # không còn file nào có thể move
-                break
+        rel = os.path.relpath(src_path, src_dir)
+        dst_path = os.path.join(dst_dir, rel)
+        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+        
+        try:
+            shutil.move(src_path, dst_path)
+        except Exception as e:
+            print(f"Migration error: {src_path} -> {e}")
 
-    print("\nOverflow after rebalance:\n")
-    print_stats(dex_data)
-
+    final_dex_data, _ = collect_dex_data(base, mode)
+    print("\nStats after optimization:")
+    print_stats(final_dex_data)
 
 # -------------------------------------------------
 # MAIN
 # -------------------------------------------------
 
 def main():
-
     if len(sys.argv) < 2:
         print("Usage: python redivision.py <project_folder> [limit]")
         return
 
     base = sys.argv[1]
-
     if not os.path.isdir(base):
-        print("Invalid project path")
+        print("Invalid project directory path")
         return
 
     try:
@@ -427,18 +322,15 @@ def main():
         limit = DEFAULT_LIMIT
 
     mode = detect_mode(base)
-
     if not mode:
-        print("Cannot detect project structure\n", file=sys.stderr)
+        print("Failed to recognize project architecture (Requires Apktool or ApkEditor directory tree)", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Detected mode: {mode}")
-    print(f"Limit: {limit}\n")
+    print(f"Detected project mode: {mode}")
+    print(f"Identifier limit cap: {limit}\n")
 
     rebalance_overflow_only(base, mode, limit)
-    
-    print(f"\nDone\n")
+    print("\nProcess completed successfully!\n")
 
 if __name__ == "__main__":
     main()
-    

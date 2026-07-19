@@ -61,7 +61,8 @@ class TextEditorActivity : AppCompatActivity() {
         // Các đuôi file được coi là script shell, cho phép "chạy thử nghiệm"
         private val RUNNABLE_EXTENSIONS = mapOf(
             "sh" to "sh",
-            "bash" to "bash"
+            "bash" to "bash",
+            "py" to "python"
         )
 
         // Số bước Undo tối đa được giữ lại, và thời gian tạm dừng gõ (ms) để "chốt" một bước
@@ -129,12 +130,12 @@ class TextEditorActivity : AppCompatActivity() {
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayShowTitleEnabled(false)
+        // supportActionBar?.setDisplayShowTitleEnabled(false)
         // Bỏ nút back (mũi tên) trên toolbar theo yêu cầu — việc thoát trang giờ thực hiện qua
         // mục "Thoát" trong menu (xem onOptionsItemSelected). Nút back cứng/gesture của hệ
         // thống vẫn hoạt động bình thường nhờ onBackPressedDispatcher bên dưới.
-        supportActionBar?.setHomeButtonEnabled(false)
-        supportActionBar?.setDisplayHomeAsUpEnabled(false)
+        supportActionBar?.setHomeButtonEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         setupUndoRedoButtons(toolbar)
 
         onBackPressedDispatcher.addCallback(this) { attemptClose() }
@@ -279,7 +280,7 @@ class TextEditorActivity : AppCompatActivity() {
                 setBackgroundResource(outValue.resourceId)
                 ImageViewCompat.setImageTintList(this, tint)
                 layoutParams = Toolbar.LayoutParams(buttonSize, buttonSize).apply {
-                    gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                    gravity = Gravity.END or Gravity.CENTER_VERTICAL
                 }
             }
         }
@@ -384,8 +385,12 @@ class TextEditorActivity : AppCompatActivity() {
     private fun applyHistorySnapshot(snapshot: EditorSnapshot) {
         isApplyingHistory = true
         val editText = binding.editorContent
-        editText.setText(snapshot.text)
-        editText.setSelection(snapshot.cursor.coerceIn(0, snapshot.text.length))
+        editText.text?.let { editable ->
+            editable.replace(0, editable.length, snapshot.text)
+        } ?: run {
+            editText.setText(snapshot.text)
+        }
+        editText.setSelection(snapshot.cursor.coerceIn(0, editText.text?.length ?: 0))
         isApplyingHistory = false
     }
 
@@ -548,14 +553,6 @@ class TextEditorActivity : AppCompatActivity() {
                 wrapEnabled = !wrapEnabled
                 item.isChecked = wrapEnabled
                 applyWrapState()
-                true
-            }
-            R.id.editor_menu_exit -> {
-                attemptClose()
-                true
-            }
-            android.R.id.home -> {
-                attemptClose()
                 true
             }
             else -> super.onOptionsItemSelected(item)

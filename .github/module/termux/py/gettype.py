@@ -2,7 +2,7 @@
 
 import os
 import sys
-import multiprocessing as mp
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 formats = (
     (b'PK', "zip"),
@@ -185,7 +185,6 @@ def main(path):
     path = os.path.abspath(path)
     cache = load_cache()
 
-    # Thư mục gốc đang chạy
     if os.path.isfile(path):
         root = os.path.dirname(path)
         root = os.path.abspath(root)
@@ -204,11 +203,13 @@ def main(path):
         return
 
     valid_relpaths = set()
+    cpu = min((os.cpu_count() or 1), 4)
+    args = [(f, root, root_cache) for f in files]
 
-    cpu = min(mp.cpu_count(), 4)
-    with mp.Pool(cpu) as pool:
-        args = [(f, root, root_cache) for f in files]
-        for file, relpath, typ, mtime_ns in pool.imap_unordered(gettype, args):
+    with ThreadPoolExecutor(max_workers=cpu) as executor:
+        futures = [executor.submit(gettype, arg) for arg in args]
+        for future in as_completed(futures):
+            file, relpath, typ, mtime_ns = future.result()
             valid_relpaths.add(relpath)
             cache.setdefault(root, {})[relpath] = (typ, mtime_ns)
             print(f"{os.path.basename(file)}:{typ}")
