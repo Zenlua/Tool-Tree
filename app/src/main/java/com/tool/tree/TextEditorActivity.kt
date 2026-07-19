@@ -57,7 +57,14 @@ class TextEditorActivity : AppCompatActivity() {
             "ksh" to "ksh"
         )
 
-        fun start(context: Context, file: String, title: String? = null, desc: String? = null, wrap: Boolean = true, dir: String? = null) {
+        fun start(
+            context: Context,
+            file: String,
+            title: String? = null,
+            desc: String? = null,
+            wrap: Boolean = true,
+            dir: String? = null
+        ) {
             val intent = Intent(context, TextEditorActivity::class.java).apply {
                 putExtra(EXTRA_FILE, file)
                 putExtra(EXTRA_TITLE, title ?: "")
@@ -105,6 +112,7 @@ class TextEditorActivity : AppCompatActivity() {
             finish()
             return
         }
+
         filePath = extraFile
         configDir = intent.getStringExtra(EXTRA_DIR).orEmpty()
         absoluteFilePath = resolveAbsolutePath(configDir, filePath)
@@ -181,7 +189,10 @@ class TextEditorActivity : AppCompatActivity() {
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
 
         when {
-            lineBottom > visibleBottom -> scrollView.smoothScrollTo(0, lineBottom - scrollView.height + scrollView.paddingBottom)
+            lineBottom > visibleBottom -> scrollView.smoothScrollTo(
+                0,
+                lineBottom - scrollView.height + scrollView.paddingBottom
+            )
             lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
         }
     }
@@ -195,7 +206,11 @@ class TextEditorActivity : AppCompatActivity() {
     private fun fileExtension(): String {
         val name = File(absoluteFilePath).name
         val dotIndex = name.lastIndexOf(".")
-        return if (dotIndex >= 0 && dotIndex < name.length - 1) name.substring(dotIndex + 1).lowercase() else ""
+        return if (dotIndex >= 0 && dotIndex < name.length - 1) {
+            name.substring(dotIndex + 1).lowercase()
+        } else {
+            ""
+        }
     }
 
     private fun runnableInterpreter(): String? = RUNNABLE_EXTENSIONS[fileExtension()]
@@ -220,7 +235,11 @@ class TextEditorActivity : AppCompatActivity() {
                 isNewFile = newFile
                 savedContent = content
                 binding.editorContent.setText(content)
-                binding.editorContent.hint = if (newFile) getString(R.string.editor_hint_new_file) else getString(R.string.editor_hint_empty)
+                binding.editorContent.hint = if (newFile) {
+                    getString(R.string.editor_hint_new_file)
+                } else {
+                    getString(R.string.editor_hint_empty)
+                }
             }
         }
     }
@@ -263,7 +282,10 @@ class TextEditorActivity : AppCompatActivity() {
             )
             hsv.removeAllViews()
             hsv.addView(editText)
-            hsv.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            hsv.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
             hsv.scrollTo(0, 0)
             scrollView.addView(hsv)
         }
@@ -272,7 +294,10 @@ class TextEditorActivity : AppCompatActivity() {
         // Layout nội bộ theo chiều rộng mới (văn bản đã dàn trang trước đó bị giữ nguyên), nên
         // phải set lại text để buộc nó dựng lại layout rồi khôi phục vị trí con trỏ.
         editText.setText(currentText)
-        editText.setSelection(cursorStart.coerceAtMost(currentText.length), cursorEnd.coerceAtMost(currentText.length))
+        editText.setSelection(
+            cursorStart.coerceAtMost(currentText.length),
+            cursorEnd.coerceAtMost(currentText.length)
+        )
     }
 
     private fun hasUnsavedChanges(): Boolean {
@@ -289,12 +314,18 @@ class TextEditorActivity : AppCompatActivity() {
             this,
             title = getString(R.string.editor_unsaved_title),
             message = getString(R.string.editor_unsaved_message),
-            onConfirm = DialogHelper.DialogButton(getString(R.string.editor_save), onClick = Runnable {
-                saveFile { success -> if (success) finish() }
-            }),
-            onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard), onClick = Runnable {
-                finish()
-            })
+            onConfirm = DialogHelper.DialogButton(
+                getString(R.string.editor_save),
+                onClick = Runnable {
+                    saveFile { success -> if (success) finish() }
+                }
+            ),
+            onCancel = DialogHelper.DialogButton(
+                getString(R.string.editor_discard),
+                onClick = Runnable {
+                    finish()
+                }
+            )
         )
     }
 
@@ -330,28 +361,53 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     /**
-     * Lưu nội dung hiện tại xuống file. Thử ghi trực tiếp trước, nếu không được (thiếu quyền)
-     * thì ghi ra file cache riêng của ứng dụng rồi copy đè bằng quyền root.
+     * Lưu nội dung hiện tại xuống file.
+     *
+     * showProgress = false: không hiện màn hình "vui lòng chờ"
+     * showToast = false: không hiện toast thành công/thất bại
      */
-    private fun saveFile(onResult: ((Boolean) -> Unit)? = null) {
+    private fun saveFile(
+        showProgress: Boolean = true,
+        showToast: Boolean = true,
+        onResult: ((Boolean) -> Unit)? = null
+    ) {
         if (isSaving) return
         isSaving = true
+
         val content = binding.editorContent.text?.toString().orEmpty()
-        progressBarDialog.showDialog(getString(R.string.editor_saving))
+        if (showProgress) {
+            progressBarDialog.showDialog(getString(R.string.editor_saving))
+        }
 
         lifecycleScope.launch(Dispatchers.IO) {
             val success = writeFileContent(absoluteFilePath, content)
 
             withContext(Dispatchers.Main) {
-                progressBarDialog.hideDialog()
+                if (showProgress) {
+                    progressBarDialog.hideDialog()
+                }
                 isSaving = false
+
                 if (success) {
                     savedContent = content
                     isNewFile = false
-                    Toast.makeText(this@TextEditorActivity, R.string.editor_save_success, Toast.LENGTH_SHORT).show()
+                    if (showToast) {
+                        Toast.makeText(
+                            this@TextEditorActivity,
+                            R.string.editor_save_success,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 } else {
-                    Toast.makeText(this@TextEditorActivity, R.string.editor_save_fail, Toast.LENGTH_LONG).show()
+                    if (showToast) {
+                        Toast.makeText(
+                            this@TextEditorActivity,
+                            R.string.editor_save_fail,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
+
                 onResult?.invoke(success)
             }
         }
@@ -391,6 +447,7 @@ class TextEditorActivity : AppCompatActivity() {
                 chmod 644 "$path"
                 if [ -f "$path" ]; then echo EDITOR_SAVE_OK; fi
             """.trimIndent()
+
             val result = KeepShellPublic.doCmdSync(command)
             cacheFile.delete()
             result.trim().contains("EDITOR_SAVE_OK")
@@ -400,9 +457,19 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun saveAndRun(interpreter: String) {
-        saveFile { success ->
+        // Lưu im lặng rồi chạy ngay, không hiện progress/toast lưu file
+        saveFile(
+            showProgress = false,
+            showToast = false
+        ) { success ->
             if (success) {
                 runScript(interpreter)
+            } else {
+                Toast.makeText(
+                    this,
+                    R.string.editor_save_fail,
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -413,6 +480,7 @@ class TextEditorActivity : AppCompatActivity() {
             interruptable = true
             shell = RunnableNode.shellModeDefault
         }
+
         val script = "chmod 755 \"$absoluteFilePath\" 2>/dev/null\n$interpreter \"$absoluteFilePath\"\n"
 
         val dialog = DialogLogFragment.create(
