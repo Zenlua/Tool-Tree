@@ -105,13 +105,15 @@ class TextEditorActivity : AppCompatActivity() {
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
 
     // --- Undo / Redo ---
-    // Lưu lại toàn bộ nội dung tại mỗi "đợt" chỉnh sửa (gộp các ký tự gõ liên tục thành một
-    // bước, thay vì lưu theo từng ký tự) để nút Undo/Redo hoạt động tự nhiên như trình soạn
-    // thảo thông thường. EditText mặc định của Android không có sẵn undo/redo công khai nên
-    // phải tự quản lý 2 stack này.
-    private val undoStack = ArrayDeque<String>()
-    private val redoStack = ArrayDeque<String>()
-    private var pendingUndoSnapshot: String? = null
+    // Lưu lại toàn bộ nội dung và vị trí con trỏ tại mỗi "đợt" chỉnh sửa (gộp các ký tự gõ
+    // liên tục thành một bước, thay vì lưu theo từng ký tự) để nút Undo/Redo hoạt động tự nhiên
+    // như trình soạn thảo thông thường. EditText mặc định của Android không có sẵn undo/redo
+    // công khai nên phải tự quản lý 2 stack này.
+    private data class EditorSnapshot(val text: String, val cursor: Int)
+
+    private val undoStack = ArrayDeque<EditorSnapshot>()
+    private val redoStack = ArrayDeque<EditorSnapshot>()
+    private var pendingUndoSnapshot: EditorSnapshot? = null
     private var isApplyingHistory = false
     private var undoButton: ImageButton? = null
     private var redoButton: ImageButton? = null
@@ -127,6 +129,7 @@ class TextEditorActivity : AppCompatActivity() {
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
         // Bỏ nút back (mũi tên) trên toolbar theo yêu cầu — việc thoát trang giờ thực hiện qua
         // mục "Thoát" trong menu (xem onOptionsItemSelected). Nút back cứng/gesture của hệ
         // thống vẫn hoạt động bình thường nhờ onBackPressedDispatcher bên dưới.
@@ -308,7 +311,10 @@ class TextEditorActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 if (isApplyingHistory) return
                 if (pendingUndoSnapshot == null) {
-                    pendingUndoSnapshot = s?.toString().orEmpty()
+                    // Chụp nội dung VÀ vị trí con trỏ ngay trước khi thay đổi xảy ra —
+                    // đây là trạng thái cần quay lại khi người dùng bấm Undo.
+                    val cursor = binding.editorContent.selectionStart.coerceAtLeast(0)
+                    pendingUndoSnapshot = EditorSnapshot(s?.toString().orEmpty(), cursor)
                 }
             }
 
@@ -328,7 +334,7 @@ class TextEditorActivity : AppCompatActivity() {
         val snapshot = pendingUndoSnapshot ?: return
         pendingUndoSnapshot = null
         val current = binding.editorContent.text?.toString().orEmpty()
-        if (snapshot == current) return
+        if (snapshot.text == current) return
 
         if (undoStack.size >= UNDO_HISTORY_LIMIT) {
             undoStack.removeFirst()
@@ -339,9 +345,10 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun performUndo() {
         undoHandler.removeCallbacks(commitPendingUndoRunnable)
-        val current = binding.editorContent.text?.toString().orEmpty()
+        val currentText = binding.editorContent.text?.toString().orEmpty()
+        val currentCursor = binding.editorContent.selectionStart.coerceAtLeast(0)
 
-        val target: String
+        val target: EditorSnapshot
         val pending = pendingUndoSnapshot
         if (pending != null) {
             // Đang có một đợt gõ chưa kịp "chốt" vào undoStack — hoàn tác thẳng về mốc đó.
@@ -352,8 +359,8 @@ class TextEditorActivity : AppCompatActivity() {
             target = undoStack.removeLast()
         }
 
-        redoStack.addLast(current)
-        applyHistoryText(target)
+        redoStack.addLast(EditorSnapshot(currentText, currentCursor))
+        applyHistorySnapshot(target)
         refreshUndoRedoButtons()
     }
 
@@ -362,22 +369,23 @@ class TextEditorActivity : AppCompatActivity() {
         undoHandler.removeCallbacks(commitPendingUndoRunnable)
         pendingUndoSnapshot = null
 
-        val current = binding.editorContent.text?.toString().orEmpty()
+        val currentText = binding.editorContent.text?.toString().orEmpty()
+        val currentCursor = binding.editorContent.selectionStart.coerceAtLeast(0)
         val target = redoStack.removeLast()
 
         if (undoStack.size >= UNDO_HISTORY_LIMIT) {
             undoStack.removeFirst()
         }
-        undoStack.addLast(current)
-        applyHistoryText(target)
+        undoStack.addLast(EditorSnapshot(currentText, currentCursor))
+        applyHistorySnapshot(target)
         refreshUndoRedoButtons()
     }
 
-    private fun applyHistoryText(text: String) {
+    private fun applyHistorySnapshot(snapshot: EditorSnapshot) {
         isApplyingHistory = true
         val editText = binding.editorContent
-        editText.setText(text)
-        editText.setSelection(text.length.coerceAtLeast(0))
+        editText.setText(snapshot.text)
+        editText.setSelection(snapshot.cursor.coerceIn(0, snapshot.text.length))
         isApplyingHistory = false
     }
 
