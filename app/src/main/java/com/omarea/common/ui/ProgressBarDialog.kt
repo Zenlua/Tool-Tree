@@ -15,6 +15,8 @@ import com.omarea.common.shell.AsynSuShellUnit
 open class ProgressBarDialog(private var context: Activity, private var uniqueId: String? = null) {
     private var alert: DialogHelper.DialogWrap? = null
     private var textView: TextView? = null
+    private var cancelButton: Button? = null
+    private var cancelCallback: (() -> Unit)? = null
 
     companion object {
         private val dialogs = LinkedHashMap<String, DialogHelper.DialogWrap>()
@@ -52,7 +54,6 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
         val textView: TextView = (dialog.findViewById(R.id.dialog_text))
         textView.text = context.getString(R.string.execute_wait)
         alert = DialogHelper.customDialog(context, dialog, false)
-        // AlertDialog.Builder(context).setView(dialog).setCancelable(false).create()
         if (handler == null) {
             AsynSuShellUnit(DefaultHandler(alert)).exec(cmd).waitFor()
         } else {
@@ -69,6 +70,7 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
     }
 
     fun hideDialog() {
+        cancelCallback = null
         try {
             if (alert != null) {
                 alert?.dismiss()
@@ -76,7 +78,9 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
             }
         } catch (_: Exception) {
         }
-    
+        textView = null
+        cancelButton = null
+
         uniqueId?.run {
             if (dialogs.containsKey(this)) {
                 dialogs.remove(this)
@@ -85,52 +89,68 @@ open class ProgressBarDialog(private var context: Activity, private var uniqueId
     }
 
     /**
-     * Hiển thị dialog loading kèm nút Hủy.
-     * [onCancel] được gọi trên main thread khi người dùng bấm Hủy;
-     * dialog tự đóng ngay sau đó.
+     * Đặt callback hủy cho dialog đang hiển thị.
+     * Nếu dialog chưa mở thì callback được lưu lại và áp dụng khi [showDialog] được gọi.
+     * Gọi với null để ẩn nút Hủy.
+     */
+    fun setCancelCallback(onCancel: (() -> Unit)?) {
+        cancelCallback = onCancel
+        val btn = cancelButton ?: return
+        if (onCancel != null) {
+            btn.visibility = View.VISIBLE
+            btn.setOnClickListener {
+                val cb = cancelCallback
+                hideDialog()
+                cb?.invoke()
+            }
+        } else {
+            btn.visibility = View.GONE
+        }
+    }
+
+    /**
+     * Hiển thị dialog loading kèm nút Hủy ngay từ đầu.
+     * Các lần gọi [showDialog] sau đó chỉ cập nhật text, nút Hủy vẫn được giữ nguyên.
      */
     fun showDialogWithCancel(text: String, onCancel: () -> Unit): ProgressBarDialog {
-        val layoutInflater = LayoutInflater.from(context)
-        val dialog = layoutInflater.inflate(R.layout.dialog_loading, null)
-
-        textView = dialog.findViewById(R.id.dialog_text)
-        textView?.text = text
-
-        val cancelButton = dialog.findViewById<Button>(R.id.dialog_cancel_button)
-        cancelButton?.visibility = View.VISIBLE
-        cancelButton?.setOnClickListener {
-            hideDialog()
-            onCancel()
-        }
-
-        alert = DialogHelper.customDialog(context, dialog, false)
-
-        uniqueId?.run {
-            dialogs.remove(this)
-            alert?.let { dialogs[this] = it }
-        }
-
+        cancelCallback = onCancel
+        showDialog(text)
         return this
     }
 
     fun showDialog(text: String = "Loading, please wait..."): ProgressBarDialog {
-        if (textView != null && alert != null) {
+        if (textView != null && alert?.isShowing == true) {
+            // Dialog đang mở — chỉ cập nhật text, giữ nguyên nút Hủy
             textView?.text = text
         } else {
+            // Tạo mới dialog
             val layoutInflater = LayoutInflater.from(context)
             val dialog = layoutInflater.inflate(R.layout.dialog_loading, null)
-    
+
             textView = dialog.findViewById(R.id.dialog_text)
             textView?.text = text
-    
+
+            cancelButton = dialog.findViewById(R.id.dialog_cancel_button)
+            val cb = cancelCallback
+            if (cb != null) {
+                cancelButton?.visibility = View.VISIBLE
+                cancelButton?.setOnClickListener {
+                    val captured = cancelCallback
+                    hideDialog()
+                    captured?.invoke()
+                }
+            } else {
+                cancelButton?.visibility = View.GONE
+            }
+
             alert = DialogHelper.customDialog(context, dialog, false)
         }
-    
+
         uniqueId?.run {
             dialogs.remove(this)
             alert?.let { dialogs[this] = it }
         }
-    
+
         return this
     }
 }

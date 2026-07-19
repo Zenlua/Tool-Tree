@@ -56,6 +56,7 @@ class ActionPage : AppCompatActivity() {
     private var menuOptions: ArrayList<PageMenuOption>? = null
     private var menuCheckboxRefreshing = false
     private var checkboxRefreshJob: Job? = null
+    private var loadPageJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -373,7 +374,13 @@ class ActionPage : AppCompatActivity() {
     private fun loadPageConfig(showLoading: Boolean = true) {
         val config = currentPageConfig ?: return
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        loadPageJob?.cancel()
+        progressBarDialog.setCancelCallback {
+            loadPageJob?.cancel()
+            finish()
+        }
+
+        loadPageJob = lifecycleScope.launch(Dispatchers.IO) {
             if (config.beforeRead.isNotEmpty()) {
                 withContext(Dispatchers.Main) {
                     progressBarDialog.showDialog(getString(R.string.kr_page_before_load))

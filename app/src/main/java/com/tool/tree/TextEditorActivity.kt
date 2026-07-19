@@ -145,11 +145,7 @@ class TextEditorActivity : AppCompatActivity() {
         filePath = extraFile
         configDir = intent.getStringExtra(EXTRA_DIR).orEmpty()
         absoluteFilePath = resolveAbsolutePath(configDir, filePath)
-
-        val extraTitle = intent.getStringExtra(EXTRA_TITLE).orEmpty()
         wrapEnabled = intent.getBooleanExtra(EXTRA_WRAP, true)
-
-        title = extraTitle.ifEmpty { File(absoluteFilePath).name }
 
         applyWrapState()
         setupCursorAutoScroll()

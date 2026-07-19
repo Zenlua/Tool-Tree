@@ -44,6 +44,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     private var actionInfos: ArrayList<NodeInfoBase>? = null
     private lateinit var progressBarDialog: ProgressBarDialog
+    private var activeLoadJob: Job? = null
     private var krScriptActionHandler: KrScriptActionHandler? = null
     private var autoRunTask: AutoRunTask? = null
     private var themeMode: ThemeMode? = null
@@ -240,9 +241,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             separator = item.separator
         }
 
+        progressBarDialog.setCancelCallback {
+            activeLoadJob?.cancel()
+        }
         progressBarDialog.showDialog(getString(R.string.kr_param_options_load))
 
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+        activeLoadJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             if (item.getState != null) {
                 paramInfo.valueFromShell = executeScriptGetResult(item.getState!!, item)
             }
@@ -304,9 +308,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             val layoutInflater = LayoutInflater.from(requireContext())
             val linearLayout = layoutInflater.inflate(R.layout.kr_params_list, null) as LinearLayout
 
+            progressBarDialog.setCancelCallback {
+                activeLoadJob?.cancel()
+            }
             progressBarDialog.showDialog(getString(R.string.onloading))
 
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            activeLoadJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 for (param in actionParamInfos) {
                     withContext(Dispatchers.Main) {
                         progressBarDialog.showDialog(getString(R.string.kr_param_load) + (param.label ?: param.name))
