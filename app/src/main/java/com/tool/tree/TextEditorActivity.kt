@@ -11,6 +11,8 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shared.FileWrite
 import com.omarea.common.shell.KeepShellPublic
@@ -82,6 +84,7 @@ class TextEditorActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityTextEditorBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setupKeyboardInsets()
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -109,6 +112,30 @@ class TextEditorActivity : AppCompatActivity() {
         applyWrapState()
         setupFab()
         loadFileContent()
+    }
+
+    /**
+     * App đang dùng chế độ edge-to-edge (decorFitsSystemWindows = false) nên hệ thống sẽ
+     * không tự đẩy layout lên khi hiện bàn phím dù có khai báo windowSoftInputMode="adjustResize"
+     * trong manifest — phải tự lắng nghe inset của bàn phím (IME) rồi đệm (padding) đáy vùng
+     * nội dung lên tương ứng, đồng thời ẩn FAB đi để không bị bàn phím che mất/đè lên.
+     */
+    private fun setupKeyboardInsets() {
+        val scrollContainer = binding.mainList
+        ViewCompat.setOnApplyWindowInsetsListener(scrollContainer) { view, insets ->
+            val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            val systemBarsInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            val keyboardVisible = imeInset > systemBarsInset
+
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, maxOf(imeInset, systemBarsInset))
+            binding.editorFabRun.visibility = if (keyboardVisible) View.GONE else View.VISIBLE
+
+            if (keyboardVisible) {
+                view.post { scrollContainer.fullScroll(View.FOCUS_DOWN) }
+            }
+
+            insets
+        }
     }
 
     private fun resolveAbsolutePath(dir: String, file: String): String {
