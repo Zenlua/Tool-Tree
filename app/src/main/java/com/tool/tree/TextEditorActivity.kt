@@ -389,9 +389,11 @@ class TextEditorActivity : AppCompatActivity() {
         val canUndo = undoStack.isNotEmpty() || pendingUndoSnapshot != null
         val canRedo = redoStack.isNotEmpty()
         undoButton?.isEnabled = canUndo
-        undoButton?.alpha = if (canUndo) 1f else 0.4f
+        undoButton?.isClickable = canUndo
+        undoButton?.alpha = if (canUndo) 1f else 0.3f
         redoButton?.isEnabled = canRedo
-        redoButton?.alpha = if (canRedo) 1f else 0.4f
+        redoButton?.isClickable = canRedo
+        redoButton?.alpha = if (canRedo) 1f else 0.3f
     }
 
     private fun loadFileContent() {
