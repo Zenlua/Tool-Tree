@@ -2,6 +2,7 @@ package com.tool.tree.ui
 
 import android.graphics.Typeface
 import android.text.Editable
+import android.text.Spanned
 import android.text.TextWatcher
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
@@ -115,7 +116,7 @@ abstract class BaseSyntaxHighlighter(
             ForegroundColorSpan(color),
             start,
             safeEnd,
-            Editable.SPAN_EXCLUSIVE_EXCLUSIVE
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         )
     }
 
@@ -126,7 +127,7 @@ abstract class BaseSyntaxHighlighter(
             StyleSpan(Typeface.BOLD),
             start,
             safeEnd,
-            Editable.SPAN_EXCLUSIVE_EXCLUSIVE
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         )
     }
 
@@ -167,41 +168,41 @@ class ShellSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
         val s = text.toString()
 
         // Comments
-        Regex("(?m)#.*$").findAll(s).forEach {
+        Regex("""(?m)#.*$""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, commentColor())
         }
 
         // Strings: double quotes, single quotes, backticks
-        Regex("\"(?:\\.|[^\"])*\"").findAll(s).forEach {
+        Regex(""""(?:\\.|[^"])*"""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
-        Regex("'(?:[^']*)'").findAll(s).forEach {
+        Regex("""'(?:[^']*)'""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
-        Regex("`(?:\\.|[^`])*`").findAll(s).forEach {
+        Regex("""`(?:\\.|[^`])*`""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
 
         // Command substitution
-        Regex("\\$\\((?:[^()]*|\\([^()]*\\))*\\)").findAll(s).forEach {
+        Regex("""\$\((?:[^()]*|\([^()]*\))*\)""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, builtinColor())
         }
 
         // Variables
-        Regex("\\$\{[A-Za-z_][A-Za-z0-9_]*[^}]*}").findAll(s).forEach {
+        Regex("""\$\{[A-Za-z_][A-Za-z0-9_]*[^}]*}""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, numberColor())
         }
-        Regex("\\$[A-Za-z_][A-Za-z0-9_]*").findAll(s).forEach {
+        Regex("""\$[A-Za-z_][A-Za-z0-9_]*""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, numberColor())
         }
 
         // Numbers
-        Regex("(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_])").findAll(s).forEach {
+        Regex("""(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_])""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, numberColor())
         }
 
         // Keywords / builtins
-        Regex("(?<![A-Za-z0-9_])([A-Za-z_][A-Za-z0-9_]*)(?![A-Za-z0-9_])").findAll(s).forEach {
+        Regex("""(?<![A-Za-z0-9_])([A-Za-z_][A-Za-z0-9_]*)(?![A-Za-z0-9_])""").findAll(s).forEach {
             val word = it.value
             when {
                 keywords.contains(word) -> {
@@ -213,7 +214,7 @@ class ShellSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
         }
 
         // Punctuation/operators
-        Regex("&&|\|\||\\||;|\\(|\\)|\\{|\\}|\\[\\[|\\]\\]|<|>").findAll(s).forEach {
+        Regex("""&&|\|\||\||;|\(|\)|\{|\}|\[\[|\]\]|<|>""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, punctuationColor())
         }
     }
@@ -233,38 +234,38 @@ class XmlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
         val s = text.toString()
 
         // XML comments
-        Regex("(?s)<!--.*?-->").findAll(s).forEach {
+        Regex("""(?s)<!--.*?-->""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, commentColor())
         }
 
         // CDATA
-        Regex("(?s)<!\[CDATA\[.*?\]\]>").findAll(s).forEach {
+        Regex("""(?s)<!\[CDATA\[.*?\]\]>""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
 
         // Tags
-        Regex("</?[A-Za-z_][A-Za-z0-9_:\\-\.]*").findAll(s).forEach {
+        Regex("""</?[A-Za-z_][A-Za-z0-9_:\-\.]*""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, keywordColor())
             bold(text, it.range.first, it.range.last + 1)
         }
 
-        // Attribute names
-        Regex("\b[A-Za-z_][A-Za-z0-9_:\\-\.]*=(?=\")").findAll(s).forEach {
-            color(text, it.range.first, it.range.last, builtinColor())
+        // Attribute names (the part before =")
+        Regex("""\b[A-Za-z_][A-Za-z0-9_:\-\.]*(?=\s*=)""").findAll(s).forEach {
+            color(text, it.range.first, it.range.last + 1, builtinColor())
         }
 
         // Attribute values
-        Regex("\"(?:\\.|[^\"])*\"").findAll(s).forEach {
+        Regex(""""(?:\\.|[^"])*"""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
 
         // Entities
-        Regex("&(?:amp|lt|gt|apos|quot|#x?[0-9A-Fa-f]+);").findAll(s).forEach {
+        Regex("""&(?:amp|lt|gt|apos|quot|#x?[0-9A-Fa-f]+);""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, numberColor())
         }
 
         // Angle brackets / punctuation
-        Regex("</?|/>|>").findAll(s).forEach {
+        Regex("""</?|/>|>""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, punctuationColor())
         }
     }
@@ -284,12 +285,12 @@ class PropSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
         val s = text.toString()
 
         // Comments
-        Regex("(?m)^\s*[#!].*$").findAll(s).forEach {
+        Regex("""(?m)^\s*[#!].*$""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, commentColor())
         }
 
         // Key = value
-        Regex("(?m)^\s*([A-Za-z0-9_.-]+)(\s*=)").findAll(s).forEach {
+        Regex("""(?m)^\s*([A-Za-z0-9_.-]+)(\s*=)""").findAll(s).forEach {
             val line = it.value
             val keyEnd = line.indexOf('=')
             if (keyEnd > 0) {
@@ -300,17 +301,17 @@ class PropSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
         }
 
         // Quoted values
-        Regex("\"(?:\\.|[^\"])*\"").findAll(s).forEach {
+        Regex(""""(?:\\.|[^"])*"""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, stringColor())
         }
 
         // Numbers
-        Regex("(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_])").findAll(s).forEach {
+        Regex("""(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_])""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, numberColor())
         }
 
         // Separators
-        Regex("=").findAll(s).forEach {
+        Regex("""=""").findAll(s).forEach {
             color(text, it.range.first, it.range.last + 1, punctuationColor())
         }
     }
