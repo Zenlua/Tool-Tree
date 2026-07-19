@@ -138,7 +138,7 @@ class TextEditorActivity : AppCompatActivity() {
         mainListBaseBottomMargin = mainListParams.bottomMargin
         val fabParams = binding.editorFabRun.layoutParams as ViewGroup.MarginLayoutParams
         fabBaseBottomMargin = fabParams.bottomMargin
-        val extraGapPx = (48 * resources.displayMetrics.density).toInt()
+        val extraGapPx = (24 * resources.displayMetrics.density).toInt()
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
