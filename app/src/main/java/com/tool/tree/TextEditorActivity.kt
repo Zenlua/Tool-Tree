@@ -81,7 +81,6 @@ class TextEditorActivity : AppCompatActivity() {
     private var isNewFile = false
     private var isSaving = false
     private var noWrapContainer: HorizontalScrollView? = null
-    private var fabBaseMarginBottom = 0
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,28 +122,26 @@ class TextEditorActivity : AppCompatActivity() {
     /**
      * App đang dùng chế độ edge-to-edge (decorFitsSystemWindows = false) nên hệ thống sẽ
      * không tự đẩy layout lên khi hiện bàn phím dù có khai báo windowSoftInputMode="adjustResize"
-     * trong manifest — phải tự lắng nghe inset của bàn phím (IME) rồi đệm (padding) đáy vùng
-     * nội dung lên tương ứng, đồng thời đẩy FAB lên theo để nó luôn nổi trên bàn phím thay vì
-     * bị che khuất hoặc biến mất.
+     * trong manifest — phải tự lắng nghe inset của bàn phím (IME) rồi tự đẩy.
+     *
+     * Thay vì chỉ đệm (padding) đáy vùng cuộn — vốn phụ thuộc vào cách ScrollView tự tính vùng
+     * cuộn được nên không phải lúc nào cũng chắc chắn tránh được bàn phím — cách này dịch chuyển
+     * (translationY) thẳng toàn bộ vùng nội dung bên dưới thanh tiêu đề (gồm cả FAB) lên trên
+     * đúng bằng phần chiều cao bị bàn phím che, đảm bảo con trỏ/văn bản luôn nổi lên trên bàn
+     * phím chứ không bị che.
      */
     private fun setupKeyboardInsets() {
-        val scrollContainer = binding.mainList
-        val fabParams = binding.editorFabRun.layoutParams as ViewGroup.MarginLayoutParams
-        fabBaseMarginBottom = fabParams.bottomMargin
-
-        ViewCompat.setOnApplyWindowInsetsListener(scrollContainer) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val systemBarsInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            val keyboardVisible = imeInset > systemBarsInset
+            val pushUp = (imeInset - systemBarsInset).coerceAtLeast(0).toFloat()
+            val keyboardVisible = pushUp > 0
 
-            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, maxOf(imeInset, systemBarsInset))
-
-            val fabLp = binding.editorFabRun.layoutParams as ViewGroup.MarginLayoutParams
-            fabLp.bottomMargin = fabBaseMarginBottom + imeInset
-            binding.editorFabRun.layoutParams = fabLp
+            binding.mainList.animate().translationY(-pushUp).setDuration(120).start()
+            binding.editorFabRun.animate().translationY(-pushUp).setDuration(120).start()
 
             if (keyboardVisible) {
-                view.post { scrollToCursor() }
+                binding.mainList.post { scrollToCursor() }
             }
 
             insets
