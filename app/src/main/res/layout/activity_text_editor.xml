@@ -54,6 +54,7 @@
         android:layout_marginEnd="32dp"
         android:contentDescription="@string/editor_run_test"
         android:src="@drawable/kr_run"
+        app:tint="@color/kr_shortcut_color"
         android:visibility="gone" />
 
 </RelativeLayout>
