@@ -82,7 +82,6 @@ class TextEditorActivity : AppCompatActivity() {
     private var isSaving = false
     private var noWrapContainer: HorizontalScrollView? = null
     private var mainListBaseBottomMargin = 0
-    private var fabBaseBottomMargin = 0
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,7 +115,6 @@ class TextEditorActivity : AppCompatActivity() {
         title = extraTitle.ifEmpty { File(absoluteFilePath).name }
 
         applyWrapState()
-        setupFab()
         setupCursorAutoScroll()
         loadFileContent()
     }
@@ -128,16 +126,14 @@ class TextEditorActivity : AppCompatActivity() {
      *
      * Dùng translationY (chỉ dịch hình ảnh) từng gây lỗi không kéo lên đầu được, vì vùng chạm/
      * cuộn vẫn được tính theo kích thước View cũ (translation không đổi kích thước/measurement
-     * thật). Ở đây đổi sang tăng bottomMargin thật của vùng nội dung và FAB — tương đương
-     * cách adjustResize thật sự hoạt động — nên kích thước, vùng cuộn và vùng chạm đều được
-     * tính lại chính xác theo không gian còn trống phía trên bàn phím. Có thêm một khoảng đệm
-     * dư ra để văn bản/con trỏ không dính sát vào mép bàn phím.
+     * thật). Ở đây đổi sang tăng bottomMargin thật của vùng nội dung — tương đương cách
+     * adjustResize thật sự hoạt động — nên kích thước, vùng cuộn và vùng chạm đều được tính lại
+     * chính xác theo không gian còn trống phía trên bàn phím. Có thêm một khoảng đệm dư ra để
+     * văn bản/con trỏ không dính sát vào mép bàn phím.
      */
     private fun setupKeyboardInsets() {
         val mainListParams = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
         mainListBaseBottomMargin = mainListParams.bottomMargin
-        val fabParams = binding.editorFabRun.layoutParams as ViewGroup.MarginLayoutParams
-        fabBaseBottomMargin = fabParams.bottomMargin
         val extraGapPx = (24 * resources.displayMetrics.density).toInt()
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
@@ -150,10 +146,6 @@ class TextEditorActivity : AppCompatActivity() {
             val mlp = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
             mlp.bottomMargin = mainListBaseBottomMargin + keyboardHeight + extraGap
             binding.mainList.layoutParams = mlp
-
-            val flp = binding.editorFabRun.layoutParams as ViewGroup.MarginLayoutParams
-            flp.bottomMargin = fabBaseBottomMargin + keyboardHeight + extraGap
-            binding.editorFabRun.layoutParams = flp
 
             if (keyboardVisible) {
                 binding.mainList.post { scrollToCursor() }
@@ -206,19 +198,7 @@ class TextEditorActivity : AppCompatActivity() {
         return if (dotIndex >= 0 && dotIndex < name.length - 1) name.substring(dotIndex + 1).lowercase() else ""
     }
 
-    private fun setupFab() {
-        val interpreter = RUNNABLE_EXTENSIONS[fileExtension()]
-        binding.editorFabRun.visibility = View.VISIBLE
-        if (interpreter != null) {
-            binding.editorFabRun.contentDescription = getString(R.string.editor_run_test)
-            binding.editorFabRun.setImageResource(R.drawable.kr_run)
-            binding.editorFabRun.setOnClickListener { saveAndRun(interpreter) }
-        } else {
-            binding.editorFabRun.contentDescription = getString(R.string.editor_save)
-            binding.editorFabRun.setImageResource(android.R.drawable.ic_menu_save)
-            binding.editorFabRun.setOnClickListener { saveFile() }
-        }
-    }
+    private fun runnableInterpreter(): String? = RUNNABLE_EXTENSIONS[fileExtension()]
 
     private fun loadFileContent() {
         progressBarDialog.showDialog(getString(R.string.please_wait))
@@ -321,11 +301,16 @@ class TextEditorActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_text_editor, menu)
         menu.findItem(R.id.editor_menu_wrap)?.isChecked = wrapEnabled
+        menu.findItem(R.id.editor_menu_run)?.isVisible = runnableInterpreter() != null
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.editor_menu_run -> {
+                runnableInterpreter()?.let { saveAndRun(it) }
+                true
+            }
             R.id.editor_menu_save -> {
                 saveFile()
                 true

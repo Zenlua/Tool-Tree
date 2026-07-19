@@ -35,16 +35,4 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/editor_fab_run"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="32dp"
-        android:layout_marginEnd="32dp"
-        android:contentDescription="@string/editor_run_test"
-        android:src="@drawable/kr_run"
-        android:visibility="gone" />
-
 </RelativeLayout>
