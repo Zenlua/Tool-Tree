@@ -90,7 +90,7 @@ Want to help translate Tool-Tree?
 
 - [App resources](https://github.com/Zenlua/Tool-Tree/tree/main/app/src/main/res)
 
-- [Shell language packs](https://github.com/Zenlua/Tool-Tree/tree/main/app/src/main/assets/home/etc/lang)
+- [Shell language](https://github.com/Zenlua/Tool-Tree/tree/main/app/src/main/assets/home/etc/lang)
 
 - [Addon language](https://github.com/Zenlua/Tool-Tree/tree/main/.github/module/ZADD)
 
