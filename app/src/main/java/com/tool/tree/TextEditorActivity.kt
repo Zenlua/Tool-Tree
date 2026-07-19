@@ -184,12 +184,12 @@ class TextEditorActivity : AppCompatActivity() {
             this,
             title = getString(R.string.editor_unsaved_title),
             message = getString(R.string.editor_unsaved_message),
-            onConfirm = DialogHelper.DialogButton(getString(R.string.editor_save)) {
+            onConfirm = DialogHelper.DialogButton(getString(R.string.editor_save), onClick = Runnable {
                 saveFile { success -> if (success) finish() }
-            },
-            onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard)) {
+            }),
+            onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard), onClick = Runnable {
                 finish()
-            }
+            })
         )
     }
 
