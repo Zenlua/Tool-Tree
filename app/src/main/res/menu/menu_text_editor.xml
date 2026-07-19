@@ -7,6 +7,12 @@
         android:title="@string/editor_save"
         app:showAsAction="never" />
     <item
+        android:id="@+id/editor_menu_run"
+        android:orderInCategory="15"
+        android:icon="@android:drawable/kr_script"
+        android:title="@string/editor_run_test"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/editor_menu_wrap"
         android:checkable="true"
         android:orderInCategory="20"
