@@ -171,5 +171,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="editor_exit">Exit</string>
     <string name="editor_undo">Undo</string>
     <string name="editor_redo">Redo</string>
+    <string name="loading_data">Loading data...</string>
 
 </resources>

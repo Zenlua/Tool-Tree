@@ -157,5 +157,6 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="editor_exit">Thoát</string>
     <string name="editor_undo">Hoàn tác</string>
     <string name="editor_redo">Làm lại</string>
+    <string name="loading_data">Đang tải dữ liệu...</string>
 
 </resources>
