@@ -48,7 +48,7 @@ class SplashActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         // 1. Kiểm tra nếu script đã chạy hoặc đang chạy thì vào thẳng Home
         if (ScriptEnvironmen.isInited() && isTaskRoot &&
             !intent.getBooleanExtra("force_reset", false)) {
@@ -83,11 +83,11 @@ class SplashActivity : AppCompatActivity() {
             this,
             getString(R.string.permission_dialog_title),
             getString(R.string.permission_dialog_message),
-            Runnable { 
+            Runnable {
                 // Quan trọng: Lưu trạng thái đồng ý ngay khi nhấn nút
-                saveAgreement() 
+                saveAgreement()
                 // Sau đó mới đi xin quyền hệ thống
-                requestRequiredPermissions() 
+                requestRequiredPermissions()
             },
             Runnable { finish() }
         ).setCancelable(false)
@@ -226,6 +226,12 @@ class SplashActivity : AppCompatActivity() {
     private val maxLines = 5
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
+    // Cờ tạm cho biết dòng log hiện tại kết thúc bằng '\r' (cập nhật tại chỗ, kiểu
+    // tiến trình tải của wget) hay '\n' (dòng log mới thật sự). Được set ngay trước
+    // khi gọi processOutput() vì SilentShellOutputHandler.onReader() không cho
+    // truyền kèm tham số riêng.
+    private var pendingIsUpdate = false
+
     // Được tạo/truy cập LẦN ĐẦU tiên bên trong handler.post{} (tức luôn ở main thread) vì
     // SilentShellOutputHandler kế thừa android.os.Handler, cần Looper của thread hiện tại khi khởi tạo.
     private val splashLogHandler: SplashLogOutputHandler by lazy { SplashLogOutputHandler() }
@@ -239,38 +245,71 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
+    // Đọc raw stream theo TỪNG KÝ TỰ (không dùng forEachLine/readLine) để tự phân biệt:
+    // - '\n'  => dòng log mới thật sự
+    // - '\r'  => cập nhật tại chỗ (ví dụ % tiến trình của wget), không phải dòng mới
+    // BufferedReader.readLine() coi cả '\r' và '\n' là dấu kết thúc dòng, nên nếu dùng
+    // forEachLine thì mỗi lần wget in '\r' để cập nhật % tải sẽ bị hiểu lầm là một dòng
+    // log mới, khiến các dòng log xếp chồng lên nhau thay vì ghi đè.
     private fun readStreamAsync(reader: BufferedReader) {
         try {
-            reader.forEachLine { line -> handleRawLogLine(line) }
+            val buffer = StringBuilder()
+            var code = reader.read()
+            while (code != -1) {
+                when (code.toChar()) {
+                    '\n' -> {
+                        handleRawLogLine(buffer.toString(), isUpdate = false)
+                        buffer.clear()
+                    }
+                    '\r' -> {
+                        handleRawLogLine(buffer.toString(), isUpdate = true)
+                        buffer.clear()
+                    }
+                    else -> buffer.append(code.toChar())
+                }
+                code = reader.read()
+            }
+            if (buffer.isNotEmpty()) {
+                handleRawLogLine(buffer.toString(), isUpdate = false)
+            }
         } catch (e: Exception) {}
     }
 
     // Luôn xử lý trên main thread: vừa để an toàn cho SilentShellOutputHandler (cần Looper),
     // vừa vì onAm() bên trong có thể gọi startActivity().
-    private fun handleRawLogLine(line: String) {
+    private fun handleRawLogLine(line: String, isUpdate: Boolean) {
         handler.post {
+            pendingIsUpdate = isUpdate
             splashLogHandler.processOutput(line)
         }
     }
 
     private fun onLogOutput(log: String) {
-        // Một số log có thể chứa "\n" dạng escape (2 ký tự '\' và 'n') từ string
-        // resource hoặc output shell. Coi đó là xuống dòng thật và tách ra thành
-        // nhiều dòng riêng để hiển thị và tính đúng vào giới hạn maxLines.
+        val isUpdate = pendingIsUpdate
+
+        // Hỗ trợ "\n" dạng escape (2 ký tự '\' và 'n') xuất hiện bên trong nội dung log
+        // (ví dụ từ string resource hoặc script), coi đó như xuống dòng thật và tách
+        // thành nhiều dòng con trước khi hiển thị.
         val lines = log
-            .replace("\\r\\n", "\n") // chuẩn hoá luôn \r\n dạng escape nếu có
+            .replace("\\r\\n", "\n")
             .replace("\\n", "\n")
             .split("\n")
-    
+
         synchronized(rows) {
-            for (l in lines) {
-                if (rows.size >= maxLines) {
-                    rows.removeAt(0)
-                    ignored = true
+            for ((index, l) in lines.withIndex()) {
+                // Chỉ dòng con đầu tiên mới có thể là bản cập nhật tại chỗ (\r) của dòng
+                // trước đó; các dòng con sau (nếu log có nhiều "\n" escape) luôn là dòng mới.
+                val replaceLast = isUpdate && index == 0 && rows.isNotEmpty()
+                if (replaceLast) {
+                    rows[rows.size - 1] = l
+                } else {
+                    if (rows.size >= maxLines) {
+                        rows.removeAt(0)
+                        ignored = true
+                    }
+                    rows.add(l)
                 }
-                rows.add(l)
             }
-            // Join bằng ký tự xuống dòng thật, không phải chuỗi "\\n"
             binding.startStateText.text = rows.joinToString("\n", if (ignored) "……\n" else "")
         }
     }
