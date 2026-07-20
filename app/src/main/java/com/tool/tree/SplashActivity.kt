@@ -232,34 +232,80 @@ class SplashActivity : AppCompatActivity() {
 
     // Nhận diện am:[...] (mở activity, ẩn khỏi log) và tự resolve @string/ten_resource cho các
     // dòng log thông thường còn lại trước khi hiển thị lên màn hình splash.
+    // currentLineIsProgress được set ngay trước khi gọi processOutput() (luôn trên main thread,
+    // đồng bộ) để onReader() biết dòng hiện tại có phải là cập nhật thanh tiến trình (\r) hay không.
+    private var currentLineIsProgress = false
+
     private inner class SplashLogOutputHandler : SilentShellOutputHandler(this@SplashActivity) {
         override fun onReader(msg: Any?) {
             val line = msg?.toString() ?: return
-            onLogOutput(StringResRef.resolve(this@SplashActivity, line))
+            onLogOutput(StringResRef.resolve(this@SplashActivity, line), currentLineIsProgress)
         }
     }
 
+    // Đọc stream theo từng ký tự thay vì dùng reader.forEachLine()/readLine(), vì readLine() coi
+    // \r, \n và \r\n là tương đương nên không phân biệt được đâu là dòng log bình thường (kết
+    // thúc bằng \n) và đâu là cập nhật thanh tiến trình tại chỗ (kết thúc bằng \r, không có \n,
+    // ví dụ "Copying... 10%\rCopying... 20%\r..."). Ở đây ta giữ lại thông tin ký tự kết thúc để
+    // xử lý đúng: \r -> ghi đè dòng cuối, \n -> thêm dòng mới. \r\n (CRLF) vẫn được gộp lại thành
+    // một dòng duy nhất như bình thường.
     private fun readStreamAsync(reader: BufferedReader) {
         try {
-            reader.forEachLine { line -> handleRawLogLine(line) }
+            val buffer = StringBuilder()
+            var lastWasCR = false
+            var c: Int
+            while (reader.read().also { c = it } != -1) {
+                when (c) {
+                    '\r'.code -> {
+                        handleRawLogLine(buffer.toString(), isProgress = true)
+                        buffer.setLength(0)
+                        lastWasCR = true
+                    }
+                    '\n'.code -> {
+                        if (lastWasCR) {
+                            // Đây là \n của một cặp \r\n vừa xử lý ở nhánh \r phía trên, bỏ qua.
+                            lastWasCR = false
+                        } else {
+                            handleRawLogLine(buffer.toString(), isProgress = false)
+                            buffer.setLength(0)
+                        }
+                    }
+                    else -> {
+                        buffer.append(c.toChar())
+                        lastWasCR = false
+                    }
+                }
+            }
+            if (buffer.isNotEmpty()) {
+                handleRawLogLine(buffer.toString(), isProgress = false)
+            }
         } catch (e: Exception) {}
     }
 
     // Luôn xử lý trên main thread: vừa để an toàn cho SilentShellOutputHandler (cần Looper),
     // vừa vì onAm() bên trong có thể gọi startActivity().
-    private fun handleRawLogLine(line: String) {
+    private fun handleRawLogLine(line: String, isProgress: Boolean) {
         handler.post {
+            currentLineIsProgress = isProgress
             splashLogHandler.processOutput(line)
         }
     }
 
-    private fun onLogOutput(log: String) {
+    private fun onLogOutput(log: String, isProgress: Boolean) {
         synchronized(rows) {
-            if (rows.size >= maxLines) {
-                rows.removeAt(0)
-                ignored = true
+            if (isProgress && rows.isNotEmpty()) {
+                // Bỏ qua các cú \r rỗng liên tiếp (không có nội dung mới) để tránh xoá dòng cuối.
+                if (log.isEmpty()) return
+                // Cập nhật (ghi đè) dòng cuối cùng thay vì thêm dòng mới -> thanh tiến trình
+                // đứng yên một dòng và chỉ thay đổi nội dung.
+                rows[rows.size - 1] = log
+            } else {
+                if (rows.size >= maxLines) {
+                    rows.removeAt(0)
+                    ignored = true
+                }
+                rows.add(log)
             }
-            rows.add(log)
             binding.startStateText.text = rows.joinToString("\n", if (ignored) "…......…\n" else "")
         }
     }
