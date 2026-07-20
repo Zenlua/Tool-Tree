@@ -54,4 +54,4 @@ root=false
 
 - There are many things that are difficult to say that can only be found out by yourself.
 
-- [See details](https://github.com/helloklf/kr-scripts)
+- [See details](https://zenlua.github.io/Tool-Tree/website/References.html)
