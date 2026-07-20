@@ -20,7 +20,10 @@ import com.tool.tree.ThemeModeState
 
 class ParamsAppChooserRender(
     private var actionParamInfo: ActionParamInfo,
-    private var context: FragmentActivity
+    private var context: FragmentActivity,
+    // Được gọi mỗi khi người dùng xác nhận thay đổi ứng dụng đã chọn trong dialog con,
+    // dùng để các param khác "depend-on" param này biết mà cập nhật ẩn/hiện.
+    private val onValueChanged: (() -> Unit)? = null
 ) : DialogAppChooser.Callback {
 
     private val darkMode: Boolean = ThemeModeState.isDarkMode()
@@ -275,5 +278,6 @@ class ParamsAppChooserRender(
             valueView.text = item?.packageName ?: ""
             nameView.text = item?.appName ?: item?.packageName ?: ""
         }
+        onValueChanged?.invoke()
     }
 }

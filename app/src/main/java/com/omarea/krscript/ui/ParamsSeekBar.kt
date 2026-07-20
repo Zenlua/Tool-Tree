@@ -9,7 +9,13 @@ import android.widget.TextView
 import com.tool.tree.R
 import com.omarea.krscript.model.ActionParamInfo
 
-class ParamsSeekBar(private var actionParamInfo: ActionParamInfo, private var context: Context) {
+class ParamsSeekBar(
+    private var actionParamInfo: ActionParamInfo,
+    private var context: Context,
+    // Được gọi mỗi khi giá trị seekbar thay đổi (kéo tay hoặc bấm +/-), dùng để các param khác
+    // "depend-on" param này biết mà cập nhật ẩn/hiện.
+    private val onValueChanged: (() -> Unit)? = null
+) {
     fun render(): View {
         val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_seekbar, null)
         val seekbar = layout.findViewById<SeekBar>(R.id.kr_param_seekbar)
@@ -36,6 +42,7 @@ class ParamsSeekBar(private var actionParamInfo: ActionParamInfo, private var co
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 textView.text = (progress + actionParamInfo.min).toString()
+                onValueChanged?.invoke()
             }
         })
         minus.setOnClickListener {

@@ -41,10 +41,21 @@ class ActionParamInfo {
     // 多个值的分隔符（仅限多选下拉）
     var separator: String = "\n"
 
-    // Tên param điều khiển (param này sẽ ẩn/hiện dựa theo giá trị của param có "name" trùng dependOn)
+    // Tên (các) param điều khiển: param này sẽ ẩn/hiện dựa theo giá trị của (các) param có
+    // "name" trùng dependOn. Có thể khai báo NHIỀU param cha cùng lúc, nối bằng dấu "|",
+    // ví dụ: "mode|cam" -> phụ thuộc đồng thời vào cả param "mode" và "cam" (tất cả phải
+    // cùng thỏa điều kiện tương ứng - AND).
     var dependOn: String? = null
-    // Danh sách giá trị cần khớp, cách nhau bởi dấu phẩy, ví dụ: "a,b"
+    // Danh sách giá trị cần khớp cho từng param cha (theo đúng thứ tự khai báo ở dependOn),
+    // các param cha cách nhau bởi dấu "|"; trong mỗi vị trí, các giá trị được chấp nhận (OR)
+    // cách nhau bởi dấu phẩy, ví dụ: "a|b,c" -> cha 1 khớp khi = a, cha 2 khớp khi = b hoặc c.
+    // Giá trị so khớp không chỉ là value thực tế của option, mà còn có thể là title (label)
+    // hiển thị của option, hoặc phần văn bản nằm trong dấu ngoặc () của title (khớp cả có
+    // ngoặc lẫn không ngoặc). Ví dụ option-sh="echo -e 'a|A (so)'" (value=a, title="A (so)")
+    // thì depend-value="a,A,(so)" đều khớp được (qua value "a", qua title "A", qua "(so)"/"so").
     var dependValue: String? = null
     // "show": chỉ hiện khi khớp dependValue (mặc định) | "hide": ẩn khi khớp dependValue
+    // Cũng có thể khai báo riêng cho từng param cha, nối bằng "|", theo đúng thứ tự dependOn,
+    // ví dụ: "show|hide".
     var dependMode: String = "show"
 }

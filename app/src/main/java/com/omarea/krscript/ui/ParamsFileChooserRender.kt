@@ -11,7 +11,11 @@ import com.omarea.krscript.model.ActionParamInfo
 class ParamsFileChooserRender(
     private var actionParamInfo: ActionParamInfo,
     private var context: Context,
-    private var fileChooser: FileChooserInterface?) {
+    private var fileChooser: FileChooserInterface?,
+    // Được gọi mỗi khi giá trị đường dẫn (file/folder) thay đổi - do chọn qua dialog hoặc
+    // gõ tay (khi editable="true"), dùng để các param khác "depend-on" param này biết mà
+    // cập nhật ẩn/hiện.
+    private val onValueChanged: (() -> Unit)? = null) {
     interface FileChooserInterface {
         fun openFileChooser(fileSelectedInterface: FileSelectedInterface): Boolean
     }
@@ -77,6 +81,7 @@ class ParamsFileChooserRender(
                         textView.text = path
                         pathView.setText(path)
                     }
+                    onValueChanged?.invoke()
                 }
 
                 override fun mimeType(): String? {
@@ -111,6 +116,14 @@ class ParamsFileChooserRender(
         }
 
         pathView.tag = actionParamInfo.name
+
+        if (actionParamInfo.editable) {
+            pathView.addTextChangedListener(object : android.text.TextWatcher {
+                override fun afterTextChanged(s: android.text.Editable?) = onValueChanged?.invoke() ?: Unit
+                override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            })
+        }
 
         return layout
     }

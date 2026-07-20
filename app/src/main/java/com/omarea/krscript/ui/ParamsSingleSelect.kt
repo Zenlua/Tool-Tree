@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
@@ -16,7 +17,11 @@ import com.tool.tree.ThemeModeState
 
 class ParamsSingleSelect(
         private var actionParamInfo: ActionParamInfo,
-        private var context: FragmentActivity
+        private var context: FragmentActivity,
+        // Được gọi mỗi khi người dùng thay đổi lựa chọn - áp dụng cho cả 2 kiểu hiển thị
+        // (Spinner khi <=6 lựa chọn, dialog khi > 6 lựa chọn), dùng để các param khác
+        // "depend-on" param này biết mà cập nhật ẩn/hiện.
+        private val onValueChanged: (() -> Unit)? = null
 ) {
 
     private val darkMode: Boolean = ThemeModeState.isDarkMode()
@@ -25,6 +30,18 @@ class ParamsSingleSelect(
 
     // Thêm biến lưu thời gian click lúc mở danh sách chọn
     private var lastOpenTime: Long = 0
+
+    // Chỉ khác null khi render() dùng nhánh Spinner (<=6 lựa chọn)
+    private var spinnerView: Spinner? = null
+
+    // Đọc giá trị hiện tại đang được chọn (dùng cho cơ chế depend-on), áp dụng cho cả 2 kiểu
+    // hiển thị (Spinner khi <=6 lựa chọn, dialog khi > 6 lựa chọn).
+    fun getValue(): String {
+        spinnerView?.let { spinner ->
+            return (spinner.selectedItem as? SelectItem)?.value ?: ""
+        }
+        return if (selectedIndex > -1 && selectedIndex < options.size) options[selectedIndex].value ?: "" else ""
+    }
 
     private fun updateValueView(valueView: TextView, textView: TextView) {
         if (selectedIndex > -1 && selectedIndex < options.size) {
@@ -57,6 +74,7 @@ class ParamsSingleSelect(
             // TODO:设置Spinner默认不选中任何项
             layout.findViewById<Spinner>(R.id.kr_param_spinner).run {
                 tag = actionParamInfo.name
+                spinnerView = this
 
                 adapter = ArrayAdapter(context, R.layout.kr_spinner_default, R.id.text, options).apply {
                     setDropDownViewResource(R.layout.kr_spinner_dropdown)
@@ -65,6 +83,14 @@ class ParamsSingleSelect(
 
                 if (selectedIndex > -1 && selectedIndex < options.size) {
                     setSelection(selectedIndex)
+                }
+
+                onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                        selectedIndex = pos
+                        onValueChanged?.invoke()
+                    }
+                    override fun onNothingSelected(p: AdapterView<*>?) {}
                 }
             }
 
@@ -90,6 +116,7 @@ class ParamsSingleSelect(
                 // Không chặn nút xác nhận theo yêu cầu
                 selectedIndex = status.indexOf(true)
                 updateValueView(valueView, textView)
+                onValueChanged?.invoke()
             }
         }).show(context.supportFragmentManager, "params-single-select")
     }

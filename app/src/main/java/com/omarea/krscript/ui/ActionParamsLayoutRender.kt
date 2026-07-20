@@ -106,9 +106,10 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                     addToLayout(view, actionParamInfo)
                     actionParamInfo.name?.let { valueReaders[it] = { widget.getValue() } }
                 } else {
-                    val view = ParamsSingleSelect(actionParamInfo, context).render()
+                    val widget = ParamsSingleSelect(actionParamInfo, context) { evaluateDependencies() }
+                    val view = widget.render()
                     addToLayout(view, actionParamInfo)
-                    attachDefaultListener(view, actionParamInfo)
+                    actionParamInfo.name?.let { valueReaders[it] = { widget.getValue() } }
                 }
             }
             // 选择框渲染
@@ -125,14 +126,19 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             }
             // 滑块
             else if (actionParamInfo.type == "seekbar") {
-                val layout = ParamsSeekBar(actionParamInfo, context).render()
+                val layout = ParamsSeekBar(actionParamInfo, context) { evaluateDependencies() }.render()
 
                 addToLayout(layout, actionParamInfo)
-                attachDefaultListener(layout, actionParamInfo)
+                actionParamInfo.name?.let { name ->
+                    valueReaders[name] = {
+                        val seekBar = linearLayout.findViewWithTag<SeekBar?>(name)
+                        if (seekBar != null) (seekBar.progress + actionParamInfo.min).toString() else ""
+                    }
+                }
             }
             // 文件选择
             else if (actionParamInfo.type == "file" || actionParamInfo.type == "folder") {
-                val layout = ParamsFileChooserRender(actionParamInfo, context, fileChooser).render()
+                val layout = ParamsFileChooserRender(actionParamInfo, context, fileChooser) { evaluateDependencies() }.render()
 
                 addToLayout(layout, actionParamInfo)
                 // Widget này lưu đường dẫn trong 1 EditText con có tag=name -> tìm sâu để đọc giá trị
@@ -142,7 +148,7 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             }
             // 应用选择
             else if (actionParamInfo.type == "app" || actionParamInfo.type == "packages") {
-                val layout = ParamsAppChooserRender(actionParamInfo, context).render()
+                val layout = ParamsAppChooserRender(actionParamInfo, context) { evaluateDependencies() }.render()
 
                 addToLayout(layout, actionParamInfo)
                 actionParamInfo.name?.let { name ->
@@ -227,25 +233,92 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         }
     }
 
+    // Trích các đoạn nằm trong dấu ngoặc đơn () của title, ví dụ "A (so)" -> "so".
+    private val parenPattern = Regex("\\(([^()]*)\\)")
+
+    // Xây tập "định danh" hiện tại của 1 giá trị đang được chọn ở param điều khiển (parent):
+    // gồm chính giá trị (value), title tương ứng (nếu tìm thấy option khớp value), và phần
+    // nội dung nằm trong dấu ngoặc () của title (khớp cả có ngoặc lẫn không ngoặc).
+    // Ví dụ option-sh="echo -e 'a|A (so)'" (value=a, title="A (so)")
+    //   -> identifiers = {"a", "A (so)", "so", "(so)"}
+    private fun buildValueIdentifiers(value: String, options: ArrayList<SelectItem>?): Set<String> {
+        val identifiers = HashSet<String>()
+        identifiers.add(value)
+
+        val title = options?.find { it.value == value }?.title?.trim()
+        if (!title.isNullOrEmpty()) {
+            identifiers.add(title)
+            parenPattern.findAll(title).forEach { m ->
+                val inner = m.groupValues[1].trim()
+                if (inner.isNotEmpty()) {
+                    identifiers.add(inner)
+                    identifiers.add("(" + inner + ")")
+                }
+            }
+        }
+        return identifiers
+    }
+
     // Kiểm tra lại toàn bộ param có "depend-on", ẩn/hiện dòng tương ứng.
-    // So khớp theo kiểu "contains" (không phải bằng tuyệt đối) để tương thích với param
-    // điều khiển là multi-select (giá trị là danh sách nối bằng separator).
+    //
+    // Hỗ trợ NHIỀU điều kiện phụ thuộc cùng lúc (nhiều param cha), nối bằng dấu "|" ở cả 3
+    // thuộc tính depend-on / depend-value / depend-mode - các phần tử cùng vị trí (index) tương
+    // ứng với nhau. Tất cả điều kiện phải cùng thỏa mãn (AND) thì param mới được hiện/ẩn.
+    // Ví dụ: depend-on="mode|cam" depend-value="a|b" depend-mode="show|hide"
+    //        -> hiện khi mode = a  VÀ  cam khác b
+    //
+    // Mỗi vị trí trong depend-value vẫn có thể chứa nhiều giá trị được chấp nhận, nối bằng dấu
+    // ",", so khớp kiểu OR (giữ tương thích với cú pháp cũ), ví dụ "b,c" nghĩa là khớp khi giá
+    // trị điều khiển là b HOẶC c.
+    //
+    // Việc so khớp không chỉ dựa vào value thực tế của param điều khiển, mà còn khớp cả theo
+    // title (label hiển thị) của option đang chọn, và phần văn bản nằm trong dấu ngoặc () của
+    // title (khớp cả có ngoặc lẫn không ngoặc). Ví dụ option-sh="echo -e 'a|A (so)\nb|B\nc|C'"
+    // thì depend-value="a,A,(so)" khớp khi giá trị đang chọn là "a" (value), HOẶC "A" (title),
+    // HOẶC "(so)"/"so" (phần trong ngoặc của title).
     private fun evaluateDependencies() {
         for (info in currentParamInfos) {
-            val dependOn = info.dependOn?.trim()
+            val dependOnRaw = info.dependOn?.trim()
             val name = info.name
-            if (dependOn.isNullOrEmpty() || name.isNullOrEmpty()) continue
+            if (dependOnRaw.isNullOrEmpty() || name.isNullOrEmpty()) continue
 
-            val controllerInfo = currentParamInfos.find { it.name == dependOn }
-            val reader = valueReaders[dependOn]
-            if (controllerInfo == null || reader == null) continue
+            val dependOnList = dependOnRaw.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+            if (dependOnList.isEmpty()) continue
 
-            val currentValues = reader().split(controllerInfo.separator)
-                .map { it.trim() }.filter { it.isNotEmpty() }
-            val wanted = info.dependValue?.split(",")?.map { it.trim() } ?: emptyList()
-            val matched = wanted.any { currentValues.contains(it) }
+            val dependValueList = (info.dependValue ?: "").split("|")
+            val dependModeList = info.dependMode.split("|")
 
-            val shouldShow = if (info.dependMode == "hide") !matched else matched
+            var shouldShow = true // AND toàn bộ điều kiện
+            for (i in dependOnList.indices) {
+                val parentName = dependOnList[i]
+                val controllerInfo = currentParamInfos.find { it.name == parentName }
+                val reader = valueReaders[parentName]
+                if (controllerInfo == null || reader == null) continue // Không rõ param cha -> bỏ qua điều kiện này
+
+                val currentValues = reader().split(controllerInfo.separator)
+                    .map { it.trim() }.filter { it.isNotEmpty() }
+                val parentOptions = controllerInfo.optionsFromShell ?: controllerInfo.options
+
+                // Tập toàn bộ định danh (value + title + nội dung trong ngoặc) của các giá trị
+                // đang được chọn ở param cha này.
+                val currentIdentifiers = HashSet<String>()
+                for (v in currentValues) {
+                    currentIdentifiers.addAll(buildValueIdentifiers(v, parentOptions))
+                }
+
+                val wantedRaw = dependValueList.getOrNull(i) ?: dependValueList.lastOrNull() ?: ""
+                val wanted = wantedRaw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                val matched = wanted.isEmpty() || wanted.any { currentIdentifiers.contains(it) }
+
+                val mode = (dependModeList.getOrNull(i) ?: dependModeList.lastOrNull() ?: "show").trim()
+                val conditionShow = if (mode == "hide") !matched else matched
+
+                if (!conditionShow) {
+                    shouldShow = false
+                    break // AND: chỉ cần 1 điều kiện không thỏa là đủ để ẩn
+                }
+            }
+
             rowViews[name]?.visibility = if (shouldShow) View.VISIBLE else View.GONE
         }
     }
