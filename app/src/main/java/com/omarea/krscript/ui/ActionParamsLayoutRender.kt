@@ -263,9 +263,24 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
     //
     // Hỗ trợ NHIỀU điều kiện phụ thuộc cùng lúc (nhiều param cha), nối bằng dấu "|" ở cả 3
     // thuộc tính depend-on / depend-value / depend-mode - các phần tử cùng vị trí (index) tương
-    // ứng với nhau. Tất cả điều kiện phải cùng thỏa mãn (AND) thì param mới được hiện/ẩn.
-    // Ví dụ: depend-on="mode|cam" depend-value="a|b" depend-mode="show|hide"
-    //        -> hiện khi mode = a  VÀ  cam khác b
+    // ứng với nhau.
+    //
+    // Cách kết hợp các điều kiện được quyết định bởi depend-logic:
+    // - "and" (mặc định, giữ tương thích hành vi cũ): TẤT CẢ điều kiện phải cùng thỏa (AND) thì
+    //   param mới được hiện.
+    //   Ví dụ: depend-on="mode|cam" depend-value="a|b" depend-mode="show|hide"
+    //          -> hiện khi mode = a  VÀ  cam khác b
+    // - "priority" / "or": hỗ trợ MỨC ƯU TIÊN, xét theo thứ tự khai báo trong depend-on, TỪ
+    //   TRÁI SANG PHẢI. Điều kiện nào thỏa trước (đã tính cả depend-mode riêng của điều kiện
+    //   đó) sẽ quyết định luôn là "show", không cần xét tiếp các điều kiện còn lại. Nếu không
+    //   có điều kiện nào thỏa thì "hide".
+    //   Ví dụ: depend-on="mode|level" depend-value="b|7" depend-mode="show|show"
+    //          depend-logic="priority"
+    //            -> Nếu "mode" khớp "b" thì show luôn.
+    //            -> Nếu "mode" không khớp mà "level" khớp "7" thì vẫn show.
+    //            -> Nếu cả hai đều không khớp thì hide.
+    // - "priority-rtl" / "or-rtl": giống "priority" nhưng xét thứ tự ưu tiên TỪ PHẢI SANG TRÁI
+    //   (điều kiện cuối cùng khai báo trong depend-on được xét trước tiên).
     //
     // Mỗi vị trí trong depend-value vẫn có thể chứa nhiều giá trị được chấp nhận, nối bằng dấu
     // ",", so khớp kiểu OR (giữ tương thích với cú pháp cũ), ví dụ "b,c" nghĩa là khớp khi giá
@@ -288,12 +303,14 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             val dependValueList = (info.dependValue ?: "").split("|")
             val dependModeList = info.dependMode.split("|")
 
-            var shouldShow = true // AND toàn bộ điều kiện
-            for (i in dependOnList.indices) {
+            // Đánh giá điều kiện thứ i (theo đúng thứ tự khai báo trong dependOnList),
+            // trả về null nếu không rõ param cha (bỏ qua điều kiện này), ngược lại trả về
+            // true/false là kết quả "muốn show" của riêng điều kiện đó.
+            fun evalCondition(i: Int): Boolean? {
                 val parentName = dependOnList[i]
                 val controllerInfo = currentParamInfos.find { it.name == parentName }
                 val reader = valueReaders[parentName]
-                if (controllerInfo == null || reader == null) continue // Không rõ param cha -> bỏ qua điều kiện này
+                if (controllerInfo == null || reader == null) return null // Không rõ param cha -> bỏ qua
 
                 val currentValues = reader().split(controllerInfo.separator)
                     .map { it.trim() }.filter { it.isNotEmpty() }
@@ -311,11 +328,46 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 val matched = wanted.isEmpty() || wanted.any { currentIdentifiers.contains(it) }
 
                 val mode = (dependModeList.getOrNull(i) ?: dependModeList.lastOrNull() ?: "show").trim()
-                val conditionShow = if (mode == "hide") !matched else matched
+                return if (mode == "hide") !matched else matched
+            }
 
-                if (!conditionShow) {
-                    shouldShow = false
-                    break // AND: chỉ cần 1 điều kiện không thỏa là đủ để ẩn
+            val logic = info.dependLogic.trim().lowercase()
+            val shouldShow: Boolean = when (logic) {
+                "priority", "or", "priority-ltr", "or-ltr" -> {
+                    // Ưu tiên trái -> phải: điều kiện đầu tiên thỏa sẽ quyết định show luôn.
+                    var result = false
+                    for (i in dependOnList.indices) {
+                        val conditionShow = evalCondition(i) ?: continue
+                        if (conditionShow) {
+                            result = true
+                            break
+                        }
+                    }
+                    result
+                }
+                "priority-rtl", "or-rtl" -> {
+                    // Ưu tiên phải -> trái: xét từ điều kiện cuối cùng trở về đầu.
+                    var result = false
+                    for (i in dependOnList.indices.reversed()) {
+                        val conditionShow = evalCondition(i) ?: continue
+                        if (conditionShow) {
+                            result = true
+                            break
+                        }
+                    }
+                    result
+                }
+                else -> {
+                    // "and" (mặc định): tất cả điều kiện phải cùng thỏa.
+                    var result = true
+                    for (i in dependOnList.indices) {
+                        val conditionShow = evalCondition(i) ?: continue
+                        if (!conditionShow) {
+                            result = false
+                            break // AND: chỉ cần 1 điều kiện không thỏa là đủ để ẩn
+                        }
+                    }
+                    result
                 }
             }
 

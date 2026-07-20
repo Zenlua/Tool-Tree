@@ -354,6 +354,9 @@ class PageConfigReader {
                     "depend-mode" -> {
                         actionParamInfo.dependMode = attrValue
                     }
+                    "depend-logic", "depend-priority" -> {
+                        actionParamInfo.dependLogic = attrValue
+                    }
                 }
             }
             if (actionParamInfo.supported && actionParamInfo.name != null && actionParamInfo.name!!.isNotEmpty()) {

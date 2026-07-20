@@ -58,4 +58,19 @@ class ActionParamInfo {
     // Cũng có thể khai báo riêng cho từng param cha, nối bằng "|", theo đúng thứ tự dependOn,
     // ví dụ: "show|hide".
     var dependMode: String = "show"
+
+    // Cách kết hợp nhiều điều kiện phụ thuộc (khi dependOn khai báo nhiều param cha):
+    // - "and" (mặc định): TẤT CẢ điều kiện phải cùng thỏa (giữ tương thích hành vi cũ).
+    // - "priority" (hoặc "or"): xét theo THỨ TỰ ưu tiên từ TRÁI SANG PHẢI theo đúng thứ tự
+    //   khai báo trong dependOn. Điều kiện nào (đã tính cả dependMode của chính nó) thỏa
+    //   trước sẽ quyết định luôn kết quả là "show" (không cần xét tiếp các điều kiện còn lại).
+    //   Nếu không có điều kiện nào thỏa thì "hide".
+    //   Ví dụ: depend-on="mode|level" depend-value="b|7" depend-mode="show|show"
+    //   depend-logic="priority"
+    //     -> Nếu "mode" khớp "b" thì show luôn (bất kể level).
+    //     -> Nếu "mode" không khớp nhưng "level" khớp "7" thì vẫn show.
+    //     -> Nếu cả hai đều không khớp thì hide.
+    // - "priority-rtl" (hoặc "or-rtl"): giống "priority" nhưng xét theo thứ tự ưu tiên từ
+    //   PHẢI SANG TRÁI (điều kiện cuối cùng trong dependOn được xét trước).
+    var dependLogic: String = "and"
 }
