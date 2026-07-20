@@ -104,6 +104,7 @@ API="$(dexupdater -g "$INPUT/dex/classes.dex" -printApi 2>/dev/null | awk '/API/
 for vkn in "$INPUT"/dex/classes*.dex; do
     [ -f "$vkn" ] || continue
     kout="$(basename $vkn .dex)"
+    [ -d "$INPUT/smali/$kout" ] || continue
     if [ -f "$INPUT/.cache/hash_$kout.json" ];then
     cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
     dkfjff="$(check_changes.py "$INPUT/smali/$kout" "$INPUT/.cache/2hash_$kout.json")"

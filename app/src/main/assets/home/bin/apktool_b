@@ -107,6 +107,7 @@ for vkn in "$INPUT"/classes*.dex; do
     [ -f "$vkn" ] || continue
     [ "${vkn##*/}" == "classes.dex" ] && thyedkm="smali" || thyedkm="smali_classes"
     kout="$(basename $vkn .dex | sed "s|classes|$thyedkm|")"
+    [ -d "$INPUT/$kout" ] || continue
     if [ -f "$INPUT/.cache/hash_$kout.json" ];then
     cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
     dkfjff="$(check_changes.py "$INPUT/$kout" "$INPUT/.cache/2hash_$kout.json")"
