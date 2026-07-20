@@ -11,7 +11,13 @@ import com.omarea.krscript.model.ActionParamInfo
 import android.content.res.Configuration
 import com.tool.tree.ThemeModeState
 
-class ParamsMultipleSelect(private val actionParamInfo: ActionParamInfo, private val context: FragmentActivity) {
+class ParamsMultipleSelect(
+    private val actionParamInfo: ActionParamInfo,
+    private val context: FragmentActivity,
+    // Được gọi mỗi khi người dùng xác nhận thay đổi lựa chọn trong dialog con,
+    // dùng để các param khác "depend-on" param này biết mà cập nhật ẩn/hiện.
+    private val onValueChanged: (() -> Unit)? = null
+) {
     private var options: ArrayList<SelectItem>? = null
     private var status = booleanArrayOf()
     private var labels: Array<String?> = arrayOf()
@@ -20,6 +26,19 @@ class ParamsMultipleSelect(private val actionParamInfo: ActionParamInfo, private
 
     // Thêm biến lưu mốc thời gian click mở để làm phương án dự phòng
     private var lastOpenTime: Long = 0
+
+    // Đọc giá trị hiện tại (các mục đang được chọn), nối bằng separator của param.
+    // Dùng cho cơ chế depend-on vì view trả về bởi render() là 1 layout tổng hợp,
+    // không phải 1 View đơn (Spinner/EditText/...) nên không tự đọc được bằng cách thông thường.
+    fun getValue(): String {
+        val result = ArrayList<String?>()
+        for (index in status.indices) {
+            if (status[index]) {
+                values.getOrNull(index)?.let { result.add(it) }
+            }
+        }
+        return result.joinToString(actionParamInfo.separator)
+    }
 
     fun render(): View {
         options = actionParamInfo.optionsFromShell
@@ -98,6 +117,7 @@ class ParamsMultipleSelect(private val actionParamInfo: ActionParamInfo, private
                         status[index] = value
                     }
                     setView(textView, valueView, countView)
+                    onValueChanged?.invoke()
                 }
             }).show(context.supportFragmentManager, dialogTag)
         }

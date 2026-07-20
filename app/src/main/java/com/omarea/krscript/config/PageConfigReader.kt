@@ -345,6 +345,15 @@ class PageConfigReader {
                     "separator" -> {
                         actionParamInfo.separator = attrValue
                     }
+                    "depend-on", "depend" -> {
+                        actionParamInfo.dependOn = attrValue
+                    }
+                    "depend-value" -> {
+                        actionParamInfo.dependValue = attrValue
+                    }
+                    "depend-mode" -> {
+                        actionParamInfo.dependMode = attrValue
+                    }
                 }
             }
             if (actionParamInfo.supported && actionParamInfo.name != null && actionParamInfo.name!!.isNotEmpty()) {

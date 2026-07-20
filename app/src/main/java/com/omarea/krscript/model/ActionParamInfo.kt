@@ -40,4 +40,11 @@ class ActionParamInfo {
     var editable: Boolean = false
     // 多个值的分隔符（仅限多选下拉）
     var separator: String = "\n"
+
+    // Tên param điều khiển (param này sẽ ẩn/hiện dựa theo giá trị của param có "name" trùng dependOn)
+    var dependOn: String? = null
+    // Danh sách giá trị cần khớp, cách nhau bởi dấu phẩy, ví dụ: "a,b"
+    var dependValue: String? = null
+    // "show": chỉ hiện khi khớp dependValue (mặc định) | "hide": ẩn khi khớp dependValue
+    var dependMode: String = "show"
 }

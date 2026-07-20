@@ -3,6 +3,7 @@ package com.omarea.krscript.ui
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.FragmentActivity
 import com.omarea.common.model.SelectItem
@@ -85,54 +86,167 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
 
     private var context: FragmentActivity = activity
 
+    // key = actionParamInfo.name
+    private val rowViews = HashMap<String, View>()
+    private val valueReaders = HashMap<String, () -> String>()
+    private var currentParamInfos: ArrayList<ActionParamInfo> = ArrayList()
+
     fun renderList(actionParamInfos: ArrayList<ActionParamInfo>, fileChooser: ParamsFileChooserRender.FileChooserInterface?) {
+        currentParamInfos = actionParamInfos
+        rowViews.clear()
+        valueReaders.clear()
+
         for (actionParamInfo in actionParamInfos) {
             val options = actionParamInfo.optionsFromShell
             // 下拉框渲染
             if (options != null && !(actionParamInfo.type == "app" || actionParamInfo.type == "packages")) {
                 if (actionParamInfo.multiple) {
-                    val view = ParamsMultipleSelect(actionParamInfo, context).render()
+                    val widget = ParamsMultipleSelect(actionParamInfo, context) { evaluateDependencies() }
+                    val view = widget.render()
                     addToLayout(view, actionParamInfo)
+                    actionParamInfo.name?.let { valueReaders[it] = { widget.getValue() } }
                 } else {
-                    addToLayout(ParamsSingleSelect(actionParamInfo, context).render(), actionParamInfo)
+                    val view = ParamsSingleSelect(actionParamInfo, context).render()
+                    addToLayout(view, actionParamInfo)
+                    attachDefaultListener(view, actionParamInfo)
                 }
             }
             // 选择框渲染
             else if (actionParamInfo.type == "bool" || actionParamInfo.type == "checkbox") {
-                addToLayout(ParamsCheckbox(actionParamInfo, context).render(), actionParamInfo)
+                val view = ParamsCheckbox(actionParamInfo, context).render()
+                addToLayout(view, actionParamInfo)
+                attachDefaultListener(view, actionParamInfo)
             }
             // 开关渲染
             else if (actionParamInfo.type == "switch") {
-                addToLayout(ParamsSwitch(actionParamInfo, context).render(), actionParamInfo)
+                val view = ParamsSwitch(actionParamInfo, context).render()
+                addToLayout(view, actionParamInfo)
+                attachDefaultListener(view, actionParamInfo)
             }
             // 滑块
             else if (actionParamInfo.type == "seekbar") {
                 val layout = ParamsSeekBar(actionParamInfo, context).render()
 
                 addToLayout(layout, actionParamInfo)
+                attachDefaultListener(layout, actionParamInfo)
             }
             // 文件选择
             else if (actionParamInfo.type == "file" || actionParamInfo.type == "folder") {
                 val layout = ParamsFileChooserRender(actionParamInfo, context, fileChooser).render()
 
                 addToLayout(layout, actionParamInfo)
+                // Widget này lưu đường dẫn trong 1 EditText con có tag=name -> tìm sâu để đọc giá trị
+                actionParamInfo.name?.let { name ->
+                    valueReaders[name] = { linearLayout.findViewWithTag<TextView?>(name)?.text?.toString() ?: "" }
+                }
             }
             // 应用选择
             else if (actionParamInfo.type == "app" || actionParamInfo.type == "packages") {
                 val layout = ParamsAppChooserRender(actionParamInfo, context).render()
 
                 addToLayout(layout, actionParamInfo)
+                actionParamInfo.name?.let { name ->
+                    valueReaders[name] = { linearLayout.findViewWithTag<TextView?>(name)?.text?.toString() ?: "" }
+                }
             }
             // 颜色输入
             else if (actionParamInfo.type == "color") {
                 val layout = ParamsColorPicker(actionParamInfo, context).render()
 
                 addToLayout(layout, actionParamInfo)
+                attachDefaultListener(layout, actionParamInfo)
             }
             // 文本框渲染
             else {
-                addToLayout(ParamsEditText(actionParamInfo, context).render(), actionParamInfo)
+                val view = ParamsEditText(actionParamInfo, context).render()
+                addToLayout(view, actionParamInfo)
+                attachDefaultListener(view, actionParamInfo)
             }
+        }
+
+        evaluateDependencies() // set trạng thái ẩn/hiện ngay khi vừa mở dialog
+    }
+
+    // Gắn value-reader + listener cho các widget mà input là 1 View cụ thể (Spinner/EditText/CheckBox/Switch/SeekBar)
+    // hoặc 1 layout tổng hợp có chứa 1 trong các View đó bên trong (vd ParamsSeekBar/ParamsColorPicker bọc EditText/SeekBar).
+    private fun attachDefaultListener(view: View, info: ActionParamInfo) {
+        val name = info.name ?: return
+        valueReaders[name] = { readValueDeep(view, info) }
+
+        val target: View = when (view) {
+            is Spinner, is CheckBox, is Switch, is EditText, is SeekBar -> view
+            else -> (view as? ViewGroup)?.let { findTypedChild(it) } ?: view
+        }
+
+        when (target) {
+            is Spinner -> target.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) = evaluateDependencies()
+                override fun onNothingSelected(p: AdapterView<*>?) {}
+            }
+            is CheckBox -> target.setOnCheckedChangeListener { _, _ -> evaluateDependencies() }
+            is Switch -> target.setOnCheckedChangeListener { _, _ -> evaluateDependencies() }
+            is EditText -> target.addTextChangedListener(object : android.text.TextWatcher {
+                override fun afterTextChanged(s: android.text.Editable?) = evaluateDependencies()
+                override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            })
+            is SeekBar -> target.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: SeekBar?, p: Int, u: Boolean) = evaluateDependencies()
+                override fun onStartTrackingTouch(sb: SeekBar?) {}
+                override fun onStopTrackingTouch(sb: SeekBar?) {}
+            })
+        }
+    }
+
+    // Dò tìm 1 View con thuộc các kiểu input đã biết bên trong 1 ViewGroup (dùng cho widget tổng hợp như seekbar/color picker)
+    private fun findTypedChild(group: ViewGroup): View? {
+        for (i in 0 until group.childCount) {
+            val child = group.getChildAt(i)
+            if (child is Spinner || child is CheckBox || child is Switch || child is EditText || child is SeekBar) {
+                return child
+            }
+            if (child is ViewGroup) {
+                findTypedChild(child)?.let { return it }
+            }
+        }
+        return null
+    }
+
+    private fun readValueDeep(view: View, info: ActionParamInfo): String {
+        val target: View = when (view) {
+            is Spinner, is CheckBox, is Switch, is EditText, is SeekBar -> view
+            else -> (view as? ViewGroup)?.let { findTypedChild(it) } ?: view
+        }
+        return when (target) {
+            is EditText -> target.text.toString()
+            is CheckBox -> if (target.isChecked) "1" else "0"
+            is Switch -> if (target.isChecked) "1" else "0"
+            is SeekBar -> (target.progress + info.min).toString()
+            is Spinner -> (target.selectedItem as? SelectItem)?.value ?: target.selectedItem?.toString().orEmpty()
+            else -> ""
+        }
+    }
+
+    // Kiểm tra lại toàn bộ param có "depend-on", ẩn/hiện dòng tương ứng.
+    // So khớp theo kiểu "contains" (không phải bằng tuyệt đối) để tương thích với param
+    // điều khiển là multi-select (giá trị là danh sách nối bằng separator).
+    private fun evaluateDependencies() {
+        for (info in currentParamInfos) {
+            val dependOn = info.dependOn?.trim()
+            val name = info.name
+            if (dependOn.isNullOrEmpty() || name.isNullOrEmpty()) continue
+
+            val controllerInfo = currentParamInfos.find { it.name == dependOn }
+            val reader = valueReaders[dependOn]
+            if (controllerInfo == null || reader == null) continue
+
+            val currentValues = reader().split(controllerInfo.separator)
+                .map { it.trim() }.filter { it.isNotEmpty() }
+            val wanted = info.dependValue?.split(",")?.map { it.trim() } ?: emptyList()
+            val matched = wanted.any { currentValues.contains(it) }
+
+            val shouldShow = if (info.dependMode == "hide") !matched else matched
+            rowViews[name]?.visibility = if (shouldShow) View.VISIBLE else View.GONE
         }
     }
 
@@ -166,6 +280,8 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         // (layout.layoutParams as LinearLayout.LayoutParams).topMargin = dp2px(context, 1f)
 
         (inputView.layoutParams as FrameLayout.LayoutParams).gravity = Gravity.CENTER_VERTICAL
+
+        actionParamInfo.name?.let { rowViews[it] = layout }
     }
 
     private fun getFieldTips(actionParamInfo: ActionParamInfo): String {
@@ -253,8 +369,9 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 }
             }
 
+            val isHiddenByDepend = rowViews[actionParamInfo.name]?.visibility == View.GONE
             if (actionParamInfo.value.isNullOrEmpty()) {
-                if (actionParamInfo.required) {
+                if (actionParamInfo.required && !isHiddenByDepend) {
                     throw Exception(getFieldTips(actionParamInfo) + context.getString(R.string.do_not_empty))
                 } else {
                     params[actionParamInfo.name!!] = ""
