@@ -368,7 +368,6 @@ class TextEditorActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.menu_text_editor, menu)
         menu.findItem(R.id.editor_menu_wrap)?.isChecked = wrapEnabled
         menu.findItem(R.id.editor_menu_run)?.isVisible = runnableInterpreter() != null
-        menu.findItem(R.id.editor_menu_exit)?.isVisible = false
         return true
     }
 
@@ -377,7 +376,6 @@ class TextEditorActivity : AppCompatActivity() {
             R.id.editor_menu_run -> { runnableInterpreter()?.let { saveAndRun(it) }; true }
             R.id.editor_menu_save -> { saveFile(); true }
             R.id.editor_menu_wrap -> { wrapEnabled = !wrapEnabled; item.isChecked = wrapEnabled; applyWrapState(); true }
-            android.R.id.home -> { attemptClose(); true }
             else -> super.onOptionsItemSelected(item)
         }
     }
