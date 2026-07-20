@@ -40,15 +40,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/**
- * Trang soạn thảo văn bản chung của ứng dụng.
- *
- * Có thể mở bằng [start], hoặc qua Intent với các extra:
- *  - file (bắt buộc): đường dẫn tuyệt đối tới file cần soạn thảo. Nếu file chưa tồn tại thì
- *    sẽ được tạo mới khi bấm Lưu.
- *  - title, desc (tùy chọn): hiển thị trên thanh tiêu đề.
- *  - wrap (tùy chọn, mặc định true): trạng thái ngắt dòng ban đầu.
- */
 class TextEditorActivity : AppCompatActivity() {
 
     companion object {
@@ -57,36 +48,19 @@ class TextEditorActivity : AppCompatActivity() {
         private const val EXTRA_DESC = "desc"
         private const val EXTRA_WRAP = "wrap"
         private const val EXTRA_DIR = "dir"
-
-        // Các đuôi file được coi là script shell, cho phép "chạy thử nghiệm"
-        private val RUNNABLE_EXTENSIONS = mapOf(
-            "sh" to "sh",
-            "bash" to "bash",
-            "py" to "python"
-        )
-
-        // Số bước Undo tối đa được giữ lại, và thời gian tạm dừng gõ (ms) để "chốt" một bước
-        // Undo mới — gộp các ký tự gõ liên tục thành một bước duy nhất.
         private const val UNDO_HISTORY_LIMIT = 200
         private const val UNDO_DEBOUNCE_MS = 700L
 
-        fun start(
-            context: Context,
-            file: String,
-            title: String? = null,
-            desc: String? = null,
-            wrap: Boolean = true,
-            dir: String? = null
-        ) {
+        private val RUNNABLE_EXTENSIONS = mapOf("sh" to "sh", "bash" to "bash", "py" to "python")
+
+        fun start(context: Context, file: String, title: String? = null, desc: String? = null, wrap: Boolean = true, dir: String? = null) {
             val intent = Intent(context, TextEditorActivity::class.java).apply {
                 putExtra(EXTRA_FILE, file)
                 putExtra(EXTRA_TITLE, title ?: "")
                 putExtra(EXTRA_DESC, desc ?: "")
                 putExtra(EXTRA_WRAP, wrap)
                 putExtra(EXTRA_DIR, dir ?: "")
-                if (context !is AppCompatActivity) {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
+                if (context !is AppCompatActivity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
         }
@@ -105,13 +79,7 @@ class TextEditorActivity : AppCompatActivity() {
     private var syntaxHighlighter: SyntaxHighlighter? = null
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
 
-    // --- Undo / Redo ---
-    // Lưu lại toàn bộ nội dung và vị trí con trỏ tại mỗi "đợt" chỉnh sửa (gộp các ký tự gõ
-    // liên tục thành một bước, thay vì lưu theo từng ký tự) để nút Undo/Redo hoạt động tự nhiên
-    // như trình soạn thảo thông thường. EditText mặc định của Android không có sẵn undo/redo
-    // công khai nên phải tự quản lý 2 stack này.
     private data class EditorSnapshot(val text: String, val cursor: Int)
-
     private val undoStack = ArrayDeque<EditorSnapshot>()
     private val redoStack = ArrayDeque<EditorSnapshot>()
     private var pendingUndoSnapshot: EditorSnapshot? = null
@@ -124,29 +92,27 @@ class TextEditorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ThemeModeState.switchTheme(this)
-        binding = ActivityTextEditorBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
         setupKeyboardInsets()
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
-        // supportActionBar?.setDisplayShowTitleEnabled(false)
-        // Bỏ nút back (mũi tên) trên toolbar theo yêu cầu — việc thoát trang giờ thực hiện qua
-        // mục "Thoát" trong menu (xem onOptionsItemSelected). Nút back cứng/gesture của hệ
-        // thống vẫn hoạt động bình thường nhờ onBackPressedDispatcher bên dưới.
-        supportActionBar?.setHomeButtonEnabled(true)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        
+        supportActionBar?.apply {
+            setHomeButtonEnabled(true)
+            setDisplayHomeAsUpEnabled(true)
+        }
+        toolbar.setNavigationOnClickListener { attemptClose() }
         setupUndoRedoButtons(toolbar)
 
         onBackPressedDispatcher.addCallback(this) { attemptClose() }
 
-        val extraFile = intent.getStringExtra(EXTRA_FILE)
-        if (extraFile.isNullOrEmpty()) {
+        filePath = intent.getStringExtra(EXTRA_FILE) ?: ""
+        if (filePath.isEmpty()) {
             Toast.makeText(this, R.string.editor_file_missing, Toast.LENGTH_SHORT).show()
             finish()
             return
         }
-        filePath = extraFile
         configDir = intent.getStringExtra(EXTRA_DIR).orEmpty()
         absoluteFilePath = resolveAbsolutePath(configDir, filePath)
         wrapEnabled = intent.getBooleanExtra(EXTRA_WRAP, true)
@@ -159,26 +125,12 @@ class TextEditorActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         syntaxHighlighter?.detach()
-        syntaxHighlighter = null
         undoHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
 
-    /**
-     * App đang dùng chế độ edge-to-edge (decorFitsSystemWindows = false) nên hệ thống sẽ
-     * không tự đẩy layout lên khi hiện bàn phím dù có khai báo windowSoftInputMode="adjustResize"
-     * trong manifest — phải tự lắng nghe inset của bàn phím (IME) rồi tự xử lý.
-     *
-     * Dùng translationY (chỉ dịch hình ảnh) từng gây lỗi không kéo lên đầu được, vì vùng chạm/
-     * cuộn vẫn được tính theo kích thước View cũ (translation không đổi kích thước/measurement
-     * thật). Ở đây đổi sang tăng bottomMargin thật của vùng nội dung — tương đương cách
-     * adjustResize thật sự hoạt động — nên kích thước, vùng cuộn và vùng chạm đều được tính lại
-     * chính xác theo không gian còn trống phía trên bàn phím. Có thêm một khoảng đệm dư ra để
-     * văn bản/con trỏ không dính sát vào mép bàn phím.
-     */
     private fun setupKeyboardInsets() {
-        val mainListParams = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
-        mainListBaseBottomMargin = mainListParams.bottomMargin
+        mainListBaseBottomMargin = (binding.mainList.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
         val extraGapPx = (24 * resources.displayMetrics.density).toInt()
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
@@ -186,24 +138,16 @@ class TextEditorActivity : AppCompatActivity() {
             val systemBarsInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
             val keyboardHeight = (imeInset - systemBarsInset).coerceAtLeast(0)
             val keyboardVisible = keyboardHeight > 0
-            val extraGap = if (keyboardVisible) extraGapPx else 0
 
             val mlp = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
-            mlp.bottomMargin = mainListBaseBottomMargin + keyboardHeight + extraGap
+            mlp.bottomMargin = mainListBaseBottomMargin + keyboardHeight + if (keyboardVisible) extraGapPx else 0
             binding.mainList.layoutParams = mlp
 
-            if (keyboardVisible) {
-                binding.mainList.post { scrollToCursor() }
-            }
-
+            if (keyboardVisible) binding.mainList.post { scrollToCursor() }
             insets
         }
     }
 
-    /**
-     * Đảm bảo con trỏ luôn được cuộn vào vùng nhìn thấy mỗi khi gõ chữ/xuống dòng, kể cả khi
-     * bàn phím đang chiếm một phần màn hình.
-     */
     private fun setupCursorAutoScroll() {
         binding.editorContent.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -226,10 +170,7 @@ class TextEditorActivity : AppCompatActivity() {
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
 
         when {
-            lineBottom > visibleBottom -> scrollView.smoothScrollTo(
-                0,
-                lineBottom - scrollView.height + scrollView.paddingBottom
-            )
+            lineBottom > visibleBottom -> scrollView.smoothScrollTo(0, lineBottom - scrollView.height + scrollView.paddingBottom)
             lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
         }
     }
@@ -240,87 +181,54 @@ class TextEditorActivity : AppCompatActivity() {
         return if (base.endsWith("/")) base + file else "$base/$file"
     }
 
-    private fun fileExtension(): String {
-        val name = File(absoluteFilePath).name
-        val dotIndex = name.lastIndexOf(".")
-        return if (dotIndex >= 0 && dotIndex < name.length - 1) {
-            name.substring(dotIndex + 1).lowercase()
-        } else {
-            ""
-        }
-    }
+    private fun fileExtension() = File(absoluteFilePath).name.substringAfterLast('.', "").lowercase()
 
     private fun runnableInterpreter(): String? = RUNNABLE_EXTENSIONS[fileExtension()]
 
     private fun setupSyntaxHighlighting() {
         syntaxHighlighter?.detach()
-        syntaxHighlighter = SyntaxHighlighterFactory.createForPath(absoluteFilePath, binding.editorContent)
-        syntaxHighlighter?.attach()
+        syntaxHighlighter = SyntaxHighlighterFactory.createForPath(absoluteFilePath, binding.editorContent)?.apply { attach() }
     }
 
-    /**
-     * Tạo 2 nút Undo/Redo và gắn vào bên trái của toolbar (thay cho vị trí nút back đã bỏ).
-     */
     private fun setupUndoRedoButtons(toolbar: Toolbar) {
-        val tint = ColorStateList.valueOf(android.graphics.Color.WHITE)
+        val typedValue = TypedValue()
+        theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
+        val tint = ColorStateList.valueOf(typedValue.data)
         val buttonSize = (48 * resources.displayMetrics.density).toInt()
         val iconPadding = (12 * resources.displayMetrics.density).toInt()
 
-        fun makeButton(iconRes: Int, descRes: Int): ImageButton {
+        fun makeButton(iconRes: Int, descRes: Int, onClick: () -> Unit): ImageButton {
             return ImageButton(this).apply {
                 setImageResource(iconRes)
                 contentDescription = getString(descRes)
                 setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
                 val outValue = TypedValue()
-                theme.resolveAttribute(
-                    android.R.attr.selectableItemBackgroundBorderless,
-                    outValue,
-                    true
-                )
+                theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
                 setBackgroundResource(outValue.resourceId)
                 ImageViewCompat.setImageTintList(this, tint)
-                layoutParams = Toolbar.LayoutParams(buttonSize, buttonSize).apply {
-                    gravity = Gravity.END or Gravity.CENTER_VERTICAL
-                }
+                setOnClickListener { onClick() }
+                layoutParams = Toolbar.LayoutParams(buttonSize, buttonSize).apply { gravity = Gravity.END or Gravity.CENTER_VERTICAL }
             }
         }
 
-        undoButton = makeButton(R.drawable.ic_editor_undo, R.string.editor_undo).also {
-            it.setOnClickListener { performUndo() }
-            toolbar.addView(it)
-        }
-        redoButton = makeButton(R.drawable.ic_editor_redo, R.string.editor_redo).also {
-            it.setOnClickListener { performRedo() }
-            toolbar.addView(it)
-        }
+        undoButton = makeButton(R.drawable.ic_editor_undo, R.string.editor_undo) { performUndo() }
+        redoButton = makeButton(R.drawable.ic_editor_redo, R.string.editor_redo) { performRedo() }
+
+        toolbar.addView(redoButton)
+        toolbar.addView(undoButton)
         refreshUndoRedoButtons()
     }
 
-    private fun resolveThemeColor(attr: Int): Int {
-        val typedValue = TypedValue()
-        theme.resolveAttribute(attr, typedValue, true)
-        return typedValue.data
-    }
-
-    /**
-     * Theo dõi nội dung để phục vụ Undo/Redo. Các thay đổi gõ liên tục (không dừng quá
-     * [UNDO_DEBOUNCE_MS]) được gộp thành một bước, để Undo/Redo hoạt động theo "đợt chỉnh sửa"
-     * thay vì theo từng ký tự.
-     */
     private fun setupUndoRedoTracking() {
         binding.editorContent.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 if (isApplyingHistory) return
                 if (pendingUndoSnapshot == null) {
-                    // Chụp nội dung VÀ vị trí con trỏ ngay trước khi thay đổi xảy ra —
-                    // đây là trạng thái cần quay lại khi người dùng bấm Undo.
                     val cursor = binding.editorContent.selectionStart.coerceAtLeast(0)
                     pendingUndoSnapshot = EditorSnapshot(s?.toString().orEmpty(), cursor)
                 }
             }
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-
             override fun afterTextChanged(s: Editable?) {
                 if (isApplyingHistory) return
                 redoStack.clear()
@@ -337,9 +245,7 @@ class TextEditorActivity : AppCompatActivity() {
         val current = binding.editorContent.text?.toString().orEmpty()
         if (snapshot.text == current) return
 
-        if (undoStack.size >= UNDO_HISTORY_LIMIT) {
-            undoStack.removeFirst()
-        }
+        if (undoStack.size >= UNDO_HISTORY_LIMIT) undoStack.removeFirst()
         undoStack.addLast(snapshot)
         refreshUndoRedoButtons()
     }
@@ -348,17 +254,7 @@ class TextEditorActivity : AppCompatActivity() {
         undoHandler.removeCallbacks(commitPendingUndoRunnable)
         val currentText = binding.editorContent.text?.toString().orEmpty()
         val currentCursor = binding.editorContent.selectionStart.coerceAtLeast(0)
-
-        val target: EditorSnapshot
-        val pending = pendingUndoSnapshot
-        if (pending != null) {
-            // Đang có một đợt gõ chưa kịp "chốt" vào undoStack — hoàn tác thẳng về mốc đó.
-            target = pending
-            pendingUndoSnapshot = null
-        } else {
-            if (undoStack.isEmpty()) return
-            target = undoStack.removeLast()
-        }
+        val target = pendingUndoSnapshot?.also { pendingUndoSnapshot = null } ?: if (undoStack.isEmpty()) return else undoStack.removeLast()
 
         redoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
@@ -374,9 +270,7 @@ class TextEditorActivity : AppCompatActivity() {
         val currentCursor = binding.editorContent.selectionStart.coerceAtLeast(0)
         val target = redoStack.removeLast()
 
-        if (undoStack.size >= UNDO_HISTORY_LIMIT) {
-            undoStack.removeFirst()
-        }
+        if (undoStack.size >= UNDO_HISTORY_LIMIT) undoStack.removeFirst()
         undoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
         refreshUndoRedoButtons()
@@ -384,25 +278,18 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun applyHistorySnapshot(snapshot: EditorSnapshot) {
         isApplyingHistory = true
-        val editText = binding.editorContent
-        editText.text?.let { editable ->
-            editable.replace(0, editable.length, snapshot.text)
-        } ?: run {
-            editText.setText(snapshot.text)
+        binding.editorContent.apply {
+            text?.let { it.replace(0, it.length, snapshot.text) } ?: setText(snapshot.text)
+            setSelection(snapshot.cursor.coerceIn(0, text?.length ?: 0))
         }
-        editText.setSelection(snapshot.cursor.coerceIn(0, editText.text?.length ?: 0))
         isApplyingHistory = false
     }
 
     private fun refreshUndoRedoButtons() {
         val canUndo = undoStack.isNotEmpty() || pendingUndoSnapshot != null
         val canRedo = redoStack.isNotEmpty()
-        undoButton?.isEnabled = canUndo
-        undoButton?.isClickable = canUndo
-        undoButton?.alpha = if (canUndo) 1f else 0.3f
-        redoButton?.isEnabled = canRedo
-        redoButton?.isClickable = canRedo
-        redoButton?.alpha = if (canRedo) 1f else 0.3f
+        undoButton?.apply { isEnabled = canUndo; isClickable = canUndo; alpha = if (canUndo) 1f else 0.3f }
+        redoButton?.apply { isEnabled = canRedo; isClickable = canRedo; alpha = if (canRedo) 1f else 0.3f }
     }
 
     private fun loadFileContent() {
@@ -411,14 +298,11 @@ class TextEditorActivity : AppCompatActivity() {
             var content = ""
             var newFile = true
             try {
-                val stream = PathAnalysis(applicationContext, configDir).parsePath(filePath)
-                if (stream != null) {
+                PathAnalysis(applicationContext, configDir).parsePath(filePath)?.let { stream ->
                     newFile = false
                     content = stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                 }
-            } catch (ex: Exception) {
-                content = ""
-            }
+            } catch (_: Exception) {}
 
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
@@ -432,12 +316,7 @@ class TextEditorActivity : AppCompatActivity() {
                 undoStack.clear()
                 redoStack.clear()
                 refreshUndoRedoButtons()
-                binding.editorContent.hint = if (newFile) {
-                    getString(R.string.editor_hint_new_file)
-                } else {
-                    getString(R.string.editor_hint_empty)
-                }
-
+                binding.editorContent.hint = getString(if (newFile) R.string.editor_hint_new_file else R.string.editor_hint_empty)
                 setupSyntaxHighlighting()
             }
         }
@@ -446,89 +325,42 @@ class TextEditorActivity : AppCompatActivity() {
     private fun applyWrapState() {
         val editText = binding.editorContent
         val scrollView = binding.mainList
-
-        // Lưu lại vị trí con trỏ và nội dung hiện tại trước khi đổi chế độ
         val currentText = editText.text?.toString().orEmpty()
         val cursorStart = editText.selectionStart.coerceIn(0, currentText.length)
         val cursorEnd = editText.selectionEnd.coerceIn(0, currentText.length)
 
-        // Gỡ EditText ra khỏi cha hiện tại (có thể là ScrollView hoặc HorizontalScrollView)
         (editText.parent as? ViewGroup)?.removeView(editText)
         noWrapContainer?.let { scrollView.removeView(it) }
-
         editText.setHorizontallyScrolling(!wrapEnabled)
 
         if (wrapEnabled) {
-            // Ngắt dòng: EditText là con trực tiếp của ScrollView (dọc) -> chiều rộng bị giới hạn
-            // theo màn hình nên văn bản thực sự được ngắt dòng, chiều cao tự do để cuộn dọc.
-            editText.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            editText.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             scrollView.addView(editText)
         } else {
-            // Không ngắt dòng: bọc EditText trong một HorizontalScrollView -> chiều rộng không bị
-            // giới hạn nên các dòng dài sẽ kéo dài ra và cuộn ngang được, còn HorizontalScrollView
-            // đó vẫn là con trực tiếp của ScrollView (dọc) nên vẫn cuộn dọc bình thường.
             val hsv = noWrapContainer ?: HorizontalScrollView(this).also {
                 it.isFillViewport = false
                 it.scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
                 noWrapContainer = it
             }
-            editText.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            hsv.removeAllViews()
-            hsv.addView(editText)
-            hsv.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            hsv.scrollTo(0, 0)
+            editText.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            hsv.apply { removeAllViews(); addView(editText); layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT); scrollTo(0, 0) }
             scrollView.addView(hsv)
         }
 
-        // Chỉ đổi setHorizontallyScrolling()/layoutParams thôi thì TextView không tự dựng lại
-        // Layout nội bộ theo chiều rộng mới (văn bản đã dàn trang trước đó bị giữ nguyên), nên
-        // phải set lại text để buộc nó dựng lại layout rồi khôi phục vị trí con trỏ.
-        // Đây không phải là một thao tác chỉnh sửa nội dung thật sự nên không được tính vào
-        // lịch sử Undo/Redo.
         isApplyingHistory = true
         editText.setText(currentText)
         isApplyingHistory = false
-        editText.setSelection(
-            cursorStart.coerceAtMost(currentText.length),
-            cursorEnd.coerceAtMost(currentText.length)
-        )
+        editText.setSelection(cursorStart.coerceAtMost(currentText.length), cursorEnd.coerceAtMost(currentText.length))
     }
 
-    private fun hasUnsavedChanges(): Boolean {
-        return binding.editorContent.text?.toString().orEmpty() != savedContent
-    }
+    private fun hasUnsavedChanges() = binding.editorContent.text?.toString().orEmpty() != savedContent
 
     private fun attemptClose() {
         if (isSaving) return
-        if (!hasUnsavedChanges()) {
-            finish()
-            return
-        }
-        DialogHelper.confirm(
-            this,
-            title = getString(R.string.editor_unsaved_title),
-            message = getString(R.string.editor_unsaved_message),
-            onConfirm = DialogHelper.DialogButton(
-                getString(R.string.editor_save),
-                onClick = Runnable {
-                    saveFile { success -> if (success) finish() }
-                }
-            ),
-            onCancel = DialogHelper.DialogButton(
-                getString(R.string.editor_discard),
-                onClick = Runnable {
-                    finish()
-                }
-            )
+        if (!hasUnsavedChanges()) { finish(); return }
+        DialogHelper.confirm(this, title = getString(R.string.editor_unsaved_title), message = getString(R.string.editor_unsaved_message),
+            onConfirm = DialogHelper.DialogButton(getString(R.string.editor_save)) { saveFile { if (it) finish() } },
+            onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard)) { finish() }
         )
     }
 
@@ -536,161 +368,74 @@ class TextEditorActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.menu_text_editor, menu)
         menu.findItem(R.id.editor_menu_wrap)?.isChecked = wrapEnabled
         menu.findItem(R.id.editor_menu_run)?.isVisible = runnableInterpreter() != null
+        menu.findItem(R.id.editor_menu_exit)?.isVisible = false
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.editor_menu_run -> {
-                runnableInterpreter()?.let { saveAndRun(it) }
-                true
-            }
-            R.id.editor_menu_save -> {
-                saveFile()
-                true
-            }
-            R.id.editor_menu_wrap -> {
-                wrapEnabled = !wrapEnabled
-                item.isChecked = wrapEnabled
-                applyWrapState()
-                true
-            }
+            R.id.editor_menu_run -> { runnableInterpreter()?.let { saveAndRun(it) }; true }
+            R.id.editor_menu_save -> { saveFile(); true }
+            R.id.editor_menu_wrap -> { wrapEnabled = !wrapEnabled; item.isChecked = wrapEnabled; applyWrapState(); true }
+            android.R.id.home -> { attemptClose(); true }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    /**
-     * Lưu nội dung hiện tại xuống file.
-     *
-     * showProgress = false: không hiện màn hình "vui lòng chờ"
-     * showToast = false: không hiện toast thành công/thất bại
-     */
-    private fun saveFile(
-        showProgress: Boolean = true,
-        showToast: Boolean = true,
-        onResult: ((Boolean) -> Unit)? = null
-    ) {
+    private fun saveFile(showProgress: Boolean = true, showToast: Boolean = true, onResult: ((Boolean) -> Unit)? = null) {
         if (isSaving) return
         isSaving = true
-
         val content = binding.editorContent.text?.toString().orEmpty()
-        if (showProgress) {
-            progressBarDialog.showDialog(getString(R.string.editor_saving))
-        }
+        if (showProgress) progressBarDialog.showDialog(getString(R.string.editor_saving))
 
         lifecycleScope.launch(Dispatchers.IO) {
             val success = writeFileContent(absoluteFilePath, content)
-
             withContext(Dispatchers.Main) {
-                if (showProgress) {
-                    progressBarDialog.hideDialog()
-                }
+                if (showProgress) progressBarDialog.hideDialog()
                 isSaving = false
-
                 if (success) {
                     savedContent = content
                     isNewFile = false
-                    if (showToast) {
-                        Toast.makeText(
-                            this@TextEditorActivity,
-                            R.string.editor_save_success,
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } else {
-                    if (showToast) {
-                        Toast.makeText(
-                            this@TextEditorActivity,
-                            R.string.editor_save_fail,
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
                 }
-
+                if (showToast) Toast.makeText(this@TextEditorActivity, if (success) R.string.editor_save_success else R.string.editor_save_fail, if (success) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
                 onResult?.invoke(success)
             }
         }
     }
 
     private fun writeFileContent(path: String, content: String): Boolean {
-        // 1. Thử ghi trực tiếp (không cần root)
         try {
             val file = File(path)
-            val parent = file.parentFile
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs()
-            }
+            val parent = file.parentFile?.apply { if (!exists()) mkdirs() }
             if (parent != null && (parent.canWrite() || (file.exists() && file.canWrite()))) {
                 file.writeText(content, Charsets.UTF_8)
                 return true
             }
-        } catch (_: Exception) {
-        }
+        } catch (_: Exception) {}
 
-        // 2. Ghi qua quyền root: lưu ra file cache riêng của ứng dụng rồi copy đè bằng shell root
-        if (!KeepShellPublic.checkRoot()) {
-            return false
-        }
-
-        val cacheName = "editor_cache/tmp_${System.currentTimeMillis()}.tmp"
-        val cachePath = FileWrite.getPrivateFilePath(this, cacheName)
+        if (!KeepShellPublic.checkRoot()) return false
+        val cachePath = FileWrite.getPrivateFilePath(this, "editor_cache/tmp_${System.currentTimeMillis()}.tmp")
         return try {
-            val cacheFile = File(cachePath)
-            cacheFile.parentFile?.mkdirs()
-            cacheFile.writeText(content, Charsets.UTF_8)
-
-            val parentDir = File(path).parent ?: "/"
+            val cacheFile = File(cachePath).apply { parentFile?.mkdirs(); writeText(content, Charsets.UTF_8) }
             val command = """
-                mkdir -p "$parentDir"
+                mkdir -p "${File(path).parent ?: "/"}"
                 cp -f "$cachePath" "$path"
                 chmod 644 "$path"
                 if [ -f "$path" ]; then echo EDITOR_SAVE_OK; fi
             """.trimIndent()
-
             val result = KeepShellPublic.doCmdSync(command)
             cacheFile.delete()
             result.trim().contains("EDITOR_SAVE_OK")
-        } catch (_: Exception) {
-            false
-        }
+        } catch (_: Exception) { false }
     }
 
     private fun saveAndRun(interpreter: String) {
-        // Lưu im lặng rồi chạy ngay, không hiện progress/toast lưu file
-        saveFile(
-            showProgress = false,
-            showToast = false
-        ) { success ->
-            if (success) {
-                runScript(interpreter)
-            } else {
-                Toast.makeText(
-                    this,
-                    R.string.editor_save_fail,
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
+        saveFile(showProgress = false, showToast = false) { if (it) runScript(interpreter) else Toast.makeText(this, R.string.editor_save_fail, Toast.LENGTH_LONG).show() }
     }
 
     private fun runScript(interpreter: String) {
-        val runNode = ActionNode(absoluteFilePath).apply {
-            title = File(absoluteFilePath).name
-            interruptable = true
-            shell = RunnableNode.shellModeDefault
-        }
-
+        val runNode = ActionNode(absoluteFilePath).apply { title = File(absoluteFilePath).name; interruptable = true; shell = RunnableNode.shellModeDefault }
         val script = "chmod 755 \"$absoluteFilePath\" 2>/dev/null\n$interpreter \"$absoluteFilePath\"\n"
-
-        val dialog = DialogLogFragment.create(
-            runNode,
-            Runnable {},
-            Runnable {},
-            script,
-            null,
-            ThemeModeState.isDarkMode()
-        )
-        dialog.isCancelable = false
-        dialog.show(supportFragmentManager, "editor-run-test")
+        DialogLogFragment.create(runNode, {}, {}, script, null, ThemeModeState.isDarkMode()).apply { isCancelable = false }.show(supportFragmentManager, "editor-run-test")
     }
 }

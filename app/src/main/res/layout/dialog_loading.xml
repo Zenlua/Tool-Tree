@@ -3,41 +3,45 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
     <LinearLayout
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginVertical="12dp"
-        android:background="@drawable/krscript_item_ripple_kon"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:keepScreenOn="true"
         android:orientation="vertical"
-        android:padding="26dp">
-
+        android:background="@drawable/krscript_item_ripple_kon"
+        android:padding="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:keepScreenOn="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp">
         <ProgressBar
-            android:id="@+id/dialog_app_details_progress"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="80dp"
             android:layout_gravity="center_horizontal"
-            android:layout_margin="30dp"
-            android:indeterminate="true" />
-
+            android:id="@+id/dialog_app_details_progress"
+            android:layout_width="match_parent"
+            android:layout_height="85dp"
+            android:indeterminate="true"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            style="?android:attr/progressBarStyleHorizontal" />
         <TextView
+            android:textSize="15sp"
+            android:gravity="center"
             android:id="@+id/dialog_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minLines="2"
+            android:layout_marginBottom="25dp"
             android:text="@string/execute_wait"
-            android:textAlignment="center"
-            android:textSize="15sp" />
-
+            android:minLines="2"
+            android:textAlignment="center" />
         <Button
-            android:id="@+id/dialog_cancel_button"
-            style="@style/dialogWarningBtn"
-            android:visibility="gone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:text="@string/btn_cancel" />
-            
+            android:id="@+id/dialog_cancel_button"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginBottom="25dp"
+            android:text="@string/btn_cancel"
+            android:layout_marginStart="70dp"
+            android:layout_marginEnd="70dp"
+            style="@style/dialogWarningBtn" />
     </LinearLayout>
 </FrameLayout>
