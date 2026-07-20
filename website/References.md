@@ -363,7 +363,7 @@ depend-value="b,c"   <!-- Matches if value = b OR c -->
 <!-- Visible when: mode = a  AND  cam is NOT b  AND  xom is either b or c -->
 ```
 
-**So khớp mở rộng theo option** — `depend-value` không chỉ so với `value` thực tế của lựa chọn đang chọn ở param cha, mà còn khớp được với **title** hiển thị của option đó, và với **phần văn bản nằm trong dấu ngoặc `()`** của title (cả có ngoặc lẫn không ngoặc):
+**Extended fit according to option** — `depend-value` It not only compares to the actual `value` of the selected choice in the parent parameter, but also matches with **title** display of that option, and với **the text in parentheses `()`** of the title (both with and without parentheses):
 ```xml
 <param name="mode" type="list" option-sh="echo -e 'a|A (so)
 b|B
@@ -373,7 +373,7 @@ c|C'"/>
      OR "(so)"/"so" (the bracketed text inside the title) -->
 ```
 
-Cơ chế này áp dụng cho **mọi type** có thể làm param cha: `list` (đơn/đa), `bool`/`checkbox`, `switch`, `seekbar`, `file`/`folder`, `app`/`packages`, `color`, và input số/văn bản mặc định — tất cả đều cập nhật ẩn/hiện ngay lập tức khi giá trị thay đổi (không cần đóng dialog/màn hình lại).
+This mechanism applies to **all types** that can be parent parameters.: `list` (single/Multi), `bool`/`checkbox`, `switch`, `seekbar`, `file`/`folder`, `app`/`packages`, `color`, and default numeric/text inputs — all update instantly, showing/hiding when the value changes (no need to close the dialog/screen).).
 
 ---
 
