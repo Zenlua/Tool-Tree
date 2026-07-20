@@ -254,12 +254,23 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun onLogOutput(log: String) {
+        // Một số log có thể chứa "\n" dạng escape (2 ký tự '\' và 'n') từ string
+        // resource hoặc output shell. Coi đó là xuống dòng thật và tách ra thành
+        // nhiều dòng riêng để hiển thị và tính đúng vào giới hạn maxLines.
+        val lines = log
+            .replace("\\r\\n", "\n") // chuẩn hoá luôn \r\n dạng escape nếu có
+            .replace("\\n", "\n")
+            .split("\n")
+    
         synchronized(rows) {
-            if (rows.size >= maxLines) {
-                rows.removeAt(0)
-                ignored = true
+            for (l in lines) {
+                if (rows.size >= maxLines) {
+                    rows.removeAt(0)
+                    ignored = true
+                }
+                rows.add(l)
             }
-            rows.add(log)
+            // Join bằng ký tự xuống dòng thật, không phải chuỗi "\\n"
             binding.startStateText.text = rows.joinToString("\n", if (ignored) "……\n" else "")
         }
     }
