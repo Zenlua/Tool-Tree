@@ -15,6 +15,10 @@ import androidx.core.graphics.toColorInt
 import androidx.core.graphics.drawable.toDrawable
 
 class ParamsColorPicker(private val actionParamInfo: ActionParamInfo, private val context: Context) {
+
+    // Thêm biến lưu mốc thời gian click mở để chặn chạm nhanh 2 lần
+    private var lastOpenTime: Long = 0
+
     fun render(): View {
         val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_color, null)
         val textView = layout.findViewById<EditText>(R.id.kr_param_color_text)
@@ -73,6 +77,13 @@ class ParamsColorPicker(private val actionParamInfo: ActionParamInfo, private va
     }
 
     private fun openColorPicker(textView: TextView, invalidView: ImageView, preview: View) {
+        // >>> CHẶN TẠI ĐÂY: Tránh việc nhấn nhanh nút chọn màu mở đè 2 Hộp thoại ColorPicker
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastOpenTime < 1000) {
+            return
+        }
+        lastOpenTime = currentTime
+
         val view = LayoutInflater.from(context).inflate(R.layout.kr_color_picker, null)
         val defValue = currentColor(textView.text)
 
@@ -110,6 +121,7 @@ class ParamsColorPicker(private val actionParamInfo: ActionParamInfo, private va
                 .setTitle(context.getString(R.string.kr_color_picker))
                 .setView(view)
                 .setPositiveButton(context.getString(R.string.btn_confirm)) { _, which ->
+                    // Không chặn nút xác nhận theo yêu cầu
                     val color = Color.argb(alphaBar.progress, redBar.progress, greenBar.progress, blueBar.progress)
                     colorPreview.setBackgroundColor(color)
                     try {
@@ -118,7 +130,6 @@ class ParamsColorPicker(private val actionParamInfo: ActionParamInfo, private va
                         preview.background = color.toDrawable()
                     } catch (ex: Exception) {
                     }
-                    // Integer.toHexString(color) // "argb(${alphaBar.progress}, ${redBar.progress}, ${greenBar.progress}, ${blueBar.progress}, )"
                 }
                 .setNegativeButton(context.getString(R.string.btn_cancel)) { _, _ -> })
     }

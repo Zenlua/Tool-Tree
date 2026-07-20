@@ -18,6 +18,9 @@ class ParamsMultipleSelect(private val actionParamInfo: ActionParamInfo, private
     private var values: Array<String?> = arrayOf()
     private val darkMode: Boolean = ThemeModeState.isDarkMode()
 
+    // Thêm biến lưu mốc thời gian click mở để làm phương án dự phòng
+    private var lastOpenTime: Long = 0
+
     fun render(): View {
         options = actionParamInfo.optionsFromShell
         options?.run {
@@ -66,6 +69,20 @@ class ParamsMultipleSelect(private val actionParamInfo: ActionParamInfo, private
     }
 
     private fun openDialog(textView: TextView, valueView: TextView, countView: TextView) {
+        val dialogTag = "params-multi-select"
+
+        // [CHẶN CHIẾN LƯỢC 1]: Kiểm tra nếu Dialog này đã hiển thị trên màn hình thì không làm gì cả
+        if (context.supportFragmentManager.findFragmentByTag(dialogTag) != null) {
+            return
+        }
+
+        // [CHẶN CHIẾN LƯỢC 2]: Chặn click quá nhanh bằng thời gian hệ thống (phòng trường hợp FragmentManager chưa kịp cập nhật tag)
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastOpenTime < 1000) {
+            return
+        }
+        lastOpenTime = currentTime
+
         options?.run {
             val items = ArrayList<SelectItem>()
             for (i in labels.indices) {
@@ -82,20 +99,7 @@ class ParamsMultipleSelect(private val actionParamInfo: ActionParamInfo, private
                     }
                     setView(textView, valueView, countView)
                 }
-            }).show(context.supportFragmentManager, "params-multi-select")
+            }).show(context.supportFragmentManager, dialogTag)
         }
-        /*
-        options?.run {
-            DialogHelper.animDialog(AlertDialog.Builder(context)
-                    .setTitle(context.getString(R.string.kr_please_select))
-                    .setMultiChoiceItems(labels, status) { _, index, isChecked ->
-                        status[index] = isChecked
-                    }
-                    .setNeutralButton(R.string.btn_cancel) { _, _ -> }
-                    .setPositiveButton(R.string.btn_confirm) { _, _ ->
-                        setView(textView, valueView, countView)
-                    })
-        }
-        */
     }
 }

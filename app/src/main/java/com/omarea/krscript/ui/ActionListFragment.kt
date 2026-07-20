@@ -51,6 +51,22 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private var pageLayoutRender: PageLayoutRender? = null
     private lateinit var rootGroup: ListItemGroup
 
+    // Biến lưu mốc thời gian của cú click cuối cùng (mili-giây)
+    private var lastClickTime: Long = 0
+
+    /**
+     * Hàm kiểm tra khoảng cách thời gian giữa 2 lần click liên tiếp.
+     * @return true nếu khoảng cách lớn hơn 600ms (hợp lệ), false nếu quá nhanh (bị chặn).
+     */
+    private fun checkAndLockClick(): Boolean {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastClickTime < 1000) {
+            return false
+        }
+        lastClickTime = currentTime
+        return true
+    }
+
     private fun setListData(
         actionInfos: ArrayList<NodeInfoBase>?,
         krScriptActionHandler: KrScriptActionHandler? = null,
@@ -133,6 +149,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onSwitchClick(item: SwitchNode, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             val toValue = !item.checked
             if (item.confirm) {
@@ -153,6 +170,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onPageClick(item: PageNode, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             if (context != null && item.link.isNotEmpty()) {
                 try {
@@ -171,6 +189,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onItemLongClick(clickableNode: ClickableNode) {
+        if (!checkAndLockClick()) return
         if (clickableNode.key.isEmpty()) {
             DialogHelper.alert(this.requireActivity(), getString(R.string.kr_shortcut_create_fail), getString(R.string.kr_ushortcut_nsupported))
         } else {
@@ -189,6 +208,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onEditorClick(item: EditorNode, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             val context = context ?: return
             if (item.file.isEmpty()) {
@@ -201,6 +221,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onPickerClick(item: PickerNode, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { pickerExecute(item, onCompleted) })
@@ -266,6 +287,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted) })

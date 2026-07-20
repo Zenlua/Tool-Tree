@@ -23,6 +23,9 @@ class ParamsSingleSelect(
     val options = actionParamInfo.optionsFromShell!!
     var selectedIndex = ActionParamsLayoutRender.getParamOptionsCurrentIndex(actionParamInfo, options) // 获取当前选中项索引
 
+    // Thêm biến lưu thời gian click lúc mở danh sách chọn
+    private var lastOpenTime: Long = 0
+
     private fun updateValueView(valueView: TextView, textView: TextView) {
         if (selectedIndex > -1 && selectedIndex < options.size) {
             valueView.text = options[(selectedIndex)].value
@@ -70,6 +73,13 @@ class ParamsSingleSelect(
     }
 
     private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
+        // >>> CHẶN TẠI ĐÂY: Tránh việc nhấn nhanh mở 2 DialogItemChooser cùng lúc
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastOpenTime < 1000) {
+            return
+        }
+        lastOpenTime = currentTime
+
         DialogItemChooser(darkMode, ArrayList(options.mapIndexed{index, item->
             SelectItem().apply {
                 title = item.title
@@ -77,6 +87,7 @@ class ParamsSingleSelect(
             }
         }), false, object : DialogItemChooser.Callback {
             override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
+                // Không chặn nút xác nhận theo yêu cầu
                 selectedIndex = status.indexOf(true)
                 updateValueView(valueView, textView)
             }
