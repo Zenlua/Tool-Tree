@@ -19,7 +19,6 @@
             android:layout_width="match_parent"
             android:layout_height="85dp"
             android:indeterminate="true"
-            android:layout_marginTop="10dp"
             android:layout_marginStart="30dp"
             android:layout_marginEnd="30dp"
             style="?android:attr/progressBarStyleHorizontal" />
@@ -29,9 +28,9 @@
             android:id="@+id/dialog_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="25dp"
             android:text="@string/execute_wait"
             android:minLines="2"
+            android:translationY="-15dp"
             android:textAlignment="center" />
         <Button
             android:layout_gravity="center_horizontal"
@@ -39,7 +38,6 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="45dp"
-            android:layout_marginBottom="25dp"
             android:text="@string/btn_cancel"
             android:layout_marginStart="70dp"
             android:layout_marginEnd="70dp"
