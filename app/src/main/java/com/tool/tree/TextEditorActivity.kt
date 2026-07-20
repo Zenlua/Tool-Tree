@@ -95,7 +95,7 @@ class TextEditorActivity : AppCompatActivity() {
         binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
         setupKeyboardInsets()
 
-        val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         
         supportActionBar?.apply {
@@ -315,6 +315,7 @@ class TextEditorActivity : AppCompatActivity() {
                 savedContent = content
                 isApplyingHistory = true
                 binding.editorContent.setText(content)
+                binding.editorContent.setSelection(content.length)
                 isApplyingHistory = false
                 undoHandler.removeCallbacks(commitPendingUndoRunnable)
                 pendingUndoSnapshot = null
