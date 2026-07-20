@@ -10,12 +10,17 @@ import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.widget.EditText
 import androidx.annotation.ColorInt
+import java.io.File
 import java.lang.ref.WeakReference
 import java.util.Locale
 
 /**
  * Lightweight syntax highlighter for plain EditText.
- * Fully optimized using Debounce mechanism and Combined Named-Group Regex.
+ *
+ * Features:
+ * - Debounced highlighting
+ * - Support for temporary suspend/resume during bulk edits
+ * - Works with shell / xml / properties / python
  */
 object SyntaxHighlighterFactory {
     fun create(extension: String?, editText: EditText): SyntaxHighlighter? {
@@ -24,13 +29,13 @@ object SyntaxHighlighterFactory {
             "sh", "bash", "zsh", "ksh" -> ShellSyntaxHighlighter(editText)
             "xml" -> XmlSyntaxHighlighter(editText)
             "prop", "properties" -> PropSyntaxHighlighter(editText)
-            "py" -> PythonSyntaxHighlighter(editText) // Tích hợp bộ tô màu Python
+            "py" -> PythonSyntaxHighlighter(editText)
             else -> null
         }
     }
 
     fun createForPath(path: String?, editText: EditText): SyntaxHighlighter? {
-        val ext = path.orEmpty().substringAfterLast('.', "")
+        val ext = path.orEmpty().let { File(it).name }.substringAfterLast('.', "")
         return create(ext, editText)
     }
 }
@@ -39,6 +44,17 @@ interface SyntaxHighlighter {
     fun attach()
     fun detach()
     fun highlight()
+
+    /**
+     * Temporarily stop reacting to text changes.
+     * Call [resumeHighlighting] after a batch edit.
+     */
+    fun suspendHighlighting()
+
+    /**
+     * Resume highlighting after [suspendHighlighting].
+     */
+    fun resumeHighlighting()
 }
 
 abstract class BaseSyntaxHighlighter(
@@ -54,13 +70,15 @@ abstract class BaseSyntaxHighlighter(
     private val editTextRef = WeakReference(editText)
     private var watcher: TextWatcher? = null
     private var isHighlighting = false
+    private var highlightSuspended = false
+    private var pendingHighlight = false
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val highlightRunnable = Runnable { highlight() }
 
     companion object {
-        private const val MAX_HIGHLIGHT_LENGTH = 150_000 
-        private const val DEBOUNCE_DELAY_MS = 150L       
+        private const val MAX_HIGHLIGHT_LENGTH = 150_000
+        private const val DEBOUNCE_DELAY_MS = 150L
     }
 
     protected val editText: EditText?
@@ -76,17 +94,22 @@ abstract class BaseSyntaxHighlighter(
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
             override fun afterTextChanged(s: Editable?) {
-                if (isHighlighting || s == null) return
+                if (s == null) return
+                if (isHighlighting || highlightSuspended) {
+                    pendingHighlight = true
+                    return
+                }
                 mainHandler.removeCallbacks(highlightRunnable)
                 mainHandler.postDelayed(highlightRunnable, DEBOUNCE_DELAY_MS)
             }
         }
         et.addTextChangedListener(watcher)
-        highlight() 
+        highlight()
     }
 
     override fun detach() {
         mainHandler.removeCallbacks(highlightRunnable)
+        pendingHighlight = false
         val et = editText ?: return
         watcher?.let { et.removeTextChangedListener(it) }
         watcher = null
@@ -95,8 +118,12 @@ abstract class BaseSyntaxHighlighter(
     override fun highlight() {
         val et = editText ?: return
         val text = et.text ?: return
-        if (isHighlighting) return
 
+        if (isHighlighting) return
+        if (highlightSuspended) {
+            pendingHighlight = true
+            return
+        }
         if (text.length > MAX_HIGHLIGHT_LENGTH) return
 
         isHighlighting = true
@@ -105,6 +132,19 @@ abstract class BaseSyntaxHighlighter(
         } catch (_: Throwable) {
         } finally {
             isHighlighting = false
+        }
+    }
+
+    override fun suspendHighlighting() {
+        highlightSuspended = true
+    }
+
+    override fun resumeHighlighting() {
+        if (!highlightSuspended) return
+        highlightSuspended = false
+        if (pendingHighlight) {
+            pendingHighlight = false
+            highlight()
         }
     }
 
@@ -175,13 +215,13 @@ class ShellSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
     )
 
     private val shellRegex = Regex(
-        "(?<COMMENT>(?m)#.*$)" +
-        "|(?<STRING>\"(?:\\\\.|[^\"\\\\])*\"|'(?:[^']*)'|`(?:\\\\.|[^`\\\\])*`)" +
-        "|(?<COMMAND>\\$\\((?:[^()]*|\\([^()]*\\))*\\))" +
-        "|(?<VARIABLE>\\$\\{[A-Za-z_][A-Za-z0-9_]*[^}]*\\}|\\$[A-Za-z_][A-Za-z0-9_]*)" +
-        "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_]))" +
-        "|(?<WORD>(?<![A-Za-z0-9_])[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_]))" +
-        "|(?<PUNCTUATION>&&|\\|\\||\\||;|\\(|\\)|\\{|\\}|\\[\\[|\\]\\]|<|>)"
+        "(?<COMMENT>(?m)#.*\$)" +
+            "|(?<STRING>\"(?:\\\\.|[^\"\\\\])*\"|'(?:[^']*)'|`(?:\\\\.|[^`\\\\])*`)" +
+            "|(?<COMMAND>\\$\\((?:[^()]*|\\([^()]*\\))*\\))" +
+            "|(?<VARIABLE>\\$\\{[A-Za-z_][A-Za-z0-9_]*[^}]*\\}|\\$[A-Za-z_][A-Za-z0-9_]*)" +
+            "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_]))" +
+            "|(?<WORD>(?<![A-Za-z0-9_])[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_]))" +
+            "|(?<PUNCTUATION>&&|\\|\\||\\||;|\\(|\\)|\\{|\\}|\\[\\[|\\]\\]|<|>)"
     )
 
     override fun applyHighlight(text: Editable) {
@@ -225,12 +265,12 @@ class XmlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
 ) {
     private val xmlRegex = Regex(
         "(?<COMMENT>(?s)<!--.*?-->)" +
-        "|(?<CDATA>(?s)<!\\[CDATA\\[.*?\\]\\]>)" +
-        "|(?<TAG></?[A-Za-z_][A-Za-z0-9_:\\-\\.]*)" +
-        "|(?<ATTR>\\b[A-Za-z_][A-Za-z0-9_:\\-\\.]*(?=\\s*=))" +
-        "|(?<VALUE>\"(?:\\\\.|[^\"\\\\])*\")" +
-        "|(?<ENTITY>&(?:amp|lt|gt|apos|quot|#x?[0-9A-Fa-f]+);)" +
-        "|(?<PUNCTUATION></?|/>|>[^<]*)"
+            "|(?<CDATA>(?s)<!\\[CDATA\\[.*?\\]\\]>)" +
+            "|(?<TAG></?[A-Za-z_][A-Za-z0-9_:\\-\\.]*)" +
+            "|(?<ATTR>\\b[A-Za-z_][A-Za-z0-9_:\\-\\.]*(?=\\s*=))" +
+            "|(?<VALUE>\"(?:\\\\.|[^\"\\\\])*\")" +
+            "|(?<ENTITY>&(?:amp|lt|gt|apos|quot|#x?[0-9A-Fa-f]+);)" +
+            "|(?<PUNCTUATION></?|/>|>[^<]*)"
     )
 
     override fun applyHighlight(text: Editable) {
@@ -277,11 +317,11 @@ class PropSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
     punctuationColor = 0xFF808080.toInt(),
 ) {
     private val propRegex = Regex(
-        "(?<COMMENT>(?m)^\\s*[#!].*$)" +
-        "|(?<KEYVALUE>(?m)^\\s*([A-Za-z0-9_.-]+)(\\s*=))" +
-        "|(?<STRING>\"(?:\\\\.|[^\"\\\\])*\")" +
-        "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_]))" +
-        "|(?<SEPARATOR>=)"
+        "(?<COMMENT>(?m)^\\s*[#!].*\$)" +
+            "|(?<KEYVALUE>(?m)^\\s*([A-Za-z0-9_.-]+)(\\s*=))" +
+            "|(?<STRING>\"(?:\\\\.|[^\"\\\\])*\")" +
+            "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_]))" +
+            "|(?<SEPARATOR>=)"
     )
 
     override fun applyHighlight(text: Editable) {
@@ -313,16 +353,16 @@ class PropSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
 }
 
 /**
- * Lớp tô màu cú pháp Python tối ưu hiệu năng qua Named-Group Regex.
+ * Python syntax highlighter optimized with named-group regex.
  */
 class PythonSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
     editText = editText,
-    keywordColor = 0xFF3D8BFF.toInt(),      // Blue
-    builtinColor = 0xFFFFA000.toInt(),      // Orange
-    stringColor = 0xFF2EAD4B.toInt(),       // Green
-    commentColor = 0xFF8A8A8A.toInt(),      // Gray
-    numberColor = 0xFFAA66CC.toInt(),       // Purple
-    punctuationColor = 0xFF808080.toInt(),  // Dark Gray
+    keywordColor = 0xFF3D8BFF.toInt(),
+    builtinColor = 0xFFFFA000.toInt(),
+    stringColor = 0xFF2EAD4B.toInt(),
+    commentColor = 0xFF8A8A8A.toInt(),
+    numberColor = 0xFFAA66CC.toInt(),
+    punctuationColor = 0xFF808080.toInt(),
 ) {
     private val keywords = setOf(
         "False", "None", "True", "and", "as", "assert", "async", "await",
@@ -338,12 +378,12 @@ class PythonSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
     )
 
     private val pythonRegex = Regex(
-        "(?<COMMENT>#.*$)" +
-        "|(?<STRING>\"\"\"(?s).*?\"\"\"|'''(?s).*?'''|\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*')" +
-        "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|\\d+\\.\\d+|\\d+)(?![A-Za-z0-9_]))" +
-        "|(?<DECORATOR>@[A-Za-z_][A-Za-z0-9_]*)" +
-        "|(?<WORD>(?<![A-Za-z0-9_])[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_]))" +
-        "|(?<PUNCTUATION>[:.,;()\\[\\]{}@+\\-*/%=<>!&|^~])"
+        "(?<COMMENT>#.*\$)" +
+            "|(?<STRING>\"{3}(?s).*?\"{3}|'{3}(?s).*?'{3}|\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*')" +
+            "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|\\d+\\.\\d+|\\d+)(?![A-Za-z0-9_]))" +
+            "|(?<DECORATOR>@[A-Za-z_][A-Za-z0-9_]*)" +
+            "|(?<WORD>(?<![A-Za-z0-9_])[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_]))" +
+            "|(?<PUNCTUATION>[:.,;()\\[\\]{}@+\\-*/%=<>!&|^~])"
     )
 
     override fun applyHighlight(text: Editable) {
