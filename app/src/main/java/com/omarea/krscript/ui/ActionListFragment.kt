@@ -261,9 +261,9 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
                 if (optionsSorted != null) {
+                    if (!checkAndLockClick()) return
                     val darkMode = ThemeModeState.isDarkMode()
                     DialogItemChooser(darkMode, optionsSorted, item.multiple, object : DialogItemChooser.Callback {
-                        if (!checkAndLockClick()) return
                         override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
                             val value = if (item.multiple) {
                                 selected.joinToString(item.separator ?: "") { "" + it.value }
