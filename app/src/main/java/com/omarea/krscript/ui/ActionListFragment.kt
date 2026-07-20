@@ -191,6 +191,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onItemLongClick(clickableNode: ClickableNode) {
+        if (!checkAndLockClick()) return
         if (clickableNode.key.isEmpty()) {
             DialogHelper.alert(this.requireActivity(), getString(R.string.kr_shortcut_create_fail), getString(R.string.kr_ushortcut_nsupported))
         } else {
@@ -263,6 +264,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                     val darkMode = ThemeModeState.isDarkMode()
                     DialogItemChooser(darkMode, optionsSorted, item.multiple, object : DialogItemChooser.Callback {
                         override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
+                            if (!checkAndLockClick()) return
                             val value = if (item.multiple) {
                                 selected.joinToString(item.separator ?: "") { "" + it.value }
                             } else {
@@ -385,7 +387,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     private fun getParamOptions(actionParamInfo: ActionParamInfo, nodeInfoBase: NodeInfoBase): ArrayList<SelectItem>? {
-        if (!checkAndLockClick()) return
         val options = ArrayList<SelectItem>()
         var shellResult = ""
         if (actionParamInfo.optionsSh.isNotEmpty()) {
