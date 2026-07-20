@@ -2,7 +2,6 @@ package com.tool.tree
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -22,12 +21,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.widget.ImageViewCompat
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shared.FileWrite
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.ui.DialogHelper
-import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.config.PathAnalysis
 import com.omarea.krscript.model.ActionNode
 import com.omarea.krscript.model.RunnableNode
@@ -53,7 +50,14 @@ class TextEditorActivity : AppCompatActivity() {
 
         private val RUNNABLE_EXTENSIONS = mapOf("sh" to "sh", "bash" to "bash", "py" to "python")
 
-        fun start(context: Context, file: String, title: String? = null, desc: String? = null, wrap: Boolean = true, dir: String? = null) {
+        fun start(
+            context: Context,
+            file: String,
+            title: String? = null,
+            desc: String? = null,
+            wrap: Boolean = true,
+            dir: String? = null
+        ) {
             val intent = Intent(context, TextEditorActivity::class.java).apply {
                 putExtra(EXTRA_FILE, file)
                 putExtra(EXTRA_TITLE, title ?: "")
@@ -72,12 +76,10 @@ class TextEditorActivity : AppCompatActivity() {
     private var configDir: String = ""
     private var wrapEnabled = true
     private var savedContent: String = ""
-    private var isNewFile = false
     private var isSaving = false
     private var noWrapContainer: HorizontalScrollView? = null
     private var mainListBaseBottomMargin = 0
     private var syntaxHighlighter: SyntaxHighlighter? = null
-    private val progressBarDialog by lazy { ProgressBarDialog(this) }
 
     private data class EditorSnapshot(val text: String, val cursor: Int)
     private val undoStack = ArrayDeque<EditorSnapshot>()
@@ -97,13 +99,12 @@ class TextEditorActivity : AppCompatActivity() {
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        
+
         supportActionBar?.apply {
             setHomeButtonEnabled(true)
             setDisplayHomeAsUpEnabled(true)
         }
-        
-        // Đảm bảo nút điều hướng Back trên Toolbar luôn chạy vào logic xác nhận đóng
+
         toolbar.setNavigationOnClickListener { attemptClose() }
         setupUndoRedoButtons(toolbar)
 
@@ -115,6 +116,7 @@ class TextEditorActivity : AppCompatActivity() {
             finish()
             return
         }
+
         configDir = intent.getStringExtra(EXTRA_DIR).orEmpty()
         absoluteFilePath = resolveAbsolutePath(configDir, filePath)
         wrapEnabled = intent.getBooleanExtra(EXTRA_WRAP, true)
@@ -172,15 +174,21 @@ class TextEditorActivity : AppCompatActivity() {
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
 
         when {
-            lineBottom > visibleBottom -> scrollView.smoothScrollTo(0, lineBottom - scrollView.height + scrollView.paddingBottom)
+            lineBottom > visibleBottom -> scrollView.smoothScrollTo(
+                0,
+                lineBottom - scrollView.height + scrollView.paddingBottom
+            )
             lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
         }
     }
 
     private fun resolveAbsolutePath(dir: String, file: String): String {
         if (file.startsWith("/")) return file
-        val base = dir.ifEmpty { FileWrite.getPrivateFileDir(applicationContext) }
-        return if (base.endsWith("/")) base + file else "$base/$file"
+        val base = dir.ifBlank {
+            FileWrite.getPrivateFileDir(applicationContext).orEmpty()
+        }
+        if (base.isBlank()) return file
+        return File(base, file).absolutePath
     }
 
     private fun fileExtension() = File(absoluteFilePath).name.substringAfterLast('.', "").lowercase()
@@ -189,37 +197,56 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun setupSyntaxHighlighting() {
         syntaxHighlighter?.detach()
-        syntaxHighlighter = SyntaxHighlighterFactory.createForPath(absoluteFilePath, binding.editorContent)?.apply { attach() }
+        syntaxHighlighter = SyntaxHighlighterFactory.createForPath(
+            absoluteFilePath,
+            binding.editorContent
+        )?.apply { attach() }
     }
 
     private fun setupUndoRedoButtons(toolbar: Toolbar) {
-        // Tránh add trùng lặp View khi cấu hình Activity thay đổi
         toolbar.findViewWithTag<View>("undo_btn")?.let { toolbar.removeView(it) }
         toolbar.findViewWithTag<View>("redo_btn")?.let { toolbar.removeView(it) }
 
-        val typedValue = TypedValue()
-        theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
-        val tint = ColorStateList.valueOf(typedValue.data)
         val buttonSize = (48 * resources.displayMetrics.density).toInt()
         val iconPadding = (12 * resources.displayMetrics.density).toInt()
 
-        fun makeButton(iconRes: Int, descRes: Int, tagStr: String, onClick: () -> Unit): ImageButton {
+        fun makeButton(
+            iconRes: Int,
+            descRes: Int,
+            tagStr: String,
+            onClick: () -> Unit
+        ): ImageButton {
             return ImageButton(this).apply {
                 tag = tagStr
                 setImageResource(iconRes)
                 contentDescription = getString(descRes)
                 setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
+
                 val outValue = TypedValue()
-                theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
+                theme.resolveAttribute(
+                    android.R.attr.selectableItemBackgroundBorderless,
+                    outValue,
+                    true
+                )
                 setBackgroundResource(outValue.resourceId)
-                ImageViewCompat.setImageTintList(this, tint)
                 setOnClickListener { onClick() }
-                layoutParams = Toolbar.LayoutParams(buttonSize, buttonSize).apply { gravity = Gravity.END or Gravity.CENTER_VERTICAL }
+                layoutParams = Toolbar.LayoutParams(buttonSize, buttonSize).apply {
+                    gravity = Gravity.END or Gravity.CENTER_VERTICAL
+                }
             }
         }
 
-        undoButton = makeButton(R.drawable.ic_editor_undo, R.string.editor_undo, "undo_btn") { performUndo() }
-        redoButton = makeButton(R.drawable.ic_editor_redo, R.string.editor_redo, "redo_btn") { performRedo() }
+        undoButton = makeButton(
+            R.drawable.ic_editor_undo,
+            R.string.editor_undo,
+            "undo_btn"
+        ) { performUndo() }
+
+        redoButton = makeButton(
+            R.drawable.ic_editor_redo,
+            R.string.editor_redo,
+            "redo_btn"
+        ) { performRedo() }
 
         toolbar.addView(redoButton)
         toolbar.addView(undoButton)
@@ -235,7 +262,9 @@ class TextEditorActivity : AppCompatActivity() {
                     pendingUndoSnapshot = EditorSnapshot(s?.toString().orEmpty(), cursor)
                 }
             }
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+
             override fun afterTextChanged(s: Editable?) {
                 if (isApplyingHistory) return
                 redoStack.clear()
@@ -261,7 +290,8 @@ class TextEditorActivity : AppCompatActivity() {
         undoHandler.removeCallbacks(commitPendingUndoRunnable)
         val currentText = binding.editorContent.text?.toString().orEmpty()
         val currentCursor = binding.editorContent.selectionStart.coerceAtLeast(0)
-        val target = pendingUndoSnapshot?.also { pendingUndoSnapshot = null } ?: if (undoStack.isEmpty()) return else undoStack.removeLast()
+        val target = pendingUndoSnapshot?.also { pendingUndoSnapshot = null }
+            ?: if (undoStack.isEmpty()) return else undoStack.removeLast()
 
         redoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
@@ -295,8 +325,16 @@ class TextEditorActivity : AppCompatActivity() {
     private fun refreshUndoRedoButtons() {
         val canUndo = undoStack.isNotEmpty() || pendingUndoSnapshot != null
         val canRedo = redoStack.isNotEmpty()
-        undoButton?.apply { isEnabled = canUndo; isClickable = canUndo; alpha = if (canUndo) 1f else 0.3f }
-        redoButton?.apply { isEnabled = canRedo; isClickable = canRedo; alpha = if (canRedo) 1f else 0.3f }
+        undoButton?.apply {
+            isEnabled = canUndo
+            isClickable = canUndo
+            alpha = if (canUndo) 1f else 0.3f
+        }
+        redoButton?.apply {
+            isEnabled = canRedo
+            isClickable = canRedo
+            alpha = if (canRedo) 1f else 0.3f
+        }
     }
 
     private fun loadFileContent() {
@@ -308,21 +346,25 @@ class TextEditorActivity : AppCompatActivity() {
                     newFile = false
                     content = stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
 
             withContext(Dispatchers.Main) {
-                isNewFile = newFile
                 savedContent = content
                 isApplyingHistory = true
                 binding.editorContent.setText(content)
                 binding.editorContent.setSelection(content.length)
                 isApplyingHistory = false
+
                 undoHandler.removeCallbacks(commitPendingUndoRunnable)
                 pendingUndoSnapshot = null
                 undoStack.clear()
                 redoStack.clear()
                 refreshUndoRedoButtons()
-                binding.editorContent.hint = getString(if (newFile) R.string.editor_hint_new_file else R.string.editor_hint_empty)
+
+                binding.editorContent.hint = getString(
+                    if (newFile) R.string.editor_hint_new_file else R.string.editor_hint_empty
+                )
                 setupSyntaxHighlighting()
             }
         }
@@ -340,7 +382,10 @@ class TextEditorActivity : AppCompatActivity() {
         editText.setHorizontallyScrolling(!wrapEnabled)
 
         if (wrapEnabled) {
-            editText.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            editText.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
             scrollView.addView(editText)
         } else {
             val hsv = noWrapContainer ?: HorizontalScrollView(this).also {
@@ -348,30 +393,46 @@ class TextEditorActivity : AppCompatActivity() {
                 it.scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
                 noWrapContainer = it
             }
-            editText.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            hsv.apply { removeAllViews(); addView(editText); layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT); scrollTo(0, 0) }
+            editText.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            hsv.apply {
+                removeAllViews()
+                addView(editText)
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                scrollTo(0, 0)
+            }
             scrollView.addView(hsv)
         }
 
-        isApplyingHistory = true
-        editText.setText(currentText)
-        isApplyingHistory = false
-        editText.setSelection(cursorStart.coerceAtMost(currentText.length), cursorEnd.coerceAtMost(currentText.length))
+        editText.setSelection(
+            cursorStart.coerceAtMost(currentText.length),
+            cursorEnd.coerceAtMost(currentText.length)
+        )
     }
 
     private fun hasUnsavedChanges() = binding.editorContent.text?.toString().orEmpty() != savedContent
 
     private fun attemptClose() {
         if (isSaving) return
-        if (!hasUnsavedChanges()) { finish(); return }
-        
+        commitPendingUndoSnapshot()
+
+        if (!hasUnsavedChanges()) {
+            finish()
+            return
+        }
+
         DialogHelper.confirm(
-            this, 
-            title = getString(R.string.editor_unsaved_title), 
+            this,
+            title = getString(R.string.editor_unsaved_title),
             message = getString(R.string.editor_unsaved_message),
             onConfirm = DialogHelper.DialogButton(getString(R.string.editor_save), Runnable {
-                saveFile(showProgress = false, showToast = true) { success -> 
-                    if (success) finish() 
+                saveFile(showToast = true) { success ->
+                    if (success && !isFinishing && !isDestroyed) finish()
                 }
             }),
             onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard), Runnable {
@@ -389,17 +450,36 @@ class TextEditorActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.editor_menu_run -> { runnableInterpreter()?.let { saveAndRun(it) }; true }
-            R.id.editor_menu_save -> { saveFile(); true }
-            R.id.editor_menu_wrap -> { wrapEnabled = !wrapEnabled; item.isChecked = wrapEnabled; applyWrapState(); true }
-            android.R.id.home -> { attemptClose(); true } // Xử lý sự kiện nhấn nút Back trên thanh Menu gốc
+            R.id.editor_menu_run -> {
+                runnableInterpreter()?.let { saveAndRun(it) }
+                true
+            }
+            R.id.editor_menu_save -> {
+                saveFile()
+                true
+            }
+            R.id.editor_menu_wrap -> {
+                wrapEnabled = !wrapEnabled
+                item.isChecked = wrapEnabled
+                applyWrapState()
+                true
+            }
+            android.R.id.home -> {
+                attemptClose()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun saveFile(showProgress: Boolean = false, showToast: Boolean = true, onResult: ((Boolean) -> Unit)? = null) {
+    private fun saveFile(
+        showToast: Boolean = true,
+        onResult: ((Boolean) -> Unit)? = null
+    ) {
         if (isSaving) return
         isSaving = true
+        commitPendingUndoSnapshot()
+
         val content = binding.editorContent.text?.toString().orEmpty()
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -408,9 +488,14 @@ class TextEditorActivity : AppCompatActivity() {
                 isSaving = false
                 if (success) {
                     savedContent = content
-                    isNewFile = false
                 }
-                if (showToast) Toast.makeText(this@TextEditorActivity, if (success) R.string.editor_save_success else R.string.editor_save_fail, if (success) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
+                if (showToast) {
+                    Toast.makeText(
+                        this@TextEditorActivity,
+                        if (success) R.string.editor_save_success else R.string.editor_save_fail,
+                        if (success) Toast.LENGTH_SHORT else Toast.LENGTH_LONG
+                    ).show()
+                }
                 onResult?.invoke(success)
             }
         }
@@ -424,12 +509,17 @@ class TextEditorActivity : AppCompatActivity() {
                 file.writeText(content, Charsets.UTF_8)
                 return true
             }
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
 
         if (!KeepShellPublic.checkRoot()) return false
+
         val cachePath = FileWrite.getPrivateFilePath(this, "editor_cache/tmp_${System.currentTimeMillis()}.tmp")
         return try {
-            val cacheFile = File(cachePath).apply { parentFile?.mkdirs(); writeText(content, Charsets.UTF_8) }
+            val cacheFile = File(cachePath).apply {
+                parentFile?.mkdirs()
+                writeText(content, Charsets.UTF_8)
+            }
             val command = """
                 mkdir -p "${File(path).parent ?: "/"}"
                 cp -f "$cachePath" "$path"
@@ -439,16 +529,36 @@ class TextEditorActivity : AppCompatActivity() {
             val result = KeepShellPublic.doCmdSync(command)
             cacheFile.delete()
             result.trim().contains("EDITOR_SAVE_OK")
-        } catch (_: Exception) { false }
+        } catch (_: Exception) {
+            false
+        }
     }
 
     private fun saveAndRun(interpreter: String) {
-        saveFile(showProgress = false, showToast = false) { if (it) runScript(interpreter) else Toast.makeText(this, R.string.editor_save_fail, Toast.LENGTH_LONG).show() }
+        saveFile(showToast = false) {
+            if (it) {
+                runScript(interpreter)
+            } else {
+                Toast.makeText(this, R.string.editor_save_fail, Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun runScript(interpreter: String) {
-        val runNode = ActionNode(absoluteFilePath).apply { title = File(absoluteFilePath).name; interruptable = true; shell = RunnableNode.shellModeDefault }
+        val runNode = ActionNode(absoluteFilePath).apply {
+            title = File(absoluteFilePath).name
+            interruptable = true
+            shell = RunnableNode.shellModeDefault
+        }
         val script = "chmod 755 \"$absoluteFilePath\" 2>/dev/null\n$interpreter \"$absoluteFilePath\"\n"
-        DialogLogFragment.create(runNode, {}, {}, script, null, ThemeModeState.isDarkMode()).apply { isCancelable = false }.show(supportFragmentManager, "editor-run-test")
+        DialogLogFragment.create(
+            runNode,
+            {},
+            {},
+            script,
+            null,
+            ThemeModeState.isDarkMode()
+        ).apply { isCancelable = false }
+            .show(supportFragmentManager, "editor-run-test")
     }
 }
