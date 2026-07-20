@@ -164,8 +164,7 @@ Specific attributes for the `<picker>` tag:
 |---|---|
 | `option-sh` / `options-sh` / `options-su` | Script returning a dynamic options list, formatted as `value|title` per line |
 | `multiple` | Allows selecting multiple values |
-| `separator` | Character used to join selected values when `multiple` is true (default: newline `
-`) |
+| `separator` | Character used to join selected values when `multiple` is true (default: newline) |
 
 Child elements of `<picker>`: `<title>`, `<desc>`, `<summary>`, `<option val="">Title</option>` (static declaration, used when `option-sh` is not applied), `<getstate>`/`<get>`, `<setstate>`/`<set>`, `<resource>`, `<lock>`/`<lock-state>`.
 
