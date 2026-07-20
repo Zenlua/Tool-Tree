@@ -30,17 +30,7 @@ def scan_dir(folder):
     Quét thư mục thực tế cấu trúc POSIX Android.
     Hỗ trợ Dynamic Partitions bằng cách ép đường dẫn gốc về chuẩn Android.
     """
-    # Lấy tên thư mục thực tế
-    # Lấy tên thư mục gốc (giữ nguyên hoa/thường ban đầu)
-    folder_name_raw = os.path.basename(os.path.normpath(folder))
-    folder_name = folder_name_raw.lower()
-    
-    # Mặc định là tên thư mục gốc nếu không nhận diện được phân vùng chuẩn
-    base = folder_name_raw
-    for partition in ['vendor', 'product', 'system_ext', 'odm', 'system']:
-        if partition in folder_name:
-            base = partition
-            break
+    base = os.path.basename(os.path.normpath(folder))
             
     yield base
     yield '/'
@@ -62,9 +52,11 @@ def islink(file) -> str or None:
         if os.path.exists(file) and not os.path.isdir(file):
             try:
                 with open(file, 'rb') as f:
-                    if f.read(12) == b'!<symlink>\xff\xfe':
-                        # Sửa lỗi giải mã: Phải dùng utf-16 cho file có BOM \xff\xfe
-                        return f.read().decode("utf-16").replace('\x00', '').strip()
+                    content = f.read()
+                    # Kiểm tra header của file symlink kiểu cũ (Cygwin/Msys2/Giả lập)
+                    if content.startswith(b'!<symlink>\xff\xfe'):
+                        link_bytes = content[12:]
+                        return link_bytes.decode("utf-16", errors="ignore").replace('\x00', '').strip()
             except IOError:
                 pass
     elif os.name == 'posix':
@@ -81,11 +73,14 @@ def fs_patch(fs_file, dir_path) -> tuple:
     
     print("FsPatcher: Load origin %d entries" % len(fs_file.keys()))
     
-    # Tập hợp các file nhị phân đặc biệt cần quyền thực thi cao 0755
+    # Đã sửa: Bỏ dấu gạch chéo ở đầu để khớp chính xác với kết quả sinh ra từ scan_dir
     special_binaries = {
-        "/bin/su", "/xbin/su", "disable_selinux.sh", "daemon", "ext/.su", 
+        "bin/su", "xbin/su", "disable_selinux.sh", "daemon", "ext/.su", 
         "install-recovery", 'installed_su', 'bin/rw-system.sh', 'bin/getSPL'
     }
+
+    # Lấy thư mục cha trực tiếp của dir_path một cách an toàn
+    parent_dir = os.path.dirname(os.path.abspath(dir_path))
 
     for i in scan_dir(os.path.abspath(dir_path)):
         actual_i = i
@@ -99,14 +94,11 @@ def fs_patch(fs_file, dir_path) -> tuple:
         if actual_i in r_fs:
             continue
 
-        # Định dạng đường dẫn kiểm tra file tùy theo OS
-        if os.name == 'nt':
-            filepath = os.path.abspath(dir_path + os.sep + ".." + os.sep + i.replace('/', '\\'))
-        else:
-            filepath = os.path.abspath(dir_path + os.sep + ".." + os.sep + i)
+        # Sửa lỗi tính toán sai filepath tương đối khi gộp hệ thống
+        filepath = os.path.join(parent_dir, actual_i.replace('/', os.sep))
 
         is_dir = os.path.isdir(filepath)
-        exists = os.path.exists(filepath)
+        exists = os.path.exists(filepath) or os.path.islink(filepath)
         link_target = islink(filepath)
 
         # Thiết lập GID phân vùng nhị phân
@@ -119,14 +111,14 @@ def fs_patch(fs_file, dir_path) -> tuple:
         elif not exists:
             config = ['0', '0', '0755']
         elif link_target is not None:
-            if ("/bin" in actual_i) or ("/xbin" in actual_i):
+            if ("bin/" in actual_i) or ("xbin/" in actual_i):
                 mode = '0755'
             elif ".sh" in actual_i:
                 mode = "0750"
             else:
                 mode = "0644"
             config = [uid, gid, mode, link_target]
-        elif ("/bin" in actual_i) or ("/xbin" in actual_i):
+        elif ("bin/" in actual_i) or ("xbin/" in actual_i):
             if ".sh" in actual_i:
                 mode = "0750"
             elif any(s in actual_i for s in special_binaries):
@@ -146,7 +138,6 @@ def fs_patch(fs_file, dir_path) -> tuple:
     return new_fs, added_keys, new_add
 
 def main(dir_path, fs_config) -> None:
-    # Đọc dữ liệu cũ kèm thứ tự dòng để bảo toàn cấu trúc ROM gốc
     origin_fs, orig_order = scanfs(os.path.abspath(fs_config))
     new_fs, added_keys, new_add = fs_patch(origin_fs, dir_path)
     
