@@ -385,6 +385,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     private fun getParamOptions(actionParamInfo: ActionParamInfo, nodeInfoBase: NodeInfoBase): ArrayList<SelectItem>? {
+        if (!checkAndLockClick()) return
         val options = ArrayList<SelectItem>()
         var shellResult = ""
         if (actionParamInfo.optionsSh.isNotEmpty()) {
