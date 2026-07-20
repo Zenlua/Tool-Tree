@@ -22,6 +22,21 @@ class PageLayoutRender(private val mContext: Context,
         fun onItemLongClick(clickableNode: ClickableNode)
     }
 
+    // Biến lưu mốc thời gian của cú click cuối cùng (mili-giây)
+    private var lastClickTime: Long = 0
+
+    /**
+     * Hàm kiểm tra khoảng cách thời gian giữa 2 lần click liên tiếp.
+     * @return true nếu khoảng cách lớn hơn 600ms (hợp lệ), false nếu quá nhanh (bị chặn).
+     */
+    private fun checkAndLockClick(): Boolean {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastClickTime < 1000) {
+            return false
+        }
+        lastClickTime = currentTime
+        return true
+    }
 
     private fun findItemByDynamicIndex(key: String, actionInfos: ArrayList<NodeInfoBase>): NodeInfoBase? {
         for (item in actionInfos) {
@@ -62,6 +77,9 @@ class PageLayoutRender(private val mContext: Context,
 
     private val onItemClickListener: ListItemClickable.OnClickListener = object : ListItemClickable.OnClickListener {
         override fun onClick(listItemView: ListItemClickable) {
+            // >>> CHẶN TẠI ĐÂY: Nếu click quá nhanh thì bỏ qua toàn bộ xử lý phía dưới
+            if (!checkAndLockClick()) return
+
             val key = listItemView.index
             try {
                 val item = findItemByDynamicIndex(key, itemConfigList)

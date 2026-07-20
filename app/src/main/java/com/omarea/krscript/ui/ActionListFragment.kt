@@ -51,24 +51,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private var pageLayoutRender: PageLayoutRender? = null
     private lateinit var rootGroup: ListItemGroup
 
-    // Biến cờ bảo vệ chống nhấp đúp/nhấp liên tiếp
-    private var isClickLocked = false
-
-    /**
-     * Kiểm tra trạng thái cờ click.
-     * Nếu chưa bị khóa, hàm sẽ khóa lại và tự động mở khóa sau 500 mili-giây.
-     * @return true nếu click hợp lệ và được phép thực thi, false nếu bị chặn do click quá nhanh.
-     */
-    private fun checkAndLockClick(): Boolean {
-        if (isClickLocked) return false
-        isClickLocked = true
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            delay(1000)
-            isClickLocked = false
-        }
-        return true
-    }
-
     private fun setListData(
         actionInfos: ArrayList<NodeInfoBase>?,
         krScriptActionHandler: KrScriptActionHandler? = null,
@@ -151,7 +133,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onSwitchClick(item: SwitchNode, onCompleted: Runnable) {
-        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             val toValue = !item.checked
             if (item.confirm) {
@@ -172,7 +153,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onPageClick(item: PageNode, onCompleted: Runnable) {
-        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             if (context != null && item.link.isNotEmpty()) {
                 try {
@@ -191,7 +171,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onItemLongClick(clickableNode: ClickableNode) {
-        if (!checkAndLockClick()) return
         if (clickableNode.key.isEmpty()) {
             DialogHelper.alert(this.requireActivity(), getString(R.string.kr_shortcut_create_fail), getString(R.string.kr_ushortcut_nsupported))
         } else {
@@ -210,7 +189,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onEditorClick(item: EditorNode, onCompleted: Runnable) {
-        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             val context = context ?: return
             if (item.file.isEmpty()) {
@@ -223,7 +201,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onPickerClick(item: PickerNode, onCompleted: Runnable) {
-        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { pickerExecute(item, onCompleted) })
@@ -261,7 +238,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
                 if (optionsSorted != null) {
-                    if (!checkAndLockClick()) return
                     val darkMode = ThemeModeState.isDarkMode()
                     DialogItemChooser(darkMode, optionsSorted, item.multiple, object : DialogItemChooser.Callback {
                         override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
@@ -290,7 +266,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
-        if (!checkAndLockClick()) return
         if (nodeUnlocked(item)) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted) })
