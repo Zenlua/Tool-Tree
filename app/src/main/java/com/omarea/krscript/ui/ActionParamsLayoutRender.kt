@@ -15,8 +15,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
     companion object {
         /**
          * 获取当前选中项索引（单选）
-         * @param ActionParamInfo actionParamInfo 参数信息
-         * @param ArrayList<HashMap<String, Any>> options 使用getParamOptions获得的数据（不为空时）
          */
         fun getParamOptionsCurrentIndex(actionParamInfo: ActionParamInfo, options: ArrayList<SelectItem>): Int {
             var selectedIndex = -1
@@ -24,7 +22,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             val valList = ArrayList<String>()
             if (actionParamInfo.valueFromShell != null)
                 valList.add(actionParamInfo.valueFromShell!!)
-            // TODO:这里可能有点争议
             if (actionParamInfo.value != null) {
                 valList.add(actionParamInfo.value!!)
             }
@@ -47,8 +44,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
 
         /**
          * 获取当前选中项索引（多选）
-         * @param ActionParamInfo actionParamInfo 参数信息
-         * @param ArrayList<HashMap<String, Any>> options 使用getParamOptions获得的数据（不为空时）
          */
         fun getParamOptionsSelectedStatus(actionParamInfo: ActionParamInfo, options: ArrayList<SelectItem>): BooleanArray {
             val status = BooleanArray(options.size)
@@ -63,8 +58,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
 
         /**
          * 设置列表的选中状态
-         * @param ActionParamInfo actionParamInfo 参数信息
-         * @param ArrayList<HashMap<String, Any>> options 使用getParamOptions获得的数据（不为空时）
          */
         fun setParamOptionsSelectedStatus(actionParamInfo: ActionParamInfo, options: ArrayList<SelectItem>): ArrayList<SelectItem> {
             val values = getParamValues(actionParamInfo)
@@ -76,7 +69,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             return options
         }
 
-        // 获取多选下拉的选中值列表
         fun getParamValues (actionParamInfo: ActionParamInfo): List<String>? {
             val value = if (actionParamInfo.valueFromShell != null) actionParamInfo.valueFromShell else actionParamInfo.value
             val values = value?.split(actionParamInfo.separator)
@@ -90,11 +82,16 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
     private val rowViews = HashMap<String, View>()
     private val valueReaders = HashMap<String, () -> String>()
     private var currentParamInfos: ArrayList<ActionParamInfo> = ArrayList()
+    
+    // ========== TÍNH NĂNG MỚI: LƯỚI TRẠNG THÁI HIỆN TẠI ==========
+    // Lưu trạng thái ẩn/hiện hiện tại của từng param
+    private val visibilityState = HashMap<String, Boolean>()
 
     fun renderList(actionParamInfos: ArrayList<ActionParamInfo>, fileChooser: ParamsFileChooserRender.FileChooserInterface?) {
         currentParamInfos = actionParamInfos
         rowViews.clear()
         valueReaders.clear()
+        visibilityState.clear()
 
         for (actionParamInfo in actionParamInfos) {
             val options = actionParamInfo.optionsFromShell
@@ -141,7 +138,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 val layout = ParamsFileChooserRender(actionParamInfo, context, fileChooser) { evaluateDependencies() }.render()
 
                 addToLayout(layout, actionParamInfo)
-                // Widget này lưu đường dẫn trong 1 EditText con có tag=name -> tìm sâu để đọc giá trị
                 actionParamInfo.name?.let { name ->
                     valueReaders[name] = { linearLayout.findViewWithTag<TextView?>(name)?.text?.toString() ?: "" }
                 }
@@ -170,11 +166,31 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             }
         }
 
-        evaluateDependencies() // set trạng thái ẩn/hiện ngay khi vừa mở dialog
+        // ========== TÍNH NĂNG MỚI: ĐẶT TRẠNG THÁI KHỞI ĐỘNG ==========
+        initializeDependencyStates()
+        evaluateDependencies()
     }
 
-    // Gắn value-reader + listener cho các widget mà input là 1 View cụ thể (Spinner/EditText/CheckBox/Switch/SeekBar)
-    // hoặc 1 layout tổng hợp có chứa 1 trong các View đó bên trong (vd ParamsSeekBar/ParamsColorPicker bọc EditText/SeekBar).
+    // ========== TÍNH NĂNG MỚI: KHỞI TẠO TRẠNG THÁI PHỤ THUỘC ==========
+    private fun initializeDependencyStates() {
+        for (info in currentParamInfos) {
+            val name = info.name ?: continue
+            val initialState = info.dependInitialState.trim().lowercase()
+            
+            val initialVisibility = when {
+                initialState == "auto" -> {
+                    // Xác định tự động dựa trên dependDefault
+                    info.dependDefault.trim().lowercase() != "hide"
+                }
+                initialState == "hide" -> false
+                else -> true // "show"
+            }
+            
+            visibilityState[name] = initialVisibility
+            rowViews[name]?.visibility = if (initialVisibility) View.VISIBLE else View.GONE
+        }
+    }
+
     private fun attachDefaultListener(view: View, info: ActionParamInfo) {
         val name = info.name ?: return
         valueReaders[name] = { readValueDeep(view, info) }
@@ -204,7 +220,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         }
     }
 
-    // Dò tìm 1 View con thuộc các kiểu input đã biết bên trong 1 ViewGroup (dùng cho widget tổng hợp như seekbar/color picker)
     private fun findTypedChild(group: ViewGroup): View? {
         for (i in 0 until group.childCount) {
             val child = group.getChildAt(i)
@@ -233,14 +248,8 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         }
     }
 
-    // Trích các đoạn nằm trong dấu ngoặc đơn () của title, ví dụ "A (so)" -> "so".
     private val parenPattern = Regex("\\(([^()]*)\\)")
 
-    // Xây tập "định danh" hiện tại của 1 giá trị đang được chọn ở param điều khiển (parent):
-    // gồm chính giá trị (value), title tương ứng (nếu tìm thấy option khớp value), và phần
-    // nội dung nằm trong dấu ngoặc () của title (khớp cả có ngoặc lẫn không ngoặc).
-    // Ví dụ option-sh="echo -e 'a|A (so)'" (value=a, title="A (so)")
-    //   -> identifiers = {"a", "A (so)", "so", "(so)"}
     private fun buildValueIdentifiers(value: String, options: ArrayList<SelectItem>?): Set<String> {
         val identifiers = HashSet<String>()
         identifiers.add(value)
@@ -259,75 +268,39 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         return identifiers
     }
 
-    // Kiểm tra lại toàn bộ param có "depend-on", ẩn/hiện dòng tương ứng.
-    //
-    // Hỗ trợ NHIỀU điều kiện phụ thuộc cùng lúc (nhiều param cha), nối bằng dấu "|" ở cả 3
-    // thuộc tính depend-on / depend-value / depend-mode - các phần tử cùng vị trí (index) tương
-    // ứng với nhau.
-    //
-    // Cách kết hợp các điều kiện được quyết định bởi depend-logic:
-    // - "and" (mặc định, giữ tương thích hành vi cũ): TẤT CẢ điều kiện phải cùng thỏa (AND) thì
-    //   param mới được hiện.
-    //   Ví dụ: depend-on="mode|cam" depend-value="a|b" depend-mode="show|hide"
-    //          -> hiện khi mode = a  VÀ  cam khác b
-    // - "priority" / "or": hỗ trợ MỨC ƯU TIÊN, xét theo thứ tự khai báo trong depend-on, TỪ
-    //   TRÁI SANG PHẢI. Điều kiện nào KHỚP depend-value trước (bất kể depend-mode riêng của
-    //   điều kiện đó là "show" hay "hide") sẽ QUYẾT ĐỊNH LUÔN kết quả cuối cùng (theo đúng
-    //   depend-mode của chính điều kiện đó) và dừng lại ngay, không xét tiếp các điều kiện còn
-    //   lại. Điều kiện không khớp thì coi như chưa quyết định được gì, chuyển sang xét điều
-    //   kiện kế tiếp. Nếu đi hết mà không điều kiện nào khớp thì mặc định "hide".
-    //   Ví dụ: depend-on="IMAGES|dinh_dang" depend-value="(erofs)|(EROFS)"
-    //          depend-mode="hide|show" depend-logic="priority"
-    //            -> Nếu "IMAGES" khớp "(erofs)" thì HIDE luôn (vì depend-mode của điều kiện
-    //               này là "hide"), không xét tiếp "dinh_dang".
-    //            -> Nếu "IMAGES" KHÔNG khớp "(erofs)", chuyển sang xét "dinh_dang": nếu khớp
-    //               "(EROFS)" thì SHOW (vì depend-mode của điều kiện này là "show").
-    //            -> Nếu cả hai điều kiện đều không khớp thì HIDE (mặc định).
-    // - "priority-rtl" / "or-rtl": giống "priority" nhưng xét thứ tự ưu tiên TỪ PHẢI SANG TRÁI
-    //   (điều kiện cuối cùng khai báo trong depend-on được xét trước tiên).
-    //
-    // Mỗi vị trí trong depend-value vẫn có thể chứa nhiều giá trị được chấp nhận, nối bằng dấu
-    // ",", so khớp kiểu OR (giữ tương thích với cú pháp cũ), ví dụ "b,c" nghĩa là khớp khi giá
-    // trị điều khiển là b HOẶC c.
-    //
-    // Việc so khớp không chỉ dựa vào value thực tế của param điều khiển, mà còn khớp cả theo
-    // title (label hiển thị) của option đang chọn, và phần văn bản nằm trong dấu ngoặc () của
-    // title (khớp cả có ngoặc lẫn không ngoặc). Ví dụ option-sh="echo -e 'a|A (so)\nb|B\nc|C'"
-    // thì depend-value="a,A,(so)" khớp khi giá trị đang chọn là "a" (value), HOẶC "A" (title),
-    // HOẶC "(so)"/"so" (phần trong ngoặc của title).
+    // ========== TÍNH NĂNG MỚI: ĐÁNH GIÁ PHỤ THUỘC NÂNG CẤP ==========
     private fun evaluateDependencies() {
         for (info in currentParamInfos) {
             val dependOnRaw = info.dependOn?.trim()
             val name = info.name
-            if (dependOnRaw.isNullOrEmpty() || name.isNullOrEmpty()) continue
+            if (name.isNullOrEmpty()) continue
+
+            // Nếu không có dependOn -> hiển thị mặc định
+            if (dependOnRaw.isNullOrEmpty()) {
+                val shouldShow = info.dependDefault.trim().lowercase() != "hide"
+                updateVisibility(name, shouldShow)
+                continue
+            }
 
             val dependOnList = dependOnRaw.split("|").map { it.trim() }.filter { it.isNotEmpty() }
-            if (dependOnList.isEmpty()) continue
+            if (dependOnList.isEmpty()) {
+                updateVisibility(name, info.dependDefault.trim().lowercase() != "hide")
+                continue
+            }
 
             val dependValueList = (info.dependValue ?: "").split("|")
             val dependModeList = info.dependMode.split("|")
 
-            // Đánh giá điều kiện thứ i (theo đúng thứ tự khai báo trong dependOnList).
-            // Trả về null nếu không rõ param cha (bỏ qua điều kiện này, coi như không áp dụng).
-            // Ngược lại trả về Pair(matched, wantShow):
-            //   - matched: giá trị hiện tại của param cha có KHỚP depend-value ở vị trí i hay
-            //     không (chưa tính đến depend-mode). Dùng để biết điều kiện này có "áp dụng
-            //     được" hay không (priority-logic cần biết để quyết định dừng lại hay xét tiếp
-            //     điều kiện kế).
-            //   - wantShow: sau khi đã áp depend-mode ("hide" thì đảo ngược) - kết quả show/hide
-            //     mà điều kiện này "muốn" một khi nó khớp.
             fun evalCondition(i: Int): Pair<Boolean, Boolean>? {
                 val parentName = dependOnList[i]
                 val controllerInfo = currentParamInfos.find { it.name == parentName }
                 val reader = valueReaders[parentName]
-                if (controllerInfo == null || reader == null) return null // Không rõ param cha -> bỏ qua
+                if (controllerInfo == null || reader == null) return null
 
                 val currentValues = reader().split(controllerInfo.separator)
                     .map { it.trim() }.filter { it.isNotEmpty() }
                 val parentOptions = controllerInfo.optionsFromShell ?: controllerInfo.options
 
-                // Tập toàn bộ định danh (value + title + nội dung trong ngoặc) của các giá trị
-                // đang được chọn ở param cha này.
                 val currentIdentifiers = HashSet<String>()
                 for (v in currentValues) {
                     currentIdentifiers.addAll(buildValueIdentifiers(v, parentOptions))
@@ -345,12 +318,8 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             val logic = info.dependLogic.trim().lowercase()
             val shouldShow: Boolean = when (logic) {
                 "priority", "or", "priority-ltr", "or-ltr" -> {
-                    // Ưu tiên trái -> phải: điều kiện nào KHỚP trước sẽ quyết định luôn (show hay
-                    // hide tuỳ depend-mode riêng của điều kiện đó) và dừng lại ngay, không xét
-                    // tiếp các điều kiện còn lại. Điều kiện không khớp (matched = false) coi như
-                    // "chưa quyết định được gì" -> chuyển sang xét điều kiện kế tiếp. Nếu không
-                    // điều kiện nào khớp thì mặc định hide.
-                    var result = false
+                    // Ưu tiên trái -> phải
+                    var result = info.dependDefault.trim().lowercase() != "hide"
                     for (i in dependOnList.indices) {
                         val (matched, wantShow) = evalCondition(i) ?: continue
                         if (matched) {
@@ -361,8 +330,8 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                     result
                 }
                 "priority-rtl", "or-rtl" -> {
-                    // Giống "priority" nhưng xét từ điều kiện cuối cùng trở về đầu.
-                    var result = false
+                    // Ưu tiên phải -> trái
+                    var result = info.dependDefault.trim().lowercase() != "hide"
                     for (i in dependOnList.indices.reversed()) {
                         val (matched, wantShow) = evalCondition(i) ?: continue
                         if (matched) {
@@ -372,26 +341,73 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                     }
                     result
                 }
-                else -> {
-                    // "and" (mặc định): tất cả điều kiện phải cùng thỏa (dựa trên wantShow, đã
-                    // tính cả depend-mode riêng của từng điều kiện).
+                "xor" -> {
+                    // Chỉ ĐÚNG MỘT điều kiện được thỏa
+                    var matchCount = 0
+                    for (i in dependOnList.indices) {
+                        val (matched, _) = evalCondition(i) ?: continue
+                        if (matched) matchCount++
+                    }
+                    (matchCount == 1) != info.dependNegate
+                }
+                "nand" -> {
+                    // Phủ định của AND (KHÔNG phải tất cả điều kiện đều thỏa)
                     var result = true
                     for (i in dependOnList.indices) {
                         val (_, wantShow) = evalCondition(i) ?: continue
                         if (!wantShow) {
                             result = false
-                            break // AND: chỉ cần 1 điều kiện không thỏa là đủ để ẩn
+                            break
                         }
                     }
-                    result
+                    !result != info.dependNegate
+                }
+                else -> {
+                    // "and" (mặc định)
+                    var satisfiedCount = 0
+                    var totalCount = 0
+                    
+                    for (i in dependOnList.indices) {
+                        val (_, wantShow) = evalCondition(i) ?: continue
+                        totalCount++
+                        if (wantShow) satisfiedCount++
+                    }
+
+                    val threshold = if (info.dependThreshold < 0) {
+                        // Mặc định: 100% (tất cả phải thỏa)
+                        totalCount
+                    } else {
+                        // Tính toán % ngưỡng
+                        (totalCount * info.dependThreshold / 100).coerceAtLeast(1)
+                    }
+
+                    val result = satisfiedCount >= threshold
+                    result != info.dependNegate
                 }
             }
 
-            rowViews[name]?.visibility = if (shouldShow) View.VISIBLE else View.GONE
+            updateVisibility(name, shouldShow)
         }
     }
 
-    // 隐藏label的参数类型
+    // ========== TÍNH NĂNG MỚI: CẬP NHẬT TRẠNG THÁI VÀ GỌI CALLBACK ==========
+    private fun updateVisibility(name: String, shouldShow: Boolean) {
+        val oldState = visibilityState[name]
+        visibilityState[name] = shouldShow
+        
+        val view = rowViews[name]
+        view?.visibility = if (shouldShow) View.VISIBLE else View.GONE
+        
+        // Gọi callback nếu trạng thái thay đổi
+        if (oldState != null && oldState != shouldShow) {
+            val info = currentParamInfos.find { it.name == name }
+            if (info != null && !info.dependOnChangeCallback.isNullOrEmpty()) {
+                // TODO: Implement callback execution (shell script or custom logic)
+                // Example: executeCallback(info.dependOnChangeCallback, name, shouldShow)
+            }
+        }
+    }
+
     private val hideLabelTypes = arrayOf("bool", "checkbox", "switch")
     private fun addToLayout(inputView: View, actionParamInfo: ActionParamInfo) {
         val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_row, null)
@@ -409,7 +425,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             layout.findViewById<TextView>(R.id.kr_param_label).visibility = View.GONE
         }
 
-
         if (!actionParamInfo.desc.isNullOrEmpty()) {
             layout.findViewById<TextView>(R.id.kr_param_desc).text = actionParamInfo.desc
         } else {
@@ -418,7 +433,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
 
         layout.findViewById<FrameLayout>(R.id.kr_param_input).addView(inputView)
         linearLayout.addView(layout)
-        // (layout.layoutParams as LinearLayout.LayoutParams).topMargin = dp2px(context, 1f)
 
         (inputView.layoutParams as FrameLayout.LayoutParams).gravity = Gravity.CENTER_VERTICAL
 
@@ -441,9 +455,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         return tips.toString()
     }
 
-    /**
-     * 读取界面上填入的参数值
-     */
     fun readParamsValue(actionParamInfos: ArrayList<ActionParamInfo>): HashMap<String, String> {
         val params = HashMap<String, String>()
         for (actionParamInfo in actionParamInfos) {
@@ -511,6 +522,16 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             }
 
             val isHiddenByDepend = rowViews[actionParamInfo.name]?.visibility == View.GONE
+            
+            // ========== TÍNH NĂNG MỚI: BỎ QUA PARAM ẨN NẾU KHÔNG CÓ dependIncludeHidden ==========
+            if (isHiddenByDepend && !actionParamInfo.dependIncludeHidden) {
+                // Bỏ qua param ẩn - không kiểm tra required
+                if (!actionParamInfo.value.isNullOrEmpty()) {
+                    params[actionParamInfo.name!!] = actionParamInfo.value!!
+                }
+                continue
+            }
+            
             if (actionParamInfo.value.isNullOrEmpty()) {
                 if (actionParamInfo.required && !isHiddenByDepend) {
                     throw Exception(getFieldTips(actionParamInfo) + context.getString(R.string.do_not_empty))
@@ -524,9 +545,6 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         return params
     }
 
-    /**
-     * TODO:刷新界面上的参数输入框显示
-     */
     fun updateParamsView(actionParamInfos: ArrayList<ActionParamInfo>) {
         for (actionParamInfo in actionParamInfos) {
             if (actionParamInfo.name == null) {
@@ -535,7 +553,7 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
 
             val view = linearLayout.findViewWithTag<View>(actionParamInfo.name)
             if (view != null) {
-                // TODO:刷新界面显示
+                // TODO: Refresh interface display
             }
         }
     }

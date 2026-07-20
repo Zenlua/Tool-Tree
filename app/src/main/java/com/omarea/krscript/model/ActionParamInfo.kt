@@ -41,19 +41,19 @@ class ActionParamInfo {
     // 多个值的分隔符（仅限多选下拉）
     var separator: String = "\n"
 
+    // ========== 新增依赖管理功能 ==========
+
     // Tên (các) param điều khiển: param này sẽ ẩn/hiện dựa theo giá trị của (các) param có
     // "name" trùng dependOn. Có thể khai báo NHIỀU param cha cùng lúc, nối bằng dấu "|",
     // ví dụ: "mode|cam" -> phụ thuộc đồng thời vào cả param "mode" và "cam" (tất cả phải
     // cùng thỏa điều kiện tương ứng - AND).
     var dependOn: String? = null
+
     // Danh sách giá trị cần khớp cho từng param cha (theo đúng thứ tự khai báo ở dependOn),
     // các param cha cách nhau bởi dấu "|"; trong mỗi vị trí, các giá trị được chấp nhận (OR)
     // cách nhau bởi dấu phẩy, ví dụ: "a|b,c" -> cha 1 khớp khi = a, cha 2 khớp khi = b hoặc c.
-    // Giá trị so khớp không chỉ là value thực tế của option, mà còn có thể là title (label)
-    // hiển thị của option, hoặc phần văn bản nằm trong dấu ngoặc () của title (khớp cả có
-    // ngoặc lẫn không ngoặc). Ví dụ option-sh="echo -e 'a|A (so)'" (value=a, title="A (so)")
-    // thì depend-value="a,A,(so)" đều khớp được (qua value "a", qua title "A", qua "(so)"/"so").
     var dependValue: String? = null
+
     // "show": chỉ hiện khi khớp dependValue (mặc định) | "hide": ẩn khi khớp dependValue
     // Cũng có thể khai báo riêng cho từng param cha, nối bằng "|", theo đúng thứ tự dependOn,
     // ví dụ: "show|hide".
@@ -63,14 +63,55 @@ class ActionParamInfo {
     // - "and" (mặc định): TẤT CẢ điều kiện phải cùng thỏa (giữ tương thích hành vi cũ).
     // - "priority" (hoặc "or"): xét theo THỨ TỰ ưu tiên từ TRÁI SANG PHẢI theo đúng thứ tự
     //   khai báo trong dependOn. Điều kiện nào (đã tính cả dependMode của chính nó) thỏa
-    //   trước sẽ quyết định luôn kết quả là "show" (không cần xét tiếp các điều kiện còn lại).
-    //   Nếu không có điều kiện nào thỏa thì "hide".
-    //   Ví dụ: depend-on="mode|level" depend-value="b|7" depend-mode="show|show"
-    //   depend-logic="priority"
-    //     -> Nếu "mode" khớp "b" thì show luôn (bất kể level).
-    //     -> Nếu "mode" không khớp nhưng "level" khớp "7" thì vẫn show.
-    //     -> Nếu cả hai đều không khớp thì hide.
+    //   trước sẽ quyết định luôn kết quả.
+    //   Nếu không có điều kiện nào thỏa thì sử dụng dependDefault.
     // - "priority-rtl" (hoặc "or-rtl"): giống "priority" nhưng xét theo thứ tự ưu tiên từ
-    //   PHẢI SANG TRÁI (điều kiện cuối cùng trong dependOn được xét trước).
+    //   PHẢI SANG TRÁI.
+    // - "xor": chỉ ĐÚNG MỘT điều kiện phải thỏa.
+    // - "nand": phủ định của "and" (không phải tất cả điều kiện đều thỏa).
     var dependLogic: String = "and"
+
+    // ========== TÍNH NĂNG MỚI: MẶC ĐỊNH ẨN/HIỆN ==========
+    // Giá trị mặc định khi KHÔNG có điều kiện phụ thuộc nào thỏa mãn:
+    // - "show" (mặc định): hiển thị khi không có điều kiện nào khớp
+    // - "hide": ẩn khi không có điều kiện nào khớp
+    // Ví dụ: depend-on="mode" depend-value="advanced"
+    //        depend-default="hide"
+    //        -> Khi mode != advanced thì ẩn (không phải "show")
+    var dependDefault: String = "show"
+
+    // ========== TÍNH NĂNG MỚI: TRẠNG THÁI KHỞI ĐỘNG ==========
+    // Trạng thái ẩn/hiện BAN ĐẦU khi chưa đánh giá bất kỳ điều kiện nào:
+    // - "auto" (mặc định): tự động xác định dựa trên dependDefault
+    // - "show": luôn hiển thị lúc đầu
+    // - "hide": luôn ẩn lúc đầu
+    // Hữu ích khi bạn không muốn param nhấp nháy lúc tải dialog.
+    var dependInitialState: String = "auto"
+
+    // ========== TÍNH NĂNG MỚI: ĐẢO NGƯỢC ĐIỀU KIỆN ==========
+    // Nếu true, tất cả các điều kiện sẽ bị đảo ngược (NOT logic):
+    // - "show" trở thành "hide"
+    // - "hide" trở thành "show"
+    // Ví dụ: depend-on="admin" depend-value="1" depend-negate="true"
+    //        -> Hiện khi admin != 1 (ẩn khi admin = 1)
+    var dependNegate: Boolean = false
+
+    // ========== TÍNH NĂNG MỚI: NGƯỠNG ĐIỀU KIỆN (CHO "AND") ==========
+    // Với logic "and", chỉ bao nhiêu % điều kiện cần thỏa mãn:
+    // - -1 (mặc định): 100% (tất cả phải thỏa) - hành vi cũ
+    // - 0-100: % số điều kiện cần thỏa, vd: 50 = ít nhất 50% điều kiện phải thỏa
+    // Ví dụ: depend-on="a|b|c" 3 điều kiện
+    //        depend-threshold="67" (tối thiểu 2/3 điều kiện)
+    //        -> Chỉ cần tối thiểu 2 trong 3 điều kiện thỏa mãn
+    var dependThreshold: Int = -1
+
+    // ========== TÍNH NĂNG MỚI: HOẠT ĐỘNG KHÔNG ĐỒNG THỜI ==========
+    // Nếu true, param ẩn sẽ vẫn được đưa vào kết quả readParamsValue() nếu nó có giá trị
+    // (thay vì bỏ qua param ẩn). Hữu ích cho các param ẩn nhưng vẫn cần giá trị.
+    var dependIncludeHidden: Boolean = false
+
+    // ========== TÍNH NĂNG MỚI: LÀMĐIỀU GỌILẠI KHI THAY ĐỔI DEPENDENCY ==========
+    // Tên shell script/callback để gọi khi param này thay đổi trạng thái ẩn/hiện
+    // (chỉ gọi khi trạng thái thực sự thay đổi, từ visible -> hidden hoặc ngược lại)
+    var dependOnChangeCallback: String? = null
 }
