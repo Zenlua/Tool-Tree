@@ -164,7 +164,7 @@ Specific attributes for the `<picker>` tag:
 |---|---|
 | `option-sh` / `options-sh` / `options-su` | Script returning a dynamic options list, formatted as `value|title` per line |
 | `multiple` | Allows selecting multiple values |
-| `separator` | Character used to join selected values when `multiple` is true (default: newline) |
+| `separator` | Character used to join selected values when `multiple` is true (default: `\n`) |
 
 Child elements of `<picker>`: `<title>`, `<desc>`, `<summary>`, `<option val="">Title</option>` (static declaration, used when `option-sh` is not applied), `<getstate>`/`<get>`, `<setstate>`/`<set>`, `<resource>`, `<lock>`/`<lock-state>`.
 
@@ -299,8 +299,7 @@ Child elements of `<page>`: `<title>`, `<desc>`, `<summary>`, `<resource>`, `<ht
 | `min` / `max` | Value boundaries (used for `type="int"`/`"number"`/`"seekbar"`) |
 | `support` / `visible` | Visibility condition script — if not `"1"`, this param is **completely omitted** (no row generated) |
 | `multiple` | `"multiple"`/`"true"`/`"1"` → Allows multiple value selection (used with `type="list"`/`"app"`/`"packages"`) |
-| `separator` | Character used to join multiple selected values (default: `
-`) |
+| `separator` | Character used to join multiple selected values (default: `\n`) |
 | `editable` | Allows manual typing of values (used with `type="file"`/`"folder"`) |
 | `suffix` | Allowed file extension for selection (used with `type="file"`), also infers `mime` if not explicitly declared |
 | `mime` | Allowed MIME type for selection (used with `type="file"`) |
