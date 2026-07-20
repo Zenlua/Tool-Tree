@@ -102,6 +102,8 @@ class TextEditorActivity : AppCompatActivity() {
             setHomeButtonEnabled(true)
             setDisplayHomeAsUpEnabled(true)
         }
+        
+        // Đảm bảo nút điều hướng Back trên Toolbar luôn chạy vào logic xác nhận đóng
         toolbar.setNavigationOnClickListener { attemptClose() }
         setupUndoRedoButtons(toolbar)
 
@@ -191,14 +193,19 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun setupUndoRedoButtons(toolbar: Toolbar) {
+        // Tránh add trùng lặp View khi cấu hình Activity thay đổi
+        toolbar.findViewWithTag<View>("undo_btn")?.let { toolbar.removeView(it) }
+        toolbar.findViewWithTag<View>("redo_btn")?.let { toolbar.removeView(it) }
+
         val typedValue = TypedValue()
         theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
         val tint = ColorStateList.valueOf(typedValue.data)
         val buttonSize = (48 * resources.displayMetrics.density).toInt()
         val iconPadding = (12 * resources.displayMetrics.density).toInt()
 
-        fun makeButton(iconRes: Int, descRes: Int, onClick: () -> Unit): ImageButton {
+        fun makeButton(iconRes: Int, descRes: Int, tagStr: String, onClick: () -> Unit): ImageButton {
             return ImageButton(this).apply {
+                tag = tagStr
                 setImageResource(iconRes)
                 contentDescription = getString(descRes)
                 setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
@@ -211,8 +218,8 @@ class TextEditorActivity : AppCompatActivity() {
             }
         }
 
-        undoButton = makeButton(R.drawable.ic_editor_undo, R.string.editor_undo) { performUndo() }
-        redoButton = makeButton(R.drawable.ic_editor_redo, R.string.editor_redo) { performRedo() }
+        undoButton = makeButton(R.drawable.ic_editor_undo, R.string.editor_undo, "undo_btn") { performUndo() }
+        redoButton = makeButton(R.drawable.ic_editor_redo, R.string.editor_redo, "redo_btn") { performRedo() }
 
         toolbar.addView(redoButton)
         toolbar.addView(undoButton)
@@ -293,7 +300,6 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun loadFileContent() {
-        progressBarDialog.showDialog(getString(R.string.please_wait))
         lifecycleScope.launch(Dispatchers.IO) {
             var content = ""
             var newFile = true
@@ -305,7 +311,6 @@ class TextEditorActivity : AppCompatActivity() {
             } catch (_: Exception) {}
 
             withContext(Dispatchers.Main) {
-                progressBarDialog.hideDialog()
                 isNewFile = newFile
                 savedContent = content
                 isApplyingHistory = true
@@ -359,8 +364,12 @@ class TextEditorActivity : AppCompatActivity() {
         if (isSaving) return
         if (!hasUnsavedChanges()) { finish(); return }
         DialogHelper.confirm(this, title = getString(R.string.editor_unsaved_title), message = getString(R.string.editor_unsaved_message),
-            onConfirm = DialogHelper.DialogButton(getString(R.string.editor_save)) { saveFile { if (it) finish() } },
-            onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard)) { finish() }
+            onConfirm = DialogHelper.DialogButton(getString(R.string.editor_save)) { _ -> 
+                saveFile { success -> if (success) finish() } 
+            },
+            onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard)) { _ -> 
+                finish() 
+            }
         )
     }
 
@@ -376,20 +385,19 @@ class TextEditorActivity : AppCompatActivity() {
             R.id.editor_menu_run -> { runnableInterpreter()?.let { saveAndRun(it) }; true }
             R.id.editor_menu_save -> { saveFile(); true }
             R.id.editor_menu_wrap -> { wrapEnabled = !wrapEnabled; item.isChecked = wrapEnabled; applyWrapState(); true }
+            android.R.id.home -> { attemptClose(); true } // Xử lý sự kiện nhấn nút Back trên thanh Menu gốc
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun saveFile(showProgress: Boolean = true, showToast: Boolean = true, onResult: ((Boolean) -> Unit)? = null) {
+    private fun saveFile(showProgress: Boolean = false, showToast: Boolean = true, onResult: ((Boolean) -> Unit)? = null) {
         if (isSaving) return
         isSaving = true
         val content = binding.editorContent.text?.toString().orEmpty()
-        if (showProgress) progressBarDialog.showDialog(getString(R.string.editor_saving))
 
         lifecycleScope.launch(Dispatchers.IO) {
             val success = writeFileContent(absoluteFilePath, content)
             withContext(Dispatchers.Main) {
-                if (showProgress) progressBarDialog.hideDialog()
                 isSaving = false
                 if (success) {
                     savedContent = content
