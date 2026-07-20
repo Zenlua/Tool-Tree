@@ -363,14 +363,23 @@ class TextEditorActivity : AppCompatActivity() {
     private fun attemptClose() {
         if (isSaving) return
         if (!hasUnsavedChanges()) { finish(); return }
-        DialogHelper.confirm(this, title = getString(R.string.editor_unsaved_title), message = getString(R.string.editor_unsaved_message),
-            onConfirm = DialogHelper.DialogButton(getString(R.string.editor_save)) { _ -> 
-                saveFile { success -> if (success) finish() } 
-            },
-            onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard)) { _ -> 
-                finish() 
+        
+        // Cấu hình DialogButton truyền dạng Boolean kết hợp kèm block lắng nghe kết quả ở cuối
+        DialogHelper.confirm(
+            this, 
+            title = getString(R.string.editor_unsaved_title), 
+            message = getString(R.string.editor_unsaved_message),
+            onConfirm = DialogHelper.DialogButton(getString(R.string.editor_save), true),
+            onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard), false)
+        ) { confirmed -> // Nhận kết quả Boolean trả về khi người dùng tương tác với một trong hai nút
+            if (confirmed) {
+                saveFile(showProgress = false, showToast = true) { success -> 
+                    if (success) finish() 
+                }
+            } else {
+                finish()
             }
-        )
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
