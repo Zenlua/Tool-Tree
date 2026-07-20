@@ -263,8 +263,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 if (optionsSorted != null) {
                     val darkMode = ThemeModeState.isDarkMode()
                     DialogItemChooser(darkMode, optionsSorted, item.multiple, object : DialogItemChooser.Callback {
+                        if (!checkAndLockClick()) return
                         override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
-                            if (!checkAndLockClick()) return
                             val value = if (item.multiple) {
                                 selected.joinToString(item.separator ?: "") { "" + it.value }
                             } else {
