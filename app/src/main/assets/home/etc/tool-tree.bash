@@ -163,7 +163,7 @@ fi
 <option type="default" id="hide" silent="true" reload="true">'$hide_add_text'</option>
 <option type="default" link="https://zenlua.github.io/Tool-Tree/website/Addon.html" silent="true">'$download_text'</option>
 <option type="default" id="xoa" silent="true" reload="true">'$deleted_text'</option>
-<option id="file" suffix="add" type="file" style="fab" reload="true">'$input_add_text'</option>
+<option id="file" suffix="add,zip,7z" type="file" style="fab" reload="true">'$input_add_text'</option>
 <option type="default" id="home" silent="true" reload="true">'$home_text'</option>
 <handler>
 case "$menu_id" in
@@ -301,7 +301,7 @@ fi
 <option type="default" id="hide" silent="true" reload="true">'$hide_add_text'</option>
 <option type="default" link="https://zenlua.github.io/Tool-Tree/website/Apkon.html" silent="true">'$download_text'</option>
 <option type="default" id="xoa" silent="true" reload="true">'$deleted_text'</option>
-<option id="file" suffix="add" type="file" style="fab" reload="true">'$input_add_text'</option>
+<option id="file" suffix="add,zip,7z" type="file" style="fab" reload="true">'$input_add_text'</option>
 <option type="default" id="home" silent="true" reload="true">'$home_text'</option>
 <handler>
 case "$menu_id" in
