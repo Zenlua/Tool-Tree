@@ -31,6 +31,7 @@ import com.omarea.krscript.model.ShellHandlerBase
 import java.lang.ref.WeakReference
 import com.tool.tree.AnsiColorParser
 import java.util.concurrent.atomic.AtomicBoolean
+import java.io.File
 
 class DialogLogFragment : DialogFragment() {
 
@@ -46,6 +47,10 @@ class DialogLogFragment : DialogFragment() {
     private var themeResId: Int = 0
     private var onDismissRunnable: Runnable? = null
     private var currentHandler: MyShellHandler? = null
+
+    // Trạng thái bật/tắt soft wrap của log output (giống Text Editor Activity)
+    private var wrapEnabled = true
+    private var noWrapContainer: HorizontalScrollView? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = KrDialogLogBinding.inflate(inflater, container, false)
@@ -87,6 +92,15 @@ class DialogLogFragment : DialogFragment() {
         var forceStopRunnable: Runnable? = null
         canceled = false
         uiVisible = true
+
+        wrapEnabled = readWrapEnabled(requireContext().applicationContext)
+        applyWrapState()
+
+        binding.btnWrap.setOnClickListener {
+            wrapEnabled = !wrapEnabled
+            applyWrapState()
+            persistWrapEnabled(requireContext().applicationContext, wrapEnabled)
+        }
 
         binding.btnHide.setOnClickListener {
             uiVisible = false
@@ -190,6 +204,83 @@ class DialogLogFragment : DialogFragment() {
         return handler
     }
 
+    /**
+     * Áp dụng trạng thái bật/tắt soft wrap cho log output, tương tự cách làm ở TextEditorActivity:
+     * - wrapEnabled = true: shellOutput nằm trực tiếp trong ScrollView (cuộn dọc), tự động xuống dòng.
+     * - wrapEnabled = false: shellOutput được bọc trong một HorizontalScrollView (cho phép cuộn ngang),
+     *   không tự động xuống dòng.
+     */
+    private fun applyWrapState() {
+        val b = _binding ?: return
+        val logView = b.shellOutput
+        val scrollView = b.logScrollView
+
+        (logView.parent as? ViewGroup)?.removeView(logView)
+        noWrapContainer?.let { scrollView.removeView(it) }
+        logView.setHorizontallyScrolling(!wrapEnabled)
+
+        if (wrapEnabled) {
+            logView.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            scrollView.addView(logView)
+        } else {
+            val hsv = noWrapContainer ?: HorizontalScrollView(requireContext()).also {
+                it.isFillViewport = false
+                it.scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
+                noWrapContainer = it
+            }
+            logView.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            hsv.removeAllViews()
+            hsv.addView(logView)
+            hsv.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            scrollView.addView(hsv)
+        }
+
+        b.btnWrap.alpha = if (wrapEnabled) 0.5f else 1f
+        scrollView.post { scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
+    }
+
+    /**
+     * Đọc trạng thái soft wrap đã lưu từ file cấu hình trong thư mục riêng của app
+     * (context.filesDir), thay vì dùng đường dẫn tuyệt đối cố định.
+     * File chứa "1" => tắt soft wrap, "0" hoặc không tồn tại => bật soft wrap (mặc định, như cũ).
+     */
+    private fun readWrapEnabled(context: Context): Boolean {
+        return try {
+            val file = File(context.filesDir, WRAP_STATE_RELATIVE_PATH)
+            if (file.exists()) {
+                file.readText().trim() != "1"
+            } else {
+                true
+            }
+        } catch (ex: Exception) {
+            true
+        }
+    }
+
+    /**
+     * Lưu trạng thái soft wrap xuống file trong context.filesDir (không dùng path tuyệt đối),
+     * thực hiện ở luồng nền để tránh chặn UI thread.
+     */
+    private fun persistWrapEnabled(context: Context, wrapEnabled: Boolean) {
+        Thread {
+            try {
+                val file = File(context.filesDir, WRAP_STATE_RELATIVE_PATH)
+                file.parentFile?.let { parent -> if (!parent.exists()) parent.mkdirs() }
+                file.writeText(if (wrapEnabled) "0" else "1")
+            } catch (ex: Exception) {
+            }
+        }.start()
+    }
+
     private fun hideKeyboard(view: View) {
         try {
             val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -246,6 +337,19 @@ class DialogLogFragment : DialogFragment() {
 
         private fun getColor(resId: Int): Int {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) context.getColor(resId) else context.resources.getColor(resId)
+        }
+
+        /**
+         * Tìm ScrollView cha gần nhất trong cây view, vì khi tắt soft wrap logView có thể
+         * nằm lồng trong 1 HorizontalScrollView trung gian thay vì là con trực tiếp của ScrollView.
+         */
+        private fun findScrollViewAncestor(view: View): ScrollView? {
+            var parent = view.parent
+            while (parent is View) {
+                if (parent is ScrollView) return parent
+                parent = parent.parent
+            }
+            return null
         }
 
         private fun dpToPx(dp: Float): Int {
@@ -497,7 +601,9 @@ class DialogLogFragment : DialogFragment() {
             }
 
             // Tối ưu cuộn ScrollView xuống cuối
-            (logView.parent as? ScrollView)?.let { scrollView ->
+            // Dùng findScrollViewAncestor() thay vì cast trực tiếp logView.parent, vì khi tắt soft wrap
+            // logView được bọc thêm trong 1 HorizontalScrollView trung gian.
+            findScrollViewAncestor(logView)?.let { scrollView ->
                 scrollView.fullScroll(ScrollView.FOCUS_DOWN)
 
                 // Giữ focus thông minh không cần lồng post{} nhiều tầng
@@ -541,6 +647,10 @@ class DialogLogFragment : DialogFragment() {
     }
 
     companion object {
+        // Đường dẫn tương đối bên trong context.filesDir, KHÔNG dùng path tuyệt đối
+        // (vd: /data/user/0/com.tool.tree/files/home/usr/log/scroll_ngang)
+        private const val WRAP_STATE_RELATIVE_PATH = "home/usr/log/scroll_ngang"
+
         fun create(nodeInfo: RunnableNode, onExit: Runnable, onDismiss: Runnable, script: String, params: HashMap<String, String>?, darkMode: Boolean = false): DialogLogFragment {
             val fragment = DialogLogFragment()
             fragment.nodeInfo = nodeInfo
