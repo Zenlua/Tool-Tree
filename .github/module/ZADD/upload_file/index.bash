@@ -2,7 +2,7 @@
 # kakathic
 
 # home
-home(){ xml_print '<group title="'$google_text'">
+home(){ echo '<group title="'$google_text'">
 <action>
 <title>Upload Gofile</title>
 <param name="FILE" type="file" required="true" desc="https://gofile.io"/>

@@ -2,7 +2,7 @@
 # kakathic
 
 # home
-home(){ xml_print '<group title="'$google_text'">
+home(){ echo '<group title="'$google_text'">
 <action>
 <title>'$mage_name_text'</title>
 <desc>'$merge_partition_text'</desc>

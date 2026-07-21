@@ -3,7 +3,7 @@
 
 home(){
 # index
-xml_print '<group title="'$google_text'">
+echo '<group title="'$google_text'">
 <action shell="hidden" reload="true">
 <title>'$payload_text_1'</title>
 <summary>'$payload_text_2' '"http://...$(glog url_text_payload | tail -c 25)"'</summary>

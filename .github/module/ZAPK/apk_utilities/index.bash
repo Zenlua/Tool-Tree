@@ -31,7 +31,7 @@ fi
 
 # home
 home(){
-xml_print '<?xml version="1.0" encoding="UTF-8" ?>
+echo '<?xml version="1.0" encoding="UTF-8" ?>
 <group>
 <group title="'$google_text'">
 <picker options-sh="'$MPAT'/index.bash search_pro" shell="hidden" reload="true">

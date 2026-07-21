@@ -3,7 +3,7 @@
 
 # home
 home(){
-xml_print '<group title="'$google_text'">
+echo '<group title="'$google_text'">
 
 <action title="'$home_text_1'" desc="'$home_text_2'">
 <param desc="'$home_text_7'" name="overlay_folder" type="folder" value-sh="glog overlay_folder" required="true" editable="true"/>

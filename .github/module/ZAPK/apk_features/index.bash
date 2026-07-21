@@ -4,7 +4,7 @@
 # home
 home(){
 [ "$ROT" == 0 ] && text_root="ROOT" || text_rr="$fs_text_1"
-xml_print '<group title="'$google_text'">
+echo '<group title="'$google_text'">
 <action title="'$check_ufs_text'" summary="'$text_root'">
 <lock>
 [ "$ROT" == 0 ] && echo "'$fs_text_3'" || echo 0

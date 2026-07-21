@@ -5,7 +5,7 @@ path_modun2="/data/adb/modules_update/Tool-Tree"
 
 home(){
 # Đoạn code chính
-xml_print '<group title="'$google_text'">
+echo '<group title="'$google_text'">
 <action warn="'$lang_action_warn'" >
 <title>'$lang_title'</title>
 <summary>'$lang_summary_path''$path_modun'</summary>
