@@ -72,28 +72,35 @@
 
     </LinearLayout>
 
-    <ScrollView
+    <FrameLayout
         android:id="@+id/log_scroll_view"
         android:layout_marginTop="16dp"
         android:background="@drawable/krscript_item_ripple_kon"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:overScrollMode="never"
         android:clipToOutline="true"
         android:layout_above="@id/input_row"
         android:layout_below="@+id/header_row">
 
-        <TextView
-            android:id="@+id/shell_output"
-            android:breakStrategy="simple"
-            android:textIsSelectable="true"
+        <ScrollView
+            android:id="@+id/log_scroll_inner"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textSize="12sp"
-            android:padding="12dp" />
+            android:layout_height="match_parent"
+            android:overScrollMode="never">
 
-    </ScrollView>
+            <TextView
+                android:id="@+id/shell_output"
+                android:breakStrategy="simple"
+                android:textIsSelectable="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="12sp"
+                android:padding="12dp" />
+
+        </ScrollView>
+
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/input_row"

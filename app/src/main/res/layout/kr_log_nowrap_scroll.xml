@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="false"
+    android:fadeScrollbars="true"
+    android:scrollbarStyle="insideOverlay"
+    android:scrollbarSize="4dp"
+    android:scrollbarThumbHorizontal="@drawable/kr_hscroll_thumb"
+    android:scrollbarTrackHorizontal="@android:color/transparent" />
