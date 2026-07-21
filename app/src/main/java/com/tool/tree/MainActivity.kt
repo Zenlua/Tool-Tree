@@ -316,7 +316,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menu.findItem(R.id.option_menu_reboot)?.isVisible = hasRoot
+        menu.findItem(R.id.option_menu_reboot)?.isEnabled = hasRoot
         return super.onPrepareOptionsMenu(menu)
     }
 
