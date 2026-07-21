@@ -934,12 +934,9 @@ checktime
 <title>'$build_text'</title>
 <param name="boolbox" value-sh="glog boolboxdjh" label="'$deleted_project_text'" type="checkbox" />
 <param name="IMAGES" title="'$list_partition_text'" desc="'$builds_text_1'" multiple="true" options-sh="findfile 0 $SDH/$PTSH" required="true"/>
-
-<param name="dinh_dang" value-sh="glog dinh_dang 0" label="'$build_text'" desc="'$builds_text_2'" options-sh="echo -e '"'0|$default_text\n1|RO (EROFS)\n2|RW (EXT4)\n3|RO (F2FS)\n4|RW (F2FS)'"'" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show" />
-
-<param name="dang_nen" value-sh="glog dang_nen lz4hc" label="'$option_text'" desc="'$builds_text_3'" options-sh="echo -e '"'lz4hc\nlz4\nlzma\ndeflate\nzstd'"'" depend-on="dinh_dang|IMAGES" depend-value="EXT4,F2FS|(erofs)" depend-mode="hide|show" depend-logic="priority"/>
-
-<param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar" depend-on="dang_nen|dinh_dang|IMAGES" depend-value="lz4|EXT4,F2FS|(erofs)" depend-mode="hide|hide|show" depend-logic="priority"/>
+<param name="dinh_dang" value-sh="glog dinh_dang 0" label="'$build_text'" desc="'$builds_text_2'" options-sh="echo -e '"'0|$default_text\n1|RO (EROFS)\n2|RW (EXT4)\n3|RO (F2FS)\n4|RW (F2FS)'"'" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show" depend-default="hide"/>
+<param name="dang_nen" value-sh="glog dang_nen lz4hc" label="'$option_text'" desc="'$builds_text_3'" options-sh="echo -e '"'lz4hc\nlz4\nlzma\ndeflate\nzstd'"'" depend-on="dinh_dang|dinh_dang|IMAGES" depend-value="EROFS|EXT4,F2FS|(erofs)" depend-mode="show|hide|show" depend-logic="priority" depend-default="hide"/>
+<param name="muc_nen" value-sh="glog muc_nen 8" label="'$builds_text_4'" desc="'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22" min="0" max="22" type="seekbar" depend-on="dang_nen" depend-value="lz4" depend-mode="hide" depend-logic="priority"/>
 <param name="format_img" value-sh="glog format_imgs raw" label="'$convert_text'" desc="'$convert_img_text'" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show">
 <option value="raw">File.img (raw)</option>
 <option value="sparse">File.img (sparse)</option>
@@ -948,10 +945,10 @@ checktime
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
-<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'" depend-on="format_img|IMAGES" depend-value="raw,sparse,File.new.dat|(erofs),(ext),(f2fs)" depend-mode="hide|show" depend-logic="priority"/>
-<param name="build_times" label="'$time_text'" value-sh="glog build_times" type="number" desc="'$build_time_text_1': '$time_riviu'" required="required" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show"/>
+<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'" depend-on="format_img" depend-value="raw,sparse,File.new.dat" depend-mode="hide" depend-logic="priority"/>
+<param name="build_times" label="'$time_text'" value-sh="glog build_times" type="number" desc="'$build_time_text_1': '$time_riviu'" required="required" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show" />
 <param name="offfscontex" value-sh="glog offfscontex 1" label="'$patch_text_fscontex'" type="switch" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show"/>
-<param name="build_size" label="'$sizes_text'" value-sh="glog build_size 0" type="number" desc="'$builds_text_7'" required="required" depend-on="dinh_dang|dinh_dang|IMAGES" depend-value="EROFS|EXT4,F2FS|(ext),(f2fs)" depend-mode="hide|show|show" depend-logic="priority"/>
+<param name="build_size" label="'$sizes_text'" value-sh="glog build_size 0" type="number" desc="'$builds_text_7'" required="required" depend-on="dinh_dang|dinh_dang|IMAGES" depend-value="EROFS|EXT4,F2FS|(ext),(f2fs)" depend-mode="hide|show|show" depend-logic="priority" depend-default="hide"/>
 <set>
 slog dang_nen "$dang_nen"
 slog format_imgs "$format_img"

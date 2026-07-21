@@ -4,168 +4,202 @@
 import os
 import sys
 
-def scanfs(file) -> tuple:
-    """Đọc file cấu hình gốc, bỏ qua comment/dòng trống và giữ nguyên thứ tự dòng."""
+def scanfs(file_path: str) -> tuple:
+    """Read original fs_config, skip comments/empty lines, and preserve line order."""
     filesystem_config = {}
     original_order = []
     
-    with open(file, "r", encoding="utf-8") as file_:
-        for line_num, i in enumerate(file_, 1):
-            line = i.strip()
-            if not line or line.startswith('#'):
+    with open(file_path, "r", encoding="utf-8") as file_:
+        for line_num, line in enumerate(file_, 1):
+            line_str = line.strip()
+            if not line_str or line_str.startswith('#'):
                 continue
-            parts = line.split()
+            parts = line_str.split()
             if not parts:
                 continue
             filepath, *other = parts
             filesystem_config[filepath] = other
             original_order.append(filepath)
+            
             if len(other) > 4:
-                print(f"[Warn] Current {line_num}: {filepath} there are too many fields ({len(other)}).")
+                print(f"[Warn] Line {line_num}: {filepath} has too many fields ({len(other)}).")
                 
     return filesystem_config, original_order
 
-def scan_dir(folder):
+def scan_dir(folder: str) -> list:
     """
-    Quét thư mục thực tế cấu trúc POSIX Android.
-    Hỗ trợ Dynamic Partitions bằng cách ép đường dẫn gốc về chuẩn Android.
+    Scan real directory following Android POSIX structure.
+    Automatically formats paths to fit standard Android fs_config.
     """
-    base = os.path.basename(os.path.normpath(folder))
-            
-    yield base
-    yield '/'
-    yield f'{base}/lost+found'
+    folder_abs = os.path.abspath(folder)
+    base_name = os.path.basename(os.path.normpath(folder))
     
-    for root, dirs, files in os.walk(folder):
-        rel_root = os.path.relpath(root, folder)
+    results = [
+        base_name,
+        f"{base_name}/lost+found"
+    ]
+    
+    for root, dirs, files in os.walk(folder_abs):
+        rel_root = os.path.relpath(root, folder_abs)
         rel_root = '' if rel_root == '.' else rel_root
+        
         for d in dirs:
-            path = os.path.join(base, rel_root, d)
-            yield path.replace('\\', '/')
+            path = os.path.join(base_name, rel_root, d)
+            results.append(path.replace('\\', '/'))
+            
         for f in files:
-            path = os.path.join(base, rel_root, f)
-            yield path.replace('\\', '/')
+            path = os.path.join(base_name, rel_root, f)
+            results.append(path.replace('\\', '/'))
 
-def islink(file) -> str or None:
-    """Kiểm tra và trả về đường dẫn gốc của Symlink chuẩn xác trên cả Win và Linux."""
+    # Deduplicate while maintaining appearance order
+    seen = set()
+    deduped = []
+    for item in results:
+        if item not in seen:
+            seen.add(item)
+            deduped.append(item)
+            
+    return deduped
+
+def islink(file_path: str) -> str or None:
+    """Check and return symlink target on both Windows and Linux/Termux."""
     if os.name == 'nt':
-        if os.path.exists(file) and not os.path.isdir(file):
+        if os.path.exists(file_path) and not os.path.isdir(file_path):
             try:
-                with open(file, 'rb') as f:
+                with open(file_path, 'rb') as f:
                     content = f.read()
-                    # Kiểm tra header của file symlink kiểu cũ (Cygwin/Msys2/Giả lập)
+                    # Cygwin / MSYS2 / Windows virtual symlink header
                     if content.startswith(b'!<symlink>\xff\xfe'):
                         link_bytes = content[12:]
                         return link_bytes.decode("utf-16", errors="ignore").replace('\x00', '').strip()
             except IOError:
                 pass
-    elif os.name == 'posix':
-        if os.path.islink(file):
-            return os.readlink(file)
+    else:
+        if os.path.islink(file_path):
+            return os.readlink(file_path)
+            
     return None
 
-def fs_patch(fs_file, dir_path) -> tuple:
-    """Đối chiếu cấu hình file và vá các mục còn thiếu."""
+def fs_patch(fs_file: dict, dir_path: str) -> tuple:
+    """Match files in real folder and patch missing entries into fs_config."""
     new_fs = {}
     added_keys = []
-    new_add = 0
-    r_fs = set()
+    new_add_count = 0
     
-    print("FsPatcher: Load origin %d entries" % len(fs_file.keys()))
+    print(f"FsPatcher: Loaded {len(fs_file)} original entries.")
     
-    # Đã sửa: Bỏ dấu gạch chéo ở đầu để khớp chính xác với kết quả sinh ra từ scan_dir
     special_binaries = {
         "bin/su", "xbin/su", "disable_selinux.sh", "daemon", "ext/.su", 
-        "install-recovery", 'installed_su', 'bin/rw-system.sh', 'bin/getSPL'
+        "install-recovery", "installed_su", "bin/rw-system.sh", "bin/getSPL"
     }
 
-    # Lấy thư mục cha trực tiếp của dir_path một cách an toàn
-    parent_dir = os.path.dirname(os.path.abspath(dir_path))
+    dir_abs = os.path.abspath(dir_path)
+    base_name = os.path.basename(os.path.normpath(dir_path))
 
-    for i in scan_dir(os.path.abspath(dir_path)):
-        actual_i = i
-        if not i.isprintable():
-            actual_i = ''.join(c if c.isprintable() else '*' for c in i)
+    for path_entry in scan_dir(dir_abs):
+        actual_entry = path_entry if path_entry.isprintable() else ''.join(c if c.isprintable() else '*' for c in path_entry)
 
-        if fs_file.get(actual_i):
-            new_fs[actual_i] = fs_file[actual_i]
+        # 1. Keep existing entry if already present in original fs_config
+        if actual_entry in fs_file:
+            new_fs[actual_entry] = fs_file[actual_entry]
             continue
 
-        if actual_i in r_fs:
+        if actual_entry in new_fs:
             continue
 
-        # Sửa lỗi tính toán sai filepath tương đối khi gộp hệ thống
-        filepath = os.path.join(parent_dir, actual_i.replace('/', os.sep))
+        # 2. Resolve accurate absolute path on local file system
+        if actual_entry == base_name:
+            real_file_path = dir_abs
+        elif actual_entry.startswith(f"{base_name}/"):
+            rel_path = actual_entry[len(base_name) + 1:]
+            real_file_path = os.path.join(dir_abs, rel_path.replace('/', os.sep))
+        else:
+            real_file_path = os.path.join(dir_abs, actual_entry.replace('/', os.sep))
 
-        is_dir = os.path.isdir(filepath)
-        exists = os.path.exists(filepath) or os.path.islink(filepath)
-        link_target = islink(filepath)
+        is_dir = os.path.isdir(real_file_path)
+        exists = os.path.exists(real_file_path) or os.path.islink(real_file_path)
+        link_target = islink(real_file_path)
 
-        # Thiết lập GID phân vùng nhị phân
-        is_bin_path = any(x in actual_i for x in ["system/bin", "system/xbin", "vendor/bin"])
+        # 3. Assign Android UID/GID/Permissions
+        is_bin_path = any(x in actual_entry for x in ["bin/", "xbin/"])
         gid = '2000' if is_bin_path else '0'
         uid = '0'
 
         if is_dir:
             config = [uid, gid, '0755']
         elif not exists:
-            config = ['0', '0', '0755']
+            config = [uid, gid, '0755']
         elif link_target is not None:
-            if ("bin/" in actual_i) or ("xbin/" in actual_i):
+            # Handle File Symlinks
+            if is_bin_path:
                 mode = '0755'
-            elif ".sh" in actual_i:
+            elif ".sh" in actual_entry:
                 mode = "0750"
             else:
                 mode = "0644"
             config = [uid, gid, mode, link_target]
-        elif ("bin/" in actual_i) or ("xbin/" in actual_i):
-            if ".sh" in actual_i:
+        elif is_bin_path:
+            # Handle Executable Binaries / Scripts
+            if ".sh" in actual_entry:
                 mode = "0750"
-            elif any(s in actual_i for s in special_binaries):
+            elif any(s in actual_entry for s in special_binaries):
                 mode = "0755"
             else:
-                mode = '0755'
+                mode = "0755"
             config = [uid, gid, mode]
         else:
+            # Standard Data / Library Files
             config = [uid, '0', '0644']
 
-        print(f'Add [{actual_i} {config}]')
-        r_fs.add(actual_i)
-        new_add += 1
-        new_fs[actual_i] = config
-        added_keys.append(actual_i)
+        print(f"ADD [{actual_entry} {' '.join(config)}]")
+        new_add_count += 1
+        new_fs[actual_entry] = config
+        added_keys.append(actual_entry)
 
-    return new_fs, added_keys, new_add
+    return new_fs, added_keys, new_add_count
 
-def main(dir_path, fs_config) -> None:
-    origin_fs, orig_order = scanfs(os.path.abspath(fs_config))
-    new_fs, added_keys, new_add = fs_patch(origin_fs, dir_path)
+def main(dir_path: str, fs_config: str) -> None:
+    dir_abs = os.path.abspath(dir_path)
+    fs_config_abs = os.path.abspath(fs_config)
     
-    with open(fs_config, "w", encoding='utf-8', newline='\n') as f:
-        # Bước 1: Ghi lại các cấu hình cũ theo đúng thứ tự ưu tiên ban đầu
+    origin_fs, orig_order = scanfs(fs_config_abs)
+    new_fs, added_keys, new_add = fs_patch(origin_fs, dir_abs)
+    
+    with open(fs_config_abs, "w", encoding='utf-8', newline='\n') as f:
+        written_keys = set()
+        
+        # Step 1: Write back original entries preserving order
         for key in orig_order:
             if key in new_fs:
                 f.write(f"{key} {' '.join(new_fs[key])}\n")
-                del new_fs[key]
+                written_keys.add(key)
                 
-        # Bước 2: Sắp xếp và ghi các cấu hình mới thêm vào cuối file
+        # Step 2: Append newly added entries sorted alphabetically
         for key in sorted(added_keys):
-            if key in new_fs:
+            if key in new_fs and key not in written_keys:
                 f.write(f"{key} {' '.join(new_fs[key])}\n")
+                written_keys.add(key)
                 
-    print('FsPatcher: Add %d entries thành công!' % new_add)
+    print("---")
+    print(f"FsPatcher: Successfully added {new_add} entries to configuration.")
 
 def usage():
     print("""
-    FsPatcher: FsConfig Patching Tool
-    Usage： ./FsPatcher [Folders] [FsConfig]
-          """)
+FsPatcher: Android FsConfig Patching Tool
+Usage: python script.py <Folder_Path> <FsConfig_File>
+""")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("FsPatcher: Insufficient parameters")
+        print("FsPatcher: Insufficient parameters.")
         usage()
-    elif os.path.isfile(os.path.abspath(sys.argv[2])) and os.path.isdir(os.path.abspath(sys.argv[1])):
-        main(sys.argv[1], sys.argv[2])
+        sys.exit(1)
+        
+    folder_arg, config_arg = sys.argv[1], sys.argv[2]
+    
+    if os.path.isdir(os.path.abspath(folder_arg)) and os.path.isfile(os.path.abspath(config_arg)):
+        main(folder_arg, config_arg)
     else:
+        print("Error: Specified directory or fs_config file does not exist.")
         usage()
+        sys.exit(1)
