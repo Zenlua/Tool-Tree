@@ -1,8 +1,8 @@
 package com.tool.tree
 
-import android.app.Activity
 import android.view.View
 import androidx.activity.BackEventCompat
+import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
 
@@ -29,7 +29,7 @@ import androidx.activity.OnBackPressedDispatcher
  * "rớt" về giống như back thường (không animation), không cần code riêng xử lý.
  */
 class PredictiveBackHelper(
-    private val activity: Activity,
+    private val activity: ComponentActivity,
     private val contentView: View,
     // Tỉ lệ scale nhỏ nhất khi kéo hết cỡ (progress = 1f). Vd 0.9f = thu nhỏ còn 90%.
     private val minScale: Float = 0.9f,
