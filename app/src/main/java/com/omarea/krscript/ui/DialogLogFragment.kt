@@ -189,6 +189,7 @@ class DialogLogFragment : DialogFragment() {
                 onExit.run()
                 offScreen()
                 _binding?.let { b ->
+                    animateWrapSlide()
                     b.btnHide.visibility = View.GONE
                     b.btnCancel.visibility = View.GONE
                     b.btnExit.visibility = View.VISIBLE
@@ -202,6 +203,30 @@ class DialogLogFragment : DialogFragment() {
 
         this.currentHandler = handler
         return handler
+    }
+
+    /**
+     * Animate btn_wrap trượt mượt sang vị trí mới khi btn_hide vừa bị ẩn (GONE).
+     * Gọi hàm này NGAY TRƯỚC dòng set btn_hide.visibility = View.GONE,
+     * để lấy được vị trí cũ của btn_wrap trước khi layout thay đổi.
+     */
+    private fun animateWrapSlide() {
+        val b = _binding ?: return
+        val wrapView = b.btnWrap
+        val startX = wrapView.x
+    
+        wrapView.animate().cancel()
+        wrapView.post {
+            val endX = wrapView.x
+            val delta = startX - endX
+            if (delta != 0f) {
+                wrapView.translationX = delta
+                wrapView.animate()
+                    .translationX(0f)
+                    .setDuration(220)
+                    .start()
+            }
+        }
     }
 
     /**

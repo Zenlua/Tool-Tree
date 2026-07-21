@@ -55,7 +55,7 @@
                 android:padding="7dp"
                 android:tint="?android:textColorPrimary"
                 android:src="@drawable/ic_wrap_text"
-                android:contentDescription="@string/btn_toggle_soft_wrap" />
+                android:contentDescription="@null" />
 
             <ImageButton
                 android:id="@+id/btn_hide"
