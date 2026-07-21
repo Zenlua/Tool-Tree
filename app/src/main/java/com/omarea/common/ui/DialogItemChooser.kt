@@ -47,14 +47,14 @@ class DialogItemChooser(
             if (multiple) {
                 val adapter = (absListView.adapter as AdapterItemChooser?)
                 selectAll.visibility = View.VISIBLE
-                selectAll.isChecked = items.filter { it.selected }.size == items.size
+                selectAll.isChecked = adapter?.let { it.count > 0 && it.getSelectedItems().size == it.count } ?: false
                 selectAll.setOnClickListener {
                     adapter?.setSelectAllState((it as CompoundButton).isChecked)
                 }
                 adapter?.run {
                     setSelectStateListener(object : AdapterItemChooser.SelectStateListener {
                         override fun onSelectChange(selected: List<SelectItem>) {
-                            selectAll.isChecked = selected.size == items.size
+                            selectAll.isChecked = count > 0 && selected.size == count
                         }
                     })
                 }

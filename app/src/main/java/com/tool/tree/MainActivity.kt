@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
 
     private val ACTION_FILE_PATH_CHOOSER = 65400
+    private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
     private lateinit var adapter: MainPagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -236,11 +237,40 @@ class MainActivity : AppCompatActivity() {
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         return try {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = fileSelectedInterface.mimeType() ?: "*/*"
+            val multiple = fileSelectedInterface.multiple()
+            val pathHome = fileSelectedInterface.pathHome()
+            if (fileSelectedInterface.type() == ParamsFileChooserRender.FileSelectedInterface.TYPE_FOLDER) {
+                startActivityForResult(
+                    Intent(this, ActivityFileSelector::class.java).apply {
+                        putExtra("mode", ActivityFileSelector.MODE_FOLDER)
+                        putExtra("multiple", multiple)
+                        if (!pathHome.isNullOrEmpty()) putExtra("path_home", pathHome)
+                    },
+                    ACTION_FILE_PATH_CHOOSER_INNER
+                )
+            } else {
+                val suffix = fileSelectedInterface.suffix()
+                if (!suffix.isNullOrEmpty() || !pathHome.isNullOrEmpty()) {
+                    startActivityForResult(
+                        Intent(this, ActivityFileSelector::class.java).apply {
+                            if (!suffix.isNullOrEmpty()) putExtra("extension", suffix)
+                            putExtra("mode", ActivityFileSelector.MODE_FILE)
+                            putExtra("multiple", multiple)
+                            if (!pathHome.isNullOrEmpty()) putExtra("path_home", pathHome)
+                        },
+                        ACTION_FILE_PATH_CHOOSER_INNER
+                    )
+                } else {
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = fileSelectedInterface.mimeType() ?: "*/*"
+                        if (multiple) {
+                            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                        }
+                    }
+                    startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
+                }
             }
-            startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
             this.fileSelectedInterface = fileSelectedInterface
             true
         } catch (e: Exception) {
@@ -251,8 +281,30 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == ACTION_FILE_PATH_CHOOSER && resultCode == RESULT_OK) {
-            val path = data?.data?.let { FilePathResolver().getPath(this, it) }
+        if (resultCode == RESULT_OK && data != null) {
+            val currentInterface = fileSelectedInterface
+            val separator = currentInterface?.separator() ?: "\n"
+            val path = when (requestCode) {
+                ACTION_FILE_PATH_CHOOSER -> {
+                    val clipData = data.clipData
+                    if (currentInterface?.multiple() == true && clipData != null && clipData.itemCount > 0) {
+                        (0 until clipData.itemCount)
+                            .mapNotNull { FilePathResolver().getPath(this, clipData.getItemAt(it).uri) }
+                            .joinToString(separator)
+                    } else {
+                        data.data?.let { FilePathResolver().getPath(this, it) }
+                    }
+                }
+                ACTION_FILE_PATH_CHOOSER_INNER -> {
+                    val files = data.getStringArrayListExtra("files")
+                    if (currentInterface?.multiple() == true && files != null) {
+                        files.joinToString(separator)
+                    } else {
+                        data.getStringExtra("file")
+                    }
+                }
+                else -> null
+            }
             fileSelectedInterface?.onFileSelected(path)
             fileSelectedInterface = null
         }

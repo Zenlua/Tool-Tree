@@ -82,6 +82,10 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="btn_send">Xong</string>
     <string name="toast_invalid_number">Vui lòng nhập số</string>
     <string name="toast_out_of_range">Số phải trong khoảng %1$d đến %2$d</string>
+    <string name="action_done_select">Xong</string>
+    <string name="msg_multiple_select_mode">Chạm vào từng mục để chọn nhiều, sau đó nhấn Xong</string>
+    <string name="msg_nothing_selected">Vui lòng chọn ít nhất 1 mục</string>
+    <string name="msg_path_home_not_found">Không tìm thấy thư mục: %1$s. Hiển thị /sdcard thay thế</string>
     <string name="kr_please_choose_folder">Vui lòng chọn thư mục</string>
     <string name="kr_please_choose_file">Vui lòng chọn tệp</string>
     <string name="kr_please_choose_app">Vui lòng chọn ứng dụng</string>

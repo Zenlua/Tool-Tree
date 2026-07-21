@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,6 +15,10 @@ import com.tool.tree.R;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
 
 public class AdapterFileSelector extends BaseAdapter {
     private File[] fileArray;
@@ -22,11 +27,23 @@ public class AdapterFileSelector extends BaseAdapter {
     private File selectedFile;
     private final Handler handler = new Handler();
     private ProgressBarDialog progressBarDialog;
-    private String extension;
+    // Danh sách đuôi file được phép (đã có dấu chấm ở đầu, chữ thường), null/rỗng = không giới hạn
+    private String[] extensions;
     private boolean hasParent = false; // 是否还有父级
     private String rootDir = "/"; // 根目录
     private final boolean leaveRootDir = true; // 是否允许离开设定的rootDir到更父级的目录去
     private boolean folderChooserMode = false; // 是否是目录选择模式（目录选择模式下不显示文件，长按目录选中）
+
+    // Chế độ chọn nhiều mục (nhiều file, hoặc nhiều thư mục)
+    private boolean multipleMode = false;
+    // Giữ thứ tự đã chọn
+    private final LinkedHashSet<File> selectedFiles = new LinkedHashSet<>();
+    // Được gọi mỗi khi danh sách đã chọn thay đổi (để activity cập nhật nút "Xong"/số lượng đã chọn)
+    private SelectionChangedListener selectionChangedListener;
+
+    public interface SelectionChangedListener {
+        void onSelectionChanged(int selectedCount);
+    }
 
     private AdapterFileSelector(File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog, String extension) {
         init(rootDir, fileSelected, progressBarDialog, extension);
@@ -38,9 +55,21 @@ public class AdapterFileSelector extends BaseAdapter {
         return adapterFileSelector;
     }
 
+    public static AdapterFileSelector FolderChooser(File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog, boolean multiple) {
+        AdapterFileSelector adapterFileSelector = FolderChooser(rootDir, fileSelected, progressBarDialog);
+        adapterFileSelector.multipleMode = multiple;
+        return adapterFileSelector;
+    }
+
     public static AdapterFileSelector FileChooser(File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog, String extension) {
         AdapterFileSelector adapterFileSelector = new AdapterFileSelector(rootDir, fileSelected, progressBarDialog, extension);
         adapterFileSelector.folderChooserMode = false;
+        return adapterFileSelector;
+    }
+
+    public static AdapterFileSelector FileChooser(File rootDir, Runnable fileSelected, ProgressBarDialog progressBarDialog, String extension, boolean multiple) {
+        AdapterFileSelector adapterFileSelector = FileChooser(rootDir, fileSelected, progressBarDialog, extension);
+        adapterFileSelector.multipleMode = multiple;
         return adapterFileSelector;
     }
 
@@ -48,14 +77,38 @@ public class AdapterFileSelector extends BaseAdapter {
         this.rootDir = rootDir.getAbsolutePath();
         this.fileSelected = fileSelected;
         this.progressBarDialog = progressBarDialog;
-        if (extension != null) {
-            if (extension.startsWith(".")) {
-                this.extension = extension;
-            } else {
-                this.extension = "." + extension;
+        // Hỗ trợ nhiều đuôi file, phân cách bằng dấu phẩy, ví dụ: "zip,apk,7z"
+        if (extension != null && !extension.trim().isEmpty()) {
+            String[] parts = extension.split(",");
+            ArrayList<String> list = new ArrayList<>();
+            for (String part : parts) {
+                String trimmed = part.trim().toLowerCase(Locale.getDefault());
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+                if (!trimmed.startsWith(".")) {
+                    trimmed = "." + trimmed;
+                }
+                list.add(trimmed);
             }
+            this.extensions = list.toArray(new String[0]);
+        } else {
+            this.extensions = null;
         }
         loadDir(rootDir);
+    }
+
+    private boolean matchesExtension(File file) {
+        if (extensions == null || extensions.length == 0) {
+            return true;
+        }
+        String name = file.getName().toLowerCase(Locale.getDefault());
+        for (String ext : extensions) {
+            if (name.endsWith(ext)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void loadDir(final File dir) {
@@ -76,7 +129,7 @@ public class AdapterFileSelector extends BaseAdapter {
                         if (folderChooserMode) {
                             return fileItem.isDirectory();
                         } else {
-                            return fileItem.exists() && (!fileItem.isFile() || extension == null || extension.isEmpty() || fileItem.getName().endsWith(extension));
+                            return fileItem.exists() && (fileItem.isDirectory() || matchesExtension(fileItem));
                         }
                     }
                 });
@@ -155,12 +208,28 @@ public class AdapterFileSelector extends BaseAdapter {
         return 0;
     }
 
+    private void toggleSelection(File file) {
+        if (selectedFiles.contains(file)) {
+            selectedFiles.remove(file);
+        } else {
+            selectedFiles.add(file);
+        }
+        notifyDataSetChanged();
+        if (selectionChangedListener != null) {
+            selectionChangedListener.onSelectionChanged(selectedFiles.size());
+        }
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         final View view;
         if (hasParent && position == 0) {
             view = View.inflate(parent.getContext(), R.layout.list_item_dir, null);
             ((TextView) (view.findViewById(R.id.ItemTitle))).setText("...");
+            View checkBox = view.findViewById(R.id.ItemCheckBox);
+            if (checkBox != null) {
+                checkBox.setVisibility(View.GONE);
+            }
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -188,28 +257,66 @@ public class AdapterFileSelector extends BaseAdapter {
                     }
                 });
                 if (folderChooserMode) {
-                    view.setOnLongClickListener(new View.OnLongClickListener() {
-                        @Override
-                        public boolean onLongClick(View v) {
-                            DialogHelper.Companion.confirm(view.getContext(), view.getContext().getString(R.string.dialog_title_select_directory), file.getAbsolutePath(), new Runnable() {
+                    final CheckBox checkBox = view.findViewById(R.id.ItemCheckBox);
+                    if (multipleMode) {
+                        if (checkBox != null) {
+                            checkBox.setVisibility(View.VISIBLE);
+                            checkBox.setChecked(selectedFiles.contains(file));
+                            checkBox.setOnClickListener(new View.OnClickListener() {
                                 @Override
-                                public void run() {
+                                public void onClick(View v) {
                                     if (!file.exists()) {
                                         Toast.makeText(view.getContext(), "The selected directory has been deleted. Please select another one!", Toast.LENGTH_SHORT).show();
                                         return;
                                     }
-                                    selectedFile = file;
-                                    fileSelected.run();
-                                }
-                            }, new Runnable() {
-                                @Override
-                                public void run() {
-
+                                    toggleSelection(file);
                                 }
                             });
-                            return true;
                         }
-                    });
+                        // Nhấn giữ vẫn dùng để chọn nhanh 1 thư mục (giữ hành vi cũ, thêm vào danh sách đã chọn)
+                        view.setOnLongClickListener(new View.OnLongClickListener() {
+                            @Override
+                            public boolean onLongClick(View v) {
+                                if (!file.exists()) {
+                                    Toast.makeText(view.getContext(), "The selected directory has been deleted. Please select another one!", Toast.LENGTH_SHORT).show();
+                                    return true;
+                                }
+                                toggleSelection(file);
+                                return true;
+                            }
+                        });
+                    } else {
+                        if (checkBox != null) {
+                            checkBox.setVisibility(View.GONE);
+                        }
+                        view.setOnLongClickListener(new View.OnLongClickListener() {
+                            @Override
+                            public boolean onLongClick(View v) {
+                                DialogHelper.Companion.confirm(view.getContext(), view.getContext().getString(R.string.dialog_title_select_directory), file.getAbsolutePath(), new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (!file.exists()) {
+                                            Toast.makeText(view.getContext(), "The selected directory has been deleted. Please select another one!", Toast.LENGTH_SHORT).show();
+                                            return;
+                                        }
+                                        selectedFile = file;
+                                        fileSelected.run();
+                                    }
+                                }, new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                    }
+                                });
+                                return true;
+                            }
+                        });
+                    }
+                } else {
+                    View checkBox = view.findViewById(R.id.ItemCheckBox);
+                    if (checkBox != null) {
+                        checkBox.setVisibility(View.GONE);
+                    }
                 }
             } else {
                 view = View.inflate(parent.getContext(), R.layout.list_item_file, null);
@@ -227,27 +334,52 @@ public class AdapterFileSelector extends BaseAdapter {
 
                 ((TextView) (view.findViewById(R.id.ItemText))).setText(fileSize);
 
-                view.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        DialogHelper.Companion.confirm(view.getContext(), view.getContext().getString(R.string.dialog_title_select_file), file.getAbsolutePath(), new Runnable() {
-                            @Override
-                            public void run() {
-                                if (!file.exists()) {
-                                    Toast.makeText(view.getContext(), "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
-                                    return;
-                                }
-                                selectedFile = file;
-                                fileSelected.run();
-                            }
-                        }, new Runnable() {
-                            @Override
-                            public void run() {
-
-                            }
-                        });
+                final CheckBox checkBox = view.findViewById(R.id.ItemCheckBox);
+                if (multipleMode) {
+                    if (checkBox != null) {
+                        checkBox.setVisibility(View.VISIBLE);
+                        checkBox.setChecked(selectedFiles.contains(file));
                     }
-                });
+                    View.OnClickListener toggleListener = new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (!file.exists()) {
+                                Toast.makeText(view.getContext(), "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                            toggleSelection(file);
+                        }
+                    };
+                    view.setOnClickListener(toggleListener);
+                    if (checkBox != null) {
+                        checkBox.setOnClickListener(toggleListener);
+                    }
+                } else {
+                    if (checkBox != null) {
+                        checkBox.setVisibility(View.GONE);
+                    }
+                    view.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            DialogHelper.Companion.confirm(view.getContext(), view.getContext().getString(R.string.dialog_title_select_file), file.getAbsolutePath(), new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (!file.exists()) {
+                                        Toast.makeText(view.getContext(), "The selected file has been deleted. Please select again!", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+                                    selectedFile = file;
+                                    fileSelected.run();
+                                }
+                            }, new Runnable() {
+                                @Override
+                                public void run() {
+
+                                }
+                            });
+                        }
+                    });
+                }
             }
             ((TextView) (view.findViewById(R.id.ItemTitle))).setText(file.getName());
             return view;
@@ -256,5 +388,21 @@ public class AdapterFileSelector extends BaseAdapter {
 
     public File getSelectedFile() {
         return this.selectedFile;
+    }
+
+    public boolean isMultipleMode() {
+        return multipleMode;
+    }
+
+    public List<File> getSelectedFiles() {
+        return new ArrayList<>(selectedFiles);
+    }
+
+    public int getSelectedCount() {
+        return selectedFiles.size();
+    }
+
+    public void setSelectionChangedListener(SelectionChangedListener listener) {
+        this.selectionChangedListener = listener;
     }
 }

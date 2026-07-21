@@ -9,7 +9,7 @@ fi
 
 # Nếu rỗng thì báo lỗi
 if [ "$input" == '-h' ] || [ "$input" == '--help' ] || [ -z "$input" ];then
-echo "Usage: coverbyte 123456"
+echo "Usage: coverbyte 123456" >&2
 exit 1
 fi
 

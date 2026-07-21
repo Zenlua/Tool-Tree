@@ -96,6 +96,10 @@ If you agree, press the confirm button to continue."</string>
     <string name="btn_send">Done</string>
     <string name="toast_invalid_number">Please enter the number</string>
     <string name="toast_out_of_range">The number must be between %1$d and %2$d</string>
+    <string name="action_done_select">Done</string>
+    <string name="msg_multiple_select_mode">Tap items to select multiple, then press Done</string>
+    <string name="msg_nothing_selected">Please select at least one item</string>
+    <string name="msg_path_home_not_found">Folder not found: %1$s. Showing /sdcard instead</string>
     <string name="kr_please_choose_folder">Please select a folder</string>
     <string name="kr_please_choose_file">"Please select a file "</string>
     <string name="kr_please_choose_app">Please select an app</string>

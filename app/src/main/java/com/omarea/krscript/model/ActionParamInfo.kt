@@ -26,7 +26,7 @@ class ActionParamInfo {
     var options: ArrayList<SelectItem>? = null
     var optionsFromShell: ArrayList<SelectItem>? = null
     var optionsSh = ""
-    // 是否允许多选(options only)
+    // 是否允许多选(options 多选下拉; type=file/folder 时允许多选多个文件/文件夹)
     var multiple: Boolean = false
     // 是否支持
     var supported: Boolean = true
@@ -34,8 +34,11 @@ class ActionParamInfo {
     var placeholder: String = ""
     // 文件mime类型（仅限type=file有效）
     var mime: String = ""
-    // 文件后缀（仅限type=file有效）
+    // 文件后缀（仅限type=file有效），支持用逗号分隔多个后缀，例如 "zip,apk,7z"
     var suffix: String = ""
+    // 打开文件/目录选择器时的初始目录（仅限type=file/folder有效），例如 "/sdcard/Android"
+    // 用户仍然可以从这里返回到上一级目录
+    var pathHome: String = ""
     // 是否允许用户手动输入路径
     var editable: Boolean = false
     // 多个值的分隔符（仅限多选下拉）

@@ -11,6 +11,8 @@ class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) 
     var mime: String = ""
     // 文件后缀（仅限type=file有效）
     var suffix: String = ""
+    // 打开文件/目录选择器时的初始目录（仅限type=file/folder有效）
+    var pathHome: String = ""
 
     // Lệnh shell dùng để xác định trạng thái tích (checked) khi type = "checkbox".
     // Được chạy lại mỗi lần menu chuẩn bị hiển thị (không chỉ 1 lần lúc load trang).

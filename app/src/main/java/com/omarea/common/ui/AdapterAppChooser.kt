@@ -177,7 +177,7 @@ class AdapterAppChooser(
     // ================= Selection =================
 
     fun setSelectAllState(allSelected: Boolean) {
-        apps.forEach { it.selected = allSelected }
+        filterApps.forEach { it.selected = allSelected }
         notifyDataSetChanged()
         selectStateListener?.onSelectChange(getSelectedItems())
     }

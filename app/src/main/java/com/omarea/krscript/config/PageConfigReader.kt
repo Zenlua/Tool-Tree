@@ -315,6 +315,9 @@ class PageConfigReader {
                     "mime" -> {
                         actionParamInfo.mime = attrValue.lowercase(getDefault())
                     }
+                    "path-home", "home-path", "pathhome" -> {
+                        actionParamInfo.pathHome = attrValue.trim { it <= ' ' }
+                    }
                     "readonly" -> {
                         val value = attrValue.lowercase(getDefault()).trim { it <= ' ' }
                         actionParamInfo.readonly = (value == "readonly" || value == "true" || value == "1")
@@ -449,6 +452,9 @@ class PageConfigReader {
                             }
                             "mime" -> {
                                 option.mime = parser.getAttributeValue(i).lowercase(getDefault())
+                            }
+                            "path-home", "home-path", "pathhome" -> {
+                                option.pathHome = parser.getAttributeValue(i).trim { it <= ' ' }
                             }
                             "box", "visible", "check" -> {
                                 option.checkedSh = parser.getAttributeValue(i)

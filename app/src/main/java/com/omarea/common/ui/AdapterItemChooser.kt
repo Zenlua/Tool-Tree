@@ -175,7 +175,7 @@ class AdapterItemChooser(private val context: Context, private var items: ArrayL
     }
 
     fun setSelectAllState(allSelected: Boolean) {
-        items.forEach {
+        filterItems.forEach {
             it.selected = allSelected
         }
         notifyDataSetChanged()

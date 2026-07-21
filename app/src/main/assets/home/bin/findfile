@@ -7,10 +7,12 @@ IFS=$'\n'
 case "$1" in
   0)
     for vv in $(ls -1d *); do
+      info=''; sizec='';
       [[ "$vv" == *config* || "$vv" == *raw* ]] && continue
       info=$(head -n1 "config/${vv}_info")
+      [ -f "config/${vv}_size.txt" ] && sizec=" ($(cat "config/${vv}_size.txt" | coverbyte))"
       [[ -z "$info" ]] && continue
-      echo "$vv|$vv ($info)"
+      echo "$vv|$vv ($info)$sizec"
     done
     ;;
 

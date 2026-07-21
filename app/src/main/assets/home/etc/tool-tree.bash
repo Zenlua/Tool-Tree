@@ -911,8 +911,8 @@ echo '<group>
 <title>'$decompile_text'</title>
 <param name="cboxk" value-sh="glog dkhdh" label="'$deleted_file_text'" type="checkbox" />
 <param name="nounpak" value-sh="glog dkjdj" label="'$decode_text_1'" type="switch" />
-<param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" />
-<param name="vavb" label="'$builds_text_8'" type="switch"/>
+<param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" depend-on="nounpak" depend-value="1" depend-mode="hide"/>
+<param name="vavb" label="'$builds_text_8'" type="switch" depend-on="nounpak" depend-value="1" depend-mode="hide"/>
 <param name="IMAGES" desc="'$decode_text_3'" multiple="true" options-sh="findfile 2 $PTSD" required="true"/>
 <set>
 slog vavbbgdf "$vavb"

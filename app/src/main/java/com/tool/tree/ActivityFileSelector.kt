@@ -3,6 +3,8 @@ package com.tool.tree
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -22,7 +24,12 @@ class ActivityFileSelector : AppCompatActivity() {
     private var adapterFileSelector: AdapterFileSelector? = null
     var extension = ""
     var mode = MODE_FILE
+    // Có cho phép chọn nhiều tệp tin/thư mục cùng lúc hay không
+    var multiple = false
+    // Thư mục sẽ mở sẵn khi vào màn hình chọn (ví dụ /sdcard/Android); vẫn có thể quay lại thư mục cha
+    var pathHome = ""
     private lateinit var binding : ActivityFileSelectorBinding
+    private var toolbar: Toolbar? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         // TODO:ThemeSwitch.switchTheme(this)
         super.onCreate(savedInstanceState)
@@ -31,6 +38,7 @@ class ActivityFileSelector : AppCompatActivity() {
         setContentView(binding.root)
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
+        this.toolbar = toolbar
         setSupportActionBar(toolbar)
         // setTitle(R.string.app_name)
 
@@ -63,26 +71,73 @@ class ActivityFileSelector : AppCompatActivity() {
                     title = getString(R.string.title_activity_folder_selector)
                 }
             }
+            if (containsKey("multiple")) {
+                multiple = getBoolean("multiple")
+            }
+            if (containsKey("path_home")) {
+                pathHome = "" + intent.extras?.getString("path_home")
+            }
         }
+
+        invalidateOptionsMenu()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        if (multiple) {
+            menuInflater.inflate(R.menu.menu_file_selector, menu)
+        }
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_confirm_selection) {
+            finishWithSelection()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun finishWithSelection() {
+        val selected = adapterFileSelector?.selectedFiles?.map { it.absolutePath }
+        if (selected.isNullOrEmpty()) {
+            Snackbar.make(binding.root, R.string.msg_nothing_selected, Snackbar.LENGTH_SHORT).show()
+            return
+        }
+        setResult(RESULT_OK, Intent().putStringArrayListExtra("files", ArrayList(selected)))
+        finish()
     }
 
     override fun onResume() {
         super.onResume()
         loadData()
-        if (mode == MODE_FOLDER) {
+        if (mode == MODE_FOLDER && !multiple) {
             Snackbar.make(binding.root, R.string.msg_folder_mode, Snackbar.LENGTH_SHORT).show()
+        } else if (multiple) {
+            Snackbar.make(binding.root, R.string.msg_multiple_select_mode, Snackbar.LENGTH_LONG).show()
         }
     }
 
     private fun loadData() {
         val sdcard = Environment.getExternalStorageDirectory()
-        if (sdcard.exists() && sdcard.isDirectory) {
-            val list = sdcard.listFiles()
+        val startDir = if (pathHome.isNotEmpty()) {
+            val homeDir = File(pathHome)
+            if (homeDir.exists() && homeDir.isDirectory && homeDir.canRead()) {
+                homeDir
+            } else {
+                Snackbar.make(binding.root, getString(R.string.msg_path_home_not_found, pathHome), Snackbar.LENGTH_SHORT).show()
+                sdcard
+            }
+        } else {
+            sdcard
+        }
+
+        if (startDir.exists() && startDir.isDirectory) {
+            val list = startDir.listFiles()
             if (list == null) {
                 Snackbar.make(binding.root, "Failed to retrieve file list!", Snackbar.LENGTH_LONG).show()
                 return
             }
-            val onSelected =  Runnable {
+            val onSelected = Runnable {
                 val file = adapterFileSelector?.selectedFile
                 if (file != null) {
                     this.setResult(RESULT_OK, Intent().putExtra("file", file.absolutePath))
@@ -90,9 +145,9 @@ class ActivityFileSelector : AppCompatActivity() {
                 }
             }
             adapterFileSelector = if (mode == MODE_FOLDER) {
-                AdapterFileSelector.FolderChooser(sdcard, onSelected, ProgressBarDialog(this))
+                AdapterFileSelector.FolderChooser(startDir, onSelected, ProgressBarDialog(this), multiple)
             } else {
-                AdapterFileSelector.FileChooser(sdcard, onSelected, ProgressBarDialog(this), extension)
+                AdapterFileSelector.FileChooser(startDir, onSelected, ProgressBarDialog(this), extension, multiple)
             }
 
             binding.fileSelectorList.adapter = adapterFileSelector

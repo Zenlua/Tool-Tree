@@ -517,6 +517,7 @@ class ActionPage : AppCompatActivity() {
 
             override fun mimeType() = menuOption.mime.ifEmpty { null }
             override fun suffix() = menuOption.suffix.ifEmpty { null }
+            override fun pathHome() = menuOption.pathHome.ifEmpty { null }
             override fun type() = if (menuOption.type == "folder") {
                 ParamsFileChooserRender.FileSelectedInterface.TYPE_FOLDER
             } else {
@@ -527,20 +528,26 @@ class ActionPage : AppCompatActivity() {
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         return try {
+            val multiple = fileSelectedInterface.multiple()
+            val pathHome = fileSelectedInterface.pathHome()
             if (fileSelectedInterface.type() == ParamsFileChooserRender.FileSelectedInterface.TYPE_FOLDER) {
                 startActivityForResult(
                     Intent(this, ActivityFileSelector::class.java).apply {
                         putExtra("mode", ActivityFileSelector.MODE_FOLDER)
+                        putExtra("multiple", multiple)
+                        if (!pathHome.isNullOrEmpty()) putExtra("path_home", pathHome)
                     },
                     ACTION_FILE_PATH_CHOOSER_INNER
                 )
             } else {
                 val suffix = fileSelectedInterface.suffix()
-                if (!suffix.isNullOrEmpty()) {
+                if (!suffix.isNullOrEmpty() || !pathHome.isNullOrEmpty()) {
                     startActivityForResult(
                         Intent(this, ActivityFileSelector::class.java).apply {
-                            putExtra("extension", suffix)
+                            if (!suffix.isNullOrEmpty()) putExtra("extension", suffix)
                             putExtra("mode", ActivityFileSelector.MODE_FILE)
+                            putExtra("multiple", multiple)
+                            if (!pathHome.isNullOrEmpty()) putExtra("path_home", pathHome)
                         },
                         ACTION_FILE_PATH_CHOOSER_INNER
                     )
@@ -548,6 +555,9 @@ class ActionPage : AppCompatActivity() {
                     val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                         type = fileSelectedInterface.mimeType() ?: "*/*"
                         addCategory(Intent.CATEGORY_OPENABLE)
+                        if (multiple) {
+                            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                        }
                     }
                     startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
                 }
@@ -561,9 +571,27 @@ class ActionPage : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (resultCode == RESULT_OK && data != null) {
+            val currentInterface = fileSelectedInterface
+            val separator = currentInterface?.separator() ?: "\n"
             val path = when (requestCode) {
-                ACTION_FILE_PATH_CHOOSER -> data.data?.let { FilePathResolver().getPath(this, it) }
-                ACTION_FILE_PATH_CHOOSER_INNER -> data.getStringExtra("file")
+                ACTION_FILE_PATH_CHOOSER -> {
+                    val clipData = data.clipData
+                    if (currentInterface?.multiple() == true && clipData != null && clipData.itemCount > 0) {
+                        (0 until clipData.itemCount)
+                            .mapNotNull { FilePathResolver().getPath(this, clipData.getItemAt(it).uri) }
+                            .joinToString(separator)
+                    } else {
+                        data.data?.let { FilePathResolver().getPath(this, it) }
+                    }
+                }
+                ACTION_FILE_PATH_CHOOSER_INNER -> {
+                    val files = data.getStringArrayListExtra("files")
+                    if (currentInterface?.multiple() == true && files != null) {
+                        files.joinToString(separator)
+                    } else {
+                        data.getStringExtra("file")
+                    }
+                }
                 else -> null
             }
             fileSelectedInterface?.onFileSelected(path)

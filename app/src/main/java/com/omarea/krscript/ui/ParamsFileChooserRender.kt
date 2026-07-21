@@ -32,6 +32,13 @@ class ParamsFileChooserRender(
         fun mimeType():String?
         fun suffix():String?
         fun type(): Int
+        // Có cho phép chọn nhiều tệp tin/thư mục cùng lúc hay không (mặc định: không)
+        fun multiple(): Boolean = false
+        // Dấu phân cách dùng để nối nhiều đường dẫn đã chọn thành 1 chuỗi giá trị (mặc định: xuống dòng)
+        fun separator(): String = "\n"
+        // Thư mục sẽ được mở sẵn khi bắt đầu chọn (ví dụ "/sdcard/Android").
+        // Người dùng vẫn có thể quay lại thư mục cha (ví dụ /sdcard) như bình thường.
+        fun pathHome(): String? = null
     }
 
 
@@ -103,6 +110,18 @@ class ParamsFileChooserRender(
                         "folder" -> FileSelectedInterface.TYPE_FOLDER
                         else -> FileSelectedInterface.TYPE_FILE
                     }
+                }
+
+                override fun multiple(): Boolean {
+                    return actionParamInfo.multiple
+                }
+
+                override fun separator(): String {
+                    return actionParamInfo.separator
+                }
+
+                override fun pathHome(): String? {
+                    return actionParamInfo.pathHome.ifEmpty { null }
                 }
             })
         }
