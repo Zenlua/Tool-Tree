@@ -591,7 +591,7 @@ Feature() {
 <set>slog shellc $state</set>
 </switch>
 
-<switch icon="'`urlpng log_ngang`'" shell="hidden" visible="echo 0">
+<switch icon="'`urlpng log_ngang`'" shell="hidden" >
 <title>'$scroll_ngang_text'</title>
 <get>glog scroll_ngang</get>
 <set>slog scroll_ngang $state</set>

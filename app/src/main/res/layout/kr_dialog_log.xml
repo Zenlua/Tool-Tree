@@ -9,10 +9,12 @@
 
     <LinearLayout
         android:id="@+id/top_actions"
-        android:layout_alignParentTop="true"
+        android:layout_alignTop="@id/top_bar"
+        android:layout_alignBottom="@id/top_bar"
         android:layout_alignParentEnd="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <ImageButton
@@ -31,7 +33,7 @@
             android:scaleX="0.8"
             android:scaleY="0.8"
             style="@style/SceneButton"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="7dp"
             android:scaleType="centerInside"
             android:padding="7dp"
             android:src="@drawable/kr_hide"

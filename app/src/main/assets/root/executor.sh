@@ -45,13 +45,16 @@ export JAVA_HOME="$TERMUX"
 export PYTHONHOME="$TERMUX"
 export PIP_ROOT_USER_ACTION=ignore
 export COLORTERM=truecolor
-export COLUMNS=47
 export PATH="$BIN:$TERMUX/bin:$TERMUX/py:$PATH"
+
 # export LD_LIBRARY_PATH="$LIB"
 export PTSD="$(glog PTSD $SDC/ROM 2>/dev/null)"; # $PTSD
 export PTSH="$(glog PTSH ROM 2>/dev/null)"; # $SDH/$PTSH
 export PTAD="$(glog PTAD $SDC/APK 2>/dev/null)"; # $PTAD
 export PTAH="$(glog PTAH APK 2>/dev/null)"; # $APK/$PTAH
+[ "$(glog scroll_ngang)" == 1 ] || export COLUMNS=47
+
+# User web
 export WEBS="User-Agent: Mozilla/5.0 (Linux; Android $ANDROID_RELEASE; $ANDROID_MANUFACTURER $ANDROID_MODEL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
 
 if [ "$ROOT" == 'true' ]; then
