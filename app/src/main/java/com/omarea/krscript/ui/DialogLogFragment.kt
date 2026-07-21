@@ -192,7 +192,7 @@ class DialogLogFragment : DialogFragment() {
                 offScreen()
                 _binding?.let { b ->
                     val transition = ChangeBounds().apply {
-                        duration = 180
+                        duration = 200
                     }
                 
                     TransitionManager.beginDelayedTransition(
