@@ -8,61 +8,67 @@
     android:layout_height="match_parent">
 
     <LinearLayout
-        android:id="@+id/top_actions"
-        android:layout_alignTop="@id/top_bar"
-        android:layout_alignBottom="@id/top_bar"
-        android:layout_alignParentEnd="true"
-        android:layout_width="wrap_content"
+        android:id="@+id/header_row"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btn_wrap"
-            android:scaleX="0.8"
-            android:scaleY="0.8"
-            style="@style/SceneButton"
-            android:scaleType="centerInside"
-            android:padding="7dp"
-            android:tint="?android:textColorPrimary"
-            android:src="@drawable/ic_wrap_text"
-            android:contentDescription="@string/btn_toggle_soft_wrap" />
+        <LinearLayout
+            android:id="@+id/top_bar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <ImageButton
-            android:id="@+id/btn_hide"
-            android:scaleX="0.8"
-            android:scaleY="0.8"
-            style="@style/SceneButton"
-            android:layout_marginStart="7dp"
-            android:scaleType="centerInside"
-            android:padding="7dp"
-            android:src="@drawable/kr_hide"
-            android:contentDescription="@null" />
+            <TextView
+                android:id="@+id/title"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:paddingTop="0dp"
+                style="@style/dialogTitle" />
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/desc"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:paddingTop="0dp"
+                android:layout_marginTop="4dp"
+                style="@style/dialogDesc" />
 
-    <LinearLayout
-        android:id="@+id/top_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_toStartOf="@id/top_actions"
-        android:orientation="vertical">
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/title"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:paddingTop="0dp"
-            style="@style/dialogTitle" />
+        <LinearLayout
+            android:id="@+id/top_actions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/desc"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:paddingTop="0dp"
-            android:layout_marginTop="4dp"
-            style="@style/dialogDesc" />
+            <ImageButton
+                android:id="@+id/btn_wrap"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                style="@style/SceneButton"
+                android:scaleType="centerInside"
+                android:padding="7dp"
+                android:tint="?android:textColorPrimary"
+                android:src="@drawable/ic_wrap_text"
+                android:contentDescription="@string/btn_toggle_soft_wrap" />
+
+            <ImageButton
+                android:id="@+id/btn_hide"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                style="@style/SceneButton"
+                android:layout_marginStart="8dp"
+                android:scaleType="centerInside"
+                android:padding="7dp"
+                android:src="@drawable/kr_hide"
+                android:contentDescription="@null" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -75,7 +81,7 @@
         android:overScrollMode="never"
         android:clipToOutline="true"
         android:layout_above="@id/input_row"
-        android:layout_below="@+id/top_bar">
+        android:layout_below="@+id/header_row">
 
         <TextView
             android:id="@+id/shell_output"
@@ -153,7 +159,7 @@
     <ProgressBar
         android:id="@+id/action_progress"
         style="?android:attr/progressBarStyleHorizontal"
-        android:layout_below="@id/top_bar"
+        android:layout_below="@id/header_row"
         android:layout_width="match_parent"
         android:layout_height="7dp"
         android:layout_marginTop="13dp"
