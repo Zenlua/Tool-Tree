@@ -1,11 +1,13 @@
+#!/data/data/com.tool.tree/files/home/bin/bash
+# kakathic
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/addon.prop")"
 [ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
 
 # Google dịch
-if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
-[ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
+if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
+    [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
 fi
 
 bDeviceLifeTimeEstA=""
@@ -42,19 +44,19 @@ if [ -z "$bDeviceLifeTimeEstA" ]; then
 fi
 
 case "$bDeviceLifeTimeEstA" in
-0x00|0x0)  echo "$ufs_text_3 $ufs_text_2" ;;
-0x01|0x1)  echo "$ufs_text_3 0% ~ 10%" ;;
-0x02|0x2)  echo "$ufs_text_3 10% ~ 20%" ;;
-0x03|0x3)  echo "$ufs_text_3 20% ~ 30%" ;;
-0x04|0x4)  echo "$ufs_text_3 30% ~ 40%" ;;
-0x05|0x5)  echo "$ufs_text_3 40% ~ 50%" ;;
-0x06|0x6)  echo "$ufs_text_3 50% ~ 60%" ;;
-0x07|0x7)  echo "$ufs_text_3 60% ~ 70%" ;;
-0x08|0x8)  echo "$ufs_text_3 70% ~ 80%" ;;
-0x09|0x9)  echo "$ufs_text_3 80% ~ 90%" ;;
-0x0A|0xA)  echo "$ufs_text_3 90% ~ 100%" ;;
-0x0B|0xB)  echo "$ufs_text_3 $ufs_text_4" ;;
-*)         echo "$ufs_text_3 $ufs_text_2" ;;
+    0x00|0x0) echo "$ufs_text_3 $ufs_text_2" ;;
+    0x01|0x1) echo "$ufs_text_3 0% ~ 10%" ;;
+    0x02|0x2) echo "$ufs_text_3 10% ~ 20%" ;;
+    0x03|0x3) echo "$ufs_text_3 20% ~ 30%" ;;
+    0x04|0x4) echo "$ufs_text_3 30% ~ 40%" ;;
+    0x05|0x5) echo "$ufs_text_3 40% ~ 50%" ;;
+    0x06|0x6) echo "$ufs_text_3 50% ~ 60%" ;;
+    0x07|0x7) echo "$ufs_text_3 60% ~ 70%" ;;
+    0x08|0x8) echo "$ufs_text_3 70% ~ 80%" ;;
+    0x09|0x9) echo "$ufs_text_3 80% ~ 90%" ;;
+    0x0A|0xA) echo "$ufs_text_3 90% ~ 100%" ;;
+    0x0B|0xB) echo "$ufs_text_3 $ufs_text_4" ;;
+    *)        echo "$ufs_text_3 $ufs_text_2" ;;
 esac
 echo
 
@@ -90,20 +92,20 @@ if [ -z "$bPreEOLInfo" ]; then
 fi
 
 case "$bPreEOLInfo" in
-0x00|0x0) echo "$ufs_text_1 $ufs_text_2" ;;
-0x01|0x1) echo "$ufs_text_1 $ufs_text_6" ;;
-0x02|0x2) echo "$ufs_text_1 $ufs_text_5" ;;
-0x03|0x3) echo "$ufs_text_1 $ufs_text_4" ;;
-*)        echo "$ufs_text_1 $ufs_text_2" ;;
+    0x00|0x0) echo "$ufs_text_1 $ufs_text_2" ;;
+    0x01|0x1) echo "$ufs_text_1 $ufs_text_6" ;;
+    0x02|0x2) echo "$ufs_text_1 $ufs_text_5" ;;
+    0x03|0x3) echo "$ufs_text_1 $ufs_text_4" ;;
+    *)        echo "$ufs_text_1 $ufs_text_2" ;;
 esac
 
 echo
 echo "$check_ufs_text_2"
 echo
-dd if=/dev/zero of=${0%/*}/test.bin bs=4M count=256 conv=fsync
+dd if=/dev/zero of="${0%/*}/test.bin" bs=4M count=256 conv=fsync
 
 echo
 echo "$check_ufs_text_1"
 echo
-dd if=${0%/*}/test.bin of=/dev/null bs=4M
-rm -fr ${0%/*}/test.bin
+dd if="${0%/*}/test.bin" of=/dev/null bs=4M
+rm -fr "${0%/*}/test.bin"

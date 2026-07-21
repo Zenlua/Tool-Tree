@@ -54,7 +54,7 @@ export PTAD="$(glog PTAD $SDC/APK 2>/dev/null)"; # $PTAD
 export PTAH="$(glog PTAH APK 2>/dev/null)"; # $APK/$PTAH
 export WEBS="User-Agent: Mozilla/5.0 (Linux; Android $ANDROID_RELEASE; $ANDROID_MANUFACTURER $ANDROID_MODEL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
 
-if [ "$ROOT" == 'true' ];then
+if [ "$ROOT" == 'true' ]; then
     export ROT=1
     else
     export ROT=0
@@ -62,7 +62,7 @@ if [ "$ROOT" == 'true' ];then
     export show_root_text="ROOT"
 fi
 
-if [ "$CPU_ABI" != 'arm64-v8a' ];then
+if [ "$CPU_ABI" != 'arm64-v8a' ]; then
     text_error="Only arm64-v8a devices supported"
     showtoast --am "$text_error"
     echo "$text_error" >&2
@@ -76,7 +76,7 @@ fi
 if command -v taskset &>/dev/null; then
     max_cpukkk="$(nproc --all 2>/dev/null)"
     use_cpukkk="$(glog use_cpu $max_cpukkk)"
-    if [ -n "$use_cpukkk" ] && [ "$use_cpukkk" -lt $max_cpukkk ];then
+    if [ -n "$use_cpukkk" ] && [ "$use_cpukkk" -lt $max_cpukkk ]; then
     maskkkk=$(( (1 << use_cpukkk) - 1 ))
     mask_hexkkkk="$(printf "%x" "$maskkkk")"
     taskset -p "$mask_hexkkkk" $$ &>/dev/null

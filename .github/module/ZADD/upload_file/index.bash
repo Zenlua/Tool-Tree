@@ -2,53 +2,54 @@
 # kakathic
 
 # home
-home(){ echo '<group title="'$google_text'">
-<action>
-<title>Upload Gofile</title>
-<param name="FILE" type="file" required="true" desc="https://gofile.io"/>
-<set>
-set -o pipefail
-if [ -f "$FILE" ];then
-urls="$(xem https://api.gofile.io/servers | jq -r .data.servers[0].name)"
-[ -z "$urls" ] && urls="upload.gofile.io" || urls="$urls.gofile.io"
-echo "'$gofile_text_1' $urls"
-echo
-curl -L -H "$WEBS" -F "file=@$FILE" "https://$urls/contents/uploadfile" | jq | tee "$TMP/Upload.log" || killtree "'$gofile_text_2'"
-echo
-echo "'$gofile_text_3' $(jq -r .data.downloadPage "$TMP/Upload.log")"
-echo
-echo "'$gofile_text_4' $TMP/Upload.log"
-echo
-checktime
-else
-echo "'$gofile_text_5'"
-fi
-</set>
-</action>
+home() {
+    echo '<group title="'$google_text'">
+    <action>
+        <title>Upload Gofile</title>
+        <param name="FILE" type="file" required="true" desc="https://gofile.io"/>
+        <set>
+            set -o pipefail
+            if [ -f "$FILE" ]; then
+                urls="$(xem https://api.gofile.io/servers | jq -r .data.servers[0].name)"
+                [ -z "$urls" ] && urls="upload.gofile.io" || urls="$urls.gofile.io"
+                echo "'$gofile_text_1' $urls"
+                echo
+                curl -L -H "$WEBS" -F "file=@$FILE" "https://$urls/contents/uploadfile" | jq | tee "$TMP/Upload.log" || killtree "'$gofile_text_2'"
+                echo
+                echo "'$gofile_text_3' $(jq -r .data.downloadPage "$TMP/Upload.log")"
+                echo
+                echo "'$gofile_text_4' $TMP/Upload.log"
+                echo
+                checktime
+            else
+                echo "'$gofile_text_5'"
+            fi
+        </set>
+    </action>
 
-<action>
-<title>Upload Pixeldrain</title>
-<param name="FILE" type="file" required="true" desc="https://pixeldrain.com"/>
-<param name="TEXT" label="Token" desc="Token: xxx-xxx-xxx-xxx-xxx" value-sh="glog tocken_key_upload_free" type="text"/>
-<set>
-set -o pipefail
-[ "$TEXT" ] || echo "'$gofile_text_6'"
-slog tocken_key_upload_free "$TEXT"
-if [ -f "$FILE" ];then
-echo "'$gofile_text_1' pixeldrain.com"
-echo
-curl -T "$FILE" -u ":$TEXT" https://pixeldrain.com/api/file/ | jq -r .id | awk '"'{print \"https://pixeldrain.com/u/\"\$1}'"' | tee "$TMP/Upload.log" || killtree "'$gofile_text_2'"
-echo
-echo "'$gofile_text_3' $(cat "$TMP/Upload.log")"
-echo
-echo "'$gofile_text_4' $TMP/Upload.log"
-echo
-checktime
-else
-echo "'$gofile_text_5'"
-fi
-</set>
-</action>
+    <action>
+        <title>Upload Pixeldrain</title>
+        <param name="FILE" type="file" required="true" desc="https://pixeldrain.com"/>
+        <param name="TEXT" label="Token" desc="Token: xxx-xxx-xxx-xxx-xxx" value-sh="glog tocken_key_upload_free" type="text"/>
+        <set>
+            set -o pipefail
+            [ "$TEXT" ] || echo "'$gofile_text_6'"
+            slog tocken_key_upload_free "$TEXT"
+            if [ -f "$FILE" ]; then
+                echo "'$gofile_text_1' pixeldrain.com"
+                echo
+                curl -T "$FILE" -u ":$TEXT" https://pixeldrain.com/api/file/ | jq -r .id | awk '"'{print \"https://pixeldrain.com/u/\"\$1}'"' | tee "$TMP/Upload.log" || killtree "'$gofile_text_2'"
+                echo
+                echo "'$gofile_text_3' $(cat "$TMP/Upload.log")"
+                echo
+                echo "'$gofile_text_4' $TMP/Upload.log"
+                echo
+                checktime
+            else
+                echo "'$gofile_text_5'"
+            fi
+        </set>
+    </action>
 </group>'
 }
 
@@ -60,17 +61,19 @@ eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
 [ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
 
 # Google dịch
-if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ];then
-trans_add "$MPAT"
-[ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
+if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
+    trans_add "$MPAT"
+    [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
 fi
 
 # index
 echo '<?xml version="1.0" encoding="UTF-8" ?>
 <group>'
-if [ "$(type -t "$1")" = "function" ];then
-"$@"
+
+if [ "$(type -t "$1")" = "function" ]; then
+    "$@"
 else
-cat "$ETC/error.xml"
+    cat "$ETC/error.xml"
 fi
+
 echo '</group>'
