@@ -357,6 +357,24 @@ class PageConfigReader {
                     "depend-logic", "depend-priority" -> {
                         actionParamInfo.dependLogic = attrValue
                     }
+                    "depend-default" -> {
+                        actionParamInfo.dependDefault = attrValue
+                    }
+                    "depend-initial", "depend-initial-state" -> {
+                        actionParamInfo.dependInitialState = attrValue
+                    }
+                    "depend-negate" -> {
+                        actionParamInfo.dependNegate = attrValue == "true" || attrValue == "1" || attrValue == "negate"
+                    }
+                    "depend-threshold" -> {
+                        actionParamInfo.dependThreshold = attrValue.toIntOrNull() ?: -1
+                    }
+                    "depend-include-hidden" -> {
+                        actionParamInfo.dependIncludeHidden = attrValue == "true" || attrValue == "1"
+                    }
+                    "depend-onchange", "depend-on-change", "depend-callback" -> {
+                        actionParamInfo.dependOnChangeCallback = attrValue
+                    }
                 }
             }
             if (actionParamInfo.supported && actionParamInfo.name != null && actionParamInfo.name!!.isNotEmpty()) {

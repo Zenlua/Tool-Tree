@@ -30,6 +30,7 @@ import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
 import java.lang.ref.WeakReference
 import com.tool.tree.AnsiColorParser
+import java.util.concurrent.atomic.AtomicBoolean
 
 class DialogLogFragment : DialogFragment() {
 
@@ -229,6 +230,15 @@ class DialogLogFragment : DialogFragment() {
         private var lineStart = 0
         private var pendingOverwrite = false
 
+        // Độ dài logBuffer đã được đẩy lên UI (chỉ đọc/ghi trong synchronized(logBuffer))
+        private var uiAppliedLength = 0
+        // true nếu lần vẽ UI tiếp theo cần set lại toàn bộ text (do \r ghi đè hoặc log bị cắt tỉa)
+        private var needFullRefresh = false
+        // Đảm bảo nhiều lần cập nhật log liên tiếp chỉ gộp lại thành 1 lần vẽ UI / 1 lần cuộn,
+        // tránh spam Runnable + fullScroll() lên Main thread khi shell xả log dồn dập -> đây là
+        // nguyên nhân chính gây giật/lag khi log in ra nhanh.
+        private val pendingUiUpdate = AtomicBoolean(false)
+
         init {
             // Không set trực tiếp editable ban đầu nữa, quản lý qua append tĩnh cho mượt
             logView?.text = ""
@@ -293,6 +303,8 @@ class DialogLogFragment : DialogFragment() {
                 lineCount = 0
                 lineStart = 0
                 pendingOverwrite = false
+                uiAppliedLength = 0
+                needFullRefresh = false
                 logBuffer.clear()
             }
             logViewRef.get()?.post {
@@ -375,10 +387,6 @@ class DialogLogFragment : DialogFragment() {
          */
         private fun dispatchLogUpdate(formattedText: CharSequence) {
             val logView = logViewRef.get() ?: return
-            
-            // Biến cục bộ để xác định xem dòng này có yêu cầu ghi đè hay không (\r)
-            var isOverwriteAction = false 
-            val snapshotToDisplay: CharSequence
 
             synchronized(logBuffer) {
                 var i = 0
@@ -395,7 +403,7 @@ class DialogLogFragment : DialogFragment() {
                                 logBuffer.delete(lineStart, logBuffer.length)
                             }
                             pendingOverwrite = false
-                            isOverwriteAction = true
+                            needFullRefresh = true
                         }
                         logBuffer.append(segment)
                     }
@@ -412,7 +420,7 @@ class DialogLogFragment : DialogFragment() {
                                 if (pendingOverwrite && lineStart in 0..logBuffer.length) {
                                     logBuffer.delete(lineStart, logBuffer.length)
                                     pendingOverwrite = false
-                                    isOverwriteAction = true
+                                    needFullRefresh = true
                                 }
                                 logBuffer.append('\n')
                                 lineCount++
@@ -443,39 +451,60 @@ class DialogLogFragment : DialogFragment() {
                         logBuffer.delete(0, deleteEndIndex)
                         lineCount = 5000
                         lineStart = (lineStart - deleteEndIndex).coerceAtLeast(0)
-                        isOverwriteAction = true // Cần reload toàn bộ vì cấu trúc buffer đã dịch chuyển
+                        uiAppliedLength = (uiAppliedLength - deleteEndIndex).coerceAtLeast(0)
+                        needFullRefresh = true // Cần reload toàn bộ vì cấu trúc buffer đã dịch chuyển
                     }
                 }
-
-                // Chụp lại trạng thái text hiện tại để ném lên UI hiển thị
-                snapshotToDisplay = SpannableStringBuilder(logBuffer)
             }
 
-            // ĐẨY LÊN UI THREAD ĐỂ HIỂN THỊ
-            logView.post {
-                if (isOverwriteAction) {
-                    // Nếu có lệnh xóa dòng cũ đè dòng mới (\r) hoặc vừa bị cắt tỉa log > 5000 dòng, bắt buộc phải đặt lại text
-                    logView.text = snapshotToDisplay
-                } else {
-                    // NẾU LÀ GHI TIẾP (APPEND): Đây là chìa khóa giúp log mượt! 
-                    // Thay vì nạp lại toàn bộ 5000 dòng, chỉ truyền phần text mới tinh vào.
-                    val oldLen = logView.text.length
-                    if (snapshotToDisplay.length > oldLen) {
-                        val newChunk = snapshotToDisplay.subSequence(oldLen, snapshotToDisplay.length)
-                        logView.append(newChunk)
-                    }
+            // GỘP CẬP NHẬT UI: nếu đã có 1 lần vẽ đang chờ chạy trên Main thread thì không post thêm.
+            // Khi Main thread rảnh và chạy tới, flushToUi() sẽ tự đọc trạng thái MỚI NHẤT của logBuffer,
+            // nên nhiều dòng log đến dồn dập chỉ gây ra 1 lần setText/append + 1 lần cuộn, thay vì
+            // một Runnable + một fullScroll() cho từng dòng -> đây là nguyên nhân chính gây giật.
+            if (pendingUiUpdate.compareAndSet(false, true)) {
+                logView.post {
+                    pendingUiUpdate.set(false)
+                    flushToUi(logView)
                 }
+            }
+        }
 
-                // Tối ưu cuộn ScrollView xuống cuối
-                (logView.parent as? ScrollView)?.let { scrollView ->
-                    scrollView.fullScroll(ScrollView.FOCUS_DOWN)
-                    
-                    // Giữ focus thông minh không cần lồng post{} nhiều tầng
-                    val inputRow = inputRowRef.get()
-                    val input = shellInputRef.get()
-                    if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
-                        if (!input.isFocused) input.requestFocus()
-                    }
+        /**
+         * Vẽ lên UI. Bình thường chỉ append phần text MỚI (không copy lại toàn bộ buffer),
+         * chỉ khi có \r ghi đè dòng hoặc log vừa bị cắt tỉa (>5000 dòng) mới cần set lại toàn bộ.
+         */
+        private fun flushToUi(logView: TextView) {
+            val chunk: CharSequence?
+            val doFullRefresh: Boolean
+
+            synchronized(logBuffer) {
+                doFullRefresh = needFullRefresh
+                needFullRefresh = false
+                chunk = when {
+                    doFullRefresh -> SpannableStringBuilder(logBuffer)
+                    logBuffer.length > uiAppliedLength -> logBuffer.subSequence(uiAppliedLength, logBuffer.length)
+                    else -> null
+                }
+                uiAppliedLength = logBuffer.length
+            }
+
+            if (chunk == null) return
+
+            if (doFullRefresh) {
+                logView.text = chunk
+            } else {
+                logView.append(chunk)
+            }
+
+            // Tối ưu cuộn ScrollView xuống cuối
+            (logView.parent as? ScrollView)?.let { scrollView ->
+                scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+
+                // Giữ focus thông minh không cần lồng post{} nhiều tầng
+                val inputRow = inputRowRef.get()
+                val input = shellInputRef.get()
+                if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
+                    if (!input.isFocused) input.requestFocus()
                 }
             }
         }
