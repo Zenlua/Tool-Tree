@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter
 import android.widget.CheckBox
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.ListPopupWindow
 import androidx.appcompat.widget.Toolbar
@@ -29,7 +30,6 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.MainPagerAdapter
 import com.tool.tree.ui.TabIconHelper
-import com.tool.tree.ui.TabZoomFadePageTransformer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -65,12 +65,14 @@ class MainActivity : AppCompatActivity() {
         initAdapter()
         loadTabs()
 
-        PredictiveBackHelper(this, binding.root) {
+        onBackPressedDispatcher.addCallback(this) {
             startService(Intent(this@MainActivity, WakeLockService::class.java).apply {
                 action = WakeLockService.ACTION_END_WAKELOCK
             })
+            // isEnabled = false
+            // onBackPressedDispatcher.onBackPressed()
             finish()
-        }.register(onBackPressedDispatcher)
+        }
     }
 
     private fun initAdapter() {
@@ -78,9 +80,6 @@ class MainActivity : AppCompatActivity() {
             adapter = MainPagerAdapter(this)
             binding.viewPager.adapter = adapter
             binding.viewPager.offscreenPageLimit = 4
-            // Dùng hiệu ứng "Zoom + Fade" (thu nhỏ/mờ + phóng to/hiện rõ trong lúc trượt)
-            // khi chuyển tab, thay cho hiệu ứng slide thuần kiểu AOSP.
-            binding.viewPager.setPageTransformer(TabZoomFadePageTransformer())
         }
     }
 
