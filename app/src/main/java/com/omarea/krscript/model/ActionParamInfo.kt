@@ -110,6 +110,15 @@ class ActionParamInfo {
     // (thay vì bỏ qua param ẩn). Hữu ích cho các param ẩn nhưng vẫn cần giá trị.
     var dependIncludeHidden: Boolean = false
 
+    // ========== TÍNH NĂNG MỚI: CHA ẨN THÌ CON ẨN THEO ==========
+    // Nếu true (mặc định), khi (bất kỳ) param cha trong depend-on đang bị ẨN (do chính
+    // depend-on của nó, chuỗi phụ thuộc nhiều cấp...), param này CŨNG BỊ ẨN LUÔN, bất kể
+    // giá trị hiện tại của cha có khớp depend-value hay không.
+    // Đặt "false" nếu bạn muốn param con vẫn tự đánh giá theo giá trị của cha ngay cả khi
+    // hàng chứa param cha đang ẩn khỏi màn hình (hiếm khi cần).
+    // Ví dụ: depend-on="mode" depend-cascade="false"
+    var dependCascade: Boolean = true
+
     // ========== TÍNH NĂNG MỚI: LÀMĐIỀU GỌILẠI KHI THAY ĐỔI DEPENDENCY ==========
     // Tên shell script/callback để gọi khi param này thay đổi trạng thái ẩn/hiện
     // (chỉ gọi khi trạng thái thực sự thay đổi, từ visible -> hidden hoặc ngược lại)

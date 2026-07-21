@@ -9,6 +9,7 @@ import androidx.fragment.app.FragmentActivity
 import com.omarea.common.model.SelectItem
 import com.tool.tree.R
 import com.omarea.krscript.model.ActionParamInfo
+import com.omarea.krscript.executor.ScriptEnvironmen
 import androidx.core.graphics.toColorInt
 
 class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity: FragmentActivity) {
@@ -176,17 +177,22 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         for (info in currentParamInfos) {
             val name = info.name ?: continue
             val initialState = info.dependInitialState.trim().lowercase()
-            
-            val initialVisibility = when {
-                initialState == "auto" -> {
-                    // Xác định tự động dựa trên dependDefault
+
+            val initialVisibility = when (initialState) {
+                "hide" -> false
+                "show" -> true
+                else -> {
+                    // "auto": xác định tự động dựa trên dependDefault
                     info.dependDefault.trim().lowercase() != "hide"
                 }
-                initialState == "hide" -> false
-                else -> true // "show"
             }
-            
-            visibilityState[name] = initialVisibility
+
+            // CHỈ set View.visibility tức thời để tránh nhấp nháy lúc mở dialog.
+            // KHÔNG ghi vào visibilityState ở đây: evaluateDependencies() được gọi ngay sau
+            // initializeDependencyStates() sẽ tính trạng thái thật (có cascade) và mới là nơi
+            // ghi visibilityState + quyết định gọi depend-onchange. Nếu ghi ở đây, lần đánh giá
+            // đầu tiên sẽ hiểu nhầm đây là "thay đổi trạng thái" và gọi nhầm callback ngay khi
+            // dialog vừa mở.
             rowViews[name]?.visibility = if (initialVisibility) View.VISIBLE else View.GONE
         }
     }
@@ -268,144 +274,201 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         return identifiers
     }
 
-    // ========== TÍNH NĂNG MỚI: ĐÁNH GIÁ PHỤ THUỘC NÂNG CẤP ==========
+    // ========== TÍNH NĂNG MỚI: ĐÁNH GIÁ PHỤ THUỘC NÂNG CẤP (có depend-cascade) ==========
     private fun evaluateDependencies() {
+        // Trạng thái TRƯỚC lượt đánh giá này - dùng để phát hiện thay đổi thật sự và quyết
+        // định có gọi depend-onchange hay không (so với trạng thái đã áp dụng lần trước, KHÔNG
+        // so giữa các lượt lặp nội bộ bên dưới).
+        val previousState = HashMap(visibilityState)
+
+        // Bộ nhớ TẠM cho lượt đánh giá này. Lặp nhiều lượt để "cha ẩn thì con ẩn theo"
+        // (depend-cascade) lan truyền đúng qua các chuỗi phụ thuộc nhiều cấp, bất kể param cha
+        // được khai báo trước hay sau param con trong file XML. Dừng sớm khi không còn gì
+        // thay đổi giữa 2 lượt liên tiếp (hầu hết trường hợp chỉ cần 1-2 lượt).
+        val working = HashMap<String, Boolean>()
+        val maxPasses = currentParamInfos.size.coerceAtLeast(1).coerceAtMost(20)
+
+        for (pass in 0 until maxPasses) {
+            var changedThisPass = false
+
+            for (info in currentParamInfos) {
+                val name = info.name ?: continue
+                val shouldShow = computeShouldShow(info, working)
+
+                if (working[name] != shouldShow) {
+                    working[name] = shouldShow
+                    changedThisPass = true
+                }
+            }
+
+            if (!changedThisPass) break
+        }
+
+        // Áp dụng kết quả cuối cùng lên UI, ghi lại visibilityState chính thức, và gọi
+        // depend-onchange đúng 1 lần cho mỗi param có trạng thái thực sự thay đổi so với
+        // trước khi vào hàm evaluateDependencies() này.
         for (info in currentParamInfos) {
-            val dependOnRaw = info.dependOn?.trim()
-            val name = info.name
-            if (name.isNullOrEmpty()) continue
-
-            // Nếu không có dependOn -> hiển thị mặc định
-            if (dependOnRaw.isNullOrEmpty()) {
-                val shouldShow = info.dependDefault.trim().lowercase() != "hide"
-                updateVisibility(name, shouldShow)
-                continue
-            }
-
-            val dependOnList = dependOnRaw.split("|").map { it.trim() }.filter { it.isNotEmpty() }
-            if (dependOnList.isEmpty()) {
-                updateVisibility(name, info.dependDefault.trim().lowercase() != "hide")
-                continue
-            }
-
-            val dependValueList = (info.dependValue ?: "").split("|")
-            val dependModeList = info.dependMode.split("|")
-
-            fun evalCondition(i: Int): Pair<Boolean, Boolean>? {
-                val parentName = dependOnList[i]
-                val controllerInfo = currentParamInfos.find { it.name == parentName }
-                val reader = valueReaders[parentName]
-                if (controllerInfo == null || reader == null) return null
-
-                val currentValues = reader().split(controllerInfo.separator)
-                    .map { it.trim() }.filter { it.isNotEmpty() }
-                val parentOptions = controllerInfo.optionsFromShell ?: controllerInfo.options
-
-                val currentIdentifiers = HashSet<String>()
-                for (v in currentValues) {
-                    currentIdentifiers.addAll(buildValueIdentifiers(v, parentOptions))
-                }
-
-                val wantedRaw = dependValueList.getOrNull(i) ?: dependValueList.lastOrNull() ?: ""
-                val wanted = wantedRaw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                val matched = wanted.isEmpty() || wanted.any { currentIdentifiers.contains(it) }
-
-                val mode = (dependModeList.getOrNull(i) ?: dependModeList.lastOrNull() ?: "show").trim()
-                val wantShow = if (mode == "hide") !matched else matched
-                return Pair(matched, wantShow)
-            }
-
-            val logic = info.dependLogic.trim().lowercase()
-            val shouldShow: Boolean = when (logic) {
-                "priority", "or", "priority-ltr", "or-ltr" -> {
-                    // Ưu tiên trái -> phải
-                    var result = info.dependDefault.trim().lowercase() != "hide"
-                    for (i in dependOnList.indices) {
-                        val (matched, wantShow) = evalCondition(i) ?: continue
-                        if (matched) {
-                            result = wantShow
-                            break
-                        }
-                    }
-                    result
-                }
-                "priority-rtl", "or-rtl" -> {
-                    // Ưu tiên phải -> trái
-                    var result = info.dependDefault.trim().lowercase() != "hide"
-                    for (i in dependOnList.indices.reversed()) {
-                        val (matched, wantShow) = evalCondition(i) ?: continue
-                        if (matched) {
-                            result = wantShow
-                            break
-                        }
-                    }
-                    result
-                }
-                "xor" -> {
-                    // Chỉ ĐÚNG MỘT điều kiện được thỏa
-                    var matchCount = 0
-                    for (i in dependOnList.indices) {
-                        val (matched, _) = evalCondition(i) ?: continue
-                        if (matched) matchCount++
-                    }
-                    (matchCount == 1) != info.dependNegate
-                }
-                "nand" -> {
-                    // Phủ định của AND (KHÔNG phải tất cả điều kiện đều thỏa)
-                    var result = true
-                    for (i in dependOnList.indices) {
-                        val (_, wantShow) = evalCondition(i) ?: continue
-                        if (!wantShow) {
-                            result = false
-                            break
-                        }
-                    }
-                    !result != info.dependNegate
-                }
-                else -> {
-                    // "and" (mặc định)
-                    var satisfiedCount = 0
-                    var totalCount = 0
-                    
-                    for (i in dependOnList.indices) {
-                        val (_, wantShow) = evalCondition(i) ?: continue
-                        totalCount++
-                        if (wantShow) satisfiedCount++
-                    }
-
-                    val threshold = if (info.dependThreshold < 0) {
-                        // Mặc định: 100% (tất cả phải thỏa)
-                        totalCount
-                    } else {
-                        // Tính toán % ngưỡng
-                        (totalCount * info.dependThreshold / 100).coerceAtLeast(1)
-                    }
-
-                    val result = satisfiedCount >= threshold
-                    result != info.dependNegate
-                }
-            }
-
-            updateVisibility(name, shouldShow)
+            val name = info.name ?: continue
+            val shouldShow = working[name] ?: continue
+            applyVisibility(name, shouldShow, previousState[name])
         }
     }
 
-    // ========== TÍNH NĂNG MỚI: CẬP NHẬT TRẠNG THÁI VÀ GỌI CALLBACK ==========
-    private fun updateVisibility(name: String, shouldShow: Boolean) {
-        val oldState = visibilityState[name]
-        visibilityState[name] = shouldShow
-        
-        val view = rowViews[name]
-        view?.visibility = if (shouldShow) View.VISIBLE else View.GONE
-        
-        // Gọi callback nếu trạng thái thay đổi
-        if (oldState != null && oldState != shouldShow) {
-            val info = currentParamInfos.find { it.name == name }
-            if (info != null && !info.dependOnChangeCallback.isNullOrEmpty()) {
-                // TODO: Implement callback execution (shell script or custom logic)
-                // Example: executeCallback(info.dependOnChangeCallback, name, shouldShow)
+    // Tính shouldShow cho 1 param dựa trên trạng thái ẩn/hiện của các param cha TRONG LƯỢT
+    // ĐÁNH GIÁ HIỆN TẠI (map "working"), không phải trạng thái đã chốt từ lần render trước.
+    private fun computeShouldShow(info: ActionParamInfo, working: HashMap<String, Boolean>): Boolean {
+        val dependOnRaw = info.dependOn?.trim()
+
+        if (dependOnRaw.isNullOrEmpty()) {
+            return info.dependDefault.trim().lowercase() != "hide"
+        }
+
+        val dependOnList = dependOnRaw.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+        if (dependOnList.isEmpty()) {
+            return info.dependDefault.trim().lowercase() != "hide"
+        }
+
+        // ========== TÍNH NĂNG MỚI: CHA ẨN THÌ CON ẨN THEO (depend-cascade) ==========
+        // Nếu BẤT KỲ param cha nào trong depend-on đang bị ẩn (đã tính ở lượt trước/pass hiện
+        // tại), param này ẩn theo luôn, không cần xét tiếp depend-value/depend-logic.
+        if (info.dependCascade && dependOnList.any { working[it] == false }) {
+            return false
+        }
+
+        val dependValueList = (info.dependValue ?: "").split("|")
+        val dependModeList = info.dependMode.split("|")
+
+        fun evalCondition(i: Int): Pair<Boolean, Boolean>? {
+            val parentName = dependOnList[i]
+            val controllerInfo = currentParamInfos.find { it.name == parentName }
+            val reader = valueReaders[parentName]
+            if (controllerInfo == null || reader == null) return null
+
+            val currentValues = reader().split(controllerInfo.separator)
+                .map { it.trim() }.filter { it.isNotEmpty() }
+            val parentOptions = controllerInfo.optionsFromShell ?: controllerInfo.options
+
+            val currentIdentifiers = HashSet<String>()
+            for (v in currentValues) {
+                currentIdentifiers.addAll(buildValueIdentifiers(v, parentOptions))
+            }
+
+            val wantedRaw = dependValueList.getOrNull(i) ?: dependValueList.lastOrNull() ?: ""
+            val wanted = wantedRaw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            val matched = wanted.isEmpty() || wanted.any { currentIdentifiers.contains(it) }
+
+            val mode = (dependModeList.getOrNull(i) ?: dependModeList.lastOrNull() ?: "show").trim()
+            val wantShow = if (mode == "hide") !matched else matched
+            return Pair(matched, wantShow)
+        }
+
+        val logic = info.dependLogic.trim().lowercase()
+        return when (logic) {
+            "priority", "or", "priority-ltr", "or-ltr" -> {
+                // Ưu tiên trái -> phải
+                var result = info.dependDefault.trim().lowercase() != "hide"
+                for (i in dependOnList.indices) {
+                    val (matched, wantShow) = evalCondition(i) ?: continue
+                    if (matched) {
+                        result = wantShow
+                        break
+                    }
+                }
+                result
+            }
+            "priority-rtl", "or-rtl" -> {
+                // Ưu tiên phải -> trái
+                var result = info.dependDefault.trim().lowercase() != "hide"
+                for (i in dependOnList.indices.reversed()) {
+                    val (matched, wantShow) = evalCondition(i) ?: continue
+                    if (matched) {
+                        result = wantShow
+                        break
+                    }
+                }
+                result
+            }
+            "xor" -> {
+                // Chỉ ĐÚNG MỘT điều kiện được thỏa
+                var matchCount = 0
+                for (i in dependOnList.indices) {
+                    val (matched, _) = evalCondition(i) ?: continue
+                    if (matched) matchCount++
+                }
+                (matchCount == 1) != info.dependNegate
+            }
+            "nand" -> {
+                // Phủ định của AND (KHÔNG phải tất cả điều kiện đều thỏa)
+                var result = true
+                for (i in dependOnList.indices) {
+                    val (_, wantShow) = evalCondition(i) ?: continue
+                    if (!wantShow) {
+                        result = false
+                        break
+                    }
+                }
+                !result != info.dependNegate
+            }
+            else -> {
+                // "and" (mặc định)
+                var satisfiedCount = 0
+                var totalCount = 0
+
+                for (i in dependOnList.indices) {
+                    val (_, wantShow) = evalCondition(i) ?: continue
+                    totalCount++
+                    if (wantShow) satisfiedCount++
+                }
+
+                val threshold = if (info.dependThreshold < 0) {
+                    // Mặc định: 100% (tất cả phải thỏa)
+                    totalCount
+                } else {
+                    // Tính toán % ngưỡng
+                    (totalCount * info.dependThreshold / 100).coerceAtLeast(1)
+                }
+
+                val result = satisfiedCount >= threshold
+                result != info.dependNegate
             }
         }
+    }
+
+    // ========== TÍNH NĂNG MỚI: ÁP DỤNG TRẠNG THÁI LÊN UI + GỌI CALLBACK ==========
+    private fun applyVisibility(name: String, shouldShow: Boolean, oldState: Boolean?) {
+        visibilityState[name] = shouldShow
+
+        val view = rowViews[name]
+        view?.visibility = if (shouldShow) View.VISIBLE else View.GONE
+
+        // Chỉ gọi callback khi ĐÃ TỪNG có trạng thái trước đó (oldState != null) VÀ trạng thái
+        // thực sự đổi - tránh gọi callback ngay khi dialog vừa mở (lần đầu tiên oldState luôn
+        // null vì initializeDependencyStates() không ghi vào visibilityState).
+        if (oldState != null && oldState != shouldShow) {
+            val info = currentParamInfos.find { it.name == name }
+            val script = info?.dependOnChangeCallback
+            if (!script.isNullOrEmpty()) {
+                executeDependOnChangeCallback(name, shouldShow, script)
+            }
+        }
+    }
+
+    // ========== TÍNH NĂNG MỚI: THỰC THI depend-onchange ==========
+    // Chạy script/callback trên luồng nền (KHÔNG được chạy trực tiếp trên UI thread vì lệnh
+    // shell root có thể mất nhiều thời gian và sẽ làm treo giao diện). Truyền tên param vừa
+    // đổi trạng thái + trạng thái mới (1 = đang hiện, 0 = đang ẩn) làm biến môi trường để
+    // script có thể tự xử lý theo ngữ cảnh.
+    private fun executeDependOnChangeCallback(paramName: String, visible: Boolean, script: String) {
+        Thread {
+            try {
+                val extraParams = HashMap<String, String>()
+                extraParams["PARAM_NAME"] = paramName
+                extraParams["PARAM_VISIBLE"] = if (visible) "1" else "0"
+                ScriptEnvironmen.executeResultRoot(context, script, null, extraParams)
+            } catch (ex: Exception) {
+                // Lỗi khi chạy callback không được làm crash hay ảnh hưởng tới UI chính
+            }
+        }.start()
     }
 
     private val hideLabelTypes = arrayOf("bool", "checkbox", "switch")

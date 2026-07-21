@@ -372,6 +372,9 @@ class PageConfigReader {
                     "depend-include-hidden" -> {
                         actionParamInfo.dependIncludeHidden = attrValue == "true" || attrValue == "1"
                     }
+                    "depend-cascade" -> {
+                        actionParamInfo.dependCascade = !(attrValue == "false" || attrValue == "0")
+                    }
                     "depend-onchange", "depend-on-change", "depend-callback" -> {
                         actionParamInfo.dependOnChangeCallback = attrValue
                     }
