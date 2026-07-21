@@ -187,13 +187,21 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 }
             }
 
-            // CHỈ set View.visibility tức thời để tránh nhấp nháy lúc mở dialog.
-            // KHÔNG ghi vào visibilityState ở đây: evaluateDependencies() được gọi ngay sau
-            // initializeDependencyStates() sẽ tính trạng thái thật (có cascade) và mới là nơi
-            // ghi visibilityState + quyết định gọi depend-onchange. Nếu ghi ở đây, lần đánh giá
-            // đầu tiên sẽ hiểu nhầm đây là "thay đổi trạng thái" và gọi nhầm callback ngay khi
-            // dialog vừa mở.
-            rowViews[name]?.visibility = if (initialVisibility) View.VISIBLE else View.GONE
+            // CHỈ set View.visibility (hoặc mờ/khóa với depend-readonly) tức thời để tránh
+            // nhấp nháy lúc mở dialog. KHÔNG ghi vào visibilityState ở đây: evaluateDependencies()
+            // được gọi ngay sau initializeDependencyStates() sẽ tính trạng thái thật (có cascade)
+            // và mới là nơi ghi visibilityState + quyết định gọi depend-onchange. Nếu ghi ở đây,
+            // lần đánh giá đầu tiên sẽ hiểu nhầm đây là "thay đổi trạng thái" và gọi nhầm
+            // callback ngay khi dialog vừa mở.
+            val row = rowViews[name] ?: continue
+            if (info.dependReadonly) {
+                // Luôn hiện, chỉ mờ/khóa tương tác theo initialVisibility - không set GONE,
+                // tránh hàng bị "biến mất" rồi mới hiện lại (nhấp nháy) khi dialog vừa mở.
+                row.visibility = View.VISIBLE
+                setRowInteractive(row, initialVisibility)
+            } else {
+                row.visibility = if (initialVisibility) View.VISIBLE else View.GONE
+            }
         }
     }
 
@@ -439,16 +447,44 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         visibilityState[name] = shouldShow
 
         val view = rowViews[name]
-        view?.visibility = if (shouldShow) View.VISIBLE else View.GONE
+        val info = currentParamInfos.find { it.name == name }
+
+        if (info?.dependReadonly == true) {
+            // ========== TÍNH NĂNG MỚI: depend-readonly ==========
+            // Không ẩn (GONE) mà giữ VISIBLE, chỉ làm mờ + khóa tương tác (isEnabled = false)
+            // khi điều kiện phụ thuộc không thỏa (shouldShow = false).
+            view?.visibility = View.VISIBLE
+            view?.let { setRowInteractive(it, shouldShow) }
+        } else {
+            view?.visibility = if (shouldShow) View.VISIBLE else View.GONE
+        }
 
         // Chỉ gọi callback khi ĐÃ TỪNG có trạng thái trước đó (oldState != null) VÀ trạng thái
         // thực sự đổi - tránh gọi callback ngay khi dialog vừa mở (lần đầu tiên oldState luôn
         // null vì initializeDependencyStates() không ghi vào visibilityState).
         if (oldState != null && oldState != shouldShow) {
-            val info = currentParamInfos.find { it.name == name }
             val script = info?.dependOnChangeCallback
             if (!script.isNullOrEmpty()) {
                 executeDependOnChangeCallback(name, shouldShow, script)
+            }
+        }
+    }
+
+    // ========== TÍNH NĂNG MỚI: BẬT/TẮT TƯƠNG TÁC + LÀM MỜ CHO depend-readonly ==========
+    // enabled = true  -> hiện bình thường, hết mờ, có thể bấm/nhập/chọn
+    // enabled = false -> làm mờ cả hàng (alpha) và vô hiệu hóa toàn bộ control con
+    //                     (EditText/CheckBox/Switch/SeekBar/Spinner/nút bấm...) để
+    //                     người dùng không thể chỉnh sửa giá trị, nhưng vẫn nhìn thấy nó.
+    private fun setRowInteractive(row: View, enabled: Boolean) {
+        row.alpha = if (enabled) 1f else 0.4f
+        setEnabledRecursively(row, enabled)
+    }
+
+    private fun setEnabledRecursively(view: View, enabled: Boolean) {
+        view.isEnabled = enabled
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                setEnabledRecursively(view.getChildAt(i), enabled)
             }
         }
     }
@@ -584,7 +620,11 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 }
             }
 
-            val isHiddenByDepend = rowViews[actionParamInfo.name]?.visibility == View.GONE
+            // Dùng visibilityState (kết quả logic của evaluateDependencies) thay vì đọc trực
+            // tiếp View.visibility, vì với depend-readonly=true, view vẫn ở trạng thái
+            // VISIBLE (chỉ bị mờ + khóa tương tác) dù về mặt logic vẫn được xem là "không
+            // thỏa điều kiện" (shouldShow = false).
+            val isHiddenByDepend = visibilityState[actionParamInfo.name] == false
             
             // ========== TÍNH NĂNG MỚI: BỎ QUA PARAM ẨN NẾU KHÔNG CÓ dependIncludeHidden ==========
             if (isHiddenByDepend && !actionParamInfo.dependIncludeHidden) {

@@ -381,6 +381,9 @@ class PageConfigReader {
                     "depend-onchange", "depend-on-change", "depend-callback" -> {
                         actionParamInfo.dependOnChangeCallback = attrValue
                     }
+                    "depend-readonly" -> {
+                        actionParamInfo.dependReadonly = attrValue == "true" || attrValue == "1"
+                    }
                 }
             }
             if (actionParamInfo.supported && actionParamInfo.name != null && actionParamInfo.name!!.isNotEmpty()) {

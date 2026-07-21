@@ -126,4 +126,17 @@ class ActionParamInfo {
     // Tên shell script/callback để gọi khi param này thay đổi trạng thái ẩn/hiện
     // (chỉ gọi khi trạng thái thực sự thay đổi, từ visible -> hidden hoặc ngược lại)
     var dependOnChangeCallback: String? = null
+
+    // ========== TÍNH NĂNG MỚI: CHỈ ĐỌC THAY VÌ ẨN (depend-readonly) ==========
+    // Mặc định, khi điều kiện phụ thuộc đánh giá là "không thỏa" (shouldShow = false),
+    // param sẽ bị ẨN HOÀN TOÀN (View.GONE) như hành vi cũ.
+    // Nếu đặt dependReadonly = true, param KHÔNG bị ẩn nữa mà vẫn hiển thị bình thường,
+    // nhưng sẽ bị làm MỜ (giảm alpha) và VÔ HIỆU HÓA (không thể bấm/nhập/chọn) - tức là
+    // chuyển sang trạng thái "chỉ đọc" thay vì biến mất khỏi giao diện.
+    // Khi điều kiện thỏa trở lại (shouldShow = true), param được bật lại bình thường
+    // (hết mờ, có thể tương tác lại).
+    // Ví dụ: depend-on="mode" depend-value="advanced" depend-readonly="true"
+    //        -> Khi mode != advanced, param vẫn hiện nhưng bị mờ và khóa tương tác,
+    //           thay vì biến mất như mặc định.
+    var dependReadonly: Boolean = false
 }

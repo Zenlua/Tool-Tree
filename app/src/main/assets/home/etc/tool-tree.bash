@@ -128,6 +128,7 @@ fi
 <page icon="'`urlpng utilities`'" config-sh="$ETC/tool-tree.bash Utilities">
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
+<option type="default" config-sh="$ETC/tool-tree.bash Project">'$setting_text' - '$setting_text_3'</option>
 <option type="checkbox" id="v1" box="glog hide_show" silent="true" reload="true" >'$folder_text' ROM</option>
 '$vdbfbfsn'
 <option type="default" id="v2" silent="true">'$open_activity_text' ROM</option>
@@ -832,8 +833,8 @@ checktime
 <action icon="'`urlpng build_payload`'" >
 <title>'$generate_text' Payload</title>
 <param name="payload_switch" value-sh="glog payload_switch" label="'$payload_text_3'" type="switch" />
-<param name="payload_super_size" required="true" value-sh="glog payload_super_size 11" label="'$sizes_text'" desc="'$default_text': 11GB, '$payload_text_4'" type="number"/>
-<param name="payload_super_group" required="true" value-sh="glog payload_super_group qti_dynamic_partitions" label="'$super_text_5'" desc="'$super_text_6', '$payload_text_4'"/>
+<param name="payload_super_size" required="true" value-sh="glog payload_super_size 11" label="'$sizes_text'" desc="'$default_text': 11GB, '$payload_text_4'" type="number" depend-on="payload_switch" depend-value="0" depend-mode="hide"/>
+<param name="payload_super_group" required="true" value-sh="glog payload_super_group qti_dynamic_partitions" label="'$super_text_5'" desc="'$super_text_6', '$payload_text_4'" depend-on="payload_switch" depend-value="0" depend-mode="hide"/>
 <param name="sign_payload" label="'$sign_text'" options-sh="findfile file $ETC/key/2048 .pem | sed '"'s|.pem||'"'" value-sh="glog sign_payload testkey"/>
 <param name="IMAGES" desc="'$payload_text_2'" options-sh="findfile 11 $PTSD" required="true" multiple="true"/>
 <set>
@@ -945,7 +946,7 @@ checktime
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
-<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'" depend-on="format_img" depend-value="raw,sparse,File.new.dat" depend-mode="hide" depend-logic="priority"/>
+<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'" depend-on="format_img" depend-value="raw,sparse,File.new.dat" depend-mode="hide"/>
 <param name="build_times" label="'$time_text'" value-sh="glog build_times" type="number" desc="'$build_time_text_1': '$time_riviu'" required="required" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show" />
 <param name="offfscontex" value-sh="glog offfscontex 1" label="'$patch_text_fscontex'" type="switch" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show"/>
 <param name="build_size" label="'$sizes_text'" value-sh="glog build_size 0" type="number" desc="'$builds_text_7'" required="required" depend-on="dinh_dang|dinh_dang|IMAGES" depend-value="EROFS|EXT4,F2FS|(ext),(f2fs)" depend-mode="hide|show|show" depend-logic="priority" depend-default="hide"/>
@@ -1035,7 +1036,7 @@ checktime
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
-<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'"/>
+<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'" depend-on="format_img" depend-value="raw,sparse,File.new.dat" depend-mode="hide" />
 <param name="IMAGES" desc="'$convert_text_3'" options-sh="findfile 1 $PTSD" multiple="true" required="true"/>
 <set>
 slog format_img "$format_img"
