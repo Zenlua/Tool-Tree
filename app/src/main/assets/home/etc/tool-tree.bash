@@ -833,8 +833,8 @@ checktime
 <action icon="'`urlpng build_payload`'" >
 <title>'$generate_text' Payload</title>
 <param name="payload_switch" value-sh="glog payload_switch" label="'$payload_text_3'" type="switch" />
-<param name="payload_super_size" required="true" value-sh="glog payload_super_size 11" label="'$sizes_text'" desc="'$default_text': 11GB, '$payload_text_4'" type="number" depend-on="payload_switch" depend-value="0" depend-mode="hide"/>
-<param name="payload_super_group" required="true" value-sh="glog payload_super_group qti_dynamic_partitions" label="'$super_text_5'" desc="'$super_text_6', '$payload_text_4'" depend-on="payload_switch" depend-value="0" depend-mode="hide"/>
+<param name="payload_super_size" required="true" value-sh="glog payload_super_size 11" label="'$sizes_text'" desc="'$default_text': 11GB, '$payload_text_4'" type="number" depend-on="payload_switch" depend-value="0" depend-mode="hide" depend-readonly="true"/>
+<param name="payload_super_group" required="true" value-sh="glog payload_super_group qti_dynamic_partitions" label="'$super_text_5'" desc="'$super_text_6', '$payload_text_4'" depend-on="payload_switch" depend-value="0" depend-mode="hide" depend-readonly="true"/>
 <param name="sign_payload" label="'$sign_text'" options-sh="findfile file $ETC/key/2048 .pem | sed '"'s|.pem||'"'" value-sh="glog sign_payload testkey"/>
 <param name="IMAGES" desc="'$payload_text_2'" options-sh="findfile 11 $PTSD" required="true" multiple="true"/>
 <set>
@@ -912,8 +912,8 @@ echo '<group>
 <title>'$decompile_text'</title>
 <param name="cboxk" value-sh="glog dkhdh" label="'$deleted_file_text'" type="checkbox" />
 <param name="nounpak" value-sh="glog dkjdj" label="'$decode_text_1'" type="switch" />
-<param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" depend-on="nounpak" depend-value="1" depend-mode="hide"/>
-<param name="vavb" label="'$builds_text_8'" type="switch" depend-on="nounpak" depend-value="1" depend-mode="hide"/>
+<param name="xoa_oat_boot" value-sh="glog xoa_oat_boot" label="'$xoaoat_text_1'" type="switch" depend-on="nounpak" depend-value="1" depend-mode="hide" depend-readonly="true"/>
+<param name="vavb" label="'$builds_text_8'" type="switch" depend-on="nounpak" depend-value="1" depend-mode="hide" depend-readonly="true"/>
 <param name="IMAGES" desc="'$decode_text_3'" multiple="true" options-sh="findfile 2 $PTSD" required="true"/>
 <set>
 slog vavbbgdf "$vavb"
@@ -1210,7 +1210,7 @@ echo '<group>
 <option value="raw">'$decom_apk_text_3'</option>
 </param>
 <param name="dexlib" label="'$option_text'" desc="'$decom_apk_text_4'" value-sh="glog dexlib smali" option-sh="echo -e '"'nodex|$decom_apk_text_3\ninternal|$default_text\njf|Baksmali 2.5.2\nsmali|Baksmali 3.0.9'"'"/>
-<param name="xoa_debug_info" value-sh="glog xoa_debug_info 1" label="'$decom_apk_text_7'" type="switch" />
+<param name="xoa_debug_info" value-sh="glog xoa_debug_info 1" label="'$decom_apk_text_7'" type="switch" depend-on="dexlib" depend-value="nodex" depend-mode="hide" depend-readonly="true"/>
 <param name="FILE" multiple="multiple" option-sh="findfile 9 $PTAD" required="true" desc="'$decom_apk_text_9'"/>
 <set>
 slog dexlib "$dexlib"
