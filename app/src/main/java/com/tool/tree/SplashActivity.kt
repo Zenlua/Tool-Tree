@@ -120,8 +120,24 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun checkPermissionsNextStep() {
-        // Nếu là Android 11+ và chưa có quyền "All Files Access"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                REQUEST_CODE_NOTIFICATIONS
+            )
+            return
+        }
+    
+        // Nếu là Android 11+ và chưa có quyền All Files
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
+            !Environment.isExternalStorageManager()
+        ) {
             requestManageAllFilesPermission()
         } else {
             checkRootAndStart()
