@@ -19,7 +19,6 @@ search_text="Tìm kiếm"
 doc_text="Văn bản"
 addon_text="Add-on"
 home_text="Trang chủ"
-checktime="Tổng thời gian"
 begin_start="Đang cài đặt data..."
 trademark_text="Thương hiệu"
 version_text="Phiên bản"
@@ -47,10 +46,12 @@ dissblur_text="Tắt hiệu ứng mờ"
 tool_unpack_text="Công cụ giải mã"
 tool_repack_text="Công cụ xây dựng"
 customize_tools_text="Tùy chỉnh công cụ"
-convert_img_text="Sau khi xây dựng xong sẽ tiếp tục chuyển đổi"
-list_partition_text="Danh sách phân vùng đã giải mã"
 updating_text="Đang cập nhật"
 scroll_ngang_text="Tắt soft wrap log"
+input_file_text="Tệp đầu vào"
+input_folder_text="Thư mục đầu vào"
+path_text="Đường dẫn"
+build_time_text_2="Hiện tại:"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"
@@ -63,7 +64,6 @@ home_text_7="Thực thi các lệnh để thử nghiệm"
 
 # More
 more_text_1="Apkeditor"
-more_text_2="Công cụ giải mã APK và xây dựng"
 more_text_3="Nhập chữ ký"
 more_text_4="Xác định tệp:"
 more_text_5="Thiếu tệp:"
@@ -79,7 +79,6 @@ setting_text_2="Xem thông báo và cập nhật"
 setting_text_3="Dự án"
 setting_text_4="Thay đổi dự án và dọn dẹp"
 setting_text_5="Quyền khác"
-setting_text_6="Cấp quyền thủ công"
 setting_text_7="Tính năng"
 setting_text_8="Thay đổi và bật tắt tính năng"
 
@@ -91,8 +90,6 @@ permis_text_4="Quyền truy cập tệp tin"
 permis_text_5="Thay đổi ngôn ngữ"
 
 # Project
-project_text_1="Thư mục ROM"
-project_text_2="Thư mục APK"
 project_text_3="Dọn dẹp dự án"
 project_text_4="Trực tiếp xoá dữ án đã giải mã, hiện cả 2 loại thư mục giải mã rom và apk"
 project_text_5="Hoán đổi trang chủ"
@@ -101,7 +98,6 @@ project_text_7="Ẩn icon"
 project_text_8="Thông báo"
 project_text_9="Đây là kích thước được cấp cho java sử dụng tối đa, 1024m, chỉ bật cao khi build file nặng và thiết bị phải có nhiều ram để tránh bị lag quá tải"
 project_text_10="Cấp RAM cho Java"
-project_text_11="Luôn sáng MH ở chạy lệnh"
 project_text_12="Giới hạn số CPU"
 project_text_13="Sau khi thiết lập, các tiến trình chỉ có thể sử dụng tối đa số CPU đã chọn"
 project_text_14="Thay đổi ảnh nền"
@@ -138,7 +134,6 @@ flash_text_12="Hoàn thành"
 
 # Decode
 decode_text_1="Không giải mã tệp tin IMG"
-decode_text_2="Tính năng này bật thì sẽ chỉ giải nén file img ra cạnh tệp gốc"
 decode_text_3="Danh sách các tệp đầu vào .br .dat .img .zst .zstd .bin .zip"
 
 # Build
@@ -146,12 +141,10 @@ builds_text_1="Xây dựng các dự án đã giải mã trước đó"
 builds_text_2="Định dạng phân vùng và phương pháp đóng gói"
 builds_text_3="Phương pháp nén của erofs"
 builds_text_4="Mức nén"
-builds_text_5="Cấp độ nén erofs"
 builds_text_6="Cấp độ"
 builds_text_7="Lưu ý: Giá trị 0 tương ứng với 0Mb trống, thêm kích thước trống chỉ áp dụng cho phân vùng ext4, f2fs"
 builds_text_8="Vá tệp avb, vbmeta và fstab"
-builds_text_9="Tự động tìm và vá tệp avb, vbmeta, fstab trước khi xây dựng"
-builds_text_10="Cấp độ nén sẽ lấy ở mục chuyển đổi tệp"
+
 
 # build super
 super_text_2="Loại gói"
@@ -183,22 +176,21 @@ super_merge_text_3="Chọn tệp super.img.* để hợp nhất thành tệp sup
 
 # APK
 decom_apk_text_1="Giải mã dưới dạng XML"
-decom_apk_text_2="Giải mã dưới dạng Json"
 decom_apk_text_3="Không giải mã"
-decom_apk_text_4="Mặc định: 41, smali 2.5.2: 35, smali 3.0.9: 41 trở xuống"
-decom_apk_text_5="Chỉ AndroidManifest.xml"
-decom_apk_text_6="Tính năng khác"
+decom_apk_text_5="Chỉ giải mã AndroidManifest.xml"
 decom_apk_text_7="Xoá debug-info trong smali"
-decom_apk_text_8="Giải mã xml, json có thể chỉnh sửa được"
-decom_apk_text_9="Danh sách các loại tệp có thể hiện apk, zip, apks"
-decom_apk_text_10="Giải mã Resources.arsc"
+
+decom_apk_text_9="Danh sách các loại tệp"
+decom_apk_text_10="Chỉ giải mã resources.arsc"
 decom_apk_text_11="Giải mã tài nguyên"
-decom_apk_text_12="Giải mã classes*.dex"
+decom_apk_text_12="Giải mã dex sang smali"
 decom_apk_text_13="Sao chép Manifest.xml gốc"
-decom_apk_text_14="Phân chia lại Dex"
+decom_apk_text_14="Phân chia lại DEX"
+decom_apk_text_15="Mỗi công cụ giải mã đều có những tính năng riêng, tỷ lệ xây dựng lại cũng khác nhau"
 
 # build apk
 build_apk_text_1="Sắp xếp và lọc văn bản"
+build_apk_text_2="Khi xây dựng lại apk có thể xuất hiện lỗi, có thể nhờ sự trợ giúp từ trí tuệ nhân tạo để giải quyết vấn đề"
 
 # khôi phục sign
 restore_apk_text_1="Nhập tệp có chữ ký gốc"
@@ -241,7 +233,6 @@ supers_text_2="Xây dựng super thành công"
 # Repack
 replag_text_1="Bắt đầu giải mã"
 replag_text_2="Đang xây dựng"
-replag_text_3="Lỗi xây dựng - xem lỗi ở:"
 
 # Load
 load_text_1="Kết nối dữ liệu..."
@@ -249,21 +240,17 @@ load_text_2="Lỗi mạng hãy kiểm tra lại"
 
 # APK errors
 apke_text_1="Lỗi giải mã apk"
-apke_text_2="Đã giải mã xong"
 apke_text_3="Lỗi tệp tin apk"
 
 # APK build
 apkb_text_1="Xác định mục:"
 apkb_text_2="Kiểm tra văn bản..."
 apkb_text_3="Kiểm tra xong"
-apkb_text_4="Đã xây dựng xong"
-apkb_text_5="Giữ nguyên chữ ký"
 apkb_text_6="Sử dụng chữ ký:"
 
 # add lang
-addlang_text_1="Thêm ngôn ngữ"
-addlang_text_2="Nén lib**.so"
-addlang_text_3="Nếu là apk hệ thống thì không nên nén, nó có thể tự đọc lib**.so"
+addlang_text_2="Nén thư viện"
+addlang_text_3="Nếu đăt apk ở hệ thống thì nên chọn “Tắt” nếu có thư mục lib trong apk, còn lại mặc định"
 
 # backup apk
 backups_text_1="Chỉ sao lưu tệp apk, apks không sao lưu dữ liệu"
@@ -287,11 +274,8 @@ dexopt_app_text_3="Nếu bật lựa chọn này, mục danh sách ứng dụng 
 framework_auto_text="Nhập framework tự động"
 
 # Tính năng
-feature_hide_text="Bật/Tắt tính năng ẩn"
-use_apktool_text="Trình chỉnh sửa Apktool"
 use_network_text="Yêu cầu sử dụng mạng dữ liệu, để tiếp tục tải về"
 root_warning_text="Vui lòng root để sử dụng tính năng"
-root_warning_text_1="Cần root để sử dụng"
 deleted_file_text="Xoá tệp tin gốc sau khi hoàn thành"
 deleted_project_text="Xoá dự án sau khi xây dựng xong"
 google_translate_text="Google dịch"
@@ -303,7 +287,8 @@ apex_text_2="Danh sách hỗ trợ tệp: apex, capex"
 
 # other
 build_time_text_1="Thời gian xây dựng rom"
-build_time_text_2="Hiện tại:"
+convert_img_text="Sau khi xây dựng xong sẽ tiếp tục chuyển đổi"
+list_partition_text="Danh sách phân vùng đã giải mã"
 xoaoat_text_1="Dọn dẹp mục oat và odex"
 open_activity_text="Mở thư mục:"
 patch_text_fscontex="Vá fs_config và fs_contexts"
@@ -312,8 +297,3 @@ config_text_2="Tạo dự án mới hoặc chọn thư mục"
 
 # boot
 boot_text_1="Java đang cài đặt, mở lại sau 1~2 phút..."
-boot_text_3="Phiên bản gỡ lỗi"
-boot_text_4="10 phút sử dụng ứng dụng."
-boot_text_5="Phiên bản gỡ lỗi chỉ được phép sử dụng trong 10 phút."
-boot_text_6="Thời gian dùng thử của phiên bản gỡ lỗi đã hết."
-boot_text_7="Cảnh báo ứng dụng đã bị chỉnh sửa, hãy tải ở web GitHub: Zenlua/Tool-Tree với phiên bản chính thức"

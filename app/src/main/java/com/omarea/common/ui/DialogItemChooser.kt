@@ -21,7 +21,7 @@ class DialogItemChooser(
         // 是否永远显示为小窗口（而不是全屏）
         alwaysSmallDialog: Boolean? = null
 ) : DialogFullScreen(
-        (if (items.size > 7 && alwaysSmallDialog != true) {
+        (if (items.size > 5 && alwaysSmallDialog != true) {
             R.layout.dialog_item_chooser
         } else {
             R.layout.dialog_item_chooser_small

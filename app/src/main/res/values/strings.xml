@@ -180,4 +180,7 @@ If you agree, press the confirm button to continue."</string>
     <string name="debug_text_version">Current version</string>
     <string name="debug_text_delay">The trial period has ended, and the application has stopped working.</string>
     <string name="debug_text_notes">Switch to debug mode</string>
+    
+    <string name="check_time">Total time</string>
+    
 </resources>

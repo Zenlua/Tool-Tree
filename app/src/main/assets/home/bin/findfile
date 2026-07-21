@@ -148,7 +148,8 @@ case "$1" in
     ;;
 
   forapk)
-    ls -1d */archive-info.json | sed 's|/archive-info.json||g'
+    ls -1d */apktool.yml 2>/dev/null | sed 's|^\(.*\)/apktool.yml$|\1\|\1 (apktool)|'
+    ls -1d */archive-info.json 2>/dev/null | sed 's|^\(.*\)/archive-info.json$|\1\|\1 (apkeditor)|'
     ;;
 
   forapkt)

@@ -22,8 +22,8 @@ fi
 show_sett(){
 echo '
 <action icon="'`urlpng folder_rom`'" shell="hidden" reload="true">
-<title>'$project_text_1'</title>
-<summary>'$folder_text': '${PTSD/$SDCARD_PATH/\/sdcard}'</summary>
+<title>'$input_folder_text'</title>
+<summary>'$path_text': '${PTSD/$SDCARD_PATH/\/sdcard}'</summary>
 <param name="Name" desc="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $SDH" value-sh="glog PTSH"/>
 <param name="Folder" desc="'$config_text_2'" value-sh="glog PTSD" type="folder" editable="true" required="true"/>
 <set>
@@ -42,8 +42,8 @@ fi
 show_apkset(){
 echo '
 <action icon="'`urlpng folder_apk`'" shell="hidden" reload="true">
-<title>'$project_text_2'</title>
-<summary>'$folder_text': '${PTAD/$SDCARD_PATH/\/sdcard}'</summary>
+<title>'$input_folder_text'</title>
+<summary>'$path_text': '${PTAD/$SDCARD_PATH/\/sdcard}'</summary>
 <param name="Name" desc="'$config_text_1'" label="'$setting_text_3'" option-sh="findfile for $APK" value-sh="glog PTAH"/>
 <param name="Folder" desc="'$config_text_2'" value-sh="glog PTAD" type="folder" editable="true" required="true"/>
 <set>
@@ -129,7 +129,7 @@ fi
 <title>'$utilities_text'</title>
 <desc>'$home_text_2'</desc>
 <option type="default" config-sh="$ETC/tool-tree.bash Project">'$setting_text' - '$setting_text_3'</option>
-<option type="checkbox" id="v1" box="glog hide_show" silent="true" reload="true" >'$folder_text' ROM</option>
+<option type="checkbox" id="v1" box="glog hide_show" silent="true" reload="true" >'$input_folder_text'</option>
 '$vdbfbfsn'
 <option type="default" id="v2" silent="true">'$open_activity_text' ROM</option>
 <option type="default" id="v3" silent="true">'$open_activity_text' (data-root)</option>
@@ -233,20 +233,45 @@ fi
 <lock>
 [ -f $LOG/javaww ] && echo "'$boot_text_1'" || echo 0
 </lock>
-<option type="checkbox" id="v1" box="glog hide_show2" silent="true" reload="true">'$folder_text' APK</option>
+<option type="checkbox" id="v1" box="glog hide_show2" silent="true" reload="true">'$input_folder_text'</option>
+<option type="default" id="b2" >'$framework_auto_text'</option>
 <option type="file" id="v2" suffix="zip" auto-off="true">'$more_text_3'</option>
 <option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apkeditor.jar</option>
+<option type="file" id="b3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apktool.jar</option>
+<option type="file" id="b4" suffix="apk">'$more_text_10' framework</option>
 <option type="default" id="v4" silent="true">'$open_activity_text' APK</option>
 <option type="default" id="v5" silent="true">'$open_activity_text' (data-root)</option>
 <handler>
 if [ "$menu_id" == "v1" ]; then
 [ "$(glog hide_show2)" == 1 ] && slog hide_show2 0 || slog hide_show2 1
+elif [ "$menu_id" == "b2" ]; then
+    echo "Looking for system apk..."
+    for mm in $(pm list package -s | cut -f2 -d:); do
+    cggdccg="$(pm path $mm | cut -f2 -d:)"
+    [ -f "$cggdccg" ] && apktool if "$cggdccg" 2>/dev/null | sed "/127.apk/d"
+    done
+    rm -fr $HOME/.local/share/apktool/framework/1.apk
+    echo
+    checktime
+elif [ "$menu_id" == "b3" ]; then
+    echo "'$more_text_4' $file"
+    echo
+    unzip -oq $ETC/apktool.jar prebuilt/linux/aapt2 -d $TMP
+    cp -rf "$file" $TMP/apktool.jar || killtree "File copy error"
+    cd $TMP
+    zip -qr apktool.jar prebuilt/*
+    mv apktool.jar $ETC/apktool.jar
+    rm -fr prebuilt
+elif [ "$menu_id" == "b4" ]; then
+    echo "'$more_text_4' $file"
+    echo
+    apktool if "$file"
 elif [ "$menu_id" == "v2" ]; then
 echo "'$more_text_4' $file"
 echo
 [ "$(unzip -ql "$file" | grep -cm1 ".x509.pem")" == 1 ] || killtree "'$more_text_5' .x509.pem"
 [ "$(unzip -ql "$file" | grep -cm1 ".pk8")" == 1 ] || killtree "'$more_text_5' .pk8"
-unzip -o "$file" *.x509.pem *.pk8 -d "$ETC/key"
+unzip -oj "$file" *.x509.pem *.pk8 -d "$ETC/key"
 elif [ "$menu_id" == "v3" ]; then
 echo "'$more_text_4' $file"
 echo
@@ -903,7 +928,7 @@ if [ "$(glog hide_show 1)" == 1 ]; then
     show_sett
     echo "</group>"
 else
-    desc_rom="$folder_text: $(glog PTSD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_rom="$path_text: $(glog PTSD | sed "s|$SDCARD_PATH|\/sdcard|")"
     desc_rom1="$projects_text: $PTSH"
 fi
 
@@ -1055,7 +1080,7 @@ checktime
 if [ "$(glog hide_show_patch_rom 1)" == 1 ] && [ -f "$AON/patch_rom/addon.prop" ]; then
 dirvad="$AON/patch_rom"
 echo '<group>
-<page id="patch_rom" icon="'`urladd icon`'" config-sh="'$dirvad'/index.bash home">
+<page icon="'`urladd icon`'" config-sh="'$dirvad'/index.bash home">
 <title>Patch ROM</title>
 <option type="checkbox" box="glog auto_trans_text_patch_rom" id="v1" auto-off="true" reload="true" interruptible="false">'$google_translate_text'</option>
 <option type="refresh">'$refresh_text'</option>
@@ -1072,74 +1097,13 @@ fi
 fi
 }
 
-Apktools(){
-if [ "$(glog hide_show_apktool)" == 1 ]; then
-    echo "<group>"
-    show_apkset
-    echo "</group>"
-else
-    desc_apk="$folder_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
-    desc_apk1="$projects_text: $PTAH"
-fi
-
-echo '<group>
-<action icon="'`urlpng decom`'">
-<title>'$decompile_text'</title>
-<desc>'$desc_apk'</desc>
-<param name="mutiresk" label="'$option_text'" value-sh="glog mutiresk 1" option-sh="echo -e '"'0|$decom_apk_text_3\n1|$default_text\n2|$decom_apk_text_5'"'" desc="'$decom_apk_text_11'"/>
-<param name="dexlibk" label="'$option_text'" value-sh="glog dexlibk 2" option-sh="echo -e '"'0|$decom_apk_text_3\n1|$default_text\n2|Baksmali 3.0.9'"'" desc="'$decom_apk_text_12'"/>
-<param name="xoa_debug_info" value-sh="glog xoa_debug_info 1" label="'$decom_apk_text_7'" type="switch" />
-<param name="FILE" multiple="multiple" option-sh="findfile 9 $PTAD" required="true" desc="'$decom_apk_text_9'"/>
-<set>
-IFS=$'"'\n'"'
-    slog dexlibk "$dexlibk"
-    slog mutiresk "$mutiresk"
-    slog xoa_debug_info "$xoa_debug_info"
-for vapk in $FILE; do
-apktool_d -i "$PTAD/$vapk" -r "$mutiresk" -b "$xoa_debug_info" -d "$dexlibk" -o "$APK/$PTAH"
-echo
-done
-echo "'$save_text' $APK/$PTAH"
-echo
-checktime
-</set>
-</action>
-
-<action icon="'`urlpng build`'" desc="'$desc_apk1'">
-<title>'$build_text'</title>
-<param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
-<param name="sign" value-sh="glog sign default" option-sh="findfile file $ETC/key .pk8 | sed '"'s|.pk8||'"' " label="'$sign_text'"/>
-<param name="sstring" label="'$build_apk_text_1'" type="switch" value-sh="glog sstring 1"/>
-<param name="redivdd" label="'$decom_apk_text_14'" type="switch" value-sh="glog redivdd"/>
-<param name="copysign" label="'$decom_apk_text_13'" type="switch" value-sh="glog copysign"/>
-<param name="comlib" label="'$addlang_text_2'" value-sh="glog comlibs" option-sh="echo -e '"'manifest|$default_text\ntrue|$on_text\nfalse|$off_text'"'"/>
-<param name="FOLDER" required="true" option-sh="findfile forapkt $APK/$PTAH" multiple="multiple" desc="'$builds_text_1'"/>
-<set>
-slog sign "$sign"
-slog sstring "$sstring"
-slog xoatm "$xoatm"
-slog copysign "$copysign"
-slog redivdd "$redivdd"
-slog comlibs "$comlib"
-IFS=$'"'\n'"'
-for vbapk in $FOLDER; do
-apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm" -r "$redivdd" -x "$comlib"
-echo
-done
-echo "'$save_text' $PTAD/out"
-echo
-checktime
-</set>
-</action></group>'
-}
-
 Apex(){
 if [ "$(glog hide_show_apex)" == 1 ]; then
     echo "<group>"
     show_apkset
     echo "</group>"
 else
-    desc_apkd="$folder_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_apkd="$path_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
     desc_apkd1="$projects_text: $PTAH"
 fi
 
@@ -1195,30 +1159,39 @@ if [ "$(glog hide_show2 1)" == 1 ]; then
     show_apkset
     echo "</group>"
 else
-    desc_apks="$folder_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_apks="$path_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
     desc_apks1="$projects_text: $PTAH"
 fi
 
 echo '<group>
-<action icon="'`urlpng decom`'">
+<action icon="'`urlpng decom`'" warn="'$decom_apk_text_15'">
 <title>'$decompile_text'</title>
 <desc>'$desc_apks'</desc>
-<param name="type_apk" value-sh="glog type_apk xml" desc="'$decom_apk_text_8'" label="'$option_text'" >
-<option value="xml">'$decom_apk_text_1'</option>
-<option value="json">'$decom_apk_text_2'</option>
-<option value="reso">'$decom_apk_text_10'</option>
+<param name="tooldecom" label="'$tools_text'" title="'$customize_tools_text'" value-sh="glog tooldecom apkeditor" option-sh="echo -e '"'apkeditor|Apkeditor\napktool|Apktool'"'"/>
+<param name="mutiresk" title="'$decom_apk_text_11'" label="'$option_text'" value-sh="glog mutiresk 1" option-sh="echo -e '"'0|$decom_apk_text_3\n1|$default_text\n2|$decom_apk_text_5'"'" depend-on="tooldecom" depend-value="apkeditor" depend-mode="hide"/>
+<param name="type_apk" title="'$decom_apk_text_11'" value-sh="glog type_apk xml" label="'$option_text'" depend-on="tooldecom" depend-value="apktool" depend-mode="hide">
 <option value="raw">'$decom_apk_text_3'</option>
+<option value="xml">'$default_text'</option>
+<option value="reso">'$decom_apk_text_10'</option>
 </param>
-<param name="dexlib" label="'$option_text'" desc="'$decom_apk_text_4'" value-sh="glog dexlib smali" option-sh="echo -e '"'nodex|$decom_apk_text_3\ninternal|$default_text\njf|Baksmali 2.5.2\nsmali|Baksmali 3.0.9'"'"/>
-<param name="xoa_debug_info" value-sh="glog xoa_debug_info 1" label="'$decom_apk_text_7'" type="switch" depend-on="dexlib" depend-value="nodex" depend-mode="hide" depend-readonly="true"/>
-<param name="FILE" multiple="multiple" option-sh="findfile 9 $PTAD" required="true" desc="'$decom_apk_text_9'"/>
+<param name="dexlibk" title="'$decom_apk_text_12'" label="'$option_text'" value-sh="glog dexlibk 2" option-sh="echo -e '"'0|$decom_apk_text_3\n1|$default_text\n2|Baksmali 3.0.9'"'" depend-on="tooldecom" depend-value="apkeditor" depend-mode="hide"/>
+<param name="dexlib" title="'$decom_apk_text_12'" label="'$option_text'" value-sh="glog dexlib smali" option-sh="echo -e '"'nodex|$decom_apk_text_3\ninternal|$default_text\nsmali|Baksmali 3.0.9'"'" depend-on="tooldecom" depend-value="apktool" depend-mode="hide"/>
+<param name="xoa_debug_info" value-sh="glog xoa_debug_info 1" label="'$decom_apk_text_7'" type="switch" depend-on="dexlib|dexlibk" depend-value="nodex|0" depend-mode="hide|hide" depend-cascade="false" depend-readonly="true" depend-logic="priority"/>
+<param name="FILE" multiple="multiple" option-sh="findfile 9 $PTAD" required="true" title="'$decom_apk_text_9'" desc="'$input_file_text': apk, apks, apkm, xapk, jar, zip"/>
 <set>
 slog dexlib "$dexlib"
+slog tooldecom "$tooldecom"
 slog xoa_debug_info "$xoa_debug_info"
 slog type_apk "$type_apk"
+slog dexlibk "$dexlibk"
+slog mutiresk "$mutiresk"
 IFS=$'"'\n'"'
 for vapk in $FILE; do
+if [ "$tooldecom" == "apkeditor" ]; then
 apkeditor_d -i "$PTAD/$vapk" -t "$type_apk" -b "$xoa_debug_info" -d "$dexlib" -o "$APK/$PTAH"
+else
+apktool_d -i "$PTAD/$vapk" -r "$mutiresk" -b "$xoa_debug_info" -d "$dexlibk" -o "$APK/$PTAH"
+fi
 echo
 done
 echo "'$save_text' $APK/$PTAH"
@@ -1227,12 +1200,14 @@ checktime
 </set>
 </action>
 
-<action icon="'`urlpng build`'" desc="'$desc_apks1'">
+<action icon="'`urlpng build`'" warn="'$build_apk_text_2'">
 <title>'$build_text'</title>
+<desc>'$desc_apks1'</desc>
 <param name="xoatm" label="'$deleted_project_text'" type="bool" value-sh="glog xoatm 0" />
 <param name="sign" value-sh="glog sign default" option-sh="findfile file $ETC/key .pk8 | sed '"'s|.pk8||'"'" label="'$sign_text'"/>
 <param name="sstring" label="'$build_apk_text_1'" type="switch" value-sh="glog sstring 1"/>
 <param name="redivdd" label="'$decom_apk_text_14'" type="switch" value-sh="glog redivdd"/>
+<param name="copysign" label="'$decom_apk_text_13'" type="switch" value-sh="glog copysign" depend-on="FOLDER" depend-value="(apktool)" depend-mode="show" depend-default="hide"/>
 <param name="comlib" label="'$addlang_text_2'" desc="'$addlang_text_3'" value-sh="glog comlib" option-sh="echo -e '"'manifest|$default_text\ntrue|$on_text\nfalse|$off_text'"'"/>
 <param name="FOLDER" required="true" option-sh="findfile forapk $APK/$PTAH" multiple="multiple" desc="'$builds_text_1'"/>
 <set>
@@ -1240,10 +1215,15 @@ slog sign "$sign"
 slog comlib "$comlib"
 slog sstring "$sstring"
 slog xoatm "$xoatm"
+slog copysign "$copysign"
 slog redivdd "$redivdd"
 IFS=$'"'\n'"'
 for vbapk in $FOLDER; do
+if [ -f "$vbapk/archive-info.json" ]; then
 apkeditor_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib" -r "$redivdd"
+else
+apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm" -r "$redivdd" -x "$comlib"
+fi
 echo
 done
 echo "'$save_text' $PTAD/out"
@@ -1251,42 +1231,6 @@ echo
 checktime
 </set>
 </action></group>
-
-<group>
-<page icon="'`urlpng apktool`'" config-sh="$ETC/tool-tree.bash Apktools" >
-<title>'$use_apktool_text'</title>
-<option type="checkbox" box="glog hide_show_apktool" id="v1" silent="true" reload="true">'$folder_text' APK</option>
-<option type="default" id="v2" >'$framework_auto_text'</option>
-<option type="file" id="v3" suffix="jar" reload="true" auto-off="true">'$more_text_10' apktool.jar</option>
-<option type="file" id="v4" suffix="apk">'$more_text_10' framework</option>
-<handler>
-if [ "$menu_id" == "v1" ]; then
-    [ "$(glog hide_show_apktool)" == 1 ] && slog hide_show_apktool 0 || slog hide_show_apktool 1
-elif [ "$menu_id" == "v2" ]; then
-    echo "Looking for system apk..."
-    for mm in $(pm list package -s | cut -f2 -d:); do
-    cggdccg="$(pm path $mm | cut -f2 -d:)"
-    [ -f "$cggdccg" ] && apktool if "$cggdccg" 2>/dev/null | sed "/127.apk/d"
-    done
-    rm -fr $HOME/.local/share/apktool/framework/1.apk
-    echo
-    checktime
-elif [ "$menu_id" == "v3" ]; then
-    echo "'$more_text_4' $file"
-    echo
-    unzip -oq $ETC/apktool.jar prebuilt/linux/aapt2 -d $TMP
-    cp -rf "$file" $TMP/apktool.jar || killtree "File copy error"
-    cd $TMP
-    zip -qr apktool.jar prebuilt/*
-    mv apktool.jar $ETC/apktool.jar
-    rm -fr prebuilt
-elif [ "$menu_id" == "v4" ]; then
-    echo "'$more_text_4' $file"
-    echo
-    apktool if "$file"
-fi
-</handler>
-</page></group>
 
 <group>
 <page icon="'`urlpng apex`'" config-sh="$ETC/tool-tree.bash Apex" >

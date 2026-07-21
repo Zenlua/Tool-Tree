@@ -167,4 +167,6 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="debug_text_delay">Thời gian thử nghiệm đã hết, ứng dụng đã ngừng hoạt động.</string>
     <string name="debug_text_notes">Chuyển sang chế độ debug</string>
 
+    <string name="check_time">Tổng thời gian</string>
+
 </resources>
