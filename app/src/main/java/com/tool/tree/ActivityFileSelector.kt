@@ -12,7 +12,6 @@ import com.omarea.common.ui.ProgressBarDialog
 import com.tool.tree.databinding.ActivityFileSelectorBinding
 import com.tool.tree.ui.AdapterFileSelector
 import java.io.File
-import androidx.activity.addCallback
 import com.google.android.material.snackbar.Snackbar;
 
 class ActivityFileSelector : AppCompatActivity() {
@@ -49,11 +48,12 @@ class ActivityFileSelector : AppCompatActivity() {
             finish()
         }
 
-        onBackPressedDispatcher.addCallback(this) {
-            if (adapterFileSelector?.goParent() == true) return@addCallback
-            setResult(RESULT_CANCELED, Intent())
-            finish()
-        }
+        PredictiveBackHelper(this, binding.root) {
+            if (adapterFileSelector?.goParent() != true) {
+                setResult(RESULT_CANCELED, Intent())
+                finish()
+            }
+        }.register(onBackPressedDispatcher)
 
         intent.extras?.run {
             if (containsKey("extension")) {

@@ -16,7 +16,6 @@ import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.Toast
-import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
@@ -113,7 +112,7 @@ class TextEditorActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener { attemptClose() }
         setupUndoRedoButtons(toolbar)
     
-        onBackPressedDispatcher.addCallback(this) { attemptClose() }
+        PredictiveBackHelper(this, binding.root) { attemptClose() }.register(onBackPressedDispatcher)
     
         filePath = intent.getStringExtra(EXTRA_FILE) ?: ""
         if (filePath.isEmpty()) {

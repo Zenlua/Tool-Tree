@@ -14,7 +14,6 @@ import android.view.MenuItem
 import android.view.View
 import android.webkit.*
 import android.widget.Toast
-import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -65,13 +64,13 @@ class ActionPageOnline : AppCompatActivity() {
 
         binding.krOnlineWebview.setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
-        onBackPressedDispatcher.addCallback(this) {
+        PredictiveBackHelper(this, binding.root) {
             if (binding.krOnlineWebview.canGoBack()) {
                 binding.krOnlineWebview.goBack()
             } else {
                 finish()
             }
-        }
+        }.register(onBackPressedDispatcher)
 
         loadIntentData()
     }
