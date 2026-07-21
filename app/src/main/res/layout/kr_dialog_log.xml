@@ -7,38 +7,44 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageButton
-        android:id="@+id/btn_hide"
-        android:scaleX="0.8"
-        android:scaleY="0.8"
-        style="@style/SceneButton"
+    <LinearLayout
+        android:id="@+id/top_actions"
+        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="8dp"
-        android:scaleType="centerInside"
-        android:padding="7dp"
-        android:src="@drawable/kr_hide"
-        android:contentDescription="@null" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-    <ImageButton
-        android:id="@+id/btn_wrap"
-        android:scaleX="0.8"
-        android:scaleY="0.8"
-        style="@style/SceneButton"
-        android:layout_alignTop="@id/btn_hide"
-        android:layout_toStartOf="@id/btn_hide"
-        android:layout_marginStart="8dp"
-        android:scaleType="centerInside"
-        android:padding="7dp"
-        android:tint="?android:textColorPrimary"
-        android:src="@drawable/ic_wrap_text"
-        android:contentDescription="@string/btn_toggle_soft_wrap" />
+        <ImageButton
+            android:id="@+id/btn_wrap"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            style="@style/SceneButton"
+            android:scaleType="centerInside"
+            android:padding="7dp"
+            android:tint="?android:textColorPrimary"
+            android:src="@drawable/ic_wrap_text"
+            android:contentDescription="@string/btn_toggle_soft_wrap" />
+
+        <ImageButton
+            android:id="@+id/btn_hide"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            style="@style/SceneButton"
+            android:layout_marginStart="8dp"
+            android:scaleType="centerInside"
+            android:padding="7dp"
+            android:src="@drawable/kr_hide"
+            android:contentDescription="@null" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/top_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_toStartOf="@id/btn_wrap"
+        android:layout_toStartOf="@id/top_actions"
         android:orientation="vertical">
 
         <TextView
