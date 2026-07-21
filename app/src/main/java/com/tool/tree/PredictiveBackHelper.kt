@@ -43,10 +43,12 @@ class PredictiveBackHelper(
         dispatcher.addCallback(activity, object : OnBackPressedCallback(true) {
 
             override fun handleOnBackStarted(backEvent: BackEventCompat) {
+                android.util.Log.d("PredictiveBack", "handleOnBackStarted called - edge=${backEvent.swipeEdge}")
                 contentView.pivotY = contentView.height / 2f
             }
 
             override fun handleOnBackProgressed(backEvent: BackEventCompat) {
+                android.util.Log.d("PredictiveBack", "handleOnBackProgressed progress=${backEvent.progress}")
                 val progress = backEvent.progress.coerceIn(0f, 1f)
 
                 val scale = 1f - (1f - minScale) * progress
