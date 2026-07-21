@@ -1036,7 +1036,7 @@ checktime
 <option value="dat">File.new.dat</option>
 <option value="br">File.new.dat.br</option>
 </param>
-<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'" depend-on="format_img" depend-value="raw,sparse,File.new.dat" depend-mode="hide" />
+<param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'" depend-on="format_img" depend-value="raw,sparse,File.new.dat" depend-mode="hide" depend-readonly="true"/>
 <param name="IMAGES" desc="'$convert_text_3'" options-sh="findfile 1 $PTSD" multiple="true" required="true"/>
 <set>
 slog format_img "$format_img"
