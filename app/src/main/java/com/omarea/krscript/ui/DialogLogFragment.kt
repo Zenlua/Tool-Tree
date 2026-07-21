@@ -205,23 +205,18 @@ class DialogLogFragment : DialogFragment() {
     }
 
     /**
-     * Áp dụng trạng thái bật/tắt soft wrap cho log output:
-     * - wrapEnabled = true: logScrollInner (ScrollView dọc) là con trực tiếp của container cố định
-     *   (logScrollView), tự động xuống dòng như cũ.
-     * - wrapEnabled = false: logScrollInner được đặt vào bên trong một HorizontalScrollView có kích
-     *   thước CỐ ĐỊNH bằng đúng khung nhìn (container), rồi HorizontalScrollView đó mới là con của
-     *   container. Nhờ vậy thanh cuộn ngang được vẽ dựa trên khung nhìn cố định (chứ không phải theo
-     *   chiều cao thật của toàn bộ log), nên nó luôn nằm cố định ở đáy khung log, dù log dài bao nhiêu.
+     * Áp dụng trạng thái bật/tắt soft wrap cho log output, tương tự cách làm ở TextEditorActivity:
+     * - wrapEnabled = true: shellOutput nằm trực tiếp trong ScrollView (cuộn dọc), tự động xuống dòng.
+     * - wrapEnabled = false: shellOutput được bọc trong một HorizontalScrollView (cho phép cuộn ngang),
+     *   không tự động xuống dòng.
      */
     private fun applyWrapState() {
         val b = _binding ?: return
         val logView = b.shellOutput
-        val container = b.logScrollView
-        val verticalScroll = b.logScrollInner
+        val scrollView = b.logScrollView
 
         (logView.parent as? ViewGroup)?.removeView(logView)
-        (verticalScroll.parent as? ViewGroup)?.removeView(verticalScroll)
-        noWrapContainer?.let { (it.parent as? ViewGroup)?.removeView(it) }
+        noWrapContainer?.let { scrollView.removeView(it) }
         logView.setHorizontallyScrolling(!wrapEnabled)
 
         if (wrapEnabled) {
@@ -229,41 +224,28 @@ class DialogLogFragment : DialogFragment() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            verticalScroll.addView(logView)
-            verticalScroll.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            container.addView(verticalScroll)
+            scrollView.addView(logView)
         } else {
+            val hsv = noWrapContainer ?: HorizontalScrollView(requireContext()).also {
+                it.isFillViewport = false
+                it.isHorizontalScrollBarEnabled = false
+                noWrapContainer = it
+            }
             logView.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            verticalScroll.addView(logView)
-            verticalScroll.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-
-            val hsv = noWrapContainer ?: (layoutInflater.inflate(
-                R.layout.kr_log_nowrap_scroll,
-                container,
-                false
-            ) as HorizontalScrollView).also {
-                noWrapContainer = it
-            }
             hsv.removeAllViews()
-            hsv.addView(verticalScroll)
+            hsv.addView(logView)
             hsv.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+                ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            container.addView(hsv)
+            scrollView.addView(hsv)
         }
 
         b.btnWrap.alpha = if (wrapEnabled) 0.5f else 1f
-        verticalScroll.post { verticalScroll.fullScroll(ScrollView.FOCUS_DOWN) }
+        scrollView.post { scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
     }
 
     /**
