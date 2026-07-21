@@ -476,7 +476,7 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
     //                     (EditText/CheckBox/Switch/SeekBar/Spinner/nút bấm...) để
     //                     người dùng không thể chỉnh sửa giá trị, nhưng vẫn nhìn thấy nó.
     private fun setRowInteractive(row: View, enabled: Boolean) {
-        row.alpha = if (enabled) 1f else 0.6f
+        row.alpha = if (enabled) 1f else 0.8f
         setEnabledRecursively(row, enabled)
     }
 
