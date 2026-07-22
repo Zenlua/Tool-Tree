@@ -332,18 +332,31 @@ class DialogLogFragment : DialogFragment() {
         private var lineStart = 0
         private var pendingOverwrite = false
 
-        // Độ dài logBuffer đã được đẩy lên UI (chỉ đọc/ghi trong synchronized(logBuffer))
+        // Độ dài logBuffer đã được đẩy lên UI (chỉ đọc/ghi trong synchronized(logBuffer)).
+        // Bất biến quan trọng: SAU MỖI LẦN flush thành công, nội dung hiển thị trên UI luôn
+        // trùng khớp CHÍNH XÁC với logBuffer[0, uiAppliedLength).
         private var uiAppliedLength = 0
-        // true nếu lần vẽ UI tiếp theo cần set lại toàn bộ text (do \r ghi đè hoặc log bị cắt tỉa)
-        private var needFullRefresh = false
+
+        // Vị trí (tính theo tọa độ logBuffer/UI) SỚM NHẤT mà nội dung đã bị thay đổi so với
+        // lần flush trước (do \r ghi đè dòng, hoặc do cắt tỉa log). Int.MAX_VALUE nghĩa là
+        // "chưa có gì bị ghi đè, chỉ có nội dung mới được thêm vào cuối" (trường hợp append thường).
+        // Nhờ theo dõi chính xác vị trí này (thay vì đoán qua so sánh từng ký tự), lần flush tiếp
+        // theo chỉ cần thay thế ĐÚNG đoạn bị đổi bằng Editable.replace(), KHÔNG BAO GIỜ gán lại
+        // toàn bộ `.text = ...`. Đây là điểm mấu chốt để tránh lỗi "nhảy lên đầu" khi có \r:
+        // gán lại `.text` khiến TextView coi như nội dung hoàn toàn mới, tự reset con trỏ/selection
+        // về vị trí 0, kéo theo ScrollView bị giật lên đầu; còn Editable.replace() chỉ sửa đúng
+        // phần thay đổi tại chỗ, không làm mất "trạng thái" hiển thị hiện tại.
+        private var uiInvalidFrom = Int.MAX_VALUE
+
         // Đảm bảo nhiều lần cập nhật log liên tiếp chỉ gộp lại thành 1 lần vẽ UI / 1 lần cuộn,
         // tránh spam Runnable + fullScroll() lên Main thread khi shell xả log dồn dập -> đây là
         // nguyên nhân chính gây giật/lag khi log in ra nhanh.
         private val pendingUiUpdate = AtomicBoolean(false)
 
         init {
-            // Không set trực tiếp editable ban đầu nữa, quản lý qua append tĩnh cho mượt
-            logView?.text = ""
+            // Bắt buộc dùng BufferType.EDITABLE ngay từ đầu để có thể dùng editableText.replace()
+            // ở flushToUi(), thay vì phải gán lại `.text` (nguyên nhân gây giật/nhảy scroll).
+            logView?.setText("", TextView.BufferType.EDITABLE)
         }
 
         private fun getColor(resId: Int): Int {
@@ -419,11 +432,17 @@ class DialogLogFragment : DialogFragment() {
                 lineStart = 0
                 pendingOverwrite = false
                 uiAppliedLength = 0
-                needFullRefresh = false
+                uiInvalidFrom = Int.MAX_VALUE
                 logBuffer.clear()
             }
             logViewRef.get()?.post {
-                logViewRef.get()?.text = ""
+                val tv = logViewRef.get() ?: return@post
+                val editable = tv.editableText
+                if (editable != null) {
+                    editable.clear()
+                } else {
+                    tv.setText("", TextView.BufferType.EDITABLE)
+                }
             }
         }
 
@@ -498,6 +517,14 @@ class DialogLogFragment : DialogFragment() {
         }
 
         /**
+         * Đánh dấu rằng nội dung từ vị trí [from] trở đi trong logBuffer đã bị thay đổi so với
+         * lần flush trước, để flushToUi() biết chính xác cần Editable.replace() từ đâu.
+         */
+        private fun markInvalidFrom(from: Int) {
+            if (from < uiInvalidFrom) uiInvalidFrom = from
+        }
+
+        /**
          * XỬ LÝ CHUỖI TẠI BACKGROUND THREAD ĐỂ GIẢM TẢI UI THREAD
          */
         private fun dispatchLogUpdate(formattedText: CharSequence) {
@@ -516,9 +543,9 @@ class DialogLogFragment : DialogFragment() {
                         if (pendingOverwrite) {
                             if (lineStart in 0..logBuffer.length) {
                                 logBuffer.delete(lineStart, logBuffer.length)
+                                markInvalidFrom(lineStart)
                             }
                             pendingOverwrite = false
-                            needFullRefresh = true
                         }
                         logBuffer.append(segment)
                     }
@@ -534,8 +561,8 @@ class DialogLogFragment : DialogFragment() {
                             '\n' -> {
                                 if (pendingOverwrite && lineStart in 0..logBuffer.length) {
                                     logBuffer.delete(lineStart, logBuffer.length)
+                                    markInvalidFrom(lineStart)
                                     pendingOverwrite = false
-                                    needFullRefresh = true
                                 }
                                 logBuffer.append('\n')
                                 lineCount++
@@ -567,14 +594,15 @@ class DialogLogFragment : DialogFragment() {
                         lineCount = 5000
                         lineStart = (lineStart - deleteEndIndex).coerceAtLeast(0)
                         uiAppliedLength = (uiAppliedLength - deleteEndIndex).coerceAtLeast(0)
-                        needFullRefresh = true // Cần reload toàn bộ vì cấu trúc buffer đã dịch chuyển
+                        // Toàn bộ tọa độ đã dịch chuyển do cắt từ đầu -> cần đồng bộ lại từ đầu buffer
+                        uiInvalidFrom = 0
                     }
                 }
             }
 
             // GỘP CẬP NHẬT UI: nếu đã có 1 lần vẽ đang chờ chạy trên Main thread thì không post thêm.
             // Khi Main thread rảnh và chạy tới, flushToUi() sẽ tự đọc trạng thái MỚI NHẤT của logBuffer,
-            // nên nhiều dòng log đến dồn dập chỉ gây ra 1 lần setText/append + 1 lần cuộn, thay vì
+            // nên nhiều dòng log đến dồn dập chỉ gây ra 1 lần cập nhật + 1 lần cuộn, thay vì
             // một Runnable + một fullScroll() cho từng dòng -> đây là nguyên nhân chính gây giật.
             if (pendingUiUpdate.compareAndSet(false, true)) {
                 logView.post {
@@ -585,38 +613,51 @@ class DialogLogFragment : DialogFragment() {
         }
 
         /**
-         * Vẽ lên UI. Bình thường chỉ append phần text MỚI (không copy lại toàn bộ buffer),
-         * chỉ khi có \r ghi đè dòng hoặc log vừa bị cắt tỉa (>5000 dòng) mới cần set lại toàn bộ.
+         * Vẽ lên UI. CHỈ thay thế đúng đoạn nội dung đã thay đổi kể từ lần flush trước
+         * (append thường: chỉ phần thêm mới ở cuối; có \r ghi đè: đoạn từ uiInvalidFrom trở đi),
+         * bằng Editable.replace() tại chỗ. KHÔNG BAO GIỜ gán lại toàn bộ `.text = ...`, vì việc
+         * gán lại text khiến TextView/ScrollView tự reset về vị trí 0 -> đây chính là nguyên nhân
+         * gây hiện tượng "nhảy lên đầu" khi có \r.
          */
         private fun flushToUi(logView: TextView) {
-            val chunk: CharSequence?
-            val doFullRefresh: Boolean
+            var replaceFrom: Int
+            val oldUiLength: Int
+            val tail: CharSequence?
 
             synchronized(logBuffer) {
-                doFullRefresh = needFullRefresh
-                needFullRefresh = false
-                chunk = when {
-                    doFullRefresh -> SpannableStringBuilder(logBuffer)
-                    logBuffer.length > uiAppliedLength -> logBuffer.subSequence(uiAppliedLength, logBuffer.length)
-                    else -> null
+                oldUiLength = uiAppliedLength
+                replaceFrom = if (uiInvalidFrom == Int.MAX_VALUE) oldUiLength else uiInvalidFrom
+                if (replaceFrom > oldUiLength) replaceFrom = oldUiLength
+                if (replaceFrom < 0) replaceFrom = 0
+
+                tail = if (replaceFrom < logBuffer.length || replaceFrom < oldUiLength) {
+                    SpannableStringBuilder(logBuffer.subSequence(replaceFrom, logBuffer.length))
+                } else {
+                    null
                 }
+
                 uiAppliedLength = logBuffer.length
+                uiInvalidFrom = Int.MAX_VALUE
             }
 
-            if (chunk == null) return
+            if (tail == null) return
 
-            if (doFullRefresh) {
-                logView.text = chunk
-            } else {
-                logView.append(chunk)
+            var editable = logView.editableText
+            if (editable == null) {
+                // Phòng hờ: nếu vì lý do gì đó buffer type chưa phải EDITABLE (không nên xảy ra
+                // do đã setText(..., BufferType.EDITABLE) từ init/resetLogState), thiết lập lại.
+                logView.setText("", TextView.BufferType.EDITABLE)
+                editable = logView.editableText ?: return
             }
+
+            val safeOldEnd = oldUiLength.coerceIn(0, editable.length)
+            val safeFrom = replaceFrom.coerceIn(0, safeOldEnd)
+            editable.replace(safeFrom, safeOldEnd, tail)
 
             // Tối ưu cuộn ScrollView xuống cuối.
-            // Dùng OnPreDrawListener thay vì gọi fullScroll() ngay lập tức: onPreDraw() được gọi
-            // ngay TRƯỚC khi frame kế tiếp được vẽ, tức là chắc chắn measure()/layout() cho nội
-            // dung mới (kể cả khi setText() toàn bộ do \r ghi đè dòng) đã hoàn tất. Nhờ vậy
-            // fullScroll() luôn tính đúng theo chiều cao mới nhất, không còn bị "nhảy lên đầu"
-            // do dùng số đo cũ (stale) như khi gọi trực tiếp ngay sau logView.text = chunk.
+            // Dùng OnPreDrawListener: onPreDraw() được gọi ngay TRƯỚC khi frame kế tiếp được vẽ,
+            // tức là chắc chắn measure()/layout() cho nội dung mới đã hoàn tất, nên fullScroll()
+            // luôn tính đúng theo chiều cao mới nhất (không dùng số đo cũ/stale).
             findScrollViewAncestor(logView)?.let { scrollView ->
                 if (!scrollView.isAttachedToWindow) return@let
                 scrollView.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
