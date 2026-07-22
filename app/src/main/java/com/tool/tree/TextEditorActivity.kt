@@ -56,8 +56,12 @@ class TextEditorActivity : AppCompatActivity() {
             "py" to "python"
         )
     
-        // Cho phép dòng đầu tiên của nội dung khai báo ngôn ngữ thực tế của file,
-        // ví dụ "# python" hoặc "#!/usr/bin/env python", bất kể phần mở rộng file là gì.
+        // Cho phép dòng đầu tiên của nội dung khai báo ngôn ngữ thực tế của file, ví dụ:
+        // "# python", "#!/usr/bin/env python", hoặc shebang trỏ tới binary Termux
+        // được bundle riêng trong thư mục dữ liệu của app (com.tool.tree), ví dụ:
+        //   #!/data/data/com.tool.tree/files/home/termux/bin/python
+        //   #!/data/data/com.tool.tree/files/home/bin/bash
+        // (vẫn hỗ trợ cả dạng /data/user/<id>/... phòng khi thiết bị multi-user)
         private val FIRST_LINE_LANG_PATTERN = Regex(
             """^#!?\s*(?:/usr/bin/env\s+)?(?:/data/(?:data|user/\d+)/com\.tool\.tree/\S*/)?(python3?|py|bash|sh|shell)\b""",
             RegexOption.IGNORE_CASE
@@ -103,6 +107,7 @@ class TextEditorActivity : AppCompatActivity() {
     private var mainListBaseBottomMargin = 0
     private var syntaxHighlighter: SyntaxHighlighter? = null
     private var placeholderText: String = ""
+    private var titleText: String = ""
     private var lastLanguageOverride: String? = null
     
     private data class EditorSnapshot(val text: String, val cursor: Int)
@@ -146,6 +151,7 @@ class TextEditorActivity : AppCompatActivity() {
         absoluteFilePath = resolveAbsolutePath(configDir, filePath)
         wrapEnabled = intent.getBooleanExtra(EXTRA_WRAP, true)
         placeholderText = intent.getStringExtra(EXTRA_PLACEHOLDER).orEmpty()
+        titleText = intent.getStringExtra(EXTRA_TITLE).orEmpty()
     
         applyWrapState()
         setupCursorAutoScroll()
@@ -639,7 +645,7 @@ class TextEditorActivity : AppCompatActivity() {
     
     private fun runScript(interpreter: String) {
         val runNode = ActionNode(absoluteFilePath).apply {
-            title = File(absoluteFilePath).name
+            title = titleText.ifEmpty { File(absoluteFilePath).name }
             interruptable = true
             shell = RunnableNode.shellModeDefault
         }
