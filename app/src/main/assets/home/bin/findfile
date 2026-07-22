@@ -152,10 +152,6 @@ case "$1" in
     ls -1d */archive-info.json 2>/dev/null | sed 's|^\(.*\)/archive-info.json$|\1\|\1 (apkeditor)|'
     ;;
 
-  forapkt)
-    ls -1d */apktool.yml | sed 's|/apktool.yml||g'
-    ;;
-
   forapex)
     ls -1d */apex_infor.ini | sed 's|/apex_infor.ini||g'
     ;;

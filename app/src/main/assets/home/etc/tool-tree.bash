@@ -1146,7 +1146,7 @@ slog copysign "$copysign"
 slog redivdd "$redivdd"
 IFS=$'"'\n'"'
 for vbapk in $FOLDER; do
-    if [ -f "$vbapk/archive-info.json" ]; then
+    if [ -f "$APK/$PTAH/$vbapk/archive-info.json" ]; then
         apkeditor_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib" -r "$redivdd"
     else
         apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm" -r "$redivdd" -x "$comlib"
