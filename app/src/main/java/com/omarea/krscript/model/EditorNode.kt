@@ -9,6 +9,7 @@ package com.omarea.krscript.model
 class EditorNode(currentConfigXml: String) : ClickableNode(currentConfigXml) {
     // Đường dẫn file cần mở để soạn thảo (bắt buộc)
     var file: String = ""
+    var placeholder: String? = null
 
     // Trạng thái ngắt dòng mặc định khi mở trang soạn thảo (mặc định: bật ngắt dòng)
     var wrap: Boolean = true
