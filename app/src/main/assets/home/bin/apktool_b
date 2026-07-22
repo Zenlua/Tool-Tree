@@ -69,16 +69,16 @@ echo "$apkb_text_1 ${INPUT##*/}"
 echo
 
 # Lọc vẫn bản
-if [ -d "$INPUT/res/values" ] && [ "$FIRTVB" == 1 ];then
+if [ -d "$INPUT/res/values" ] && [ "$FIRTVB" == 1 ]; then
 echo "$apkb_text_2"
 echo
 cp "$INPUT/.cache/hash_res.json" "$INPUT/.cache/2hash_res.json"
 for vvv in $(check_changes.py "$INPUT/res" "$INPUT/.cache/2hash_res.json" | grep -e 'fixed:' -e 'values' | awk '{print $2}'); do
-if [ "$(echo "$vvv" | grep -cm1 "values-.*/")" == 1 ];then
+if [ "$(echo "$vvv" | grep -cm1 "values-.*/")" == 1 ]; then
 ten_file="$(basename "$vvv" .xml)"
 text_filter.py "$INPUT/res/values/$ten_file.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/text_filter.log
 fi
-if [ "$(echo "$vvv" | grep -cm1 "values/")" == 1 ];then
+if [ "$(echo "$vvv" | grep -cm1 "values/")" == 1 ]; then
 [ "$vvv" == "values/public.xml" ] || update_id.py --use-file "$INPUT/res/values/public.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/public_log.log
 fi
 done
@@ -94,7 +94,7 @@ if [ "$REDIVIS" == 1 ] && [ ! -f "$INPUT/.cache/redivision.log" ]; then
 redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
 fi
 
-if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ];then
+if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ]; then
 # Tạo dex
 for vcxs in $INPUT/smali_*; do
 if [ -d "$vcxs" ]; then
@@ -108,14 +108,14 @@ for vkn in "$INPUT"/classes*.dex; do
     [ "${vkn##*/}" == "classes.dex" ] && thyedkm="smali" || thyedkm="smali_classes"
     kout="$(basename $vkn .dex | sed "s|classes|$thyedkm|")"
     [ -d "$INPUT/$kout" ] || continue
-    if [ -f "$INPUT/.cache/hash_$kout.json" ];then
+    if [ -f "$INPUT/.cache/hash_$kout.json" ]; then
     cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
     dkfjff="$(check_changes.py "$INPUT/$kout" "$INPUT/.cache/2hash_$kout.json")"
     rm -fr "$INPUT/.cache/2hash_$kout.json"
     else
     dkfjff="$(check_changes.py "$INPUT/$kout" "$INPUT/.cache/hash_$kout.json" )"
     fi
-    if [ -n "$dkfjff" ];then
+    if [ -n "$dkfjff" ]; then
     add_fixsmali="$(echo "$dkfjff" | grep -e "new:" -e "fixed:" | awk '{print "'$INPUT/$kout'/"$2}')"
     [ -n "$add_fixsmali" ] && smali a --api $API -o "$INPUT/$kout.dex" $add_fixsmali
         if [ -s "$vkn" ]; then
@@ -136,7 +136,7 @@ fi
 find "$INPUT" -type f -name "*.bak" -delete >/dev/null
 
 # Nén lib.so
-if [ "$(grep -cm1 '\- so$' "$INPUT/apktool.yml")" == 1 ];then
+if [ "$(grep -cm1 '\- so$' "$INPUT/apktool.yml")" == 1 ]; then
 [ "$XTRALIB" == "true" ] && sed -i "/- so$/d" "$INPUT/apktool.yml"
 else
 [ "$XTRALIB" == "false" ] && sed -i "/^doNotCompress/a\- so" "$INPUT/apktool.yml"
@@ -152,19 +152,19 @@ apktool b --copy-original -f "$INPUT" || killtree "$unpack_text_3"
 mkdir -p "$OUTPUT"
 
 # ký apk
-if [ "$SIGNAP" != 'default' ];then
+if [ "$SIGNAP" != 'default' ]; then
 echo
 echo "$apkb_text_6 $SIGNAP"
 sign -i "$INPUT/dist/$tenapkkk" -o "$OUTPUT/$tenapkkk" -k "$ETC/key/$SIGNAP.pk8" -c "$ETC/key/$SIGNAP.x509.pem"
 else
 # khôi phục chữ ký
-    if [ -d "$INPUT/signatures" ];then
+    if [ -d "$INPUT/signatures" ]; then
     apkeditor b -f -t sig -i "$INPUT/dist/$tenapkkk" -sig "$INPUT/signatures" -o "$OUTPUT/$tenapkkk" &> "$INPUT/.cache/restore_sign.log"
     fi
 fi
 
 # in đường dẫn lưu
-if [ -f "$OUTPUT/$tenapkkk" ];then
+if [ -f "$OUTPUT/$tenapkkk" ]; then
 # xoá dự án
 [ "$XDELF" == 1 ] && rm -fr "$INPUT"
 else

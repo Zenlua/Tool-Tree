@@ -59,24 +59,24 @@ echo
 
 # chuyển đổi tệp tin
 typefile="$(checkapk "$INPUT")"
-if [ "$typefile" == "zipapk" ];then
+if [ "$typefile" == "zipapk" ]; then
 typeten="$(unzip -l -q "$INPUT" | grep -v '.*./.*.\.apk' | grep '\.apk'$ | awk '{print $4}')"
 unzip -q -o "$INPUT" -d "${INPUT%/*}" $typeten &>/dev/null
 ptpk="${INPUT%/*}/$typeten"
 apkskk=1
-elif [ "$typefile" == "apks" ];then
+elif [ "$typefile" == "apks" ]; then
 apkeditor m -f -i "$INPUT" -o "${INPUT%.*}.apk" &>/dev/null
 ptpk="${INPUT%.*}.apk"
 apkskk=1
-elif [ "$typefile" == "apk" ] || [ "$typefile" == "dex" ];then
+elif [ "$typefile" == "apk" ] || [ "$typefile" == "dex" ]; then
 ptpk="$INPUT"
 fi
 
 # xác định tệp
-if [ -f "$ptpk" ];then
+if [ -f "$ptpk" ]; then
 
 # check dùng giải mã smali
-if [ "$DECODEX" == "nodex" ] || [ "$DECODEX" == "smali" ];then
+if [ "$DECODEX" == "nodex" ] || [ "$DECODEX" == "smali" ]; then
 setkkh="-dex"
 else
 setkkh="-dex-lib $DECODEX"
@@ -84,7 +84,7 @@ setkkh="-dex-lib $DECODEX"
 fi
 
 # decode only resources.arsc
-if [ "$TYPEAPK" == 'reso' ];then
+if [ "$TYPEAPK" == 'reso' ]; then
 TYPEAPK="xml"
 setkkh="-keep-res-path $setkkh"
 fi
@@ -108,7 +108,7 @@ eval "apkeditor d -f -t \"$TYPEAPK\" $setkkh -i \"$ptpk\" -o \"$Tout\" " 2>&1 | 
 mkdir -p "$Tout/.cache"
 
 # giải mã smali
-if [ "$DECODEX" == "smali" ];then
+if [ "$DECODEX" == "smali" ]; then
     [ "$DEBUGA" == 1 ] && hhhhfdr="--debug-info false -l" || hhhhfdr="--debug-info true"
     for vkn in "$Tout"/dex/classes*.dex; do
     [ -f "$vkn" ] || continue
@@ -123,7 +123,7 @@ if [ "$DECODEX" == "smali" ];then
 fi
 
 # check hash res
-if [ -d "$Tout/resources/package_1/res" ];then
+if [ -d "$Tout/resources/package_1/res" ]; then
     check_changes.py "$Tout/resources/package_1/res" "$Tout/.cache/hash_res.json" >/dev/null
 fi
 

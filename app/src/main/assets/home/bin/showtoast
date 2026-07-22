@@ -1,11 +1,11 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
 echo "Use: showtoast 'Xin chào'"
 exit
 fi
 
-if [ "$1" == "-a" ] || [ "$1" == "--am" ] || [ -z "$shell_progres" ];then
+if [ "$1" == "-a" ] || [ "$1" == "--am" ] || [ -z "$shell_progres" ]; then
     if [ "$1" == "-a" ] || [ "$1" == "--am" ]; then
         shift
     fi

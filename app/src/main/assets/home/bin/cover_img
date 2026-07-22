@@ -52,9 +52,9 @@ process_count(){
 PIDK=$!
 num1="$1"; num2="$2";
 while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$num2" ];then
+if [ -f "$num2" ]; then
     num3=$(tr '\r' '\n' < "$num2" | awk '/ : /{v=$3} END{print v}')
-    if [ "${num3:-0}" != 0 ];then
+    if [ "${num3:-0}" != 0 ]; then
     [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
     num4="$num3"
     fi
@@ -71,33 +71,33 @@ rm -f "$logcv"
 mkdir -p "$OUTPUT"
 
 # Xử lý các tệp nén
-if [ "$dang_type" == 'zstd' ] || [ "$dang_type" == 'gz' ] || [ "$dang_type" == 'xz' ] || [ "$dang_type" == 'lz4' ] || [ "$dang_type" == 'lzma' ];then
+if [ "$dang_type" == 'zstd' ] || [ "$dang_type" == 'gz' ] || [ "$dang_type" == 'xz' ] || [ "$dang_type" == 'lz4' ] || [ "$dang_type" == 'lzma' ]; then
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
 size_zstd="$(zstd -lv "$INPUT" 2>/dev/null | awk -F'[()]' '/Decompressed Size/ {print $2}' | awk '{print $1}')"
 zstd --progress -vv -f -d -k "$INPUT" -o "$TMP/$namerd" &>>$logcv || killtree "Error: $unpack_text_2 $logcv" &
 process_count "$size_zstd" "$logcv"
-elif [ "$dang_type" == 'br' ];then
+elif [ "$dang_type" == 'br' ]; then
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
 brotli -vf -d "$INPUT" -o "$TMP/$namerd" &>>$logcv
-    if [ "$(checktype "$TMP/$namerd")" == 'dat' ];then
+    if [ "$(checktype "$TMP/$namerd")" == 'dat' ]; then
     [ -f "${INPUT%%.*}.transfer.list" ] || killtree "Missing file: ${INPUT%%.*}.transfer.list"
     sdat2img "${INPUT%%.*}.transfer.list" "$TMP/$namerd" "$TMP/2_$namerd" &>>$logcv
     [ -f "$TMP/2_$namerd" ] && mv "$TMP/2_$namerd" "$TMP/$namerd" || killtree "Conversion failed error !!!"
     fi
-elif [ "$dang_type" == 'dat' ];then
+elif [ "$dang_type" == 'dat' ]; then
 [ -f "${INPUT%%.*}.transfer.list" ] || killtree "Missing file: ${INPUT%%.*}.transfer.list"
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
 sdat2img "${INPUT%%.*}.transfer.list" "$INPUT" "$TMP/$namerd" &>>$logcv
 fi
 
 # xử lý sparse
-if [ "$(checktype "$INPUT")" == 'sparse' ];then
+if [ "$(checktype "$INPUT")" == 'sparse' ]; then
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
 simg2img "$INPUT" "$TMP/$namerd" &>>$logcv
 fi
 
 # nhận file
-if [ -f "$TMP/$namerd" ];then
+if [ -f "$TMP/$namerd" ]; then
 file_img="$TMP/$namerd"
 else
 file_img="$INPUT"
@@ -106,15 +106,15 @@ fi
 echo -e "$unpack_text_0 (${file_img##*/}) ➠ ($CONVER)...\n"
 
 # chuyển đổi
-if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'zst' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ];then
+if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'zst' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ]; then
     [ "$CONVER" == 'zst' ] && FORMATS='zstd' || FORMATS="$CONVER"
     zstd --progress -f -$LEVEL --format=$FORMATS --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" &>>$logcv || killtree "Error: $unpack_text_2 $logcv" &
     PIDK=$!
     while kill -0 $PIDK 2>/dev/null; do
-    if [ -f "$logcv" ];then
+    if [ -f "$logcv" ]; then
     num2="$(tr '\r' '\n' < "$logcv" | awk '/Read:/{r=$2*($3=="GiB"?1024:1); t=$5*($6=="GiB"?1024:1)} END{print (t>0?int(r/t*100):0)}')"
     [ $num2 == 0 ] && num2="$(tr '\r' '\n' < "$logcv" | awk '/^Read/{r=$3; t=$5} END{print (t>0?int(r/t*100):0)}')"
-        if [ "${num2:-0}" != 0 ];then
+        if [ "${num2:-0}" != 0 ]; then
         [ "${num2:-0}" == "${num4:-1}" ] || progress "$num2/100"
         num4="$num2"
         fi
@@ -122,17 +122,17 @@ if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'zst' ] || [ "$CONVER" == 'gz' ] ||
     sleep 1
     done
     progress -1/0
-elif [ "$CONVER" == 'dat' ];then
-    if [ -f "$TMP/$namerd" ];then
+elif [ "$CONVER" == 'dat' ]; then
+    if [ -f "$TMP/$namerd" ]; then
     img2simg $file_img &>>$logcv
     else
     img2simg "$file_img" "$TMP/$namerd" &>>$logcv
     file_img="$TMP/$namerd"
     fi
 img2sdat "$file_img" -o "$OUTPUT" -v 4 -p $namesv &>>$logcv
-elif [ "$CONVER" == 'br' ];then
+elif [ "$CONVER" == 'br' ]; then
 LEVEL="$(echo "$LEVEL / 2" | bc)"
-    if [ -f "$TMP/$namerd" ];then
+    if [ -f "$TMP/$namerd" ]; then
     img2simg $file_img &>>$logcv
     else
     img2simg "$file_img" "$TMP/$namerd" &>>$logcv
@@ -142,10 +142,10 @@ img2sdat "$file_img" -o "$OUTPUT" -v 4 -p $namesv &>>$logcv
 [ -f "$OUTPUT/$namesv.new.dat" ] || killtree "Error creating file $namesv.new.dat failed !!!"
 brotli -vfq "$LEVEL" "$OUTPUT/$namesv.new.dat" -o "$OUTPUT/$namesv.new.dat.br" &>>$logcv
 rm -fr "$OUTPUT/$namesv.new.dat"
-elif [ "$CONVER" == 'sparse' ];then
+elif [ "$CONVER" == 'sparse' ]; then
 img2simg "$file_img" "$OUTPUT/$namesv.img"
 else
-    if [ "$file_img" == "$INPUT" ];then
+    if [ "$file_img" == "$INPUT" ]; then
     killtree "Nothing to convert !!!"
     else
     mv -f "$file_img" "$OUTPUT/$namesv.img"
@@ -153,7 +153,7 @@ else
 fi
 
 # xác nhận để xóa rác
-if [ "$file_img" != "$INPUT" ];then
+if [ "$file_img" != "$INPUT" ]; then
 [ -f "$file_img" ] && rm -fr "$file_img"
 fi
 

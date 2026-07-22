@@ -58,16 +58,16 @@ echo
 
 # chuyển đổi apk
 typefile="$(checkapk "$INPUT")"
-if [ "$typefile" == "zipapk" ];then
+if [ "$typefile" == "zipapk" ]; then
 typeten="$(unzip -l -q "$INPUT" | grep -v '.*./.*.\.apk' | grep -i '\.apk'$ | awk '{print $4}')"
 unzip -qo "$INPUT" -d "${INPUT%/*}" $typeten &>/dev/null
 ptpk="${INPUT%/*}/$typeten"
 apkskk=1
-elif [ "$typefile" == "apks" ];then
+elif [ "$typefile" == "apks" ]; then
 apkeditor m -f -i "$INPUT" -o "${INPUT%.*}.apk" &>/dev/null
 ptpk="${INPUT%.*}.apk"
 apkskk=1
-elif [ "$typefile" == "apk" ] || [ "$typefile" == "dex" ];then
+elif [ "$typefile" == "apk" ] || [ "$typefile" == "dex" ]; then
 ptpk="$INPUT"
 fi
 
@@ -76,15 +76,15 @@ gwngfds="$(unzip -ql "$ptpk" AndroidManifest.xml | grep -cm1 'AndroidManifest.xm
 [ "$gwngfds" == 1 ] && apktool if "$ptpk" &>/dev/null
 
 # xác định tệp
-if [ -f "$ptpk" ];then
+if [ -f "$ptpk" ]; then
 
 # check dùng giải mã smali
-if [ "$RESAPK" == 0 ];then
+if [ "$RESAPK" == 0 ]; then
 rdex='-r'
-elif [ "$RESAPK" == 2 ];then
+elif [ "$RESAPK" == 2 ]; then
 rdex='--only-manifest'
 fi
-    if [ "$DECODEX" == 1 ];then
+    if [ "$DECODEX" == 1 ]; then
     rdex="$rdex"
     [ "$DEBUGA" == 1 ] && rdex="--no-debug-info $rdex"
     else
@@ -99,9 +99,9 @@ Tout="$OUTPUT/${Tmout##*/}"
 Lay_api="$(unzip -qp "$ptpk" AndroidManifest.xml > $TMP/1.xml && axmlprinter $TMP/1.xml && rm -fr $TMP/1.xml)"
 api1="$(echo "$Lay_api" | grep -m1 "android:compileSdkVersion=" | cut -d\" -f2)"
 api2="$(echo "$Lay_api" | grep -m1 "platformBuildVersionCode=" | cut -d\" -f2)"
-if [ -f "$HOME/.local/share/apktool/framework/1-$api1.apk" ];then
+if [ -f "$HOME/.local/share/apktool/framework/1-$api1.apk" ]; then
 ktfw="-t $api1"
-elif [ -f "$HOME/.local/share/apktool/framework/1-$api2.apk" ];then
+elif [ -f "$HOME/.local/share/apktool/framework/1-$api2.apk" ]; then
 ktfw="-t $api2"
 fi
 
@@ -110,7 +110,7 @@ eval "apktool d --match-original $ktfw -f $rdex -o \"$Tout\" \"$ptpk\" || killtr
 mkdir -p "$Tout/.cache"
 
 # giải mã smali
-if [ "$DECODEX" == 2 ];then
+if [ "$DECODEX" == 2 ]; then
     [ "$DEBUGA" == 1 ] && hhhhfdr="--debug-info false -l" || hhhhfdr="--debug-info true"
     for vkn in "$Tout"/classes*.dex; do
     [ -f "$vkn" ] || continue
@@ -126,7 +126,7 @@ if [ "$DECODEX" == 2 ];then
 fi
 
 # check hash res
-if [ -d "$Tout/res" ];then
+if [ -d "$Tout/res" ]; then
     check_changes.py "$Tout/res" "$Tout/.cache/hash_res.json" >/dev/null
 fi
 

@@ -58,7 +58,7 @@ i2+="${i%.*}:"
 done
 mkdir -p out
 
-if [ "$PSWITCH" == 1 ];then
+if [ "$PSWITCH" == 1 ]; then
 # kích thước chuyển đổi
 super_sizek="$(echo "$PSSIZE * 1024 * 1024 * 1024" | bc | cut -d. -f1)"
 echo "${sizes_text}: ${PSSIZE} GB ➠ ${super_sizek} bytes"

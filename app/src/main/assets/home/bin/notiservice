@@ -49,7 +49,7 @@ CMDs="startservice -n com.tool.tree/com.tool.tree.NotiService "
 [ "$TITLE" ] && CMDs+="--es title \"$TITLE\" "
 [ "$MESSAGE" ] && CMDs+="--es message \"$MESSAGE\" "
 
-if [ "$AMON" == 1 ] || [ -z "$shell_progres" ];then
+if [ "$AMON" == 1 ] || [ -z "$shell_progres" ]; then
     eval "am $CMDs" &>/dev/null
 else
     echo "am:[$CMDs]"

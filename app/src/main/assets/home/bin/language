@@ -4,9 +4,9 @@
 source $ETC/lang/default.bash
 
 # Chạy file ngôn ngữ có sẵn
-if [ -f "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash" ];then
+if [ -f "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash" ]; then
 source "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash"
-elif [ -f "$ETC/lang/$LANGUAGE.bash" ];then
+elif [ -f "$ETC/lang/$LANGUAGE.bash" ]; then
 source "$ETC/lang/$LANGUAGE.bash"
 fi
 

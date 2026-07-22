@@ -1,11 +1,11 @@
 # Kakathic
 
-if [ -f /apex/com.android.art/bin/dex2oat64 ];then
+if [ -f /apex/com.android.art/bin/dex2oat64 ]; then
 exec /apex/com.android.art/bin/dex2oat64 "$@"
-elif [ -f /apex/com.android.art/bin/dex2oat ];then
+elif [ -f /apex/com.android.art/bin/dex2oat ]; then
 exec /apex/com.android.art/bin/dex2oat "$@"
-elif [ -f /system/bin/dex2oat64 ];then
+elif [ -f /system/bin/dex2oat64 ]; then
 exec /system/bin/dex2oat64 "$@"
-elif [ -f /system/bin/dex2oat ];then
+elif [ -f /system/bin/dex2oat ]; then
 exec /system/bin/dex2oat "$@"
 fi

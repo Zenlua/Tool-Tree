@@ -1,6 +1,6 @@
 # Kakathic
 
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
     echo "Use: gprop ro.vip /path/file" >&2
     exit 1
 fi

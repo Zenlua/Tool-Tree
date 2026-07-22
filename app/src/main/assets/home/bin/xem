@@ -1,5 +1,5 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
 echo "xem http://file.txt"
 exit
 fi

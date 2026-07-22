@@ -3,7 +3,7 @@
 
 source language
 
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
 echo "installadd [file.add|http://file.add] folder_ouput"
 exit
 fi
@@ -62,7 +62,7 @@ fi
 echo 0 > "$2/$loadid/status"
 chmod -R 755 "$2/$loadid"
 
-if [ -f "$2/$loadid/install.sh" ];then
+if [ -f "$2/$loadid/install.sh" ]; then
     "$2/$loadid/install.sh"
     rm -fr "$2/$loadid/install.sh"
 fi

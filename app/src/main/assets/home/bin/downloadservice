@@ -62,7 +62,7 @@ if [ -n "$PATK" ]; then
   CMDs+="--es path \"$PATK\" "
 fi
 
-if [ "$AMON" == 1 ] || [ -z "$shell_progres" ];then
+if [ "$AMON" == 1 ] || [ -z "$shell_progres" ]; then
     eval "am $CMDs" &>/dev/null
 else
     echo "am:[$CMDs]"

@@ -1,11 +1,11 @@
 # kakathic
 
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ];then
+if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
     echo "Use: glog test 1" >&2
     exit 1
 fi
 
-if [ -f "$LOG/$1" ];then
+if [ -f "$LOG/$1" ]; then
     cat "$LOG/$1"
 else
     [ -d "$LOG" ] || mkdir -p "$LOG"

@@ -40,7 +40,7 @@ fi
 [[ -z "$KEYPK" ]] && KEYPK="$ETC/key/testkey.pk8"
 [[ -z "$CPEM" ]] && CPEM="$ETC/key/testkey.x509.pem"
 
-if [[ "$CKZIPS" == 1 ]];then
+if [[ "$CKZIPS" == 1 ]]; then
 zipalign -f -p 4 "$INPUT" "$OUTPUT";
 apksigner sign --key "$KEYPK" --cert "$CPEM" "$OUTPUT"
 rm -fr "$OUTPUT".idsig

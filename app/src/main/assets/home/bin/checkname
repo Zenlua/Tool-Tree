@@ -5,7 +5,7 @@
 
 check_name_tt1="${1%.*}"
 check_name_tt2="${1##*.}"
-if [ -f "$1" ];then
+if [ -f "$1" ]; then
 for i in {1..100}; do
 if [ ! -f "${check_name_tt1}-$i.${check_name_tt2}" ]; then
 echo -n "${check_name_tt1}-$i.${check_name_tt2}"
