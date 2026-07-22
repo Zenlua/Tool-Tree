@@ -38,7 +38,7 @@ class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
     private val REQUEST_CODE_PERMISSIONS = 1001
     private val REQUEST_CODE_MANAGE_ALL_FILES = 1002
-    private val REQUEST_CODE_NOTIFICATIONS = 1003
+    private val REQUEST_CODE_NOTIFICATION = 1003
 
     private var hasRoot = false
     private var started = false
@@ -64,7 +64,7 @@ class SplashActivity : AppCompatActivity() {
         } else {
             // Đã đồng ý điều khoản rồi, chỉ kiểm tra quyền Android
             if (hasRequiredPermissions()) {
-                checkPermissionsNextStep()
+                requestNotificationPermissionIfNeeded()
             } else {
                 requestRequiredPermissions()
             }
@@ -120,25 +120,26 @@ class SplashActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_CODE_PERMISSIONS)
     }
 
-    private fun checkPermissionsNextStep() {
+    // Quyền thông báo (POST_NOTIFICATIONS) chỉ cần từ Android 13 (TIRAMISU) trở lên, và
+    // KHÔNG bắt buộc để sử dụng app: dù người dùng cấp hay từ chối, luồng khởi động vẫn
+    // tiếp tục sang bước kiểm tra quyền tiếp theo (checkPermissionsNextStep()).
+    private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                REQUEST_CODE_NOTIFICATIONS
+                REQUEST_CODE_NOTIFICATION
             )
-            return
+        } else {
+            checkPermissionsNextStep()
         }
-    
-        // Nếu là Android 11+ và chưa có quyền All Files
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-            !Environment.isExternalStorageManager()
-        ) {
+    }
+
+    private fun checkPermissionsNextStep() {
+        // Nếu là Android 11+ và chưa có quyền "All Files Access"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
             requestManageAllFilesPermission()
         } else {
             checkRootAndStart()
@@ -157,20 +158,15 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_CODE_PERMISSIONS -> {
                 if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                    checkPermissionsNextStep()
-                } else {
-                    finish()
-                }
+                    requestNotificationPermissionIfNeeded()
+                } else finish()
             }
-            REQUEST_CODE_NOTIFICATIONS -> {
+            REQUEST_CODE_NOTIFICATION -> {
+                // Quyền thông báo không bắt buộc: dù kết quả thế nào cũng tiếp tục luồng khởi động.
                 checkPermissionsNextStep()
             }
         }
