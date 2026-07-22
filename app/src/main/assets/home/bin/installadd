@@ -65,6 +65,9 @@ chmod -R 755 "$2/$loadid"
 if [ -f "$2/$loadid/install.sh" ]; then
     "$2/$loadid/install.sh"
     rm -fr "$2/$loadid/install.sh"
+elif [ -f "$2/$loadid/install.bash" ]; then
+    "$2/$loadid/install.bash"
+    rm -fr "$2/$loadid/install.bash"
 fi
 
 echo "$flash_text_12"
