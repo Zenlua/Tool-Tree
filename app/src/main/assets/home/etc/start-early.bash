@@ -5,8 +5,8 @@ source language 2>/dev/null
 unset shell_progres
 
 # Dọn dẹp tmp
-[ -d "$TMPDIR" ] && rm -fr $TMPDIR/* &
-rm -fr $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
+find "$TMPDIR" -maxdepth 1 ! -path "$TMPDIR" ! -name '*.log' -exec rm -rf {} + &
+rm -fr $TEMP/documents $TEMP/WebView &
 
 (
 if checkonline; then
