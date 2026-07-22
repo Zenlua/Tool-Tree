@@ -38,6 +38,7 @@ class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
     private val REQUEST_CODE_PERMISSIONS = 1001
     private val REQUEST_CODE_MANAGE_ALL_FILES = 1002
+    private val REQUEST_CODE_NOTIFICATIONS = 1003
 
     private var hasRoot = false
     private var started = false
@@ -156,11 +157,22 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            REQUEST_CODE_PERMISSIONS -> {
+                if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                    checkPermissionsNextStep()
+                } else {
+                    finish()
+                }
+            }
+            REQUEST_CODE_NOTIFICATIONS -> {
                 checkPermissionsNextStep()
-            } else finish()
+            }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
