@@ -9,7 +9,7 @@ unset shell_progres
 rm -fr $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
 
 (
-    if checkonline; then
+    if [ "$check_mang" == 1 ]; then
         # Tải về nhật ký
         echo -e "Download the log and the latest version..."
         timeout 20 taive 'https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/Version.md' $TEMP/Version.md
@@ -21,7 +21,7 @@ rm -fr $START_DIR/cache/* $TEMP/documents $TEMP/WebView &
 ) &
 
 (
-    if checkonline; then
+    if [ "$check_mang" == 1 ]; then
         # Thông báo cập nhật
         link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
         if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
