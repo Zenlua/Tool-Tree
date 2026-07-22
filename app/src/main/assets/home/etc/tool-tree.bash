@@ -59,6 +59,11 @@ fi
 </action>'
 }
 
+shell_bash() {
+    echo '<group><editor title="'$home_text_5'" desc="'$more_text_9'" file="home/usr/run_'$1'.bash" icon="'`urlpng shell`'"/></group>'
+}
+
+
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ]; then
     [ -f $ETC/lang/$LANGUAGE.bash ] && texgg="$LANGUAGE.bash" || texgg=vi.bash
@@ -176,33 +181,7 @@ esac
 </page>
 </group>'
 
-    [ "$(glog shellc)" == 1 ] && echo '<group>
-<action icon="'`urlpng shell`'" title="'$home_text_5'" desc="'$home_text_7'" need-input="true">
-<param name="shell" value-sh="glog shell" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shell2" value-sh="glog shell2" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shell3" value-sh="glog shell3" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shell4" value-sh="glog shell4" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shell5" value-sh="glog shell5" type="text" placeholder="#!/system/bin/sh"/>
-<set>
-slog shell "$shell"
-slog shell2 "$shell2"
-slog shell3 "$shell3"
-slog shell4 "$shell4"
-slog shell5 "$shell5"
-# history
-echo "$shell
-$shell2
-$shell3
-$shell4
-$shell5" | grep -v "^$" >> $TMP/shell_history.bash
-eval "$shell
-$shell2
-$shell3
-$shell4
-$shell5"
-</set>
-</action>
-</group>'
+    [ "$(glog shellc)" == 1 ] && shell_bash shellc
 }
 
 More() {
@@ -314,33 +293,7 @@ esac
 </page>
 </group>'
 
-    [ "$(glog shellc)" == 1 ] && echo '<group>
-<action icon="'`urlpng shell`'" title="'$home_text_5'" desc="'$more_text_9'" need-input="true">
-<param name="shells" value-sh="glog shells" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shells2" value-sh="glog shells2" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shells3" value-sh="glog shells3" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shells4" value-sh="glog shells4" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shells5" value-sh="glog shells5" type="text" placeholder="#!/system/bin/sh"/>
-<set>
-slog shells "$shells"
-slog shells2 "$shells2"
-slog shells3 "$shells3"
-slog shells4 "$shells4"
-slog shells5 "$shells5"
-# history
-echo "$shells
-$shells2
-$shells3
-$shells4
-$shells5" | grep -v "^$" >> $TMP/shell_history.bash
-eval "$shells
-$shells2
-$shells3
-$shells4
-$shells5"
-</set>
-</action>
-</group>'
+    [ "$(glog shellc)" == 1 ] && shell_bash shells
 }
 
 Info() {
@@ -408,33 +361,7 @@ fi
 </group>
 
 <group>
-<action id="shell" icon="'`urlpng shella`'" need-input="true">
-<title>'$home_text_5'</title>
-<desc>'$home_text_6'</desc>
-<param name="shella" value-sh="glog shella" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shella2" value-sh="glog shella2" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shella3" value-sh="glog shella3" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shella4" value-sh="glog shella4" type="text" placeholder="#!/system/bin/sh"/>
-<param name="shella5" value-sh="glog shella5" type="text" placeholder="#!/system/bin/sh"/>
-<set>
-slog shella "$shella"
-slog shella2 "$shella2"
-slog shella3 "$shella3"
-slog shella4 "$shella4"
-slog shella5 "$shella5"
-# history
-echo "$shella
-$shella2
-$shella3
-$shella4
-$shella5" | grep -v "^$" >> $TMP/shell_history.bash
-eval "$shella
-$shella2
-$shella3
-$shella4
-$shella5"
-</set>
-</action>
+<editor title="'$home_text_5'" desc="'$home_text_6'" file="home/usr/run_shella.bash" icon="'`urlpng shella`'"/>
 </group>'
 }
 
@@ -717,8 +644,8 @@ echo "'$save_text' $Extract"
 <lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>
-<param name="CQ" label="'$flash_text_2'" type="checkbox" />
-<param name="CQ1" label="'$flash_text_3'" type="checkbox" />
+<param name="CQ" label="'$flash_text_2'" type="checkbox" depend-on="CQ1" depend-value="1" depend-mode="hide" depend-readonly="true"/>
+<param name="CQ1" label="'$flash_text_3'" type="checkbox" depend-on="CQ" depend-value="1" depend-mode="hide" depend-readonly="true"/>
 <param name="IMG" label="IMAGE" title="'$flash_text_4'" desc="'$flash_text_5'" options-sh="search_image" required="true"/>
 <param name="Brush_in" type="file" suffix="img" editable="true" required="true" title="'$flash_text_6'" desc="'$flash_text_7'" required="true"/>
 <set>

@@ -8,9 +8,10 @@ import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import com.omarea.krscript.config.StringResRef
 
 class NotiService : Service() {
-    private val CHANNEL_ID = "notification_id"
+    private val CHANNEL_ID = "notification_id_am"
     private val notificationManager by lazy { getSystemService(NotificationManager::class.java) }
 
     // Xóa thông báo
@@ -23,15 +24,24 @@ class NotiService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val message = intent?.getStringExtra("message")
-        val title = intent?.getStringExtra("title") ?: getString(R.string.app_name) // Sử dụng tên app nếu không có title
+        val rawMessage = intent?.getStringExtra("message")
+        val rawTitle = intent?.getStringExtra("title")
         val id = intent?.getIntExtra("id", 1) ?: 1
 
         // Kiểm tra nếu muốn xóa thông báo
         if (intent?.getBooleanExtra("delete", false) == true) {
             deleteNotification(id)
             return START_NOT_STICKY
-        } else if (message != null) {
+        } else if (rawMessage != null) {
+            // Giải mã tiêu đề và nội dung thông qua StringResRef
+            val title = if (rawTitle != null) {
+                StringResRef.resolve(this, rawTitle)
+            } else {
+                getString(R.string.app_name)
+            }
+            
+            val message = StringResRef.resolve(this, rawMessage)
+
             showNotification(id, message, title)
         }
 
@@ -45,7 +55,8 @@ class NotiService : Service() {
             val notificationChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Notification",
-                NotificationManager.IMPORTANCE_HIGH // Đặt độ ưu tiên cao để hiển thị Heads-Up
+                NotificationManager.IMPORTANCE_HIGH
+                // Đặt độ ưu tiên cao để hiển thị Heads-Up
             ).apply {
                 setSound(null, null)
                 enableLights(false)
