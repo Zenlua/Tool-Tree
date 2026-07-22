@@ -17,6 +17,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -610,18 +611,28 @@ class DialogLogFragment : DialogFragment() {
                 logView.append(chunk)
             }
 
-            // Tối ưu cuộn ScrollView xuống cuối
-            // Dùng findScrollViewAncestor() thay vì cast trực tiếp logView.parent, vì khi tắt soft wrap
-            // logView được bọc thêm trong 1 HorizontalScrollView trung gian.
+            // Tối ưu cuộn ScrollView xuống cuối.
+            // Dùng OnPreDrawListener thay vì gọi fullScroll() ngay lập tức: onPreDraw() được gọi
+            // ngay TRƯỚC khi frame kế tiếp được vẽ, tức là chắc chắn measure()/layout() cho nội
+            // dung mới (kể cả khi setText() toàn bộ do \r ghi đè dòng) đã hoàn tất. Nhờ vậy
+            // fullScroll() luôn tính đúng theo chiều cao mới nhất, không còn bị "nhảy lên đầu"
+            // do dùng số đo cũ (stale) như khi gọi trực tiếp ngay sau logView.text = chunk.
             findScrollViewAncestor(logView)?.let { scrollView ->
-                scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+                if (!scrollView.isAttachedToWindow) return@let
+                scrollView.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+                    override fun onPreDraw(): Boolean {
+                        scrollView.viewTreeObserver.removeOnPreDrawListener(this)
+                        scrollView.fullScroll(ScrollView.FOCUS_DOWN)
 
-                // Giữ focus thông minh không cần lồng post{} nhiều tầng
-                val inputRow = inputRowRef.get()
-                val input = shellInputRef.get()
-                if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
-                    if (!input.isFocused) input.requestFocus()
-                }
+                        // Giữ focus thông minh không cần lồng post{} nhiều tầng
+                        val inputRow = inputRowRef.get()
+                        val input = shellInputRef.get()
+                        if (inputRow != null && inputRow.visibility == View.VISIBLE && input != null) {
+                            if (!input.isFocused) input.requestFocus()
+                        }
+                        return true
+                    }
+                })
             }
         }
     }

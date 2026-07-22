@@ -14,13 +14,18 @@ fix_permission = {
 
 
 def str_to_selinux(s: str) -> str:
-    # Escape dấu . cho đúng định dạng regex file_contexts, giữ nguyên / và -
+    # Escape dấu . đúng chuẩn regex file_contexts, giữ nguyên / và -
     escaped = re.escape(s).replace(r"\-", "-").replace(r"\/", "/")
     return escaped.replace(r"\@", "@")
 
 
+def clean_permission(perm: List[str]) -> List[str]:
+    """Lọc bỏ các cờ file type modifier như --, -d, -l, -p,... để tránh gán nhầm cờ của file cho thư mục"""
+    modifiers = {"--", "-d", "-c", "-b", "-l", "-p", "-s"}
+    return [p for p in perm if p not in modifiers]
+
+
 def scan_context(file_path: str) -> List[ContextEntry]:
-    """Đọc file gốc và GIỮ NGUYÊN thứ tự xuất hiện của từng dòng."""
     entries: List[ContextEntry] = []
     with open(file_path, "r", encoding="utf-8", errors="ignore") as fp:
         for line in fp:
@@ -60,15 +65,11 @@ def scan_dir(folder: str) -> list:
 
 def _default_permission(entries: List[ContextEntry]) -> list:
     if entries:
-        return entries[0][1]
+        return clean_permission(entries[0][1])
     return ["u:object_r:system_file:s0"]
 
 
 def find_insert_index(entries: List[ContextEntry], raw_path: str) -> Tuple[int, list]:
-    """
-    Tìm vị trí xuất hiện cuối cùng của thư mục cha trong file gốc
-    để chèn item mới vào ngay bên cạnh/dưới nó. Đồng thời trả về permission kế thừa.
-    """
     tmp_path = os.path.dirname(raw_path)
 
     while tmp_path and tmp_path != "/":
@@ -77,24 +78,24 @@ def find_insert_index(entries: List[ContextEntry], raw_path: str) -> Tuple[int, 
         found_perm = None
 
         for idx, (path, perm) in enumerate(entries):
-            # Khớp với đường dẫn gốc hoặc dạng đã escape
-            if path == tmp_path or path == tmp_selinux or path.startswith(tmp_selinux + "/"):
+            # So sánh linh hoạt cả dạng raw lẫn dạng đã escape regex
+            clean_entry_path = path.replace("\\.", ".").replace("\\", "")
+            if path in (tmp_path, tmp_selinux) or clean_entry_path == tmp_path or path.startswith(tmp_selinux + "/"):
                 last_idx = idx
-                found_perm = perm
+                found_perm = clean_permission(perm)
 
         if last_idx is not None:
             return last_idx + 1, found_perm
 
         tmp_path = os.path.dirname(tmp_path)
 
-    # Nếu không tìm thấy cha, chèn vào cuối file
     return len(entries), None
 
 
 def context_patch(fs_entries: List[ContextEntry], filename: list) -> Tuple[List[ContextEntry], int]:
     entries = list(fs_entries)
     
-    # Tập hợp các đường dẫn đã tồn tại để tránh chèn trùng
+    # Chuẩn hóa tập hợp kiểm tra trùng lặp
     existing_paths = {path for path, _ in entries}
     permission_d = _default_permission(entries)
 
@@ -111,11 +112,9 @@ def context_patch(fs_entries: List[ContextEntry], filename: list) -> Tuple[List[
 
         selinux_path = str_to_selinux(raw_path)
 
-        # Bỏ qua nếu dòng đã tồn tại trong file gốc hoặc đã được thêm trước đó
         if raw_path in existing_paths or selinux_path in existing_paths or selinux_path in seen_new:
             continue
 
-        # Xử lý quy tắc đè thủ công trong fix_permission
         if raw_path in fix_permission:
             permission = fix_permission[raw_path]
             insert_at, _ = find_insert_index(entries, raw_path)
@@ -123,11 +122,9 @@ def context_patch(fs_entries: List[ContextEntry], filename: list) -> Tuple[List[
             permission = fix_permission[selinux_path]
             insert_at, _ = find_insert_index(entries, raw_path)
         else:
-            # Tìm vị trí thích hợp (sau thư mục cha) và lấy permission kế thừa
             insert_at, parent_perm = find_insert_index(entries, raw_path)
             permission = parent_perm if parent_perm else permission_d
 
-        # Chèn trực tiếp vào vị trí tìm được mà KHÔNG làm xáo trộn các dòng khác
         entries.insert(insert_at, (selinux_path, permission))
         seen_new.add(selinux_path)
         existing_paths.add(selinux_path)

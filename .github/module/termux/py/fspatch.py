@@ -33,7 +33,7 @@ def scanfs(fs_path: str) -> List[FsEntry]:
 
 def scan_dir(folder: str):
     folder = os.path.abspath(folder)
-    base = os.path.basename(os.path.normpath(folder))
+    base = os.path.basename(folder)
     yield base
     yield "/"
     yield f"{base}/lost+found"
@@ -62,6 +62,8 @@ def islink(file_path: str) -> Optional[str]:
 
 def make_config(i: str, filepath: str) -> List[str]:
     path_norm = i.replace("\\", "/")
+    
+    # 1. Thư mục
     if os.path.isdir(filepath):
         uid = "0"
         gid = (
@@ -72,9 +74,11 @@ def make_config(i: str, filepath: str) -> List[str]:
         mode = "0755"
         return [uid, gid, mode]
 
+    # 2. File không tồn tại thực tế
     if not os.path.exists(filepath):
         return ["0", "0", "0755"]
 
+    # 3. Liên kết mềm (Symlink)
     link = islink(filepath)
     if link:
         uid = "0"
@@ -93,6 +97,7 @@ def make_config(i: str, filepath: str) -> List[str]:
 
         return [uid, gid, mode, link]
 
+    # 4. File thực thi trong bin/xbin
     if "/bin/" in path_norm or "/xbin/" in path_norm:
         uid = "0"
         gid = (
@@ -100,33 +105,15 @@ def make_config(i: str, filepath: str) -> List[str]:
             if path_norm.startswith(("system/bin/", "system/xbin/", "vendor/bin/"))
             else "0"
         )
-        mode = "0755"
-
-        if path_norm.endswith(".sh"):
-            mode = "0750"
-        else:
-            for s in [
-                "/bin/su",
-                "/xbin/su",
-                "disable_selinux.sh",
-                "daemon",
-                "ext/.su",
-                "install-recovery",
-                "installed_su",
-                "bin/rw-system.sh",
-                "bin/getSPL",
-            ]:
-                if s in path_norm:
-                    mode = "0755"
-                    break
-
+        mode = "0750" if path_norm.endswith(".sh") else "0755"
         return [uid, gid, mode]
 
+    # 5. File thông thường
     return ["0", "0", "0644"]
 
 
 def find_insert_index(entries: List[FsEntry], new_path: str) -> int:
-    norm = new_path.replace("\\", "/")
+    norm = new_path.replace("\\", "/").strip("/")
     parts = [p for p in norm.split("/") if p]
     if len(parts) <= 1:
         return len(entries)
@@ -137,23 +124,12 @@ def find_insert_index(entries: List[FsEntry], new_path: str) -> int:
 
         last_idx = None
         for idx, (path, _) in enumerate(entries):
-            p = path.replace("\\", "/")
+            p = path.replace("\\", "/").strip("/")
             if p == prefix or p.startswith(prefix_slash):
                 last_idx = idx
 
         if last_idx is not None:
             return last_idx + 1
-
-    top = parts[0]
-    top_slash = top + "/"
-    last_idx = None
-    for idx, (path, _) in enumerate(entries):
-        p = path.replace("\\", "/")
-        if p == top or p.startswith(top_slash):
-            last_idx = idx
-
-    if last_idx is not None:
-        return last_idx + 1
 
     return len(entries)
 
@@ -165,20 +141,23 @@ def fs_patch(fs_entries: List[FsEntry], dir_path: str) -> Tuple[List[FsEntry], i
     new_add = 0
     print("FsPatcher: Load origin %d entries" % len(entries))
 
-    base = os.path.basename(os.path.normpath(os.path.abspath(dir_path)))
+    target_dir = os.path.abspath(dir_path)
+    base = os.path.basename(target_dir)
 
-    for i in scan_dir(os.path.abspath(dir_path)):
+    for i in scan_dir(target_dir):
         if not i.isprintable():
             i = "".join(c if c.isprintable() else "*" for c in i)
 
-        # Không tự sinh dòng root như: vendor 0 0 0755
         if i == base and i not in existing:
             continue
 
         if i in existing or i in seen_new:
             continue
 
-        filepath = os.path.abspath(os.path.join(dir_path, "..", i))
+        # Tính đường dẫn thực tế chính xác trên ổ đĩa
+        rel_path = i[len(base) + 1:] if i.startswith(base + "/") else i
+        filepath = os.path.abspath(os.path.join(target_dir, rel_path))
+
         config = make_config(i, filepath)
 
         insert_at = find_insert_index(entries, i)

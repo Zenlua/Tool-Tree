@@ -319,7 +319,7 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]]; then
     [ "$img_size" ] && text_sizes="$img_size" || text_sizes=$(stat -c %s "$saved")
     echo "$sizes_text: ${saved##*/} $(coverbyte $text_sizes) ($text_sizes)"
     echo
-    if [ "$partition" == "ext4" ]; then
+    if [ "$partition" == "ext" ]; then
     tune2fs -l "$saved" | awk '/Free blocks:/{f=$3}/Block size:/{b=$3}END{print "Free: " int(f*b/1048576) " MB"}'
     echo
     fi
