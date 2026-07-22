@@ -214,8 +214,11 @@ class ShellSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
         "true", "false", "type", "command", "eval", "let"
     )
 
+    // "#" chỉ được coi là bắt đầu comment khi đứng đầu dòng hoặc có khoảng trắng
+    // ngay bên trái (vd: "  # note", "cmd # note"). Nếu dính liền ký tự khác
+    // (vd: "$#", "a#b", "$#1") thì không phải comment, không tô màu xám.
     private val shellRegex = Regex(
-        "(?<COMMENT>(?m)#.*\$)" +
+        "(?<COMMENT>(?m)(?:^|(?<=\\s))#.*\$)" +
             "|(?<STRING>\"(?:\\\\.|[^\"\\\\])*\"|'(?:[^']*)'|`(?:\\\\.|[^`\\\\])*`)" +
             "|(?<COMMAND>\\$\\((?:[^()]*|\\([^()]*\\))*\\))" +
             "|(?<VARIABLE>\\$\\{[A-Za-z_][A-Za-z0-9_]*[^}]*\\}|\\$[A-Za-z_][A-Za-z0-9_]*)" +
@@ -377,8 +380,11 @@ class PythonSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
         "zip", "isinstance", "map", "filter", "any", "all", "dir", "id", "help"
     )
 
+    // "#" chỉ được coi là bắt đầu comment khi đứng đầu dòng hoặc có khoảng trắng
+    // ngay bên trái. Nếu dính liền ký tự khác thì không phải comment (tránh tô
+    // nhầm màu xám cho những trường hợp như "a#b" hay các toán tử ghép "#").
     private val pythonRegex = Regex(
-        "(?<COMMENT>#.*\$)" +
+        "(?<COMMENT>(?m)(?:^|(?<=\\s))#.*\$)" +
             "|(?<STRING>\"{3}(?s).*?\"{3}|'{3}(?s).*?'{3}|\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*')" +
             "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|\\d+\\.\\d+|\\d+)(?![A-Za-z0-9_]))" +
             "|(?<DECORATOR>@[A-Za-z_][A-Za-z0-9_]*)" +

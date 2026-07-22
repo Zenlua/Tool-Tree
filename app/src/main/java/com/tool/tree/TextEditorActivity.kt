@@ -48,11 +48,27 @@ class TextEditorActivity : AppCompatActivity() {
         private const val UNDO_HISTORY_LIMIT = 200
         private const val UNDO_DEBOUNCE_MS = 700L
     
+        private const val EXTRA_PLACEHOLDER = "placeholder"
+    
         private val RUNNABLE_EXTENSIONS = mapOf(
             "sh" to "sh",
             "bash" to "bash",
             "py" to "python"
         )
+    
+        // Cho phép dòng đầu tiên của nội dung khai báo ngôn ngữ thực tế của file,
+        // ví dụ "# python" hoặc "#!/usr/bin/env python", bất kể phần mở rộng file là gì.
+        private val FIRST_LINE_LANG_PATTERN = Regex(
+            """^#!?\s*(?:/usr/bin/env\s+)?(?:/data/(?:data|user/\d+)/com\.tool\.tree/\S*/)?(python3?|py|bash|sh|shell)\b""",
+            RegexOption.IGNORE_CASE
+        )
+    
+        private fun normalizeLangToken(token: String): String? = when (token.lowercase()) {
+            "python", "python3", "py" -> "python"
+            "bash" -> "bash"
+            "sh", "shell" -> "sh"
+            else -> null
+        }
     
         fun start(
             context: Context,
@@ -60,7 +76,8 @@ class TextEditorActivity : AppCompatActivity() {
             title: String? = null,
             desc: String? = null,
             wrap: Boolean = true,
-            dir: String? = null
+            dir: String? = null,
+            placeholder: String? = null
         ) {
             val intent = Intent(context, TextEditorActivity::class.java).apply {
                 putExtra(EXTRA_FILE, file)
@@ -68,6 +85,7 @@ class TextEditorActivity : AppCompatActivity() {
                 putExtra(EXTRA_DESC, desc ?: "")
                 putExtra(EXTRA_WRAP, wrap)
                 putExtra(EXTRA_DIR, dir ?: "")
+                putExtra(EXTRA_PLACEHOLDER, placeholder ?: "")
                 if (context !is AppCompatActivity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
@@ -84,6 +102,8 @@ class TextEditorActivity : AppCompatActivity() {
     private var noWrapContainer: HorizontalScrollView? = null
     private var mainListBaseBottomMargin = 0
     private var syntaxHighlighter: SyntaxHighlighter? = null
+    private var placeholderText: String = ""
+    private var lastLanguageOverride: String? = null
     
     private data class EditorSnapshot(val text: String, val cursor: Int)
     
@@ -125,6 +145,7 @@ class TextEditorActivity : AppCompatActivity() {
         configDir = intent.getStringExtra(EXTRA_DIR).orEmpty()
         absoluteFilePath = resolveAbsolutePath(configDir, filePath)
         wrapEnabled = intent.getBooleanExtra(EXTRA_WRAP, true)
+        placeholderText = intent.getStringExtra(EXTRA_PLACEHOLDER).orEmpty()
     
         applyWrapState()
         setupCursorAutoScroll()
@@ -197,14 +218,54 @@ class TextEditorActivity : AppCompatActivity() {
     
     private fun fileExtension() = File(absoluteFilePath).name.substringAfterLast('.', "").lowercase()
     
-    private fun runnableInterpreter(): String? = RUNNABLE_EXTENSIONS[fileExtension()]
+    /**
+     * Đọc dòng đầu tiên của nội dung đang soạn thảo để xem có khai báo ngôn ngữ
+     * dạng "# python", "# bash", "#!/usr/bin/env python"... hay không. Nếu có,
+     * ngôn ngữ này sẽ được ưu tiên hơn phần mở rộng file thực tế (vd: file.sh
+     * nhưng dòng đầu ghi "# python" thì vẫn coi là python).
+     */
+    private fun detectFirstLineLanguageOverride(): String? {
+        val firstLine = binding.editorContent.text?.toString()
+            ?.lineSequence()?.firstOrNull()?.trim()
+            ?: return null
+        if (firstLine.isEmpty()) return null
+        val token = FIRST_LINE_LANG_PATTERN.find(firstLine)?.groupValues?.get(1) ?: return null
+        return normalizeLangToken(token)
+    }
+    
+    private fun runnableInterpreter(): String? =
+        detectFirstLineLanguageOverride() ?: RUNNABLE_EXTENSIONS[fileExtension()]
     
     private fun setupSyntaxHighlighting() {
         syntaxHighlighter?.detach()
+        val override = detectFirstLineLanguageOverride()
+        lastLanguageOverride = override
+        // SyntaxHighlighterFactory chọn bộ tô màu dựa trên phần mở rộng của đường dẫn
+        // truyền vào. Khi có override từ dòng đầu, ta đưa vào một "đường dẫn ảo" có
+        // đúng phần mở rộng tương ứng để factory chọn đúng ngôn ngữ, còn việc đọc/ghi
+        // file vẫn dùng absoluteFilePath thật như bình thường.
+        val highlightPath = when (override) {
+            "python" -> "$absoluteFilePath.__lang_override.py"
+            "bash" -> "$absoluteFilePath.__lang_override.bash"
+            "sh" -> "$absoluteFilePath.__lang_override.sh"
+            else -> absoluteFilePath
+        }
         syntaxHighlighter = SyntaxHighlighterFactory.createForPath(
-            absoluteFilePath,
+            highlightPath,
             binding.editorContent
         )?.apply { attach() }
+    }
+    
+    /**
+     * Gọi lại khi nội dung dòng đầu tiên thay đổi trong lúc soạn thảo, để cập nhật
+     * lại màu cú pháp và trạng thái nút "Run" (test) cho phù hợp ngôn ngữ mới.
+     */
+    private fun refreshLanguageOverrideIfChanged() {
+        val current = detectFirstLineLanguageOverride()
+        if (current != lastLanguageOverride) {
+            setupSyntaxHighlighting()
+            invalidateOptionsMenu()
+        }
     }
     
     private fun setupUndoRedoButtons(toolbar: Toolbar) {
@@ -276,6 +337,7 @@ class TextEditorActivity : AppCompatActivity() {
                 undoHandler.removeCallbacks(commitPendingUndoRunnable)
                 undoHandler.postDelayed(commitPendingUndoRunnable, UNDO_DEBOUNCE_MS)
                 refreshUndoRedoButtons()
+                refreshLanguageOverrideIfChanged()
             }
         })
     }
@@ -388,9 +450,11 @@ class TextEditorActivity : AppCompatActivity() {
                 redoStack.clear()
                 refreshUndoRedoButtons()
     
-                binding.editorContent.hint = getString(
-                    if (newFile) R.string.editor_hint_new_file else R.string.editor_hint_empty
-                )
+                binding.editorContent.hint = when {
+                    placeholderText.isNotEmpty() -> placeholderText
+                    newFile -> getString(R.string.editor_hint_new_file)
+                    else -> getString(R.string.editor_hint_empty)
+                }
                 setupSyntaxHighlighting()
             }
         }

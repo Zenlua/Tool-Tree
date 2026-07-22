@@ -644,8 +644,8 @@ echo "'$save_text' $Extract"
 <lock>
 [ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
 </lock>
-<param name="CQ" label="'$flash_text_2'" type="checkbox" depend-on="CQ1" depend-value="1" depend-mode="hide" depend-readonly="true"/>
-<param name="CQ1" label="'$flash_text_3'" type="checkbox" depend-on="CQ" depend-value="1" depend-mode="hide" depend-readonly="true"/>
+<param name="CQ" label="'$flash_text_2'" type="checkbox" depend-on="CQ1" depend-value="1" depend-mode="hide" depend-cascade="false" depend-readonly="true"/>
+<param name="CQ1" label="'$flash_text_3'" type="checkbox" depend-on="CQ" depend-value="1" depend-mode="hide" depend-cascade="false" depend-readonly="true"/>
 <param name="IMG" label="IMAGE" title="'$flash_text_4'" desc="'$flash_text_5'" options-sh="search_image" required="true"/>
 <param name="Brush_in" type="file" suffix="img" editable="true" required="true" title="'$flash_text_6'" desc="'$flash_text_7'" required="true"/>
 <set>

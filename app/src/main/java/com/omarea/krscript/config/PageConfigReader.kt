@@ -665,6 +665,7 @@ class PageConfigReader {
             when (attrName) {
                 "file", "path" -> editor.file = attrValue.trim()
                 "wrap" -> editor.wrap = !(attrValue == "0" || attrValue == "false" || attrValue == "off" || attrValue == "no-wrap")
+                "placeholder" -> editor.placeholder = attrValue
             }
         }
         return editor
