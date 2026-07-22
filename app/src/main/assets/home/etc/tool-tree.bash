@@ -60,7 +60,7 @@ fi
 }
 
 shell_bash() {
-    echo '<group><editor title="'$home_text_5'" desc="'$more_text_9'" file="home/usr/run_'$1'.bash" icon="'`urlpng shell`'"/></group>'
+    echo '<group><editor title="'$home_text_5'" desc="'$more_text_9'" file="home/usr/run_'$1'.bash" placeholder="#!/data/data/com.tool.tree/files/home/bin/bash" icon="'`urlpng shell`'"/></group>'
 }
 
 
@@ -361,7 +361,7 @@ fi
 </group>
 
 <group>
-<editor title="'$home_text_5'" desc="'$home_text_6'" file="home/usr/run_shella.bash" icon="'`urlpng shella`'"/>
+<editor title="'$home_text_5'" desc="'$home_text_6'" file="home/usr/run_shella.bash" placeholder="#!/data/data/com.tool.tree/files/home/bin/bash" icon="'`urlpng shella`'"/>
 </group>'
 }
 
