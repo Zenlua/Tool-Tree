@@ -60,7 +60,7 @@ else
 fi
 
 echo 0 > "$2/$loadid/status"
-chmod -R 755 "$2/$loadid"
+set_permis -R "$2/$loadid"
 
 if [ -f "$2/$loadid/install.sh" ]; then
     "$2/$loadid/install.sh"
