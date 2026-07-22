@@ -96,7 +96,6 @@ A szkript végrehajtása befejeződött</string>
     <string name="kr_slice_activity_fail">Az Activity megnyitása nem sikerült~</string>
     <string name="kr_slice_script_result">Szkript eredménye</string>
     <string name="kr_ushortcut_nsupported">Ez a funkció nem támogatja a parancsikonok hozzáadását</string>
-    <string name="kr_write_external_storage">Külső tárhely olvasási/írási engedély szükséges!</string>
     <string name="menu_power">Energiagazdálkodási művelet kiválasztása (root)</string>
     <string name="msg_folder_mode">Tartsa lenyomva a gombot egy mappa kiválasztásához</string>
     <string name="mtrl_badge_numberless_content_description">Új értesítés</string>

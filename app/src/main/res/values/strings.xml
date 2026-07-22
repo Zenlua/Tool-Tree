@@ -76,7 +76,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="btn_skip">Skip</string>
     <string name="btn_exit">Exit</string>
     <string name="btn_hide">Hide</string>
-    <string name="btn_toggle_soft_wrap">Toggle line wrap</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_confirm">Confirm</string>
     <string name="btn_execute">Execute</string>
@@ -106,7 +105,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_please_choose_app">Please select an app</string>
     <string name="kr_please_input_color">Please enter a color</string>
     <string name="kr_please_select">Please select</string>
-    <string name="kr_write_external_storage">Read/write external storage permission is required!</string>
     <string name="kr_download_create_fail">Failed to create download task</string>
     <string name="kr_download_create_success">File download started</string>
     <string name="kr_download_confirm">Download the file?</string>

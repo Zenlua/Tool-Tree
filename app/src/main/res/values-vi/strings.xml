@@ -68,7 +68,6 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="onloading">Đang tải dữ liệu…</string>
     <string name="kr_shell_completed">\nThực thi script hoàn tất</string>
     <string name="kr_shell_finish_error">Thực thi đã kết thúc nhưng có lỗi xảy ra</string>
-    <string name="script_losted">Thiếu tài nguyên script\n</string>
     <string name="btn_copy_output">Sao chép</string>
     <string name="hint_shell_input">Nhập nội dung để gửi cho script</string>
     <string name="btn_send_input">Gửi</string>
@@ -91,7 +90,6 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_please_choose_app">Vui lòng chọn ứng dụng</string>
     <string name="kr_please_input_color">Vui lòng nhập màu</string>
     <string name="kr_please_select">Vui lòng chọn</string>
-    <string name="kr_write_external_storage">Cần quyền đọc/ghi bộ nhớ ngoài!</string>
     <string name="kr_download_create_fail">Không thể tạo tác vụ tải xuống</string>
     <string name="kr_download_create_success">Đã bắt đầu tải tệp</string>
     <string name="kr_download_confirm">Tải tệp này?</string>
