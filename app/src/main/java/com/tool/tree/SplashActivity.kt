@@ -1,6 +1,9 @@
 package com.tool.tree
 
 import android.Manifest
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -79,31 +82,17 @@ class SplashActivity : AppCompatActivity() {
     // =================== LOGIC XỬ LÝ QUYỀN ===================
 
     private fun showAgreementDialog() {
-        // Khởi chạy WakeLockService lần đầu
-        val isFirstTime = startWakeLockServiceOnce()
-
         DialogHelper.warning(
             this,
             getString(R.string.permission_dialog_title),
             getString(R.string.permission_dialog_message),
             Runnable { 
-                // Đồng ý điều khoản
+                // Quan trọng: Lưu trạng thái đồng ý ngay khi nhấn nút
                 saveAgreement() 
-                
-                // 💡 Chỉ Stop Service nếu đây là lần đầu tiên cài đặt kích hoạt Service
-                if (isFirstTime) {
-                    WakeLockService.stopService(applicationContext)
-                }
-                
+                // Sau đó mới đi xin quyền hệ thống
                 requestRequiredPermissions() 
             },
-            Runnable { 
-                // Từ chối điều khoản -> Hủy service và đóng app
-                if (isFirstTime) {
-                    WakeLockService.stopService(applicationContext)
-                }
-                finish() 
-            }
+            Runnable { finish() }
         ).setCancelable(false)
     }
 
@@ -134,7 +123,10 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun checkPermissionsNextStep() {
-        // Kiểm tra quyền All Files Access đối với Android 11+
+        // Khởi tạo kênh thông báo đúng 1 lần duy nhất ở lần cài đặt đầu tiên
+        startWakeLockServiceOnce()
+
+        // Nếu là Android 11+ và chưa có quyền "All Files Access"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
             requestManageAllFilesPermission()
         } else {
@@ -143,19 +135,35 @@ class SplashActivity : AppCompatActivity() {
     }
 
     /**
-     * Bật WakeLockService duy nhất 1 lần đầu tiên cài đặt/chạy app.
-     * @return true nếu là lần đầu tiên kích hoạt Service, false nếu đã từng kích hoạt trước đó.
+     * Tạo Notification Channel trực tiếp với hệ thống 1 lần duy nhất ở lần đầu cài đặt.
+     * Lưu lại trạng thái vào SharedPreferences để không gọi lại ở các lần sau.
      */
-    private fun startWakeLockServiceOnce(): Boolean {
+    private fun startWakeLockServiceOnce() {
         val prefs = getSharedPreferences("kr-script-config", MODE_PRIVATE)
-        val isFirstRun = !prefs.getBoolean("wakelock_service_started_once", false)
-
-        if (isFirstRun) {
-            WakeLockService.startService(applicationContext)
+        if (!prefs.getBoolean("wakelock_service_started_once", false)) {
+            createNotificationChannel()
             prefs.edit().putBoolean("wakelock_service_started_once", true).apply()
         }
+    }
 
-        return isFirstRun
+    /**
+     * Đăng ký NotificationChannel chuẩn cho WakeLockService mà KHÔNG cần start Service
+     */
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "WakeLockServiceChannel",
+                getString(R.string.wakelock_service_running),
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                setSound(null, null)
+                enableLights(false)
+                enableVibration(false)
+                lockscreenVisibility = Notification.VISIBILITY_SECRET
+            }
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(channel)
+        }
     }
 
     private fun requestManageAllFilesPermission() {
@@ -172,20 +180,9 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            // Kích hoạt service nếu trước đó chưa kích hoạt
-            val isFirstTime = startWakeLockServiceOnce()
-
-            // 💡 Sau khi người dùng phản hồi cấp quyền (Dù Cho phép hay Từ chối)
-            // Nếu là lần đầu tiên cài đặt -> Dừng Service ngay lập tức.
-            if (isFirstTime) {
-                WakeLockService.stopService(applicationContext)
-            }
-
-            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 checkPermissionsNextStep()
-            } else {
-                finish()
-            }
+            } else finish()
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
