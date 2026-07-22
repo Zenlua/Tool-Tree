@@ -4,14 +4,15 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import com.omarea.krscript.config.StringResRef
 
 class ToastReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context, intent: Intent) {
-        val raw = intent.getStringExtra("text") ?: return
-        val message = StringResRef.resolve(context, raw)
-
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        // Lấy dữ liệu từ intent
+        val message = intent.getStringExtra("text")
+        
+        // Hiển thị Toast với nội dung nhận được từ broadcast
+        if (message != null) {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
     }
 }

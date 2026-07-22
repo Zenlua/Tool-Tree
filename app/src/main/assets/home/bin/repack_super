@@ -65,13 +65,14 @@ if [ "$TYPEIMG" == "A" ]; then
 argvs+="--metadata-slots 2 --device super:${super_sizek}:$first_sector --group ${SUPGRUP}:${super_sizek} "
 fi
 
+p_size=0
 for i in $MIMGPA; do
 echo "$i" | grep -q "\-cow" && continue
 i1=$(echo "$i" | sed 's/.img$//')
 i2=$(echo "$i" | sed -e 's/_a.img$//' -e 's/_b.img$//' -e 's/.img$//')
 info=$(checktype "$INPUT/$i1.img")
 p_size=$(stat -c %s "$INPUT/$i1.img")
-#p_size=$(( ($(stat -c %s "$INPUT/$i1.img") + 4095) / 4096 * 4096 ))
+p_total=$((p_total + p_size))
 [ "$info" == "sparse" ] && simg2img "$INPUT/$i1.img"
 [ "$TYPEIMG" == "A" ] && argvs+="--partition ${i2}:readonly:$p_size:${SUPGRUP} --image ${i2}=$i1.img "
 if [ "$TYPEIMG" == "AB" ] || [ "$TYPEIMG" == "VAB" ]; then
@@ -92,6 +93,8 @@ fi
 [ "$DANGIMG" == "sparse" ] && argvs+="--sparse "
 
 mkdir -p out
+echo "Free: $(((super_sizek - p_size) / 1024 / 1024)) MB"
+echo
 echo "lpmake ${argvs}-F --output $INPUT/out/super.img" | sed -z 's| --|\n--|g'
 lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.txt
 if [ $? == 0 ]; then
