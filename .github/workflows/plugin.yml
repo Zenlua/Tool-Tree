@@ -1,0 +1,28 @@
+name: Plugin CI
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/plugin/**'
+
+permissions: write-all
+
+jobs:
+  build-release:
+    if: ${{ github.repository_owner == 'Zenlua' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build add-on
+        run: |
+          cd .github/plugin
+          7z a -t7z -y ../plugin.so
+
+      - name: Upload module
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Tmp"
+          tag_name: "V1"
+          files: .github/plugin.so
