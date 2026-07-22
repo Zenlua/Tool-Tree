@@ -83,7 +83,7 @@
     <string name="kr_script_task_running">A végrehajtás elkezdődött</string>
     <string name="kr_sdk_discrepancy">A rendszer verziója nem megfelelő</string>
     <string name="kr_sdk_discrepancy_message">Ez a funkció csak %d SDK-val rendelkező rendszereken fut</string>
-    <string name="kr_sdk_message">Ez a funkció csak %d és %d közötti SDK-val rendelkező rendszereken fut</string>
+    <string name="kr_sdk_message">Ez a funkció csak %1$d és %2$d közötti SDK-val rendelkező rendszereken fut</string>
     <string name="kr_sdk_overtop">A rendszer verziója túl magas</string>
     <string name="kr_sdk_too_low">A rendszer verziója túl alacsony</string>
     <string name="kr_shell_completed">
