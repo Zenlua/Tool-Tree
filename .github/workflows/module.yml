@@ -11,7 +11,6 @@ jobs:
   build-release:
     if: ${{ github.repository_owner == 'Zenlua' }}
     runs-on: ubuntu-latest
-    environment: Stable
     steps:
       - uses: actions/checkout@v4
 
