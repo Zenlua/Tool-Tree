@@ -16,7 +16,7 @@ eval "$(grep '="' "$MPAT/english.prop" | sed "/google_text=/d")"
 
 # Google dịch
 if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
-  trans_add "$MPAT" 'english.prop'
+  trans_add "$MPAT"
   [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
 fi
 
@@ -40,11 +40,11 @@ if [ "$1" == "home" ]; then
           [ -e /dev/wmtWifi ] && wifi_tool_mtk="--mtk-wifi"
           cd "$HOME/root"
           if [ "$(glog wifi_tool_customize)" == 1 ]; then
-            python -u '$MPAT'/main.py -i wlan0 -b "$state" -B -w -p $(glog pin_number_wifi 00000000) --spoof-mac $wifi_tool_mtk | sed -u -e "s/\[[0-9;]*m//g" -e "s|WPA PSK:|WPA PSK (Password):|"
+            python -u '$MPAT'/main.py -i wlan0 -b "$state" -B -w -p $(glog pin_number_wifi 00000000) --spoof-mac $wifi_tool_mtk | sed -u -e "s|WPA PSK:|WPA PSK (Password):|"
           elif [ "$(glog wifi_tool_customize)" == 2 ]; then
-            python -u '$MPAT'/main.py -i wlan0 -b "$state" --pbc $wifi_tool_mtk | sed -u -e "s/\[[0-9;]*m//g" -e "s|WPA PSK:|WPA PSK (Password):|"
+            python -u '$MPAT'/main.py -i wlan0 -b "$state" --pbc $wifi_tool_mtk | sed -u -e "s|WPA PSK:|WPA PSK (Password):|"
           else
-            python -u '$MPAT'/main.py -i wlan0 -b "$state" -K --spoof-mac -d 3 -l 120 $wifi_tool_mtk | sed -u -e "s/\[[0-9;]*m//g" -e "s|WPA PSK:|WPA PSK (Password):|"
+            python -u '$MPAT'/main.py -i wlan0 -b "$state" -K --spoof-mac -d 3 -l 120 $wifi_tool_mtk | sed -u -e "s|WPA PSK:|WPA PSK (Password):|"
           fi
           echo
           checktime
