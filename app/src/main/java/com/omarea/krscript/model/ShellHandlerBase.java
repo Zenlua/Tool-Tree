@@ -56,8 +56,30 @@ public abstract class ShellHandlerBase extends Handler {
     // (gọi từ release() khi dialog bị huỷ) để không giữ rác sau khi không cần nữa.
     private DataOutputStream stdin;
 
+    // Runnable do ShellExecutor.execute() cung cấp qua onStart(Runnable) — khi gọi sẽ thực thi
+    // "killtree" (kill toàn bộ cây tiến trình con sinh ra bởi phiên shell hiện tại, không chỉ
+    // riêng process của app) rồi đóng stream + destroy process shell chính. Cần lưu lại tham
+    // chiếu này ở lớp cha vì killApp() (phục vụ "exit:[kill]"/"exit:[restart]") cần gọi tới nó
+    // TRƯỚC khi kill process của app — nếu không, các lệnh shell chạy ngầm (con của su/sh) sẽ
+    // bị mồ côi và tiếp tục chạy nền dù app đã bị kill/restart.
+    private Runnable forceStop;
+
     public ShellHandlerBase(Context context) {
         this.context = context;
+    }
+
+    /**
+     * Lưu lại runnable kill-tree do ShellExecutor cung cấp. Lớp con override onStart(Runnable)
+     * (ví dụ để gắn vào nút "Dừng") CẦN gọi thêm dòng này trong phần implement của mình, ví dụ:
+     *
+     *   {@literal @}Override
+     *   public void onStart(Runnable forceStop) {
+     *       bindForceStop(forceStop);
+     *       this.stopButtonAction = forceStop; // logic cũ của lớp con vẫn giữ nguyên
+     *   }
+     */
+    public void bindForceStop(Runnable forceStop) {
+        this.forceStop = forceStop;
     }
 
     /**
@@ -236,21 +258,32 @@ public abstract class ShellHandlerBase extends Handler {
             onKillRequest();
         } catch (Exception ignored) {
             // Không để lỗi dọn dẹp UI cản trở việc kill
-        } finally {
-            if (restart) {
-                try {
-                    Intent launch = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-                    if (launch != null) {
-                        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        context.startActivity(launch);
-                    }
-                } catch (Exception ignored) {
-                    // Không để lỗi khởi động lại cản trở việc kill process cũ
-                }
-            }
-            android.os.Process.killProcess(android.os.Process.myPid());
-            System.exit(10);
         }
+        // Kill cây tiến trình shell (root killtree theo sessionTag) TRƯỚC khi kill app process.
+        // Nếu bỏ qua bước này, killProcess() bên dưới chỉ giết process Java của app — các tiến
+        // trình su/sh/script con sẽ bị mồ côi, được init nhận nuôi, và tiếp tục chạy nền bình
+        // thường dù app đã biến mất khỏi Recent Apps.
+        Runnable forceStop = this.forceStop;
+        if (forceStop != null) {
+            try {
+                forceStop.run();
+            } catch (Exception ignored) {
+                // Không để lỗi kill-tree cản trở việc kill process của app
+            }
+        }
+        if (restart) {
+            try {
+                Intent launch = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+                if (launch != null) {
+                    launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    context.startActivity(launch);
+                }
+            } catch (Exception ignored) {
+                // Không để lỗi khởi động lại cản trở việc kill process cũ
+            }
+        }
+        android.os.Process.killProcess(android.os.Process.myPid());
+        System.exit(10);
     }
 
     private String getAmHelp() {
