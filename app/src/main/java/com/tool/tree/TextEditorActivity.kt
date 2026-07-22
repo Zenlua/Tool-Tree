@@ -35,7 +35,10 @@ import com.tool.tree.ui.SyntaxHighlighterFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
+import java.security.MessageDigest
 
 class TextEditorActivity : AppCompatActivity() {
 
@@ -47,6 +50,8 @@ class TextEditorActivity : AppCompatActivity() {
         private const val EXTRA_DIR = "dir"
         private const val UNDO_HISTORY_LIMIT = 200
         private const val UNDO_DEBOUNCE_MS = 700L
+        private const val UNDO_CACHE_DEBOUNCE_MS = 400L
+        private const val UNDO_CACHE_DIR = "editor_undo_cache"
     
         private const val EXTRA_PLACEHOLDER = "placeholder"
     
@@ -56,12 +61,6 @@ class TextEditorActivity : AppCompatActivity() {
             "py" to "python"
         )
     
-        // Cho phép dòng đầu tiên của nội dung khai báo ngôn ngữ thực tế của file, ví dụ:
-        // "# python", "#!/usr/bin/env python", hoặc shebang trỏ tới binary Termux
-        // được bundle riêng trong thư mục dữ liệu của app (com.tool.tree), ví dụ:
-        //   #!/data/data/com.tool.tree/files/home/termux/bin/python
-        //   #!/data/data/com.tool.tree/files/home/bin/bash
-        // (vẫn hỗ trợ cả dạng /data/user/<id>/... phòng khi thiết bị multi-user)
         private val FIRST_LINE_LANG_PATTERN = Regex(
             """^#!?\s*(?:/usr/bin/env\s+)?(?:/data/(?:data|user/\d+)/com\.tool\.tree/\S*/)?(python3?|py|bash|sh|shell)\b""",
             RegexOption.IGNORE_CASE
@@ -120,6 +119,7 @@ class TextEditorActivity : AppCompatActivity() {
     private var redoButton: ImageButton? = null
     private val undoHandler = Handler(Looper.getMainLooper())
     private val commitPendingUndoRunnable = Runnable { commitPendingUndoSnapshot() }
+    private val persistUndoCacheRunnable = Runnable { persistUndoCacheToDisk() }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -159,10 +159,105 @@ class TextEditorActivity : AppCompatActivity() {
         loadFileContent()
     }
     
+    override fun onPause() {
+        commitPendingUndoSnapshot()
+        persistUndoCacheToDisk()
+        super.onPause()
+    }
+    
     override fun onDestroy() {
         syntaxHighlighter?.detach()
         undoHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
+    }
+    
+    // ---------------------------------------------------------------------
+    // Cache undo/redo xuống đĩa: cho phép khôi phục lịch sử undo/redo nếu
+    // Activity bị hệ thống hủy (xoay màn hình, thiếu RAM) hoặc người dùng
+    // rời màn hình soạn thảo mà chưa lưu, rồi quay lại mở đúng file đó.
+    // Cache chỉ được khôi phục khi nội dung file tại thời điểm mở lại trùng
+    // khớp với nội dung đã có lúc ghi cache (tránh áp lịch sử undo sai lệch
+    // lên một nội dung file đã thay đổi bởi nơi khác).
+    // ---------------------------------------------------------------------
+    
+    private fun undoCacheFile(): File {
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(absoluteFilePath.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+        val dir = File(cacheDir, UNDO_CACHE_DIR).apply { mkdirs() }
+        return File(dir, "$digest.json")
+    }
+    
+    private fun snapshotToJson(snapshot: EditorSnapshot) = JSONObject().apply {
+        put("text", snapshot.text)
+        put("cursor", snapshot.cursor)
+    }
+    
+    private fun jsonToSnapshot(json: JSONObject) =
+        EditorSnapshot(json.optString("text", ""), json.optInt("cursor", 0))
+    
+    private fun scheduleUndoCachePersist() {
+        undoHandler.removeCallbacks(persistUndoCacheRunnable)
+        undoHandler.postDelayed(persistUndoCacheRunnable, UNDO_CACHE_DEBOUNCE_MS)
+    }
+    
+    private fun persistUndoCacheToDisk() {
+        undoHandler.removeCallbacks(persistUndoCacheRunnable)
+        if (!::binding.isInitialized) return
+        val baseContent = savedContent
+        val undoSnapshot = undoStack.toList()
+        val redoSnapshot = redoStack.toList()
+        val pending = pendingUndoSnapshot
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                if (undoSnapshot.isEmpty() && redoSnapshot.isEmpty() && pending == null) {
+                    undoCacheFile().delete()
+                    return@launch
+                }
+                val root = JSONObject().apply {
+                    put("baseContent", baseContent)
+                    put("undo", JSONArray().apply { undoSnapshot.forEach { put(snapshotToJson(it)) } })
+                    put("redo", JSONArray().apply { redoSnapshot.forEach { put(snapshotToJson(it)) } })
+                    pending?.let { put("pending", snapshotToJson(it)) }
+                }
+                undoCacheFile().writeText(root.toString())
+            } catch (_: Exception) {
+            }
+        }
+    }
+    
+    /** Phải được gọi từ Main thread, sau khi [savedContent] đã được thiết lập. */
+    private fun restoreUndoCacheFromDisk() {
+        try {
+            val file = undoCacheFile()
+            if (!file.exists()) return
+            val root = JSONObject(file.readText())
+            val baseContent = if (root.has("baseContent")) root.getString("baseContent") else null
+            if (baseContent == null || baseContent != savedContent) {
+                file.delete()
+                return
+            }
+    
+            undoStack.clear()
+            redoStack.clear()
+            root.optJSONArray("undo")?.let { arr ->
+                for (i in 0 until arr.length()) undoStack.addLast(jsonToSnapshot(arr.getJSONObject(i)))
+            }
+            root.optJSONArray("redo")?.let { arr ->
+                for (i in 0 until arr.length()) redoStack.addLast(jsonToSnapshot(arr.getJSONObject(i)))
+            }
+            pendingUndoSnapshot = root.optJSONObject("pending")?.let { jsonToSnapshot(it) }
+            refreshUndoRedoButtons()
+        } catch (_: Exception) {
+        }
+    }
+    
+    private fun clearUndoCache() {
+        undoHandler.removeCallbacks(persistUndoCacheRunnable)
+        try {
+            undoCacheFile().delete()
+        } catch (_: Exception) {
+        }
     }
     
     private fun setupKeyboardInsets() {
@@ -224,12 +319,6 @@ class TextEditorActivity : AppCompatActivity() {
     
     private fun fileExtension() = File(absoluteFilePath).name.substringAfterLast('.', "").lowercase()
     
-    /**
-     * Đọc dòng đầu tiên của nội dung đang soạn thảo để xem có khai báo ngôn ngữ
-     * dạng "# python", "# bash", "#!/usr/bin/env python"... hay không. Nếu có,
-     * ngôn ngữ này sẽ được ưu tiên hơn phần mở rộng file thực tế (vd: file.sh
-     * nhưng dòng đầu ghi "# python" thì vẫn coi là python).
-     */
     private fun detectFirstLineLanguageOverride(): String? {
         val firstLine = binding.editorContent.text?.toString()
             ?.lineSequence()?.firstOrNull()?.trim()
@@ -246,10 +335,6 @@ class TextEditorActivity : AppCompatActivity() {
         syntaxHighlighter?.detach()
         val override = detectFirstLineLanguageOverride()
         lastLanguageOverride = override
-        // SyntaxHighlighterFactory chọn bộ tô màu dựa trên phần mở rộng của đường dẫn
-        // truyền vào. Khi có override từ dòng đầu, ta đưa vào một "đường dẫn ảo" có
-        // đúng phần mở rộng tương ứng để factory chọn đúng ngôn ngữ, còn việc đọc/ghi
-        // file vẫn dùng absoluteFilePath thật như bình thường.
         val highlightPath = when (override) {
             "python" -> "$absoluteFilePath.__lang_override.py"
             "bash" -> "$absoluteFilePath.__lang_override.bash"
@@ -262,10 +347,6 @@ class TextEditorActivity : AppCompatActivity() {
         )?.apply { attach() }
     }
     
-    /**
-     * Gọi lại khi nội dung dòng đầu tiên thay đổi trong lúc soạn thảo, để cập nhật
-     * lại màu cú pháp và trạng thái nút "Run" (test) cho phù hợp ngôn ngữ mới.
-     */
     private fun refreshLanguageOverrideIfChanged() {
         val current = detectFirstLineLanguageOverride()
         if (current != lastLanguageOverride) {
@@ -344,6 +425,7 @@ class TextEditorActivity : AppCompatActivity() {
                 undoHandler.postDelayed(commitPendingUndoRunnable, UNDO_DEBOUNCE_MS)
                 refreshUndoRedoButtons()
                 refreshLanguageOverrideIfChanged()
+                scheduleUndoCachePersist()
             }
         })
     }
@@ -357,6 +439,7 @@ class TextEditorActivity : AppCompatActivity() {
         if (undoStack.size >= UNDO_HISTORY_LIMIT) undoStack.removeFirst()
         undoStack.addLast(snapshot)
         refreshUndoRedoButtons()
+        scheduleUndoCachePersist()
     }
     
     private inline fun withHighlightSuspended(block: () -> Unit) {
@@ -380,6 +463,7 @@ class TextEditorActivity : AppCompatActivity() {
         redoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
         refreshUndoRedoButtons()
+        persistUndoCacheToDisk()
     }
     
     private fun performRedo() {
@@ -395,6 +479,7 @@ class TextEditorActivity : AppCompatActivity() {
         undoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
         refreshUndoRedoButtons()
+        persistUndoCacheToDisk()
     }
     
     private fun applyHistorySnapshot(snapshot: EditorSnapshot) {
@@ -454,6 +539,10 @@ class TextEditorActivity : AppCompatActivity() {
                 pendingUndoSnapshot = null
                 undoStack.clear()
                 redoStack.clear()
+    
+                // Nếu có cache undo/redo được lưu từ phiên trước cho đúng nội dung
+                // file này, khôi phục lại để người dùng có thể undo/redo tiếp.
+                restoreUndoCacheFromDisk()
                 refreshUndoRedoButtons()
     
                 binding.editorContent.hint = when {
@@ -518,6 +607,7 @@ class TextEditorActivity : AppCompatActivity() {
         commitPendingUndoSnapshot()
     
         if (!hasUnsavedChanges()) {
+            clearUndoCache()
             finish()
             return
         }
@@ -532,6 +622,7 @@ class TextEditorActivity : AppCompatActivity() {
                 }
             }),
             onCancel = DialogHelper.DialogButton(getString(R.string.editor_discard), Runnable {
+                clearUndoCache()
                 finish()
             })
         )
@@ -584,6 +675,10 @@ class TextEditorActivity : AppCompatActivity() {
                 isSaving = false
                 if (success) {
                     savedContent = content
+                    // Cập nhật lại "baseContent" của cache theo nội dung vừa lưu,
+                    // để lịch sử undo/redo hiện có vẫn còn dùng được nếu quay
+                    // lại chỉnh sửa tiếp mà chưa đóng màn hình.
+                    persistUndoCacheToDisk()
                 }
                 if (showToast) {
                     Toast.makeText(
