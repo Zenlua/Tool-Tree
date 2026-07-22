@@ -38,6 +38,7 @@ public abstract class ShellHandlerBase extends Handler {
     private static final Pattern AM_PATTERN = Pattern.compile("am:\\[(.*?)\\]");
     private static final Pattern PROGRESS_PATTERN = Pattern.compile("progress:\\[(.*?)\\]");
     private static final Pattern INPUT_PATTERN = Pattern.compile("input:\\[(.*?)\\]");
+    private static final Pattern EXIT_PATTERN = Pattern.compile("exit:\\[(.*?)\\]");
 
     protected abstract void onProgress(int current, int total);
     protected abstract void onStart(Object msg);
@@ -102,6 +103,13 @@ public abstract class ShellHandlerBase extends Handler {
     protected void onInputRequest(String prompt) {
     }
 
+    /**
+     * Được gọi ngay trước khi tiến trình app bị kill (do "exit:[kill]" hoặc "exit:[restart]"),
+     * để lớp con có cơ hội dọn dẹp UI (đóng dialog, finish activity...). Mặc định không làm gì.
+     */
+    protected void onKillRequest() {
+    }
+
     @Override
     public void handleMessage(Message msg) {
         super.handleMessage(msg);
@@ -129,7 +137,19 @@ public abstract class ShellHandlerBase extends Handler {
         
         String log = msg.toString();
         String cleanLog = ANSI_ESCAPE_PATTERN.matcher(log).replaceAll("").trim();
-    
+
+        // === XỬ LÝ LỆNH THOÁT APP: exit:[kill] / exit:[restart] ===
+        Matcher exitMatcher = EXIT_PATTERN.matcher(cleanLog);
+        if (exitMatcher.find()) {
+            String args = exitMatcher.group(1).trim().toLowerCase(Locale.US);
+            if (args.equals("kill")) {
+                killApp(false);
+            } else if (args.equals("restart")) {
+                killApp(true);
+            }
+            return;
+        }
+
         // === TỰ ĐỘNG PHÁT HIỆN PROMPT CẦN INPUT ===
         if (shouldShowInputPrompt(cleanLog)) {
             onInputRequest(cleanLog);
@@ -200,6 +220,37 @@ public abstract class ShellHandlerBase extends Handler {
 
     protected void onError(Object msg) {
         updateLog(msg, "#ff0000");
+    }
+
+    /**
+     * Kill toàn bộ tiến trình app hiện tại (bao gồm mọi thread/service nền đang chạy trong
+     * cùng process), phục vụ cú pháp "exit:[kill]" (restart=false) và "exit:[restart]"
+     * (restart=true, sẽ khởi động lại app ngay trước khi kill process cũ).
+     *
+     * Lưu ý: killProcess() chỉ dừng process hiện tại. Nếu app có khai báo service ở process
+     * riêng (android:process=":other" trong Manifest), process đó KHÔNG bị ảnh hưởng bởi lệnh
+     * này — cần killBackgroundProcesses() riêng nếu muốn dọn luôn.
+     */
+    private void killApp(boolean restart) {
+        try {
+            onKillRequest();
+        } catch (Exception ignored) {
+            // Không để lỗi dọn dẹp UI cản trở việc kill
+        } finally {
+            if (restart) {
+                try {
+                    Intent launch = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+                    if (launch != null) {
+                        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        context.startActivity(launch);
+                    }
+                } catch (Exception ignored) {
+                    // Không để lỗi khởi động lại cản trở việc kill process cũ
+                }
+            }
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(10);
+        }
     }
 
     private String getAmHelp() {
