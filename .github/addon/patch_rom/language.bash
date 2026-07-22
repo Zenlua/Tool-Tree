@@ -89,7 +89,7 @@ quick_custom_text="Tùy chỉnh nhanh"
 diss_ovelsy_text="Vô hiệu hóa overlay"
 move_pangu_text="Di chuyển mục pangu vào system"
 move_miext_text="Di chuyển các mục trong mi_ext"
-label_fix_enforce="Xoá mã hóa enforceVersionPolicy"
+label_fix_enforce="Loại bỏ hạn chế enforceVersionPolicy"
 elif [ "$LANGUAGE-$COUNTRY" == "hu-HU" ]; then
 project_text="Projekt"
 save_text="Mentés ide:"

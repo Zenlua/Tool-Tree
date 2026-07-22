@@ -374,14 +374,14 @@ Update() {
             text_desc_size="$sizes_text: $(cat $TEMP/update | coverbyte)"
         else
             if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
-                websums="$(xem $link_url/tags/beta)"
+                websums="$(xem $link_url/tags/beta 2>/dev/null)"
                 tagname="${PACKAGE_VERSION_NAME//./}"
             else
-                websums="$(xem $link_url/latest)"
+                websums="$(xem $link_url/latest 2>/dev/null)"
                 tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
             fi
             websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
-            filesum="$(checksum "$PATH_APK")"
+            filesum="$(checksum "$PATH_APK" 2>/dev/null)"
             websize="$(echo "$websums" | jq -r '.assets[0].size')"
             text_desc_size="$sizes_text: $(coverbyte $websize 2>/dev/null)"
             if [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
