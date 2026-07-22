@@ -1,7 +1,7 @@
 # Launch after data installation is complete.
 
 if [ -d "$AON" ] || [ "$AOK" ]; then
-chmod 777 $AON/*/*
+set_permis $AON/*/* $AOK/*/* &>/dev/nul
 for vadd in $AON/* $AOK/*; do
     if [ -f "$vadd/firstly_start.bash" ]; then
     echo "Firstly shell: $vadd/firstly_start.bash"
