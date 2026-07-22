@@ -138,8 +138,8 @@ class SplashActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("kr-script-config", MODE_PRIVATE)
         if (!prefs.getBoolean("wakelock_service_started_once", false)) {
             WakeLockService.startService(applicationContext)
-            WakeLockService.stopService(applicationContext)
             prefs.edit().putBoolean("wakelock_service_started_once", true).apply()
+            WakeLockService.stopService(applicationContext)
         }
     }
 
