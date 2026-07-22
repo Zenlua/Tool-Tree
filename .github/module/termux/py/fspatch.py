@@ -3,203 +3,220 @@
 
 import os
 import sys
+from typing import List, Optional, Tuple
 
-def scanfs(file_path: str) -> tuple:
-    """Read original fs_config, skip comments/empty lines, and preserve line order."""
-    filesystem_config = {}
-    original_order = []
-    
-    with open(file_path, "r", encoding="utf-8") as file_:
-        for line_num, line in enumerate(file_, 1):
-            line_str = line.strip()
-            if not line_str or line_str.startswith('#'):
+FsEntry = Tuple[str, List[str]]
+
+
+def scanfs(fs_path: str) -> List[FsEntry]:
+    entries: List[FsEntry] = []
+    with open(fs_path, "r", encoding="utf-8", errors="ignore") as fp:
+        for line_num, raw_line in enumerate(fp, 1):
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
                 continue
-            parts = line_str.split()
+
+            parts = line.split()
             if not parts:
                 continue
+
             filepath, *other = parts
-            filesystem_config[filepath] = other
-            original_order.append(filepath)
-            
+            entries.append((filepath, other))
+
             if len(other) > 4:
-                print(f"[Warn] Line {line_num}: {filepath} has too many fields ({len(other)}).")
-                
-    return filesystem_config, original_order
+                print(
+                    f"[Warn] Line {line_num}: {filepath} has too many fields ({len(other)})."
+                )
 
-def scan_dir(folder: str) -> list:
-    """
-    Scan real directory following Android POSIX structure.
-    Automatically formats paths to fit standard Android fs_config.
-    """
-    folder_abs = os.path.abspath(folder)
-    base_name = os.path.basename(os.path.normpath(folder))
-    
-    results = [
-        base_name,
-        f"{base_name}/lost+found"
-    ]
-    
-    for root, dirs, files in os.walk(folder_abs):
-        rel_root = os.path.relpath(root, folder_abs)
-        rel_root = '' if rel_root == '.' else rel_root
-        
+    return entries
+
+
+def scan_dir(folder: str):
+    folder = os.path.abspath(folder)
+    base = os.path.basename(os.path.normpath(folder))
+    yield base
+    yield "/"
+    yield f"{base}/lost+found"
+
+    for root, dirs, files in os.walk(folder):
+        rel_root = os.path.relpath(root, folder)
+        rel_root = "" if rel_root == "." else rel_root
+
         for d in dirs:
-            path = os.path.join(base_name, rel_root, d)
-            results.append(path.replace('\\', '/'))
-            
+            path = os.path.join(base, rel_root, d)
+            yield path.replace("\\", "/")
+
         for f in files:
-            path = os.path.join(base_name, rel_root, f)
-            results.append(path.replace('\\', '/'))
+            path = os.path.join(base, rel_root, f)
+            yield path.replace("\\", "/")
 
-    # Deduplicate while maintaining appearance order
-    seen = set()
-    deduped = []
-    for item in results:
-        if item not in seen:
-            seen.add(item)
-            deduped.append(item)
-            
-    return deduped
 
-def islink(file_path: str) -> str or None:
-    """Check and return symlink target on both Windows and Linux/Termux."""
-    if os.name == 'nt':
-        if os.path.exists(file_path) and not os.path.isdir(file_path):
-            try:
-                with open(file_path, 'rb') as f:
-                    content = f.read()
-                    # Cygwin / MSYS2 / Windows virtual symlink header
-                    if content.startswith(b'!<symlink>\xff\xfe'):
-                        link_bytes = content[12:]
-                        return link_bytes.decode("utf-16", errors="ignore").replace('\x00', '').strip()
-            except IOError:
-                pass
-    else:
-        if os.path.islink(file_path):
+def islink(file_path: str) -> Optional[str]:
+    if os.path.islink(file_path):
+        try:
             return os.readlink(file_path)
-            
+        except OSError:
+            return None
     return None
 
-def fs_patch(fs_file: dict, dir_path: str) -> tuple:
-    """Match files in real folder and patch missing entries into fs_config."""
-    new_fs = {}
-    added_keys = []
-    new_add_count = 0
-    
-    print(f"FsPatcher: Loaded {len(fs_file)} original entries.")
-    
-    special_binaries = {
-        "bin/su", "xbin/su", "disable_selinux.sh", "daemon", "ext/.su", 
-        "install-recovery", "installed_su", "bin/rw-system.sh", "bin/getSPL"
-    }
 
-    dir_abs = os.path.abspath(dir_path)
-    base_name = os.path.basename(os.path.normpath(dir_path))
+def make_config(i: str, filepath: str) -> List[str]:
+    path_norm = i.replace("\\", "/")
+    if os.path.isdir(filepath):
+        uid = "0"
+        gid = (
+            "2000"
+            if path_norm.startswith(("system/bin/", "system/xbin/", "vendor/bin/"))
+            else "0"
+        )
+        mode = "0755"
+        return [uid, gid, mode]
 
-    for path_entry in scan_dir(dir_abs):
-        actual_entry = path_entry if path_entry.isprintable() else ''.join(c if c.isprintable() else '*' for c in path_entry)
+    if not os.path.exists(filepath):
+        return ["0", "0", "0755"]
 
-        # 1. Keep existing entry if already present in original fs_config
-        if actual_entry in fs_file:
-            new_fs[actual_entry] = fs_file[actual_entry]
+    link = islink(filepath)
+    if link:
+        uid = "0"
+        gid = (
+            "2000"
+            if path_norm.startswith(("system/bin/", "system/xbin/", "vendor/bin/"))
+            else "0"
+        )
+
+        if "/bin/" in path_norm or "/xbin/" in path_norm:
+            mode = "0755"
+        elif path_norm.endswith(".sh"):
+            mode = "0750"
+        else:
+            mode = "0644"
+
+        return [uid, gid, mode, link]
+
+    if "/bin/" in path_norm or "/xbin/" in path_norm:
+        uid = "0"
+        gid = (
+            "2000"
+            if path_norm.startswith(("system/bin/", "system/xbin/", "vendor/bin/"))
+            else "0"
+        )
+        mode = "0755"
+
+        if path_norm.endswith(".sh"):
+            mode = "0750"
+        else:
+            for s in [
+                "/bin/su",
+                "/xbin/su",
+                "disable_selinux.sh",
+                "daemon",
+                "ext/.su",
+                "install-recovery",
+                "installed_su",
+                "bin/rw-system.sh",
+                "bin/getSPL",
+            ]:
+                if s in path_norm:
+                    mode = "0755"
+                    break
+
+        return [uid, gid, mode]
+
+    return ["0", "0", "0644"]
+
+
+def find_insert_index(entries: List[FsEntry], new_path: str) -> int:
+    norm = new_path.replace("\\", "/")
+    parts = [p for p in norm.split("/") if p]
+    if len(parts) <= 1:
+        return len(entries)
+
+    for end in range(len(parts) - 1, 0, -1):
+        prefix = "/".join(parts[:end])
+        prefix_slash = prefix + "/"
+
+        last_idx = None
+        for idx, (path, _) in enumerate(entries):
+            p = path.replace("\\", "/")
+            if p == prefix or p.startswith(prefix_slash):
+                last_idx = idx
+
+        if last_idx is not None:
+            return last_idx + 1
+
+    top = parts[0]
+    top_slash = top + "/"
+    last_idx = None
+    for idx, (path, _) in enumerate(entries):
+        p = path.replace("\\", "/")
+        if p == top or p.startswith(top_slash):
+            last_idx = idx
+
+    if last_idx is not None:
+        return last_idx + 1
+
+    return len(entries)
+
+
+def fs_patch(fs_entries: List[FsEntry], dir_path: str) -> Tuple[List[FsEntry], int]:
+    entries = list(fs_entries)
+    existing = {k for k, _ in entries}
+    seen_new = set()
+    new_add = 0
+    print("FsPatcher: Load origin %d entries" % len(entries))
+
+    base = os.path.basename(os.path.normpath(os.path.abspath(dir_path)))
+
+    for i in scan_dir(os.path.abspath(dir_path)):
+        if not i.isprintable():
+            i = "".join(c if c.isprintable() else "*" for c in i)
+
+        # Không tự sinh dòng root như: vendor 0 0 0755
+        if i == base and i not in existing:
             continue
 
-        if actual_entry in new_fs:
+        if i in existing or i in seen_new:
             continue
 
-        # 2. Resolve accurate absolute path on local file system
-        if actual_entry == base_name:
-            real_file_path = dir_abs
-        elif actual_entry.startswith(f"{base_name}/"):
-            rel_path = actual_entry[len(base_name) + 1:]
-            real_file_path = os.path.join(dir_abs, rel_path.replace('/', os.sep))
-        else:
-            real_file_path = os.path.join(dir_abs, actual_entry.replace('/', os.sep))
+        filepath = os.path.abspath(os.path.join(dir_path, "..", i))
+        config = make_config(i, filepath)
 
-        is_dir = os.path.isdir(real_file_path)
-        exists = os.path.exists(real_file_path) or os.path.islink(real_file_path)
-        link_target = islink(real_file_path)
+        insert_at = find_insert_index(entries, i)
+        entries.insert(insert_at, (i, config))
+        seen_new.add(i)
+        new_add += 1
 
-        # 3. Assign Android UID/GID/Permissions
-        is_bin_path = any(x in actual_entry for x in ["bin/", "xbin/"])
-        gid = '2000' if is_bin_path else '0'
-        uid = '0'
+        print(f"Add [{i} {' '.join(config)}] at {insert_at}")
 
-        if is_dir:
-            config = [uid, gid, '0755']
-        elif not exists:
-            config = [uid, gid, '0755']
-        elif link_target is not None:
-            # Handle File Symlinks
-            if is_bin_path:
-                mode = '0755'
-            elif ".sh" in actual_entry:
-                mode = "0750"
-            else:
-                mode = "0644"
-            config = [uid, gid, mode, link_target]
-        elif is_bin_path:
-            # Handle Executable Binaries / Scripts
-            if ".sh" in actual_entry:
-                mode = "0750"
-            elif any(s in actual_entry for s in special_binaries):
-                mode = "0755"
-            else:
-                mode = "0755"
-            config = [uid, gid, mode]
-        else:
-            # Standard Data / Library Files
-            config = [uid, '0', '0644']
+    return entries, new_add
 
-        print(f"ADD [{actual_entry} {' '.join(config)}]")
-        new_add_count += 1
-        new_fs[actual_entry] = config
-        added_keys.append(actual_entry)
-
-    return new_fs, added_keys, new_add_count
 
 def main(dir_path: str, fs_config: str) -> None:
-    dir_abs = os.path.abspath(dir_path)
-    fs_config_abs = os.path.abspath(fs_config)
-    
-    origin_fs, orig_order = scanfs(fs_config_abs)
-    new_fs, added_keys, new_add = fs_patch(origin_fs, dir_abs)
-    
-    with open(fs_config_abs, "w", encoding='utf-8', newline='\n') as f:
-        written_keys = set()
-        
-        # Step 1: Write back original entries preserving order
-        for key in orig_order:
-            if key in new_fs:
-                f.write(f"{key} {' '.join(new_fs[key])}\n")
-                written_keys.add(key)
-                
-        # Step 2: Append newly added entries sorted alphabetically
-        for key in sorted(added_keys):
-            if key in new_fs and key not in written_keys:
-                f.write(f"{key} {' '.join(new_fs[key])}\n")
-                written_keys.add(key)
-                
-    print("---")
-    print(f"FsPatcher: Successfully added {new_add} entries to configuration.")
+    fs_entries = scanfs(os.path.abspath(fs_config))
+    new_entries, new_add = fs_patch(fs_entries, dir_path)
+    with open(fs_config, "w", encoding="utf-8", newline="\n") as f:
+        for key, value in new_entries:
+            f.write(key + " " + " ".join(value) + "\n")
 
-def usage():
-    print("""
-FsPatcher: Android FsConfig Patching Tool
-Usage: python script.py <Folder_Path> <FsConfig_File>
-""")
+    print(f"FsPatcher: Add {new_add} entries")
+
+
+def usage() -> None:
+    print(
+        """
+FsPatcher: FsConfig Patching Tool
+Usage: ./FsPatcher [Folders] [FsConfig]
+"""
+    )
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("FsPatcher: Insufficient parameters.")
+        print("FsPatcher: Insufficient parameters")
         usage()
-        sys.exit(1)
-        
-    folder_arg, config_arg = sys.argv[1], sys.argv[2]
-    
-    if os.path.isdir(os.path.abspath(folder_arg)) and os.path.isfile(os.path.abspath(config_arg)):
-        main(folder_arg, config_arg)
+    elif os.path.isfile(os.path.abspath(sys.argv[2])) and os.path.isdir(
+        os.path.abspath(sys.argv[1])
+    ):
+        main(sys.argv[1], sys.argv[2])
     else:
-        print("Error: Specified directory or fs_config file does not exist.")
         usage()
-        sys.exit(1)

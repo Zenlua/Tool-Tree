@@ -4,176 +4,162 @@
 import os
 import re
 import sys
+from typing import List, Tuple
 
-# Khai báo quy tắc gán context cứng (hỗ trợ cả đường dẫn tuyệt đối lẫn tên file/thư mục đặc biệt)
-FIX_PERMISSIONS = {
-    "lost+found": ["u:object_r:rootfs:s0"],
-    "system/bin/init": ["u:object_r:init_exec:s0"],
-    "system/bin/idmap": ["u:object_r:idmap_exec:s0"],
-    "system/bin/fsck": ["u:object_r:fsck_exec:s0"],
-    "system/bin/e2fsck": ["u:object_r:fsck_exec:s0"],
-    "system/bin/logcat": ["u:object_r:logcat_exec:s0"],
-    "vendor/bin/hw/android.hardware.wifi@1.0": ["u:object_r:hal_wifi_default_exec:s0"]
+ContextEntry = Tuple[str, List[str]]
+
+fix_permission = {
+    "/vendor/bin/hw/android.hardware.wifi@1.0": ["u:object_r:hal_wifi_default_exec:s0"]
 }
 
-def escape_regex_path(path: str) -> str:
-    """
-    Escape các ký tự đặc biệt Regex (+, .) cho file_contexts của Android,
-    giữ nguyên dấu / và @ để make_ext4fs đọc chuẩn.
-    """
-    # Escape dấu '+' chưa được escape trước đó
-    path_escaped = re.sub(r'(?<!\\)\+', r'\+', path)
-    return path_escaped
 
-def scan_context(file_path: str) -> tuple:
-    """Đọc file context, lưu trữ dưới dạng dict và bảo toàn thứ tự dòng gốc."""
-    context = {}
-    original_order = []
-    
-    with open(file_path, "r", encoding='utf-8') as f:
-        for line in f:
+def str_to_selinux(s: str) -> str:
+    # Escape dấu . cho đúng định dạng regex file_contexts, giữ nguyên / và -
+    escaped = re.escape(s).replace(r"\-", "-").replace(r"\/", "/")
+    return escaped.replace(r"\@", "@")
+
+
+def scan_context(file_path: str) -> List[ContextEntry]:
+    """Đọc file gốc và GIỮ NGUYÊN thứ tự xuất hiện của từng dòng."""
+    entries: List[ContextEntry] = []
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as fp:
+        for line in fp:
             line_str = line.strip()
-            if not line_str or line_str.startswith('#'):
+            if not line_str or line_str.startswith("#"):
                 continue
-                
+
             parts = line_str.split()
             if not parts:
                 continue
-                
-            filepath = parts[0]
-            # Chuẩn hóa đường dẫn bỏ escape @ nếu có
-            filepath_clean = filepath.replace(r'\@', '@')
-            
-            context[filepath_clean] = parts[1:]
-            original_order.append(filepath_clean)
-            
-    return context, original_order
+
+            filepath, *other = parts
+            entries.append((filepath, other))
+
+    return entries
+
 
 def scan_dir(folder: str) -> list:
-    """
-    Quét thư mục thực tế và chuyển đổi sang định dạng path chuẩn của Android SELinux.
-    Hỗ trợ Dynamic Partitions (system, vendor, product, system_ext, cust...).
-    """
-    folder_abs = os.path.abspath(folder).replace('\\', '/')
-    part_name = os.path.basename(os.path.normpath(folder))
-    
-    allfiles = [
-        '/',
-        f'/{part_name}',
-        f'/{part_name}/',
-        f'/{part_name}/lost+found'
-    ]
-    
+    folder = os.path.abspath(folder)
+    part_name = os.path.basename(folder.rstrip(os.sep)) or os.path.basename(folder)
+    allfiles = ["/", f"/{part_name}/lost+found", f"/{part_name}", f"/{part_name}/"]
+
     for root, dirs, files in os.walk(folder, topdown=True):
-        root_clean = os.path.abspath(root).replace('\\', '/')
-        
-        for dir_name in dirs:
-            full_path = f"{root_clean}/{dir_name}"
-            target_path = full_path.replace(folder_abs, '/' + part_name)
-            allfiles.append(target_path)
-            
-        for file_name in files:
-            full_path = f"{root_clean}/{file_name}"
-            target_path = full_path.replace(folder_abs, '/' + part_name)
-            allfiles.append(target_path)
-                
+        rel_root = os.path.relpath(root, folder)
+        rel_root = "" if rel_root == "." else rel_root
+
+        for dir_ in dirs:
+            rel_path = os.path.join(rel_root, dir_).replace("\\", "/")
+            allfiles.append(f"/{part_name}/{rel_path}".replace("//", "/"))
+
+        for file_ in files:
+            rel_path = os.path.join(rel_root, file_).replace("\\", "/")
+            allfiles.append(f"/{part_name}/{rel_path}".replace("//", "/"))
+
     return sorted(set(allfiles), key=allfiles.index)
 
-def context_patch(fs_file: dict, filename_list: list) -> tuple:
-    """Vá context thông minh dựa trên luật cứng, quy tắc tương thích hoặc thừa kế thư mục cha."""
-    new_fs = {}
-    added_keys = []
+
+def _default_permission(entries: List[ContextEntry]) -> list:
+    if entries:
+        return entries[0][1]
+    return ["u:object_r:system_file:s0"]
+
+
+def find_insert_index(entries: List[ContextEntry], raw_path: str) -> Tuple[int, list]:
+    """
+    Tìm vị trí xuất hiện cuối cùng của thư mục cha trong file gốc
+    để chèn item mới vào ngay bên cạnh/dưới nó. Đồng thời trả về permission kế thừa.
+    """
+    tmp_path = os.path.dirname(raw_path)
+
+    while tmp_path and tmp_path != "/":
+        tmp_selinux = str_to_selinux(tmp_path)
+        last_idx = None
+        found_perm = None
+
+        for idx, (path, perm) in enumerate(entries):
+            # Khớp với đường dẫn gốc hoặc dạng đã escape
+            if path == tmp_path or path == tmp_selinux or path.startswith(tmp_selinux + "/"):
+                last_idx = idx
+                found_perm = perm
+
+        if last_idx is not None:
+            return last_idx + 1, found_perm
+
+        tmp_path = os.path.dirname(tmp_path)
+
+    # Nếu không tìm thấy cha, chèn vào cuối file
+    return len(entries), None
+
+
+def context_patch(fs_entries: List[ContextEntry], filename: list) -> Tuple[List[ContextEntry], int]:
+    entries = list(fs_entries)
     
-    # Context mặc định cho file/folder không xác định
-    default_permission = ['u:object_r:system_file:s0']
-    if fs_file:
-        default_permission = fs_file.get(next(iter(fs_file)), default_permission)
+    # Tập hợp các đường dẫn đã tồn tại để tránh chèn trùng
+    existing_paths = {path for path, _ in entries}
+    permission_d = _default_permission(entries)
 
-    for path in filename_list:
-        actual_path = path if path.isprintable() else ''.join(c if c.isprintable() else '*' for c in path)
-        
-        # 1. Khớp chính xác với file_contexts gốc
-        if actual_path in fs_file:
-            new_fs[actual_path] = fs_file[actual_path]
-            continue
-            
-        if actual_path in new_fs:
+    seen_new = set()
+    new_add = 0
+
+    for i in filename:
+        if not i:
             continue
 
-        permission = None
-        clean_path = actual_path.lstrip('/')
-        base_name = os.path.basename(actual_path)
+        raw_path = i
+        if not raw_path.isprintable():
+            raw_path = "".join(c if c.isprintable() else "*" for c in raw_path)
 
-        # 2. Khớp theo FIX_PERMISSIONS (Tên file/thư mục hoặc đuôi path)
-        if clean_path in FIX_PERMISSIONS:
-            permission = FIX_PERMISSIONS[clean_path]
-        elif base_name in FIX_PERMISSIONS:
-            permission = FIX_PERMISSIONS[base_name]
+        selinux_path = str_to_selinux(raw_path)
+
+        # Bỏ qua nếu dòng đã tồn tại trong file gốc hoặc đã được thêm trước đó
+        if raw_path in existing_paths or selinux_path in existing_paths or selinux_path in seen_new:
+            continue
+
+        # Xử lý quy tắc đè thủ công trong fix_permission
+        if raw_path in fix_permission:
+            permission = fix_permission[raw_path]
+            insert_at, _ = find_insert_index(entries, raw_path)
+        elif selinux_path in fix_permission:
+            permission = fix_permission[selinux_path]
+            insert_at, _ = find_insert_index(entries, raw_path)
         else:
-            # 3. Thừa kế context từ thư mục cha gần nhất
-            tmp_path = os.path.dirname(actual_path)
-            while tmp_path:
-                if tmp_path in fs_file:
-                    permission = fs_file[tmp_path]
-                    break
-                if tmp_path in new_fs:
-                    permission = new_fs[tmp_path]
-                    break
-                if tmp_path in ('/', ''):
-                    break
-                
-                prev_path = tmp_path
-                tmp_path = os.path.dirname(tmp_path)
-                if tmp_path == prev_path:
-                    break
+            # Tìm vị trí thích hợp (sau thư mục cha) và lấy permission kế thừa
+            insert_at, parent_perm = find_insert_index(entries, raw_path)
+            permission = parent_perm if parent_perm else permission_d
 
-        # Nếu vẫn chưa tìm thấy context -> Dùng default
-        if not permission:
-            permission = default_permission
+        # Chèn trực tiếp vào vị trí tìm được mà KHÔNG làm xáo trộn các dòng khác
+        entries.insert(insert_at, (selinux_path, permission))
+        seen_new.add(selinux_path)
+        existing_paths.add(selinux_path)
+        new_add += 1
 
-        print(f"ADD [{actual_path} : {' '.join(permission)}]")
-        new_fs[actual_path] = permission
-        added_keys.append(actual_path)
-        
-    return new_fs, added_keys
+        print(f"ADD [{selinux_path} {' '.join(permission)}] at index {insert_at}")
+
+    return entries, new_add
+
 
 def main(dir_path: str, fs_config: str) -> None:
-    origin, orig_order = scan_context(os.path.abspath(fs_config))
+    origin_entries = scan_context(os.path.abspath(fs_config))
     allfiles = scan_dir(os.path.abspath(dir_path))
     
-    new_fs, added_keys = context_patch(origin, allfiles)
-    
-    with open(fs_config, "w", encoding='utf-8', newline='\n') as f:
-        written_keys = set()
+    new_entries, new_add = context_patch(origin_entries, allfiles)
 
-        # Ghi các key cũ theo đúng thứ tự gốc
-        for key in orig_order:
-            if key in new_fs:
-                formatted_key = escape_regex_path(key)
-                f.write(f"{formatted_key} {' '.join(new_fs[key])}\n")
-                written_keys.add(key)
-                
-        # Ghi các key mới được bổ sung
-        for key in sorted(added_keys):
-            if key in new_fs and key not in written_keys:
-                formatted_key = escape_regex_path(key)
-                f.write(f"{formatted_key} {' '.join(new_fs[key])}\n")
-                written_keys.add(key)
+    with open(fs_config, "w", encoding="utf-8", newline="\n") as f:
+        for path, perm in new_entries:
+            f.write(f"{path} {' '.join(perm)}\n")
 
-    print("---")
-    print(f"Load origin: {len(origin)} entries")
-    print(f"Detect total: {len(allfiles)} entries")
-    print(f"Added new: {len(added_keys)} entries successfully")
+    print(f"Load origin {len(origin_entries)} entries")
+    print(f"Detect total {len(allfiles)} entries")
+    print(f"Add {new_add} entries")
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: python script.py <dir_path> <file_contexts_path>")
+        print("Insufficient parameters")
         sys.exit(1)
-        
-    dir_arg, context_arg = sys.argv[1], sys.argv[2]
-    
-    if not os.path.exists(dir_arg) or not os.path.exists(context_arg):
-        print("Error: Target directory or file_contexts path does not exist.")
+
+    if not os.path.exists(sys.argv[1]) or not os.path.exists(sys.argv[2]):
+        print("File or directory does not exist")
         sys.exit(1)
-        
-    main(dir_arg, context_arg)
+
+    main(sys.argv[1], sys.argv[2])

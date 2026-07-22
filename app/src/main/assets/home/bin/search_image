@@ -1,5 +1,5 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
-jian="$TMP/by_name.log"
+jian="$TMP/by_name.txt"
 jian22="$TMP/by_name_$RANDOM.log"
 if [[ ! -f $jian ]]; then
     BLOCKDEV=`which blockdev`
