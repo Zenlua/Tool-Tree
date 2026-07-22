@@ -79,17 +79,31 @@ class SplashActivity : AppCompatActivity() {
     // =================== LOGIC XỬ LÝ QUYỀN ===================
 
     private fun showAgreementDialog() {
+        // Khởi chạy WakeLockService lần đầu
+        val isFirstTime = startWakeLockServiceOnce()
+
         DialogHelper.warning(
             this,
             getString(R.string.permission_dialog_title),
             getString(R.string.permission_dialog_message),
             Runnable { 
-                // Quan trọng: Lưu trạng thái đồng ý ngay khi nhấn nút
+                // Đồng ý điều khoản
                 saveAgreement() 
-                // Sau đó mới đi xin quyền hệ thống
+                
+                // 💡 Chỉ Stop Service nếu đây là lần đầu tiên cài đặt kích hoạt Service
+                if (isFirstTime) {
+                    WakeLockService.stopService(applicationContext)
+                }
+                
                 requestRequiredPermissions() 
             },
-            Runnable { finish() }
+            Runnable { 
+                // Từ chối điều khoản -> Hủy service và đóng app
+                if (isFirstTime) {
+                    WakeLockService.stopService(applicationContext)
+                }
+                finish() 
+            }
         ).setCancelable(false)
     }
 
@@ -120,11 +134,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun checkPermissionsNextStep() {
-        // Khởi động WakeLockService đúng 1 lần duy nhất (lần đầu cài đặt/mở app),
-        // các lần sau sẽ không gọi lại nữa.
-        startWakeLockServiceOnce()
-
-        // Nếu là Android 11+ và chưa có quyền "All Files Access"
+        // Kiểm tra quyền All Files Access đối với Android 11+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
             requestManageAllFilesPermission()
         } else {
@@ -132,15 +142,20 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    // Chỉ gọi WakeLockService.startService() một lần duy nhất trong vòng đời cài đặt app,
-    // đánh dấu bằng cờ lưu trong SharedPreferences để các lần khởi động sau không gọi lại.
-    private fun startWakeLockServiceOnce() {
+    /**
+     * Bật WakeLockService duy nhất 1 lần đầu tiên cài đặt/chạy app.
+     * @return true nếu là lần đầu tiên kích hoạt Service, false nếu đã từng kích hoạt trước đó.
+     */
+    private fun startWakeLockServiceOnce(): Boolean {
         val prefs = getSharedPreferences("kr-script-config", MODE_PRIVATE)
-        if (!prefs.getBoolean("wakelock_service_started_once", false)) {
+        val isFirstRun = !prefs.getBoolean("wakelock_service_started_once", false)
+
+        if (isFirstRun) {
             WakeLockService.startService(applicationContext)
             prefs.edit().putBoolean("wakelock_service_started_once", true).apply()
-            WakeLockService.stopService(applicationContext)
         }
+
+        return isFirstRun
     }
 
     private fun requestManageAllFilesPermission() {
@@ -157,9 +172,20 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+            // Kích hoạt service nếu trước đó chưa kích hoạt
+            val isFirstTime = startWakeLockServiceOnce()
+
+            // 💡 Sau khi người dùng phản hồi cấp quyền (Dù Cho phép hay Từ chối)
+            // Nếu là lần đầu tiên cài đặt -> Dừng Service ngay lập tức.
+            if (isFirstTime) {
+                WakeLockService.stopService(applicationContext)
+            }
+
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 checkPermissionsNextStep()
-            } else finish()
+            } else {
+                finish()
+            }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
@@ -241,14 +267,8 @@ class SplashActivity : AppCompatActivity() {
     private val maxLines = 5
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
-    // Được tạo/truy cập LẦN ĐẦU tiên bên trong handler.post{} (tức luôn ở main thread) vì
-    // SilentShellOutputHandler kế thừa android.os.Handler, cần Looper của thread hiện tại khi khởi tạo.
     private val splashLogHandler: SplashLogOutputHandler by lazy { SplashLogOutputHandler() }
 
-    // Nhận diện am:[...] (mở activity, ẩn khỏi log) và tự resolve @string/ten_resource cho các
-    // dòng log thông thường còn lại trước khi hiển thị lên màn hình splash.
-    // currentLineIsProgress được set ngay trước khi gọi processOutput() (luôn trên main thread,
-    // đồng bộ) để onReader() biết dòng hiện tại có phải là cập nhật thanh tiến trình (\r) hay không.
     private var currentLineIsProgress = false
 
     private inner class SplashLogOutputHandler : SilentShellOutputHandler(this@SplashActivity) {
@@ -258,12 +278,6 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    // Đọc stream theo từng ký tự thay vì dùng reader.forEachLine()/readLine(), vì readLine() coi
-    // \r, \n và \r\n là tương đương nên không phân biệt được đâu là dòng log bình thường (kết
-    // thúc bằng \n) và đâu là cập nhật thanh tiến trình tại chỗ (kết thúc bằng \r, không có \n,
-    // ví dụ "Copying... 10%\rCopying... 20%\r..."). Ở đây ta giữ lại thông tin ký tự kết thúc để
-    // xử lý đúng: \r -> ghi đè dòng cuối, \n -> thêm dòng mới. \r\n (CRLF) vẫn được gộp lại thành
-    // một dòng duy nhất như bình thường.
     private fun readStreamAsync(reader: BufferedReader) {
         try {
             val buffer = StringBuilder()
@@ -278,7 +292,6 @@ class SplashActivity : AppCompatActivity() {
                     }
                     '\n'.code -> {
                         if (lastWasCR) {
-                            // Đây là \n của một cặp \r\n vừa xử lý ở nhánh \r phía trên, bỏ qua.
                             lastWasCR = false
                         } else {
                             handleRawLogLine(buffer.toString(), isProgress = false)
@@ -297,8 +310,6 @@ class SplashActivity : AppCompatActivity() {
         } catch (e: Exception) {}
     }
 
-    // Luôn xử lý trên main thread: vừa để an toàn cho SilentShellOutputHandler (cần Looper),
-    // vừa vì onAm() bên trong có thể gọi startActivity().
     private fun handleRawLogLine(line: String, isProgress: Boolean) {
         handler.post {
             currentLineIsProgress = isProgress
@@ -309,10 +320,7 @@ class SplashActivity : AppCompatActivity() {
     private fun onLogOutput(log: String, isProgress: Boolean) {
         synchronized(rows) {
             if (isProgress && rows.isNotEmpty()) {
-                // Bỏ qua các cú \r rỗng liên tiếp (không có nội dung mới) để tránh xoá dòng cuối.
                 if (log.isEmpty()) return
-                // Cập nhật (ghi đè) dòng cuối cùng thay vì thêm dòng mới -> thanh tiến trình
-                // đứng yên một dòng và chỉ thay đổi nội dung.
                 rows[rows.size - 1] = log
             } else {
                 if (rows.size >= maxLines) {
