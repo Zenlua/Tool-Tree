@@ -1,0 +1,9 @@
+Update log:
+
+3.1: Add the KaoriosToolbox patch
+3.0: Upgrade the app's experimental features.
+2.9: Added some new features and fixed code and bugs.
+2.8: The update mechanism has been revised; add-on patches for ROMs will now auto update if a new version is available.
+2.7: Fixes the InstallPackageHelper.smali patch error
+2.6: Repair the boot patch code
+2.5: Added the ability to run application tests and fix errors

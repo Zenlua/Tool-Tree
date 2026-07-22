@@ -1,0 +1,10 @@
+# Add-on
+id=patch_rom
+name=Patch ROM
+author=Kakathic
+version=3.1
+versionCode=310
+shortcut=true
+root=false
+description=ROM quick patch tool
+description_vi=Công cụ vá nhanh ROM

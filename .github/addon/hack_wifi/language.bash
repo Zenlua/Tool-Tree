@@ -1,0 +1,36 @@
+
+if [ "$LANGUAGE-$COUNTRY" == "vi-VN" ]; then
+wifi_text_1="Danh sách mạng"
+wifi_text_2="Chọn một mạng Wi-Fi bất kỳ để thử tìm mật khẩu"
+wifi_text_3="Bắt đầu kết nối"
+wifi_text_4="Không tìm thấy mạng Wi-Fi nào."
+wifi_text_5="Mật khẩu đã lưu"
+wifi_text_6="Không tìm thấy mật khẩu đã lưu."
+
+STR_ADVANCED_CUSTOM="Tùy chỉnh nâng cao"
+STR_OPTION="Tùy chọn"
+STR_ALL_ATTACK_METHODS="Kết hợp tất cả các phương thức"
+STR_BASIC_ATTACK="Tấn công cơ bản"
+STR_PIN_DATABASE_ATTACK="Tấn công bằng cơ sở dữ liệu PIN"
+STR_WPS_PUSH_ATTACK="Tấn công bằng nút nhấn (WPS)"
+STR_PIN_WARNING="Nhập đúng mã PIN sẽ tăng cơ hội kết nối thành công"
+STR_INPUT_PIN="Nhập mã PIN"
+STR_PIN_CODE="Mã PIN"
+elif [ "$LANGUAGE-$COUNTRY" == "hu-HU" ]; then
+wifi_text_1="Hálózatlista"
+wifi_text_2="Válassz ki egy tetszőleges Wi-Fi-hálózatot, és próbáld meg megtalálni a jelszavát"
+wifi_text_3="Kezdje el a kapcsolatteremtést"
+wifi_text_4="Nem található Wi-Fi-hálózat."
+wifi_text_5="Mentett jelszavak"
+wifi_text_6="Nem található mentett jelszó."
+
+STR_ADVANCED_CUSTOM="Speciális testreszabás"
+STR_OPTION="Beállítások"
+STR_ALL_ATTACK_METHODS="Kombinálja az összes módszert"
+STR_BASIC_ATTACK="Alaptámadás"
+STR_PIN_DATABASE_ATTACK="PIN-adatbázis elleni támadás"
+STR_WPS_PUSH_ATTACK="Gombnyomásos támadás (WPS)"
+STR_PIN_WARNING="A helyes PIN-kód megadása növeli a sikeres csatlakozás esélyét"
+STR_INPUT_PIN="Adja meg a PIN-kódot"
+STR_PIN_CODE="PIN kód"
+fi
