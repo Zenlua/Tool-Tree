@@ -37,8 +37,10 @@ class ActivityFileSelector : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityFileSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.editorRoot.isDrawStrokeEnabled = false
+        
+        binding.fileActivi.isDrawStrokeEnabled = false
         BlurEngine.controller.captureAndBlur(this)
+        
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         this.toolbar = toolbar
         setSupportActionBar(toolbar)

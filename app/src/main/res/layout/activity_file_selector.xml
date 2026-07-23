@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="true"
-    android:id="@+id/editor_root"
+    android:id="@+id/file_activi"
     android:fitsSystemWindows="false"
     tools:openDrawer="start">
 
