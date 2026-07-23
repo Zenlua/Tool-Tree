@@ -53,7 +53,6 @@
                 style="@style/SceneButton"
                 android:scaleType="centerInside"
                 android:padding="7dp"
-                android:tint="?android:textColorPrimary"
                 android:src="@drawable/ic_wrap_text"
                 android:contentDescription="@null" />
 
