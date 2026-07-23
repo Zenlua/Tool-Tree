@@ -52,7 +52,7 @@
             <FrameLayout
                 android:id="@+id/editor_content_container"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
                 android:focusable="true">
@@ -61,7 +61,7 @@
                 <EditText
                     android:id="@+id/editor_content"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:background="@null"
                     android:gravity="top|start"
                     android:hint="@string/editor_hint_empty"

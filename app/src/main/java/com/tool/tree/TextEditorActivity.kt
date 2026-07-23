@@ -12,6 +12,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
@@ -43,6 +44,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.security.MessageDigest
+import kotlin.math.abs
 
 class TextEditorActivity : AppCompatActivity() {
 
@@ -292,7 +294,21 @@ class TextEditorActivity : AppCompatActivity() {
             imm?.showSoftInput(binding.editorContent, InputMethodManager.SHOW_IMPLICIT)
         }
 
-        binding.mainList.setOnClickListener { focusAndShowKeyboard() }
+        var touchDownY = 0f
+        binding.mainList.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    touchDownY = event.y
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (abs(event.y - touchDownY) < 10) {
+                        focusAndShowKeyboard()
+                    }
+                }
+            }
+            false
+        }
+
         binding.editorLineNumbers.setOnClickListener { focusAndShowKeyboard() }
         binding.editorContentContainer.setOnClickListener { focusAndShowKeyboard() }
     }
@@ -317,7 +333,6 @@ class TextEditorActivity : AppCompatActivity() {
         val lineTop = layout.getLineTop(line) + editText.top + editText.paddingTop
         val lineBottom = layout.getLineBottom(line) + editText.top
     
-        // Khoảng đệm an toàn để con trỏ luôn cách mép dưới một đoạn thoải mái (120dp)
         val extraBottomOffset = (120 * resources.displayMetrics.density).toInt()
     
         val visibleTop = scrollView.scrollY
@@ -331,7 +346,6 @@ class TextEditorActivity : AppCompatActivity() {
             lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
         }
     }
-
     
     private fun setupLineNumbers() {
         binding.editorContent.addTextChangedListener(object : TextWatcher {
@@ -675,25 +689,25 @@ class TextEditorActivity : AppCompatActivity() {
         if (wrapEnabled) {
             editText.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
             container.addView(editText)
         } else {
             val hsv = noWrapContainer ?: HorizontalScrollView(this).also {
-                it.isFillViewport = false
+                it.isFillViewport = true
                 it.scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
                 noWrapContainer = it
             }
             editText.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
             hsv.apply {
                 removeAllViews()
                 addView(editText)
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
+                    ViewGroup.LayoutParams.MATCH_PARENT
                 )
                 scrollTo(0, 0)
             }
