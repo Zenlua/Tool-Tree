@@ -135,7 +135,11 @@ object ThemeModeState {
             
             activity.findViewById<View>(R.id.blur_top_container)?.setPadding(0, systemBars.top, 0, 0)
             activity.findViewById<View>(R.id.file_selector_list)?.setPadding(0, systemBars.top, 0, 0)
-            activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
+            // ĐÃ BỎ: setPadding(main_list, systemBars.top) — main_list luôn nằm NGAY
+            // DƯỚI blur_top_container (khối toolbar) trong mọi layout dùng id này
+            // (activity_text_editor.xml, activity_action_page.xml). blur_top_container
+            // đã tự đẩy xuống dưới status bar rồi, nên cộng thêm padding này vào main_list
+            // là cộng dồn 2 lần chiều cao status bar -> tạo khoảng trống thừa ngay dưới toolbar.
             activity.findViewById<View>(R.id.blur_bottom_container)?.setPadding(0, 0, 0, systemBars.bottom)
             activity.findViewById<View>(R.id.kr_online_webview)?.setPadding(0, systemBars.top, 0, 0)
             
