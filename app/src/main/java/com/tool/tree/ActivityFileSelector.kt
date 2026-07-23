@@ -35,7 +35,8 @@ class ActivityFileSelector : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityFileSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        
+        binding.fileDrawerContainer.engine.cornerRadius = 0f
         binding.fileDrawerContainer.isDrawStrokeEnabled = false
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
