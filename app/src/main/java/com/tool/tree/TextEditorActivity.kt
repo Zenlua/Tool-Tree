@@ -316,17 +316,22 @@ class TextEditorActivity : AppCompatActivity() {
         val line = layout.getLineForOffset(selection)
         val lineTop = layout.getLineTop(line) + editText.top + editText.paddingTop
         val lineBottom = layout.getLineBottom(line) + editText.top
+    
+        // Khoảng đệm an toàn để con trỏ luôn cách mép dưới một đoạn thoải mái (120dp)
+        val extraBottomOffset = (120 * resources.displayMetrics.density).toInt()
+    
         val visibleTop = scrollView.scrollY
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
     
         when {
-            lineBottom > visibleBottom -> scrollView.smoothScrollTo(
+            lineBottom + extraBottomOffset > visibleBottom -> scrollView.smoothScrollTo(
                 0,
-                lineBottom - scrollView.height + scrollView.paddingBottom
+                (lineBottom + extraBottomOffset) - scrollView.height + scrollView.paddingBottom
             )
             lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
         }
     }
+
     
     private fun setupLineNumbers() {
         binding.editorContent.addTextChangedListener(object : TextWatcher {

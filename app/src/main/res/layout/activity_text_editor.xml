@@ -40,7 +40,6 @@
                 android:textSize="14sp"
                 android:typeface="monospace" />
 
-
             <!-- Dải ngăn cách phân chia số dòng và khung code -->
             <View
                 android:id="@+id/editor_line_divider"
@@ -58,6 +57,7 @@
                 android:clickable="true"
                 android:focusable="true">
 
+                <!-- Khung soạn thảo -->
                 <EditText
                     android:id="@+id/editor_content"
                     android:layout_width="match_parent"
