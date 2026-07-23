@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="true"
-    android:id="@+id/file_activi"
     android:fitsSystemWindows="false"
     tools:openDrawer="start">
 
@@ -20,6 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:id="@+id/file_activi"
         android:orientation="vertical">
 
         <ListView
