@@ -16,7 +16,7 @@
 
     <!-- Khu vực cuộn chính -->
     <ScrollView
-        android:id="@+id/main_list"
+        android:id="@+id/main_list_text"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -28,7 +28,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:clickable="true"
             android:focusable="true"
             android:orientation="horizontal">
@@ -44,7 +44,7 @@
                 android:paddingStart="8dp"
                 android:paddingTop="4dp"
                 android:paddingEnd="6dp"
-                android:paddingBottom="64dp"
+                android:paddingBottom="4dp"
                 android:text="1"
                 android:textColor="?android:attr/textColorSecondary"
                 android:textSize="14sp"
@@ -81,7 +81,7 @@
                     android:paddingStart="8dp"
                     android:paddingTop="4dp"
                     android:paddingEnd="16dp"
-                    android:paddingBottom="64dp"
+                    android:paddingBottom="4dp"
                     android:textColor="?android:attr/textColorPrimary"
                     android:textColorHint="?android:attr/textColorSecondary"
                     android:textSize="14sp"
