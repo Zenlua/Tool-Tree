@@ -913,7 +913,7 @@ slog muc_nen "$muc_nen"
 slog nen_br "$nen_br"
 slog build_times "$build_times"
 for vkl in $IMAGES; do
-    repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD" -n "$dang_nen" -l $muc_nen -k $dinh_dang -s $build_size -d $boolbox -c $format_img -p "$offfscontex"
+    repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD" -n "$dang_nen" -l "$muc_nen" -k "$dinh_dang" -s "$build_size" -d "$boolbox" -c "$format_img" -p "$offfscontex"
 done
 echo "'$save_text' $PTSD/out"
 echo
