@@ -283,11 +283,8 @@ class TextEditorActivity : AppCompatActivity() {
             charsLp.bottomMargin = specialCharsBaseBottomMargin + keyboardHeight
             binding.editorSpecialCharsScroll.layoutParams = charsLp
     
-            // main_list đã được neo phía trên editor_special_chars_scroll (layout_above), nên
-            // không cần cộng thêm keyboardHeight vào margin của nó nữa - chỉ giữ một khoảng
-            // đệm nhỏ cho thoải mái khi bàn phím đang hiện.
             val mlp = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
-            mlp.bottomMargin = mainListBaseBottomMargin + if (keyboardVisible) extraGapPx else 0
+            mlp.bottomMargin = mainListBaseBottomMargin + keyboardHeight + if (keyboardVisible) extraGapPx else 0
             binding.mainList.layoutParams = mlp
     
             if (keyboardVisible) binding.mainList.post { scrollToCursor() }
