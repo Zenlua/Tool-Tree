@@ -237,7 +237,7 @@ class DialogLogFragment : DialogFragment() {
             scrollView.addView(logView)
         } else {
             val hsv = noWrapContainer ?: HorizontalScrollView(requireContext()).also {
-                it.isFillViewport = false
+                it.isFillViewport = true
                 it.isHorizontalScrollBarEnabled = false
                 noWrapContainer = it
             }
