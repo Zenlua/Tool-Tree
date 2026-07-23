@@ -61,84 +61,6 @@ fi
 source language 2>/dev/null
 dang_tep="$(checktype "$INPUT")"
 
-process_count(){
-PIDK=$!
-num1="$1"; num2="$2";
-while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$num2" ]; then
-    num3=$(tr '\r' '\n' < "$num2" | awk '/ : /{v=$3} END{print v}')
-    if [ "${num3:-0}" != 0 ]; then
-    [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
-    num4="$num3"
-    fi
-fi
-sleep 1
-done
-progress -1/0
-}
-
-process_payload(){
-PIDK=$!
-while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$1" ]; then
-    num3=$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$1" | grep -o '[0-9]\+%' | tail -n1 | tr -d '%')
-    if [ "${num3:-0}" != 0 ]; then
-    [ "${num3:-0}" == "${num4:-1}" ] || progress "$num3/100"
-    num4="$num3"
-    fi
-fi
-sleep 0.01
-done
-progress -1/0
-[ -f $1 ] && sed -i 's/\x1b\[[^m]*m//g' $1
-}
-
-process_imgkit(){
-PIDK=$!
-while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$1" ]; then
-    number_kk="$(sed -E 's/[\r\t]/\n/g; s/.*\[([0-9]+\/[0-9]+)\].*/\1/p; d' "$1" | tail -n1)"
-    if [ "$number_kk" ]; then
-    [ "${number_kk:-0}" == "${save_num:-1}" ] || progress "$number_kk"
-    save_num="$number_kk"
-    fi
-fi
-sleep 1
-done
-progress -1/0
-}
-
-process_unsquashfs(){
-PIDK=$!
-while kill -0 $PIDK 2>/dev/null; do
-if [ -f $1 ]; then
-number_kk="$(sed 's/[\r\t]/\n/g' $1 | sed -n 's/.* \([0-9]\+\)%$/\1/p' | tail -n 1)"
-    if [ "${number_kk:-0}" != 0 ]; then
-    [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
-    save_num="$number_kk"
-    fi
-fi
-sleep 1
-done
-progress -1/0
-}
-
-process_unerrofs(){
-PIDK=$!
-while kill -0 $PIDK 2>/dev/null; do
-if [ -f $1 ]; then
-    number_kk="$(sed -E 's/\x1b\[[0-9;]*m//g; s/[\r\t]/\n/g' "$1" | grep -E 'Extract: \[[^]]+\]' | tail -n 1 | awk '{print $3}' | cut -d\. -f1)"
-    if [ "${number_kk:-0}" != 0 ]; then
-    [ "${number_kk:-0}" == "${save_num:-1}" ] || progress $number_kk/100
-    save_num="$number_kk"
-    fi
-fi
-sleep 0.01
-done
-progress -1/0
-[ -f $1 ] && sed -i 's/\x1b\[[^m]*m//g' $1
-}
-
 # xử lý zip
 if [ "$dang_tep" == 'zip' ]; then
 xacnhatpay="$(listpayload "$INPUT")"
@@ -164,8 +86,7 @@ if [ "$dang_tep" == 'zstd' ] || [ "$dang_tep" == 'gz' ] || [ "$dang_tep" == 'xz'
     else
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     fi
-    zstd --progress -f -d -k "$INPUT" -o "$file_img" 2>&1 | tee "$TMP/unzstd.log" || killtree "The zstd file extraction failed."
-    #process_count "$size_zstd" "$TMP/unzstd.log"
+    zstd --progress -f -d -k "$INPUT" -o "$file_img" || killtree "The zstd file extraction failed."
     echo
 elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ]; then
     tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
@@ -178,6 +99,7 @@ elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ]; then
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     fi
     sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" >$TMP/sdat2img.log || killtree "File extraction error"
+    echo
 elif [ "$dang_tep" == 'sparse' ]; then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     if [ "$NODECO" == 1 ]; then
@@ -193,8 +115,7 @@ elif [ "$dang_tep" == 'payload' ] || [ -n "$xacnhatpay" ]; then
     else
     file_img_tmp="$TMP"
     fi
-    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" | tee "$TMP/payload_extract.log" || killtree "Payload extract error." &
-    process_payload "$TMP/payload_extract.log"
+    payload_extract -i "$INPUT" -X "$PVUGBIN" -o "$file_img_tmp" || killtree "Payload extract error."
     echo
     file_img="$file_img_tmp/$PVUGBIN.img"
 elif [ "$dang_tep" == 'super' ]; then
@@ -246,8 +167,7 @@ mkdir -p "$in_name" $OUTPUT/config
 
     if [ "$dang_file" == 'ext' ]; then
         if [ "$(glog un_tool_ext4)" == 1 ]; then
-        imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" 2>&1 | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error"
-        #process_imgkit "$TMP/imgkit_scuti.log"
+        imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" || killtree "imgkit_scuti error"
         echo
         else
         imgextractor "$file_img" "$OUTPUT" >$TMP/imgextractor_ext.log
@@ -255,8 +175,7 @@ mkdir -p "$in_name" $OUTPUT/config
         echo "$dang_file" > "$info"
     elif [ "$dang_file" == 'f2fs' ]; then
         if [ "$(glog un_tool_f2fs)" == 1 ]; then
-            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" 2>&1 | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti error"
-            #process_imgkit "$TMP/imgkit_scuti.log"
+            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" || killtree "imgkit_scuti error"
             echo
         else
             extract.f2fs "$file_img" "$OUTPUT" || killtree "Extracting f2fs failed !";
@@ -276,14 +195,11 @@ mkdir -p "$in_name" $OUTPUT/config
         fsck.f2fs -a "$file_img" &> "$fs_options"
     elif [ "$dang_file" == 'erofs' ]; then
         if [ "$(glog un_tool_erofs)" == 1 ]; then
-            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" 2>&1 | tee $TMP/imgkit_scuti.log || killtree "imgkit_scuti extract error"
-            #process_imgkit "$TMP/imgkit_scuti.log"
+            imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" || killtree "imgkit_scuti extract error"
         elif [ "$(glog un_tool_erofs)" == 2 ]; then
-            $TERMUX/lib/theft/extract.erofs -x -i "$file_img" -o "$OUTPUT" | tee $TMP/extract_erofs.log || killtree "extract.erofs extract error" &
-            process_unerrofs "$TMP/extract_erofs.log"
+            $TERMUX/lib/theft/extract.erofs -x -i "$file_img" -o "$OUTPUT" || killtree "extract.erofs extract error"
         else
-            extract.erofs -x -i "$file_img" -o "$OUTPUT" | tee $TMP/extract_erofs.log || killtree "extract.erofs extract error" &
-            process_unerrofs "$TMP/extract_erofs.log"
+            extract.erofs -x -i "$file_img" -o "$OUTPUT" || killtree "extract.erofs extract error"
         fi
         if [ -f $OUTPUT/config/exception.log ]; then
         cat $OUTPUT/config/exception.log >&2
@@ -373,8 +289,7 @@ mkdir -p "$in_name" $OUTPUT/config
         echo
     elif [ "$dang_file" == 'squashfs' ]; then
         [ "$ROT" == 0 ] && killtree "Error Unpack: squashfs, $root_warning_text"
-        unsquashfs -f -d "$in_name" "$file_img" | tee $TMP/unsquashfs.log || killtree "\nunsquashfs unpack error: ${namepv##*/}" "$in_name"
-        #process_unsquashfs $TMP/unsquashfs.log
+        unsquashfs -f -d "$in_name" "$file_img" || killtree "\nunsquashfs unpack error: ${namepv##*/}" "$in_name"
         echo "$dang_file" > $info
         unsquashfs -s "$file_img" &> "$fs_options"
         echo

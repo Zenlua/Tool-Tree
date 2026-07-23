@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.omarea.common.ui.ThemeMode
 import com.omarea.common.ui.BlurEngine
+import com.omarea.krscript.executor.ScriptEnvironmen
 import java.io.File
 
 object ThemeModeState {
@@ -79,6 +80,11 @@ object ThemeModeState {
                 applyWallpaperMode(activity, false)
             }
         }
+
+        // Cập nhật lại biến DARK_MODE trong file executor của krscript mỗi khi dark mode
+        // thay đổi thực sự (trước đây DARK_MODE chỉ được set 1 lần lúc init() nên đổi
+        // dark mode giữa chừng không được cập nhật cho tới khi khởi động lại app).
+        ScriptEnvironmen.updateDarkMode(activity, themeMode.isDarkMode)
 
         // Logic xử lý Blur: Chỉ bật khi level >= 3 VÀ file dissblur không phải là 1
         if (level >= 3 && !isBlurDisabled(activity)) {

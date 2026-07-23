@@ -15,6 +15,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.omarea.common.shell.KeepShellPublic;
 import com.omarea.common.shell.ShellExecutor;
 import com.omarea.common.ui.DialogHelper;
+import com.omarea.common.ui.ProgressBarDialog;
 import com.omarea.krscript.downloader.Downloader;
 import com.omarea.krscript.executor.ExtractAssets;
 import com.omarea.krscript.executor.ScriptEnvironmen;
@@ -43,6 +44,9 @@ public class WebViewInjector {
     private final Context context;
     private final ParamsFileChooserRender.FileChooserInterface fileChooser;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    // Dialog loading dùng chung layout dialog_loading.xml, có sẵn nút Hủy (dialog_cancel_button)
+    // để người dùng có thể hủy việc tải trang khi đang duyệt web.
+    private ProgressBarDialog loadingDialog;
 
     @SuppressLint("SetJavaScriptEnabled")
     public WebViewInjector(WebView webView, ParamsFileChooserRender.FileChooserInterface fileChooser) {
@@ -53,6 +57,8 @@ public class WebViewInjector {
 
     @SuppressLint({"JavascriptInterface", "SetJavaScriptEnabled"})
     public void inject(final Activity activity, final boolean credible) {
+        loadingDialog = new ProgressBarDialog(activity);
+
         if (webView != null) {
             WebSettings webSettings = webView.getSettings();
             
@@ -87,6 +93,34 @@ public class WebViewInjector {
                         .setNegativeButton(R.string.btn_cancel, (dialog, which) -> {
                         })).setCancelable(false);
             });
+        }
+    }
+
+    /**
+     * Hiển thị dialog loading (layout dialog_loading.xml) kèm nút Hủy khi đang tải trang web.
+     * Bấm nút Hủy sẽ gọi webView.stopLoading() để dừng việc tải trang giữa chừng.
+     * Gọi hàm này trong WebViewClient.onPageStarted khi duyệt web.
+     */
+    public void showLoading(String message) {
+        if (loadingDialog == null || webView == null) {
+            return;
+        }
+        loadingDialog.showDialogWithCancel(message, () -> {
+            webView.stopLoading();
+        });
+    }
+
+    public void showLoading() {
+        showLoading(context.getString(R.string.please_wait));
+    }
+
+    /**
+     * Ẩn dialog loading. Gọi trong WebViewClient.onPageFinished (hoặc khi tải lỗi)
+     * khi duyệt web.
+     */
+    public void hideLoading() {
+        if (loadingDialog != null) {
+            loadingDialog.hideDialog();
         }
     }
 

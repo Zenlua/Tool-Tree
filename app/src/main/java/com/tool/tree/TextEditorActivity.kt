@@ -707,7 +707,7 @@ class TextEditorActivity : AppCompatActivity() {
     
         val cachePath = FileWrite.getPrivateFilePath(
             this,
-            "editor_cache/tmp_${System.currentTimeMillis()}.tmp"
+            "home/tmp/tmp_${System.currentTimeMillis()}.tmp"
         )
         return try {
             val cacheFile = File(cachePath).apply {

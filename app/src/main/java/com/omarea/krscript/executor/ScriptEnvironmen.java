@@ -41,6 +41,13 @@ public class ScriptEnvironmen {
     private static boolean rooted = false;
     private static KeepShell privateShell;
     private static ShellTranslation shellTranslation;
+    // Template gốc của executor.sh (chưa thay thế biến), lưu lại để có thể build lại
+    // file executor mỗi khi các biến môi trường "động" (vd: DARK_MODE) thay đổi.
+    private static String envShellTemplate = "";
+    private static String executorFileName = "";
+    // Giá trị DARK_MODE đã được ghi vào file executor gần nhất, dùng để tránh ghi lại
+    // file khi giá trị không đổi (switchTheme có thể được gọi ở onCreate của mọi Activity).
+    private static Boolean lastDarkMode = null;
 
     public static boolean isInited() {
         return inited;
@@ -75,21 +82,14 @@ public class ScriptEnvironmen {
             long length = inputStream.read(bytes, 0, bytes.length);
             String envShell = new String(bytes, Charset.defaultCharset()).replaceAll("\r", "");
 
-            HashMap<String, String> environment = getEnvironment(context);
-            for (String key : environment.keySet()) {
-                String value = environment.get(key);
-                if (value == null) {
-                    value = "";
-                }
-                envShell = envShell.replace("$({" + key + "})", value);
-            }
-            String outputPathAbs = FileWrite.INSTANCE.getPrivateFilePath(context, fileName);
-            envShell = envShell.replace("$({EXECUTOR_PATH})", outputPathAbs);
+            // Lưu lại template gốc (trước khi thay thế biến) và tên file, để sau này
+            // có thể build lại file executor khi cần cập nhật các biến "động" như DARK_MODE.
+            envShellTemplate = envShell;
+            executorFileName = fileName;
 
-
-            inited = FileWrite.INSTANCE.writePrivateFile(envShell.getBytes(Charset.defaultCharset()), fileName, context);
+            inited = writeExecutorScript(context);
             if (inited) {
-                environmentPath = outputPathAbs;
+                lastDarkMode = ThemeModeState.INSTANCE.isDarkMode();
             }
 
             SharedPreferences.Editor configSpf = context.getSharedPreferences("kr-script-config", Context.MODE_PRIVATE).edit();
@@ -103,6 +103,58 @@ public class ScriptEnvironmen {
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    // Build lại nội dung executor.sh từ template gốc (envShellTemplate) với các biến
+    // môi trường mới nhất (bao gồm DARK_MODE), rồi ghi đè xuống file private.
+    // Tách riêng khỏi init() để có thể gọi lại nhiều lần trong vòng đời app.
+    private static boolean writeExecutorScript(Context context) {
+        if (envShellTemplate.isEmpty() || executorFileName.isEmpty()) {
+            return false;
+        }
+        try {
+            String envShell = envShellTemplate;
+
+            HashMap<String, String> environment = getEnvironment(context);
+            for (String key : environment.keySet()) {
+                String value = environment.get(key);
+                if (value == null) {
+                    value = "";
+                }
+                envShell = envShell.replace("$({" + key + "})", value);
+            }
+            String outputPathAbs = FileWrite.INSTANCE.getPrivateFilePath(context, executorFileName);
+            envShell = envShell.replace("$({EXECUTOR_PATH})", outputPathAbs);
+
+            boolean success = FileWrite.INSTANCE.writePrivateFile(envShell.getBytes(Charset.defaultCharset()), executorFileName, context);
+            if (success) {
+                environmentPath = outputPathAbs;
+            }
+            return success;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    // Gọi hàm này mỗi khi chế độ dark mode của app thay đổi (vd: trong
+    // ThemeModeState.switchTheme) để cập nhật lại biến DARK_MODE trong file executor.
+    // Trước đây DARK_MODE chỉ được tính 1 lần lúc init() nên khi đổi dark mode ở giữa
+    // phiên sử dụng, giá trị cũ vẫn được giữ nguyên cho tới khi khởi động lại app.
+    public static synchronized boolean updateDarkMode(Context context, boolean isDarkMode) {
+        if (!inited) {
+            // Chưa init thì giá trị DARK_MODE sẽ được lấy đúng ở lần init() đầu tiên,
+            // không cần làm gì thêm ở đây.
+            return false;
+        }
+        if (lastDarkMode != null && lastDarkMode == isDarkMode) {
+            // Giá trị không đổi, không cần ghi lại file.
+            return true;
+        }
+        boolean success = writeExecutorScript(context);
+        if (success) {
+            lastDarkMode = isDarkMode;
+        }
+        return success;
     }
 
     private static String md5(String string) {

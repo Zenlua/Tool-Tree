@@ -25,7 +25,6 @@ import androidx.webkit.WebSettingsCompat.FORCE_DARK_ON
 import androidx.webkit.WebViewFeature
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.DialogHelper
-import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.WebViewInjector
 import com.omarea.krscript.downloader.Downloader
@@ -34,7 +33,6 @@ import com.tool.tree.databinding.ActivityActionPageOnlineBinding
 import java.util.*
 
 class ActionPageOnline : AppCompatActivity() {
-    private val progressBarDialog = ProgressBarDialog(this)
     private lateinit var themeMode: ThemeMode
     private lateinit var binding: ActivityActionPageOnlineBinding
     private var progressPolling: Timer? = null
@@ -157,6 +155,13 @@ class ActionPageOnline : AppCompatActivity() {
             WebSettingsCompat.setForceDark(settings, if (isDark) FORCE_DARK_ON else FORCE_DARK_OFF)
         }
 
+        val webViewInjector = WebViewInjector(binding.krOnlineWebview,
+            object : ParamsFileChooserRender.FileChooserInterface {
+                override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
+                    return chooseFilePath(fileSelectedInterface)
+                }
+            })
+
         binding.krOnlineWebview.webChromeClient = object : WebChromeClient() {
             override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
                 DialogHelper.animDialog(
@@ -184,13 +189,13 @@ class ActionPageOnline : AppCompatActivity() {
         binding.krOnlineWebview.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                progressBarDialog.hideDialog()
+                webViewInjector.hideLoading()
                 view?.title?.let { setTitle(it) }
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
-                progressBarDialog.showDialog(getString(R.string.please_wait))
+                webViewInjector.showLoading(getString(R.string.please_wait))
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -209,12 +214,7 @@ class ActionPageOnline : AppCompatActivity() {
             }
         }
 
-        WebViewInjector(binding.krOnlineWebview,
-            object : ParamsFileChooserRender.FileChooserInterface {
-                override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
-                    return chooseFilePath(fileSelectedInterface)
-                }
-            }).inject(this, url?.startsWith("file:///android_asset") == true)
+        webViewInjector.inject(this, url?.startsWith("file:///android_asset") == true)
 
         url?.let { binding.krOnlineWebview.loadUrl(it) }
     }
