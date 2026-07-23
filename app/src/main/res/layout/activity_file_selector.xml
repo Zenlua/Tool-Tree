@@ -1,24 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout 
+<LinearLayout 
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <!-- Nội dung chính có nền Blur -->
+    <!-- Toolbar trên cùng -->
+    <include
+        layout="@layout/app_bar_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Container chứa danh sách file có hiệu ứng Blur -->
     <com.omarea.common.ui.BlurViewLinearLayout
         android:id="@+id/file_drawer_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <include layout="@layout/app_bar_main" />
-
         <ListView
             android:id="@+id/file_selector_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fastScrollEnabled="true"
+            android:fadingEdge="vertical"
+            android:requiresFadingEdge="vertical"
+            android:scrollbarStyle="insideOverlay"
             android:smoothScrollbar="true" />
 
     </com.omarea.common.ui.BlurViewLinearLayout>
-</FrameLayout>
+
+</LinearLayout>

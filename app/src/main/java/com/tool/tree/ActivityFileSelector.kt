@@ -6,15 +6,15 @@ import android.os.Environment
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.google.android.material.snackbar.Snackbar
+import com.omarea.common.ui.BlurEngine
 import com.omarea.common.ui.ProgressBarDialog
 import com.tool.tree.databinding.ActivityFileSelectorBinding
 import com.tool.tree.ui.AdapterFileSelector
 import java.io.File
-import androidx.activity.addCallback
-import com.google.android.material.snackbar.Snackbar;
-import com.omarea.common.ui.BlurEngine
 
 class ActivityFileSelector : AppCompatActivity() {
     companion object {
@@ -25,41 +25,35 @@ class ActivityFileSelector : AppCompatActivity() {
     private var adapterFileSelector: AdapterFileSelector? = null
     var extension = ""
     var mode = MODE_FILE
-    // Có cho phép chọn nhiều tệp tin/thư mục cùng lúc hay không
     var multiple = false
-    // Thư mục sẽ mở sẵn khi vào màn hình chọn (ví dụ /sdcard/Android); vẫn có thể quay lại thư mục cha
     var pathHome = ""
-    private lateinit var binding : ActivityFileSelectorBinding
+    private lateinit var binding: ActivityFileSelectorBinding
     private var toolbar: Toolbar? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ThemeModeState.switchTheme(this)
         binding = ActivityFileSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         binding.fileDrawerContainer.isDrawStrokeEnabled = false
-    
-        // Chờ màn hình vẽ xong mới chụp nền để blur
-        binding.root.post {
-            BlurEngine.controller.captureAndBlur(this)
-        }
-    
+
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         this.toolbar = toolbar
         setSupportActionBar(toolbar)
-    
+
         supportActionBar!!.setHomeButtonEnabled(true)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener {
             finish()
         }
-    
+
         onBackPressedDispatcher.addCallback(this) {
             if (adapterFileSelector?.goParent() == true) return@addCallback
             setResult(RESULT_CANCELED, Intent())
             finish()
         }
-    
+
         intent.extras?.run {
             if (containsKey("extension")) {
                 extension = "" + intent.extras?.getString("extension")
@@ -83,7 +77,7 @@ class ActivityFileSelector : AppCompatActivity() {
                 pathHome = "" + intent.extras?.getString("path_home")
             }
         }
-    
+
         invalidateOptionsMenu()
     }
 
@@ -156,6 +150,11 @@ class ActivityFileSelector : AppCompatActivity() {
             }
 
             binding.fileSelectorList.adapter = adapterFileSelector
+
+            // ✅ Chụp ảnh mờ sau khi gán Adapter và Render dữ liệu xong
+            binding.root.post {
+                BlurEngine.controller.captureAndBlur(this)
+            }
         } else {
             Snackbar.make(binding.root, "External storage not available!", Snackbar.LENGTH_LONG).show()
         }
