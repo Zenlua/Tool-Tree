@@ -10,6 +10,7 @@ import android.text.TextWatcher
 import android.util.TypedValue
 import android.graphics.Typeface
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -129,6 +130,7 @@ class TextEditorActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
         setupKeyboardInsets()
+        setupEditorFocusHandling()
     
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -267,28 +269,59 @@ class TextEditorActivity : AppCompatActivity() {
     
     private fun setupKeyboardInsets() {
         mainListBaseBottomMargin = (binding.mainList.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
-        val extraGapPx = (24 * resources.displayMetrics.density).toInt()
+        val extraGapPx = (8 * resources.displayMetrics.density).toInt()
         val specialCharsBaseBottomMargin =
             (binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
-    
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val systemBarsInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
             val keyboardHeight = (imeInset - systemBarsInset).coerceAtLeast(0)
             val keyboardVisible = keyboardHeight > 0
-    
-            // Đẩy hàng ký tự đặc biệt lên ngay phía trên bàn phím, để luôn thao tác được
-            // dù đang gõ.
+
+            // Đẩy hàng ký tự đặc biệt lên ngay phía trên bàn phím và chừa một khoảng
+            // hở nhỏ để UI không dính sát vào mép bàn phím.
             val charsLp = binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams
-            charsLp.bottomMargin = specialCharsBaseBottomMargin + keyboardHeight
+            charsLp.bottomMargin = specialCharsBaseBottomMargin + keyboardHeight + if (keyboardVisible) extraGapPx else 0
             binding.editorSpecialCharsScroll.layoutParams = charsLp
-    
+
             val mlp = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
             mlp.bottomMargin = mainListBaseBottomMargin + keyboardHeight + if (keyboardVisible) extraGapPx else 0
             binding.mainList.layoutParams = mlp
-    
+
             if (keyboardVisible) binding.mainList.post { scrollToCursor() }
             insets
+        }
+    }
+
+    private fun setupEditorFocusHandling() {
+        fun focusEditor(showKeyboard: Boolean = true) {
+            if (!binding.editorContent.isFocused) {
+                binding.editorContent.requestFocusFromTouch()
+            }
+            if (showKeyboard) {
+                binding.editorContent.post {
+                    ViewCompat.getWindowInsetsController(binding.editorContent)
+                        ?.show(WindowInsetsCompat.Type.ime())
+                }
+            }
+        }
+
+        binding.mainList.setOnTouchListener { _, event ->
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                focusEditor()
+            }
+            false
+        }
+
+        binding.editorContentContainer.setOnClickListener { focusEditor() }
+        binding.editorLineNumbers.setOnClickListener { focusEditor() }
+        binding.root.setOnClickListener { focusEditor() }
+
+        binding.editorContent.apply {
+            isFocusable = true
+            isFocusableInTouchMode = true
+            setOnClickListener { focusEditor() }
         }
     }
     
