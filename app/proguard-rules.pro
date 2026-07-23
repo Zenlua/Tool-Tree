@@ -34,3 +34,7 @@
 -keep class com.tool.tree.ui.** { *; }
 -keep class com.tool.tree.** { *; }
 -keepclassmembers class * implements java.io.Serializable { *; }
+-keep class org.tomlj.** { *; }
+-dontwarn org.tomlj.**
+-dontwarn com.google.errorprone.**
+-dontwarn com.google.common.**

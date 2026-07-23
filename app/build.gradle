@@ -68,6 +68,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.8.7"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7"
     implementation "androidx.webkit:webkit:1.15.0"
+    implementation "org.tomlj:tomlj:1.1.1"
 }
 repositories {
     google()

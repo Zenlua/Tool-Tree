@@ -20,7 +20,7 @@ import java.util.Locale
  * Features:
  * - Debounced highlighting
  * - Support for temporary suspend/resume during bulk edits
- * - Works with shell / xml / properties / python
+ * - Works with shell / xml / toml / properties / python
  */
 object SyntaxHighlighterFactory {
     fun create(extension: String?, editText: EditText): SyntaxHighlighter? {
@@ -28,6 +28,7 @@ object SyntaxHighlighterFactory {
         return when (ext) {
             "sh", "bash", "zsh", "ksh" -> ShellSyntaxHighlighter(editText)
             "xml" -> XmlSyntaxHighlighter(editText)
+            "toml" -> TomlSyntaxHighlighter(editText)
             "prop", "properties" -> PropSyntaxHighlighter(editText)
             "py" -> PythonSyntaxHighlighter(editText)
             else -> null
@@ -305,6 +306,81 @@ class XmlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
                     }
                     color(text, start, punctEnd, punctuationColor())
                 }
+            }
+        }
+    }
+}
+
+/**
+ * TOML syntax highlighter.
+ *
+ * Supports:
+ * - Comments (#...)
+ * - Table headers: [table] và [[array of tables]]
+ * - Key = Value (bare key, "quoted key", 'literal key')
+ * - Strings: "basic", 'literal', """multi-line basic""", '''multi-line literal'''
+ * - Numbers: int, float, hex/oct/bin, +/-inf, nan
+ * - Booleans: true / false
+ * - Dates/times (RFC 3339)
+ * - Punctuation: = , . [ ] { }
+ */
+class TomlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
+    editText = editText,
+    keywordColor = 0xFF3D8BFF.toInt(),
+    builtinColor = 0xFFFFA000.toInt(),
+    stringColor = 0xFF2EAD4B.toInt(),
+    commentColor = 0xFF8A8A8A.toInt(),
+    numberColor = 0xFFAA66CC.toInt(),
+    punctuationColor = 0xFF808080.toInt(),
+) {
+    private val bareKey = "[A-Za-z0-9_-]+"
+    private val quotedKey = "\"(?:\\\\.|[^\"\\\\])*\"|'[^']*'"
+    private val keyPart = "(?:$bareKey|$quotedKey)"
+    // key có thể là dotted key: a.b."c d".e
+    private val dottedKey = "$keyPart(?:\\s*\\.\\s*$keyPart)*"
+
+    private val tomlRegex = Regex(
+        "(?<COMMENT>(?m)#.*\$)" +
+            "|(?<TABLE>(?m)^\\s*\\[\\[?\\s*$dottedKey\\s*]]?)" +
+            "|(?<KEYVALUE>(?m)^\\s*($dottedKey)(\\s*=))" +
+            "|(?<STRING>\"\"\"(?s).*?\"\"\"|'''(?s).*?'''|\"(?:\\\\.|[^\"\\\\])*\"|'[^']*')" +
+            "|(?<BOOLEAN>(?<![A-Za-z0-9_])(?:true|false)(?![A-Za-z0-9_]))" +
+            "|(?<DATETIME>\\d{4}-\\d{2}-\\d{2}(?:[Tt ]\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:[Zz]|[+-]\\d{2}:\\d{2})?)?|\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?)" +
+            "|(?<NUMBER>[+-]?(?:0x[0-9A-Fa-f_]+|0o[0-7_]+|0b[01_]+|(?:inf|nan)|(?:\\d[\\d_]*)?\\.\\d[\\d_]*(?:[eE][+-]?\\d+)?|\\d[\\d_]*(?:[eE][+-]?\\d+)?))" +
+            "|(?<PUNCTUATION>[=,.\\[\\]{}])"
+    )
+
+    override fun applyHighlight(text: Editable) {
+        clearSpans(text)
+        val s = text.toString()
+
+        tomlRegex.findAll(s).forEach { result ->
+            val groups = result.groups
+            val start = result.range.first
+            val end = result.range.last + 1
+
+            when {
+                groups["COMMENT"] != null -> color(text, start, end, commentColor())
+                groups["TABLE"] != null -> {
+                    color(text, start, end, keywordColor())
+                    bold(text, start, end)
+                }
+                groups["KEYVALUE"] != null -> {
+                    val line = result.value
+                    val eqIndex = line.lastIndexOf('=')
+                    if (eqIndex > 0) {
+                        color(text, start, start + eqIndex, builtinColor())
+                        color(text, start + eqIndex, start + eqIndex + 1, punctuationColor())
+                    }
+                }
+                groups["STRING"] != null -> color(text, start, end, stringColor())
+                groups["BOOLEAN"] != null -> {
+                    color(text, start, end, keywordColor())
+                    bold(text, start, end)
+                }
+                groups["DATETIME"] != null -> color(text, start, end, numberColor())
+                groups["NUMBER"] != null -> color(text, start, end, numberColor())
+                groups["PUNCTUATION"] != null -> color(text, start, end, punctuationColor())
             }
         }
     }
