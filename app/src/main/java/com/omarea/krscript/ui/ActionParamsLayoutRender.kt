@@ -197,8 +197,9 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             if (info.dependReadonly) {
                 // Luôn hiện, chỉ mờ/khóa tương tác theo initialVisibility - không set GONE,
                 // tránh hàng bị "biến mất" rồi mới hiện lại (nhấp nháy) khi dialog vừa mở.
+                // Nếu param còn có readonly="true" cố định thì giữ khóa ngay từ đầu.
                 row.visibility = View.VISIBLE
-                setRowInteractive(row, initialVisibility)
+                setRowInteractive(row, initialVisibility && !info.readonly)
             } else {
                 row.visibility = if (initialVisibility) View.VISIBLE else View.GONE
             }
@@ -382,7 +383,7 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                         break
                     }
                 }
-                result
+                result != info.dependNegate
             }
             "priority-rtl", "or-rtl" -> {
                 // Ưu tiên phải -> trái
@@ -394,7 +395,7 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                         break
                     }
                 }
-                result
+                result != info.dependNegate
             }
             "xor" -> {
                 // Chỉ ĐÚNG MỘT điều kiện được thỏa
@@ -449,12 +450,16 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         val view = rowViews[name]
         val info = currentParamInfos.find { it.name == name }
 
-        if (info?.dependReadonly == true) {
+        if (info != null && info.dependReadonly) {
             // ========== TÍNH NĂNG MỚI: depend-readonly ==========
             // Không ẩn (GONE) mà giữ VISIBLE, chỉ làm mờ + khóa tương tác (isEnabled = false)
             // khi điều kiện phụ thuộc không thỏa (shouldShow = false).
+            // Nếu param còn có readonly="true" cố định (riêng biệt với depend-readonly), phải
+            // giữ nguyên trạng thái khóa dù depend có thỏa hay không - trước đây khi shouldShow
+            // = true, setRowInteractive sẽ bật lại isEnabled = true, vô tình gỡ khóa readonly cố định.
+            val effectiveEnabled = shouldShow && info.readonly != true
             view?.visibility = View.VISIBLE
-            view?.let { setRowInteractive(it, shouldShow) }
+            view?.let { setRowInteractive(it, effectiveEnabled) }
         } else {
             view?.visibility = if (shouldShow) View.VISIBLE else View.GONE
         }
@@ -627,10 +632,17 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             val isHiddenByDepend = visibilityState[actionParamInfo.name] == false
             
             // ========== TÍNH NĂNG MỚI: BỎ QUA PARAM ẨN NẾU KHÔNG CÓ dependIncludeHidden ==========
-            if (isHiddenByDepend && !actionParamInfo.dependIncludeHidden) {
-                // Bỏ qua param ẩn - không kiểm tra required
-                if (!actionParamInfo.value.isNullOrEmpty()) {
-                    params[actionParamInfo.name!!] = actionParamInfo.value!!
+            if (isHiddenByDepend) {
+                if (actionParamInfo.dependIncludeHidden) {
+                    // depend-include-hidden=true: vẫn đưa giá trị vào kết quả nếu có, không
+                    // kiểm tra required.
+                    if (!actionParamInfo.value.isNullOrEmpty()) {
+                        params[actionParamInfo.name!!] = actionParamInfo.value!!
+                    }
+                } else {
+                    // depend-include-hidden=false (mặc định): bỏ qua HOÀN TOÀN param đang ẩn,
+                    // kể cả khi nó có giá trị - trước đây bị ghi nhầm nên vẫn đưa giá trị vào
+                    // params dù cờ này = false, khiến depend-include-hidden gần như vô tác dụng.
                 }
                 continue
             }
