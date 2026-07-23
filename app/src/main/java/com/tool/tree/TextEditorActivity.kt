@@ -63,9 +63,6 @@ class TextEditorActivity : AppCompatActivity() {
         private const val UNDO_CACHE_DEBOUNCE_MS = 1000L
         private const val UNDO_CACHE_DIR = "editor_undo_cache"
 
-        // Thời gian chờ sau khi gõ xong để cập nhật lại nền mờ (Background Blur)
-        private const val BLUR_UPDATE_DEBOUNCE_MS = 800L
-
         private val RUNNABLE_EXTENSIONS = mapOf(
             "sh" to "sh",
             "bash" to "bash",
@@ -121,6 +118,7 @@ class TextEditorActivity : AppCompatActivity() {
     private var titleText: String = ""
     private var lastLanguageOverride: String? = null
     private var lastLineCount = -1
+    private var isKeyboardVisible = false
 
     private data class EditorSnapshot(val text: String, val cursor: Int)
 
@@ -135,7 +133,6 @@ class TextEditorActivity : AppCompatActivity() {
     private val commitPendingUndoRunnable = Runnable { commitPendingUndoSnapshot() }
     private val persistUndoCacheRunnable = Runnable { persistUndoCacheToDisk() }
     private val updateLineNumbersRunnable = Runnable { updateLineNumbersInternal() }
-    private val updateBlurRunnable = Runnable { applyBlurredBackground() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -297,6 +294,13 @@ class TextEditorActivity : AppCompatActivity() {
             val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
             val targetBottomInset = if (imeInset > 0) imeInset else sysInset
 
+            // Cập nhật background blur khi ẩn/hiện bàn phím
+            val keyboardCurrentlyVisible = imeInset > 0
+            if (isKeyboardVisible != keyboardCurrentlyVisible) {
+                isKeyboardVisible = keyboardCurrentlyVisible
+                applyBlurredBackground()
+            }
+
             val charsLp = binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams
             charsLp.bottomMargin = specialCharsBaseBottomMargin + targetBottomInset
             binding.editorSpecialCharsScroll.layoutParams = charsLp
@@ -365,11 +369,7 @@ class TextEditorActivity : AppCompatActivity() {
                 editorHandler.removeCallbacks(updateLineNumbersRunnable)
                 editorHandler.postDelayed(updateLineNumbersRunnable, 80L)
 
-                // 4. Debounce việc cập nhật Background Blur sau khi gõ xong
-                editorHandler.removeCallbacks(updateBlurRunnable)
-                editorHandler.postDelayed(updateBlurRunnable, BLUR_UPDATE_DEBOUNCE_MS)
-
-                // 5. Auto scroll theo con trỏ
+                // 4. Auto scroll theo con trỏ
                 binding.editorContent.post { scrollToCursor() }
             }
         })
@@ -920,6 +920,9 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun runScript(interpreter: String) {
+        // Cập nhật lại Background Blur trước khi kích hoạt chạy script
+        applyBlurredBackground()
+
         val runNode = ActionNode(absoluteFilePath).apply {
             title = titleText.ifEmpty { File(absoluteFilePath).name }
             interruptable = true
