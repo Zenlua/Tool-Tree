@@ -232,7 +232,7 @@ class TextEditorActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     /** Phải được gọi từ Main thread, sau khi [savedContent] đã được thiết lập. */
     private fun restoreUndoCacheFromDisk() {
         try {
@@ -296,12 +296,13 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun setupEditorFocusHandling() {
         fun focusEditor(showKeyboard: Boolean = true) {
-            if (!binding.editorContent.isFocused) {
-                binding.editorContent.requestFocusFromTouch()
+            val editor = binding.editorContent
+            if (!editor.isFocused) {
+                editor.requestFocusFromTouch()
             }
             if (showKeyboard) {
-                binding.editorContent.post {
-                    ViewCompat.getWindowInsetsController(binding.editorContent)
+                editor.post {
+                    ViewCompat.getWindowInsetsController(binding.root)
                         ?.show(WindowInsetsCompat.Type.ime())
                 }
             }
@@ -324,11 +325,12 @@ class TextEditorActivity : AppCompatActivity() {
             setOnClickListener { focusEditor() }
         }
     }
-    
+
     private fun setupCursorAutoScroll() {
         binding.editorContent.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+    
             override fun afterTextChanged(s: Editable?) {
                 if (isApplyingHistory) return
                 binding.editorContent.post { scrollToCursor() }
@@ -340,19 +342,35 @@ class TextEditorActivity : AppCompatActivity() {
         val editText = binding.editorContent
         val layout = editText.layout ?: return
         val scrollView = binding.mainList
-        val selection = editText.selectionEnd.coerceIn(0, editText.text?.length ?: 0)
+    
+        val textLength = editText.text?.length ?: 0
+        val selection = editText.selectionEnd.coerceIn(0, textLength)
         val line = layout.getLineForOffset(selection)
+    
         val lineTop = layout.getLineTop(line) + editText.top + editText.paddingTop
-        val lineBottom = layout.getLineBottom(line) + editText.top
+        val lineBottom = layout.getLineBottom(line) + editText.top + editText.paddingTop
+    
         val visibleTop = scrollView.scrollY
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
+        val viewportHeight = scrollView.height - scrollView.paddingTop - scrollView.paddingBottom
     
-        when {
-            lineBottom > visibleBottom -> scrollView.smoothScrollTo(
-                0,
-                lineBottom - scrollView.height + scrollView.paddingBottom
-            )
-            lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
+        val bottomGapPx = (56 * resources.displayMetrics.density).toInt()
+    
+        val targetY = when {
+            lineBottom > visibleBottom - bottomGapPx -> {
+                (lineBottom - viewportHeight + bottomGapPx).coerceAtLeast(0)
+            }
+            lineTop < visibleTop -> {
+                lineTop.coerceAtLeast(0)
+            }
+            selection >= textLength -> {
+                (lineBottom - viewportHeight + bottomGapPx).coerceAtLeast(0)
+            }
+            else -> visibleTop
+        }
+    
+        if (targetY != visibleTop) {
+            scrollView.smoothScrollTo(0, targetY)
         }
     }
     
@@ -694,6 +712,7 @@ class TextEditorActivity : AppCompatActivity() {
                     else -> getString(R.string.editor_hint_empty)
                 }
                 setupSyntaxHighlighting()
+                binding.mainList.post { scrollToCursor() }
             }
         }
     }
