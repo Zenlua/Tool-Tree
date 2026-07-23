@@ -1,16 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.omarea.common.ui.BlurViewLinearLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/editor_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="false">
+    android:fitsSystemWindows="false"
+    android:orientation="vertical">
 
-    <!-- Khu vực cuộn chính chứa số dòng và khung nhập liệu -->
+    <!-- Toolbar nằm trên cùng -->
+    <include
+        layout="@layout/app_bar_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Khu vực cuộn chính chứa số dòng và khung nhập liệu (Tự dãn theo chiều cao) -->
     <ScrollView
         android:id="@+id/main_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/editor_special_chars_scroll"
-        android:layout_marginTop="?android:actionBarSize"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clickable="true"
         android:fadingEdge="vertical"
         android:fillViewport="true"
@@ -85,12 +94,11 @@
 
     </ScrollView>
 
-    <!-- Hàng phím ký tự đặc biệt gắn ở đáy màn hình với hiệu ứng Blur Bottom Bar -->
+    <!-- Hàng phím ký tự đặc biệt gắn ở đáy màn hình -->
     <com.omarea.common.ui.BlurBottomBarLayout
         android:id="@+id/editor_special_chars_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:background="@drawable/krscript_item_ripple_in">
 
         <HorizontalScrollView
@@ -111,10 +119,4 @@
 
     </com.omarea.common.ui.BlurBottomBarLayout>
 
-    <!-- Toolbar nằm trên cùng chiều Z-Index -->
-    <include
-        layout="@layout/app_bar_main"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-</RelativeLayout>
+</com.omarea.common.ui.BlurViewLinearLayout>

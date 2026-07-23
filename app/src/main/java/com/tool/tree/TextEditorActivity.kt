@@ -3,7 +3,6 @@ package com.tool.tree
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -29,8 +28,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shared.FileWrite
 import com.omarea.common.shell.KeepShellPublic
+import com.omarea.common.ui.BlurEngine
 import com.omarea.common.ui.DialogHelper
-import com.omarea.common.ui.FastBlurUtility
 import com.omarea.krscript.config.PathAnalysis
 import com.omarea.krscript.model.ActionNode
 import com.omarea.krscript.model.RunnableNode
@@ -118,7 +117,6 @@ class TextEditorActivity : AppCompatActivity() {
     private var titleText: String = ""
     private var lastLanguageOverride: String? = null
     private var lastLineCount = -1
-    private var isKeyboardVisible = false
 
     private data class EditorSnapshot(val text: String, val cursor: Int)
 
@@ -139,7 +137,10 @@ class TextEditorActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
-        applyBlurredBackground()
+        // --- BẬT HIỆU ỨNG BLUR KÍNH MỜ ---
+        // Tự động chụp và xử lý hình nền Wallpaper mờ bên dưới
+        BlurEngine.controller.captureAndBlur(this)
+
         setupKeyboardInsets()
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar) ?: binding.root.findViewById(R.id.toolbar)
@@ -174,22 +175,6 @@ class TextEditorActivity : AppCompatActivity() {
         setupSpecialCharsBar()
         setupEditorTouchAndFocus()
         loadFileContent()
-    }
-
-    private fun applyBlurredBackground() {
-        if (isFinishing || isDestroyed) return
-        window.decorView.post {
-            lifecycleScope.launch(Dispatchers.IO) {
-                val blurredBmp = FastBlurUtility.getBlurBackgroundDrawer(this@TextEditorActivity)
-                withContext(Dispatchers.Main) {
-                    blurredBmp?.let { bmp ->
-                        if (!isFinishing && !isDestroyed) {
-                            binding.root.background = BitmapDrawable(resources, bmp)
-                        }
-                    }
-                }
-            }
-        }
     }
 
     override fun onPause() {
@@ -294,13 +279,6 @@ class TextEditorActivity : AppCompatActivity() {
             val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
             val targetBottomInset = if (imeInset > 0) imeInset else sysInset
 
-            // Cập nhật background blur khi ẩn/hiện bàn phím
-            val keyboardCurrentlyVisible = imeInset > 0
-            if (isKeyboardVisible != keyboardCurrentlyVisible) {
-                isKeyboardVisible = keyboardCurrentlyVisible
-                applyBlurredBackground()
-            }
-
             val charsLp = binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams
             charsLp.bottomMargin = specialCharsBaseBottomMargin + targetBottomInset
             binding.editorSpecialCharsScroll.layoutParams = charsLp
@@ -331,10 +309,6 @@ class TextEditorActivity : AppCompatActivity() {
         binding.editorContentContainer.setOnClickListener { focusAndShowKeyboard() }
     }
 
-    /**
-     * Gom toàn bộ logic của các TextWatcher lại thành 1 duy nhất.
-     * Hạn chế tối đa việc tạo chuỗi String mới và giật lag trên UI Thread.
-     */
     private fun setupUnifiedTextWatcher() {
         binding.editorContent.addTextChangedListener(object : TextWatcher {
             private var startChangeIndex = 0
@@ -920,9 +894,6 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun runScript(interpreter: String) {
-        // Cập nhật lại Background Blur trước khi kích hoạt chạy script
-        applyBlurredBackground()
-
         val runNode = ActionNode(absoluteFilePath).apply {
             title = titleText.ifEmpty { File(absoluteFilePath).name }
             interruptable = true
