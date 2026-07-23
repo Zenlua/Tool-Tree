@@ -23,16 +23,12 @@ public class FastBlurUtility {
     private static final float SCALE_FACTOR = 0.10f;
     private static final int BLUR_RADIUS = 8;
 
-    /**
-     * Giữ nguyên Signature cũ: Chụp màn hình và làm mờ.
-     */
     public static Bitmap getBlurBackgroundDrawer(Activity activity) {
         Bitmap bmp = takeScreenShot(activity);
         if (bmp == null) return null;
 
         Bitmap blurredBmp = startBlurBackground(bmp);
 
-        // Dọn dẹp bitmap chụp màn hình ban đầu nếu đã tạo bitmap mới
         if (bmp != blurredBmp && !bmp.isRecycled()) {
             bmp.recycle();
         }
@@ -40,47 +36,40 @@ public class FastBlurUtility {
         return blurredBmp;
     }
 
-    /**
-     * Giữ nguyên Signature cũ: Nhận Bitmap và trả về Bitmap đã làm mờ.
-     * Tự động chọn GPU (API 31+) hoặc CPU StackBlur (API < 31).
-     */
     public static Bitmap startBlurBackground(Bitmap bkg) {
         if (bkg == null || bkg.isRecycled()) return null;
 
-        // --- NẾU LÀ ANDROID 12+ (API 31+): DÙNG GPU RENDEREFFECT ---
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            Bitmap gpuBlurred = blurWithRenderEffect(bkg, 20f);
-            if (gpuBlurred != null) {
-                return applyDimFilter(gpuBlurred);
+        try {
+            // 1. Android 12+ (API 31+): Dùng GPU RenderEffect
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                Bitmap gpuBlurred = blurWithRenderEffect(bkg, 20f);
+                if (gpuBlurred != null) {
+                    return applyDimFilter(gpuBlurred);
+                }
             }
+
+            // 2. Android 11 trở xuống (hoặc nếu GPU fail): Dùng StackBlur CPU
+            int width = Math.round(bkg.getWidth() * SCALE_FACTOR);
+            int height = Math.round(bkg.getHeight() * SCALE_FACTOR);
+
+            if (width <= 0 || height <= 0) return bkg;
+
+            Bitmap smallBitmap = Bitmap.createScaledBitmap(bkg, width, height, true);
+            Bitmap blurred = fastBlur(smallBitmap, BLUR_RADIUS);
+
+            if (smallBitmap != null && smallBitmap != blurred && !smallBitmap.isRecycled()) {
+                smallBitmap.recycle();
+            }
+
+            if (blurred == null) return bkg;
+
+            return scaleAndDim(blurred, bkg.getWidth(), bkg.getHeight());
+        } catch (Throwable e) {
+            // An toàn tuyệt đối: Nếu có bất kỳ lỗi toán học hay OOM nào, trả lại ảnh gốc
+            return bkg;
         }
-
-        // --- NẾU LÀ ANDROID 11 TRỞ XUỐNG (API 23 - 30): FALLBACK VỀ STACKBLUR (CPU) ---
-        int width = Math.round(bkg.getWidth() * SCALE_FACTOR);
-        int height = Math.round(bkg.getHeight() * SCALE_FACTOR);
-
-        if (width <= 0 || height <= 0) return bkg;
-
-        // 1. Thu nhỏ ảnh
-        Bitmap smallBitmap = Bitmap.createScaledBitmap(bkg, width, height, true);
-
-        // 2. Làm mờ CPU
-        Bitmap blurred = fastBlur(smallBitmap, BLUR_RADIUS);
-
-        // Dọn dẹp bitmap thu nhỏ trung gian
-        if (smallBitmap != null && smallBitmap != blurred && !smallBitmap.isRecycled()) {
-            smallBitmap.recycle();
-        }
-
-        if (blurred == null) return null;
-
-        // 3. Phóng to & Nhuộm tối
-        return scaleAndDim(blurred, bkg.getWidth(), bkg.getHeight());
     }
 
-    /**
-     * Phương thức làm mờ bằng phần cứng GPU dành riêng cho Android 12+
-     */
     private static Bitmap blurWithRenderEffect(Bitmap input, float radius) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null;
 
@@ -88,7 +77,6 @@ public class FastBlurUtility {
             int width = input.getWidth();
             int height = input.getHeight();
 
-            // Tạo RenderNode vẽ hình ảnh lên GPU với hiệu ứng Blur
             RenderNode node = new RenderNode("BlurEffectNode");
             node.setPosition(0, 0, width, height);
             node.setRenderEffect(RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP));
@@ -97,7 +85,6 @@ public class FastBlurUtility {
             canvas.drawBitmap(input, 0, 0, null);
             node.endRecording();
 
-            // Dùng HardwareRenderer để Render khung hình từ GPU ra ImageReader
             ImageReader imageReader = ImageReader.newInstance(
                     width, height, PixelFormat.RGBA_8888, 1, HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE | HardwareBuffer.USAGE_GPU_COLOR_OUTPUT
             );
@@ -114,7 +101,6 @@ public class FastBlurUtility {
                 return null;
             }
 
-            // Chuyển HardwareBuffer thu được thành Bitmap
             HardwareBuffer hardwareBuffer = image.getHardwareBuffer();
             Bitmap result = null;
             if (hardwareBuffer != null) {
@@ -126,21 +112,17 @@ public class FastBlurUtility {
             imageReader.close();
             renderer.destroy();
 
-            // Copy sang Software Bitmap để có thể chỉnh sửa/nhuộm màu an toàn nếu cần
             if (result != null) {
                 Bitmap copy = result.copy(Bitmap.Config.ARGB_8888, true);
                 result.recycle();
                 return copy;
             }
         } catch (Exception e) {
-            // Nếu có lỗi phần cứng trên một số ROM tùy biến, tự nhảy về null để dùng StackBlur bên ngoài
+            // Fallback nếu GPU không hỗ trợ
         }
         return null;
     }
 
-    /**
-     * Áp dụng hiệu ứng tối màu (Dimming) lên Bitmap đã mờ bằng GPU
-     */
     private static Bitmap applyDimFilter(Bitmap src) {
         Bitmap output = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
@@ -162,9 +144,6 @@ public class FastBlurUtility {
         return output;
     }
 
-    /**
-     * Chụp ảnh màn hình an toàn trên SDK 23+
-     */
     public static Bitmap takeScreenShot(Activity activity) {
         if (activity == null || activity.isFinishing()) return null;
         try {
@@ -206,16 +185,23 @@ public class FastBlurUtility {
         return output;
     }
 
-    /**
-     * Thuật toán StackBlur CPU gốc cho thiết bị đời cũ
-     */
+    // Hàm hỗ trợ khóa chỉ số mảng an toàn
+    private static int clampIndex(int val, int maxLen) {
+        if (val < 0) return 0;
+        if (val >= maxLen) return maxLen - 1;
+        return val;
+    }
+
     private static Bitmap fastBlur(Bitmap sentBitmap, int radius) {
         if (sentBitmap == null || sentBitmap.isRecycled() || radius < 1) return null;
 
         Bitmap bitmap = sentBitmap.isMutable() ? sentBitmap : sentBitmap.copy(sentBitmap.getConfig(), true);
+        if (bitmap == null) return null;
 
         int w = bitmap.getWidth();
         int h = bitmap.getHeight();
+        if (w <= 0 || h <= 0) return null;
+
         int[] pix = new int[w * h];
         bitmap.getPixels(pix, 0, w, 0, 0, w, h);
 
@@ -272,40 +258,52 @@ public class FastBlurUtility {
             stackpointer = radius;
 
             for (x = 0; x < w; x++) {
-                r[yi] = dv[rsum];
-                g[yi] = dv[gsum];
-                b[yi] = dv[bsum];
+                r[yi] = dv[clampIndex(rsum, dv.length)];
+                g[yi] = dv[clampIndex(gsum, dv.length)];
+                b[yi] = dv[clampIndex(bsum, dv.length)];
+
                 rsum -= routsum;
                 gsum -= goutsum;
                 bsum -= boutsum;
+
                 stackstart = stackpointer - radius + div;
                 sir = stack[stackstart % div];
+
                 routsum -= sir[0];
                 goutsum -= sir[1];
                 boutsum -= sir[2];
+
                 if (y == 0) vmin[x] = Math.min(x + radius + 1, wm);
                 p = pix[yw + vmin[x]];
+
                 sir[0] = (p & 0xff0000) >> 16;
                 sir[1] = (p & 0x00ff00) >> 8;
                 sir[2] = (p & 0x0000ff);
+
                 rinsum += sir[0];
                 ginsum += sir[1];
                 binsum += sir[2];
+
                 rsum += rinsum;
                 gsum += ginsum;
                 bsum += binsum;
+
                 stackpointer = (stackpointer + 1) % div;
-                sir = stack[(stackpointer) % div];
-                routsum -= sir[0];
-                goutsum -= sir[1];
-                boutsum -= sir[2];
+                sir = stack[stackpointer % div];
+
+                routsum += sir[0];
+                goutsum += sir[1];
+                boutsum += sir[2];
+
                 rinsum -= sir[0];
                 ginsum -= sir[1];
                 binsum -= sir[2];
+
                 yi++;
             }
             yw += w;
         }
+
         for (x = 0; x < w; x++) {
             rinsum = ginsum = binsum = routsum = goutsum = boutsum = rsum = gsum = bsum = 0;
             yp = -radius * w;
@@ -328,39 +326,56 @@ public class FastBlurUtility {
                     goutsum += sir[1];
                     boutsum += sir[2];
                 }
-                if (i < hm) yp += w;
+                // ĐÃ SỬA: Kiểm tra giới hạn hàng dựa trên kích thước thực hm * w
+                if (yp < (hm * w)) {
+                    yp += w;
+                }
             }
             yi = x;
             stackpointer = radius;
             for (y = 0; y < h; y++) {
-                pix[yi] = (0xff000000 & pix[yi]) | (dv[rsum] << 16) | (dv[gsum] << 8) | dv[bsum];
+                pix[yi] = (0xff000000 & pix[yi]) 
+                        | (dv[clampIndex(rsum, dv.length)] << 16) 
+                        | (dv[clampIndex(gsum, dv.length)] << 8) 
+                        | dv[clampIndex(bsum, dv.length)];
+
                 rsum -= routsum;
                 gsum -= goutsum;
                 bsum -= boutsum;
+
                 stackstart = stackpointer - radius + div;
                 sir = stack[stackstart % div];
+
                 routsum -= sir[0];
                 goutsum -= sir[1];
                 boutsum -= sir[2];
+
                 if (x == 0) vmin[y] = Math.min(y + r1, hm) * w;
                 p = x + vmin[y];
+
                 sir[0] = r[p];
                 sir[1] = g[p];
                 sir[2] = b[p];
+
                 rinsum += sir[0];
                 ginsum += sir[1];
                 binsum += sir[2];
+
                 rsum += rinsum;
                 gsum += ginsum;
                 bsum += binsum;
+
                 stackpointer = (stackpointer + 1) % div;
-                sir = stack[stackpointer];
-                routsum -= sir[0];
-                goutsum -= sir[1];
-                boutsum -= sir[2];
+                sir = stack[stackpointer % div];
+
+                routsum += sir[0];
+                goutsum += sir[1];
+                boutsum += sir[2];
+
                 rinsum -= sir[0];
                 ginsum -= sir[1];
                 binsum -= sir[2];
+
                 yi += w;
             }
         }
