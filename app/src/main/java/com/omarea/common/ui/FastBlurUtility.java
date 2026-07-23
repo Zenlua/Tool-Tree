@@ -11,45 +11,54 @@ import android.view.View;
 
 public class FastBlurUtility {
 
-    // Tỉ lệ thu nhỏ ảnh để xử lý nhanh (1/10 giúp giảm 100 lần số pixel cần tính toán)
     private static final float SCALE_FACTOR = 0.10f;
     private static final int BLUR_RADIUS = 8;
 
     /**
-     * Chụp màn hình và làm mờ (Dùng làm phương án dự phòng khi không lấy được Wallpaper)
+     * Chụp màn hình và làm mờ nền.
+     * LƯU Ý: Nên gọi phương thức này ở Background Thread (RxJava, Coroutine, Executors...)
      */
     public static Bitmap getBlurBackgroundDrawer(Activity activity) {
         Bitmap bmp = takeScreenShot(activity);
-        return startBlurBackground(bmp);
+        if (bmp == null) return null;
+        
+        Bitmap blurredBmp = startBlurBackground(bmp);
+        
+        // Dọn dẹp bitmap ảnh gốc chụp màn hình
+        if (bmp != blurredBmp && !bmp.isRecycled()) {
+            bmp.recycle();
+        }
+        
+        return blurredBmp;
     }
 
-    /**
-     * Quy trình xử lý: Thu nhỏ -> Làm mờ -> Phóng to & Nhuộm tối (Dim)
-     * Đảm bảo mượt mà từ SDK 23 trở lên.
-     */
     public static Bitmap startBlurBackground(Bitmap bkg) {
         if (bkg == null || bkg.isRecycled()) return null;
 
-        // 1. Tính toán kích thước thu nhỏ
         int width = Math.round(bkg.getWidth() * SCALE_FACTOR);
         int height = Math.round(bkg.getHeight() * SCALE_FACTOR);
-        
+
         if (width <= 0 || height <= 0) return bkg;
 
-        // 2. Thu nhỏ ảnh (Sử dụng bộ lọc Bilinear để ảnh mượt hơn)
+        // 1. Thu nhỏ ảnh
         Bitmap smallBitmap = Bitmap.createScaledBitmap(bkg, width, height, true);
 
-        // 3. Làm mờ bằng thuật toán StackBlur (CPU-based, cực kỳ ổn định)
+        // 2. Làm mờ bằng StackBlur
         Bitmap blurred = fastBlur(smallBitmap, BLUR_RADIUS);
 
-        // 4. Phóng to về kích thước gốc và áp dụng bộ lọc màu tối
+        // SỬA LỖI LEAK: Giải phóng smallBitmap ngay sau khi làm mờ xong
+        if (smallBitmap != null && smallBitmap != blurred && !smallBitmap.isRecycled()) {
+            smallBitmap.recycle();
+        }
+
+        if (blurred == null) return null;
+
+        // 3. Phóng to & Nhuộm tối
         return scaleAndDim(blurred, bkg.getWidth(), bkg.getHeight());
     }
 
-    /**
-     * Chụp ảnh màn hình an toàn trên SDK 23+
-     */
     private static Bitmap takeScreenShot(Activity activity) {
+        if (activity == null || activity.isFinishing()) return null;
         try {
             View view = activity.getWindow().getDecorView();
             if (view.getWidth() <= 0 || view.getHeight() <= 0) return null;
@@ -63,19 +72,14 @@ public class FastBlurUtility {
         }
     }
 
-    /**
-     * Phóng to ảnh và áp dụng ColorMatrix để làm tối nền (Dim)
-     */
     private static Bitmap scaleAndDim(Bitmap bitmap, int targetW, int targetH) {
         Bitmap output = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
-        
-        // Paint với bộ lọc chống răng cưa và lọc bitmap khi scale
+
         Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
 
-        // Tạo bộ lọc màu để giảm độ sáng (contrast 0.85f ~ giảm 15% độ sáng)
         ColorMatrix cm = new ColorMatrix();
-        float contrast = 0.80f; 
+        float contrast = 0.80f;
         cm.set(new float[]{
                 contrast, 0, 0, 0, 0,
                 0, contrast, 0, 0, 0,
@@ -83,27 +87,23 @@ public class FastBlurUtility {
                 0, 0, 0, 1, 0});
         paint.setColorFilter(new ColorMatrixColorFilter(cm));
 
-        // Vẽ ảnh từ vùng nguồn (nhỏ) ra vùng đích (toàn màn hình)
         Rect src = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
         Rect dst = new Rect(0, 0, targetW, targetH);
         canvas.drawBitmap(bitmap, src, dst, paint);
 
-        // Giải phóng bitmap tạm sau khi đã vẽ xong
-        if (bitmap != null && !bitmap.isRecycled()) {
+        // Dọn dẹp bitmap đầu vào của hàm scale
+        if (!bitmap.isRecycled()) {
             bitmap.recycle();
         }
 
         return output;
     }
 
-    /**
-     * Thuật toán StackBlur (Multi-pass box blur) - Tối ưu cho hiệu năng CPU
-     * Hỗ trợ hoàn hảo cho các thiết bị từ cũ đến mới.
-     */
     private static Bitmap fastBlur(Bitmap sentBitmap, int radius) {
-        Bitmap bitmap = sentBitmap.copy(sentBitmap.getConfig(), true);
+        if (sentBitmap == null || sentBitmap.isRecycled() || radius < 1) return null;
 
-        if (radius < 1) return null;
+        // Tránh tạo bản sao không cần thiết nếu bitmap đã có thể sửa đổi (isMutable)
+        Bitmap bitmap = sentBitmap.isMutable() ? sentBitmap : sentBitmap.copy(sentBitmap.getConfig(), true);
 
         int w = bitmap.getWidth();
         int h = bitmap.getHeight();
@@ -187,9 +187,9 @@ public class FastBlurUtility {
                 bsum += binsum;
                 stackpointer = (stackpointer + 1) % div;
                 sir = stack[(stackpointer) % div];
-                routsum += sir[0];
-                goutsum += sir[1];
-                boutsum += sir[2];
+                routsum -= sir[0];
+                goutsum -= sir[1];
+                boutsum -= sir[2];
                 rinsum -= sir[0];
                 ginsum -= sir[1];
                 binsum -= sir[2];
@@ -246,9 +246,9 @@ public class FastBlurUtility {
                 bsum += binsum;
                 stackpointer = (stackpointer + 1) % div;
                 sir = stack[stackpointer];
-                routsum += sir[0];
-                goutsum += sir[1];
-                boutsum += sir[2];
+                routsum -= sir[0];
+                goutsum -= sir[1];
+                boutsum -= sir[2];
                 rinsum -= sir[0];
                 ginsum -= sir[1];
                 binsum -= sir[2];
