@@ -62,11 +62,11 @@ class Options(object):
       script_name = os.path.basename(exec_path)
       # logger hasn't been initialized yet at this point. Use print to output
       # warnings.
-      print(
-          'Warning: releasetools script should be invoked as hermetic Python '
-          'executable -- build and run `{}` directly.'.format(
-              script_name[:-3]),
-          file=sys.stderr)
+      # print(
+          # 'Warning: releasetools script should be invoked as hermetic Python '
+          # 'executable -- build and run `{}` directly.'.format(
+              # script_name[:-3]),
+          # file=sys.stderr)
     self.search_path = os.path.dirname(os.path.dirname(exec_path))
 
     self.signapk_path = "bin/signapk.jar"  # Relative to search_path
