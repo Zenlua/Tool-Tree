@@ -111,7 +111,7 @@ class TextEditorActivity : AppCompatActivity() {
     private var savedContent: String = ""
     private var isSaving = false
     private var noWrapContainer: HorizontalScrollView? = null
-    private var mainListBaseBottomMargin = 0
+    private var mainListTextBaseBottomMargin = 0
     private var syntaxHighlighter: SyntaxHighlighter? = null
     private var placeholderText: String = ""
     private var titleText: String = ""
@@ -271,7 +271,7 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun setupKeyboardInsets() {
-        mainListBaseBottomMargin = (binding.mainList.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+        mainListTextBaseBottomMargin = (binding.mainListText.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
         val specialCharsBaseBottomMargin =
             (binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
 
@@ -284,12 +284,12 @@ class TextEditorActivity : AppCompatActivity() {
             charsLp.bottomMargin = specialCharsBaseBottomMargin + targetBottomInset
             binding.editorSpecialCharsScroll.layoutParams = charsLp
 
-            val mlp = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
-            mlp.bottomMargin = mainListBaseBottomMargin
-            binding.mainList.layoutParams = mlp
+            val mlp = binding.mainListText.layoutParams as ViewGroup.MarginLayoutParams
+            mlp.bottomMargin = mainListTextBaseBottomMargin
+            binding.mainListText.layoutParams = mlp
 
             if (imeInset > 0) {
-                binding.mainList.post { scrollToCursor() }
+                binding.mainListText.post { scrollToCursor() }
             }
             insets
         }
@@ -305,7 +305,7 @@ class TextEditorActivity : AppCompatActivity() {
             }
         }
 
-        binding.mainList.setOnClickListener { focusAndShowKeyboard() }
+        binding.mainListText.setOnClickListener { focusAndShowKeyboard() }
         binding.editorLineNumbers.setOnClickListener { focusAndShowKeyboard() }
         binding.editorContentContainer.setOnClickListener { focusAndShowKeyboard() }
     }
@@ -353,7 +353,7 @@ class TextEditorActivity : AppCompatActivity() {
     private fun scrollToCursor() {
         val editText = binding.editorContent
         val layout = editText.layout ?: return
-        val scrollView = binding.mainList
+        val scrollView = binding.mainListText
         val selection = editText.selectionEnd.coerceIn(0, editText.text?.length ?: 0)
         val line = layout.getLineForOffset(selection)
     
