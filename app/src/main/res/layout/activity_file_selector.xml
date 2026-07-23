@@ -22,15 +22,18 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:orientation="vertical">
-
-        <!-- Nên thay ListView bằng RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
+    
+        <ListView
             android:id="@+id/file_selector_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="?attr/actionBarSize"
-            android:scrollbars="vertical" />
-
+            android:fastScrollEnabled="true"
+            android:fadingEdge="vertical"
+            android:requiresFadingEdge="vertical"
+            android:scrollbarStyle="insideOverlay"
+            android:smoothScrollbar="true" />
+    
     </com.omarea.common.ui.BlurViewLinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>
