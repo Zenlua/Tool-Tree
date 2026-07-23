@@ -294,21 +294,7 @@ class TextEditorActivity : AppCompatActivity() {
             imm?.showSoftInput(binding.editorContent, InputMethodManager.SHOW_IMPLICIT)
         }
 
-        var touchDownY = 0f
-        binding.mainList.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    touchDownY = event.y
-                }
-                MotionEvent.ACTION_UP -> {
-                    if (abs(event.y - touchDownY) < 10) {
-                        focusAndShowKeyboard()
-                    }
-                }
-            }
-            false
-        }
-
+        binding.mainList.setOnClickListener { focusAndShowKeyboard() }
         binding.editorLineNumbers.setOnClickListener { focusAndShowKeyboard() }
         binding.editorContentContainer.setOnClickListener { focusAndShowKeyboard() }
     }
@@ -333,7 +319,7 @@ class TextEditorActivity : AppCompatActivity() {
         val lineTop = layout.getLineTop(line) + editText.top + editText.paddingTop
         val lineBottom = layout.getLineBottom(line) + editText.top
     
-        val extraBottomOffset = (120 * resources.displayMetrics.density).toInt()
+        val extraBottomOffset = (100 * resources.displayMetrics.density).toInt()
     
         val visibleTop = scrollView.scrollY
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
