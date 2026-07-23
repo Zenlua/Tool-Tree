@@ -5,8 +5,17 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.HardwareRenderer;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.RenderEffect;
+import android.graphics.RenderNode;
+import android.graphics.Shader;
+import android.hardware.HardwareBuffer;
+import android.media.Image;
+import android.media.ImageReader;
+import android.os.Build;
 import android.view.View;
 
 public class FastBlurUtility {
@@ -15,26 +24,38 @@ public class FastBlurUtility {
     private static final int BLUR_RADIUS = 8;
 
     /**
-     * Chụp màn hình và làm mờ nền.
-     * LƯU Ý: Nên gọi phương thức này ở Background Thread (RxJava, Coroutine, Executors...)
+     * Giữ nguyên Signature cũ: Chụp màn hình và làm mờ.
      */
     public static Bitmap getBlurBackgroundDrawer(Activity activity) {
         Bitmap bmp = takeScreenShot(activity);
         if (bmp == null) return null;
-        
+
         Bitmap blurredBmp = startBlurBackground(bmp);
-        
-        // Dọn dẹp bitmap ảnh gốc chụp màn hình
+
+        // Dọn dẹp bitmap chụp màn hình ban đầu nếu đã tạo bitmap mới
         if (bmp != blurredBmp && !bmp.isRecycled()) {
             bmp.recycle();
         }
-        
+
         return blurredBmp;
     }
 
+    /**
+     * Giữ nguyên Signature cũ: Nhận Bitmap và trả về Bitmap đã làm mờ.
+     * Tự động chọn GPU (API 31+) hoặc CPU StackBlur (API < 31).
+     */
     public static Bitmap startBlurBackground(Bitmap bkg) {
         if (bkg == null || bkg.isRecycled()) return null;
 
+        // --- NẾU LÀ ANDROID 12+ (API 31+): DÙNG GPU RENDEREFFECT ---
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Bitmap gpuBlurred = blurWithRenderEffect(bkg, 20f);
+            if (gpuBlurred != null) {
+                return applyDimFilter(gpuBlurred);
+            }
+        }
+
+        // --- NẾU LÀ ANDROID 11 TRỞ XUỐNG (API 23 - 30): FALLBACK VỀ STACKBLUR (CPU) ---
         int width = Math.round(bkg.getWidth() * SCALE_FACTOR);
         int height = Math.round(bkg.getHeight() * SCALE_FACTOR);
 
@@ -43,10 +64,10 @@ public class FastBlurUtility {
         // 1. Thu nhỏ ảnh
         Bitmap smallBitmap = Bitmap.createScaledBitmap(bkg, width, height, true);
 
-        // 2. Làm mờ bằng StackBlur
+        // 2. Làm mờ CPU
         Bitmap blurred = fastBlur(smallBitmap, BLUR_RADIUS);
 
-        // SỬA LỖI LEAK: Giải phóng smallBitmap ngay sau khi làm mờ xong
+        // Dọn dẹp bitmap thu nhỏ trung gian
         if (smallBitmap != null && smallBitmap != blurred && !smallBitmap.isRecycled()) {
             smallBitmap.recycle();
         }
@@ -57,7 +78,94 @@ public class FastBlurUtility {
         return scaleAndDim(blurred, bkg.getWidth(), bkg.getHeight());
     }
 
-    private static Bitmap takeScreenShot(Activity activity) {
+    /**
+     * Phương thức làm mờ bằng phần cứng GPU dành riêng cho Android 12+
+     */
+    private static Bitmap blurWithRenderEffect(Bitmap input, float radius) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null;
+
+        try {
+            int width = input.getWidth();
+            int height = input.getHeight();
+
+            // Tạo RenderNode vẽ hình ảnh lên GPU với hiệu ứng Blur
+            RenderNode node = new RenderNode("BlurEffectNode");
+            node.setPosition(0, 0, width, height);
+            node.setRenderEffect(RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP));
+
+            Canvas canvas = node.beginRecording(width, height);
+            canvas.drawBitmap(input, 0, 0, null);
+            node.endRecording();
+
+            // Dùng HardwareRenderer để Render khung hình từ GPU ra ImageReader
+            ImageReader imageReader = ImageReader.newInstance(
+                    width, height, PixelFormat.RGBA_8888, 1, HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE | HardwareBuffer.USAGE_GPU_COLOR_OUTPUT
+            );
+
+            HardwareRenderer renderer = new HardwareRenderer();
+            renderer.setSurface(imageReader.getSurface());
+            renderer.setContentRoot(node);
+            renderer.createRenderRequest().syncAndDraw();
+
+            Image image = imageReader.acquireNextImage();
+            if (image == null) {
+                renderer.destroy();
+                imageReader.close();
+                return null;
+            }
+
+            // Chuyển HardwareBuffer thu được thành Bitmap
+            HardwareBuffer hardwareBuffer = image.getHardwareBuffer();
+            Bitmap result = null;
+            if (hardwareBuffer != null) {
+                result = Bitmap.wrapHardwareBuffer(hardwareBuffer, null);
+                hardwareBuffer.close();
+            }
+
+            image.close();
+            imageReader.close();
+            renderer.destroy();
+
+            // Copy sang Software Bitmap để có thể chỉnh sửa/nhuộm màu an toàn nếu cần
+            if (result != null) {
+                Bitmap copy = result.copy(Bitmap.Config.ARGB_8888, true);
+                result.recycle();
+                return copy;
+            }
+        } catch (Exception e) {
+            // Nếu có lỗi phần cứng trên một số ROM tùy biến, tự nhảy về null để dùng StackBlur bên ngoài
+        }
+        return null;
+    }
+
+    /**
+     * Áp dụng hiệu ứng tối màu (Dimming) lên Bitmap đã mờ bằng GPU
+     */
+    private static Bitmap applyDimFilter(Bitmap src) {
+        Bitmap output = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+
+        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
+        ColorMatrix cm = new ColorMatrix();
+        float contrast = 0.80f;
+        cm.set(new float[]{
+                contrast, 0, 0, 0, 0,
+                0, contrast, 0, 0, 0,
+                0, 0, contrast, 0, 0,
+                0, 0, 0, 1, 0});
+        paint.setColorFilter(new ColorMatrixColorFilter(cm));
+
+        canvas.drawBitmap(src, 0, 0, paint);
+        if (!src.isRecycled()) {
+            src.recycle();
+        }
+        return output;
+    }
+
+    /**
+     * Chụp ảnh màn hình an toàn trên SDK 23+
+     */
+    public static Bitmap takeScreenShot(Activity activity) {
         if (activity == null || activity.isFinishing()) return null;
         try {
             View view = activity.getWindow().getDecorView();
@@ -91,7 +199,6 @@ public class FastBlurUtility {
         Rect dst = new Rect(0, 0, targetW, targetH);
         canvas.drawBitmap(bitmap, src, dst, paint);
 
-        // Dọn dẹp bitmap đầu vào của hàm scale
         if (!bitmap.isRecycled()) {
             bitmap.recycle();
         }
@@ -99,10 +206,12 @@ public class FastBlurUtility {
         return output;
     }
 
+    /**
+     * Thuật toán StackBlur CPU gốc cho thiết bị đời cũ
+     */
     private static Bitmap fastBlur(Bitmap sentBitmap, int radius) {
         if (sentBitmap == null || sentBitmap.isRecycled() || radius < 1) return null;
 
-        // Tránh tạo bản sao không cần thiết nếu bitmap đã có thể sửa đổi (isMutable)
         Bitmap bitmap = sentBitmap.isMutable() ? sentBitmap : sentBitmap.copy(sentBitmap.getConfig(), true);
 
         int w = bitmap.getWidth();
