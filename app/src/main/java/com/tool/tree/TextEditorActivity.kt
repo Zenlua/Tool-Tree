@@ -139,6 +139,7 @@ class TextEditorActivity : AppCompatActivity() {
 
         // --- BẬT HIỆU ỨNG BLUR KÍNH MỜ ---
         // Tự động chụp và xử lý hình nền Wallpaper mờ bên dưới
+        binding.editorRoot.isDrawStrokeEnabled = false
         BlurEngine.controller.captureAndBlur(this)
 
         setupKeyboardInsets()
