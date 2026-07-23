@@ -4,26 +4,34 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:backgroundTintMode="screen"
     android:clipToPadding="true"
     android:fitsSystemWindows="false"
-    android:keepScreenOn="false"
     tools:openDrawer="start">
 
-    <ListView
-        android:id="@+id/file_selector_list"
-        android:layout_marginTop="?attr/actionBarSize"
-        android:fastScrollEnabled="true"
-        android:scrollbarStyle="insideOverlay"
-        android:requiresFadingEdge="vertical"
-        android:fadingEdge="vertical"
-        android:smoothScrollbar="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
+    <!-- 1. Nội dung chính của màn hình (luôn nằm ở trên cùng trong XML) -->
     <include
         layout="@layout/app_bar_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <!-- 2. Menu Drawer mờ (Nằm bên dưới, có layout_gravity="start") -->
+    <com.omarea.common.ui.BlurViewLinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:orientation="vertical">
+
+        <ListView
+            android:id="@+id/file_selector_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="?attr/actionBarSize"
+            android:fastScrollEnabled="true"
+            android:fadingEdge="vertical"
+            android:requiresFadingEdge="vertical"
+            android:scrollbarStyle="insideOverlay"
+            android:smoothScrollbar="true" />
+
+    </com.omarea.common.ui.BlurViewLinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>

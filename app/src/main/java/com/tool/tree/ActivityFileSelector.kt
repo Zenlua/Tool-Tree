@@ -14,6 +14,7 @@ import com.tool.tree.ui.AdapterFileSelector
 import java.io.File
 import androidx.activity.addCallback
 import com.google.android.material.snackbar.Snackbar;
+import com.omarea.common.ui.BlurEngine
 
 class ActivityFileSelector : AppCompatActivity() {
     companion object {
@@ -36,7 +37,8 @@ class ActivityFileSelector : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityFileSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        binding.editorRoot.isDrawStrokeEnabled = false
+        BlurEngine.controller.captureAndBlur(this)
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         this.toolbar = toolbar
         setSupportActionBar(toolbar)
