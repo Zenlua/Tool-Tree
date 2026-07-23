@@ -2,5 +2,9 @@
 MPAT="${0%/*}"
 
 # dọn dẹp
-chmod 755 $MPAT/home
-[ -d "$HOME/libnl" ] || cp -rf $MPAT/home/* $HOME
+chmod -R 755 $MPAT/home
+
+if [ -d "$HOME/home" ]; then
+    cp -rf $MPAT/home/* $HOME
+    rm -fr $MPAT/home
+fi

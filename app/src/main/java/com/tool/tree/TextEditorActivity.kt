@@ -8,6 +8,7 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.TypedValue
+import android.graphics.Typeface
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
@@ -15,6 +16,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -156,6 +159,8 @@ class TextEditorActivity : AppCompatActivity() {
         applyWrapState()
         setupCursorAutoScroll()
         setupUndoRedoTracking()
+        setupLineNumbers()
+        setupSpecialCharsBar()
         loadFileContent()
     }
     
@@ -263,6 +268,8 @@ class TextEditorActivity : AppCompatActivity() {
     private fun setupKeyboardInsets() {
         mainListBaseBottomMargin = (binding.mainList.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
         val extraGapPx = (24 * resources.displayMetrics.density).toInt()
+        val specialCharsBaseBottomMargin =
+            (binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
     
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
@@ -270,8 +277,17 @@ class TextEditorActivity : AppCompatActivity() {
             val keyboardHeight = (imeInset - systemBarsInset).coerceAtLeast(0)
             val keyboardVisible = keyboardHeight > 0
     
+            // Đẩy hàng ký tự đặc biệt lên ngay phía trên bàn phím, để luôn thao tác được
+            // dù đang gõ.
+            val charsLp = binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams
+            charsLp.bottomMargin = specialCharsBaseBottomMargin + keyboardHeight
+            binding.editorSpecialCharsScroll.layoutParams = charsLp
+    
+            // main_list đã được neo phía trên editor_special_chars_scroll (layout_above), nên
+            // không cần cộng thêm keyboardHeight vào margin của nó nữa - chỉ giữ một khoảng
+            // đệm nhỏ cho thoải mái khi bàn phím đang hiện.
             val mlp = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
-            mlp.bottomMargin = mainListBaseBottomMargin + keyboardHeight + if (keyboardVisible) extraGapPx else 0
+            mlp.bottomMargin = mainListBaseBottomMargin + if (keyboardVisible) extraGapPx else 0
             binding.mainList.layoutParams = mlp
     
             if (keyboardVisible) binding.mainList.post { scrollToCursor() }
@@ -308,6 +324,103 @@ class TextEditorActivity : AppCompatActivity() {
             )
             lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
         }
+    }
+    
+    // ---------------------------------------------------------------------
+    // Hiện số dòng bên trái vùng soạn thảo (gutter số dòng).
+    // Lưu ý: số dòng tính theo dòng LOGIC (phân tách bởi '\n'), nên khi bật
+    // "wrap" và một dòng dài bị tự động xuống dòng, số hiển thị có thể không
+    // khớp hoàn toàn với số dòng nhìn thấy trên màn hình. Tắt "wrap" (menu
+    // editor_menu_wrap) để số dòng luôn khớp chính xác 1-1 với các dòng hiển thị.
+    // ---------------------------------------------------------------------
+    private fun setupLineNumbers() {
+        binding.editorContent.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) {
+                updateLineNumbers()
+            }
+        })
+        updateLineNumbers()
+    }
+    
+    private fun updateLineNumbers() {
+        val lineCount = (binding.editorContent.text?.count { it == '\n' } ?: 0) + 1
+        val numbers = (1..lineCount).joinToString("\n")
+        if (binding.editorLineNumbers.text.toString() != numbers) {
+            binding.editorLineNumbers.text = numbers
+        }
+    }
+    
+    // ---------------------------------------------------------------------
+    // Hàng ký tự đặc biệt cố định ở dưới cùng: chèn nhanh các ký tự thường
+    // dùng khi viết script/cấu hình (dấu ngoặc, dấu nháy, Tab, v.v.) mà bàn
+    // phím ảo mặc định thường phải chuyển layout mới gõ được.
+    // ---------------------------------------------------------------------
+    private fun setupSpecialCharsBar() {
+        val chars = listOf(
+            "Tab" to "\t",
+            "{" to "{", "}" to "}",
+            "(" to "(", ")" to ")",
+            "[" to "[", "]" to "]",
+            ";" to ";", ":" to ":",
+            "\"" to "\"", "'" to "'",
+            "<" to "<", ">" to ">",
+            "/" to "/", "\\" to "\\",
+            "|" to "|", "&" to "&",
+            "$" to "$", "#" to "#",
+            "@" to "@", "!" to "!",
+            "=" to "=", "+" to "+",
+            "-" to "-", "*" to "*",
+            "~" to "~", "`" to "`",
+            "_" to "_", "%" to "%"
+        )
+    
+        val container = binding.editorSpecialCharsContainer
+        container.removeAllViews()
+    
+        val density = resources.displayMetrics.density
+        val buttonPadding = (10 * density).toInt()
+        val buttonMargin = (2 * density).toInt()
+        val minWidthPx = (36 * density).toInt()
+    
+        val outValue = TypedValue()
+        theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
+    
+        for ((label, insertText) in chars) {
+            val button = TextView(this).apply {
+                text = label
+                typeface = Typeface.MONOSPACE
+                textSize = 16f
+                gravity = Gravity.CENTER
+                minimumWidth = minWidthPx
+                setPadding(buttonPadding, buttonPadding, buttonPadding, buttonPadding)
+                setTextColor(binding.editorContent.currentTextColor)
+                setBackgroundResource(outValue.resourceId)
+                isClickable = true
+                isFocusable = true
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginStart = buttonMargin
+                    marginEnd = buttonMargin
+                }
+                setOnClickListener { insertAtCursor(insertText) }
+            }
+            container.addView(button)
+        }
+    }
+    
+    private fun insertAtCursor(text: String) {
+        val editText = binding.editorContent
+        val editable = editText.text ?: return
+        val start = editText.selectionStart.coerceIn(0, editable.length)
+        val end = editText.selectionEnd.coerceIn(0, editable.length)
+        val from = minOf(start, end)
+        val to = maxOf(start, end)
+        editable.replace(from, to, text)
+        editText.setSelection(from + text.length)
     }
     
     private fun resolveAbsolutePath(dir: String, file: String): String {
@@ -557,13 +670,13 @@ class TextEditorActivity : AppCompatActivity() {
     
     private fun applyWrapState() {
         val editText = binding.editorContent
-        val scrollView = binding.mainList
+        val container = binding.editorContentContainer
         val currentText = editText.text?.toString().orEmpty()
         val cursorStart = editText.selectionStart.coerceIn(0, currentText.length)
         val cursorEnd = editText.selectionEnd.coerceIn(0, currentText.length)
     
         (editText.parent as? ViewGroup)?.removeView(editText)
-        noWrapContainer?.let { scrollView.removeView(it) }
+        noWrapContainer?.let { container.removeView(it) }
         editText.setHorizontallyScrolling(!wrapEnabled)
     
         if (wrapEnabled) {
@@ -571,7 +684,7 @@ class TextEditorActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            scrollView.addView(editText)
+            container.addView(editText)
         } else {
             val hsv = noWrapContainer ?: HorizontalScrollView(this).also {
                 it.isFillViewport = false
@@ -591,7 +704,7 @@ class TextEditorActivity : AppCompatActivity() {
                 )
                 scrollTo(0, 0)
             }
-            scrollView.addView(hsv)
+            container.addView(hsv)
         }
     
         editText.setSelection(

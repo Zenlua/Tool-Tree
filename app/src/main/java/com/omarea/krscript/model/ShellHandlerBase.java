@@ -204,10 +204,10 @@ public abstract class ShellHandlerBase extends Handler {
         
         String lower = line.toLowerCase(Locale.getDefault()).trim();
         return 
-            lower.contains("y/n") ||
+            lower.contains("(y/n)") ||
             lower.contains("enter: ") ||
             lower.contains("choice: ") ||
-            lower.contains("yes/no");
+            lower.contains("(yes/no)");
     }
 
     protected void onReader(Object msg) {
