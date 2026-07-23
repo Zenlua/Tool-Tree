@@ -690,13 +690,6 @@ class TextEditorActivity : AppCompatActivity() {
                 }
                 setupSyntaxHighlighting()
                 updateLineNumbersInternal()
-
-                // Ép ScrollView quay lại đầu file: tránh việc EditText tự
-                // cuộn theo vị trí con trỏ (cuối file) ngay khi vừa mở file,
-                // gây ra khoảng trống/nhảy vị trí ngay dưới toolbar.
-                binding.mainList.post {
-                    binding.mainList.scrollTo(0, 0)
-                }
             }
         }
     }
