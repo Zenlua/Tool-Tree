@@ -8,21 +8,21 @@
         android:id="@+id/main_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?android:actionBarSize"
         android:layout_above="@id/editor_special_chars_scroll"
+        android:layout_marginTop="?android:actionBarSize"
+        android:clickable="true"
         android:fadingEdge="vertical"
         android:fillViewport="true"
-        android:scrollbars="none"
-        android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:scrollbars="none">
 
-        <!-- Hàng ngang gồm: cột số dòng + đường ngăn cách + vùng chứa nội dung soạn thảo -->
+        <!-- Đổi layout_height thành match_parent để View divider kéo dài hết màn hình -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_height="match_parent"
             android:clickable="true"
-            android:focusable="true">
+            android:focusable="true"
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/editor_line_numbers"
@@ -30,6 +30,7 @@
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:gravity="top|end"
+                android:includeFontPadding="false"
                 android:minWidth="32dp"
                 android:paddingStart="12dp"
                 android:paddingTop="16dp"
@@ -45,43 +46,54 @@
                 android:id="@+id/editor_line_divider"
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
-                android:background="?android:attr/textColorSecondary"
-                android:alpha="0.2" />
+                android:alpha="0.2"
+                android:background="?android:attr/textColorSecondary" />
 
-            <FrameLayout
-                android:id="@+id/editor_content_container"
+            <!-- Thêm HorizontalScrollView hỗ trợ tính năng Tắt Wrap Text (Cuộn ngang) -->
+            <HorizontalScrollView
+                android:id="@+id/editor_horizontal_scroll"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true">
+                android:fillViewport="true"
+                android:scrollbars="none">
 
-                <EditText
-                    android:id="@+id/editor_content"
-                    android:layout_width="match_parent"
+                <FrameLayout
+                    android:id="@+id/editor_content_container"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minHeight="300dp"
-                    android:background="@android:color/transparent"
-                    android:gravity="top|start"
-                    android:hint="@string/editor_hint_empty"
-                    android:inputType="textMultiLine|textNoSuggestions"
-                    android:imeOptions="flagNoExtractUi"
-                    android:paddingStart="8dp"
-                    android:paddingTop="16dp"
-                    android:paddingEnd="16dp"
-                    android:paddingBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary"
-                    android:textSize="14sp"
-                    android:typeface="monospace" />
+                    android:clickable="true"
+                    android:focusable="true">
 
-            </FrameLayout>
+                    <EditText
+                        android:id="@+id/editor_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:gravity="top|start"
+                        android:hint="@string/editor_hint_empty"
+                        android:imeOptions="flagNoExtractUi"
+                        android:includeFontPadding="false"
+                        android:inputType="textMultiLine|textNoSuggestions"
+                        android:minHeight="300dp"
+                        android:paddingStart="8dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="16dp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textColorHint="?android:attr/textColorSecondary"
+                        android:textSize="14sp"
+                        android:typeface="monospace" />
+
+                </FrameLayout>
+
+            </HorizontalScrollView>
 
         </LinearLayout>
 
     </ScrollView>
 
-    <!-- Hàng ký tự đặc biệt: luôn nằm cố định ở đáy màn hình và nổi ngay phía trên bàn phím -->
+    <!-- Hàng ký tự đặc biệt: luôn nằm cố định ở đáy màn hình -->
     <HorizontalScrollView
         android:id="@+id/editor_special_chars_scroll"
         android:layout_width="match_parent"

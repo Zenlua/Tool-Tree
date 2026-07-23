@@ -181,5 +181,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="debug_text_notes">Switch to debug mode</string>
     <string name="debug_text_quit">If the application fails the testing steps, it will stop working.</string>
     <string name="check_time">Total time</string>
+    <string name="editor_toggle_monospace">Font Monospace</string>
     
 </resources>

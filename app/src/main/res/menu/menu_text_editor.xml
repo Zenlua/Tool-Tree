@@ -18,4 +18,11 @@
         android:orderInCategory="20"
         android:title="@string/editor_toggle_wrap"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/editor_menu_monospace"
+        android:checkable="true"
+        android:checked="true"
+        android:orderInCategory="25"
+        android:title="@string/editor_toggle_monospace"
+        app:showAsAction="never" />
 </menu>

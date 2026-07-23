@@ -104,6 +104,7 @@ class TextEditorActivity : AppCompatActivity() {
     private lateinit var absoluteFilePath: String
     private var configDir: String = ""
     private var wrapEnabled = true
+    private var monospaceEnabled = true
     private var savedContent: String = ""
     private var isSaving = false
     private var noWrapContainer: HorizontalScrollView? = null
@@ -158,6 +159,7 @@ class TextEditorActivity : AppCompatActivity() {
         titleText = intent.getStringExtra(EXTRA_TITLE).orEmpty()
     
         applyWrapState()
+        applyMonospaceState()
         setupCursorAutoScroll()
         setupUndoRedoTracking()
         setupLineNumbers()
@@ -257,9 +259,6 @@ class TextEditorActivity : AppCompatActivity() {
         }
     }
     
-    // ---------------------------------------------------------------------
-    // Điều chỉnh lề dưới cho thanh ký tự đặc biệt khi bàn phím ảo bật/tắt
-    // ---------------------------------------------------------------------
     private fun setupKeyboardInsets() {
         mainListBaseBottomMargin = (binding.mainList.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
         val specialCharsBaseBottomMargin =
@@ -269,8 +268,6 @@ class TextEditorActivity : AppCompatActivity() {
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
             
-            // Khi bàn phím bật, imeInset đo khoảng cách từ đáy màn hình tới mép trên bàn phím.
-            // Khi bàn phím tắt, dùng sysInset để tính lề điều hướng gesture/sử dụng bình thường.
             val targetBottomInset = if (imeInset > 0) imeInset else sysInset
     
             val charsLp = binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams
@@ -288,9 +285,6 @@ class TextEditorActivity : AppCompatActivity() {
         }
     }
     
-    // ---------------------------------------------------------------------
-    // Chạm vào bất kỳ vị trí nào trong khu vực soạn thảo để tập trung và mở bàn phím
-    // ---------------------------------------------------------------------
     private fun setupEditorTouchAndFocus() {
         val focusAndShowKeyboard = {
             binding.editorContent.requestFocus()
@@ -356,15 +350,15 @@ class TextEditorActivity : AppCompatActivity() {
     private fun setupSpecialCharsBar() {
         val chars = listOf(
             "Tab" to "\t",
+            "|" to "|", "&" to "&",
+            "\"" to "\"", "'" to "'",
+            "/" to "/", "\\" to "\\",
+            "$" to "$", "#" to "#",
             "{" to "{", "}" to "}",
             "(" to "(", ")" to ")",
             "[" to "[", "]" to "]",
             ";" to ";", ":" to ":",
-            "\"" to "\"", "'" to "'",
             "<" to "<", ">" to ">",
-            "/" to "/", "\\" to "\\",
-            "|" to "|", "&" to "&",
-            "$" to "$", "#" to "#",
             "@" to "@", "!" to "!",
             "=" to "=", "+" to "+",
             "-" to "-", "*" to "*",
@@ -706,6 +700,12 @@ class TextEditorActivity : AppCompatActivity() {
             cursorEnd.coerceAtMost(currentText.length)
         )
     }
+
+    private fun applyMonospaceState() {
+        val targetTypeface = if (monospaceEnabled) Typeface.MONOSPACE else Typeface.DEFAULT
+        binding.editorContent.typeface = targetTypeface
+        binding.editorLineNumbers.typeface = targetTypeface
+    }
     
     private fun hasUnsavedChanges() = binding.editorContent.text?.toString().orEmpty() != savedContent
     
@@ -738,6 +738,7 @@ class TextEditorActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_text_editor, menu)
         menu.findItem(R.id.editor_menu_wrap)?.isChecked = wrapEnabled
+        menu.findItem(R.id.editor_menu_monospace)?.isChecked = monospaceEnabled
         menu.findItem(R.id.editor_menu_run)?.isVisible = runnableInterpreter() != null
         return true
     }
@@ -756,6 +757,12 @@ class TextEditorActivity : AppCompatActivity() {
                 wrapEnabled = !wrapEnabled
                 item.isChecked = wrapEnabled
                 applyWrapState()
+                true
+            }
+            R.id.editor_menu_monospace -> {
+                monospaceEnabled = !monospaceEnabled
+                item.isChecked = monospaceEnabled
+                applyMonospaceState()
                 true
             }
             android.R.id.home -> {
