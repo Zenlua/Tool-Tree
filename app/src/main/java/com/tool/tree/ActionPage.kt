@@ -552,8 +552,24 @@ class ActionPage : AppCompatActivity() {
                         ACTION_FILE_PATH_CHOOSER_INNER
                     )
                 } else {
+                    // Hỗ trợ nhiều mime type cùng lúc, ví dụ:
+                    // mime="application/vnd.android.package-archive,application/java-archive,application/zip"
+                    val mimeTypes = fileSelectedInterface.mimeType()
+                        ?.split(",")
+                        ?.map { it.trim() }
+                        ?.filter { it.isNotEmpty() }
+                        ?.toTypedArray()
+                        ?: emptyArray()
+
                     val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                        type = fileSelectedInterface.mimeType() ?: "*/*"
+                        if (mimeTypes.size > 1) {
+                            // Với nhiều mime type, "type" phải để "*/*" và liệt kê
+                            // các mime cụ thể qua EXTRA_MIME_TYPES
+                            type = "*/*"
+                            putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
+                        } else {
+                            type = mimeTypes.firstOrNull() ?: "*/*"
+                        }
                         addCategory(Intent.CATEGORY_OPENABLE)
                         if (multiple) {
                             putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
