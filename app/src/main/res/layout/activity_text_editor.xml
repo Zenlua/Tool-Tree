@@ -10,26 +10,27 @@
         android:layout_height="match_parent"
         android:layout_marginTop="?android:actionBarSize"
         android:layout_above="@id/editor_special_chars_scroll"
-        android:descendantFocusability="afterDescendants"
-        android:fillViewport="true"
-        android:clipToPadding="false"
         android:fadingEdge="vertical"
-        android:scrollbars="none">
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:clickable="true"
+        android:focusable="true">
 
+        <!-- Hàng ngang gồm: cột số dòng + đường ngăn cách + vùng chứa nội dung soạn thảo -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:baselineAligned="false"
-            android:gravity="bottom"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
                 android:id="@+id/editor_line_numbers"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:gravity="top|end"
-                android:minWidth="28dp"
+                android:minWidth="32dp"
                 android:paddingStart="12dp"
                 android:paddingTop="16dp"
                 android:paddingEnd="8dp"
@@ -39,34 +40,33 @@
                 android:textSize="14sp"
                 android:typeface="monospace" />
 
+            <!-- Dải ngăn cách phân chia số dòng và khung code -->
             <View
-                android:id="@+id/editor_divider"
+                android:id="@+id/editor_line_divider"
                 android:layout_width="1dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="fill_vertical"
-                android:background="?android:attr/textColorTertiary"/>
+                android:layout_height="match_parent"
+                android:background="?android:attr/textColorSecondary"
+                android:alpha="0.2" />
 
-            <LinearLayout
+            <FrameLayout
                 android:id="@+id/editor_content_container"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:gravity="bottom"
-                android:orientation="vertical">
+                android:clickable="true"
+                android:focusable="true">
 
                 <EditText
                     android:id="@+id/editor_content"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="300dp"
                     android:background="@android:color/transparent"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
                     android:gravity="top|start"
                     android:hint="@string/editor_hint_empty"
                     android:inputType="textMultiLine|textNoSuggestions"
                     android:imeOptions="flagNoExtractUi"
-                    android:paddingStart="0dp"
+                    android:paddingStart="8dp"
                     android:paddingTop="16dp"
                     android:paddingEnd="16dp"
                     android:paddingBottom="16dp"
@@ -75,12 +75,13 @@
                     android:textSize="14sp"
                     android:typeface="monospace" />
 
-            </LinearLayout>
+            </FrameLayout>
 
         </LinearLayout>
 
     </ScrollView>
 
+    <!-- Hàng ký tự đặc biệt: luôn nằm cố định ở đáy màn hình và nổi ngay phía trên bàn phím -->
     <HorizontalScrollView
         android:id="@+id/editor_special_chars_scroll"
         android:layout_width="match_parent"

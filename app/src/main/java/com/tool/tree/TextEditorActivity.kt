@@ -2,19 +2,19 @@ package com.tool.tree
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.TypedValue
-import android.graphics.Typeface
 import android.view.Gravity
-import android.view.MotionEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -130,7 +130,6 @@ class TextEditorActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
         setupKeyboardInsets()
-        setupEditorFocusHandling()
     
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -163,6 +162,7 @@ class TextEditorActivity : AppCompatActivity() {
         setupUndoRedoTracking()
         setupLineNumbers()
         setupSpecialCharsBar()
+        setupEditorTouchAndFocus()
         loadFileContent()
     }
     
@@ -177,15 +177,6 @@ class TextEditorActivity : AppCompatActivity() {
         undoHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
-    
-    // ---------------------------------------------------------------------
-    // Cache undo/redo xuống đĩa: cho phép khôi phục lịch sử undo/redo nếu
-    // Activity bị hệ thống hủy (xoay màn hình, thiếu RAM) hoặc người dùng
-    // rời màn hình soạn thảo mà chưa lưu, rồi quay lại mở đúng file đó.
-    // Cache chỉ được khôi phục khi nội dung file tại thời điểm mở lại trùng
-    // khớp với nội dung đã có lúc ghi cache (tránh áp lịch sử undo sai lệch
-    // lên một nội dung file đã thay đổi bởi nơi khác).
-    // ---------------------------------------------------------------------
     
     private fun undoCacheFile(): File {
         val digest = MessageDigest.getInstance("SHA-256")
@@ -232,8 +223,7 @@ class TextEditorActivity : AppCompatActivity() {
             }
         }
     }
-
-    /** Phải được gọi từ Main thread, sau khi [savedContent] đã được thiết lập. */
+    
     private fun restoreUndoCacheFromDisk() {
         try {
             val file = undoCacheFile()
@@ -267,70 +257,56 @@ class TextEditorActivity : AppCompatActivity() {
         }
     }
     
+    // ---------------------------------------------------------------------
+    // Điều chỉnh lề dưới cho thanh ký tự đặc biệt khi bàn phím ảo bật/tắt
+    // ---------------------------------------------------------------------
     private fun setupKeyboardInsets() {
         mainListBaseBottomMargin = (binding.mainList.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
-        val extraGapPx = (8 * resources.displayMetrics.density).toInt()
         val specialCharsBaseBottomMargin =
             (binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
-
+    
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            val systemBarsInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            val keyboardHeight = (imeInset - systemBarsInset).coerceAtLeast(0)
-            val keyboardVisible = keyboardHeight > 0
-
-            // Đẩy hàng ký tự đặc biệt lên ngay phía trên bàn phím và chừa một khoảng
-            // hở nhỏ để UI không dính sát vào mép bàn phím.
+            val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            
+            // Khi bàn phím bật, imeInset đo khoảng cách từ đáy màn hình tới mép trên bàn phím.
+            // Khi bàn phím tắt, dùng sysInset để tính lề điều hướng gesture/sử dụng bình thường.
+            val targetBottomInset = if (imeInset > 0) imeInset else sysInset
+    
             val charsLp = binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams
-            charsLp.bottomMargin = specialCharsBaseBottomMargin + keyboardHeight + if (keyboardVisible) extraGapPx else 0
+            charsLp.bottomMargin = specialCharsBaseBottomMargin + targetBottomInset
             binding.editorSpecialCharsScroll.layoutParams = charsLp
-
+    
             val mlp = binding.mainList.layoutParams as ViewGroup.MarginLayoutParams
-            mlp.bottomMargin = mainListBaseBottomMargin + keyboardHeight + if (keyboardVisible) extraGapPx else 0
+            mlp.bottomMargin = mainListBaseBottomMargin
             binding.mainList.layoutParams = mlp
-
-            if (keyboardVisible) binding.mainList.post { scrollToCursor() }
+    
+            if (imeInset > 0) {
+                binding.mainList.post { scrollToCursor() }
+            }
             insets
         }
     }
-
-    private fun setupEditorFocusHandling() {
-        fun focusEditor(showKeyboard: Boolean = true) {
-            val editor = binding.editorContent
-            if (!editor.isFocused) {
-                editor.requestFocusFromTouch()
-            }
-            if (showKeyboard) {
-                editor.post {
-                    ViewCompat.getWindowInsetsController(binding.root)
-                        ?.show(WindowInsetsCompat.Type.ime())
-                }
-            }
+    
+    // ---------------------------------------------------------------------
+    // Chạm vào bất kỳ vị trí nào trong khu vực soạn thảo để tập trung và mở bàn phím
+    // ---------------------------------------------------------------------
+    private fun setupEditorTouchAndFocus() {
+        val focusAndShowKeyboard = {
+            binding.editorContent.requestFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.showSoftInput(binding.editorContent, InputMethodManager.SHOW_IMPLICIT)
         }
 
-        binding.mainList.setOnTouchListener { _, event ->
-            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                focusEditor()
-            }
-            false
-        }
-
-        binding.editorContentContainer.setOnClickListener { focusEditor() }
-        binding.editorLineNumbers.setOnClickListener { focusEditor() }
-        binding.root.setOnClickListener { focusEditor() }
-
-        binding.editorContent.apply {
-            isFocusable = true
-            isFocusableInTouchMode = true
-            setOnClickListener { focusEditor() }
-        }
+        binding.mainList.setOnClickListener { focusAndShowKeyboard() }
+        binding.editorLineNumbers.setOnClickListener { focusAndShowKeyboard() }
+        binding.editorContentContainer.setOnClickListener { focusAndShowKeyboard() }
     }
-
+    
     private fun setupCursorAutoScroll() {
         binding.editorContent.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-    
             override fun afterTextChanged(s: Editable?) {
                 if (isApplyingHistory) return
                 binding.editorContent.post { scrollToCursor() }
@@ -342,45 +318,22 @@ class TextEditorActivity : AppCompatActivity() {
         val editText = binding.editorContent
         val layout = editText.layout ?: return
         val scrollView = binding.mainList
-    
-        val textLength = editText.text?.length ?: 0
-        val selection = editText.selectionEnd.coerceIn(0, textLength)
+        val selection = editText.selectionEnd.coerceIn(0, editText.text?.length ?: 0)
         val line = layout.getLineForOffset(selection)
-    
         val lineTop = layout.getLineTop(line) + editText.top + editText.paddingTop
-        val lineBottom = layout.getLineBottom(line) + editText.top + editText.paddingTop
-    
+        val lineBottom = layout.getLineBottom(line) + editText.top
         val visibleTop = scrollView.scrollY
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
-        val viewportHeight = scrollView.height - scrollView.paddingTop - scrollView.paddingBottom
     
-        val bottomGapPx = (56 * resources.displayMetrics.density).toInt()
-    
-        val targetY = when {
-            lineBottom > visibleBottom - bottomGapPx -> {
-                (lineBottom - viewportHeight + bottomGapPx).coerceAtLeast(0)
-            }
-            lineTop < visibleTop -> {
-                lineTop.coerceAtLeast(0)
-            }
-            selection >= textLength -> {
-                (lineBottom - viewportHeight + bottomGapPx).coerceAtLeast(0)
-            }
-            else -> visibleTop
-        }
-    
-        if (targetY != visibleTop) {
-            scrollView.smoothScrollTo(0, targetY)
+        when {
+            lineBottom > visibleBottom -> scrollView.smoothScrollTo(
+                0,
+                lineBottom - scrollView.height + scrollView.paddingBottom
+            )
+            lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
         }
     }
     
-    // ---------------------------------------------------------------------
-    // Hiện số dòng bên trái vùng soạn thảo (gutter số dòng).
-    // Lưu ý: số dòng tính theo dòng LOGIC (phân tách bởi '\n'), nên khi bật
-    // "wrap" và một dòng dài bị tự động xuống dòng, số hiển thị có thể không
-    // khớp hoàn toàn với số dòng nhìn thấy trên màn hình. Tắt "wrap" (menu
-    // editor_menu_wrap) để số dòng luôn khớp chính xác 1-1 với các dòng hiển thị.
-    // ---------------------------------------------------------------------
     private fun setupLineNumbers() {
         binding.editorContent.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -400,11 +353,6 @@ class TextEditorActivity : AppCompatActivity() {
         }
     }
     
-    // ---------------------------------------------------------------------
-    // Hàng ký tự đặc biệt cố định ở dưới cùng: chèn nhanh các ký tự thường
-    // dùng khi viết script/cấu hình (dấu ngoặc, dấu nháy, Tab, v.v.) mà bàn
-    // phím ảo mặc định thường phải chuyển layout mới gõ được.
-    // ---------------------------------------------------------------------
     private fun setupSpecialCharsBar() {
         val chars = listOf(
             "Tab" to "\t",
@@ -701,8 +649,6 @@ class TextEditorActivity : AppCompatActivity() {
                 undoStack.clear()
                 redoStack.clear()
     
-                // Nếu có cache undo/redo được lưu từ phiên trước cho đúng nội dung
-                // file này, khôi phục lại để người dùng có thể undo/redo tiếp.
                 restoreUndoCacheFromDisk()
                 refreshUndoRedoButtons()
     
@@ -712,7 +658,6 @@ class TextEditorActivity : AppCompatActivity() {
                     else -> getString(R.string.editor_hint_empty)
                 }
                 setupSyntaxHighlighting()
-                binding.mainList.post { scrollToCursor() }
             }
         }
     }
@@ -837,9 +782,6 @@ class TextEditorActivity : AppCompatActivity() {
                 isSaving = false
                 if (success) {
                     savedContent = content
-                    // Cập nhật lại "baseContent" của cache theo nội dung vừa lưu,
-                    // để lịch sử undo/redo hiện có vẫn còn dùng được nếu quay
-                    // lại chỉnh sửa tiếp mà chưa đóng màn hình.
                     persistUndoCacheToDisk()
                 }
                 if (showToast) {
@@ -869,7 +811,7 @@ class TextEditorActivity : AppCompatActivity() {
     
         val cachePath = FileWrite.getPrivateFilePath(
             this,
-            "home/tmp/tmp_${System.currentTimeMillis()}.tmp"
+            "editor_cache/tmp_${System.currentTimeMillis()}.tmp"
         )
         return try {
             val cacheFile = File(cachePath).apply {
