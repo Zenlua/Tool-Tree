@@ -657,6 +657,16 @@ class TextEditorActivity : AppCompatActivity() {
             }
         }
         isApplyingHistory = false
+    
+        // --- BỔ SUNG CÁC DÒNG DƯỚI ĐÂY ---
+        // 1. Reset cờ đếm dòng để ép redraw giao diện số dòng
+        lastLineCount = -1 
+        
+        // 2. Cập nhật lại cột số dòng ngay lập tức
+        updateLineNumbersInternal() 
+        
+        // 3. Cuộn ScrollView đến vị trí con trỏ vừa Undo/Redo
+        binding.editorContent.post { scrollToCursor() }
     }
 
     private fun refreshUndoRedoButtons() {
