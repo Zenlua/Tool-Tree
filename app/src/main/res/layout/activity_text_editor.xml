@@ -31,15 +31,15 @@
                 android:background="@android:color/transparent"
                 android:gravity="top|end"
                 android:includeFontPadding="false"
-                android:minWidth="32dp"
-                android:paddingStart="12dp"
+                android:paddingStart="8dp"
                 android:paddingTop="16dp"
-                android:paddingEnd="8dp"
+                android:paddingEnd="6dp"
                 android:paddingBottom="16dp"
                 android:text="1"
                 android:textColor="?android:attr/textColorSecondary"
                 android:textSize="14sp"
                 android:typeface="monospace" />
+
 
             <!-- Dải ngăn cách phân chia số dòng và khung code -->
             <View
@@ -84,24 +84,32 @@
 
     </ScrollView>
 
-    <!-- Hàng ký tự đặc biệt: luôn nằm cố định ở đáy màn hình -->
-    <HorizontalScrollView
+    <!-- Hàng ký tự đặc biệt với background Blur và Ripple riêng -->
+    <com.omarea.common.ui.BlurBottomBarLayout
         android:id="@+id/editor_special_chars_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="?android:attr/colorBackground"
-        android:scrollbars="none">
+        android:background="@drawable/krscript_item_ripple_in">
 
-        <LinearLayout
-            android:id="@+id/editor_special_chars_container"
-            android:layout_width="wrap_content"
+        <HorizontalScrollView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp" />
+            android:background="@android:color/transparent"
+            android:scrollbars="none">
 
-    </HorizontalScrollView>
+            <LinearLayout
+                android:id="@+id/editor_special_chars_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp" />
+
+        </HorizontalScrollView>
+
+    </com.omarea.common.ui.BlurBottomBarLayout>
+
 
     <include
         layout="@layout/app_bar_main"
