@@ -24,18 +24,18 @@
 
             <TextView
                 android:id="@+id/title"
+                style="@style/dialogTitle"
                 android:paddingStart="0dp"
-                android:paddingEnd="0dp"
                 android:paddingTop="0dp"
-                style="@style/dialogTitle" />
+                android:paddingEnd="0dp" />
 
             <TextView
                 android:id="@+id/desc"
-                android:paddingStart="0dp"
-                android:paddingEnd="0dp"
-                android:paddingTop="0dp"
+                style="@style/dialogDesc"
                 android:layout_marginTop="4dp"
-                style="@style/dialogDesc" />
+                android:paddingStart="0dp"
+                android:paddingTop="0dp"
+                android:paddingEnd="0dp" />
 
         </LinearLayout>
 
@@ -48,50 +48,53 @@
 
             <ImageButton
                 android:id="@+id/btn_wrap"
+                style="@style/SceneButton"
+                android:contentDescription="@null"
+                android:padding="7dp"
+                android:scaleType="centerInside"
                 android:scaleX="0.8"
                 android:scaleY="0.8"
-                style="@style/SceneButton"
-                android:scaleType="centerInside"
-                android:padding="7dp"
-                android:src="@drawable/ic_wrap_text"
-                android:contentDescription="@null" />
+                android:src="@drawable/ic_wrap_text" />
 
             <ImageButton
                 android:id="@+id/btn_hide"
-                android:scaleX="0.8"
-                android:scaleY="0.8"
                 style="@style/SceneButton"
                 android:layout_marginStart="8dp"
-                android:scaleType="centerInside"
+                android:contentDescription="@null"
                 android:padding="7dp"
-                android:src="@drawable/kr_hide"
-                android:contentDescription="@null" />
+                android:scaleType="centerInside"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                android:src="@drawable/kr_hide" />
 
         </LinearLayout>
 
     </LinearLayout>
 
+    <!-- 1. Thêm android:fillViewport="true" vào ScrollView -->
     <ScrollView
         android:id="@+id/log_scroll_view"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/krscript_item_ripple_kon"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:overScrollMode="never"
-        android:clipToOutline="true"
-        android:scrollbarSize="1dp"
         android:layout_above="@id/input_row"
-        android:layout_below="@+id/header_row">
+        android:layout_below="@+id/header_row"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/krscript_item_ripple_kon"
+        android:clipToOutline="true"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbarSize="1dp">
 
+        <!-- 2. Đổi layout_height của TextView thành match_parent -->
         <TextView
             android:id="@+id/shell_output"
-            android:breakStrategy="simple"
-            android:textIsSelectable="true"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:breakStrategy="simple"
             android:fontFamily="monospace"
-            android:textSize="12sp"
-            android:padding="12dp" />
+            android:padding="12dp"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
 
     </ScrollView>
 
@@ -110,14 +113,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:fontFamily="monospace"
             android:hint="@string/hint_shell_input"
             android:imeOptions="actionSend"
             android:inputType="text"
             android:maxLines="1"
             android:singleLine="true"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:fontFamily="monospace"
             android:textSize="14sp" />
 
     </LinearLayout>
@@ -153,14 +156,14 @@
     <ProgressBar
         android:id="@+id/action_progress"
         style="?android:attr/progressBarStyleHorizontal"
-        android:layout_below="@id/header_row"
         android:layout_width="match_parent"
         android:layout_height="7dp"
-        android:layout_marginTop="13dp"
+        android:layout_below="@id/header_row"
         android:layout_marginStart="10dp"
+        android:layout_marginTop="13dp"
         android:layout_marginEnd="10dp"
         android:indeterminate="true"
-        android:progress="0"
-        android:max="100" />
+        android:max="100"
+        android:progress="0" />
 
 </RelativeLayout>
