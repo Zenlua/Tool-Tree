@@ -137,7 +137,6 @@ class DialogLogFragment : DialogFragment() {
             }
         }
 
-        binding.btnSendInput.setOnClickListener { sendUserInput() }
         binding.shellInput.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEND ||
                 (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)

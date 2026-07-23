@@ -120,12 +120,6 @@
             android:fontFamily="monospace"
             android:textSize="14sp" />
 
-        <Button
-            android:id="@+id/btn_send_input"
-            style="@style/dialogConfirmBtn"
-            android:layout_weight="1.0"
-            android:text="@string/btn_send_input" />
-
     </LinearLayout>
 
     <LinearLayout
