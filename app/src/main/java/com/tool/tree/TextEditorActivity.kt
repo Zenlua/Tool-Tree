@@ -55,11 +55,13 @@ class TextEditorActivity : AppCompatActivity() {
         private const val EXTRA_DESC = "desc"
         private const val EXTRA_WRAP = "wrap"
         private const val EXTRA_DIR = "dir"
-        private const val UNDO_HISTORY_LIMIT = 200
-        private const val UNDO_DEBOUNCE_MS = 700L
-        private const val UNDO_CACHE_DEBOUNCE_MS = 400L
-        private const val UNDO_CACHE_DIR = "editor_undo_cache"
         private const val EXTRA_PLACEHOLDER = "placeholder"
+
+        // Tối ưu RAM: Giảm Undo Stack từ 200 xuống 50 để tránh OutOfMemory
+        private const val UNDO_HISTORY_LIMIT = 50
+        private const val UNDO_DEBOUNCE_MS = 600L
+        private const val UNDO_CACHE_DEBOUNCE_MS = 1000L
+        private const val UNDO_CACHE_DIR = "editor_undo_cache"
 
         private val RUNNABLE_EXTENSIONS = mapOf(
             "sh" to "sh",
@@ -115,6 +117,7 @@ class TextEditorActivity : AppCompatActivity() {
     private var placeholderText: String = ""
     private var titleText: String = ""
     private var lastLanguageOverride: String? = null
+    private var lastLineCount = -1
 
     private data class EditorSnapshot(val text: String, val cursor: Int)
 
@@ -124,18 +127,18 @@ class TextEditorActivity : AppCompatActivity() {
     private var isApplyingHistory = false
     private var undoButton: ImageButton? = null
     private var redoButton: ImageButton? = null
-    private val undoHandler = Handler(Looper.getMainLooper())
+
+    private val editorHandler = Handler(Looper.getMainLooper())
     private val commitPendingUndoRunnable = Runnable { commitPendingUndoSnapshot() }
     private val persistUndoCacheRunnable = Runnable { persistUndoCacheToDisk() }
+    private val updateLineNumbersRunnable = Runnable { updateLineNumbersInternal() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ThemeModeState.switchTheme(this)
         binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
-        // Tích hợp hiệu ứng Blur Nền Activity từ FastBlurUtility
         applyBlurredBackground()
-
         setupKeyboardInsets()
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar) ?: binding.root.findViewById(R.id.toolbar)
@@ -166,24 +169,21 @@ class TextEditorActivity : AppCompatActivity() {
 
         applyWrapState()
         applyMonospaceState()
-        setupCursorAutoScroll()
-        setupUndoRedoTracking()
-        setupLineNumbers()
+        setupUnifiedTextWatcher()
         setupSpecialCharsBar()
         setupEditorTouchAndFocus()
         loadFileContent()
     }
 
-    /**
-     * Chụp và làm mờ nền ứng dụng phía sau Activity
-     */
     private fun applyBlurredBackground() {
         window.decorView.post {
             lifecycleScope.launch(Dispatchers.IO) {
                 val blurredBmp = FastBlurUtility.getBlurBackgroundDrawer(this@TextEditorActivity)
                 withContext(Dispatchers.Main) {
                     blurredBmp?.let { bmp ->
-                        binding.root.background = BitmapDrawable(resources, bmp)
+                        if (!isFinishing && !isDestroyed) {
+                            binding.root.background = BitmapDrawable(resources, bmp)
+                        }
                     }
                 }
             }
@@ -198,7 +198,7 @@ class TextEditorActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         syntaxHighlighter?.detach()
-        undoHandler.removeCallbacksAndMessages(null)
+        editorHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
 
@@ -219,19 +219,18 @@ class TextEditorActivity : AppCompatActivity() {
         EditorSnapshot(json.optString("text", ""), json.optInt("cursor", 0))
 
     private fun scheduleUndoCachePersist() {
-        undoHandler.removeCallbacks(persistUndoCacheRunnable)
-        undoHandler.postDelayed(persistUndoCacheRunnable, UNDO_CACHE_DEBOUNCE_MS)
+        editorHandler.removeCallbacks(persistUndoCacheRunnable)
+        editorHandler.postDelayed(persistUndoCacheRunnable, UNDO_CACHE_DEBOUNCE_MS)
     }
 
     private fun persistUndoCacheToDisk() {
-        undoHandler.removeCallbacks(persistUndoCacheRunnable)
+        editorHandler.removeCallbacks(persistUndoCacheRunnable)
         if (!::binding.isInitialized) return
         val baseContent = savedContent
         val undoSnapshot = undoStack.toList()
         val redoSnapshot = redoStack.toList()
         val pending = pendingUndoSnapshot
-        
-        // Sử dụng NonCancellable để tránh hủy Coroutines khi Activity dừng/hủy
+
         lifecycleScope.launch(Dispatchers.IO + NonCancellable) {
             try {
                 if (undoSnapshot.isEmpty() && redoSnapshot.isEmpty() && pending == null) {
@@ -276,7 +275,7 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun clearUndoCache() {
-        undoHandler.removeCallbacks(persistUndoCacheRunnable)
+        editorHandler.removeCallbacks(persistUndoCacheRunnable)
         try {
             undoCacheFile().delete()
         } catch (_: Exception) {
@@ -291,7 +290,6 @@ class TextEditorActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val sysInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-
             val targetBottomInset = if (imeInset > 0) imeInset else sysInset
 
             val charsLp = binding.editorSpecialCharsScroll.layoutParams as ViewGroup.MarginLayoutParams
@@ -314,7 +312,6 @@ class TextEditorActivity : AppCompatActivity() {
             binding.editorContent.requestFocus()
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
             imm?.showSoftInput(binding.editorContent, InputMethodManager.SHOW_IMPLICIT)
-            
             if (binding.editorContent.selectionStart < 0) {
                 binding.editorContent.setSelection(binding.editorContent.text?.length ?: 0)
             }
@@ -325,12 +322,45 @@ class TextEditorActivity : AppCompatActivity() {
         binding.editorContentContainer.setOnClickListener { focusAndShowKeyboard() }
     }
 
-    private fun setupCursorAutoScroll() {
+    /**
+     * Gom toàn bộ logic của các TextWatcher lại thành 1 duy nhất.
+     * Hạn chế tối đa việc tạo chuỗi String mới và giật lag trên UI Thread.
+     */
+    private fun setupUnifiedTextWatcher() {
         binding.editorContent.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            private var startChangeIndex = 0
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                if (isApplyingHistory) return
+                startChangeIndex = start
+                if (pendingUndoSnapshot == null) {
+                    val cursor = binding.editorContent.selectionStart.coerceAtLeast(0)
+                    pendingUndoSnapshot = EditorSnapshot(s?.toString().orEmpty(), cursor)
+                }
+            }
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+
             override fun afterTextChanged(s: Editable?) {
                 if (isApplyingHistory) return
+
+                // 1. Quản lý Undo/Redo Debounce
+                redoStack.clear()
+                editorHandler.removeCallbacks(commitPendingUndoRunnable)
+                editorHandler.postDelayed(commitPendingUndoRunnable, UNDO_DEBOUNCE_MS)
+                refreshUndoRedoButtons()
+                scheduleUndoCachePersist()
+
+                // 2. Chỉ kiểm tra đổi Ngôn ngữ khi người dùng chỉnh sửa dòng đầu tiên (dòng chứa Shebang)
+                if (startChangeIndex < 100) {
+                    refreshLanguageOverrideIfChanged()
+                }
+
+                // 3. Debounce việc tính toán Số dòng
+                editorHandler.removeCallbacks(updateLineNumbersRunnable)
+                editorHandler.postDelayed(updateLineNumbersRunnable, 80L)
+
+                // 4. Auto scroll theo con trỏ
                 binding.editorContent.post { scrollToCursor() }
             }
         })
@@ -342,70 +372,66 @@ class TextEditorActivity : AppCompatActivity() {
         val scrollView = binding.mainList
         val selection = editText.selectionEnd.coerceIn(0, editText.text?.length ?: 0)
         val line = layout.getLineForOffset(selection)
+    
+        // Tính toán tọa độ Y thực tế của dòng đang đặt con trỏ
         val lineTop = layout.getLineTop(line) + editText.top + editText.paddingTop
-        val lineBottom = layout.getLineBottom(line) + editText.top
-
-        val extraBottomOffset = (100 * resources.displayMetrics.density).toInt()
-
+        val lineBottom = layout.getLineBottom(line) + editText.top + editText.paddingTop
+    
+        // Giảm lề an toàn xuống 24dp (vừa đủ nhìn, không bị đẩy lên cao)
+        val margin = (24 * resources.displayMetrics.density).toInt()
+    
         val visibleTop = scrollView.scrollY
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
-
-        when {
-            lineBottom + extraBottomOffset > visibleBottom -> scrollView.smoothScrollTo(
-                0,
-                (lineBottom + extraBottomOffset) - scrollView.height + scrollView.paddingBottom
-            )
-            lineTop < visibleTop -> scrollView.smoothScrollTo(0, lineTop)
+    
+        // CHỈ CUỘN KHI CON TRỎ NẰM NGOÀI VÙNG NHÌN THẤY
+        if (lineBottom + margin > visibleBottom) {
+            // Con trỏ bị khuất phía dưới bàn phím -> Cuộn xuống vừa đủ
+            val targetScrollY = (lineBottom + margin) - scrollView.height + scrollView.paddingBottom
+            scrollView.smoothScrollTo(0, targetScrollY)
+        } else if (lineTop - margin < visibleTop) {
+            // Con trỏ bị khuất phía trên Toolbar -> Cuộn lên vừa đủ
+            val targetScrollY = (lineTop - margin).coerceAtLeast(0)
+            scrollView.smoothScrollTo(0, targetScrollY)
         }
     }
 
-    private fun setupLineNumbers() {
-        binding.editorContent.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-            override fun afterTextChanged(s: Editable?) {
-                binding.editorContent.post { updateLineNumbers() }
-            }
-        })
-        binding.editorContent.post { updateLineNumbers() }
-    }
 
-    private fun updateLineNumbers() {
+    private fun updateLineNumbersInternal() {
         val editText = binding.editorContent
-        val text = editText.text ?: return
+        val editable = editText.text ?: return
 
-        // Khi tắt Wrap Text: Đếm số ký tự '\n'
+        // Trường hợp No-Wrap: Đếm số ký tự newline
         if (!wrapEnabled) {
-            val lineCount = text.count { it == '\n' } + 1
-            val numbers = (1..lineCount).joinToString("\n")
-            if (binding.editorLineNumbers.text.toString() != numbers) {
-                binding.editorLineNumbers.text = numbers
+            var lines = 1
+            for (i in 0 until editable.length) {
+                if (editable[i] == '\n') lines++
+            }
+            if (lines != lastLineCount) {
+                lastLineCount = lines
+                val sb = StringBuilder(lines * 4)
+                for (i in 1..lines) {
+                    sb.append(i).append('\n')
+                }
+                if (sb.isNotEmpty()) sb.setLength(sb.length - 1)
+                binding.editorLineNumbers.text = sb.toString()
             }
             return
         }
 
-        // Khi bật Wrap Text: Dựa vào Layout thực tế để chèn dòng trống gióng hàng
-        val layout = editText.layout
-        if (layout == null) {
-            editText.post { updateLineNumbers() }
-            return
-        }
-
+        // Trường hợp Wrap Text: Dựa trên Layout
+        val layout = editText.layout ?: return
         val totalVisualLines = layout.lineCount
-        val sb = StringBuilder()
+        val sb = StringBuilder(totalVisualLines * 4)
         var logicalLine = 1
 
         for (i in 0 until totalVisualLines) {
             val startOffset = layout.getLineStart(i)
-
-            // Dòng đầu tiên hoặc ký tự trước đó là '\n' -> Đây là dòng mới
-            if (i == 0 || (startOffset > 0 && text[startOffset - 1] == '\n')) {
+            if (i == 0 || (startOffset > 0 && editable[startOffset - 1] == '\n')) {
                 sb.append(logicalLine)
                 logicalLine++
             }
-
             if (i < totalVisualLines - 1) {
-                sb.append("\n")
+                sb.append('\n')
             }
         }
 
@@ -417,20 +443,13 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun setupSpecialCharsBar() {
         val chars = listOf(
-            "Tab" to "\t",
-            "|" to "|", "&" to "&",
-            "\"" to "\"", "'" to "'",
-            "/" to "/", "\\" to "\\",
-            "$" to "$", "#" to "#",
-            "{" to "{", "}" to "}",
-            "(" to "(", ")" to ")",
-            "[" to "[", "]" to "]",
-            ";" to ";", ":" to ":",
-            "<" to "<", ">" to ">",
-            "@" to "@", "!" to "!",
-            "=" to "=", "+" to "+",
-            "-" to "-", "*" to "*",
-            "~" to "~", "`" to "`",
+            "Tab" to "\t", "|" to "|", "&" to "&",
+            "\"" to "\"", "'" to "'", "/" to "/", "\\" to "\\",
+            "$" to "$", "#" to "#", "{" to "{", "}" to "}",
+            "(" to "(", ")" to ")", "[" to "[", "]" to "]",
+            ";" to ";", ":" to ":", "<" to "<", ">" to ">",
+            "@" to "@", "!" to "!", "=" to "=", "+" to "+",
+            "-" to "-", "*" to "*", "~" to "~", "`" to "`",
             "_" to "_", "%" to "%"
         )
 
@@ -491,10 +510,14 @@ class TextEditorActivity : AppCompatActivity() {
     private fun fileExtension() = File(absoluteFilePath).name.substringAfterLast('.', "").lowercase()
 
     private fun detectFirstLineLanguageOverride(): String? {
-        val firstLine = binding.editorContent.text?.toString()
-            ?.lineSequence()?.firstOrNull()?.trim()
-            ?: return null
+        val editable = binding.editorContent.text ?: return null
+        if (editable.isEmpty()) return null
+
+        // Tối ưu: Đọc trực tiếp ký tự dòng 1 mà không gọi .toString() toàn bộ file
+        val lineEnd = editable.indexOf('\n').let { if (it == -1) editable.length else it }
+        val firstLine = editable.subSequence(0, lineEnd).toString().trim()
         if (firstLine.isEmpty()) return null
+
         val token = FIRST_LINE_LANG_PATTERN.find(firstLine)?.groupValues?.get(1) ?: return null
         return normalizeLangToken(token)
     }
@@ -560,45 +583,12 @@ class TextEditorActivity : AppCompatActivity() {
             }
         }
 
-        undoButton = makeButton(
-            R.drawable.ic_editor_undo,
-            R.string.editor_undo,
-            "undo_btn"
-        ) { performUndo() }
-
-        redoButton = makeButton(
-            R.drawable.ic_editor_redo,
-            R.string.editor_redo,
-            "redo_btn"
-        ) { performRedo() }
+        undoButton = makeButton(R.drawable.ic_editor_undo, R.string.editor_undo, "undo_btn") { performUndo() }
+        redoButton = makeButton(R.drawable.ic_editor_redo, R.string.editor_redo, "redo_btn") { performRedo() }
 
         toolbar.addView(redoButton)
         toolbar.addView(undoButton)
         refreshUndoRedoButtons()
-    }
-
-    private fun setupUndoRedoTracking() {
-        binding.editorContent.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                if (isApplyingHistory) return
-                if (pendingUndoSnapshot == null) {
-                    val cursor = binding.editorContent.selectionStart.coerceAtLeast(0)
-                    pendingUndoSnapshot = EditorSnapshot(s?.toString().orEmpty(), cursor)
-                }
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-
-            override fun afterTextChanged(s: Editable?) {
-                if (isApplyingHistory) return
-                redoStack.clear()
-                undoHandler.removeCallbacks(commitPendingUndoRunnable)
-                undoHandler.postDelayed(commitPendingUndoRunnable, UNDO_DEBOUNCE_MS)
-                refreshUndoRedoButtons()
-                refreshLanguageOverrideIfChanged()
-                scheduleUndoCachePersist()
-            }
-        })
     }
 
     private fun commitPendingUndoSnapshot() {
@@ -624,7 +614,7 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun performUndo() {
-        undoHandler.removeCallbacks(commitPendingUndoRunnable)
+        editorHandler.removeCallbacks(commitPendingUndoRunnable)
 
         val currentText = binding.editorContent.text?.toString().orEmpty()
         val currentCursor = binding.editorContent.selectionStart.coerceAtLeast(0)
@@ -639,7 +629,7 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun performRedo() {
         if (redoStack.isEmpty()) return
-        undoHandler.removeCallbacks(commitPendingUndoRunnable)
+        editorHandler.removeCallbacks(commitPendingUndoRunnable)
         pendingUndoSnapshot = null
 
         val currentText = binding.editorContent.text?.toString().orEmpty()
@@ -706,7 +696,7 @@ class TextEditorActivity : AppCompatActivity() {
                 }
                 isApplyingHistory = false
 
-                undoHandler.removeCallbacks(commitPendingUndoRunnable)
+                editorHandler.removeCallbacks(commitPendingUndoRunnable)
                 pendingUndoSnapshot = null
                 undoStack.clear()
                 redoStack.clear()
@@ -720,6 +710,7 @@ class TextEditorActivity : AppCompatActivity() {
                     else -> getString(R.string.editor_hint_empty)
                 }
                 setupSyntaxHighlighting()
+                updateLineNumbersInternal()
             }
         }
     }
@@ -768,7 +759,8 @@ class TextEditorActivity : AppCompatActivity() {
             cursorEnd.coerceAtMost(currentText.length)
         )
 
-        editText.post { updateLineNumbers() }
+        lastLineCount = -1
+        editText.post { updateLineNumbersInternal() }
     }
 
     private fun applyMonospaceState() {
@@ -776,7 +768,8 @@ class TextEditorActivity : AppCompatActivity() {
         binding.editorContent.typeface = targetTypeface
         binding.editorLineNumbers.typeface = targetTypeface
 
-        binding.editorContent.post { updateLineNumbers() }
+        lastLineCount = -1
+        binding.editorContent.post { updateLineNumbersInternal() }
     }
 
     private fun hasUnsavedChanges() = binding.editorContent.text?.toString().orEmpty() != savedContent
