@@ -24,17 +24,18 @@
             android:focusable="true"
             android:orientation="horizontal">
 
+            <!-- Cột số dòng (Sửa match_parent và paddingBottom 250dp) -->
             <TextView
                 android:id="@+id/editor_line_numbers"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:background="@android:color/transparent"
                 android:gravity="top|end"
                 android:includeFontPadding="false"
                 android:paddingStart="8dp"
                 android:paddingTop="16dp"
                 android:paddingEnd="6dp"
-                android:paddingBottom="16dp"
+                android:paddingBottom="250dp"
                 android:text="1"
                 android:textColor="?android:attr/textColorSecondary"
                 android:textSize="14sp"
@@ -57,7 +58,7 @@
                 android:clickable="true"
                 android:focusable="true">
 
-                <!-- Khung soạn thảo -->
+                <!-- Khung soạn thảo (Sửa paddingBottom 250dp) -->
                 <EditText
                     android:id="@+id/editor_content"
                     android:layout_width="match_parent"
@@ -72,7 +73,7 @@
                     android:paddingStart="8dp"
                     android:paddingTop="16dp"
                     android:paddingEnd="16dp"
-                    android:paddingBottom="16dp"
+                    android:paddingBottom="250dp"
                     android:textColor="?android:attr/textColorPrimary"
                     android:textColorHint="?android:attr/textColorSecondary"
                     android:textSize="14sp"
@@ -109,7 +110,6 @@
         </HorizontalScrollView>
 
     </com.omarea.common.ui.BlurBottomBarLayout>
-
 
     <include
         layout="@layout/app_bar_main"

@@ -338,17 +338,55 @@ class TextEditorActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
             override fun afterTextChanged(s: Editable?) {
-                updateLineNumbers()
+                binding.editorContent.post { updateLineNumbers() }
             }
         })
-        updateLineNumbers()
+        binding.editorContent.post { updateLineNumbers() }
     }
     
     private fun updateLineNumbers() {
-        val lineCount = (binding.editorContent.text?.count { it == '\n' } ?: 0) + 1
-        val numbers = (1..lineCount).joinToString("\n")
-        if (binding.editorLineNumbers.text.toString() != numbers) {
-            binding.editorLineNumbers.text = numbers
+        val editText = binding.editorContent
+        val text = editText.text ?: return
+
+        // Khi tắt Wrap Text: Đếm ký tự '\n'
+        if (!wrapEnabled) {
+            val lineCount = text.count { it == '\n' } + 1
+            val numbers = (1..lineCount).joinToString("\n")
+            if (binding.editorLineNumbers.text.toString() != numbers) {
+                binding.editorLineNumbers.text = numbers
+            }
+            return
+        }
+
+        // Khi bật Wrap Text: Dựa vào Layout thực tế của EditText để chèn dòng trống gióng hàng
+        val layout = editText.layout
+        if (layout == null) {
+            editText.post { updateLineNumbers() }
+            return
+        }
+
+        val totalVisualLines = layout.lineCount
+        val sb = StringBuilder()
+        var logicalLine = 1
+
+        for (i in 0 until totalVisualLines) {
+            val startOffset = layout.getLineStart(i)
+
+            // Dòng đầu tiên hoặc ký tự trước nó là '\n' -> Đây là dòng mới
+            if (i == 0 || (startOffset > 0 && text[startOffset - 1] == '\n')) {
+                sb.append(logicalLine)
+                logicalLine++
+            }
+            // Ngược lại nếu là dòng bị ngắt (wrapped line) -> Chỉ thêm dòng trống để gióng hàng
+
+            if (i < totalVisualLines - 1) {
+                sb.append("\n")
+            }
+        }
+
+        val result = sb.toString()
+        if (binding.editorLineNumbers.text.toString() != result) {
+            binding.editorLineNumbers.text = result
         }
     }
     
@@ -704,12 +742,18 @@ class TextEditorActivity : AppCompatActivity() {
             cursorStart.coerceAtMost(currentText.length),
             cursorEnd.coerceAtMost(currentText.length)
         )
+
+        // Cập nhật lại số dòng sau khi đổi chế độ Wrap
+        editText.post { updateLineNumbers() }
     }
 
     private fun applyMonospaceState() {
         val targetTypeface = if (monospaceEnabled) Typeface.MONOSPACE else Typeface.DEFAULT
         binding.editorContent.typeface = targetTypeface
         binding.editorLineNumbers.typeface = targetTypeface
+
+        // Cập nhật lại số dòng do độ rộng font chữ thay đổi làm ảnh hưởng đến vị trí ngắt dòng
+        binding.editorContent.post { updateLineNumbers() }
     }
     
     private fun hasUnsavedChanges() = binding.editorContent.text?.toString().orEmpty() != savedContent
