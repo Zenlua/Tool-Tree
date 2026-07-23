@@ -49,45 +49,36 @@
                 android:alpha="0.2"
                 android:background="?android:attr/textColorSecondary" />
 
-            <!-- Thêm HorizontalScrollView hỗ trợ tính năng Tắt Wrap Text (Cuộn ngang) -->
-            <HorizontalScrollView
-                android:id="@+id/editor_horizontal_scroll"
+            <!-- FrameLayout chiếm phần không gian còn lại (0dp + weight=1) -->
+            <FrameLayout
+                android:id="@+id/editor_content_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:fillViewport="true"
-                android:scrollbars="none">
+                android:clickable="true"
+                android:focusable="true">
 
-                <FrameLayout
-                    android:id="@+id/editor_content_container"
-                    android:layout_width="wrap_content"
+                <EditText
+                    android:id="@+id/editor_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true">
+                    android:background="@null"
+                    android:gravity="top|start"
+                    android:hint="@string/editor_hint_empty"
+                    android:imeOptions="flagNoExtractUi"
+                    android:includeFontPadding="false"
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:minHeight="300dp"
+                    android:paddingStart="8dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="16dp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColorHint="?android:attr/textColorSecondary"
+                    android:textSize="14sp"
+                    android:typeface="monospace" />
 
-                    <EditText
-                        android:id="@+id/editor_content"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@null"
-                        android:gravity="top|start"
-                        android:hint="@string/editor_hint_empty"
-                        android:imeOptions="flagNoExtractUi"
-                        android:includeFontPadding="false"
-                        android:inputType="textMultiLine|textNoSuggestions"
-                        android:minHeight="300dp"
-                        android:paddingStart="8dp"
-                        android:paddingTop="16dp"
-                        android:paddingEnd="16dp"
-                        android:paddingBottom="16dp"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textColorHint="?android:attr/textColorSecondary"
-                        android:textSize="14sp"
-                        android:typeface="monospace" />
-
-                </FrameLayout>
-
-            </HorizontalScrollView>
+            </FrameLayout>
 
         </LinearLayout>
 
