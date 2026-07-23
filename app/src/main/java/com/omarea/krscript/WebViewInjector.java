@@ -57,7 +57,7 @@ public class WebViewInjector {
 
     @SuppressLint({"JavascriptInterface", "SetJavaScriptEnabled"})
     public void inject(final Activity activity, final boolean credible) {
-        loadingDialog = new ProgressBarDialog(activity);
+        loadingDialog = new ProgressBarDialog(activity, null);
 
         if (webView != null) {
             WebSettings webSettings = webView.getSettings();
@@ -107,6 +107,7 @@ public class WebViewInjector {
         }
         loadingDialog.showDialogWithCancel(message, () -> {
             webView.stopLoading();
+            return kotlin.Unit.INSTANCE;
         });
     }
 
