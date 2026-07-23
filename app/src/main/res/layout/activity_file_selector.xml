@@ -1,37 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipToPadding="true"
     android:fitsSystemWindows="false"
     tools:openDrawer="start">
 
-    <!-- 1. Nội dung chính của màn hình (luôn nằm ở trên cùng trong XML) -->
+    <!-- 1. Nội dung chính của màn hình -->
     <include
         layout="@layout/app_bar_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- 2. Menu Drawer mờ (Nằm bên dưới, có layout_gravity="start") -->
+    <!-- 2. Menu Drawer mờ (Khuyên dùng chiều rộng cố định khoảng 300dp - 320dp) -->
     <com.omarea.common.ui.BlurViewLinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/file_drawer_container"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:id="@+id/file_activi"
         android:orientation="vertical">
 
-        <ListView
+        <!-- Nên thay ListView bằng RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/file_selector_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="?attr/actionBarSize"
-            android:fastScrollEnabled="true"
-            android:fadingEdge="vertical"
-            android:requiresFadingEdge="vertical"
-            android:scrollbarStyle="insideOverlay"
-            android:smoothScrollbar="true" />
+            android:scrollbars="vertical" />
 
     </com.omarea.common.ui.BlurViewLinearLayout>
 

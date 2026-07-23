@@ -32,33 +32,34 @@ class ActivityFileSelector : AppCompatActivity() {
     private lateinit var binding : ActivityFileSelectorBinding
     private var toolbar: Toolbar? = null
     override fun onCreate(savedInstanceState: Bundle?) {
-        // TODO:ThemeSwitch.switchTheme(this)
         super.onCreate(savedInstanceState)
         ThemeModeState.switchTheme(this)
         binding = ActivityFileSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        binding.fileActivi.isDrawStrokeEnabled = false
-        BlurEngine.controller.captureAndBlur(this)
-        
+        binding.fileDrawerContainer.isDrawStrokeEnabled = false
+    
+        // Chờ màn hình vẽ xong mới chụp nền để blur
+        binding.root.post {
+            BlurEngine.controller.captureAndBlur(this)
+        }
+    
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         this.toolbar = toolbar
         setSupportActionBar(toolbar)
-        // setTitle(R.string.app_name)
-
-        // 显示返回按钮
+    
         supportActionBar!!.setHomeButtonEnabled(true)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener {
             finish()
         }
-
+    
         onBackPressedDispatcher.addCallback(this) {
             if (adapterFileSelector?.goParent() == true) return@addCallback
             setResult(RESULT_CANCELED, Intent())
             finish()
         }
-
+    
         intent.extras?.run {
             if (containsKey("extension")) {
                 extension = "" + intent.extras?.getString("extension")
@@ -82,7 +83,7 @@ class ActivityFileSelector : AppCompatActivity() {
                 pathHome = "" + intent.extras?.getString("path_home")
             }
         }
-
+    
         invalidateOptionsMenu()
     }
 
