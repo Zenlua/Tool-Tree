@@ -23,6 +23,7 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
@@ -56,7 +57,6 @@ class TextEditorActivity : AppCompatActivity() {
         private const val EXTRA_DIR = "dir"
         private const val EXTRA_PLACEHOLDER = "placeholder"
 
-        // Tối ưu RAM: Giảm Undo Stack từ 200 xuống 50 để tránh OutOfMemory
         private const val UNDO_HISTORY_LIMIT = 50
         private const val UNDO_DEBOUNCE_MS = 600L
         private const val UNDO_CACHE_DEBOUNCE_MS = 1000L
@@ -137,8 +137,6 @@ class TextEditorActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
-        // --- BẬT HIỆU ỨNG BLUR KÍNH MỜ ---
-        // Tự động chụp và xử lý hình nền Wallpaper mờ bên dưới
         binding.editorRoot.isDrawStrokeEnabled = false
         BlurEngine.controller.captureAndBlur(this)
 
@@ -291,7 +289,12 @@ class TextEditorActivity : AppCompatActivity() {
             if (imeInset > 0) {
                 binding.mainList.post { scrollToCursor() }
             }
-            insets
+
+            // TRIỆT TIÊU TOP INSET (Status Bar Inset)
+            // Ngăn không cho Android tự động chèn Padding đỉnh vào ScrollView/EditText/TextView
+            WindowInsetsCompat.Builder(insets)
+                .setInsets(WindowInsetsCompat.Type.statusBars(), Insets.NONE)
+                .build()
         }
     }
 
@@ -328,23 +331,19 @@ class TextEditorActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {
                 if (isApplyingHistory) return
 
-                // 1. Quản lý Undo/Redo Debounce
                 redoStack.clear()
                 editorHandler.removeCallbacks(commitPendingUndoRunnable)
                 editorHandler.postDelayed(commitPendingUndoRunnable, UNDO_DEBOUNCE_MS)
                 refreshUndoRedoButtons()
                 scheduleUndoCachePersist()
 
-                // 2. Chỉ kiểm tra đổi Ngôn ngữ khi người dùng chỉnh sửa dòng đầu tiên (dòng chứa Shebang)
                 if (startChangeIndex < 100) {
                     refreshLanguageOverrideIfChanged()
                 }
 
-                // 3. Debounce việc tính toán Số dòng
                 editorHandler.removeCallbacks(updateLineNumbersRunnable)
                 editorHandler.postDelayed(updateLineNumbersRunnable, 80L)
 
-                // 4. Auto scroll theo con trỏ
                 binding.editorContent.post { scrollToCursor() }
             }
         })
