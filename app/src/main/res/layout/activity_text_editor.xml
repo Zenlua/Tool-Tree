@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="false">
 
+    <!-- Khu vực cuộn chính chứa số dòng và khung nhập liệu -->
     <ScrollView
         android:id="@+id/main_list"
         android:layout_width="match_parent"
@@ -16,7 +17,6 @@
         android:focusable="true"
         android:scrollbars="none">
 
-        <!-- Đổi layout_height thành match_parent để View divider kéo dài hết màn hình -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -24,7 +24,7 @@
             android:focusable="true"
             android:orientation="horizontal">
 
-            <!-- Cột số dòng (Sửa match_parent và paddingBottom 250dp) -->
+            <!-- Cột hiển thị số dòng -->
             <TextView
                 android:id="@+id/editor_line_numbers"
                 android:layout_width="wrap_content"
@@ -41,7 +41,7 @@
                 android:textSize="14sp"
                 android:typeface="monospace" />
 
-            <!-- Dải ngăn cách phân chia số dòng và khung code -->
+            <!-- Dải ngăn cách giữa số dòng và khung code -->
             <View
                 android:id="@+id/editor_line_divider"
                 android:layout_width="1dp"
@@ -49,7 +49,7 @@
                 android:alpha="0.2"
                 android:background="?android:attr/textColorSecondary" />
 
-            <!-- FrameLayout chiếm phần không gian còn lại (0dp + weight=1) -->
+            <!-- Container linh hoạt chứa EditText (hoặc HorizontalScrollView khi tắt Word Wrap) -->
             <FrameLayout
                 android:id="@+id/editor_content_container"
                 android:layout_width="0dp"
@@ -58,7 +58,7 @@
                 android:clickable="true"
                 android:focusable="true">
 
-                <!-- Khung soạn thảo (Sửa paddingBottom 250dp) -->
+                <!-- Khung soạn thảo văn bản / mã nguồn -->
                 <EditText
                     android:id="@+id/editor_content"
                     android:layout_width="match_parent"
@@ -85,7 +85,7 @@
 
     </ScrollView>
 
-    <!-- Hàng ký tự đặc biệt với background Blur và Ripple riêng -->
+    <!-- Hàng phím ký tự đặc biệt gắn ở đáy màn hình với hiệu ứng Blur Bottom Bar -->
     <com.omarea.common.ui.BlurBottomBarLayout
         android:id="@+id/editor_special_chars_scroll"
         android:layout_width="match_parent"
@@ -111,6 +111,7 @@
 
     </com.omarea.common.ui.BlurBottomBarLayout>
 
+    <!-- Toolbar nằm trên cùng chiều Z-Index -->
     <include
         layout="@layout/app_bar_main"
         android:layout_width="match_parent"
