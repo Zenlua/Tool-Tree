@@ -63,6 +63,9 @@ class TextEditorActivity : AppCompatActivity() {
         private const val UNDO_CACHE_DEBOUNCE_MS = 1000L
         private const val UNDO_CACHE_DIR = "editor_undo_cache"
 
+        // Thời gian chờ sau khi gõ xong để cập nhật lại nền mờ (Background Blur)
+        private const val BLUR_UPDATE_DEBOUNCE_MS = 800L
+
         private val RUNNABLE_EXTENSIONS = mapOf(
             "sh" to "sh",
             "bash" to "bash",
@@ -132,6 +135,7 @@ class TextEditorActivity : AppCompatActivity() {
     private val commitPendingUndoRunnable = Runnable { commitPendingUndoSnapshot() }
     private val persistUndoCacheRunnable = Runnable { persistUndoCacheToDisk() }
     private val updateLineNumbersRunnable = Runnable { updateLineNumbersInternal() }
+    private val updateBlurRunnable = Runnable { applyBlurredBackground() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -176,6 +180,7 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun applyBlurredBackground() {
+        if (isFinishing || isDestroyed) return
         window.decorView.post {
             lifecycleScope.launch(Dispatchers.IO) {
                 val blurredBmp = FastBlurUtility.getBlurBackgroundDrawer(this@TextEditorActivity)
@@ -360,7 +365,11 @@ class TextEditorActivity : AppCompatActivity() {
                 editorHandler.removeCallbacks(updateLineNumbersRunnable)
                 editorHandler.postDelayed(updateLineNumbersRunnable, 80L)
 
-                // 4. Auto scroll theo con trỏ
+                // 4. Debounce việc cập nhật Background Blur sau khi gõ xong
+                editorHandler.removeCallbacks(updateBlurRunnable)
+                editorHandler.postDelayed(updateBlurRunnable, BLUR_UPDATE_DEBOUNCE_MS)
+
+                // 5. Auto scroll theo con trỏ
                 binding.editorContent.post { scrollToCursor() }
             }
         })
@@ -373,34 +382,27 @@ class TextEditorActivity : AppCompatActivity() {
         val selection = editText.selectionEnd.coerceIn(0, editText.text?.length ?: 0)
         val line = layout.getLineForOffset(selection)
     
-        // Tính toán tọa độ Y thực tế của dòng đang đặt con trỏ
         val lineTop = layout.getLineTop(line) + editText.top + editText.paddingTop
         val lineBottom = layout.getLineBottom(line) + editText.top + editText.paddingTop
     
-        // Giảm lề an toàn xuống 24dp (vừa đủ nhìn, không bị đẩy lên cao)
         val margin = (24 * resources.displayMetrics.density).toInt()
     
         val visibleTop = scrollView.scrollY
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
     
-        // CHỈ CUỘN KHI CON TRỎ NẰM NGOÀI VÙNG NHÌN THẤY
         if (lineBottom + margin > visibleBottom) {
-            // Con trỏ bị khuất phía dưới bàn phím -> Cuộn xuống vừa đủ
             val targetScrollY = (lineBottom + margin) - scrollView.height + scrollView.paddingBottom
             scrollView.smoothScrollTo(0, targetScrollY)
         } else if (lineTop - margin < visibleTop) {
-            // Con trỏ bị khuất phía trên Toolbar -> Cuộn lên vừa đủ
             val targetScrollY = (lineTop - margin).coerceAtLeast(0)
             scrollView.smoothScrollTo(0, targetScrollY)
         }
     }
 
-
     private fun updateLineNumbersInternal() {
         val editText = binding.editorContent
         val editable = editText.text ?: return
 
-        // Trường hợp No-Wrap: Đếm số ký tự newline
         if (!wrapEnabled) {
             var lines = 1
             for (i in 0 until editable.length) {
@@ -418,7 +420,6 @@ class TextEditorActivity : AppCompatActivity() {
             return
         }
 
-        // Trường hợp Wrap Text: Dựa trên Layout
         val layout = editText.layout ?: return
         val totalVisualLines = layout.lineCount
         val sb = StringBuilder(totalVisualLines * 4)
@@ -513,7 +514,6 @@ class TextEditorActivity : AppCompatActivity() {
         val editable = binding.editorContent.text ?: return null
         if (editable.isEmpty()) return null
 
-        // Tối ưu: Đọc trực tiếp ký tự dòng 1 mà không gọi .toString() toàn bộ file
         val lineEnd = editable.indexOf('\n').let { if (it == -1) editable.length else it }
         val firstLine = editable.subSequence(0, lineEnd).toString().trim()
         if (firstLine.isEmpty()) return null
@@ -658,14 +658,8 @@ class TextEditorActivity : AppCompatActivity() {
         }
         isApplyingHistory = false
     
-        // --- BỔ SUNG CÁC DÒNG DƯỚI ĐÂY ---
-        // 1. Reset cờ đếm dòng để ép redraw giao diện số dòng
         lastLineCount = -1 
-        
-        // 2. Cập nhật lại cột số dòng ngay lập tức
         updateLineNumbersInternal() 
-        
-        // 3. Cuộn ScrollView đến vị trí con trỏ vừa Undo/Redo
         binding.editorContent.post { scrollToCursor() }
     }
 
