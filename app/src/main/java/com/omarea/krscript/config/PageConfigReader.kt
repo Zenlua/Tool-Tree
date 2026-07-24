@@ -680,7 +680,15 @@ class PageConfigReader {
         }
     }
 
-    // Đọc thuộc tính riêng của thẻ <editor file="" title="" desc="" wrap="" />
+    // Đọc thuộc tính riêng của thẻ
+    // <editor file="" title="" desc="" wrap="" readonly="" need-input="" value="" value-sh="" />
+    // - readonly="true": chỉ xem, không cho sửa/lưu
+    // - need-input="true": khi chạy thử script (nút Run) mà script có gọi lệnh `read` để chờ
+    //   nhập dữ liệu, giống hệt thuộc tính need-input của thẻ <action> -> hiện ô nhập liệu
+    //   trong lúc script đang chạy
+    // - value / value-sh: nội dung khởi tạo, CHỈ áp dụng khi file chưa tồn tại (tạo file mới
+    //   và điền nội dung này vào); nếu file đã tồn tại thì giữ nguyên, không điền gì thêm.
+    //   value-sh (nếu có) được ưu tiên hơn value (kết quả script sẽ được dùng làm nội dung).
     private fun editorNode(editor: EditorNode, parser: XmlPullParser): EditorNode {
         for (attrIndex in 0 until parser.attributeCount) {
             val attrName = parser.getAttributeName(attrIndex)
@@ -689,6 +697,10 @@ class PageConfigReader {
                 "file", "path" -> editor.file = attrValue.trim()
                 "wrap" -> editor.wrap = !(attrValue == "0" || attrValue == "false" || attrValue == "off" || attrValue == "no-wrap")
                 "placeholder" -> editor.placeholder = attrValue
+                "readonly" -> editor.readonly = (attrValue == "true" || attrValue == "1")
+                "need-input" -> editor.needInput = (attrValue == "true" || attrValue == "1")
+                "value-sh" -> editor.valueSh = attrValue
+                "value" -> editor.value = attrValue
             }
         }
         return editor
@@ -1304,6 +1316,10 @@ class PageConfigReader {
         tomlGet(table, "file", "path")?.let { editor.file = it.trim() }
         tomlGet(table, "wrap")?.let { editor.wrap = !(it == "0" || it == "false" || it == "off" || it == "no-wrap") }
         tomlGet(table, "placeholder")?.let { editor.placeholder = it }
+        tomlGet(table, "readonly")?.let { editor.readonly = (it == "true" || it == "1") }
+        tomlGet(table, "need-input")?.let { editor.needInput = (it == "true" || it == "1") }
+        tomlGet(table, "value-sh")?.let { editor.valueSh = it }
+        tomlGet(table, "value")?.let { editor.value = it }
         return editor
     }
 

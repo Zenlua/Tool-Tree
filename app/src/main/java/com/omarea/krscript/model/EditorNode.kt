@@ -13,4 +13,20 @@ class EditorNode(currentConfigXml: String) : ClickableNode(currentConfigXml) {
 
     // Trạng thái ngắt dòng mặc định khi mở trang soạn thảo (mặc định: bật ngắt dòng)
     var wrap: Boolean = true
+
+    // Chỉ đọc: true thì không cho phép chỉnh sửa/lưu nội dung (chỉ xem)
+    var readonly: Boolean = false
+
+    // Khi bấm nút Run để chạy thử script đang soạn thảo: true nghĩa là script có gọi lệnh
+    // `read` để chờ người dùng nhập dữ liệu qua bàn phím trong lúc chạy (giống thuộc tính
+    // need-input của thẻ <action>) -> ứng dụng sẽ hiện ô nhập liệu trong lúc thực thi.
+    var needInput: Boolean = false
+
+    // Nội dung khởi tạo (script): kết quả trả về sẽ được dùng làm nội dung ban đầu
+    // nếu file chưa tồn tại. Ưu tiên cao hơn "value" nếu cả hai đều có.
+    var valueSh: String = ""
+
+    // Nội dung khởi tạo (tĩnh): chỉ được điền vào khi file CHƯA tồn tại.
+    // Nếu file đã tồn tại thì giữ nguyên nội dung hiện có, không điền gì thêm.
+    var value: String = ""
 }

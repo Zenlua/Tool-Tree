@@ -53,6 +53,10 @@ class TextEditorActivity : AppCompatActivity() {
         private const val EXTRA_WRAP = "wrap"
         private const val EXTRA_DIR = "dir"
         private const val EXTRA_PLACEHOLDER = "placeholder"
+        private const val EXTRA_READONLY = "readonly"
+        private const val EXTRA_NEED_INPUT = "need_input"
+        private const val EXTRA_VALUE = "value"
+        private const val EXTRA_VALUE_SH = "value_sh"
 
         // Tối ưu RAM: Giảm Undo Stack từ 200 xuống 50 để tránh OutOfMemory
         private const val UNDO_HISTORY_LIMIT = 50
@@ -85,7 +89,11 @@ class TextEditorActivity : AppCompatActivity() {
             desc: String? = null,
             wrap: Boolean = true,
             dir: String? = null,
-            placeholder: String? = null
+            placeholder: String? = null,
+            readonly: Boolean = false,
+            needInput: Boolean = false,
+            value: String? = null,
+            valueSh: String? = null
         ) {
             val intent = Intent(context, TextEditorActivity::class.java).apply {
                 putExtra(EXTRA_FILE, file)
@@ -94,6 +102,10 @@ class TextEditorActivity : AppCompatActivity() {
                 putExtra(EXTRA_WRAP, wrap)
                 putExtra(EXTRA_DIR, dir ?: "")
                 putExtra(EXTRA_PLACEHOLDER, placeholder ?: "")
+                putExtra(EXTRA_READONLY, readonly)
+                putExtra(EXTRA_NEED_INPUT, needInput)
+                putExtra(EXTRA_VALUE, value ?: "")
+                putExtra(EXTRA_VALUE_SH, valueSh ?: "")
                 if (context !is AppCompatActivity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
@@ -113,6 +125,10 @@ class TextEditorActivity : AppCompatActivity() {
     private var syntaxHighlighter: SyntaxHighlighter? = null
     private var placeholderText: String = ""
     private var titleText: String = ""
+    private var readonlyMode: Boolean = false
+    private var needInput: Boolean = false
+    private var initialValue: String = ""
+    private var initialValueSh: String = ""
     private var lastLanguageOverride: String? = null
     private var lastLineCount = -1
 
@@ -166,12 +182,17 @@ class TextEditorActivity : AppCompatActivity() {
         wrapEnabled = intent.getBooleanExtra(EXTRA_WRAP, true)
         placeholderText = intent.getStringExtra(EXTRA_PLACEHOLDER).orEmpty()
         titleText = intent.getStringExtra(EXTRA_TITLE).orEmpty()
+        readonlyMode = intent.getBooleanExtra(EXTRA_READONLY, false)
+        needInput = intent.getBooleanExtra(EXTRA_NEED_INPUT, false)
+        initialValue = intent.getStringExtra(EXTRA_VALUE).orEmpty()
+        initialValueSh = intent.getStringExtra(EXTRA_VALUE_SH).orEmpty()
 
         applyWrapState()
         applyMonospaceState()
         setupUnifiedTextWatcher()
         setupSpecialCharsBar()
         setupEditorTouchAndFocus()
+        applyReadonlyState()
         loadFileContent()
     }
 
@@ -616,6 +637,31 @@ class TextEditorActivity : AppCompatActivity() {
             } catch (_: Exception) {
             }
 
+            // Chỉ điền nội dung khởi tạo (value / value-sh) khi file CHƯA tồn tại.
+            // Nếu file đã tồn tại thì giữ nguyên, không điền/ghi đè gì thêm.
+            if (newFile) {
+                val computedValue = if (initialValueSh.isNotEmpty()) {
+                    try {
+                        com.omarea.krscript.executor.ScriptEnvironmen.executeResultRoot(
+                            applicationContext,
+                            initialValueSh,
+                            com.omarea.krscript.model.NodeInfoBase("")
+                        )
+                    } catch (_: Exception) {
+                        ""
+                    }
+                } else {
+                    initialValue
+                }
+
+                if (computedValue.isNotEmpty()) {
+                    content = computedValue
+                    if (writeFileContent(absoluteFilePath, content)) {
+                        newFile = false
+                    }
+                }
+            }
+
             withContext(Dispatchers.Main) {
                 savedContent = content
                 isApplyingHistory = true
@@ -642,6 +688,15 @@ class TextEditorActivity : AppCompatActivity() {
                 updateLineNumbersInternal()
             }
         }
+    }
+
+    // Áp dụng trạng thái chỉ đọc (readonly="true"): không cho phép gõ/sửa/dán nội dung
+    private fun applyReadonlyState() {
+        if (!readonlyMode) return
+        binding.editorContent.keyListener = null
+        binding.editorContent.isFocusable = true
+        binding.editorContent.isFocusableInTouchMode = true
+        binding.editorContent.isLongClickable = true
     }
 
     private fun applyWrapState() {
@@ -705,6 +760,10 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun attemptClose() {
         if (isSaving) return
+        if (readonlyMode) {
+            finish()
+            return
+        }
         commitPendingUndoSnapshot()
 
         if (!hasUnsavedChanges()) {
@@ -738,7 +797,13 @@ class TextEditorActivity : AppCompatActivity() {
 
         menu.findItem(R.id.editor_menu_wrap)?.isChecked = wrapEnabled
         menu.findItem(R.id.editor_menu_monospace)?.isChecked = monospaceEnabled
-        menu.findItem(R.id.editor_menu_run)?.isVisible = runnableInterpreter() != null
+        menu.findItem(R.id.editor_menu_run)?.isVisible = !readonlyMode && runnableInterpreter() != null
+
+        if (readonlyMode) {
+            menu.findItem(R.id.editor_menu_save)?.isVisible = false
+            menu.findItem(R.id.editor_menu_undo)?.isVisible = false
+            menu.findItem(R.id.editor_menu_redo)?.isVisible = false
+        }
 
         refreshToolbarButtons()
         return true
@@ -787,6 +852,7 @@ class TextEditorActivity : AppCompatActivity() {
         onResult: ((Boolean) -> Unit)? = null
     ) {
         if (isSaving || !hasUnsavedChanges()) return
+        if (readonlyMode) return
         isSaving = true
         commitPendingUndoSnapshot()
 
@@ -869,6 +935,7 @@ class TextEditorActivity : AppCompatActivity() {
             title = titleText.ifEmpty { File(absoluteFilePath).name }
             interruptable = true
             shell = RunnableNode.shellModeDefault
+            needInput = this@TextEditorActivity.needInput
         }
         val script = "chmod 755 \"$absoluteFilePath\" 2>/dev/null\n$interpreter \"$absoluteFilePath\"\n"
         DialogLogFragment.create(

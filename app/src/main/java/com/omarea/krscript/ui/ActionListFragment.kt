@@ -215,7 +215,10 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 Toast.makeText(context, getString(R.string.editor_file_missing), Toast.LENGTH_SHORT).show()
                 return
             }
-            com.tool.tree.TextEditorActivity.start(context, item.file, item.title, item.desc, item.wrap, item.pageConfigDir, item.placeholder)
+            com.tool.tree.TextEditorActivity.start(
+                context, item.file, item.title, item.desc, item.wrap, item.pageConfigDir, item.placeholder,
+                item.readonly, item.needInput, item.value, item.valueSh
+            )
             onCompleted.run()
         }
     }
