@@ -80,6 +80,32 @@ class MainActivity : AppCompatActivity() {
             adapter = MainPagerAdapter(this)
             binding.viewPager.adapter = adapter
             binding.viewPager.offscreenPageLimit = 4
+
+            // FIX: giảm độ nhạy cạnh (edge sensitivity) giúp cử chỉ vuốt được ViewPager2
+            // nhận diện dứt khoát hơn, tránh xung đột với vuốt back gesture / RecyclerView con
+            reduceViewPagerTouchSlop(binding.viewPager)
+        }
+    }
+
+    /**
+     * FIX: ViewPager2 dùng RecyclerView bên trong, mặc định touchSlop khá lớn khiến
+     * cử chỉ vuốt đôi khi bị "trễ"/giật lúc bắt đầu kéo. Giảm touchSlop giúp
+     * ViewPager2 phản hồi ngay từ pixel di chuyển đầu tiên, cảm giác mượt hơn.
+     */
+    private fun reduceViewPagerTouchSlop(viewPager: androidx.viewpager2.widget.ViewPager2) {
+        try {
+            val recyclerViewField = androidx.viewpager2.widget.ViewPager2::class.java
+                .getDeclaredField("mRecyclerView")
+            recyclerViewField.isAccessible = true
+            val recyclerView = recyclerViewField.get(viewPager)
+
+            val touchSlopField = androidx.recyclerview.widget.RecyclerView::class.java
+                .getDeclaredField("mTouchSlop")
+            touchSlopField.isAccessible = true
+            val currentTouchSlop = touchSlopField.get(recyclerView) as Int
+            touchSlopField.set(recyclerView, (currentTouchSlop * 0.6).toInt())
+        } catch (e: Exception) {
+            // Reflection có thể fail trên một số phiên bản AndroidX -> bỏ qua, không critical
         }
     }
 
@@ -163,16 +189,28 @@ class MainActivity : AppCompatActivity() {
                 if (binding.viewPager.currentItem != tab.position) {
                     binding.viewPager.setCurrentItem(tab.position, true)
                 }
-                
+
                 // Cập nhật hiệu ứng hiển thị (màu sắc/scale) của tab
                 tabHelper.updateHighlight(binding.tabLayout, tab.position)
-                
-                isFavoritesTab = (tab.position == 0)
-                invalidateOptionsMenu()
+
+                // FIX: chỉ invalidate menu khi trạng thái favorites thật sự đổi,
+                // tránh rebuild toàn bộ Toolbar menu mỗi lần vuốt/settle tab
+                // (đây là nguyên nhân chính gây giật khi vuốt chuyển tab, vì
+                // invalidateOptionsMenu() chạy đồng bộ trên main thread đúng lúc
+                // animation settle của ViewPager2 vừa kết thúc)
+                val nowFavorites = (tab.position == 0)
+                if (isFavoritesTab != nowFavorites) {
+                    isFavoritesTab = nowFavorites
+                    invalidateOptionsMenu()
+                }
             }
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
+
+        // FIX: tắt hiệu ứng "over-scroll glow" ở rìa để cảm giác vuốt liền mạch hơn,
+        // đặc biệt khi vuốt tới tab đầu/cuối
+        binding.viewPager.getChildAt(0)?.overScrollMode = android.view.View.OVER_SCROLL_NEVER
     }
 
     private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {
