@@ -63,10 +63,10 @@ echo 0 > "$2/$loadid/status"
 set_permis -R "$2/$loadid"
 
 if [ -f "$2/$loadid/install.sh" ]; then
-    "$2/$loadid/install.sh"
+    bash "$2/$loadid/install.sh"
     rm -fr "$2/$loadid/install.sh"
 elif [ -f "$2/$loadid/install.bash" ]; then
-    "$2/$loadid/install.bash"
+    bash "$2/$loadid/install.bash"
     rm -fr "$2/$loadid/install.bash"
 fi
 
