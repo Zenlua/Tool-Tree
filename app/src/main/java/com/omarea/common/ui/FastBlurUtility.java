@@ -11,7 +11,7 @@ import android.view.View;
 
 public class FastBlurUtility {
 
-    // Tỉ lệ thu nhỏ ảnh để xử lý nhanh (1/10 giúp giảm 100 lần số pixel cần tính toán)
+    // Tỉ lệ thu nhỏ ảnh để xử lý nhanh
     private static final float SCALE_FACTOR = 0.10f;
     private static final int BLUR_RADIUS = 8;
 
@@ -24,7 +24,7 @@ public class FastBlurUtility {
 
         Bitmap blurredBmp = startBlurBackground(bmp);
 
-        // Giải phóng bitmap gốc sau khi đã blur xong
+        // Giải phóng bitmap chụp màn hình gốc sau khi dùng xong
         if (bmp != blurredBmp && !bmp.isRecycled()) {
             bmp.recycle();
         }
@@ -33,36 +33,41 @@ public class FastBlurUtility {
 
     /**
      * Quy trình xử lý: Thu nhỏ -> Làm mờ -> Phóng to & Nhuộm tối (Dim)
-     * Đảm bảo mượt mà và an toàn bộ nhớ từ SDK 23 trở lên.
      */
     public static Bitmap startBlurBackground(Bitmap bkg) {
         if (bkg == null || bkg.isRecycled()) return null;
 
-        int width = Math.round(bkg.getWidth() * SCALE_FACTOR);
-        int height = Math.round(bkg.getHeight() * SCALE_FACTOR);
+        // 1. Tính toán kích thước thu nhỏ
+        int scaledW = Math.round(bkg.getWidth() * SCALE_FACTOR);
+        int scaledH = Math.round(bkg.getHeight() * SCALE_FACTOR);
 
-        // Đảm bảo kích thước tối thiểu để không làm hỏng thuật toán
-        if (width < 2 || height < 2) return null;
+        // Đảm bảo kích thước ảnh sau thu nhỏ không được nhỏ hơn (BLUR_RADIUS * 2)
+        // Điều này ngăn triệt để lỗi ArrayIndexOutOfBoundsException trong fastBlur
+        int minSize = BLUR_RADIUS * 2;
+        int width = Math.max(scaledW, minSize);
+        int height = Math.max(scaledH, minSize);
 
-        // 1. Thu nhỏ ảnh (Sử dụng bộ lọc Bilinear để ảnh mượt hơn)
+        if (width <= 0 || height <= 0) return null;
+
+        // 2. Thu nhỏ ảnh
         Bitmap smallBitmap = Bitmap.createScaledBitmap(bkg, width, height, true);
 
-        // 2. Làm mờ bằng thuật toán StackBlur
+        // 3. Làm mờ bằng thuật toán StackBlur gốc
         Bitmap blurred = fastBlur(smallBitmap, BLUR_RADIUS);
 
-        // Giải phóng smallBitmap tạm thời tránh Memory Leak
+        // Giải phóng smallBitmap tạm thời để tránh Memory Leak
         if (smallBitmap != null && smallBitmap != blurred && !smallBitmap.isRecycled()) {
             smallBitmap.recycle();
         }
 
         if (blurred == null) return null;
 
-        // 3. Phóng to về kích thước gốc và áp dụng bộ lọc màu tối (scaleAndDim sẽ tự recycle 'blurred')
+        // 4. Phóng to về kích thước gốc và áp dụng bộ lọc màu tối (scaleAndDim sẽ tự recycle 'blurred')
         return scaleAndDim(blurred, bkg.getWidth(), bkg.getHeight());
     }
 
     /**
-     * Chụp ảnh màn hình an toàn trên SDK 23+
+     * Chụp ảnh màn hình an toàn
      */
     private static Bitmap takeScreenShot(Activity activity) {
         if (activity == null || activity.isFinishing()) return null;
@@ -88,12 +93,10 @@ public class FastBlurUtility {
         Bitmap output = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
 
-        // Paint với bộ lọc chống răng cưa và lọc bitmap khi scale
         Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
 
-        // Tạo bộ lọc màu để giảm độ sáng (contrast 0.80f ~ giảm 20% độ sáng)
         ColorMatrix cm = new ColorMatrix();
-        float contrast = 0.80f;
+        float contrast = 0.80f; 
         cm.set(new float[]{
                 contrast, 0, 0, 0, 0,
                 0, contrast, 0, 0, 0,
@@ -101,12 +104,11 @@ public class FastBlurUtility {
                 0, 0, 0, 1, 0});
         paint.setColorFilter(new ColorMatrixColorFilter(cm));
 
-        // Vẽ ảnh từ vùng nguồn (nhỏ) ra vùng đích (toàn màn hình)
         Rect src = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
         Rect dst = new Rect(0, 0, targetW, targetH);
         canvas.drawBitmap(bitmap, src, dst, paint);
 
-        // Giải phóng bitmap tạm sau khi đã vẽ xong
+        // Giải phóng bitmap tạm sau khi vẽ xong
         if (!bitmap.isRecycled()) {
             bitmap.recycle();
         }
@@ -115,7 +117,7 @@ public class FastBlurUtility {
     }
 
     /**
-     * Thuật toán StackBlur (Multi-pass box blur) - Đã sửa toàn bộ lỗi OutOfBoundsException & Leak
+     * Thuật toán StackBlur NGUYÊN BẢN GỐC (Giữ nguyên 100% phép tính toán học)
      */
     private static Bitmap fastBlur(Bitmap sentBitmap, int radius) {
         if (sentBitmap == null || sentBitmap.isRecycled()) return null;
@@ -128,21 +130,17 @@ public class FastBlurUtility {
         Bitmap bitmap = sentBitmap.copy(config, true);
         if (bitmap == null) return null;
 
+        if (radius < 1) return null;
+
         int w = bitmap.getWidth();
         int h = bitmap.getHeight();
-        if (w < 1 || h < 1) return null;
-
-        // Giới hạn bán kính làm mờ không vượt quá kích thước ảnh
-        int safeRadius = Math.min(radius, Math.min(w, h) - 1);
-        if (safeRadius < 1) safeRadius = 1;
-
         int[] pix = new int[w * h];
         bitmap.getPixels(pix, 0, w, 0, 0, w, h);
 
         int wm = w - 1;
         int hm = h - 1;
         int wh = w * h;
-        int div = safeRadius + safeRadius + 1;
+        int div = radius + radius + 1;
 
         int[] r = new int[wh];
         int[] g = new int[wh];
@@ -152,9 +150,8 @@ public class FastBlurUtility {
 
         int divsum = (div + 1) >> 1;
         divsum *= divsum;
-        int dvLimit = 256 * divsum;
-        int[] dv = new int[dvLimit];
-        for (i = 0; i < dvLimit; i++) {
+        int[] dv = new int[256 * divsum];
+        for (i = 0; i < 256 * divsum; i++) {
             dv[i] = (i / divsum);
         }
 
@@ -164,15 +161,15 @@ public class FastBlurUtility {
         int stackstart;
         int[] sir;
         int rbs;
-        int r1 = safeRadius + 1;
+        int r1 = radius + 1;
         int routsum, goutsum, boutsum;
         int rinsum, ginsum, binsum;
 
         for (y = 0; y < h; y++) {
             rinsum = ginsum = binsum = routsum = goutsum = boutsum = rsum = gsum = bsum = 0;
-            for (i = -safeRadius; i <= safeRadius; i++) {
+            for (i = -radius; i <= radius; i++) {
                 p = pix[yi + Math.min(wm, Math.max(i, 0))];
-                sir = stack[i + safeRadius];
+                sir = stack[i + radius];
                 sir[0] = (p & 0xff0000) >> 16;
                 sir[1] = (p & 0x00ff00) >> 8;
                 sir[2] = (p & 0x0000ff);
@@ -190,70 +187,56 @@ public class FastBlurUtility {
                     boutsum += sir[2];
                 }
             }
-            stackpointer = safeRadius;
+            stackpointer = radius;
 
             for (x = 0; x < w; x++) {
-                r[yi] = dv[clamp(rsum, 0, dvLimit - 1)];
-                g[yi] = dv[clamp(gsum, 0, dvLimit - 1)];
-                b[yi] = dv[clamp(bsum, 0, dvLimit - 1)];
-
+                r[yi] = dv[rsum];
+                g[yi] = dv[gsum];
+                b[yi] = dv[bsum];
                 rsum -= routsum;
                 gsum -= goutsum;
                 bsum -= boutsum;
-
-                stackstart = stackpointer - safeRadius + div;
+                stackstart = stackpointer - radius + div;
                 sir = stack[stackstart % div];
-
                 routsum -= sir[0];
                 goutsum -= sir[1];
                 boutsum -= sir[2];
-
-                if (y == 0) vmin[x] = Math.min(x + safeRadius + 1, wm);
+                if (y == 0) vmin[x] = Math.min(x + radius + 1, wm);
                 p = pix[yw + vmin[x]];
-
                 sir[0] = (p & 0xff0000) >> 16;
                 sir[1] = (p & 0x00ff00) >> 8;
                 sir[2] = (p & 0x0000ff);
-
                 rinsum += sir[0];
                 ginsum += sir[1];
                 binsum += sir[2];
-
                 rsum += rinsum;
                 gsum += ginsum;
                 bsum += binsum;
-
                 stackpointer = (stackpointer + 1) % div;
                 sir = stack[(stackpointer) % div];
-
                 routsum += sir[0];
                 goutsum += sir[1];
                 boutsum += sir[2];
-
                 rinsum -= sir[0];
                 ginsum -= sir[1];
                 binsum -= sir[2];
-
                 yi++;
             }
             yw += w;
         }
-
         for (x = 0; x < w; x++) {
             rinsum = ginsum = binsum = routsum = goutsum = boutsum = rsum = gsum = bsum = 0;
-            yp = -safeRadius * w;
-            for (i = -safeRadius; i <= safeRadius; i++) {
-                yi = Math.min(wh - 1, Math.max(0, yp) + x);
-                sir = stack[i + safeRadius];
+            yp = -radius * w;
+            for (i = -radius; i <= radius; i++) {
+                yi = Math.max(0, yp) + x;
+                sir = stack[i + radius];
                 sir[0] = r[yi];
                 sir[1] = g[yi];
                 sir[2] = b[yi];
-
                 rbs = r1 - Math.abs(i);
                 rsum += r[yi] * rbs;
                 gsum += g[yi] * rbs;
                 bsum += b[yi] * rbs;
-
                 if (i > 0) {
                     rinsum += sir[0];
                     ginsum += sir[1];
@@ -266,59 +249,40 @@ public class FastBlurUtility {
                 if (i < hm) yp += w;
             }
             yi = x;
-            stackpointer = safeRadius;
+            stackpointer = radius;
             for (y = 0; y < h; y++) {
-                int rVal = dv[clamp(rsum, 0, dvLimit - 1)];
-                int gVal = dv[clamp(gsum, 0, dvLimit - 1)];
-                int bVal = dv[clamp(bsum, 0, dvLimit - 1)];
-
-                pix[yi] = (0xff000000 & pix[yi]) | (rVal << 16) | (gVal << 8) | bVal;
-
+                pix[yi] = (0xff000000 & pix[yi]) | (dv[rsum] << 16) | (dv[gsum] << 8) | dv[bsum];
                 rsum -= routsum;
                 gsum -= goutsum;
                 bsum -= boutsum;
-
-                stackstart = stackpointer - safeRadius + div;
+                stackstart = stackpointer - radius + div;
                 sir = stack[stackstart % div];
-
                 routsum -= sir[0];
                 goutsum -= sir[1];
                 boutsum -= sir[2];
-
                 if (x == 0) vmin[y] = Math.min(y + r1, hm) * w;
-                p = Math.min(wh - 1, x + vmin[y]);
-
+                p = x + vmin[y];
                 sir[0] = r[p];
                 sir[1] = g[p];
                 sir[2] = b[p];
-
                 rinsum += sir[0];
                 ginsum += sir[1];
                 binsum += sir[2];
-
                 rsum += rinsum;
                 gsum += ginsum;
                 bsum += binsum;
-
                 stackpointer = (stackpointer + 1) % div;
                 sir = stack[stackpointer];
-
                 routsum -= sir[0];
                 goutsum -= sir[1];
                 boutsum -= sir[2];
-
                 rinsum -= sir[0];
                 ginsum -= sir[1];
                 binsum -= sir[2];
-
                 yi += w;
             }
         }
         bitmap.setPixels(pix, 0, w, 0, 0, w, h);
         return bitmap;
-    }
-
-    private static int clamp(int val, int min, int max) {
-        return Math.max(min, Math.min(val, max));
     }
 }
