@@ -54,7 +54,6 @@ class TextEditorActivity : AppCompatActivity() {
         private const val EXTRA_DIR = "dir"
         private const val EXTRA_PLACEHOLDER = "placeholder"
 
-        // Tối ưu RAM: Giảm Undo Stack từ 200 xuống 50 để tránh OutOfMemory
         private const val UNDO_HISTORY_LIMIT = 50
         private const val UNDO_DEBOUNCE_MS = 600L
         private const val UNDO_CACHE_DEBOUNCE_MS = 1000L
@@ -122,10 +121,11 @@ class TextEditorActivity : AppCompatActivity() {
     private val redoStack = ArrayDeque<EditorSnapshot>()
     private var pendingUndoSnapshot: EditorSnapshot? = null
     private var isApplyingHistory = false
-    
-    // Đã thay đổi: Quản lý qua MenuItem
+
+    // Quản lý trạng thái các MenuItem
     private var undoMenuItem: MenuItem? = null
     private var redoMenuItem: MenuItem? = null
+    private var saveMenuItem: MenuItem? = null
 
     private val editorHandler = Handler(Looper.getMainLooper())
     private val commitPendingUndoRunnable = Runnable { commitPendingUndoSnapshot() }
@@ -137,7 +137,6 @@ class TextEditorActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
-        // Blur đã được ThemeModeState.switchTheme() xử lý (có kiểm tra level và cờ dissblur)
         binding.editorRoot.isDrawStrokeEnabled = false
 
         setupKeyboardInsets()
@@ -330,9 +329,10 @@ class TextEditorActivity : AppCompatActivity() {
                 editorHandler.removeCallbacks(commitPendingUndoRunnable)
                 editorHandler.postDelayed(commitPendingUndoRunnable, UNDO_DEBOUNCE_MS)
                 refreshUndoRedoButtons()
+                refreshSaveButtonState() // Cập nhật nút Save
                 scheduleUndoCachePersist()
 
-                // 2. Chỉ kiểm tra đổi Ngôn ngữ khi người dùng chỉnh sửa dòng đầu tiên (dòng chứa Shebang)
+                // 2. Chỉ kiểm tra đổi Ngôn ngữ khi người dùng chỉnh sửa dòng đầu tiên
                 if (startChangeIndex < 100) {
                     refreshLanguageOverrideIfChanged()
                 }
@@ -353,15 +353,15 @@ class TextEditorActivity : AppCompatActivity() {
         val scrollView = binding.mainListText
         val selection = editText.selectionEnd.coerceIn(0, editText.text?.length ?: 0)
         val line = layout.getLineForOffset(selection)
-    
+
         val lineTop = layout.getLineTop(line) + editText.top + editText.paddingTop
         val lineBottom = layout.getLineBottom(line) + editText.top + editText.paddingTop
-    
+
         val margin = (24 * resources.displayMetrics.density).toInt()
-    
+
         val visibleTop = scrollView.scrollY
         val visibleBottom = visibleTop + scrollView.height - scrollView.paddingBottom
-    
+
         if (lineBottom + margin > visibleBottom) {
             val targetScrollY = (lineBottom + margin) - scrollView.height + scrollView.paddingBottom
             scrollView.smoothScrollTo(0, targetScrollY)
@@ -553,6 +553,7 @@ class TextEditorActivity : AppCompatActivity() {
         redoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
         refreshUndoRedoButtons()
+        refreshSaveButtonState()
         persistUndoCacheToDisk()
     }
 
@@ -569,6 +570,7 @@ class TextEditorActivity : AppCompatActivity() {
         undoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
         refreshUndoRedoButtons()
+        refreshSaveButtonState()
         persistUndoCacheToDisk()
     }
 
@@ -586,19 +588,28 @@ class TextEditorActivity : AppCompatActivity() {
             }
         }
         isApplyingHistory = false
-    
-        lastLineCount = -1 
-        updateLineNumbersInternal() 
+
+        lastLineCount = -1
+        updateLineNumbersInternal()
         binding.editorContent.post { scrollToCursor() }
     }
 
-    // Đã cập nhật: Quản lý trạng thái qua MenuItem
     private fun refreshUndoRedoButtons() {
         val canUndo = undoStack.isNotEmpty() || pendingUndoSnapshot != null
         val canRedo = redoStack.isNotEmpty()
 
         undoMenuItem?.isEnabled = canUndo
         redoMenuItem?.isEnabled = canRedo
+    }
+
+    // Điều khiển trạng thái nút Save (Sáng khi có thay đổi, Mờ/Vô hiệu hóa khi chưa đổi)
+    private fun refreshSaveButtonState() {
+        val hasChanges = hasUnsavedChanges()
+        saveMenuItem?.let { item ->
+            item.isEnabled = hasChanges
+            // 255: Hiện sáng rõ (100% alpha), 90: Mờ đi (khoảng 35% alpha)
+            item.icon?.mutate()?.alpha = if (hasChanges) 255 else 90
+        }
     }
 
     private fun loadFileContent() {
@@ -629,6 +640,7 @@ class TextEditorActivity : AppCompatActivity() {
 
                 restoreUndoCacheFromDisk()
                 refreshUndoRedoButtons()
+                refreshSaveButtonState()
 
                 binding.editorContent.hint = when {
                     placeholderText.isNotEmpty() -> placeholderText
@@ -731,12 +743,14 @@ class TextEditorActivity : AppCompatActivity() {
 
         undoMenuItem = menu.findItem(R.id.editor_menu_undo)
         redoMenuItem = menu.findItem(R.id.editor_menu_redo)
+        saveMenuItem = menu.findItem(R.id.editor_menu_save)
 
         menu.findItem(R.id.editor_menu_wrap)?.isChecked = wrapEnabled
         menu.findItem(R.id.editor_menu_monospace)?.isChecked = monospaceEnabled
         menu.findItem(R.id.editor_menu_run)?.isVisible = runnableInterpreter() != null
 
         refreshUndoRedoButtons()
+        refreshSaveButtonState()
         return true
     }
 
@@ -782,7 +796,7 @@ class TextEditorActivity : AppCompatActivity() {
         showToast: Boolean = true,
         onResult: ((Boolean) -> Unit)? = null
     ) {
-        if (isSaving) return
+        if (isSaving || !hasUnsavedChanges()) return
         isSaving = true
         commitPendingUndoSnapshot()
 
@@ -795,6 +809,7 @@ class TextEditorActivity : AppCompatActivity() {
                 if (success) {
                     savedContent = content
                     persistUndoCacheToDisk()
+                    refreshSaveButtonState() // Cập nhật nút Save ngay khi lưu thành công
                 }
                 if (showToast) {
                     Toast.makeText(
@@ -846,12 +861,16 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun saveAndRun(interpreter: String) {
-        saveFile(showToast = false) {
-            if (it) {
-                runScript(interpreter)
-            } else {
-                Toast.makeText(this, R.string.editor_save_fail, Toast.LENGTH_LONG).show()
+        if (hasUnsavedChanges()) {
+            saveFile(showToast = false) { success ->
+                if (success) {
+                    runScript(interpreter)
+                } else {
+                    Toast.makeText(this, R.string.editor_save_fail, Toast.LENGTH_LONG).show()
+                }
             }
+        } else {
+            runScript(interpreter)
         }
     }
 
