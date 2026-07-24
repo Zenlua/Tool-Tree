@@ -21,123 +21,53 @@ import android.view.View;
 public class FastBlurUtility {
 
     private static final float SCALE_FACTOR = 0.10f;
-    // Alias public để nơi khác (VD: DialogHelper khi tự chụp screenshot trên main thread rồi
-    // đẩy phần blur sang background thread) biết chụp ở đúng tỉ lệ mà blurCapturedBitmap() cần.
-    public static final float CAPTURE_SCALE = SCALE_FACTOR;
     private static final int BLUR_RADIUS = 8;
-    // Bán kính blur GPU tương ứng với ảnh full-res gốc là 20f; vì giờ blur được thực hiện
-    // trên ảnh đã thu nhỏ theo SCALE_FACTOR nên bán kính cũng phải thu nhỏ theo tỉ lệ tương ứng
-    // để giữ hiệu ứng mờ tương đương sau khi phóng to lại (kỹ thuật downsample-blur-upsample).
-    private static final float GPU_BLUR_RADIUS = 20f * SCALE_FACTOR;
-
-    // Bảng tra cứu (lookup table) dùng trong StackBlur chỉ phụ thuộc vào bán kính blur.
-    // Vì BLUR_RADIUS luôn là hằng số, bảng này được tính đúng MỘT LẦN khi class được load,
-    // thay vì cấp phát mảng mới (256 * divsum phần tử, ~80KB) và tính lại mỗi lần fastBlur()
-    // chạy - đây từng là một nguồn gây lag/rác GC không cần thiết.
-    private static final int[] DV_LOOKUP = buildLookupTable(BLUR_RADIUS);
-
-    private static int[] buildLookupTable(int radius) {
-        int div = radius + radius + 1;
-        int divsum = (div + 1) >> 1;
-        divsum *= divsum;
-        int[] dv = new int[256 * divsum];
-        for (int i = 0; i < dv.length; i++) {
-            dv[i] = i / divsum;
-        }
-        return dv;
-    }
 
     public static Bitmap getBlurBackgroundDrawer(Activity activity) {
-        if (activity == null || activity.isFinishing()) return null;
+        Bitmap bmp = takeScreenShot(activity);
+        if (bmp == null) return null;
 
-        View decorView;
-        int targetW, targetH;
-        try {
-            decorView = activity.getWindow().getDecorView();
-            targetW = decorView.getWidth();
-            targetH = decorView.getHeight();
-        } catch (Throwable e) {
-            return null;
+        Bitmap blurredBmp = startBlurBackground(bmp);
+
+        if (bmp != blurredBmp && !bmp.isRecycled()) {
+            bmp.recycle();
         }
-        if (targetW <= 0 || targetH <= 0) return null;
 
-        // Chụp trực tiếp ở độ phân giải đã thu nhỏ (SCALE_FACTOR) thay vì chụp screenshot
-        // full-res rồi mới scale xuống như trước. Đây là nguồn gây lag lớn nhất trước đây:
-        // - view.draw() vào một Bitmap full màn hình rất tốn bộ nhớ + thời gian rasterize.
-        // - Với path GPU (Android 12+), phải copy toàn bộ hardware buffer kích thước màn
-        //   hình gốc từ GPU sang software bitmap (result.copy(ARGB_8888, true)) - rất chậm.
-        // Chụp ảnh nhỏ ngay từ đầu giúp mọi bước xử lý phía sau (vẽ, copy, blur) đều nhanh hơn
-        // nhiều lần vì chỉ phải xử lý ~1% số pixel so với trước.
-        Bitmap smallBmp = takeScreenShot(activity, SCALE_FACTOR);
-        if (smallBmp == null) return null;
-
-        try {
-            return blurCapturedBitmap(smallBmp, targetW, targetH);
-        } catch (Throwable e) {
-            // An toàn tuyệt đối: nếu có lỗi toán học hay OOM, không có ảnh để trả về
-            if (!smallBmp.isRecycled()) smallBmp.recycle();
-            return null;
-        }
+        return blurredBmp;
     }
 
-    /**
-     * Giữ lại cho tương thích ngược: xử lý blur từ một bitmap full-res có sẵn (ví dụ do nơi
-     * khác tự chụp screenshot rồi truyền vào). Nếu có thể, nên dùng getBlurBackgroundDrawer()
-     * để tận dụng việc chụp ảnh trực tiếp ở kích thước nhỏ.
-     */
     public static Bitmap startBlurBackground(Bitmap bkg) {
         if (bkg == null || bkg.isRecycled()) return null;
 
         try {
-            int targetW = bkg.getWidth();
-            int targetH = bkg.getHeight();
+            // 1. Android 12+ (API 31+): Dùng GPU RenderEffect
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                Bitmap gpuBlurred = blurWithRenderEffect(bkg, 20f);
+                if (gpuBlurred != null) {
+                    return applyDimFilter(gpuBlurred);
+                }
+            }
 
-            int width = Math.max(1, Math.round(targetW * SCALE_FACTOR));
-            int height = Math.max(1, Math.round(targetH * SCALE_FACTOR));
+            // 2. Android 11 trở xuống (hoặc nếu GPU fail): Dùng StackBlur CPU
+            int width = Math.round(bkg.getWidth() * SCALE_FACTOR);
+            int height = Math.round(bkg.getHeight() * SCALE_FACTOR);
+
+            if (width <= 0 || height <= 0) return bkg;
 
             Bitmap smallBitmap = Bitmap.createScaledBitmap(bkg, width, height, true);
-            if (smallBitmap == null) return bkg;
+            Bitmap blurred = fastBlur(smallBitmap, BLUR_RADIUS);
 
-            return blurCapturedBitmap(smallBitmap, targetW, targetH);
+            if (smallBitmap != null && smallBitmap != blurred && !smallBitmap.isRecycled()) {
+                smallBitmap.recycle();
+            }
+
+            if (blurred == null) return bkg;
+
+            return scaleAndDim(blurred, bkg.getWidth(), bkg.getHeight());
         } catch (Throwable e) {
             // An toàn tuyệt đối: Nếu có bất kỳ lỗi toán học hay OOM nào, trả lại ảnh gốc
             return bkg;
         }
-    }
-
-    /**
-     * Thực hiện blur trên một bitmap ĐÃ được thu nhỏ sẵn (theo CAPTURE_SCALE), rồi phóng to +
-     * làm tối (dim) về đúng kích thước targetW x targetH. Bitmap đầu vào sẽ bị recycle bởi
-     * hàm này (hoặc bởi các hàm con của nó) sau khi dùng xong.
-     *
-     * Hàm này KHÔNG đụng tới View hierarchy nên an toàn để gọi trên background thread - khác
-     * với takeScreenShot()/takeScreenShot(activity, scale), vốn bắt buộc phải chạy trên main
-     * thread vì cần view.draw(). Cách dùng khuyến khích cho nơi cần tránh block main thread:
-     *   1. Trên main thread: val small = FastBlurUtility.takeScreenShot(activity, FastBlurUtility.CAPTURE_SCALE)
-     *   2. Trên background thread: val blurred = FastBlurUtility.blurCapturedBitmap(small, targetW, targetH)
-     *   3. Post kết quả về main thread để set background.
-     */
-    public static Bitmap blurCapturedBitmap(Bitmap smallBmp, int targetW, int targetH) {
-        // 1. Android 12+ (API 31+): Dùng GPU RenderEffect trên ảnh nhỏ (rất nhanh)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            Bitmap gpuBlurred = blurWithRenderEffect(smallBmp, GPU_BLUR_RADIUS);
-            if (gpuBlurred != null) {
-                if (!smallBmp.isRecycled()) {
-                    smallBmp.recycle();
-                }
-                return scaleAndDim(gpuBlurred, targetW, targetH);
-            }
-        }
-
-        // 2. Android 11 trở xuống (hoặc nếu GPU fail): Dùng StackBlur CPU
-        Bitmap blurred = fastBlur(smallBmp, BLUR_RADIUS);
-
-        if (blurred == null) {
-            // fastBlur thất bại: vẫn cần trả về đúng kích thước, dùng luôn ảnh nhỏ chưa blur
-            return scaleAndDim(smallBmp, targetW, targetH);
-        }
-
-        return scaleAndDim(blurred, targetW, targetH);
     }
 
     private static Bitmap blurWithRenderEffect(Bitmap input, float radius) {
@@ -193,38 +123,11 @@ public class FastBlurUtility {
         return null;
     }
 
-    public static Bitmap takeScreenShot(Activity activity) {
-        return takeScreenShot(activity, 1f);
-    }
+    private static Bitmap applyDimFilter(Bitmap src) {
+        Bitmap output = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
 
-    /**
-     * Chụp screenshot của decor view, có thể vẽ trực tiếp ở tỉ lệ thu nhỏ (scale < 1f) để
-     * tránh phải cấp phát + rasterize một Bitmap full màn hình rồi mới scale xuống sau đó.
-     */
-    public static Bitmap takeScreenShot(Activity activity, float scale) {
-        if (activity == null || activity.isFinishing()) return null;
-        try {
-            View view = activity.getWindow().getDecorView();
-            int viewWidth = view.getWidth();
-            int viewHeight = view.getHeight();
-            if (viewWidth <= 0 || viewHeight <= 0) return null;
-
-            int width = Math.max(1, Math.round(viewWidth * scale));
-            int height = Math.max(1, Math.round(viewHeight * scale));
-
-            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bitmap);
-            if (scale != 1f) {
-                canvas.scale(scale, scale);
-            }
-            view.draw(canvas);
-            return bitmap;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static void applyDimPaint(Paint paint) {
+        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
         ColorMatrix cm = new ColorMatrix();
         float contrast = 0.80f;
         cm.set(new float[]{
@@ -233,6 +136,27 @@ public class FastBlurUtility {
                 0, 0, contrast, 0, 0,
                 0, 0, 0, 1, 0});
         paint.setColorFilter(new ColorMatrixColorFilter(cm));
+
+        canvas.drawBitmap(src, 0, 0, paint);
+        if (!src.isRecycled()) {
+            src.recycle();
+        }
+        return output;
+    }
+
+    public static Bitmap takeScreenShot(Activity activity) {
+        if (activity == null || activity.isFinishing()) return null;
+        try {
+            View view = activity.getWindow().getDecorView();
+            if (view.getWidth() <= 0 || view.getHeight() <= 0) return null;
+
+            Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            view.draw(canvas);
+            return bitmap;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static Bitmap scaleAndDim(Bitmap bitmap, int targetW, int targetH) {
@@ -240,7 +164,15 @@ public class FastBlurUtility {
         Canvas canvas = new Canvas(output);
 
         Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
-        applyDimPaint(paint);
+
+        ColorMatrix cm = new ColorMatrix();
+        float contrast = 0.80f;
+        cm.set(new float[]{
+                contrast, 0, 0, 0, 0,
+                0, contrast, 0, 0, 0,
+                0, 0, contrast, 0, 0,
+                0, 0, 0, 1, 0});
+        paint.setColorFilter(new ColorMatrixColorFilter(cm));
 
         Rect src = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
         Rect dst = new Rect(0, 0, targetW, targetH);
@@ -284,9 +216,12 @@ public class FastBlurUtility {
         int rsum, gsum, bsum, x, y, i, p, yp, yi, yw;
         int[] vmin = new int[Math.max(w, h)];
 
-        // Dùng bảng tra cứu đã cache sẵn khi radius trùng với BLUR_RADIUS (trường hợp luôn
-        // xảy ra trong thực tế); chỉ build lại nếu có ai đó gọi fastBlur với radius khác.
-        int[] dv = (radius == BLUR_RADIUS) ? DV_LOOKUP : buildLookupTable(radius);
+        int divsum = (div + 1) >> 1;
+        divsum *= divsum;
+        int[] dv = new int[256 * divsum];
+        for (i = 0; i < 256 * divsum; i++) {
+            dv[i] = (i / divsum);
+        }
 
         yw = yi = 0;
         int[][] stack = new int[div][3];
@@ -391,7 +326,7 @@ public class FastBlurUtility {
                     goutsum += sir[1];
                     boutsum += sir[2];
                 }
-                // Kiểm tra giới hạn hàng dựa trên kích thước thực hm * w
+                // ĐÃ SỬA: Kiểm tra giới hạn hàng dựa trên kích thước thực hm * w
                 if (yp < (hm * w)) {
                     yp += w;
                 }
@@ -399,9 +334,9 @@ public class FastBlurUtility {
             yi = x;
             stackpointer = radius;
             for (y = 0; y < h; y++) {
-                pix[yi] = (0xff000000 & pix[yi])
-                        | (dv[clampIndex(rsum, dv.length)] << 16)
-                        | (dv[clampIndex(gsum, dv.length)] << 8)
+                pix[yi] = (0xff000000 & pix[yi]) 
+                        | (dv[clampIndex(rsum, dv.length)] << 16) 
+                        | (dv[clampIndex(gsum, dv.length)] << 8) 
                         | dv[clampIndex(bsum, dv.length)];
 
                 rsum -= routsum;

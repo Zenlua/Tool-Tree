@@ -2,14 +2,10 @@
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:shareInterpolator="false"
     android:zAdjustment="top">
-    <scale
-        android:duration="300"
-        android:pivotX="50%"
-        android:pivotY="50%"
-        android:fromXScale="0.9"
-        android:toXScale="1.0"
-        android:fromYScale="0.9"
-        android:toYScale="1.0" />
+    <!-- Đã bỏ <scale> (từng scale toàn bộ window từ 90% -> 100%): vì window này rộng full
+         màn hình (chứa cả nền blur phủ toàn màn hình), scale toàn window khiến nền blur bị
+         phóng to theo, tạo cảm giác "hiện ô vuông nhỏ rồi phóng to full màn hình". Giờ chỉ
+         còn fade alpha nên nền blur + dialog hiện đúng full màn hình ngay từ đầu, mượt hơn. -->
     <alpha
         android:interpolator="@android:anim/linear_interpolator"
         android:duration="300"
