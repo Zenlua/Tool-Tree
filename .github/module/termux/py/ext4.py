@@ -845,15 +845,12 @@ class Inode:
 
             xattrs_header = ext4_xattr_header.from_buffer_copy(xattrs_block)
             if not self.volume.ignore_magic and xattrs_header.h_magic != 0xEA020000:
-                try:
-                    raise MagicError(
-                        "Invalid magic value in xattrs block header at offset 0x{xattrs_block_start:X} of inode {inode:d}: 0x{xattrs_header} (expected 0xEA020000)".format(
-                            inode=self.inode_idx,
-                            xattrs_block_start=xattrs_block_start,
-                            xattrs_header=xattrs_header.h_magic
-                        ))
-                except:
-                        pass        
+                raise MagicError(
+                    "Invalid magic value in xattrs block header at offset 0x{xattrs_block_start:X} of inode {inode:d}: 0x{xattrs_header} (expected 0xEA020000)".format(
+                        inode=self.inode_idx,
+                        xattrs_block_start=xattrs_block_start,
+                        xattrs_header=xattrs_header.h_magic
+                    ))
 
             if xattrs_header.h_blocks != 1:
                 raise Ext4Error(

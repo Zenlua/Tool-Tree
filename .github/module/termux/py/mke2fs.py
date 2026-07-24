@@ -232,11 +232,11 @@ def main(argv):
 
   # run mke2fs
   with tempfile.NamedTemporaryFile() as conf_file:
-      conf_path = os.path.expandvars("$ETC/mke2fs.conf")
-      with open(conf_path, "rb") as f:
-          conf_file.write(f.read())
-      conf_file.flush()
-      mke2fs_env = {"MKE2FS_CONFIG": conf_file.name}
+    conf_path = os.path.expandvars("$ETC/mke2fs.conf")
+    with open(conf_path, "rb") as f:
+      conf_file.write(f.read())
+    conf_file.flush()
+    mke2fs_env = {"MKE2FS_CONFIG": conf_file.name}
 
     if args.timestamp:
       mke2fs_env["E2FSPROGS_FAKE_TIME"] = args.timestamp

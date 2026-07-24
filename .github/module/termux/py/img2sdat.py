@@ -61,6 +61,14 @@ def main(INPUT_IMAGE, OUTDIR='.', VERSION=None, PREFIX='system'):
     # Get sparse image
     image = sparse_img.SparseImage(INPUT_IMAGE, tempfile.mkstemp()[1], '0')
 
+    # blockimgdiff needs common.OPTIONS.cache_size to size its stash/transfer
+    # logic correctly. img2sdat never sets it, so it silently defaults to
+    # None and blockimgdiff falls back to a hard-coded 100MB with a warning
+    # ("Cache size is not set, defaulting to a fallback size."). Set it
+    # explicitly here so the warning goes away and stash sizing is correct.
+    if common.OPTIONS.cache_size is None:
+        common.OPTIONS.cache_size = 100 * 1024 * 1024  # 100MB, safe default
+
     # Generate output files
     b = blockimgdiff.BlockImageDiff(image, None, VERSION)
     b.Compute(OUTDIR)

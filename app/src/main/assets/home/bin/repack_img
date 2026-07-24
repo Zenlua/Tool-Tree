@@ -332,7 +332,9 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]]; then
     zstd --progress -f -$lvnen --format=$FORMATS --compress "$saved" -o "${out_saved%.*}.img.$CONVER" 2>&1 | tee "$TMP/repzstd.log" || killtree "Conver $FORMATS error"
     elif [ "$CONVER" == 'dat' ] || [ "$CONVER" == 'br' ]; then
     img2simg "$saved"
+    echo 1
     img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p "${INPUT##*/}" >$TMP/img2sdat.log
+    echo 2
     [ -f "$OUTPUT/out/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed"
         if [ "$CONVER" == 'br' ]; then
         LEVEL="$(echo "$lvnen / 2" | bc)"

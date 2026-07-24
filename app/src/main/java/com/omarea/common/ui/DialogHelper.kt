@@ -21,6 +21,8 @@ import androidx.core.graphics.drawable.toDrawable
 import com.tool.tree.ThemeModeState
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class DialogHelper {
     class DialogButton(val text: String, val onClick: Runnable? = null, val dismiss: Boolean = true)
@@ -74,6 +76,11 @@ class DialogHelper {
     companion object {
         // 是否禁用模糊背景
         var disableBlurBg = false
+
+        // Dùng chung 1 thread nền cho việc xử lý blur ảnh nền dialog, tránh tạo/hủy thread
+        // mới mỗi lần mở dialog. Việc blur (GPU RenderEffect hoặc CPU StackBlur) không đụng
+        // tới View hierarchy nên chạy an toàn ở đây, tách khỏi main thread.
+        private val blurExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
         fun animDialog(dialog: AlertDialog?): DialogWrap? {
             if (dialog != null && !dialog.isShowing) {
@@ -402,38 +409,78 @@ class DialogHelper {
             return ThemeModeState.isDarkMode()
         }
 
+        // Nền fallback (màu đặc theo theme, hoặc dim nếu là dialog dạng floating).
+        // Tách riêng để có thể hiện ngay lập tức, không phải đợi bước blur ảnh nền phía sau.
+        private fun applyFallbackWindowBg(window: Window, activity: Activity, wallpaperMode: Boolean) {
+            window.run {
+                try {
+                    val bg = getWindowBackground(activity)
+                    if (bg == Color.TRANSPARENT) {
+                        if (isFloating) {
+                            setBackgroundDrawable(bg.toDrawable())
+                            setDimAmount(0.8f)
+                            return
+                        } else {
+                            val d = if (wallpaperMode || isNightMode(context)) {
+                                Color.argb(255, 18, 18, 18).toDrawable()
+                            } else {
+                                Color.argb(255, 245, 245, 245).toDrawable()
+                            }
+                            setBackgroundDrawable(d)
+                        }
+                    } else {
+                        setBackgroundDrawable(bg.toDrawable())
+                    }
+                } catch (_: Exception) {
+                    setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+                }
+            }
+        }
+
         // Trong setWindowBlurBg
         fun setWindowBlurBg(window: Window, activity: Activity) {
             val wallpaperMode = activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0
-            window.run {
-                val blurBitmap = if (disableBlurBg) {
+
+            // Hiện nền fallback NGAY LẬP TỨC để dialog xuất hiện tức thì. Nếu blur bật và
+            // thành công, nền này sẽ được thay bằng ảnh mờ ngay khi xử lý xong ở bước dưới -
+            // đánh đổi một nhịp hiện nền tạm để đổi lấy việc không giật main thread khi mở
+            // dialog như cách làm đồng bộ trước đây.
+            applyFallbackWindowBg(window, activity, wallpaperMode)
+
+            if (disableBlurBg) return
+
+            // Bước chụp BẮT BUỘC chạy trên main thread vì cần view.draw() với view hierarchy
+            // hiện tại. Nhờ chụp trực tiếp ở CAPTURE_SCALE (10%) thay vì full-res nên bước
+            // này rất nhẹ, không đáng kể tới hiệu năng main thread.
+            val smallBmp = FastBlurUtility.takeScreenShot(activity, FastBlurUtility.CAPTURE_SCALE) ?: return
+
+            val decorView = window.decorView
+            val targetW = decorView.width
+            val targetH = decorView.height
+            if (targetW <= 0 || targetH <= 0) {
+                if (!smallBmp.isRecycled) smallBmp.recycle()
+                return
+            }
+
+            // Phần xử lý blur (GPU RenderEffect / CPU StackBlur + phóng to) là phần nặng thực
+            // sự và không đụng tới View hierarchy, nên chạy an toàn trên background thread -
+            // đây chính là phần trước đây làm main thread bị giật mỗi khi mở dialog.
+            blurExecutor.execute {
+                val blurred = try {
+                    FastBlurUtility.blurCapturedBitmap(smallBmp, targetW, targetH)
+                } catch (e: Throwable) {
                     null
-                } else {
-                    FastBlurUtility.getBlurBackgroundDrawer(activity)
                 }
-                if (blurBitmap != null) {
-                    setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
-                } else {
-                    try {
-                        val bg = getWindowBackground(activity)
-                        if (bg == Color.TRANSPARENT) {
-                            if (isFloating) {
-                                setBackgroundDrawable(bg.toDrawable())
-                                setDimAmount(0.8f)
-                                return
-                            } else {
-                                val d = if (wallpaperMode || isNightMode(context)) {
-                                    Color.argb(255, 18, 18, 18).toDrawable()
-                                } else {
-                                    Color.argb(255, 245, 245, 245).toDrawable()
-                                }
-                                setBackgroundDrawable(d)
-                            }
-                        } else {
-                            setBackgroundDrawable(bg.toDrawable())
+                if (blurred != null) {
+                    decorView.post {
+                        // Dialog có thể đã bị dismiss / activity đã finish trong lúc blur chạy
+                        // nền -> luôn kiểm tra lại trước khi set background để tránh crash
+                        // hoặc rò rỉ view/bitmap.
+                        if (!activity.isFinishing && decorView.isAttachedToWindow) {
+                            window.setBackgroundDrawable(blurred.toDrawable(activity.resources))
+                        } else if (!blurred.isRecycled) {
+                            blurred.recycle()
                         }
-                    } catch (_: Exception) {
-                        setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
                     }
                 }
             }
