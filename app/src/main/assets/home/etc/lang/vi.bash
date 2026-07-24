@@ -52,6 +52,7 @@ input_file_text="Tệp đầu vào"
 input_folder_text="Thư mục đầu vào"
 path_text="Đường dẫn"
 build_time_text_2="Hiện tại:"
+noti_update="Hiện toast cập nhật"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"

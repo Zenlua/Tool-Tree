@@ -52,6 +52,7 @@ input_file_text="Input file"
 input_folder_text="Input folder"
 path_text="Path"
 build_time_text_2="Current:"
+noti_update="Toast update"
 
 # Home
 home_text_1="App information and features"

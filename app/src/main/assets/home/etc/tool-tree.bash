@@ -1296,9 +1296,15 @@ fi
         if [ "$(gprop name)" ]; then
             # Xác nhận có google dịch
             if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null || grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
-                google_trankk='<option type="checkbox" box="glog auto_trans_text_'${dirvad##*/}'" id="v1" auto-off="true" reload="true" silent="true">'$google_translate_text'</option>'
-                google_tran_shellkk='elif [ "$menu_id" == "v1" ]; then
+                google_trankk='<option type="checkbox" box="glog auto_trans_text_'${dirvad##*/}'" id="trans" auto-off="true" reload="true" silent="true">'$google_translate_text'</option>'
+                google_tran_shellkk='elif [ "$menu_id" == "trans" ]; then
 [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
+            fi
+
+            if [ -f "$dirvad/download.prop" ]; then
+                noti_texts='<option type="default" id="noti" type="checkbox" box="[ -f '$dirvad'/show ] && echo 1 || echo 0" silent="true">'$noti_update'</option>'
+                noti_shells='elif [ "$menu_id" == "noti" ]; then
+                    [ -f "'$dirvad'/show" ] && rm -f "'$dirvad'/show" || echo > "'$dirvad'/show"'
             fi
 
             # phát hiện tính năng
@@ -1312,14 +1318,14 @@ fi
 '"$summss"'
 '"$farooot"'
 '"$google_trankk"'
-<option type="default" id="v2" auto-finish="true" silent="true">'$pin_text_add'</option>
-<option type="default" id="v2" auto-finish="true" silent="true">'$project_text_8'</option>
+<option type="default" id="pin" auto-finish="true" silent="true">'$pin_text_add'</option>
+'"$noti_texts"'
 '"$code_option"'
 <handler>
-if [ "$menu_id" == "v2" ]; then
-    [ -f "'$dirvad'/pin" ] && rm -f "'$dirvad'/pin" || echo > "'$dirvad'/pin"
-    [ -f "'$dirvad'/show" ] && rm -f "'$dirvad'/show" || echo > "'$dirvad'/show"
-    '"$google_tran_shellkk"'
+if [ "$menu_id" == "pin" ]; then
+[ -f "'$dirvad'/pin" ] && rm -f "'$dirvad'/pin" || echo > "'$dirvad'/pin"
+'"$noti_shells"'
+'"$google_tran_shellkk"'
 fi
 '"$code_shell"'
 </handler>
