@@ -16,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.HorizontalScrollView
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -123,8 +122,10 @@ class TextEditorActivity : AppCompatActivity() {
     private val redoStack = ArrayDeque<EditorSnapshot>()
     private var pendingUndoSnapshot: EditorSnapshot? = null
     private var isApplyingHistory = false
-    private var undoButton: ImageButton? = null
-    private var redoButton: ImageButton? = null
+    
+    // Đã thay đổi: Quản lý qua MenuItem
+    private var undoMenuItem: MenuItem? = null
+    private var redoMenuItem: MenuItem? = null
 
     private val editorHandler = Handler(Looper.getMainLooper())
     private val commitPendingUndoRunnable = Runnable { commitPendingUndoSnapshot() }
@@ -149,7 +150,6 @@ class TextEditorActivity : AppCompatActivity() {
                 setDisplayHomeAsUpEnabled(true)
             }
             it.setNavigationOnClickListener { attemptClose() }
-            setupUndoRedoButtons(it)
         }
 
         onBackPressedDispatcher.addCallback(this) { attemptClose() }
@@ -521,48 +521,6 @@ class TextEditorActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupUndoRedoButtons(toolbar: Toolbar) {
-        toolbar.findViewWithTag<View>("undo_btn")?.let { toolbar.removeView(it) }
-        toolbar.findViewWithTag<View>("redo_btn")?.let { toolbar.removeView(it) }
-
-        val buttonSize = (48 * resources.displayMetrics.density).toInt()
-        val iconPadding = (12 * resources.displayMetrics.density).toInt()
-
-        fun makeButton(
-            iconRes: Int,
-            descRes: Int,
-            tagStr: String,
-            onClick: () -> Unit
-        ): ImageButton {
-            return ImageButton(this).apply {
-                tag = tagStr
-                setImageResource(iconRes)
-                contentDescription = getString(descRes)
-                setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
-
-                val outValue = TypedValue()
-                theme.resolveAttribute(
-                    android.R.attr.selectableItemBackgroundBorderless,
-                    outValue,
-                    true
-                )
-                setBackgroundResource(outValue.resourceId)
-                setOnClickListener { onClick() }
-
-                layoutParams = Toolbar.LayoutParams(buttonSize, buttonSize).apply {
-                    gravity = Gravity.END or Gravity.CENTER_VERTICAL
-                }
-            }
-        }
-
-        undoButton = makeButton(R.drawable.ic_editor_undo, R.string.editor_undo, "undo_btn") { performUndo() }
-        redoButton = makeButton(R.drawable.ic_editor_redo, R.string.editor_redo, "redo_btn") { performRedo() }
-
-        toolbar.addView(redoButton)
-        toolbar.addView(undoButton)
-        refreshUndoRedoButtons()
-    }
-
     private fun commitPendingUndoSnapshot() {
         val snapshot = pendingUndoSnapshot ?: return
         pendingUndoSnapshot = null
@@ -635,20 +593,13 @@ class TextEditorActivity : AppCompatActivity() {
         binding.editorContent.post { scrollToCursor() }
     }
 
+    // Đã cập nhật: Quản lý trạng thái qua MenuItem
     private fun refreshUndoRedoButtons() {
         val canUndo = undoStack.isNotEmpty() || pendingUndoSnapshot != null
         val canRedo = redoStack.isNotEmpty()
 
-        undoButton?.apply {
-            isEnabled = canUndo
-            isClickable = canUndo
-            alpha = if (canUndo) 1f else 0.3f
-        }
-        redoButton?.apply {
-            isEnabled = canRedo
-            isClickable = canRedo
-            alpha = if (canRedo) 1f else 0.3f
-        }
+        undoMenuItem?.isEnabled = canUndo
+        redoMenuItem?.isEnabled = canRedo
     }
 
     private fun loadFileContent() {
@@ -778,14 +729,28 @@ class TextEditorActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_text_editor, menu)
+
+        undoMenuItem = menu.findItem(R.id.editor_menu_undo)
+        redoMenuItem = menu.findItem(R.id.editor_menu_redo)
+
         menu.findItem(R.id.editor_menu_wrap)?.isChecked = wrapEnabled
         menu.findItem(R.id.editor_menu_monospace)?.isChecked = monospaceEnabled
         menu.findItem(R.id.editor_menu_run)?.isVisible = runnableInterpreter() != null
+
+        refreshUndoRedoButtons()
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.editor_menu_undo -> {
+                performUndo()
+                true
+            }
+            R.id.editor_menu_redo -> {
+                performRedo()
+                true
+            }
             R.id.editor_menu_run -> {
                 runnableInterpreter()?.let { saveAndRun(it) }
                 true

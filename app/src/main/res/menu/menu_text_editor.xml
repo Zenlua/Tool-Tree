@@ -1,23 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/editor_menu_undo"
+        android:icon="@drawable/ic_editor_undo"
+        android:orderInCategory="1"
+        android:title="@string/editor_undo"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/editor_menu_redo"
+        android:icon="@drawable/ic_editor_redo"
+        android:orderInCategory="2"
+        android:title="@string/editor_redo"
+        app:showAsAction="always" />
+
     <item
         android:id="@+id/editor_menu_save"
         android:orderInCategory="10"
         android:title="@string/editor_save"
         app:showAsAction="never" />
+
     <item
         android:id="@+id/editor_menu_run"
-        android:orderInCategory="15"
         android:icon="@drawable/ic_editor_run"
+        android:orderInCategory="15"
         android:title="@string/editor_run_test"
         app:showAsAction="ifRoom" />
+
     <item
         android:id="@+id/editor_menu_wrap"
         android:checkable="true"
         android:orderInCategory="20"
         android:title="@string/editor_toggle_wrap"
         app:showAsAction="never" />
+
     <item
         android:id="@+id/editor_menu_monospace"
         android:checkable="true"
