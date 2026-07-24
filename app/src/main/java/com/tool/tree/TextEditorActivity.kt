@@ -58,7 +58,7 @@ class TextEditorActivity : AppCompatActivity() {
         private const val UNDO_HISTORY_LIMIT = 50
         private const val UNDO_DEBOUNCE_MS = 600L
         private const val UNDO_CACHE_DEBOUNCE_MS = 1000L
-        private const val UNDO_CACHE_DIR = "editor_undo_cache"
+        private const val UNDO_CACHE_DIR = "editor_cache"
 
         private val RUNNABLE_EXTENSIONS = mapOf(
             "sh" to "sh",
@@ -417,13 +417,12 @@ class TextEditorActivity : AppCompatActivity() {
     private fun setupSpecialCharsBar() {
         val chars = listOf(
             "Tab" to "\t", "$" to "$", "#" to "#",
-            "\"" to "\"", "'" to "'", "/" to "/", "\\" to "\\",
-            "|" to "|", "&" to "&", "{" to "{", "}" to "}",
-            "(" to "(", ")" to ")", "[" to "[", "]" to "]",
-            ";" to ";", ":" to ":", "<" to "<", ">" to ">",
-            "@" to "@", "!" to "!", "=" to "=", "+" to "+",
-            "-" to "-", "*" to "*", "~" to "~", "`" to "`",
-            "_" to "_", "%" to "%"
+            "\"" to "\"", "'" to "'", "`" to "`", "/" to "/",
+            "\\" to "\\", "|" to "|", "&" to "&", "{" to "{",
+            "}" to "}", "(" to "(", ")" to ")", "[" to "[",
+            "]" to "]", ";" to ";", ":" to ":", "<" to "<",
+            ">" to ">", "@" to "@", "!" to "!", "=" to "=", "+" to "+",
+            "-" to "-", "*" to "*", "~" to "~", "_" to "_", "%" to "%"
         )
 
         val container = binding.editorSpecialCharsContainer
@@ -824,7 +823,7 @@ class TextEditorActivity : AppCompatActivity() {
 
         val privateCacheDir = FileWrite.getPrivateFilePath(
             this,
-            "editor_cache/tmp_${System.currentTimeMillis()}.tmp"
+            "hone/tmp/tmp_${System.currentTimeMillis()}.tmp"
         ) ?: return false
 
         return try {

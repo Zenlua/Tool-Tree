@@ -27,7 +27,7 @@
         android:icon="@drawable/ic_editor_run"
         android:orderInCategory="15"
         android:title="@string/editor_run_test"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/editor_menu_wrap"
