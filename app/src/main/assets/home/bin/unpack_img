@@ -99,7 +99,6 @@ elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ]; then
     file_img="$TMP/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     fi
     sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')" "$file_img" >$TMP/sdat2img.log || killtree "File extraction error"
-    echo
 elif [ "$dang_tep" == 'sparse' ]; then
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
     if [ "$NODECO" == 1 ]; then

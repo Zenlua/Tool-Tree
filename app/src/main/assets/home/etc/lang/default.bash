@@ -291,6 +291,7 @@ list_partition_text="List of decompiled partitions"
 xoaoat_text_1="Clean up oat and odex items"
 open_activity_text="Open folder:"
 patch_text_fscontex="Patch fs_config and fs_contexts"
+patch_text_fsdesc="Auto add required permissions for newly added items"
 config_text_1="Convert existing project"
 config_text_2="Create a new project or choose a folder"
 

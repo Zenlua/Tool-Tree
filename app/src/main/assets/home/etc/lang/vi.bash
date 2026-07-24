@@ -292,6 +292,8 @@ list_partition_text="Danh sách phân vùng đã giải mã"
 xoaoat_text_1="Dọn dẹp mục oat và odex"
 open_activity_text="Mở thư mục:"
 patch_text_fscontex="Vá fs_config và fs_contexts"
+patch_text_fsdesc="Tự động thêm các quyền cần thiết cho mục mới thêm vào"
+
 config_text_1="Chuyển đổi dự án có sẵn"
 config_text_2="Tạo dự án mới hoặc chọn thư mục"
 

@@ -900,7 +900,7 @@ checktime
 </param>
 <param name="nen_br" required="true" value-sh="glog nen_br 4" label="'$builds_text_4'" type="seekbar" min="0" max="22" desc="'$convert_text_2'" depend-on="format_img" depend-value="raw,sparse,File.new.dat" depend-mode="hide"/>
 <param name="build_times" label="'$time_text'" value-sh="glog build_times" type="number" desc="'$build_time_text_1': '$time_riviu'" required="required" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show" />
-<param name="offfscontex" value-sh="glog offfscontex 1" label="'$patch_text_fscontex'" type="switch" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show"/>
+<param name="offfscontex" value-sh="glog offfscontex 1" label="'$patch_text_fscontex'" desc="'$patch_text_fsdesc'" type="switch" depend-on="IMAGES" depend-value="(erofs),(ext),(f2fs)" depend-mode="show"/>
 <param name="build_size" label="'$sizes_text'" value-sh="glog build_size 0" type="number" desc="'$builds_text_7'" required="required" depend-on="dinh_dang|dinh_dang|IMAGES" depend-value="EROFS|EXT4,F2FS|(ext),(f2fs)" depend-mode="hide|show|show" depend-logic="priority" depend-default="hide"/>
 <set>
 slog dang_nen "$dang_nen"
