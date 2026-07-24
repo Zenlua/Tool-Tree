@@ -6,66 +6,167 @@ import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
+import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
+import android.text.style.URLSpan
 import android.text.style.UnderlineSpan
 import java.util.regex.Pattern
 
 object AnsiColorParser {
-    private val ANSI_PATTERN = Pattern.compile("\\u001B\\[([\\d;]*)m")
-    
-    private const val DEFAULT_FOREGROUND = Color.LTGRAY 
-    private const val DEFAULT_BACKGROUND = Color.TRANSPARENT // Mặc định không có màu nền
 
-    // Cấu trúc lưu trữ trạng thái định dạng hiện tại của luồng log
+    // CSI: ESC [ params intermediate finalByte   (SGR dùng finalByte = 'm', ngoài ra còn
+    // cursor move/clear line/hide cursor... với finalByte khác -> bị bỏ qua không render)
+    private val CSI_PATTERN = Pattern.compile(
+        "\\u001B\\[([0-9;:?]*)([ -/]*)([@-~])"
+    )
+
+    // OSC: ESC ] body (BEL | ESC \)  — dùng cho hyperlink (8;;URL) và các OSC khác (vd 0;title)
+    private val OSC_PATTERN = Pattern.compile(
+        "\\u001B\\]([^\\u0007\\u001B]*)(?:\\u0007|\\u001B\\\\)"
+    )
+
+    // Escape đơn dạng ESC + 1 ký tự không phải '[' hoặc ']' (vd chọn charset ESC(B, ESC)0...)
+    private val SIMPLE_ESC_PATTERN = Pattern.compile(
+        "\\u001B[()#][A-Za-z0-9]|\\u001B[=>]"
+    )
+
+    private const val DEFAULT_FOREGROUND = Color.LTGRAY
+    private const val DEFAULT_BACKGROUND = Color.TRANSPARENT
+
+    // Trạng thái định dạng hiện tại của luồng log (giữ nguyên xuyên suốt các lần parse)
     private var currentFgColor = DEFAULT_FOREGROUND
     private var currentBgColor = DEFAULT_BACKGROUND
     private var isBold = false
+    private var isItalic = false
     private var isUnderline = false
+    private var isStrikethrough = false
+    private var isReverse = false
+    private var isDim = false
 
-    // Bảng 16 màu ANSI cơ bản (cho cả Foreground và Background)
     private val ANSI_16_COLORS = intArrayOf(
-        Color.BLACK,              // 0 - Black
-        Color.RED,                // 1 - Red
-        Color.GREEN,              // 2 - Green
-        Color.rgb(200, 150, 0),   // 3 - Yellow (Tối đi một chút để tránh chói mắt)
-        Color.BLUE,               // 4 - Blue
-        Color.MAGENTA,            // 5 - Magenta
-        Color.CYAN,               // 6 - Cyan
-        Color.WHITE,              // 7 - White
-        // 8 - 15: Bright Colors (Màu sáng)
-        Color.DKGRAY,             // 8 - Bright Black (Dark Gray)
-        Color.rgb(255, 85, 85),        // 9 - Bright Red
-        Color.rgb(85, 255, 85),        // 10 - Bright Green
-        Color.rgb(255, 255, 85),       // 11 - Bright Yellow
-        Color.rgb(85, 85, 255),        // 12 - Bright Blue
-        Color.rgb(255, 85, 255),       // 13 - Bright Magenta
-        Color.rgb(85, 255, 255),       // 14 - Bright Cyan
-        Color.WHITE                    // 15 - Bright White
+        Color.BLACK,
+        Color.RED,
+        Color.GREEN,
+        Color.rgb(200, 150, 0),
+        Color.BLUE,
+        Color.MAGENTA,
+        Color.CYAN,
+        Color.WHITE,
+        Color.DKGRAY,
+        Color.rgb(255, 85, 85),
+        Color.rgb(85, 255, 85),
+        Color.rgb(255, 255, 85),
+        Color.rgb(85, 85, 255),
+        Color.rgb(255, 85, 255),
+        Color.rgb(85, 255, 255),
+        Color.WHITE
     )
 
     fun parse(text: String?): CharSequence {
         if (text == null) return ""
+
         val builder = SpannableStringBuilder()
-        val matcher = ANSI_PATTERN.matcher(text)
-        var lastHeight = 0
+        val plainBuffer = StringBuilder()
 
-        while (matcher.find()) {
-            val start = matcher.start()
-            val end = matcher.end()
+        var pendingLinkUrl: String? = null
+        var pendingLinkStart = -1
 
-            if (start > lastHeight) {
-                val part = text.substring(lastHeight, start)
-                appendStyledText(builder, part)
+        var i = 0
+        val len = text.length
+
+        fun flushPlainBuffer() {
+            if (plainBuffer.isNotEmpty()) {
+                appendStyledText(builder, plainBuffer.toString())
+                plainBuffer.setLength(0)
             }
-
-            val paramsStr = matcher.group(1) ?: ""
-            parseAnsiParameters(paramsStr)
-            lastHeight = end
         }
 
-        if (lastHeight < text.length) {
-            val part = text.substring(lastHeight)
-            appendStyledText(builder, part)
+        while (i < len) {
+            val c = text[i]
+
+            if (c != '\u001B') {
+                plainBuffer.append(c)
+                i++
+                continue
+            }
+
+            // Gặp ESC -> flush phần text thường đã tích lũy trước khi xử lý escape
+            flushPlainBuffer()
+
+            val nextChar = if (i + 1 < len) text[i + 1] else '\u0000'
+
+            when (nextChar) {
+                '[' -> {
+                    val m = CSI_PATTERN.matcher(text)
+                    m.region(i, len)
+                    if (m.lookingAt()) {
+                        val params = m.group(1) ?: ""
+                        val finalByte = m.group(3)
+                        if (finalByte == "m") {
+                            parseAnsiParameters(params)
+                        }
+                        // Các CSI khác (cursor move, clear line, hide cursor...) -> bỏ qua, không render
+                        i = m.end()
+                    } else {
+                        i++ // escape hỏng/không đầy đủ, bỏ qua 1 ký tự để tránh vòng lặp vô hạn
+                    }
+                }
+
+                ']' -> {
+                    val m = OSC_PATTERN.matcher(text)
+                    m.region(i, len)
+                    if (m.lookingAt()) {
+                        val body = m.group(1) ?: ""
+                        if (body.startsWith("8;")) {
+                            // OSC 8 hyperlink: "8;params;URL"
+                            val url = body.substringAfterLast(';', "")
+                            if (url.isEmpty()) {
+                                // Thẻ đóng link
+                                if (pendingLinkUrl != null && pendingLinkStart in 0..builder.length) {
+                                    builder.setSpan(
+                                        URLSpan(pendingLinkUrl),
+                                        pendingLinkStart,
+                                        builder.length,
+                                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                    )
+                                }
+                                pendingLinkUrl = null
+                                pendingLinkStart = -1
+                            } else {
+                                // Thẻ mở link
+                                pendingLinkUrl = url
+                                pendingLinkStart = builder.length
+                            }
+                        }
+                        // Các OSC khác (đặt title cửa sổ, v.v.) -> bỏ qua, không hiển thị ra text
+                        i = m.end()
+                    } else {
+                        i++
+                    }
+                }
+
+                else -> {
+                    val m = SIMPLE_ESC_PATTERN.matcher(text)
+                    m.region(i, len)
+                    if (m.lookingAt()) {
+                        i = m.end() // bỏ qua, không có nội dung hiển thị
+                    } else {
+                        i++ // ESC đơn lẻ không rõ dạng -> bỏ qua chính nó
+                    }
+                }
+            }
+        }
+
+        flushPlainBuffer()
+
+        // Nếu chuỗi kết thúc mà link vẫn chưa đóng (log bị cắt giữa chừng), vẫn áp span cho phần đã có
+        if (pendingLinkUrl != null && pendingLinkStart in 0 until builder.length) {
+            builder.setSpan(
+                URLSpan(pendingLinkUrl),
+                pendingLinkStart,
+                builder.length,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
         }
 
         return builder
@@ -81,47 +182,78 @@ object AnsiColorParser {
 
         if (spanStart == spanEnd) return
 
-        // 1. Áp dụng màu chữ (Foreground)
+        var fg = currentFgColor
+        var bg = currentBgColor
+
+        // Reverse video: hoán đổi fg/bg khi hiển thị
+        if (isReverse) {
+            val realBg = if (bg == Color.TRANSPARENT) Color.BLACK else bg
+            val tmp = fg
+            fg = realBg
+            bg = tmp
+        }
+
+        // Dim/faint: giảm độ chói của màu chữ
+        if (isDim) {
+            fg = Color.argb(
+                180,
+                Color.red(fg), Color.green(fg), Color.blue(fg)
+            )
+        }
+
         builder.setSpan(
-            ForegroundColorSpan(currentFgColor),
-            spanStart,
-            spanEnd,
+            ForegroundColorSpan(fg),
+            spanStart, spanEnd,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
 
-        // 2. Áp dụng màu nền (Background) nếu có thiết lập màu khác trong suốt
-        if (currentBgColor != Color.TRANSPARENT) {
+        if (bg != Color.TRANSPARENT) {
             builder.setSpan(
-                BackgroundColorSpan(currentBgColor),
-                spanStart,
-                spanEnd,
+                BackgroundColorSpan(bg),
+                spanStart, spanEnd,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
 
-        // 3. Áp dụng kiểu chữ in đậm (Bold)
-        if (isBold) {
+        if (isBold && isItalic) {
+            builder.setSpan(
+                StyleSpan(Typeface.BOLD_ITALIC),
+                spanStart, spanEnd,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        } else if (isBold) {
             builder.setSpan(
                 StyleSpan(Typeface.BOLD),
-                spanStart,
-                spanEnd,
+                spanStart, spanEnd,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        } else if (isItalic) {
+            builder.setSpan(
+                StyleSpan(Typeface.ITALIC),
+                spanStart, spanEnd,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
 
-        // 4. Áp dụng kiểu chữ gạch chân (Underline)
         if (isUnderline) {
             builder.setSpan(
                 UnderlineSpan(),
-                spanStart,
-                spanEnd,
+                spanStart, spanEnd,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        if (isStrikethrough) {
+            builder.setSpan(
+                StrikethroughSpan(),
+                spanStart, spanEnd,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
     }
 
     /**
-     * Parse chuỗi tham số ANSI để cập nhật trạng thái định dạng (in đậm, màu chữ, màu nền,...)
+     * Parse chuỗi tham số SGR để cập nhật trạng thái định dạng
      */
     private fun parseAnsiParameters(paramsStr: String) {
         if (paramsStr.isEmpty() || paramsStr == "0") {
@@ -135,31 +267,32 @@ object AnsiColorParser {
         while (i < tokens.size) {
             val code = tokens[i].toIntOrNull() ?: 0
             when {
-                // Reset định dạng về mặc định
                 code == 0 -> resetToDefault()
 
-                // Kiểu chữ (Style)
                 code == 1 -> isBold = true
+                code == 2 -> isDim = true
+                code == 3 -> isItalic = true
                 code == 4 -> isUnderline = true
-                code == 21 -> isBold = false // Tắt in đậm (Double underline hoặc bold off tùy terminal)
-                code == 22 -> isBold = false // Tắt in đậm thông thường
-                code == 24 -> isUnderline = false // Tắt gạch chân
+                code == 7 -> isReverse = true
+                code == 9 -> isStrikethrough = true
 
-                // Màu chữ mặc định (Default Foreground)
+                code == 21 -> isBold = false // double underline / bold-off tùy terminal
+                code == 22 -> { isBold = false; isDim = false }
+                code == 23 -> isItalic = false
+                code == 24 -> isUnderline = false
+                code == 27 -> isReverse = false
+                code == 29 -> isStrikethrough = false
+
                 code == 39 -> currentFgColor = DEFAULT_FOREGROUND
-
-                // Màu nền mặc định (Default Background)
                 code == 49 -> currentBgColor = DEFAULT_BACKGROUND
 
-                // Màu chữ cơ bản (30 - 37) và màu chữ sáng (90 - 97)
                 code in 30..37 -> currentFgColor = ANSI_16_COLORS[code - 30]
                 code in 90..97 -> currentFgColor = ANSI_16_COLORS[code - 90 + 8]
 
-                // Màu nền cơ bản (40 - 47) và màu nền sáng (100 - 107)
                 code in 40..47 -> currentBgColor = ANSI_16_COLORS[code - 40]
                 code in 100..107 -> currentBgColor = ANSI_16_COLORS[code - 100 + 8]
 
-                // Chế độ màu chữ mở rộng (38;5;ID hoặc 38;2;R;G;B)
+                // Màu chữ mở rộng: 38;5;ID hoặc 38;2;R;G;B
                 code == 38 -> {
                     if (i + 1 < tokens.size) {
                         val mode = tokens[i + 1].toIntOrNull() ?: 0
@@ -177,7 +310,7 @@ object AnsiColorParser {
                     }
                 }
 
-                // Chế độ màu nền mở rộng (48;5;ID hoặc 48;2;R;G;B)
+                // Màu nền mở rộng: 48;5;ID hoặc 48;2;R;G;B
                 code == 48 -> {
                     if (i + 1 < tokens.size) {
                         val mode = tokens[i + 1].toIntOrNull() ?: 0
@@ -221,7 +354,11 @@ object AnsiColorParser {
         currentFgColor = DEFAULT_FOREGROUND
         currentBgColor = DEFAULT_BACKGROUND
         isBold = false
+        isItalic = false
         isUnderline = false
+        isStrikethrough = false
+        isReverse = false
+        isDim = false
     }
 
     fun reset() {
