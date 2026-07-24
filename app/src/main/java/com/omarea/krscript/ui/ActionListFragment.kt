@@ -334,7 +334,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                             return krScriptActionHandler?.openFileChooser(callback) ?: false
                         }
                     })
-                    progressBarDialog.hideDialog()
+                    // Không hideDialog() ở đây nữa — sẽ tắt sau khi dialog tham số
+                    // mới (đã có nền mờ) hiện lên, xem bên dưới.
 
                     val customRunner = krScriptActionHandler?.openParamsPage(action, linearLayout) {
                         try {
@@ -355,12 +356,18 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         val dialog = if (isLongList) {
                             AlertDialog.Builder(requireContext(), if (darkMode) R.style.kr_full_screen_dialog_dark else R.style.kr_full_screen_dialog_light)
                                 .setView(dialogView).create().apply {
-                                    show()
+                                    // Set nền blur TRƯỚC show() để tránh nháy (frame đầu không mờ)
                                     window?.let { DialogHelper.setWindowBlurBg(it, requireActivity()) }
+                                    show()
                                 }
                         } else {
                             DialogHelper.customDialog(requireActivity(), dialogView).dialog
                         }
+
+                        // Chỉ tắt dialog "loading" SAU KHI dialog tham số (đã có nền mờ) hiện lên,
+                        // để lúc nào màn hình cũng có một dialog mờ che phủ, không có khoảng
+                        // trống bị "tắt mờ" giữa 2 dialog.
+                        progressBarDialog.hideDialog()
 
                         dialogView.findViewById<TextView>(R.id.title).text = action.title
                         dialogView.findViewById<TextView>(R.id.desc).apply { if (action.desc.isEmpty()) visibility = View.GONE else text = action.desc }
@@ -375,6 +382,9 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 Toast.makeText(requireContext(), "" + ex.message, Toast.LENGTH_LONG).show()
                             }
                         }
+                    } else {
+                        // openParamsPage tự xử lý UI riêng (không phải dialog blur ở trên) -> tắt loading ngay
+                        progressBarDialog.hideDialog()
                     }
                 }
             }

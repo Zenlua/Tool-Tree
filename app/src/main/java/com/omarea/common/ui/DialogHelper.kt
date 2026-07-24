@@ -378,13 +378,15 @@ class DialogHelper {
             }).setView(view).setCancelable(cancelable).create()
 
             if (context is Activity) {
-                dialog.show()
+                // Tính & set nền blur TRƯỚC khi show() để không có khung hình nào
+                // dialog hiện ra mà chưa có nền mờ (tránh nháy mờ/rõ).
                 dialog.window?.run {
                     setWindowBlurBg(this, context)
                     decorView.run {
                         systemUiVisibility = context.window.decorView.systemUiVisibility // View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                     }
                 }
+                dialog.show()
             } else {
                 dialog.window?.run {
                     setWindowAnimations(R.style.windowAnim2)
