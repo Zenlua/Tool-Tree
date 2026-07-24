@@ -156,6 +156,9 @@ public class AdapterFileSelector extends BaseAdapter {
                 public void run() {
                     notifyDataSetChanged();
                     progressBarDialog.hideDialog();
+                    if (selectionChangedListener != null) {
+                        selectionChangedListener.onSelectionChanged(selectedFiles.size());
+                    }
                 }
             });
         }).start();
@@ -213,6 +216,51 @@ public class AdapterFileSelector extends BaseAdapter {
             selectedFiles.remove(file);
         } else {
             selectedFiles.add(file);
+        }
+        notifyDataSetChanged();
+        if (selectionChangedListener != null) {
+            selectionChangedListener.onSelectionChanged(selectedFiles.size());
+        }
+    }
+
+    // Một tệp/thư mục có phải là đối tượng "có thể chọn" (hiện checkbox) trong danh sách hiện tại không.
+    // Ở chế độ chọn thư mục: mọi mục trong fileArray đều là thư mục -> có thể chọn.
+    // Ở chế độ chọn tệp: chỉ tệp mới có thể chọn, thư mục chỉ dùng để điều hướng.
+    private boolean isSelectable(File file) {
+        return folderChooserMode || !file.isDirectory();
+    }
+
+    // Thư mục hiện tại đã được chọn hết (mọi mục có thể chọn) hay chưa - dùng để đồng bộ checkbox "Chọn tất cả".
+    public boolean isAllCurrentDirSelected() {
+        if (fileArray == null || fileArray.length == 0) {
+            return false;
+        }
+        boolean hasSelectable = false;
+        for (File file : fileArray) {
+            if (isSelectable(file)) {
+                hasSelectable = true;
+                if (!selectedFiles.contains(file)) {
+                    return false;
+                }
+            }
+        }
+        return hasSelectable;
+    }
+
+    // Chọn/bỏ chọn tất cả các mục có thể chọn trong thư mục đang hiển thị.
+    public void setSelectAllState(boolean selectAll) {
+        if (fileArray == null) {
+            return;
+        }
+        for (File file : fileArray) {
+            if (!isSelectable(file)) {
+                continue;
+            }
+            if (selectAll) {
+                selectedFiles.add(file);
+            } else {
+                selectedFiles.remove(file);
+            }
         }
         notifyDataSetChanged();
         if (selectionChangedListener != null) {

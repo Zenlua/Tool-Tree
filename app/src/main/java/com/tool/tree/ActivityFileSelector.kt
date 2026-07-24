@@ -152,6 +152,32 @@ class ActivityFileSelector : AppCompatActivity() {
 
             binding.fileSelectorList.adapter = adapterFileSelector
 
+            // Hàng "Chọn tất cả" chỉ hiện khi đang ở chế độ chọn nhiều (multiple)
+            if (multiple) {
+                binding.selectAllBlock.visibility = View.VISIBLE
+
+                fun syncSelectAllCheckbox() {
+                    binding.selectAll.isChecked = adapterFileSelector?.isAllCurrentDirSelected() == true
+                }
+                syncSelectAllCheckbox()
+
+                val toggleSelectAll = View.OnClickListener {
+                    val nextState = adapterFileSelector?.isAllCurrentDirSelected() != true
+                    adapterFileSelector?.setSelectAllState(nextState)
+                    binding.selectAll.isChecked = nextState
+                }
+                binding.selectAllBlock.setOnClickListener(toggleSelectAll)
+                binding.selectAll.setOnClickListener(toggleSelectAll)
+
+                adapterFileSelector?.setSelectionChangedListener(object : AdapterFileSelector.SelectionChangedListener {
+                    override fun onSelectionChanged(selectedCount: Int) {
+                        syncSelectAllCheckbox()
+                    }
+                })
+            } else {
+                binding.selectAllBlock.visibility = View.GONE
+            }
+
             // ✅ Chụp ảnh mờ sau khi gán Adapter và Render dữ liệu xong
             binding.root.post {
                 BlurEngine.controller.captureAndBlur(this)
