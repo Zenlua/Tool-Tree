@@ -419,9 +419,9 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun setupSpecialCharsBar() {
         val chars = listOf(
-            "Tab" to "\t", "|" to "|", "&" to "&",
+            "Tab" to "\t", "$" to "$", "#" to "#",
             "\"" to "\"", "'" to "'", "/" to "/", "\\" to "\\",
-            "$" to "$", "#" to "#", "{" to "{", "}" to "}",
+            "|" to "|", "&" to "&", "{" to "{", "}" to "}",
             "(" to "(", ")" to ")", "[" to "[", "]" to "]",
             ";" to ";", ":" to ":", "<" to "<", ">" to ">",
             "@" to "@", "!" to "!", "=" to "=", "+" to "+",

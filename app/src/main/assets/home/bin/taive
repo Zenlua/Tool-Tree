@@ -6,16 +6,23 @@ if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
 fi
 
 PROGRESS_FLAG=""
-
 if [ "$1" == '-#' ]; then
     PROGRESS_FLAG="-#"
+    shift
+elif [ "$1" == '-c' ]; then
+    PROGRESS_FLAG="-c"
     shift
 fi
 
 SAVE_PATH="${2:-${1##*/}}"
-
 if [ -z "$SAVE_PATH" ]; then
     SAVE_PATH="downloaded_file"
 fi
 
-curl $PROGRESS_FLAG -L -H "$WEBS" "$1" -o "$SAVE_PATH"
+if [ "$PROGRESS_FLAG" == '-#' ]; then
+    curl $PROGRESS_FLAG -L -H "$WEBS" "$1" -o "$SAVE_PATH"
+elif [ "$PROGRESS_FLAG" == '-c' ]; then
+    curl -L -H "$WEBS" "$1" -o "$SAVE_PATH"
+else
+    axel -H "$WEBS" -n 10 -o "$SAVE_PATH" "$1"
+fi

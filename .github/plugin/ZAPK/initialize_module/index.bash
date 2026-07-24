@@ -11,13 +11,11 @@ home() {
         <summary>'$lang_summary_path''$path_modun'</summary>
         <param name="uri_file_modun" value-sh="glog uri_file_modun" options-sh="findfile files $PTAD" required="required" label="@string/options_text" multiple="true"/>
         <param name="uri_adb_moduls" desc="'$lang_desc_adb'" placeholder="/system_ext/priv-app/Settings/Settings.apk" value-sh="glog uri_adb_moduls" type="text" />
-        <param name="prop_modunls" desc="'$lang_desc_prop'" placeholder="ro.control_privapp_permissions=log" value-sh="cat '$path_modun'/system.prop 2>/dev/null" type="text" />
         <set>
             slog uri_adb_moduls "$uri_adb_moduls"
             slog uri_file_modun "$uri_file_modun"
             [ -f '$path_modun'/remove ] && rm -fr '$path_modun'/remove
             mkdir -p '$path_modun' '$path_modun2'
-            echo "$prop_modunls" > '$path_modun2'/system.prop
             for vcc in $uri_file_modun; do
                 if [ "$uri_adb_moduls" ]; then
                     mkdir -p "'$path_modun2'${uri_adb_moduls%/*}"
@@ -49,6 +47,10 @@ description=Modified system files" | tee '$path_modun'/module.prop
             set_permis -R -o 0:0 -c u:object_r:system_file:s0 '$path_modun2'/system
         </set>
     </action>
+</group>
+
+<group>
+<editor title="'$lang_desc_prop'" file="'$path_modun'/system.prop" placeholder="ro.control_privapp_permissions=log"/>
 </group>
 
 <group>
