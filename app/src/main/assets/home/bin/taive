@@ -2,14 +2,14 @@
 
 # Kiểm tra trợ giúp hoặc thiếu tham số
 if [[ "$1" =~ ^(-h|--help)$ ]] || [ -z "$1" ]; then
-    echo "Syntax: taive [-#|-a|-w] http://file.zip [path/save.zip]"
+    echo "Syntax: taive [-#|-w] http://file.zip [path/save.zip]"
     exit 0
 fi
 
 # Tách cờ tùy chọn nếu có
 FLAG=""
 case "$1" in
-    -#|-a|-w) FLAG="$1"; shift ;;
+    -#|-w) FLAG="$1"; shift ;;
 esac
 
 # Xác định đường dẫn lưu
@@ -24,7 +24,6 @@ fi
 # Thực thi công cụ tải tương ứng
 case "$FLAG" in
     -#) curl -# -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
-    -a) axel -H "$WEBS" -n 10 -o "$SAVE_PATH" "$1" ;;
     -w) wget --header "$WEBS" --no-check-certificate -O "$SAVE_PATH" "$1" ;;
      *) curl -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
 esac
