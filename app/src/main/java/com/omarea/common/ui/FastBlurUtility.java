@@ -11,7 +11,6 @@ import android.view.View;
 
 public class FastBlurUtility {
 
-    // Tỉ lệ thu nhỏ ảnh để xử lý nhanh
     private static final float SCALE_FACTOR = 0.10f;
     private static final int BLUR_RADIUS = 8;
 
@@ -24,7 +23,6 @@ public class FastBlurUtility {
 
         Bitmap blurredBmp = startBlurBackground(bmp);
 
-        // Giải phóng bitmap chụp màn hình gốc sau khi dùng xong
         if (bmp != blurredBmp && !bmp.isRecycled()) {
             bmp.recycle();
         }
@@ -32,37 +30,25 @@ public class FastBlurUtility {
     }
 
     /**
-     * Quy trình xử lý: Thu nhỏ -> Làm mờ -> Phóng to & Nhuộm tối (Dim)
+     * Quy trình xử lý: Thu nhỏ -> Làm mờ -> Phóng to & Dim
      */
     public static Bitmap startBlurBackground(Bitmap bkg) {
         if (bkg == null || bkg.isRecycled()) return null;
 
-        // 1. Tính toán kích thước thu nhỏ
-        int scaledW = Math.round(bkg.getWidth() * SCALE_FACTOR);
-        int scaledH = Math.round(bkg.getHeight() * SCALE_FACTOR);
+        // Đảm bảo kích thước tối thiểu 16px để tránh ảnh bị quá nhỏ gây mờ đục hoặc hỏng layout
+        int width = Math.max(Math.round(bkg.getWidth() * SCALE_FACTOR), 16);
+        int height = Math.max(Math.round(bkg.getHeight() * SCALE_FACTOR), 16);
 
-        // Đảm bảo kích thước ảnh sau thu nhỏ không được nhỏ hơn (BLUR_RADIUS * 2)
-        // Điều này ngăn triệt để lỗi ArrayIndexOutOfBoundsException trong fastBlur
-        int minSize = BLUR_RADIUS * 2;
-        int width = Math.max(scaledW, minSize);
-        int height = Math.max(scaledH, minSize);
-
-        if (width <= 0 || height <= 0) return null;
-
-        // 2. Thu nhỏ ảnh
         Bitmap smallBitmap = Bitmap.createScaledBitmap(bkg, width, height, true);
 
-        // 3. Làm mờ bằng thuật toán StackBlur gốc
         Bitmap blurred = fastBlur(smallBitmap, BLUR_RADIUS);
 
-        // Giải phóng smallBitmap tạm thời để tránh Memory Leak
         if (smallBitmap != null && smallBitmap != blurred && !smallBitmap.isRecycled()) {
             smallBitmap.recycle();
         }
 
         if (blurred == null) return null;
 
-        // 4. Phóng to về kích thước gốc và áp dụng bộ lọc màu tối (scaleAndDim sẽ tự recycle 'blurred')
         return scaleAndDim(blurred, bkg.getWidth(), bkg.getHeight());
     }
 
@@ -85,7 +71,7 @@ public class FastBlurUtility {
     }
 
     /**
-     * Phóng to ảnh và áp dụng ColorMatrix để làm tối nền (Dim)
+     * Phóng to ảnh và áp dụng ColorMatrix làm tối (Dim)
      */
     private static Bitmap scaleAndDim(Bitmap bitmap, int targetW, int targetH) {
         if (bitmap == null || bitmap.isRecycled()) return null;
@@ -108,7 +94,6 @@ public class FastBlurUtility {
         Rect dst = new Rect(0, 0, targetW, targetH);
         canvas.drawBitmap(bitmap, src, dst, paint);
 
-        // Giải phóng bitmap tạm sau khi vẽ xong
         if (!bitmap.isRecycled()) {
             bitmap.recycle();
         }
@@ -117,7 +102,7 @@ public class FastBlurUtility {
     }
 
     /**
-     * Thuật toán StackBlur NGUYÊN BẢN GỐC (Giữ nguyên 100% phép tính toán học)
+     * Thuật toán StackBlur đã sửa lỗi hổng chỉ số mảng & giữ nguyên 100% chất lượng Blur gốc
      */
     private static Bitmap fastBlur(Bitmap sentBitmap, int radius) {
         if (sentBitmap == null || sentBitmap.isRecycled()) return null;
@@ -145,13 +130,14 @@ public class FastBlurUtility {
         int[] r = new int[wh];
         int[] g = new int[wh];
         int[] b = new int[wh];
-        int rsum, gsum, bsum, x, y, i, p, yp, yi, yw;
+        int rsum, gsum, bsum, x, y, i, p, yi, yw;
         int[] vmin = new int[Math.max(w, h)];
 
         int divsum = (div + 1) >> 1;
         divsum *= divsum;
-        int[] dv = new int[256 * divsum];
-        for (i = 0; i < 256 * divsum; i++) {
+        int maxDv = 256 * divsum;
+        int[] dv = new int[maxDv];
+        for (i = 0; i < maxDv; i++) {
             dv[i] = (i / divsum);
         }
 
@@ -165,6 +151,7 @@ public class FastBlurUtility {
         int routsum, goutsum, boutsum;
         int rinsum, ginsum, binsum;
 
+        // --- LƯỢT 1: LÀM MỜ CHIỀU NGANG ---
         for (y = 0; y < h; y++) {
             rinsum = ginsum = binsum = routsum = goutsum = boutsum = rsum = gsum = bsum = 0;
             for (i = -radius; i <= radius; i++) {
@@ -190,53 +177,69 @@ public class FastBlurUtility {
             stackpointer = radius;
 
             for (x = 0; x < w; x++) {
-                r[yi] = dv[rsum];
-                g[yi] = dv[gsum];
-                b[yi] = dv[bsum];
+                r[yi] = dv[Math.min(Math.max(rsum, 0), maxDv - 1)];
+                g[yi] = dv[Math.min(Math.max(gsum, 0), maxDv - 1)];
+                b[yi] = dv[Math.min(Math.max(bsum, 0), maxDv - 1)];
+
                 rsum -= routsum;
                 gsum -= goutsum;
                 bsum -= boutsum;
+
                 stackstart = stackpointer - radius + div;
                 sir = stack[stackstart % div];
+
                 routsum -= sir[0];
                 goutsum -= sir[1];
                 boutsum -= sir[2];
+
                 if (y == 0) vmin[x] = Math.min(x + radius + 1, wm);
                 p = pix[yw + vmin[x]];
+
                 sir[0] = (p & 0xff0000) >> 16;
                 sir[1] = (p & 0x00ff00) >> 8;
                 sir[2] = (p & 0x0000ff);
+
                 rinsum += sir[0];
                 ginsum += sir[1];
                 binsum += sir[2];
+
                 rsum += rinsum;
                 gsum += ginsum;
                 bsum += binsum;
+
                 stackpointer = (stackpointer + 1) % div;
                 sir = stack[(stackpointer) % div];
+
                 routsum += sir[0];
                 goutsum += sir[1];
                 boutsum += sir[2];
+
                 rinsum -= sir[0];
                 ginsum -= sir[1];
                 binsum -= sir[2];
+
                 yi++;
             }
             yw += w;
         }
+
+        // --- LƯỢT 2: LÀM MỜ CHIỀU DỌC ---
         for (x = 0; x < w; x++) {
             rinsum = ginsum = binsum = routsum = goutsum = boutsum = rsum = gsum = bsum = 0;
-            yp = -radius * w;
+
+            // ĐÃ SỬA LỖI: Khởi tạo stack chuẩn xác bằng Math.min(hm, Math.max(i, 0)) * w + x
             for (i = -radius; i <= radius; i++) {
-                yi = Math.max(0, yp) + x;
+                yi = Math.min(hm, Math.max(i, 0)) * w + x;
                 sir = stack[i + radius];
                 sir[0] = r[yi];
                 sir[1] = g[yi];
                 sir[2] = b[yi];
+
                 rbs = r1 - Math.abs(i);
                 rsum += r[yi] * rbs;
                 gsum += g[yi] * rbs;
                 bsum += b[yi] * rbs;
+
                 if (i > 0) {
                     rinsum += sir[0];
                     ginsum += sir[1];
@@ -246,42 +249,57 @@ public class FastBlurUtility {
                     goutsum += sir[1];
                     boutsum += sir[2];
                 }
-                if (i < hm) yp += w;
             }
+
             yi = x;
             stackpointer = radius;
             for (y = 0; y < h; y++) {
-                pix[yi] = (0xff000000 & pix[yi]) | (dv[rsum] << 16) | (dv[gsum] << 8) | dv[bsum];
+                pix[yi] = (0xff000000 & pix[yi])
+                        | (dv[Math.min(Math.max(rsum, 0), maxDv - 1)] << 16)
+                        | (dv[Math.min(Math.max(gsum, 0), maxDv - 1)] << 8)
+                        | dv[Math.min(Math.max(bsum, 0), maxDv - 1)];
+
                 rsum -= routsum;
                 gsum -= goutsum;
                 bsum -= boutsum;
+
                 stackstart = stackpointer - radius + div;
                 sir = stack[stackstart % div];
+
                 routsum -= sir[0];
                 goutsum -= sir[1];
                 boutsum -= sir[2];
+
                 if (x == 0) vmin[y] = Math.min(y + r1, hm) * w;
                 p = x + vmin[y];
+
                 sir[0] = r[p];
                 sir[1] = g[p];
                 sir[2] = b[p];
+
                 rinsum += sir[0];
                 ginsum += sir[1];
                 binsum += sir[2];
+
                 rsum += rinsum;
                 gsum += ginsum;
                 bsum += binsum;
+
                 stackpointer = (stackpointer + 1) % div;
                 sir = stack[stackpointer];
+
                 routsum -= sir[0];
                 goutsum -= sir[1];
                 boutsum -= sir[2];
+
                 rinsum -= sir[0];
                 ginsum -= sir[1];
                 binsum -= sir[2];
+
                 yi += w;
             }
         }
+
         bitmap.setPixels(pix, 0, w, 0, 0, w, h);
         return bitmap;
     }
