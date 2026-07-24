@@ -72,7 +72,6 @@ fi
 [[ -z "$CONVER" ]] && CONVER='raw'
 [[ -z "$DISATFS" ]] && DISATFS=1
 
-[ -f $ETC/mke2fs.conf ] && export MKE2FS_CONFIG="$ETC/mke2fs.conf"
 # Thời gian build
 time_build="$(glog build_times)"
 [ -z "$time_build" ] && time_build="1230768000"
@@ -166,10 +165,10 @@ if [ "$partition" == "erofs" ]; then
     if [ "$tool_erofs" == 1 ]; then
     imgkit_scuti pack --type erofs -s "$INPUT" -o "$saved" --compress $NENEROFS --compress-level ${zlsize/,/} --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" | tee $TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti" "$saved"
     elif [ "$tool_erofs" == 2 ]; then
-    $TERMUX/lib/theft/mkfs.erofs -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" > $TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs)" "$saved" &
+    $TERMUX/lib/theft/mkfs.erofs -E^xattr-name-filter -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" > $TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs)" "$saved" &
     process_erofss $TMP/mkfs_erofs.log
     else
-    mkfs.erofs -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" > $TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs" "$saved" &
+    mkfs.erofs -E^xattr-name-filter -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" > $TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs" "$saved" &
     process_erofss $TMP/mkfs_erofs.log
     fi
 elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then

@@ -481,10 +481,10 @@ done
 <action icon="'`urlpng list_tool`'" shell="hidden" reload="true">
 <title>'$customize_tools_text'</title>
 <param name="un_tool_ext4" value-sh="glog un_tool_ext4 0" label="'$option_text'" title="'$tool_unpack_text' ext4" options-sh="echo -e '"'0|imgextractor\n1|imgkit_scuti'"' "/>
-<param name="un_tool_erofs" value-sh="glog un_tool_erofs 0" label="'$option_text'" title="'$tool_unpack_text' erofs" options-sh="echo -e '"'0|extract.erofs\n1|imgkit_scuti\n2|extract.erofs (old)'"' "/>
+<param name="un_tool_erofs" value-sh="glog un_tool_erofs 0" label="'$option_text'" title="'$tool_unpack_text' erofs" options-sh="echo -e '"'0|extract.erofs\n1|imgkit_scuti\n2|extract.erofs (new)'"' "/>
 <param name="un_tool_f2fs" value-sh="glog un_tool_f2fs 0" label="'$option_text'" title="'$tool_unpack_text' f2fs" options-sh="echo -e '"'0|extract.f2fs\n1|imgkit_scuti'"' "/>
 <param name="re_tool_ext4" value-sh="glog re_tool_ext4 0" label="'$option_text'" title="'$tool_repack_text' ext4" options-sh="echo -e '"'0|make_ext4fs\n1|mke2fs+e2fsdroid\n2|imgkit_scuti'"' "/>
-<param name="re_tool_erofs" value-sh="glog re_tool_erofs 0" label="'$option_text'" title="'$tool_repack_text' erofs" options-sh="echo -e '"'0|mkfs.erofs\n1|imgkit_scuti\n2|mkfs.erofs (old)'"' "/>
+<param name="re_tool_erofs" value-sh="glog re_tool_erofs 0" label="'$option_text'" title="'$tool_repack_text' erofs" options-sh="echo -e '"'0|mkfs.erofs\n1|imgkit_scuti\n2|mkfs.erofs (new)'"' "/>
 <param name="re_tool_f2fs" value-sh="glog re_tool_f2fs 0" label="'$option_text'" title="'$tool_repack_text' f2fs" options-sh="echo -e '"'0|sload_f2fs'"' "/>
 <set>
 slog un_tool_ext4 "$un_tool_ext4"
