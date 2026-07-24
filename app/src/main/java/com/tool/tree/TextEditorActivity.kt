@@ -54,6 +54,7 @@ class TextEditorActivity : AppCompatActivity() {
         private const val EXTRA_DIR = "dir"
         private const val EXTRA_PLACEHOLDER = "placeholder"
 
+        // Tối ưu RAM: Giảm Undo Stack từ 200 xuống 50 để tránh OutOfMemory
         private const val UNDO_HISTORY_LIMIT = 50
         private const val UNDO_DEBOUNCE_MS = 600L
         private const val UNDO_CACHE_DEBOUNCE_MS = 1000L
@@ -122,7 +123,7 @@ class TextEditorActivity : AppCompatActivity() {
     private var pendingUndoSnapshot: EditorSnapshot? = null
     private var isApplyingHistory = false
 
-    // Quản lý trạng thái các MenuItem
+    // Quản lý trạng thái các MenuItem trên Toolbar
     private var undoMenuItem: MenuItem? = null
     private var redoMenuItem: MenuItem? = null
     private var saveMenuItem: MenuItem? = null
@@ -253,7 +254,7 @@ class TextEditorActivity : AppCompatActivity() {
                 for (i in 0 until arr.length()) redoStack.addLast(jsonToSnapshot(arr.getJSONObject(i)))
             }
             pendingUndoSnapshot = root.optJSONObject("pending")?.let { jsonToSnapshot(it) }
-            refreshUndoRedoButtons()
+            refreshToolbarButtons()
         } catch (_: Exception) {
         }
     }
@@ -324,15 +325,15 @@ class TextEditorActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {
                 if (isApplyingHistory) return
 
-                // 1. Quản lý Undo/Redo Debounce
+                // 1. Quản lý Undo/Redo & Save Debounce
                 redoStack.clear()
                 editorHandler.removeCallbacks(commitPendingUndoRunnable)
                 editorHandler.postDelayed(commitPendingUndoRunnable, UNDO_DEBOUNCE_MS)
-                refreshUndoRedoButtons()
-                refreshSaveButtonState() // Cập nhật nút Save
+
+                refreshToolbarButtons()
                 scheduleUndoCachePersist()
 
-                // 2. Chỉ kiểm tra đổi Ngôn ngữ khi người dùng chỉnh sửa dòng đầu tiên
+                // 2. Chỉ kiểm tra đổi Ngôn ngữ khi người dùng chỉnh sửa dòng đầu tiên (dòng chứa Shebang)
                 if (startChangeIndex < 100) {
                     refreshLanguageOverrideIfChanged()
                 }
@@ -528,7 +529,7 @@ class TextEditorActivity : AppCompatActivity() {
 
         if (undoStack.size >= UNDO_HISTORY_LIMIT) undoStack.removeFirst()
         undoStack.addLast(snapshot)
-        refreshUndoRedoButtons()
+        refreshToolbarButtons()
         scheduleUndoCachePersist()
     }
 
@@ -552,8 +553,7 @@ class TextEditorActivity : AppCompatActivity() {
 
         redoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
-        refreshUndoRedoButtons()
-        refreshSaveButtonState()
+        refreshToolbarButtons()
         persistUndoCacheToDisk()
     }
 
@@ -569,8 +569,7 @@ class TextEditorActivity : AppCompatActivity() {
         if (undoStack.size >= UNDO_HISTORY_LIMIT) undoStack.removeFirst()
         undoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
-        refreshUndoRedoButtons()
-        refreshSaveButtonState()
+        refreshToolbarButtons()
         persistUndoCacheToDisk()
     }
 
@@ -594,22 +593,15 @@ class TextEditorActivity : AppCompatActivity() {
         binding.editorContent.post { scrollToCursor() }
     }
 
-    private fun refreshUndoRedoButtons() {
+    // Quản lý đồng bộ độ sáng/mờ và trạng thái active của cả 3 nút Toolbar (Undo, Redo, Save)
+    private fun refreshToolbarButtons() {
         val canUndo = undoStack.isNotEmpty() || pendingUndoSnapshot != null
         val canRedo = redoStack.isNotEmpty()
+        val hasChanges = hasUnsavedChanges()
 
         undoMenuItem?.isEnabled = canUndo
         redoMenuItem?.isEnabled = canRedo
-    }
-
-    // Điều khiển trạng thái nút Save (Sáng khi có thay đổi, Mờ/Vô hiệu hóa khi chưa đổi)
-    private fun refreshSaveButtonState() {
-        val hasChanges = hasUnsavedChanges()
-        saveMenuItem?.let { item ->
-            item.isEnabled = hasChanges
-            // 255: Hiện sáng rõ (100% alpha), 90: Mờ đi (khoảng 35% alpha)
-            item.icon?.mutate()?.alpha = if (hasChanges) 255 else 90
-        }
+        saveMenuItem?.isEnabled = hasChanges
     }
 
     private fun loadFileContent() {
@@ -639,8 +631,7 @@ class TextEditorActivity : AppCompatActivity() {
                 redoStack.clear()
 
                 restoreUndoCacheFromDisk()
-                refreshUndoRedoButtons()
-                refreshSaveButtonState()
+                refreshToolbarButtons()
 
                 binding.editorContent.hint = when {
                     placeholderText.isNotEmpty() -> placeholderText
@@ -749,8 +740,7 @@ class TextEditorActivity : AppCompatActivity() {
         menu.findItem(R.id.editor_menu_monospace)?.isChecked = monospaceEnabled
         menu.findItem(R.id.editor_menu_run)?.isVisible = runnableInterpreter() != null
 
-        refreshUndoRedoButtons()
-        refreshSaveButtonState()
+        refreshToolbarButtons()
         return true
     }
 
@@ -809,7 +799,7 @@ class TextEditorActivity : AppCompatActivity() {
                 if (success) {
                     savedContent = content
                     persistUndoCacheToDisk()
-                    refreshSaveButtonState() // Cập nhật nút Save ngay khi lưu thành công
+                    refreshToolbarButtons()
                 }
                 if (showToast) {
                     Toast.makeText(
