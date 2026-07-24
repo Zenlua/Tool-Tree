@@ -1,7 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
-    echo "Syntax: taive [-#] http://file.zip [path/save.zip]"
+    echo "Syntax: taive [-#|-c] http://file.zip [path/save.zip]"
     exit 0
 fi
 
