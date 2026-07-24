@@ -19,37 +19,36 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Hàng "Chọn tất cả" cố định ở đầu trang, chỉ hiện khi đang ở chế độ chọn nhiều (multiple) -->
-        <LinearLayout
+        <!-- Hàng "Chọn tất cả" cố định ở đầu trang, chỉ hiện khi đang ở chế độ chọn nhiều (multiple).
+             Dùng đúng 1 CheckBox (layoutDirection rtl) để chữ dính sát ô vuông, và padding 6dp
+             giống hệt list_item_file/list_item_dir để ô vuông thẳng hàng với checkbox bên dưới. -->
+        <RelativeLayout
             android:id="@+id/select_all_block"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
             android:visibility="gone"
             android:clickable="true"
             android:focusable="true"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/select_all_label"
-                android:text="@string/select_all"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="14dp"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content" />
-
             <CheckBox
                 android:id="@+id/select_all"
+                android:text="@string/select_all"
+                android:layoutDirection="rtl"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="14dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
                 android:clickable="true"
                 android:focusable="true"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-        </LinearLayout>
+        </RelativeLayout>
 
         <ListView
             android:id="@+id/file_selector_list"

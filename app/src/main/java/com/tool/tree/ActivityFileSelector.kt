@@ -6,6 +6,7 @@ import android.os.Environment
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -80,6 +81,20 @@ class ActivityFileSelector : AppCompatActivity() {
         }
 
         invalidateOptionsMenu()
+
+        // Cho phép tiêu đề toolbar xuống dòng (tối đa 2 dòng) thay vì bị cắt hiện dấu "..."
+        // Toolbar tự tạo TextView tiêu đề khi layout, nên phải chờ tới lúc đó mới chỉnh được.
+        toolbar.post {
+            for (i in 0 until toolbar.childCount) {
+                val child = toolbar.getChildAt(i)
+                if (child is TextView && child.text?.toString() == toolbar.title?.toString()) {
+                    child.isSingleLine = false
+                    child.maxLines = 2
+                    child.ellipsize = null
+                    break
+                }
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

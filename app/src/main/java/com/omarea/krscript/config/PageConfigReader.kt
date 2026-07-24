@@ -1125,6 +1125,7 @@ class PageConfigReader {
         }
         tomlGet(table, "mime")?.let { option.mime = it.lowercase(getDefault()) }
         tomlGet(table, "path-home", "home-path", "pathhome")?.let { option.pathHome = it.trim() }
+        tomlGet(table, "multiple")?.let { option.multiple = tomlTruthy(it, "multiple") }
         tomlGet(table, "box", "visible", "check")?.let { option.checkedSh = it }
         tomlGet(table, "silent", "hidden")?.let { option.silent = it.isEmpty() || tomlTruthy(it, "silent", "hidden") }
         tomlGet(table, "link", "href")?.let { option.link = it }
