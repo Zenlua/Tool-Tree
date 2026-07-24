@@ -1313,10 +1313,12 @@ fi
 '"$farooot"'
 '"$google_trankk"'
 <option type="default" id="v2" auto-finish="true" silent="true">'$pin_text_add'</option>
+<option type="default" id="v2" auto-finish="true" silent="true">'$project_text_8'</option>
 '"$code_option"'
 <handler>
 if [ "$menu_id" == "v2" ]; then
     [ -f "'$dirvad'/pin" ] && rm -f "'$dirvad'/pin" || echo > "'$dirvad'/pin"
+    [ -f "'$dirvad'/show" ] && rm -f "'$dirvad'/show" || echo > "'$dirvad'/show"
     '"$google_tran_shellkk"'
 fi
 '"$code_shell"'
