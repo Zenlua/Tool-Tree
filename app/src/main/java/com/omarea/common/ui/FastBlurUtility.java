@@ -16,13 +16,84 @@ import android.hardware.HardwareBuffer;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class FastBlurUtility {
 
     private static final float SCALE_FACTOR = 0.10f;
     private static final int BLUR_RADIUS = 8;
 
+    // ĐÃ SỬA: bảng chia dv[] chỉ phụ thuộc vào BLUR_RADIUS (hằng số),
+    // nên tính 1 lần duy nhất khi load class thay vì cấp phát lại mỗi lần gọi fastBlur().
+    private static final int DIV = BLUR_RADIUS + BLUR_RADIUS + 1;
+    private static final int DIVSUM;
+    private static final int[] DV;
+
+    static {
+        int divsum = (DIV + 1) >> 1;
+        divsum *= divsum;
+        DIVSUM = divsum;
+        DV = new int[256 * DIVSUM];
+        for (int i = 0; i < DV.length; i++) {
+            DV[i] = i / DIVSUM;
+        }
+    }
+
+    // ĐÃ SỬA: dùng 1 background thread riêng để làm việc nặng (blur),
+    // tránh block main thread gây giật lag khi mở màn hình.
+    private static final ExecutorService BLUR_EXECUTOR = Executors.newSingleThreadExecutor();
+
+    public interface OnBlurResultListener {
+        void onBlurResult(Bitmap bitmap);
+    }
+
+    /**
+     * ĐÃ THÊM: API bất đồng bộ - nên dùng thay cho getBlurBackgroundDrawer() ở nơi có thể,
+     * vì chỉ có bước chụp màn hình (rất nhanh) chạy trên main thread,
+     * còn toàn bộ việc blur (chậm) được đẩy sang thread khác.
+     */
+    public static void getBlurBackgroundAsync(Activity activity, OnBlurResultListener listener) {
+        if (activity == null || activity.isFinishing()) {
+            listener.onBlurResult(null);
+            return;
+        }
+
+        // Bước bắt buộc phải chạy trên main thread vì cần truy cập View,
+        // nhưng bước này rất rẻ (chỉ vẽ 1 lần vào bitmap).
+        Bitmap bmp = takeScreenShot(activity);
+        if (bmp == null) {
+            listener.onBlurResult(null);
+            return;
+        }
+
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        BLUR_EXECUTOR.execute(() -> {
+            Bitmap blurred;
+            try {
+                blurred = startBlurBackground(bmp);
+            } catch (Throwable t) {
+                blurred = bmp;
+            }
+
+            final Bitmap result = blurred;
+            if (bmp != result && !bmp.isRecycled()) {
+                bmp.recycle();
+            }
+
+            mainHandler.post(() -> listener.onBlurResult(result));
+        });
+    }
+
+    /**
+     * Giữ lại API đồng bộ cũ để tương thích ngược, nhưng khuyến nghị dùng
+     * getBlurBackgroundAsync() thay thế vì hàm này chạy blur ngay trên thread gọi nó
+     * (nếu gọi từ main thread thì vẫn có thể gây giật).
+     */
     public static Bitmap getBlurBackgroundDrawer(Activity activity) {
         Bitmap bmp = takeScreenShot(activity);
         if (bmp == null) return null;
@@ -42,9 +113,12 @@ public class FastBlurUtility {
         try {
             // 1. Android 12+ (API 31+): Dùng GPU RenderEffect
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // ĐÃ SỬA: gộp blur + dim (contrast) làm 1 RenderEffect duy nhất,
+                // GPU tính cả 2 hiệu ứng trong 1 lần render, không cần thêm 1 bước
+                // Canvas.drawBitmap + cấp phát bitmap phụ như bản cũ (applyDimFilter).
                 Bitmap gpuBlurred = blurWithRenderEffect(bkg, 20f);
                 if (gpuBlurred != null) {
-                    return applyDimFilter(gpuBlurred);
+                    return gpuBlurred;
                 }
             }
 
@@ -79,7 +153,22 @@ public class FastBlurUtility {
 
             RenderNode node = new RenderNode("BlurEffectNode");
             node.setPosition(0, 0, width, height);
-            node.setRenderEffect(RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP));
+
+            // ĐÃ SỬA: chain ColorFilterEffect (contrast/dim) lồng vào BlurEffect,
+            // để GPU thực hiện cả 2 bước cùng lúc thay vì phải render riêng rồi
+            // vẽ lại qua Canvas như bản gốc (applyDimFilter cũ).
+            ColorMatrix cm = new ColorMatrix();
+            float contrast = 0.80f;
+            cm.set(new float[]{
+                    contrast, 0, 0, 0, 0,
+                    0, contrast, 0, 0, 0,
+                    0, 0, contrast, 0, 0,
+                    0, 0, 0, 1, 0});
+
+            RenderEffect blurEffect = RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP);
+            RenderEffect combinedEffect = RenderEffect.createColorFilterEffect(
+                    new ColorMatrixColorFilter(cm), blurEffect);
+            node.setRenderEffect(combinedEffect);
 
             Canvas canvas = node.beginRecording(width, height);
             canvas.drawBitmap(input, 0, 0, null);
@@ -121,27 +210,6 @@ public class FastBlurUtility {
             // Fallback nếu GPU không hỗ trợ
         }
         return null;
-    }
-
-    private static Bitmap applyDimFilter(Bitmap src) {
-        Bitmap output = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
-
-        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
-        ColorMatrix cm = new ColorMatrix();
-        float contrast = 0.80f;
-        cm.set(new float[]{
-                contrast, 0, 0, 0, 0,
-                0, contrast, 0, 0, 0,
-                0, 0, contrast, 0, 0,
-                0, 0, 0, 1, 0});
-        paint.setColorFilter(new ColorMatrixColorFilter(cm));
-
-        canvas.drawBitmap(src, 0, 0, paint);
-        if (!src.isRecycled()) {
-            src.recycle();
-        }
-        return output;
     }
 
     public static Bitmap takeScreenShot(Activity activity) {
@@ -216,12 +284,9 @@ public class FastBlurUtility {
         int rsum, gsum, bsum, x, y, i, p, yp, yi, yw;
         int[] vmin = new int[Math.max(w, h)];
 
-        int divsum = (div + 1) >> 1;
-        divsum *= divsum;
-        int[] dv = new int[256 * divsum];
-        for (i = 0; i < 256 * divsum; i++) {
-            dv[i] = (i / divsum);
-        }
+        // ĐÃ SỬA: dùng bảng DV[] tĩnh (static) tính sẵn 1 lần thay vì cấp phát
+        // mảng 256*divsum phần tử mỗi lần fastBlur() được gọi.
+        int[] dv = DV;
 
         yw = yi = 0;
         int[][] stack = new int[div][3];
@@ -334,9 +399,9 @@ public class FastBlurUtility {
             yi = x;
             stackpointer = radius;
             for (y = 0; y < h; y++) {
-                pix[yi] = (0xff000000 & pix[yi]) 
-                        | (dv[clampIndex(rsum, dv.length)] << 16) 
-                        | (dv[clampIndex(gsum, dv.length)] << 8) 
+                pix[yi] = (0xff000000 & pix[yi])
+                        | (dv[clampIndex(rsum, dv.length)] << 16)
+                        | (dv[clampIndex(gsum, dv.length)] << 8)
                         | dv[clampIndex(bsum, dv.length)];
 
                 rsum -= routsum;
