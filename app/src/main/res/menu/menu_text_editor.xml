@@ -17,22 +17,23 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/editor_menu_save"
-        android:orderInCategory="10"
-        android:title="@string/editor_save"
-        app:showAsAction="never" />
-
-    <item
         android:id="@+id/editor_menu_run"
         android:icon="@drawable/ic_editor_run"
-        android:orderInCategory="15"
+        android:orderInCategory="3"
         android:title="@string/editor_run_test"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/editor_menu_save"
+        android:orderInCategory="4"
+        android:icon="@drawable/ic_save"
+        android:title="@string/editor_save"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/editor_menu_wrap"
         android:checkable="true"
-        android:orderInCategory="20"
+        android:orderInCategory="5"
         android:title="@string/editor_toggle_wrap"
         app:showAsAction="never" />
 
@@ -40,7 +41,7 @@
         android:id="@+id/editor_menu_monospace"
         android:checkable="true"
         android:checked="true"
-        android:orderInCategory="25"
+        android:orderInCategory="6"
         android:title="@string/editor_toggle_monospace"
         app:showAsAction="never" />
 </menu>
