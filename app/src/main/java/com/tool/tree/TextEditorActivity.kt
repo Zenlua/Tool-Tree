@@ -28,7 +28,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shared.FileWrite
 import com.omarea.common.shell.KeepShellPublic
-import com.omarea.common.ui.BlurEngine
 import com.omarea.common.ui.DialogHelper
 import com.omarea.krscript.config.PathAnalysis
 import com.omarea.krscript.model.ActionNode
@@ -137,10 +136,8 @@ class TextEditorActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
-        // --- BẬT HIỆU ỨNG BLUR KÍNH MỜ ---
-        // Tự động chụp và xử lý hình nền Wallpaper mờ bên dưới
+        // Blur đã được ThemeModeState.switchTheme() xử lý (có kiểm tra level và cờ dissblur)
         binding.editorRoot.isDrawStrokeEnabled = false
-        BlurEngine.controller.captureAndBlur(this)
 
         setupKeyboardInsets()
 

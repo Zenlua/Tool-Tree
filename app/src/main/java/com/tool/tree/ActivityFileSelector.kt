@@ -11,7 +11,6 @@ import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.material.snackbar.Snackbar
-import com.omarea.common.ui.BlurEngine
 import com.omarea.common.ui.ProgressBarDialog
 import com.tool.tree.databinding.ActivityFileSelectorBinding
 import com.tool.tree.ui.AdapterFileSelector
@@ -193,10 +192,6 @@ class ActivityFileSelector : AppCompatActivity() {
                 binding.selectAllBlock.visibility = View.GONE
             }
 
-            // ✅ Chụp ảnh mờ sau khi gán Adapter và Render dữ liệu xong
-            binding.root.post {
-                BlurEngine.controller.captureAndBlur(this)
-            }
         } else {
             Snackbar.make(binding.root, "External storage not available!", Snackbar.LENGTH_LONG).show()
         }
