@@ -255,7 +255,7 @@ class ActionPage : AppCompatActivity() {
             visibility = View.VISIBLE
             setOnClickListener { onMenuItemClick(menuOption) }
 
-            val iconRes = if (menuOption.type == "file" && menuOption.iconPath.isEmpty()) {
+            val iconRes = if ((menuOption.type == "file" || menuOption.type == "folder") && menuOption.iconPath.isEmpty()) {
                 R.drawable.kr_folder
             } else {
                 R.drawable.kr_fab
@@ -304,7 +304,7 @@ class ActionPage : AppCompatActivity() {
             "restart" -> restartApp()
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
-            "file" -> menuItemChooseFile(menuOption)
+            "file", "folder" -> menuItemChooseFile(menuOption)
             else -> {
                 if (menuOption.silent) {
                     menuItemExecuteSilent(menuOption)
