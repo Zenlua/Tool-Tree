@@ -478,6 +478,10 @@ class PageConfigReader {
                             "path-home", "home-path", "pathhome" -> {
                                 option.pathHome = parser.getAttributeValue(i).trim { it <= ' ' }
                             }
+                            "multiple" -> {
+                                val attrValue = parser.getAttributeValue(i)
+                                option.multiple = attrValue == "multiple" || attrValue == "true" || attrValue == "1"
+                            }
                             "box", "visible", "check" -> {
                                 option.checkedSh = parser.getAttributeValue(i)
                             }

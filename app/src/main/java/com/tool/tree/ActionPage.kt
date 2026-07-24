@@ -518,6 +518,7 @@ class ActionPage : AppCompatActivity() {
             override fun mimeType() = menuOption.mime.ifEmpty { null }
             override fun suffix() = menuOption.suffix.ifEmpty { null }
             override fun pathHome() = menuOption.pathHome.ifEmpty { null }
+            override fun multiple() = menuOption.multiple
             override fun type() = if (menuOption.type == "folder") {
                 ParamsFileChooserRender.FileSelectedInterface.TYPE_FOLDER
             } else {

@@ -13,6 +13,8 @@ class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) 
     var suffix: String = ""
     // 打开文件/目录选择器时的初始目录（仅限type=file/folder有效）
     var pathHome: String = ""
+    // Cho phép chọn nhiều tệp/thư mục cùng lúc (chỉ áp dụng khi type=file/folder)
+    var multiple: Boolean = false
 
     // Lệnh shell dùng để xác định trạng thái tích (checked) khi type = "checkbox".
     // Được chạy lại mỗi lần menu chuẩn bị hiển thị (không chỉ 1 lần lúc load trang).
