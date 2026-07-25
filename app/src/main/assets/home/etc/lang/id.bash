@@ -1,4 +1,3 @@
-```ini id="id8p3q"
 # Bahasa
 
 # all
@@ -297,4 +296,3 @@ config_text_2="Buat proyek baru atau pilih folder"
 
 # boot
 boot_text_1="Java sedang diinstal, buka kembali setelah 1~2 menit..."
-```
