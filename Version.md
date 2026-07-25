@@ -1,5 +1,19 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
+**Version: 1.5.2 (25-7-2026)**
+
++ Added some new features
++ Supports color log output 
++ Supports TOML code
++ Add text editor
++ Added the ability to select multiple files and folders.
++ Merge APK decoding, build
++ Update Apktool to version 3.0.3
++ Code bug fixes update
++ Fix the "img file not detected" error.
++ The update mainly upgrades the core. 
++ Speed optimization
+
 **Version: 1.5.1 (15-7-2026)**
 
 + Minor update
