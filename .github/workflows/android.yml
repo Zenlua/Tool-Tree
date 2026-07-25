@@ -71,9 +71,9 @@ jobs:
            
           - The application includes various tools, primarily for editing ROMs and APKs, along with many other additional utilities.
            
-          • 🧾 <a href=\"https://github.com\">Changelog</a>
-          • 📚 <b>Instruct:</b> <a href=\"https://github.io\">No-Root</a> | Root
-          • 📥 <b>Download:</b> <a href=\"https://github.com\">Download</a>
+          • 🧾 <a href=\"https://github.com/Zenlua/Tool-Tree/blob/main/Version.md\">Changelog</a>
+          • 📚 <b>Instruct:</b> <a href=\"https://zenlua.github.io/Tool-Tree/website/Guide.html\">No-Root</a> | Root
+          • 📥 <b>Download:</b> <a href=\"https://github.com/Zenlua/Tool-Tree/releases/tag/$VER\">Download</a>
           • 👥 <b>Group:</b> @tooltree
            
           🌐 <b>Language:</b> You want help <a href=\"https://github.com/Zenlua/Tool-Tree#-language\">Translation Tool-Tree</a>?
