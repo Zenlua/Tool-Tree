@@ -625,6 +625,15 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 }
             }
 
+            // ========== readonly (tĩnh, khai báo trực tiếp bằng readonly="true") ==========
+            // Param chỉ xem, không cho sửa trên UI -> giờ cũng KHÔNG gửi giá trị đi khi chạy
+            // action, bỏ qua hoàn toàn khỏi kết quả (giống hệt depend-include-hidden="false").
+            // Lưu ý: đây KHÔNG áp dụng cho depend-readonly (readonly do phụ thuộc điều kiện),
+            // depend-readonly vẫn dùng cơ chế depend-include-hidden như trước, không đổi.
+            if (actionParamInfo.readonly) {
+                continue
+            }
+
             // Dùng visibilityState (kết quả logic của evaluateDependencies) thay vì đọc trực
             // tiếp View.visibility, vì với depend-readonly=true, view vẫn ở trạng thái
             // VISIBLE (chỉ bị mờ + khóa tương tác) dù về mặt logic vẫn được xem là "không

@@ -894,7 +894,7 @@ class TextEditorActivity : AppCompatActivity() {
 
         val privateCacheDir = FileWrite.getPrivateFilePath(
             this,
-            "hone/tmp/tmp_${System.currentTimeMillis()}.tmp"
+            "home/tmp/tmp_${System.currentTimeMillis()}.tmp"
         ) ?: return false
 
         return try {

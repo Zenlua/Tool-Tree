@@ -19,6 +19,7 @@ import java.util.Locale.getDefault
 import androidx.core.graphics.toColorInt
 // Thư viện phân tích TOML (cần thêm vào build.gradle, ví dụ: implementation("org.tomlj:tomlj:1.1.1"))
 import org.tomlj.Toml
+import org.tomlj.TomlArray
 import org.tomlj.TomlTable
 
 /**
@@ -900,11 +901,11 @@ class PageConfigReader {
     // Các mục nằm "bên trong" một group (con của nó) khai báo bằng đường dẫn lồng:
     //   [[group.action]], [[group.page]], [[group.text]] ...
     //
-    // Giới hạn cần biết: TOML không lưu được thứ tự XEN KẼ giữa các bảng KHÁC TÊN
-    // (vd 1 action rồi tới 1 page rồi lại 1 action nữa) - mỗi tên gom thành 1 danh sách
-    // riêng. Mặc định các loại được sắp theo thứ tự: group, text, switch, picker, action,
-    // page, editor, resource; nếu cần chỉ định thứ tự chính xác, thêm field `order = <số>`
-    // (số nhỏ hơn hiện trước) vào từng mục.
+    // Thứ tự hiển thị: LUÔN theo đúng vị trí xuất hiện trong file (trên trước, dưới sau),
+    // bất kể loại mục là gì (group, action, page, text ...) - kể cả khi các loại XEN KẼ
+    // nhau (vd 1 action rồi tới 1 page rồi lại 1 action nữa). Vị trí này lấy trực tiếp từ
+    // dòng khai báo `[[ten]]` trong file thông qua API vị trí của tomlj, không cần khai báo
+    // thêm field `order` nào.
     //
     // Ví dụ:
     //   [[group]]
@@ -977,23 +978,45 @@ class PageConfigReader {
         }
     }
 
-    // Gom toàn bộ node con của 1 bảng (root, hoặc bảng của 1 group), theo đúng thứ tự
-    // mặc định (tomlNodeTypeOrder), trừ khi từng mục có field `order` để chỉ định vị trí.
+    // Lấy số dòng (trong file gốc) nơi 1 mục được khai báo, để dùng làm căn cứ sắp xếp
+    // "trên trước, dưới sau". Với bảng mảng [[ten]] (nhiều mục cùng tên), phải lấy vị trí
+    // của TỪNG phần tử qua TomlArray, vì vị trí của chính khoá `ten` chỉ trỏ tới mục ĐẦU
+    // TIÊN. Nếu vì lý do gì đó không lấy được vị trí (API thay đổi, lỗi...), trả về null
+    // và nơi gọi sẽ tự rơi về thứ tự xuất hiện khi đọc (seq) để không bao giờ crash.
+    private fun tomlEntryLine(parent: TomlTable, key: String, index: Int): Int? {
+        return try {
+            if (parent.isArray(key)) {
+                val arr: TomlArray? = parent.getArray(key)
+                arr?.inputPositionOf(index)?.line()
+            } else if (parent.isTable(key)) {
+                parent.inputPositionOf(key)?.line()
+            } else {
+                null
+            }
+        } catch (ex: Exception) {
+            null
+        }
+    }
+
+    // Gom toàn bộ node con của 1 bảng (root, hoặc bảng của 1 group). Thứ tự hiển thị luôn
+    // theo đúng vị trí xuất hiện trong file (trên trước, dưới sau), không phân biệt loại
+    // mục và không cần field `order`.
     private fun tomlChildren(parent: TomlTable): ArrayList<NodeInfoBase> {
-        data class Entry(val order: Double, val seq: Int, val node: NodeInfoBase)
+        data class Entry(val line: Int, val seq: Int, val node: NodeInfoBase)
 
         val entries = ArrayList<Entry>()
         var seq = 0
-        for ((typeIndex, type) in tomlNodeTypeOrder.withIndex()) {
-            val defaultBase = typeIndex * 100000.0
-            for (table in tomlEntries(parent, type)) {
+        for (type in tomlNodeTypeOrder) {
+            for ((index, table) in tomlEntries(parent, type).withIndex()) {
                 seq++
                 val node = tomlBuildNode(type, table) ?: continue
-                val explicitOrder = tomlGet(table, "order")?.trim()?.toDoubleOrNull()
-                entries.add(Entry(explicitOrder ?: (defaultBase + seq), seq, node))
+                val line = tomlEntryLine(parent, type, index) ?: Int.MAX_VALUE
+                entries.add(Entry(line, seq, node))
             }
         }
-        return ArrayList(entries.sortedWith(compareBy({ it.order }, { it.seq })).map { it.node })
+        // Sắp theo dòng thực tế trong file; nếu không lấy được dòng (line == MAX_VALUE)
+        // thì rơi về đúng thứ tự đọc được (seq) để vẫn ổn định, không xáo trộn ngẫu nhiên.
+        return ArrayList(entries.sortedWith(compareBy({ it.line }, { it.seq })).map { it.node })
     }
 
     private fun tomlBuildNode(type: String, table: TomlTable): NodeInfoBase? {
