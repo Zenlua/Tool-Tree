@@ -72,6 +72,7 @@ fi
 [[ -z "$CONVER" ]] && CONVER='raw'
 [[ -z "$DISATFS" ]] && DISATFS=1
 
+[ -f $ETC/mke2fs.conf ] && export MKE2FS_CONFIG="$ETC/mke2fs.conf"
 # Thời gian build
 time_build="$(glog build_times)"
 [ -z "$time_build" ] && time_build="1230768000"
@@ -85,7 +86,7 @@ kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
 dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
 lvnen="$(glog nen_br 4)"
 info_type="$(cat "$info" 2>/dev/null)"
-tool_ext="$(glog re_tool_ext4)"
+tool_ext="$(glog re_tool_ext4 1)"
 tool_erofs="$(glog re_tool_erofs)"
 tool_f2fs="$(glog re_tool_f2fs)"
 

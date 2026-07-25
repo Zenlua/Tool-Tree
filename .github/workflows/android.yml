@@ -34,10 +34,10 @@ jobs:
     environment: Stable
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
       - name: Cache Gradle
@@ -63,13 +63,14 @@ jobs:
           echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
           if [ "$UPTG" == "true" ]; then
           echo "Telegram"
-          chat_tg="https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER
+          chat_tg="🎉 New version Tool-Tree
           
-          🎉 New version Tool-Tree
+          • Version: [$VER](https://github.com/Zenlua/Tool-Tree)
           
-          • Version: $VER
           • Notes: <a href=\"https://github.com/Zenlua/Tool-Tree/blob/main/Version.md\">Changelog</a>
           • Group: @tooltree
+          
+          • Release: [Download](https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER)
           
           #release@tool_tree"
           
