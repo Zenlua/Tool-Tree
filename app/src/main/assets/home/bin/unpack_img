@@ -92,7 +92,11 @@ elif [ "$dang_tep" == 'br' ] || [ "$dang_tep" == 'dat' ]; then
     tenpjanvung="$(echo "${INPUT##*/}" | cut -d. -f1)"
     [ -e "${INPUT%/*}/$tenpjanvung.transfer.list" ] || killtree "$more_text_5 $tenpjanvung.transfer.list"
     echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
-    [ "${INPUT##*.}" == 'br' ] && brotli -f -d "$INPUT" -o "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')"
+    if [ "${INPUT##*.}" == 'br' ]; then
+        brotli -f -d "$INPUT" -o "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')"
+    else
+        cp -f "$INPUT" "$TMP/$(echo "${INPUT%.*}" | awk -F/ '{print $NF}')"
+    fi
     if [ "$NODECO" == 1 ]; then
     file_img="$PTSD/out/$(echo "${INPUT##*/}" | cut -d. -f1).img"
     else
@@ -356,7 +360,7 @@ if [[ "$dang_tep" =~ ^(sparse|zstd|dat|br|payload|super|zip)$ ]]; then
     [ "$xoazip" == 1 ] && rm -rf "$INPUT" "$TMP/*.transfer.list"
     if [ "$NODECO" != 1 ]; then
     [ -f "$file_img" ] && rm -f "$file_img"
-    [ "$dang_tep" == "br" ] && rm -f "${file_img%.*}.new.dat"
+    [ "$dang_tep" == "br" ] || [ "$dang_tep" == "dat" ] && rm -f "${file_img%.*}.new.dat" "${file_img%.*}.new"
     fi
 fi
 
