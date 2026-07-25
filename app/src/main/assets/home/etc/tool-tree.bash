@@ -1317,9 +1317,9 @@ fi
 <desc>'$(gprop version) $(gprop author)$description_text'</desc>
 '"$summss"'
 '"$farooot"'
+'"$noti_texts"'
 '"$google_trankk"'
 <option type="default" id="pin" auto-finish="true" silent="true">'$pin_text_add'</option>
-'"$noti_texts"'
 '"$code_option"'
 <handler>
 if [ "$menu_id" == "pin" ]; then
