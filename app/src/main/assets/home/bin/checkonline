@@ -1,9 +1,4 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-if nc -z google.com 80 &>/dev/null; then
-exit 0
-elif nc -z baidu.com 80 &>/dev/null; then
-exit 0
-else
-exit 1
-fi
+nc -z google.com 80 &>/dev/null || nc -z baidu.com 80 &>/dev/null && exit 0 || exit 1
+
