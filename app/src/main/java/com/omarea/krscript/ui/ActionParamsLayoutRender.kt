@@ -631,18 +631,19 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             // thỏa điều kiện" (shouldShow = false).
             val isHiddenByDepend = visibilityState[actionParamInfo.name] == false
             
-            // ========== TÍNH NĂNG MỚI: BỎ QUA PARAM ẨN NẾU KHÔNG CÓ dependIncludeHidden ==========
+            // ========== depend-include-hidden (mặc định = true) ==========
+            // Mặc định, param bị ẩn bởi depend-on CHỈ ẩn về mặt giao diện, giá trị vẫn được
+            // gửi đi bình thường như khi hiện (không kiểm tra required vì người dùng không
+            // nhìn thấy field để nhập). Chỉ khi khai báo rõ depend-include-hidden="false" thì
+            // param đang ẩn mới bị loại bỏ hoàn toàn khỏi kết quả.
             if (isHiddenByDepend) {
                 if (actionParamInfo.dependIncludeHidden) {
-                    // depend-include-hidden=true: vẫn đưa giá trị vào kết quả nếu có, không
-                    // kiểm tra required.
                     if (!actionParamInfo.value.isNullOrEmpty()) {
                         params[actionParamInfo.name!!] = actionParamInfo.value!!
                     }
                 } else {
-                    // depend-include-hidden=false (mặc định): bỏ qua HOÀN TOÀN param đang ẩn,
-                    // kể cả khi nó có giá trị - trước đây bị ghi nhầm nên vẫn đưa giá trị vào
-                    // params dù cờ này = false, khiến depend-include-hidden gần như vô tác dụng.
+                    // depend-include-hidden="false": bỏ qua HOÀN TOÀN param đang ẩn, kể cả khi
+                    // nó có giá trị.
                 }
                 continue
             }

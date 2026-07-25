@@ -1,6 +1,6 @@
 # [Tool-Tree](https://zenlua.github.io/Tool-Tree)
 
-+ [Download](https://github.com/Zenlua/Tool-Tree/releases/latest)
++ **[Download](https://github.com/Zenlua/Tool-Tree/releases/latest)**
 
 **Version: 1.5.2 (25-7-2026)**
 

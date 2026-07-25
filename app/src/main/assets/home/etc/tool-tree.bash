@@ -327,12 +327,12 @@ fi
 </group>
 
 <group>
-<picker icon="'`urlpng language`'" warning="'$permis_text_3'" auto-kill="true" auto-off="true" option-sh="echo -e '"'|$default_text\nauto|$google_translate_text\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia'"' ">
+<picker icon="'`urlpng language`'" warning="'$permis_text_3'" auto-kill="true" auto-off="true" option-sh="echo -e '"'0|$default_text\nauto|$google_translate_text\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia'"' ">
 <title>'$permis_text_2'</title>
 <desc>'$permis_text_5'</desc>
 <get>glog language_kkts</get>
 <set>
-slog language_kkts "$state"
+[ -dslog language_kkts "$state"
 if [ "$state" == "auto" ]; then
     sum_md5_kk="$(checksum $ETC/lang/vi.bash)"
     source $ETC/lang/vi.bash

@@ -392,7 +392,7 @@ class PageConfigReader {
                         actionParamInfo.dependThreshold = attrValue.toIntOrNull() ?: -1
                     }
                     "depend-include-hidden" -> {
-                        actionParamInfo.dependIncludeHidden = attrValue == "true" || attrValue == "1"
+                        actionParamInfo.dependIncludeHidden = !(attrValue == "false" || attrValue == "0")
                     }
                     "depend-cascade" -> {
                         actionParamInfo.dependCascade = !(attrValue == "false" || attrValue == "0")
@@ -1257,7 +1257,7 @@ class PageConfigReader {
         tomlGet(table, "depend-initial", "depend-initial-state")?.let { p.dependInitialState = it }
         tomlGet(table, "depend-negate")?.let { p.dependNegate = tomlTruthy(it, "negate") }
         tomlGet(table, "depend-threshold")?.let { p.dependThreshold = it.trim().toIntOrNull() ?: -1 }
-        tomlGet(table, "depend-include-hidden")?.let { p.dependIncludeHidden = tomlTruthy(it) }
+        tomlGet(table, "depend-include-hidden")?.let { p.dependIncludeHidden = !(it == "false" || it == "0") }
         tomlGet(table, "depend-cascade")?.let { p.dependCascade = !(it == "false" || it == "0") }
         tomlGet(table, "depend-onchange", "depend-on-change", "depend-callback")?.let { p.dependOnChangeCallback = it }
         tomlGet(table, "depend-readonly")?.let { p.dependReadonly = tomlTruthy(it) }

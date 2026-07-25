@@ -111,7 +111,7 @@ class ActionParamInfo {
     // ========== TÍNH NĂNG MỚI: HOẠT ĐỘNG KHÔNG ĐỒNG THỜI ==========
     // Nếu true, param ẩn sẽ vẫn được đưa vào kết quả readParamsValue() nếu nó có giá trị
     // (thay vì bỏ qua param ẩn). Hữu ích cho các param ẩn nhưng vẫn cần giá trị.
-    var dependIncludeHidden: Boolean = false
+    var dependIncludeHidden: Boolean = true
 
     // ========== TÍNH NĂNG MỚI: CHA ẨN THÌ CON ẨN THEO ==========
     // Nếu true (mặc định), khi (bất kỳ) param cha trong depend-on đang bị ẨN (do chính
