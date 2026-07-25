@@ -65,18 +65,17 @@ jobs:
           echo "Telegram"
           chat_tg="🎉 <b>Update new version Tool-Tree</b>
            
+          • Application has many tools, ROM and APK editing, Many add-on utilities
+           
           • 🎋 <b>Version:</b> $VER
           • 🪴 <b>Author:</b> Kakathic
           • 📱 <b>Device:</b> Arm64
            
-          - The application includes various tools, primarily for editing ROMs and APKs, along with many other additional utilities.
+          • 🧾 <b>Notes:</b> <a href=\"https://github.com/Zenlua/Tool-Tree/blob/main/Version.md\">Changelog</a>
+          • 📚 <b>Instruct:</b> Root | <a href=\"https://zenlua.github.io/Tool-Tree/website/Guide.html\">No-Root</a>
+          • 📥 <b><a href=\"https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER\">Download</a></b>
            
-          • 🧾 <a href=\"https://github.com/Zenlua/Tool-Tree/blob/main/Version.md\">Changelog</a>
-          • 📚 <b>Instruct:</b> <a href=\"https://zenlua.github.io/Tool-Tree/website/Guide.html\">No-Root</a> | Root
-          • 📥 <b>Download:</b> <a href=\"https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER\">Download</a>
-          • 👥 <b>Group:</b> @tooltree
-           
-          🌐 <b>Language:</b> You want help <a href=\"https://github.com/Zenlua/Tool-Tree#-language\">Translation Tool-Tree</a>?
+          🌐 <b>Language:</b> Help <a href=\"https://github.com/Zenlua/Tool-Tree#-language\">translation</a>
                     
           #release@tool_tree"
           
