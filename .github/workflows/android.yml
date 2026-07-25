@@ -73,7 +73,7 @@ jobs:
            
           • 🧾 <a href=\"https://github.com/Zenlua/Tool-Tree/blob/main/Version.md\">Changelog</a>
           • 📚 <b>Instruct:</b> <a href=\"https://zenlua.github.io/Tool-Tree/website/Guide.html\">No-Root</a> | Root
-          • 📥 <b>Download:</b> <a href=\"https://github.com/Zenlua/Tool-Tree/releases/tag/$VER\">Download</a>
+          • 📥 <b>Download:</b> <a href=\"https://github.com/Zenlua/Tool-Tree/releases/tag/V$VER\">Download</a>
           • 👥 <b>Group:</b> @tooltree
            
           🌐 <b>Language:</b> You want help <a href=\"https://github.com/Zenlua/Tool-Tree#-language\">Translation Tool-Tree</a>?
