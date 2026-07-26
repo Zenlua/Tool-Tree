@@ -599,6 +599,7 @@ Info() {
 
   [[group]]
   [[group.editor]]
+  id = "shella"
   title = "'$home_text_5'"
   desc = "'$home_text_6'"
   icon = "'`urlpng shella`'"

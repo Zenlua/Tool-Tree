@@ -1,43 +1,54 @@
 package com.tool.tree.ui
 
+import android.view.View
+import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.omarea.krscript.ui.ActionListFragment
 
-class MainPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
+/**
+ * Quản lý các trang (Fragment) cho SwipePager - thay thế FragmentStateAdapter cũ của
+ * ViewPager2. Vì chỉ có 4 tab cố định và luôn giữ tất cả cùng lúc (không recycle), mỗi
+ * trang được gắn (add) vào FragmentManager đúng một lần; khi cần đổi nội dung một trang
+ * đã có, dùng replace() lên đúng container đó.
+ */
+class MainPagerAdapter(private val activity: AppCompatActivity) {
 
-    private val fragmentList = ArrayList<ActionListFragment>()
+    private val fragmentList = ArrayList<ActionListFragment?>()
     private val fragmentTitles = ArrayList<String>()
-    // Sử dụng ID ổn định thay vì hashCode của Fragment
-    private val fragmentIds = ArrayList<Long>()
-    private var nextId = 0L
+    private val containers = ArrayList<FrameLayout>()
+    private var pager: SwipePager? = null
+
+    fun attach(pager: SwipePager) {
+        this.pager = pager
+    }
 
     fun addFragment(fragment: ActionListFragment, title: String) {
+        val position = fragmentList.size
         fragmentList.add(fragment)
         fragmentTitles.add(title)
-        fragmentIds.add(nextId++)
-        notifyItemInserted(fragmentList.size - 1)
+
+        val container = FrameLayout(activity).apply { id = View.generateViewId() }
+        containers.add(container)
+        pager?.addPage(container)
+
+        if (activity.isFinishing || activity.isDestroyed) return
+        activity.supportFragmentManager.beginTransaction()
+            .add(container.id, fragment, "tool_tree_page_$position")
+            .commitNowAllowingStateLoss()
     }
 
     fun replaceFragment(position: Int, fragment: ActionListFragment) {
-        if (position in 0 until fragmentList.size) {
-            fragmentList[position] = fragment
-            // Khi thay thế, ta cấp một ID mới cho vị trí này để ViewPager2 tạo lại UI
-            fragmentIds[position] = nextId++
-            notifyItemChanged(position)
-        }
+        if (position !in containers.indices) return
+        if (activity.isFinishing || activity.isDestroyed) return
+        fragmentList[position] = fragment
+        activity.supportFragmentManager.beginTransaction()
+            .replace(containers[position].id, fragment, "tool_tree_page_$position")
+            .commitNowAllowingStateLoss()
     }
 
     fun getFragment(position: Int): ActionListFragment? = fragmentList.getOrNull(position)
 
     fun getTitle(position: Int): String = fragmentTitles.getOrElse(position) { "" }
 
-    override fun getItemCount(): Int = fragmentList.size
-
-    override fun createFragment(position: Int): Fragment = fragmentList[position]
-
-    override fun getItemId(position: Int): Long = fragmentIds[position]
-
-    override fun containsItem(itemId: Long): Boolean = fragmentIds.contains(itemId)
+    fun getItemCount(): Int = fragmentList.size
 }

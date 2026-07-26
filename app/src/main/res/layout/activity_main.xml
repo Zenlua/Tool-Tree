@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true" />
 
-    <androidx.viewpager2.widget.ViewPager2
+    <com.tool.tree.ui.SwipePager
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

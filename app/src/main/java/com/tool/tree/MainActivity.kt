@@ -17,7 +17,6 @@ import androidx.appcompat.widget.ListPopupWindow
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.ui.DialogHelper
@@ -29,6 +28,7 @@ import com.omarea.krscript.ui.ActionListFragment
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.MainPagerAdapter
+import com.tool.tree.ui.SwipePager
 import com.tool.tree.ui.TabIconHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -78,34 +78,7 @@ class MainActivity : AppCompatActivity() {
     private fun initAdapter() {
         if (!::adapter.isInitialized) {
             adapter = MainPagerAdapter(this)
-            binding.viewPager.adapter = adapter
-            binding.viewPager.offscreenPageLimit = 4
-
-            // FIX: giảm độ nhạy cạnh (edge sensitivity) giúp cử chỉ vuốt được ViewPager2
-            // nhận diện dứt khoát hơn, tránh xung đột với vuốt back gesture / RecyclerView con
-            reduceViewPagerTouchSlop(binding.viewPager)
-        }
-    }
-
-    /**
-     * FIX: ViewPager2 dùng RecyclerView bên trong, mặc định touchSlop khá lớn khiến
-     * cử chỉ vuốt đôi khi bị "trễ"/giật lúc bắt đầu kéo. Giảm touchSlop giúp
-     * ViewPager2 phản hồi ngay từ pixel di chuyển đầu tiên, cảm giác mượt hơn.
-     */
-    private fun reduceViewPagerTouchSlop(viewPager: androidx.viewpager2.widget.ViewPager2) {
-        try {
-            val recyclerViewField = androidx.viewpager2.widget.ViewPager2::class.java
-                .getDeclaredField("mRecyclerView")
-            recyclerViewField.isAccessible = true
-            val recyclerView = recyclerViewField.get(viewPager)
-
-            val touchSlopField = androidx.recyclerview.widget.RecyclerView::class.java
-                .getDeclaredField("mTouchSlop")
-            touchSlopField.isAccessible = true
-            val currentTouchSlop = touchSlopField.get(recyclerView) as Int
-            touchSlopField.set(recyclerView, (currentTouchSlop * 0.6).toInt())
-        } catch (e: Exception) {
-            // Reflection có thể fail trên một số phiên bản AndroidX -> bỏ qua, không critical
+            adapter.attach(binding.viewPager)
         }
     }
 
@@ -157,19 +130,21 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 val theme = ThemeModeState.getThemeMode()
                 
-                favorites?.let { (adapter.getFragment(0) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), theme) }
-                pages?.let { (adapter.getFragment(1) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), theme) }
-                tab3Items?.let { (adapter.getFragment(2) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), theme) }
-                tab4Items?.let { (adapter.getFragment(3) as? ActionListFragment)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), theme) }
+                favorites?.let { adapter.getFragment(0)?.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), theme) }
+                pages?.let { adapter.getFragment(1)?.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), theme) }
+                tab3Items?.let { adapter.getFragment(2)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), theme) }
+                tab4Items?.let { adapter.getFragment(3)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), theme) }
             }
         }
     }
 
     private fun setupTabs() {
         val tabHelper = TabIconHelper(this)
-        
-        // Kết nối TabLayout và ViewPager2
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
+
+        binding.tabLayout.clearOnTabSelectedListeners()
+        binding.tabLayout.removeAllTabs()
+
+        for (position in 0 until adapter.getItemCount()) {
             val title = adapter.getTitle(position)
             val iconRes = when (position) {
                 0 -> R.drawable.tab_favorites
@@ -178,14 +153,15 @@ class MainActivity : AppCompatActivity() {
                 3 -> R.drawable.tab_custom4
                 else -> R.drawable.tab_home
             }
+            val tab = binding.tabLayout.newTab()
             tab.customView = tabHelper.createTabView(title, getDrawable(iconRes)!!, position == binding.viewPager.currentItem)
-        }.attach()
+            binding.tabLayout.addTab(tab)
+        }
 
         // FIX: Xử lý sự kiện click thủ công cho Custom Tab View
-        binding.tabLayout.clearOnTabSelectedListeners()
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
-                // Ép ViewPager2 chuyển trang khi ấn vào icon tab
+                // Ép SwipePager chuyển trang khi ấn vào icon tab
                 if (binding.viewPager.currentItem != tab.position) {
                     binding.viewPager.setCurrentItem(tab.position, true)
                 }
@@ -195,9 +171,6 @@ class MainActivity : AppCompatActivity() {
 
                 // FIX: chỉ invalidate menu khi trạng thái favorites thật sự đổi,
                 // tránh rebuild toàn bộ Toolbar menu mỗi lần vuốt/settle tab
-                // (đây là nguyên nhân chính gây giật khi vuốt chuyển tab, vì
-                // invalidateOptionsMenu() chạy đồng bộ trên main thread đúng lúc
-                // animation settle của ViewPager2 vừa kết thúc)
                 val nowFavorites = (tab.position == 0)
                 if (isFavoritesTab != nowFavorites) {
                     isFavoritesTab = nowFavorites
@@ -208,9 +181,13 @@ class MainActivity : AppCompatActivity() {
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
-        // FIX: tắt hiệu ứng "over-scroll glow" ở rìa để cảm giác vuốt liền mạch hơn,
-        // đặc biệt khi vuốt tới tab đầu/cuối
-        binding.viewPager.getChildAt(0)?.overScrollMode = android.view.View.OVER_SCROLL_NEVER
+        // Đồng bộ TabLayout khi trang được chọn do vuốt (SwipePager tự settle xong mới báo,
+        // tránh chọn tab liên tục theo từng pixel kéo giữa chừng).
+        binding.viewPager.setOnPageChangeListener(object : SwipePager.OnPageChangeListener {
+            override fun onPageSelected(position: Int) {
+                binding.tabLayout.getTabAt(position)?.select()
+            }
+        })
     }
 
     private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {
