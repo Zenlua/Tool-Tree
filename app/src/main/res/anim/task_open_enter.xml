@@ -3,12 +3,13 @@
     android:shareInterpolator="false"
     android:zAdjustment="top">
     <translate
-        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-        android:duration="301"
-        android:fromXDelta="100%p"
+        android:interpolator="@android:interpolator/linear_out_slow_in"
+        android:duration="230"
+        android:fromXDelta="30%p"
         android:toXDelta="0%p" />
     <alpha
-        android:duration="301"
+        android:interpolator="@android:interpolator/linear_out_slow_in"
+        android:duration="230"
         android:fromAlpha="0.0"
         android:toAlpha="1.0" />
 </set>

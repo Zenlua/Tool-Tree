@@ -3,20 +3,13 @@
     android:shareInterpolator="false"
     android:zAdjustment="bottom">
     <translate
-        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-        android:duration="301"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:duration="230"
         android:fromXDelta="0%p"
-        android:toXDelta="150%p" />
-    <scale
-        android:duration="301"
-        android:pivotX="100%"
-        android:pivotY="50%"
-        android:fromXScale="1.0"
-        android:toXScale="0.5"
-        android:fromYScale="1.0"
-        android:toYScale="0.5" />
+        android:toXDelta="30%p" />
     <alpha
-        android:duration="301"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:duration="230"
         android:fromAlpha="1.0"
         android:toAlpha="0.0" />
 </set>
