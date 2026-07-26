@@ -1281,7 +1281,7 @@ Homeadd() {
   # Load menu
   if [ -f "$dirvad/menu.bash" ]; then
     code_option="$($dirvad/menu.bash 2>/dev/null)"
-    if [ -f "$dirvad/menu.toml" ]; then
+  elif [ -f "$dirvad/menu.toml" ]; then
     code_option="$(cat $dirvad/menu.toml 2>/dev/null)"
   fi
 
