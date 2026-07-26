@@ -1122,8 +1122,8 @@ Troot() {
     patk="$(pm path $v | cut -f2 -d:)"
     patk22="$(pm path "$v" | cut -f2 -d: | head -n1)"
     pathvv="${patk22%/*}"
-    hcdf="$(echo "$patk" | grep -c "\.apk"$)"
-    paptn="$(echo "$patk" | grep "base\.apk"$)"
+    hcdf="$(echo "$patk" | grep -c ".apk"$)"
+    paptn="$(echo "$patk" | grep "base.apk"$)"
     if [[ -n "$paptn" ]]; then
     infor="$(apkeditor info -i "$paptn")"
     nameapk="$(echo "$infor" | grep -m1 "AppName" | cut -d\" -f2)"
@@ -1294,7 +1294,7 @@ Generate() {
     fi
     if [ -n "$(ls -1d $PTSD/$FOLDER/*.img 2>/dev/null)" ]; then
     for vv in $PTSD/$FOLDER/*.img; do
-    echo "mv: ${vv##*/} ➠ $(echo "${vv##*/}" | sed "s|\.img$|\.PARTITION|")"
+    echo "mv: ${vv##*/} ➠ $(echo "${vv##*/}" | sed "s|\\.img$|.PARTITION|")"
     mv "$vv" "${vv%.*}.PARTITION"
     done
     echo
@@ -1348,7 +1348,7 @@ Generate() {
     [[group.action.params]]
     name = "FOLDER"
     desc = "'$builds_text_1'"
-    options-sh = "findfile file $PTSD platform.conf | sed \"s|/platform\.conf||\""
+    options-sh = "findfile file $PTSD platform.conf | sed \"s|/platform.conf||\""
     required = true
     multiple = true
   '
