@@ -1444,4 +1444,10 @@ Vips() {
 }
 
 # index
+if [ "$1" == "Addon" ]; then
 "$@"
+else
+echo '<?xml version="1.0" encoding="UTF-8" ?><group>'
+"$@"
+echo '</group>'
+fi
