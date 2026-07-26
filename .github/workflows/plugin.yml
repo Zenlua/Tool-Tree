@@ -18,11 +18,11 @@ jobs:
       - name: Build add-on
         run: |
           cd .github/plugin
-          7z a -t7z -y ../plugin.so
+          7z a -t7z -y ../plugins.so
 
       - name: Upload module
         uses: softprops/action-gh-release@v2
         with:
           name: "Tmp"
           tag_name: "V1"
-          files: .github/plugin.so
+          files: .github/plugins.so

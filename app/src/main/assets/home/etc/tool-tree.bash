@@ -1237,140 +1237,135 @@ rm -fr "$TMP/signatures_dir"
 
 Addon() {
 
-    Download() {
-        if [ "$(gprop url)" ]; then
-        echo '[[group.action]]
-        '$farooot'
-        warn = "'$use_network_text'"
-        icon = "'`urladd icon`'"
-        reload = "true"
-        title = "'$(gprop name)'"
-        desc = "'$(gprop version)' '$(gprop author)$description_text'"
-        script = """
-        echo "'$update_text_3'"
-        echo
-        installadd '$(gprop url)' "'${dirvad%/*}'"
-        """'
-        fi
-    }
+Download() {
+  if [ "$(gprop url)" ]; then
+  echo '[[group.action]]
+  '$farooot'
+  warn = "'$use_network_text'"
+  icon = "'`urladd icon`'"
+  reload = "true"
+  title = "'$(gprop name)'"
+  desc = "'$(gprop version)' '$(gprop author)$description_text'"
+  script = """
+  echo "'$update_text_3'"
+  echo
+  installadd '$(gprop url)' "'${dirvad%/*}'"
+  """'
+  fi
+}
 
-    Features() {
-        [ "$1" == "status" ] && atextx="$addon_text_10" || atextx="$addon_text_2"
-        echo '<group><switch icon="'`urladd icon`'" shell="hidden" warn="'$atextx'">
-<title>'$(gprop name)'</title>
-<desc>'$(gprop version)' '$(gprop author)$description_text'</desc>
-<get>cat '$dirvad'/'$1'</get>
-<set>echo "$state" > '$dirvad'/'$1'</set>
-</switch>
-</group>'
-    }
+Features() {
+  [ "$1" == "status" ] && atextx="$addon_text_10" || atextx="$addon_text_2"
+  echo '
+  [[group.switch]]
+  warn = "'$atextx'"
+  title = "'$(gprop name)'"
+  desc = "'$(gprop version)' '$(gprop author)$description_text'"
+  icon = "'`urladd icon`'"
+  shell = "hidden"
+  get = "cat '$dirvad'/'$1'"
+  set = "echo "$state" > '$dirvad'/'$1'" '
+}
 
-    Homeadd() {
-        # Load index
-        if [ -f "$dirvad/index.bash" ]; then
-            pagesh='config-sh = "'$dirvad'/index.bash home"'
-        elif [ -f "$dirvad/index.toml" ]; then
-            pagesh='config = "'$dirvad'/index.toml"'
-        else
-            pagesh='config = "'$ETC'/error.toml"'
-        fi
+Homeadd() {
 
-        # Load menu
-        if [ -f "$dirvad/menu.bash" ]; then
-            code_option="$($dirvad/menu.bash 2>/dev/null)"
-        if [ -f "$dirvad/menu.toml" ]; then
-            code_option="$(cat $dirvad/menu.toml 2>/dev/null)"
-        fi
+  # Load index
+  if [ -f "$dirvad/index.bash" ]; then
+    pagesh='config-sh = "'$dirvad'/index.bash home"'
+    elif [ -f "$dirvad/index.toml" ]; then
+    pagesh='config = "'$dirvad'/index.toml"'
+    else
+    pagesh='config = "'$ETC'/error.toml"'
+  fi
 
-        # Load trang
-        if [ "$(gprop name)" ]; then
+  # Load menu
+  if [ -f "$dirvad/menu.bash" ]; then
+    code_option="$($dirvad/menu.bash 2>/dev/null)"
+    if [ -f "$dirvad/menu.toml" ]; then
+    code_option="$(cat $dirvad/menu.toml 2>/dev/null)"
+  fi
 
-            # Xác nhận có google dịch
-            if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null; then
-            google_trankk='
-            [[group.page.options]]
-            title = "'$google_translate_text'"
-            box = "glog auto_trans_text_'${dirvad##*/}'"
-            reload = "true"
-            silent = "true"
-            auto-off = "true"
-            type = "checkbox"
-            script = """
-            if [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ]; then
-            slog auto_trans_text_'${dirvad##*/}' 0
-            else
-            slog auto_trans_text_'${dirvad##*/}' 1
-            fi
-            """ '
-            fi
+  # Load trang
+  if [ "$(gprop name)" ]; then
 
-            # Xác nhận có show noti
-            if [ -f "$dirvad/download.prop" ]; then
-                noti_texts='
-                [[group.page.options]]
-                title = "'$noti_update'"
-                type = "checkbox"
-                silent = "true"
-                box = "[ -f '$dirvad'/show ] && echo 1 || echo 0"
-                script = """
-                if [ -f "'$dirvad'/show" ]; then
-                rm -f "'$dirvad'/show"
-                else
-                echo > "'$dirvad'/show"
-                fi
-                """ '
-            fi
+    # Xác nhận có google dịch
+    if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null; then
+      google_trankk='
+      [[group.page.options]]
+      title = "'$google_translate_text'"
+      box = "glog auto_trans_text_'${dirvad##*/}'"
+      reload = "true"
+      silent = "true"
+      auto-off = "true"
+      type = "checkbox"
+      script = """
+      if [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ]; then
+      slog auto_trans_text_'${dirvad##*/}' 0
+      else
+      slog auto_trans_text_'${dirvad##*/}' 1
+      fi
+      """ '
+    fi
 
-            # phát hiện tính năng
-            [ "$(gprop summary)" ] && summss='summary = "'$(gprop summary)'" '
-            [ "$(gprop shortcut)" == "true" ] && shortcut='id = "'${dirvad##*/}'" '
+    # Xác nhận có show noti
+    if [ -f "$dirvad/download.prop" ]; then
+      noti_texts='
+      [[group.page.options]]
+      title = "'$noti_update'"
+      type = "checkbox"
+      silent = "true"
+      box = "[ -f '$dirvad'/show ] && echo 1 || echo 0"
+      script = """
+      if [ -f "'$dirvad'/show" ]; then
+      rm -f "'$dirvad'/show"
+      else
+      echo > "'$dirvad'/show"
+      fi
+      """ '
+    fi
 
-            echo '
-            [[group]]
-            [[group.page]]
-            '$farooot'
-            '$shortcut'
-            '$pagesh'
-            '$summss'
-            title = "'$(gprop name)'"
-            desc = "'$(gprop version) $(gprop author)$description_text'"
-            icon = "'`urladd icon`'"
-            
-              '"$noti_texts"'
-              '"$google_trankk"'
-              [[group.page.options]]
-              title = "'$pin_text_add'"
-              auto-finish = "true"
-              silent = "true"
-              script = """
-              if [ -f "'$dirvad'/pin" ]; then
-              rm -f "'$dirvad'/pin"
-              else
-              echo > "'$dirvad'/pin"
-              fi
-              """
-              '"$code_option"'
-            '
-        fi
-    }
+    # phát hiện tính năng
+    [ "$(gprop summary)" ] && summss='summary = "'$(gprop summary)'" '
+    [ "$(gprop shortcut)" == "true" ] && shortcut='id = "'${dirvad##*/}'" '
 
-  Vips() {
+    echo '
+    [[group]]
+    [[group.page]]
+    '$farooot'
+    '$shortcut'
+    '$pagesh'
+    '$summss'
+    title = "'$(gprop name)'"
+    desc = "'$(gprop version) $(gprop author)$description_text'"
+    icon = "'`urladd icon`'"
+  
+    '"$noti_texts"'
+    '"$google_trankk"'
+    [[group.page.options]]
+    title = "'$pin_text_add'"
+    auto-finish = "true"
+    silent = "true"
+    script = """
+    if [ -f "'$dirvad'/pin" ]; then
+    rm -f "'$dirvad'/pin"
+    else
+    echo > "'$dirvad'/pin"
+    fi
+    """
+    '"$code_option"'
+    '
+  fi
+}
+
+Vips() {
   # Xoá giá trị cũ
-  code_option=''
-  code_shell=''
-  description_text=''
-  farooot=''
-  summss=''
-  google_trankk=''
-  google_tran_shellkk=''
-  shortcut=''
-  atextx=''
-  index_adds=''
+  code_option=''; farooot=''; index_adds=''; atextx='';
+  summss=''; google_trankk=''; shortcut=''; description_text='';
   
   # Chọn bên
   if [ "$PATHADD" == "$AON" ]; then
     index_adds="$(glog settadd)"
-  else
+    else
     index_adds="$(glog settadd2)"
   fi
 
@@ -1386,9 +1381,11 @@ Addon() {
 
   # Desc ngôn ngữ
   if [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ]; then
-    [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ] && description_text=" | $(gprop 'description_'$LANGUAGE'_'$COUNTRY'')"
+    [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ] && \
+    description_text=" | $(gprop 'description_'$LANGUAGE'_'$COUNTRY'')"
     elif [ "$(gprop 'description_'$LANGUAGE'')" ]; then
-    [ "$(gprop description_$LANGUAGE)" ] && description_text=" | $(gprop description_$LANGUAGE)"
+    [ "$(gprop description_$LANGUAGE)" ] && \
+    description_text=" | $(gprop description_$LANGUAGE)"
     else
     [ "$(gprop description)" ] && description_text=" | $(gprop description)"
   fi
@@ -1410,7 +1407,7 @@ Addon() {
     fi
     fi
   fi
-  }
+}
 
   # Load trang add-on có pin trước
   for vadd in $PATHADD/*/addon.prop; do
