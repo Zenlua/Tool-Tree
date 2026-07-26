@@ -3,25 +3,51 @@
 
 # home
 home() {
-    echo '<group title="'$google_text'">
-    <action title="'$home_text_1'" desc="'$home_text_2'">
-        <param desc="'$home_text_7'" name="overlay_folder" type="folder" value-sh="glog overlay_folder" required="true" editable="true"/>
-        <set>
-            slog overlay_folder "$overlay_folder"
-            '$MPAT'/overlay.bash
-        </set>
-    </action>
+echo '
+[[group]]
+  title = "'$google_text'"
 
-    <action title="'$home_text_3'" desc="'$home_text_4'">
-        <param desc="'$home_text_8'" name="extract_folder_lang" type="folder" value-sh="glog extract_folder_lang" required="true" editable="true"/>
-        <param name="extract_folder_lang_text" label="'$home_text_5'" desc="'$home_text_6'" placeholder="values-vi,values-zh-rCN" type="text" value-sh="glog extract_folder_lang_text"/>
-        <set>
-            slog extract_folder_lang "$extract_folder_lang"
-            slog extract_folder_lang_text "$extract_folder_lang_text"
-            '$MPAT'/extract.bash
-        </set>
-    </action>
-</group>'
+  [[group.action]]
+  title = "'$home_text_1'"
+  desc = "'$home_text_2'"
+  script = """
+    slog overlay_folder "$overlay_folder"
+    '$MPAT'/overlay.bash
+  """
+
+    [[group.action.params]]
+    name = "overlay_folder"
+    desc = "'$home_text_7'"
+    type = "folder"
+    value-sh = "glog overlay_folder"
+    required = true
+    editable = true
+
+  [[group.action]]
+  title = "'$home_text_3'"
+  desc = "'$home_text_4'"
+  script = """
+    slog extract_folder_lang "$extract_folder_lang"
+    slog extract_folder_lang_text "$extract_folder_lang_text"
+    '$MPAT'/extract.bash
+  """
+
+    [[group.action.params]]
+    name = "extract_folder_lang"
+    desc = "'$home_text_8'"
+    type = "folder"
+    value-sh = "glog extract_folder_lang"
+    required = true
+    editable = true
+
+    [[group.action.params]]
+    name = "extract_folder_lang_text"
+    label = "'$home_text_5'"
+    desc = "'$home_text_6'"
+    placeholder = "values-vi,values-zh-rCN"
+    type = "text"
+    value-sh = "glog extract_folder_lang_text"
+  '
 }
 
 # Thư mục hiện tại
@@ -38,13 +64,4 @@ if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
 fi
 
 # index
-echo '<?xml version="1.0" encoding="UTF-8" ?>
-<group>'
-
-if [ "$(type -t "$1")" = "function" ]; then
-    "$@"
-else
-    cat "$ETC/error.xml"
-fi
-
-echo '</group>'
+"$@"

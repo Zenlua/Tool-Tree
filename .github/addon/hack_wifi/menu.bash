@@ -2,7 +2,7 @@
 
 MPAT="${0%/*}"
 
-echo '
+true || echo '
   [[group.page.options]]
   type = "default"
   title = "@string/update_text"

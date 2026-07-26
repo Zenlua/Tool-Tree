@@ -1,7 +1,7 @@
 # Kakathic
 
 MPAT="${0%/*}"
-echo '
+true || echo '
   [[group.page.options]]
   type = "refresh"
   title = "@string/refresh_text"
