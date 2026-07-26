@@ -1,31 +1,11 @@
 #!/data/data/com.tool.tree/files/home/termux/bin/python
 
-# Tóm tắt:
-# Script kiểm tra các thay đổi của file trong thư mục lớn trên Android/Termux.
-# - Dùng ThreadPoolExecutor (không sử dụng multiprocessing.SemLock).
-# - Quét file theo luồng (generator) để giảm tiêu thụ bộ nhớ.
-# - Lưu kết quả hash, kích thước, thời gian chỉnh sửa vào file JSON.
-# - Bỏ qua hash file khi kích thước và thời gian không đổi (tiết kiệm thời gian).
-# - Đọc file với bộ đệm 1 MB.
-# - Số luồng tối đa mặc định: min(32, CPU*2). Cho phép cấu hình qua tùy chọn --workers.
-# - Loại trừ đuôi file mặc định: .bak, .tmp, .log. Có thể tùy chỉnh qua --exclude.
-# - Có tùy chọn --force để tính toán lại tất cả file.
-# - Lưu file database một cách nguyên tử (ghi vào tạm rồi replace).
-# - Xử lý đường dẫn Unicode và lỗi I/O một cách chắc chắn.
-# - In ra thay đổi theo định dạng: new:, fixed:, deleted:.
-# - Bảng tham số khuyến nghị:
-#     Buffer đọc      | Số luồng tối đa      | Chunk size (executor.map)
-#     1048576 (1 MB)   | min(32, CPU*2)       | 64
-#
-# Ví dụ sử dụng:
-#   python script.py /duong/dan/thu_muc data.json --exclude=.bak,.tmp --force
-
 import os
 import sys
 import json
 import argparse
 import hashlib
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 def compute_hash(file_path, buffer_size=1048576):
     """
@@ -70,16 +50,14 @@ def save_hash_db(hash_db_path, hash_db):
 
 def iter_files(root_dir, excluded_exts):
     """
-    Yield đường dẫn file trong thư mục (không đệ quy).
+    Yield đường dẫn file trong thư mục và các thư mục con (có đệ quy).
     Loại trừ các file có đuôi trong excluded_exts.
     """
-    for entry in os.scandir(root_dir):
-        if not entry.is_file():
-            continue
-        name = entry.name
-        if any(name.lower().endswith(ext) for ext in excluded_exts):
-            continue
-        yield entry.path
+    for dirpath, _, filenames in os.walk(root_dir):
+        for name in filenames:
+            if any(name.lower().endswith(ext) for ext in excluded_exts):
+                continue
+            yield os.path.join(dirpath, name)
 
 def scan_directory(root_dir, excluded_exts, previous_db, force=False, buffer_size=1048576, max_workers=None):
     """
@@ -87,22 +65,19 @@ def scan_directory(root_dir, excluded_exts, previous_db, force=False, buffer_siz
     Trả về dict mới {rel_path: {"hash":..., "size":..., "mtime":...}}.
     """
     current_db = {}
-    # Chuẩn bị công việc: xác định file cần hash (generator)
     def gen_tasks():
         for file_path in iter_files(root_dir, excluded_exts):
             rel = os.path.relpath(file_path, root_dir)
             try:
                 st = os.stat(file_path)
             except Exception:
-                continue  # bỏ qua file không thể truy xuất
+                continue
             size = st.st_size
             mtime = st.st_mtime_ns
             prev = previous_db.get(rel)
             if not force and prev and prev.get("size") == size and prev.get("mtime") == mtime:
-                # Không thay đổi, dùng hash cũ
                 current_db[rel] = {"hash": prev.get("hash"), "size": size, "mtime": mtime}
             else:
-                # Cần tính hash
                 yield file_path
 
     if max_workers is None:
@@ -110,7 +85,6 @@ def scan_directory(root_dir, excluded_exts, previous_db, force=False, buffer_siz
         max_workers = min(32, cpu * 2)
     try:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # executor.map với chunksize giới hạn số tasks đồng thời
             for file_path, file_hash in executor.map(lambda p: compute_hash(p, buffer_size), gen_tasks(), chunksize=64):
                 rel = os.path.relpath(file_path, root_dir)
                 try:
@@ -120,10 +94,7 @@ def scan_directory(root_dir, excluded_exts, previous_db, force=False, buffer_siz
                 except Exception:
                     size = None
                     mtime = None
-                if file_hash:
-                    current_db[rel] = {"hash": file_hash, "size": size, "mtime": mtime}
-                else:
-                    current_db[rel] = {"hash": None, "size": size, "mtime": mtime}
+                current_db[rel] = {"hash": file_hash, "size": size, "mtime": mtime}
     except KeyboardInterrupt:
         print("Program paused (interrupted by user)...", file=sys.stderr)
         return current_db
@@ -138,7 +109,6 @@ def check_changes(root_dir, hash_db_path, exclude_list, force=False, buffer_size
     previous_db = load_hash_db(hash_db_path)
     current_db = scan_directory(root_dir, exclude_list, previous_db, force, buffer_size, max_workers)
 
-    # In kết quả so sánh
     for rel, info in current_db.items():
         if rel not in previous_db:
             print(f"new: {rel}")
@@ -148,7 +118,6 @@ def check_changes(root_dir, hash_db_path, exclude_list, force=False, buffer_size
         if rel not in current_db:
             print(f"deleted: {rel}")
 
-    # Lưu database mới
     save_hash_db(hash_db_path, current_db)
 
 def main():
