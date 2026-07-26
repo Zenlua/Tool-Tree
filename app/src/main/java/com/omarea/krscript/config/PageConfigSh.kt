@@ -38,14 +38,11 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
 
         val result = ScriptEnvironmen.executeResultRoot(activity, pageConfigSh, parentConfig)?.trim()
         if (result != null) {
-            if (result.endsWith(".xml") || result.endsWith(".toml")) {
+            if (result.endsWith(".toml")) {
                 items = PageConfigReader(activity, result, parentConfig?.pageConfigDir).readConfigXml()
                 if (items == null) {
                     noReadPermission()
                 }
-            } else if (result.startsWith("<?xml") && result.endsWith(">")) {
-                val inputStream = ByteArrayInputStream(result.toByteArray())
-                items = PageConfigReader(activity, inputStream).readConfigXml()
             } else if (looksLikeInlineToml(result)) {
                 // Nội dung TOML trả về trực tiếp (không phải đường dẫn file):
                 // nhận diện qua header [[group]]/[[group. ...]] ở dòng 1 hoặc dòng 2.

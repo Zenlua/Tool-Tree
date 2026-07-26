@@ -29,10 +29,10 @@ public class KrScriptConfig {
     private static HashMap<String, String> configInfo;
 
     private final String EXECUTOR_CORE_DEFAULT = "file:///android_asset/root/executor.sh";
-    private final String PAGE_LIST_CONFIG_DEFAULT = "file:///android_asset/root/more.xml";
-    private final String FAVORITE_CONFIG_DEFAULT = "file:///android_asset/root/favorites.xml";
-    private final String CUSTOM_TAB3_DEFAULT = "file:///android_asset/root/tab3.xml";
-    private final String CUSTOM_TAB4_DEFAULT = "file:///android_asset/root/tab4.xml";
+    private final String PAGE_LIST_CONFIG_DEFAULT = "file:///android_asset/root/more.toml";
+    private final String FAVORITE_CONFIG_DEFAULT = "file:///android_asset/root/favorites.toml";
+    private final String CUSTOM_TAB3_DEFAULT = "file:///android_asset/root/tab3.toml";
+    private final String CUSTOM_TAB4_DEFAULT = "file:///android_asset/root/tab4.toml";
     private final String BEFORE_START_SH_DEFAULT = "";
 
     public KrScriptConfig init(Context context) {
