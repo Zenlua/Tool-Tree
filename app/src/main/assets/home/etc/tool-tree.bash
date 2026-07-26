@@ -1264,7 +1264,7 @@ Features() {
   icon = "'`urladd icon`'"
   shell = "hidden"
   get = "cat '$dirvad'/'$1'"
-  set = "echo "$state" > '$dirvad'/'$1'" '
+  set = "echo \"$state\" > '$dirvad'/'$1'" '
 }
 
 Homeadd() {
@@ -1289,7 +1289,7 @@ Homeadd() {
   if [ "$(gprop name)" ]; then
 
     # Xác nhận có google dịch
-    if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null; then
+    if grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
       google_trankk='
       [[group.page.options]]
       title = "'$google_translate_text'"
@@ -1307,7 +1307,7 @@ Homeadd() {
       """ '
     fi
 
-    # Xác nhận có show noti
+    # Xác nhận có show toast
     if [ -f "$dirvad/download.prop" ]; then
       noti_texts='
       [[group.page.options]]
@@ -1341,6 +1341,7 @@ Homeadd() {
   
     '"$noti_texts"'
     '"$google_trankk"'
+  
     [[group.page.options]]
     title = "'$pin_text_add'"
     auto-finish = "true"
@@ -1352,6 +1353,7 @@ Homeadd() {
     echo > "'$dirvad'/pin"
     fi
     """
+    
     '"$code_option"'
     '
   fi
@@ -1359,7 +1361,7 @@ Homeadd() {
 
 Vips() {
   # Xoá giá trị cũ
-  code_option=''; farooot=''; index_adds=''; atextx='';
+  code_option=''; farooot=''; index_adds=''; atextx=''; noti_texts='';
   summss=''; google_trankk=''; shortcut=''; description_text='';
   
   # Chọn bên

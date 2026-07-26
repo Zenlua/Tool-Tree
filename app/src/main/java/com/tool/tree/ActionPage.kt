@@ -347,9 +347,12 @@ class ActionPage : AppCompatActivity() {
     private fun menuItemExecuteSilent(menuOption: PageMenuOption) {
         val config = currentPageConfig ?: return
         val extraParams = hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key)
+        // Nếu option có script riêng (script/set) thì chạy trực tiếp, không cần pageHandlerSh
+        // + không cần dựa vào $menu_id/$state để tự phân biệt option nào được bấm nữa.
+        val script = if (menuOption.script.isNotEmpty()) menuOption.script else config.pageHandlerSh
 
         lifecycleScope.launch(Dispatchers.IO) {
-           val output = ScriptEnvironmen.executeResultRoot(this@ActionPage, config.pageHandlerSh, config, extraParams)
+           val output = ScriptEnvironmen.executeResultRoot(this@ActionPage, script, config, extraParams)
 
             if (!isActive) return@launch
 
@@ -485,11 +488,13 @@ class ActionPage : AppCompatActivity() {
         }
 
         val config = currentPageConfig ?: return
+        // Nếu option có script riêng (script/set) thì chạy trực tiếp, không cần pageHandlerSh
+        val script = if (menuOption.script.isNotEmpty()) menuOption.script else config.pageHandlerSh
         val dialog = DialogLogFragment.create(
             menuOption,
             {},
             onDismiss,
-            config.pageHandlerSh,
+            script,
             params,
             ThemeModeState.getThemeMode().isDarkMode
         )

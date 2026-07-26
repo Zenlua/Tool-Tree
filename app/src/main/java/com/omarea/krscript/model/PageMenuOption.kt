@@ -33,4 +33,8 @@ class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) 
     var onlineHtmlPage: String = ""
     var pageConfigPath: String = ""
     var pageConfigSh: String = ""
+    // Script CHẠY RIÊNG cho chính option này khi bấm, KHÔNG cần thông qua pageHandlerSh của page
+    // và không cần phân biệt bằng $menu_id/$state nữa. Nếu để trống, hành vi cũ giữ nguyên
+    // (vẫn chạy pageHandlerSh của page, truyền state/menu_id = key của option).
+    var script: String = ""
 }

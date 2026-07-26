@@ -499,6 +499,8 @@ class PageConfigReader {
                             "html" -> option.onlineHtmlPage = parser.getAttributeValue(i)
                             "config" -> option.pageConfigPath = parser.getAttributeValue(i)
                             "config-sh" -> option.pageConfigSh = parser.getAttributeValue(i)
+                            // Script chạy riêng cho option này, không cần dựa vào pageHandlerSh + $menu_id nữa
+                            "script", "set", "setstate" -> option.script = parser.getAttributeValue(i)
                         }
                     }
                     option.title = StringResRef.resolve(context, parser.nextText())
@@ -1168,6 +1170,8 @@ class PageConfigReader {
         tomlGet(table, "html")?.let { option.onlineHtmlPage = it }
         tomlGet(table, "config")?.let { option.pageConfigPath = it }
         tomlGet(table, "config-sh")?.let { option.pageConfigSh = it }
+        // Script chạy riêng cho option này, không cần dựa vào pageHandlerSh + $menu_id nữa
+        tomlGet(table, "script", "set", "setstate")?.let { option.script = it }
         tomlGet(table, "title", "text")?.let { option.title = StringResRef.resolve(context, it) }
         if (option.key.isEmpty()) option.key = option.title
         return option
