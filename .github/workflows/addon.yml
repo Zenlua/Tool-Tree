@@ -1,10 +1,10 @@
-name: Patch ROM CI
+name: Add-on CI
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - '.github/addon/patch_rom/**'
+      - '.github/addon/**'
 
 permissions: write-all
 
@@ -17,12 +17,16 @@ jobs:
 
       - name: Build add-on
         run: |
-          cd .github/addon/patch_rom
-          7z a -t7z -y ../patch_rom.add
+          for vv in ./.github/addon/*; do
+          if [ -d "$vv" ]; then
+          cd "$vv"
+          7z a -t7z -y ../${vv##*/}.add
+          fi
+          done
 
       - name: Upload module
         uses: softprops/action-gh-release@v2
         with:
           name: "Tmp"
           tag_name: "V1"
-          files: .github/addon/patch_rom.add
+          files: .github/addon/*.add

@@ -568,7 +568,7 @@ Info() {
   warn = "'$permis_text_3'"
   auto-kill = true
   auto-off = true
-  option-sh = "echo -e \"|$default_text\nauto|$google_translate_text\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia\""
+  option-sh = "echo -e \"|'$default_text'\nauto|'$google_translate_text'\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia\""
   get = "glog language_kkts"
   set = """
     slog language_kkts "$state"
@@ -1466,7 +1466,7 @@ Utilities() {
     label = "'$build_text'"
     desc = "'$builds_text_2'"
     value-sh = "glog dinh_dang 0"
-    options-sh = "echo -e \"0|$default_text\n1|RO (EROFS)\n2|RW (EXT4)\n3|RO (F2FS)\n4|RW (F2FS)\""
+    options-sh = "echo -e \"0|'$default_text'\n1|RO (EROFS)\n2|RW (EXT4)\n3|RO (F2FS)\n4|RW (F2FS)\""
     depend-on = "IMAGES"
     depend-value = "(erofs),(ext),(f2fs)"
     depend-mode = "show"
@@ -1808,7 +1808,7 @@ Apex() {
   desc = "'$desc_apkd'"
   icon = "'`urlpng decom`'"
   script = """
-    IFS=$\"\n\"
+    IFS=$'"'\n'"'
     for vv in $FILE; do
         apexeditor -s decom -i "$PTAD/$vv" -o "$APK/$PTAH"
         echo
@@ -1835,7 +1835,7 @@ Apex() {
     slog apis_apex "$APIs"
     slog payload_type "$payload_type"
     slog signs_apex "$SIGNS"
-    IFS=$\"\n\"
+    IFS=$'"'\n'"'
     for vv in $FILE; do
         apexeditor -s build -f "$payload_type" -k "$SIGNS" -a "$APIs" -c "$nen_apex" -d "$gobo_apex" -i "$APK/$PTAH/$vv" -o "$PTAD/out"
         echo
@@ -1861,7 +1861,7 @@ Apex() {
     name = "APIs"
     label = "API"
     value-sh = "glog apis_apex auto"
-    options-sh = "echo -e \"auto|$default_text\n30\n31\n32\n33\n34\n35\n36\""
+    options-sh = "echo -e \"auto|'$default_text'\n30\n31\n32\n33\n34\n35\n36\""
 
     [[group.action.params]]
     name = "nen_apex"
@@ -1873,7 +1873,7 @@ Apex() {
     name = "payload_type"
     label = "'$super_text_2'"
     value-sh = "glog payload_type auto"
-    options-sh = "echo -e \"auto|$default_text\next4\nerofs\nf2fs\""
+    options-sh = "echo -e \"auto|'$default_text'\next4\nerofs\nf2fs\""
 
     [[group.action.params]]
     name = "FILE"
@@ -1909,7 +1909,7 @@ Utiliapk() {
     slog type_apk "$type_apk"
     slog dexlibk "$dexlibk"
     slog mutiresk "$mutiresk"
-    IFS=$\"\n\"
+    IFS=$'"'\n'"'
     for vapk in $FILE; do
         if [ "$tooldecom" == "apkeditor" ]; then
             apkeditor_d -i "$PTAD/$vapk" -t "$type_apk" -b "$xoa_debug_info" -d "$dexlib" -o "$APK/$PTAH"
@@ -1935,7 +1935,7 @@ Utiliapk() {
     title = "'$decom_apk_text_11'"
     label = "'$option_text'"
     value-sh = "glog mutiresk 1"
-    options-sh = "echo -e \"0|$decom_apk_text_3\n1|$default_text\n2|$decom_apk_text_5\""
+    options-sh = "echo -e \"0|'$decom_apk_text_3'\n1|'$default_text'\n2|'$decom_apk_text_5'\""
     depend-on = "tooldecom"
     depend-value = "apkeditor"
     depend-mode = "hide"
@@ -1966,7 +1966,7 @@ Utiliapk() {
     title = "'$decom_apk_text_12'"
     label = "'$option_text'"
     value-sh = "glog dexlibk 2"
-    options-sh = "echo -e \"0|$decom_apk_text_3\n1|$default_text\n2|Baksmali 3.0.9\""
+    options-sh = "echo -e \"0|'$decom_apk_text_3'\n1|'$default_text'\n2|Baksmali 3.0.9\""
     depend-on = "tooldecom"
     depend-value = "apkeditor"
     depend-mode = "hide"
@@ -1976,7 +1976,7 @@ Utiliapk() {
     title = "'$decom_apk_text_12'"
     label = "'$option_text'"
     value-sh = "glog dexlib smali"
-    options-sh = "echo -e \"nodex|$decom_apk_text_3\ninternal|$default_text\nsmali|Baksmali 3.0.9\""
+    options-sh = "echo -e \"nodex|'$decom_apk_text_3'\ninternal|'$default_text'\nsmali|Baksmali 3.0.9\""
     depend-on = "tooldecom"
     depend-value = "apktool"
     depend-mode = "hide"
@@ -2013,7 +2013,7 @@ Utiliapk() {
     slog xoatm "$xoatm"
     slog copysign "$copysign"
     slog redivdd "$redivdd"
-    IFS=$\"\n\"
+    IFS=$'"'\n'"'
     for vbapk in $FOLDER; do
         if [ -f "$APK/$PTAH/$vbapk/archive-info.json" ]; then
             apkeditor_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib" -r "$redivdd"
@@ -2066,7 +2066,7 @@ Utiliapk() {
     label = "'$addlang_text_2'"
     desc = "'$addlang_text_3'"
     value-sh = "glog comlib"
-    options-sh = "echo -e \"manifest|$default_text\ntrue|$on_text\nfalse|$off_text\""
+    options-sh = "echo -e \"manifest|'$default_text'\ntrue|'$on_text'\nfalse|'$off_text'\""
 
     [[group.action.params]]
     name = "FOLDER"
@@ -2100,7 +2100,7 @@ Utiliapk() {
   icon = "'`urlpng apk_distur`'"
   warn = "'$distur_apk_text_1'"
   script = """
-    IFS=$\"\n\"
+    IFS=$'"'\n'"'
     for v in $FILE; do
         echo "'$more_text_4' $FILE"
         echo
@@ -2121,7 +2121,7 @@ Utiliapk() {
   icon = "'`urlpng apk_restore`'"
   warn = "'$apk_restore_text_1'"
   script = """
-    IFS=$\"\n\"
+    IFS=$'"'\n'"'
     for v in $FILE; do
         echo "'$more_text_4' $FILE"
         echo
@@ -2143,7 +2143,7 @@ Utiliapk() {
   icon = "'`urlpng merge_apk`'"
   warn = "'$apk_mager_text_1'"
   script = """
-    IFS=$\"\n\"
+    IFS=$'"'\n'"'
     for v in $FILE; do
         echo "'$more_text_4' $FILE"
         echo
