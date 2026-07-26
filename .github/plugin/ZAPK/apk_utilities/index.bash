@@ -31,39 +31,61 @@ search_plurals() {
 
 # home
 home() {
-    echo '<?xml version="1.0" encoding="UTF-8" ?>
-<group>
-    <group title="'$google_text'">
-        <picker options-sh="'$MPAT'/index.bash search_pro" shell="hidden" reload="true">
-            <title>'$clean_text_1'</title>
-            <summary>'$clean_text_2' '"$path_clean"'</summary>
-            <get>glog project_apk_clean</get>
-            <set>
-                [ "$state" ] && slog project_apk_clean "$state"
-            </set>
-        </picker>
-    </group>
+echo '[[group]]
 
-    <group>
-        <action reload="true" visible="echo '$show_clean'">
-            <title>'$clean_text_3'</title>
-            <param name="LIST" title="strings" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_values"/>
-            <param name="LIST2" title="arrays" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_array"/>
-            <param name="LIST3" title="plurals" desc="'$clean_text_4'" multiple="multiple" options-sh="'$MPAT'/index.bash search_plurals"/>
-            <set>
-                IFS=$'"'\n'"'
-                for vv in $LIST $LIST2 $LIST3; do
-                    echo "'$clean_text_5' $vv"
-                    if [ -d "$APK/$PTAH/'$path_clean'/resources/package_1/res" ]; then
-                        rm -fr "$APK/$PTAH/'$path_clean'/resources/package_1/res/$vv"
-                    elif [ -d "$APK/$PTAH/'$path_clean'/res" ]; then
-                        rm -fr "$APK/$PTAH/'$path_clean'/res/$vv"
-                    fi
-                done
-            </set>
-        </action>
-    </group>
-</group>'
+  [[group.group]]
+  title = "'$google_text'"
+
+    [[group.group.picker]]
+    shell = "hidden"
+    reload = "true"
+    options-sh = "'$MPAT'/index.bash search_pro"
+    title = "'$clean_text_1'"
+    summary = "'$clean_text_2' '"$path_clean"'"
+    get = "glog project_apk_clean"
+    set = """
+    [ "$state" ] && slog project_apk_clean "$state"
+    """
+
+  [[group.group]]
+
+    [[group.group.action]]
+    reload = "true"
+    visible = "echo '$show_clean'"
+    title = "'$clean_text_3'"
+    script = """
+    IFS=$'"'\n'"'
+    for vv in $LIST $LIST2 $LIST3; do
+      echo "'$clean_text_5' $vv"
+      if [ -d "$APK/$PTAH/'$path_clean'/resources/package_1/res" ]; then
+      rm -fr "$APK/$PTAH/'$path_clean'/resources/package_1/res/$vv"
+      elif [ -d "$APK/$PTAH/'$path_clean'/res" ]; then
+      rm -fr "$APK/$PTAH/'$path_clean'/res/$vv"
+      fi
+    done
+    """
+
+      [[group.group.action.params]]
+      name = "LIST"
+      title = "strings"
+      desc = "'$clean_text_4'"
+      multiple = "multiple"
+      options-sh = "'$MPAT'/index.bash search_values"
+
+      [[group.group.action.params]]
+      name = "LIST2"
+      title = "arrays"
+      desc = "'$clean_text_4'"
+      multiple = "multiple"
+      options-sh = "'$MPAT'/index.bash search_array"
+
+      [[group.group.action.params]]
+      name = "LIST3"
+      title = "plurals"
+      desc = "'$clean_text_4'"
+      multiple = "multiple"
+      options-sh = "'$MPAT'/index.bash search_plurals"
+'
 }
 
 # Thư mục hiện tại
@@ -82,11 +104,4 @@ if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
 fi
 
 # index
-if [ "$(type -t "$1")" = "function" ]; then
-    "$@"
-else
-    echo '<?xml version="1.0" encoding="UTF-8" ?>
-<group>'
-    cat "$ETC/error.xml"
-    echo '</group>'
-fi
+"$@"

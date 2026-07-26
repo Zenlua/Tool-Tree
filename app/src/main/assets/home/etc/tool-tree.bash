@@ -1236,27 +1236,21 @@ rm -fr "$TMP/signatures_dir"
 }
 
 Addon() {
+
     Download() {
         if [ "$(gprop url)" ]; then
-            echo '<group>
-<action warn="'$use_network_text'" icon="'`urladd icon`'" reload="true">
-<title>'$(gprop name)'</title>
-<desc>'$(gprop version)' '$(gprop author)$description_text'</desc>
-'"$farooot"'
-<set>
-echo "'$update_text_3'"
-echo
-taive "'$(gprop url)'" $TMP/addon.add 2>&1
-echo
-if [ -f $TMP/addon.add ]; then
-    installadd $TMP/addon.add "'${dirvad%/*}'"
-    rm -fr $TMP/addon.add
-else
-    echo "Add-on download failed !" >&2
-fi
-</set>
-</action>
-</group>'
+        echo '[[group.action]]
+        '$farooot'
+        warn = "'$use_network_text'"
+        icon = "'`urladd icon`'"
+        reload = "true"
+        title = "'$(gprop name)'"
+        desc = "'$(gprop version)' '$(gprop author)$description_text'"
+        script = """
+        echo "'$update_text_3'"
+        echo
+        installadd '$(gprop url)' "'${dirvad%/*}'"
+        """'
         fi
     }
 
@@ -1274,163 +1268,183 @@ fi
     Homeadd() {
         # Load index
         if [ -f "$dirvad/index.bash" ]; then
-            pagesh='config-sh="'$dirvad'/index.bash home"'
-        elif [ -f "$dirvad/index.sh" ]; then
-            pagesh='config-sh="'$dirvad'/index.sh home"'
-        elif [ -f "$dirvad/index.xml" ]; then
-            pagesh='config="'$dirvad'/index.xml"'
+            pagesh='config-sh = "'$dirvad'/index.bash home"'
+        elif [ -f "$dirvad/index.toml" ]; then
+            pagesh='config = "'$dirvad'/index.toml"'
         else
-            pagesh='config="'$ETC'/error.xml"'
+            pagesh='config = "'$ETC'/error.toml"'
         fi
 
         # Load menu
-        if grep -q code_option "$dirvad/menu.bash" 2>/dev/null; then
-            code_option="$($dirvad/menu.bash code_option 2>/dev/null)"
-            code_shell="$($dirvad/menu.bash code_shell 2>/dev/null)"
-        elif grep -q code_option "$dirvad/menu.sh" 2>/dev/null; then
-            code_option="$($dirvad/menu.sh code_option 2>/dev/null)"
-            code_shell="$($dirvad/menu.sh code_shell 2>/dev/null)"
+        if [ -f "$dirvad/menu.bash" ]; then
+            code_option="$($dirvad/menu.bash 2>/dev/null)"
+        if [ -f "$dirvad/menu.toml" ]; then
+            code_option="$(cat $dirvad/menu.toml 2>/dev/null)"
         fi
 
         # Load trang
         if [ "$(gprop name)" ]; then
+
             # Xác nhận có google dịch
-            if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null || grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
-                google_trankk='<option type="checkbox" box="glog auto_trans_text_'${dirvad##*/}'" id="trans" auto-off="true" reload="true" silent="true">'$google_translate_text'</option>'
-                google_tran_shellkk='elif [ "$menu_id" == "trans" ]; then
-[ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ] && slog auto_trans_text_'${dirvad##*/}' 0 || slog auto_trans_text_'${dirvad##*/}' 1'
+            if grep -q "trans_add" "$dirvad/index.sh" 2>/dev/null; then
+            google_trankk='
+            [[group.page.options]]
+            title = "'$google_translate_text'"
+            box = "glog auto_trans_text_'${dirvad##*/}'"
+            reload = "true"
+            silent = "true"
+            auto-off = "true"
+            type = "checkbox"
+            script = """
+            if [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ]; then
+            slog auto_trans_text_'${dirvad##*/}' 0
+            else
+            slog auto_trans_text_'${dirvad##*/}' 1
+            fi
+            """ '
             fi
 
+            # Xác nhận có show noti
             if [ -f "$dirvad/download.prop" ]; then
-                noti_texts='<option type="default" id="noti" type="checkbox" box="[ -f '$dirvad'/show ] && echo 1 || echo 0" silent="true">'$noti_update'</option>'
-                noti_shells='elif [ "$menu_id" == "noti" ]; then
-                    [ -f "'$dirvad'/show" ] && rm -f "'$dirvad'/show" || echo > "'$dirvad'/show"'
+                noti_texts='
+                [[group.page.options]]
+                title = "'$noti_update'"
+                type = "checkbox"
+                silent = "true"
+                box = "[ -f '$dirvad'/show ] && echo 1 || echo 0"
+                script = """
+                if [ -f "'$dirvad'/show" ]; then
+                rm -f "'$dirvad'/show"
+                else
+                echo > "'$dirvad'/show"
+                fi
+                """ '
             fi
 
             # phát hiện tính năng
-            [ "$(gprop summary)" ] && summss='<summary>'"$(gprop summary)"'</summary>'
-            [ "$(gprop shortcut)" == "true" ] && shortcut='id="'${dirvad##*/}'"'
+            [ "$(gprop summary)" ] && summss='summary = "'$(gprop summary)'" '
+            [ "$(gprop shortcut)" == "true" ] && shortcut='id = "'${dirvad##*/}'" '
 
-            echo '<group>
-<page '$shortcut' icon="'`urladd icon`'" '$pagesh'>
-<title>'$(gprop name)'</title>
-<desc>'$(gprop version) $(gprop author)$description_text'</desc>
-'"$summss"'
-'"$farooot"'
-'"$noti_texts"'
-'"$google_trankk"'
-<option type="default" id="pin" auto-finish="true" silent="true">'$pin_text_add'</option>
-'"$code_option"'
-<handler>
-if [ "$menu_id" == "pin" ]; then
-[ -f "'$dirvad'/pin" ] && rm -f "'$dirvad'/pin" || echo > "'$dirvad'/pin"
-'"$noti_shells"'
-'"$google_tran_shellkk"'
-fi
-'"$code_shell"'
-</handler>
-</page>
-</group>'
+            echo '
+            [[group]]
+            [[group.page]]
+            '$farooot'
+            '$shortcut'
+            '$pagesh'
+            '$summss'
+            title = "'$(gprop name)'"
+            desc = "'$(gprop version) $(gprop author)$description_text'"
+            icon = "'`urladd icon`'"
+            
+              '"$noti_texts"'
+              '"$google_trankk"'
+              [[group.page.options]]
+              title = "'$pin_text_add'"
+              auto-finish = "true"
+              silent = "true"
+              script = """
+              if [ -f "'$dirvad'/pin" ]; then
+              rm -f "'$dirvad'/pin"
+              else
+              echo > "'$dirvad'/pin"
+              fi
+              """
+              '"$code_option"'
+            '
         fi
     }
 
-    Vips() {
-        # Xoá giá trị cũ
-        code_option=''
-        code_shell=''
-        description_text=''
-        farooot=''
-        summss=''
-        google_trankk=''
-        google_tran_shellkk=''
-        shortcut=''
-        atextx=''
-        index_adds=''
-        if [ "$PATHADD" == "$AON" ]; then
-            index_adds="$(glog settadd)"
-        else
-            index_adds="$(glog settadd2)"
-        fi
+  Vips() {
+  # Xoá giá trị cũ
+  code_option=''
+  code_shell=''
+  description_text=''
+  farooot=''
+  summss=''
+  google_trankk=''
+  google_tran_shellkk=''
+  shortcut=''
+  atextx=''
+  index_adds=''
+  
+  # Chọn bên
+  if [ "$PATHADD" == "$AON" ]; then
+    index_adds="$(glog settadd)"
+  else
+    index_adds="$(glog settadd2)"
+  fi
 
-        # getprop
-        gprop() {
-            cat "$vadd" 2>/dev/null | awk -F= -v k="$1" '$1==k{print $2; exit}'
-        }
+  # getprop
+  gprop() {
+    cat "$vadd" 2>/dev/null | awk -F= -v k="$1" '$1==k{print $2; exit}'
+  }
 
-        # Phát hiện root
-        if [ "$(gprop root)" == "true" ]; then
-            farooot='<lock>
-[ "$ROT" == 0 ] && echo "'$root_warning_text'" || echo 0
-</lock>'
-        fi
+  # Phát hiện root
+  if [ "$(gprop root)" == "true" ]; then
+    farooot='lock = "[ $ROT == 0 ] && echo \"'$root_warning_text'\" || echo 0"'
+  fi
 
-        # Desc ngôn ngữ
-        if [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ]; then
-            [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ] && description_text=" | $(gprop 'description_'$LANGUAGE'_'$COUNTRY'')"
-        elif [ "$(gprop 'description_'$LANGUAGE'')" ]; then
-            [ "$(gprop description_$LANGUAGE)" ] && description_text=" | $(gprop description_$LANGUAGE)"
-        else
-            [ "$(gprop description)" ] && description_text=" | $(gprop description)"
-        fi
+  # Desc ngôn ngữ
+  if [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ]; then
+    [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ] && description_text=" | $(gprop 'description_'$LANGUAGE'_'$COUNTRY'')"
+    elif [ "$(gprop 'description_'$LANGUAGE'')" ]; then
+    [ "$(gprop description_$LANGUAGE)" ] && description_text=" | $(gprop description_$LANGUAGE)"
+    else
+    [ "$(gprop description)" ] && description_text=" | $(gprop description)"
+  fi
 
-        if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
-            if [ -f "$dirvad/uninstall.sh" ]; then
-                $dirvad/uninstall.sh
-            elif [ -f "$dirvad/uninstall.bash" ]; then
-                $dirvad/uninstall.bash
-            fi
-            find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
-        elif [ "$index_adds" == 1 ]; then
-            Features status
-        elif [ "$index_adds" == 2 ]; then
-            [ -f $dirvad/nodelete ] || Features delete
-        else
-            if [ "$(cat $dirvad/status 2>/dev/null)" != 1 ]; then
-                if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
-                    Homeadd
-                elif [ -f "$dirvad/download.prop" ]; then
-                    Download
-                fi
-            fi
-        fi
-    }
+  # Load trang tính năng
+  if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
+    [ -f "$dirvad/uninstall.bash" ] && $dirvad/uninstall.bash
+    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
+    elif [ "$index_adds" == 1 ]; then
+    Features status
+    elif [ "$index_adds" == 2 ]; then
+    [ -f $dirvad/nodelete ] || Features delete
+    else
+    if [ "$(cat $dirvad/status 2>/dev/null)" != 1 ]; then
+    if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
+    Homeadd
+    elif [ -f "$dirvad/download.prop" ]; then
+    Download
+    fi
+    fi
+  fi
+  }
 
-    # Load trang add-on có pin trước
-    for vadd in $PATHADD/*/addon.prop; do
-        [ -f "$vadd" ] || continue
-        dirvad="${vadd%/*}"
-        pin_text_add="$unpin_text"
-        [ -f "$dirvad/pin" ] || continue
-        if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
-            Vips
-        fi
-    done
+  # Load trang add-on có pin trước
+  for vadd in $PATHADD/*/addon.prop; do
+    [ -f "$vadd" ] || continue
+    dirvad="${vadd%/*}"
+    pin_text_add="$unpin_text"
+    [ -f "$dirvad/pin" ] || continue
+    if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
+    Vips
+    fi
+  done
 
-    # Load trang không có pin
-    for vadd in $PATHADD/*/addon.prop; do
-        [ -f "$vadd" ] || continue
-        dirvad="${vadd%/*}"
-        pin_text_add="$pin_text"
-        [ -f "$dirvad/pin" ] && continue
-        if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
-            Vips
-        fi
-    done
+  # Load trang không có pin
+  for vadd in $PATHADD/*/addon.prop; do
+    [ -f "$vadd" ] || continue
+    dirvad="${vadd%/*}"
+    pin_text_add="$pin_text"
+    [ -f "$dirvad/pin" ] && continue
+    if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
+    Vips
+    fi
+  done
 
-    # Load trang tải xuống ở dưới cùng
-    for vadd in $PATHADD/*/download.prop; do
-        [ -f "$vadd" ] || continue
-        dirvad="${vadd%/*}"
-        pin_text_add="$pin_text"
-        if [[ -f "$dirvad/pin" || -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.xml" ]]; then
-            continue
-        fi
-        Vips
-    done
+  # Load trang tải xuống ở dưới cùng
+  for vadd in $PATHADD/*/download.prop; do
+    [ -f "$vadd" ] || continue
+    dirvad="${vadd%/*}"
+    pin_text_add="$pin_text"
+    if [[ -f "$dirvad/pin" || -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
+    continue
+    fi
+    Vips
+  done
 }
 
 # index
-echo '<?xml version="1.0" encoding="UTF-8" ?>
-<group>'
 "$@"
-echo '</group>'

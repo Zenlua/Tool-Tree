@@ -2,36 +2,50 @@
 # Kakathic
 
 home() {
-    # index
-    echo '<group title="'$google_text'">
-    <action shell="hidden" reload="true">
-        <title>'$payload_text_1'</title>
-        <summary>'$payload_text_2' '"http://...$(glog url_text_payload | tail -c 25)"'</summary>
-        <param name="url_text_payload" placeholder="https://web.com/rom-payload-ota.zip" value-sh="glog url_text_payload" type="text" required="required" />
-        <set>
-            slog url_text_payload "$url_text_payload"
-        </set>
-    </action>
-</group>
+echo '
+[[group]]
+title = "'$google_text'"
 
-<group>
-    <action visible="echo '$checkdjhrh'" reload="true">
-        <title>'$payload_text_3'</title>
-        <summary>'$payload_text_4' '$PTSD'</summary>
-        <param name="partition" desc="'$payload_text_5'" multiple="multiple" options-sh="cat '$MPAT'/list_payload" required="required"/>
-        <set>
-            echo "Downloading..." | trans -b $LANGUAGE-$COUNTRY
-            echo
-            for vv in $partition; do
-                '$MPAT'/payload.bash $vv
-            done
-            echo
-            echo "'$payload_text_4' $PTSD"
-            echo
-            checktime
-        </set>
-    </action>
-</group>'
+  [[group.action]]
+  shell = "hidden"
+  reload = "true"
+  title = "'$payload_text_1'"
+  summary = "'$payload_text_2' http://...'$(glog url_text_payload | tail -c 25)'"
+  script = "slog url_text_payload \"$url_text_payload\""
+
+    [[group.action.params]]
+    name = "url_text_payload"
+    placeholder = "https://web.com/rom-payload-ota.zip"
+    value-sh = "glog url_text_payload"
+    type = "text"
+    required = "required"
+
+[[group]]
+
+  [[group.action]]
+  visible = "echo '$checkdjhrh'"
+  reload = "true"
+  title = "'$payload_text_3'"
+  summary = "'$payload_text_4' '$PTSD'"
+  script = """
+  echo "Downloading..." | trans -b $LANGUAGE-$COUNTRY
+  echo
+  for vv in $partition; do
+      '$MPAT'/payload.bash $vv
+  done
+  echo
+  echo "'$payload_text_4' $PTSD"
+  echo
+  checktime
+  """
+
+    [[group.action.params]]
+    name = "partition"
+    desc = "'$payload_text_5'"
+    multiple = "multiple"
+    options-sh = "cat '$MPAT'/list_payload"
+    required = "required"
+'
 }
 
 # Thư mục hiện tại
@@ -58,13 +72,4 @@ if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
 fi
 
 # index
-echo '<?xml version="1.0" encoding="UTF-8" ?>
-<group>'
-
-if [ "$(type -t "$1")" = "function" ]; then
-    "$@"
-else
-    cat "$ETC/error.xml"
-fi
-
-echo '</group>'
+"$@"
