@@ -99,15 +99,8 @@ summary-sh = "find '$path_modun' -type f"
 # Thư mục hiện tại
 MPAT="${0%/*}"
 
-# Ngôn ngữ mặc định
-eval "$(grep '="' "$MPAT/addon.prop" | sed "/google_text=/d")"
-[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
-
-# Google dịch
-if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
-    trans_add "$MPAT"
-    [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
-fi
+# Ngôn ngữ & Google dịch
+source trans_add "$MPAT"
 
 # index
 "$@"
