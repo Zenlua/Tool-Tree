@@ -27,6 +27,7 @@ import com.omarea.krscript.model.*
 import com.omarea.krscript.ui.ActionListFragment
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityMainBinding
+import com.tool.tree.ui.FadeScalePageTransformer
 import com.tool.tree.ui.MainPagerAdapter
 import com.tool.tree.ui.SwipePager
 import com.tool.tree.ui.TabIconHelper
@@ -79,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         if (!::adapter.isInitialized) {
             adapter = MainPagerAdapter(this)
             adapter.attach(binding.viewPager)
+            binding.viewPager.setPageTransformer(FadeScalePageTransformer())
         }
     }
 

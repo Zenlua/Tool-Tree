@@ -35,8 +35,19 @@ class SwipePager @JvmOverloads constructor(
         fun onPageScrolled(position: Int, offset: Float) {}
     }
 
+    /**
+     * Cho phép áp hiệu ứng chuyển trang tuỳ ý (fade, scale, depth...), tương tự
+     * ViewPager.PageTransformer thế hệ 1. [position] là vị trí tương đối của trang so với
+     * trang đang được chọn: 0 = đang hiển thị đầy đủ, -1 = lùi hẳn 1 trang bên trái,
+     * 1 = lùi hẳn 1 trang bên phải.
+     */
+    interface PageTransformer {
+        fun transformPage(page: View, position: Float)
+    }
+
     private val pages = ArrayList<View>()
     private var listener: OnPageChangeListener? = null
+    private var pageTransformer: PageTransformer? = null
 
     var currentItem: Int = 0
         private set
@@ -71,10 +82,43 @@ class SwipePager @JvmOverloads constructor(
         listener = l
     }
 
+    fun setPageTransformer(transformer: PageTransformer?) {
+        pageTransformer = transformer
+        applyPageTransform()
+    }
+
+    /**
+     * Áp hiệu ứng transform lên từng trang dựa theo vị trí hiện tại của scrollX.
+     * Gọi lại mỗi khi scrollX đổi (kéo tay, fling, settle) hoặc khi layout/thêm trang.
+     */
+    private fun applyPageTransform() {
+        if (width == 0) return
+        val transformer = pageTransformer
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            val position = (child.left - scrollX).toFloat() / width
+            if (transformer != null) {
+                transformer.transformPage(child, position)
+            } else {
+                // Không có transformer -> đảm bảo trang luôn ở trạng thái gốc
+                child.alpha = 1f
+                child.scaleX = 1f
+                child.scaleY = 1f
+                child.translationX = 0f
+            }
+        }
+    }
+
+    override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
+        super.onScrollChanged(l, t, oldl, oldt)
+        applyPageTransform()
+    }
+
     fun addPage(view: View) {
         pages.add(view)
         addView(view)
         requestLayout()
+        applyPageTransform()
     }
 
     fun getPageCount(): Int = pages.size
@@ -131,6 +175,7 @@ class SwipePager @JvmOverloads constructor(
             pendingItem = null
             scrollTo(target * w, 0)
         }
+        applyPageTransform()
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
