@@ -1,6 +1,7 @@
 package com.tool.tree
 
 import android.app.Application
+import com.omarea.common.ui.CurrentActivityHolder
 
 class PIO : Application() {
 
@@ -10,5 +11,7 @@ class PIO : Application() {
         Thread.setDefaultUncaughtExceptionHandler(
             CrashHandler(this)
         )
+
+        registerActivityLifecycleCallbacks(CurrentActivityHolder)
     }
 }

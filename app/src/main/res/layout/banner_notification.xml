@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/banner_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="12dp"
+    android:layout_marginEnd="12dp"
+    android:layout_marginTop="12dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/banner_bg"
+    android:elevation="8dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="14dp"
+    android:paddingBottom="14dp">
+
+    <ImageView
+        android:id="@+id/banner_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="top"
+        android:src="@drawable/ic_banner_info" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/banner_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/banner_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:maxLines="4" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/banner_close"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="top"
+        android:padding="8dp"
+        android:src="@drawable/ic_banner_close"
+        android:background="?attr/selectableItemBackgroundBorderless" />
+
+</LinearLayout>

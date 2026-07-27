@@ -130,6 +130,13 @@
                 <action android:name="${applicationId}.broadcast.MESSAGE" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".BannerReceiver"
+                  android:enabled="true"
+                  android:exported="true">
+            <intent-filter>
+                <action android:name="${applicationId}.broadcast.BANNER" />
+            </intent-filter>
+        </receiver>
         <service
             android:name=".WakeLockService"
             android:enabled="true"

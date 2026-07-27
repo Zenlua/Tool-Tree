@@ -34,4 +34,9 @@
     <color name="kr_shell_log_script">#808080</color>
     <color name="kr_shell_log_basic">#6c7d8f</color>
     <color name="kr_shell_log_end">#0e75c7</color>
+
+    <color name="banner_info">#0dbda2</color>
+    <color name="banner_success">#43A047</color>
+    <color name="banner_warning">#FFB300</color>
+    <color name="banner_error">#cf4e4c</color>
 </resources>
