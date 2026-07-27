@@ -12,6 +12,7 @@ import android.text.Editable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.method.LinkMovementMethod
 import android.text.style.ForegroundColorSpan
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -95,6 +96,11 @@ class DialogLogFragment : DialogFragment() {
         var forceStopRunnable: Runnable? = null
         canceled = false
         uiVisible = true
+
+        // Cho phép ấn vào các URLSpan (hyperlink OSC 8 hoặc URL trần) trong log để mở trình duyệt.
+        // Đặt sau khi view đã inflate với textIsSelectable="true" để không bị ghi đè
+        // bởi movement method mặc định của chế độ chọn văn bản.
+        binding.shellOutput.movementMethod = LinkMovementMethod.getInstance()
 
         wrapEnabled = readWrapEnabled(requireContext().applicationContext)
         applyWrapState()

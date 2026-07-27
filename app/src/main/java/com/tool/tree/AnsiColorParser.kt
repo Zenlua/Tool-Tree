@@ -10,6 +10,7 @@ import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
 import android.text.style.UnderlineSpan
+import android.util.Patterns
 import java.util.regex.Pattern
 
 object AnsiColorParser {
@@ -76,7 +77,9 @@ object AnsiColorParser {
 
         fun flushPlainBuffer() {
             if (plainBuffer.isNotEmpty()) {
-                appendStyledText(builder, plainBuffer.toString())
+                // Chỉ tự động nhận diện URL trần (http://, https://) khi không đang nằm trong
+                // một hyperlink OSC 8 (tránh chồng lấn 2 lớp URLSpan trên cùng vùng text).
+                appendStyledText(builder, plainBuffer.toString(), autoLink = pendingLinkUrl == null)
                 plainBuffer.setLength(0)
             }
         }
@@ -174,13 +177,20 @@ object AnsiColorParser {
 
     /**
      * Thêm chuỗi văn bản và áp dụng tất cả cấu hình span đang hoạt động
+     *
+     * @param autoLink nếu true, tự động dò các URL trần (http://, https://) trong [text]
+     *                 và gắn URLSpan để có thể ấn vào mở trình duyệt.
      */
-    private fun appendStyledText(builder: SpannableStringBuilder, text: String) {
+    private fun appendStyledText(builder: SpannableStringBuilder, text: String, autoLink: Boolean = true) {
         val spanStart = builder.length
         builder.append(text)
         val spanEnd = builder.length
 
         if (spanStart == spanEnd) return
+
+        if (autoLink) {
+            linkifyPlainUrls(builder, text, spanStart)
+        }
 
         var fg = currentFgColor
         var bg = currentBgColor
@@ -247,6 +257,54 @@ object AnsiColorParser {
             builder.setSpan(
                 StrikethroughSpan(),
                 spanStart, spanEnd,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+    }
+
+    /**
+     * Dò tìm các URL trần (http://..., https://...) nằm trong [text] vừa được append vào [builder]
+     * (bắt đầu tại vị trí [offset] trong builder) và gắn URLSpan cho từng URL tìm được, kèm
+     * gạch chân để người dùng nhận biết đây là link có thể ấn vào.
+     *
+     * Không dùng cho các đoạn text đã nằm trong một hyperlink OSC 8 (đã có URLSpan riêng).
+     */
+    private fun linkifyPlainUrls(builder: SpannableStringBuilder, text: String, offset: Int) {
+        val matcher = Patterns.WEB_URL.matcher(text)
+        while (matcher.find()) {
+            var start = matcher.start()
+            var end = matcher.end()
+
+            var url = text.substring(start, end)
+
+            // Bỏ các dấu câu/ngoặc thường bị dính vào cuối URL do nằm trong câu văn
+            // (vd: "xem tại https://example.com." hoặc "(https://example.com)")
+            while (end > start && url.isNotEmpty() && url.last() in ".,;:!?)]}\"'") {
+                end--
+                url = text.substring(start, end)
+            }
+            if (url.isEmpty()) continue
+
+            // Patterns.WEB_URL cho phép URL không có scheme (vd "example.com"); URLSpan cần scheme
+            // đầy đủ để Intent.ACTION_VIEW mở đúng trình duyệt.
+            val fullUrl = if (url.startsWith("http://", ignoreCase = true) ||
+                url.startsWith("https://", ignoreCase = true)
+            ) {
+                url
+            } else {
+                "http://$url"
+            }
+
+            builder.setSpan(
+                URLSpan(fullUrl),
+                offset + start,
+                offset + end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            builder.setSpan(
+                UnderlineSpan(),
+                offset + start,
+                offset + end,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
