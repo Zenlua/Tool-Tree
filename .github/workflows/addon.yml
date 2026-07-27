@@ -20,7 +20,7 @@ jobs:
           for vv in $(ls -1d .github/addon/*); do
           echo $vv
           cd "$vv"
-          7z a -t7z -y ../${vv##*/}.add &
+          7z a -t7z -y ../${vv##*/}.add
           cd ~
           done
 
