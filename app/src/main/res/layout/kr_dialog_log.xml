@@ -76,7 +76,7 @@
         android:id="@+id/log_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/input_row"
+        android:layout_above="@id/choose_row"
         android:layout_below="@+id/header_row"
         android:layout_marginTop="16dp"
         android:background="@drawable/krscript_item_ripple_kon"
@@ -97,6 +97,27 @@
             android:textSize="12sp" />
 
     </ScrollView>
+
+    <!-- Hàng các nút lựa chọn, hiển thị khi script yêu cầu chọn phương án qua cú pháp
+         "choose:[gia_tri_1|nhan_1,gia_tri_2|nhan_2,...]". Ẩn mặc định, chỉ hiện khi có yêu cầu.
+         Đặt layout_above="@id/input_row" để khi GONE không chiếm chỗ (giống cách input_row
+         đang hoạt động), và khi hiện lên sẽ đẩy log_scroll_view thu nhỏ lại tương ứng. -->
+    <HorizontalScrollView
+        android:id="@+id/choose_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/input_row"
+        android:layout_marginTop="8dp"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/choose_options_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+    </HorizontalScrollView>
 
     <LinearLayout
         android:id="@+id/input_row"

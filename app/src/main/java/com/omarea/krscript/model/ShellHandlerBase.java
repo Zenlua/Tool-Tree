@@ -38,6 +38,15 @@ public abstract class ShellHandlerBase extends Handler {
     private static final Pattern AM_PATTERN = Pattern.compile("am:\\[(.*?)\\]");
     private static final Pattern PROGRESS_PATTERN = Pattern.compile("progress:\\[(.*?)\\]");
     private static final Pattern INPUT_PATTERN = Pattern.compile("input:\\[(.*?)\\]");
+    // Lưu ý: dùng ".*" (tham lam / greedy) thay vì ".*?" (không tham lam) như các pattern khác
+    // ở trên. Vì nhãn hiển thị (label) có thể tự chứa dấu ngoặc vuông trang trí, ví dụ
+    // "choose:[1|[A],2|[B]]" — nếu dùng ".*?" thì regex sẽ dừng ngay ở dấu ']' đầu tiên
+    // (của "[A]"), cắt cụt nội dung và làm mất các phương án phía sau. Dùng ".*" sẽ khớp tới
+    // dấu ']' CUỐI CÙNG trên dòng, đảm bảo lấy đủ toàn bộ danh sách phương án.
+    // Đánh đổi: nếu sau "choose:[...]" trên cùng 1 dòng còn có thêm text chứa dấu ']' khác
+    // (hiếm gặp trong thực tế vì choose thường chiếm trọn 1 dòng echo riêng), phần đó sẽ bị
+    // gộp nhầm vào bên trong. Chấp nhận đánh đổi này để ưu tiên đúng cho trường hợp phổ biến.
+    private static final Pattern CHOOSE_PATTERN = Pattern.compile("choose:\\[(.*)\\]");
     private static final Pattern EXIT_PATTERN = Pattern.compile("exit:\\[(.*?)\\]");
 
     protected abstract void onProgress(int current, int total);
@@ -104,6 +113,58 @@ public abstract class ShellHandlerBase extends Handler {
     }
 
     /**
+     * Một phương án lựa chọn: [value] là dữ liệu sẽ được ghi vào stdin khi người dùng chọn
+     * (tương ứng phần trước dấu '|'), [label] là nhãn hiển thị trên nút bấm (phần sau dấu '|').
+     */
+    public static class ChoiceOption {
+        public final String value;
+        public final String label;
+
+        public ChoiceOption(String value, String label) {
+            this.value = value;
+            this.label = label;
+        }
+    }
+
+    /**
+     * Được gọi khi script yêu cầu người dùng chọn 1 trong nhiều phương án, thông qua cú pháp:
+     *   echo "choose:[1|A,2|B,3|C,4|D]"
+     *   read answer
+     * Khi người dùng ấn vào 1 phương án, giá trị tương ứng (vd "1") sẽ được ghi vào stdin
+     * (kèm xuống dòng) y hệt như đang gõ tay rồi nhấn Enter, để lệnh `read` nhận được kết quả.
+     * Mặc định không làm gì; lớp con override để hiển thị các nút bấm tương ứng.
+     */
+    protected void onChooseRequest(java.util.List<ChoiceOption> options) {
+    }
+
+    /**
+     * Parse nội dung bên trong "choose:[...]" thành danh sách phương án.
+     * Định dạng mỗi phương án: "giá_trị|nhãn", các phương án cách nhau bởi dấu phẩy.
+     * Nếu 1 phương án không có dấu '|' (chỉ có giá trị), nhãn sẽ dùng luôn giá trị đó.
+     */
+    private java.util.List<ChoiceOption> parseChooseOptions(String content) {
+        java.util.List<ChoiceOption> options = new ArrayList<>();
+        if (content == null || content.trim().isEmpty()) return options;
+
+        for (String rawItem : content.split(",")) {
+            String item = rawItem.trim();
+            if (item.isEmpty()) continue;
+
+            int sep = item.indexOf('|');
+            if (sep >= 0) {
+                String value = item.substring(0, sep).trim();
+                String label = item.substring(sep + 1).trim();
+                if (!value.isEmpty()) {
+                    options.add(new ChoiceOption(value, label.isEmpty() ? value : label));
+                }
+            } else {
+                options.add(new ChoiceOption(item, item));
+            }
+        }
+        return options;
+    }
+
+    /**
      * Được gọi ngay trước khi tiến trình app bị kill (do "exit:[kill]" hoặc "exit:[restart]"),
      * để lớp con có cơ hội dọn dẹp UI (đóng dialog, finish activity...). Mặc định không làm gì.
      */
@@ -148,6 +209,16 @@ public abstract class ShellHandlerBase extends Handler {
                 killApp(true);
             }
             return;
+        }
+
+        // === PHÁT HIỆN YÊU CẦU CHỌN PHƯƠNG ÁN: choose:[1|A,2|B,...] ===
+        Matcher chooseMatcher = CHOOSE_PATTERN.matcher(cleanLog);
+        if (chooseMatcher.find()) {
+            java.util.List<ChoiceOption> options = parseChooseOptions(chooseMatcher.group(1).trim());
+            if (!options.isEmpty()) {
+                onChooseRequest(options);
+                return;
+            }
         }
 
         // === TỰ ĐỘNG PHÁT HIỆN PROMPT CẦN INPUT ===

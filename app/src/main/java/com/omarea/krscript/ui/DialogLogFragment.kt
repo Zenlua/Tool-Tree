@@ -186,6 +186,7 @@ class DialogLogFragment : DialogFragment() {
                 binding.btnExit.visibility = View.GONE
                 binding.btnCancel.visibility = if (nodeInfo.interruptable && forceStop != null) View.VISIBLE else View.GONE
                 binding.inputRow.visibility = View.GONE
+                binding.chooseRow.visibility = View.GONE
             }
 
             override fun onSuccess() {
@@ -210,11 +211,12 @@ class DialogLogFragment : DialogFragment() {
                     b.btnExit.visibility = View.VISIBLE
                     b.actionProgress.visibility = View.GONE
                     b.inputRow.visibility = View.GONE
+                    b.chooseRow.visibility = View.GONE
                     hideKeyboard(b.shellInput)
                 }
                 isCancelable = true
             }
-        }, binding.shellOutput, binding.actionProgress, binding.inputRow, binding.shellInput)
+        }, binding.shellOutput, binding.actionProgress, binding.inputRow, binding.shellInput, binding.chooseRow, binding.chooseOptionsContainer)
 
         this.currentHandler = handler
         return handler
@@ -317,13 +319,17 @@ class DialogLogFragment : DialogFragment() {
         logView: TextView?,
         shellProgress: ProgressBar?,
         inputRow: View? = null,
-        shellInput: EditText? = null
+        shellInput: EditText? = null,
+        chooseRow: View? = null,
+        chooseOptionsContainer: LinearLayout? = null
     ) : ShellHandlerBase(context) {
 
         private val logViewRef = WeakReference(logView)
         private val progressRef = WeakReference(shellProgress)
         private val inputRowRef = WeakReference(inputRow)
         private val shellInputRef = WeakReference(shellInput)
+        private val chooseRowRef = WeakReference(chooseRow)
+        private val chooseOptionsContainerRef = WeakReference(chooseOptionsContainer)
 
         private val errorColor = getColor(R.color.kr_shell_log_error)
         private val basicColor = getColor(R.color.kr_shell_log_basic)
@@ -390,6 +396,8 @@ class DialogLogFragment : DialogFragment() {
             progressRef.clear()
             inputRowRef.clear()
             shellInputRef.clear()
+            chooseRowRef.clear()
+            chooseOptionsContainerRef.clear()
             unbindStdin()
             actionEventHandler = null
         }
@@ -399,6 +407,7 @@ class DialogLogFragment : DialogFragment() {
             val row = inputRowRef.get() ?: return
             val input = shellInputRef.get()
             (logView ?: row).post {
+                chooseRowRef.get()?.visibility = View.GONE
                 row.visibility = View.VISIBLE
                 if (input != null) {
                     if (prompt.isNotEmpty()) {
@@ -410,6 +419,37 @@ class DialogLogFragment : DialogFragment() {
                     val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
                     imm?.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
                 }
+            }
+        }
+
+        /**
+         * Hiện các nút bấm tương ứng với từng phương án script yêu cầu chọn (cú pháp
+         * "choose:[giá_trị|nhãn,...]"). Ấn vào 1 nút sẽ ghi thẳng [ChoiceOption.value] vào
+         * stdin (giống như gõ tay rồi nhấn Enter), để lệnh `read` trong script nhận được kết quả.
+         */
+        override fun onChooseRequest(options: MutableList<ChoiceOption>) {
+            val logView = logViewRef.get()
+            val container = chooseOptionsContainerRef.get() ?: return
+            val row = chooseRowRef.get() ?: return
+            val ctx = context
+
+            (logView ?: row).post {
+                // Đang trong lúc chờ chọn phương án thì không cần ô nhập text nữa
+                inputRowRef.get()?.visibility = View.GONE
+
+                container.removeAllViews()
+                for (option in options) {
+                    val button = Button(ctx, null, 0, R.style.dialogChoiceBtn).apply {
+                        text = option.label
+                        setOnClickListener {
+                            writeInput(option.value)
+                            row.visibility = View.GONE
+                            container.removeAllViews()
+                        }
+                    }
+                    container.addView(button)
+                }
+                row.visibility = View.VISIBLE
             }
         }
 
