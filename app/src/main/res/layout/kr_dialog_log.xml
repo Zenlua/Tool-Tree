@@ -108,6 +108,7 @@
         android:layout_height="wrap_content"
         android:layout_above="@id/input_row"
         android:layout_marginTop="8dp"
+        android:fillViewport="true"
         android:scrollbars="none"
         android:visibility="gone">
 

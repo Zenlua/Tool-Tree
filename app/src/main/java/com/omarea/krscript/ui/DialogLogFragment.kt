@@ -459,16 +459,15 @@ class DialogLogFragment : DialogFragment() {
                 }
                 val useFillMode = availableWidth > 0 && perButtonIfFilled >= minComfortableWidthPx
 
-                // LƯU Ý: container nằm bên trong HorizontalScrollView (choose_row). Một
-                // HorizontalScrollView luôn đo con của nó theo chiều ngang với
-                // MeasureSpec.UNSPECIFIED, nên layout_width="match_parent" trên container SẼ
-                // BỊ BỎ QUA (không có tác dụng) -> các nút bên trong dùng weight=1 sẽ không có
-                // chiều rộng cha xác định để chia theo tỉ lệ, kết quả là co cụm về kích thước
-                // nội dung tối thiểu (tròn, dồn về 1 góc) thay vì lấp đầy. Do đó ở chế độ "lấp
-                // đầy", phải gán MỘT SỐ PX CỤ THỂ (= availableWidth) thay vì cờ MATCH_PARENT,
-                // để LinearLayout biết chính xác chiều rộng khả dụng và chia đều weight đúng.
+                // LƯU Ý: container nằm trong HorizontalScrollView (choose_row). Bình thường một
+                // HorizontalScrollView LUÔN đo con của nó theo UNSPECIFIED (bỏ qua layout_width
+                // của con dù là match_parent hay 1 số px cụ thể) -> con tự co về kích thước nội
+                // dung -> các nút weight=1 bên trong không có gì để chia, co về minWidth (tròn
+                // nhỏ, dồn 1 góc). Phải bật android:fillViewport="true" trên choose_row (đã sửa
+                // trong kr_dialog_log.xml) để ScrollView tự đo lại con bằng EXACTLY(viewport)
+                // khi con nhỏ hơn viewport -> lúc đó match_parent ở đây mới thực sự có tác dụng.
                 container.layoutParams = FrameLayout.LayoutParams(
-                    if (useFillMode) availableWidth else ViewGroup.LayoutParams.WRAP_CONTENT,
+                    if (useFillMode) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
 
