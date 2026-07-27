@@ -610,39 +610,41 @@ Info() {
 }
 
 Update() {
-    # Thông báo cập nhật
-    link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
-    if checkonline; then
+  # Thông báo cập nhật
+  link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
+  if checkonline; then
     if [ -f $TEMP/update ]; then
-    show_update=1
-    text_desc_size="$sizes_text: $(cat $TEMP/update | coverbyte)"
+      show_update=1
+      text_desc_size="$sizes_text: $(cat $TEMP/update | coverbyte)"
     else
-    if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
-    websums="$(xem $link_url/tags/beta 2>/dev/null)"
-    tagname="${PACKAGE_VERSION_NAME//./}"
-    else
-    websums="$(xem $link_url/latest 2>/dev/null)"
-    tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
+      if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
+      websums="$(xem $link_url/tags/beta 2>/dev/null)"
+      tagname="${PACKAGE_VERSION_NAME//./}"
+      else
+      websums="$(xem $link_url/latest 2>/dev/null)"
+      tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
+      fi
+      websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
+      filesum="$(checksum "$PATH_APK" 2>/dev/null)"
+      websize="$(echo "$websums" | jq -r '.assets[0].size')"
+      name_apk="$(echo "$websums" | jq -r .name)"
+      url_dowload="$(echo "$websums" | jq -r ".assets[0].browser_download_url")"
+      text_desc_size="$sizes_text: $(coverbyte $websize 2>/dev/null)"
+      if [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
+        if [[ "$websum" != "$filesum" ]] && [[ "$websum" ]]; then
+          if [[ "$tagname" ]]; then
+          show_update=1
+          echo "$websize" >$TEMP/update
+          fi
+        fi
+      else
+        if [ -n "$tagname" ]; then
+        show_update=1
+        echo "$websize" >$TEMP/update
+        fi
+      fi
     fi
-    websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
-    filesum="$(checksum "$PATH_APK" 2>/dev/null)"
-    websize="$(echo "$websums" | jq -r '.assets[0].size')"
-    text_desc_size="$sizes_text: $(coverbyte $websize 2>/dev/null)"
-    if [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
-    if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
-    if [ -n "$tagname" ]; then
-    show_update=1
-    echo "$websize" >$TEMP/update
-    fi
-    fi
-    else
-    if [ -n "$tagname" ]; then
-    show_update=1
-    echo "$websize" >$TEMP/update
-    fi
-    fi
-    fi
-    fi
+  fi
 
   echo '
   [[group]]
@@ -666,26 +668,19 @@ Update() {
   support = "echo '$show_update'"
   script = """
     echo "'$update_text_2'"
-    echo
-    if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
-    data_json="$(xem '$link_url'/tags/beta)"
-    else
-    data_json="$(xem '$link_url'/latest)"
-    fi
-    websum="$(echo "$data_json" | jq -r .assets[0].digest | cut -d: -f2)"
-    name_apk="$(echo "$data_json" | jq -r .name)"
-    if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
+    if [[ "'$websum'" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
     openfile "$TMP/Tool-Tree.apk"
     exit
     fi
-    if [[ "$websum" != "$(checksum "$PATH_APK")" ]]; then
+    echo
+    if [[ "'$websum'" != "'$filesum'" ]]; then
     echo "'$update_text_3'"
     echo
-    taive "$(echo "$data_json" | jq -r ".assets[0].browser_download_url")" "$TMP/Tool-Tree.apk" 2>&1
-    if [[ "$websum" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
-    cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/${name_apk}.apk"
+    taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1
+    if [[ "'$websum'" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
+    cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/'$name_apk'.apk"
     echo
-    echo "'$save_text' $SDCARD_PATH/Download/${name_apk}.apk"
+    echo "'$save_text' $SDCARD_PATH/Download/'$name_apk'.apk"
     openfile "$TMP/Tool-Tree.apk"
     fi
     else
