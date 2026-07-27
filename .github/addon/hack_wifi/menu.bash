@@ -2,7 +2,8 @@
 
 MPAT="${0%/*}"
 
-true || echo '
+if [ -f $ETC/error.toml ]; then
+  echo '
   [[group.page.options]]
   type = "default"
   title = "@string/update_text"
@@ -19,3 +20,4 @@ true || echo '
   style = "fab"
   icon = "'$ETC'/icon/Loading.png"
   '
+fi
