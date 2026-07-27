@@ -21,7 +21,8 @@ jobs:
             echo "Processing: $vv"
             (
             cd "$vv"
-            7z a -t7z -mmt=off -mtc=off -mta=off -mtt=off -y /home/runner/${vv##*/}.add
+            find "$vv" -exec touch -d "2026-01-01 00:00:00" {} +
+            7z a -t7z -mmt=off -mtc=off -mta=off -y /home/runner/${vv##*/}.add
             )
           done
 
