@@ -529,9 +529,15 @@ Info() {
   icon = "'`urlpng info`'"
   config-sh = "'$ETC'/tool-tree.bash Update"
   handler = """
-    progress 0.02 10 &
     if [ "$menu_id" == "share" ]; then
     echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
+    elif [ "$menu_id" == "beta" ]; then
+    if [ -f "$TMP/Tool-Tree.apk" ]; then
+    openfile "$TMP/Tool-Tree.apk"
+    else
+    taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
+    openfile "$TMP/Tool-Tree.apk"
+    fi
     fi
   """
 
@@ -540,6 +546,11 @@ Info() {
     type = "default"
     title = "'$share_text'"
     silent = true
+    
+    [[group.page.options]]
+    key = "beta"
+    type = "default"
+    title = "Tool-Tree-beta.apk"
 
   [[group]]
   [[group.page]]
