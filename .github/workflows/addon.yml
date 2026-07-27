@@ -17,14 +17,11 @@ jobs:
 
       - name: Build add-on
         run: |
-          ls -1d .github/addon/*
-          for vv in .github/addon/*; do
+          for vv in $(ls -1d .github/addon/*); do
           echo $vv
-          if [ -d "$vv" ]; then
           cd "$vv"
           7z a -t7z -y ../${vv##*/}.add &
           cd ~
-          fi
           done
 
       - name: Upload module
