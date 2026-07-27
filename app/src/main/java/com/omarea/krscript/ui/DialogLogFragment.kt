@@ -439,8 +439,6 @@ class DialogLogFragment : DialogFragment() {
             val logView = logViewRef.get()
             val container = chooseOptionsContainerRef.get() ?: return
             val row = chooseRowRef.get() ?: return
-            val ctx = context
-
             val compactGapPx = dpToPx(8f)
             val maxGapPx = dpToPx(28f)
 
@@ -449,11 +447,11 @@ class DialogLogFragment : DialogFragment() {
 
                 container.removeAllViews()
                 for ((index, option) in options.withIndex()) {
-                    val button = Button(ctx, null, 0, R.style.dialogChoiceBtn).apply {
+                    val button = Button(row.context, null, 0, R.style.dialogChoiceBtn).apply {
                         text = option.label
                         layoutParams = LinearLayout.LayoutParams(
                             ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
+                            dpToPx(40f)
                         ).also {
                             if (index < options.size - 1) it.marginEnd = compactGapPx
                         }
