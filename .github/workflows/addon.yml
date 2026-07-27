@@ -31,4 +31,4 @@ jobs:
         with:
           name: "Tmp"
           tag_name: "V1"
-          files: .github/addon/*.add
+          files: ./.github/addon/*.add
