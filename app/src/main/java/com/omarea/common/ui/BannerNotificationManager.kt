@@ -3,15 +3,12 @@ package com.omarea.common.ui
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.Activity
-import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.ViewCompat
@@ -21,15 +18,15 @@ import com.tool.tree.R
 enum class BannerType { INFO, SUCCESS, WARNING, ERROR }
 
 /**
- * Hiện 1 banner thông báo đè lên trên cùng của Activity đang foreground.
+ * Hiện 1 banner thông báo đè lên trên cùng của Activity (hoặc Dialog) đang hiển thị.
  * Khác với Toast: hiển thị trong nội dung ứng dụng, có thể tùy biến màu/icon/tiêu đề,
  * và chỉ hoạt động khi app đang mở (cần 1 Activity foreground để add vào).
  *
- * Banner được thêm vào dưới dạng 1 Window độc lập (WindowManager.addView), KHÔNG phải
- * child view của content Activity. Lý do: nếu chỉ addView vào content, banner sẽ bị các
- * Dialog/AlertDialog (vốn là 1 Window riêng nổi trên Window của Activity) che mất, vì
- * Dialog luôn ở lớp trên bất kể elevation. Thêm dưới dạng Window riêng, add sau cùng,
- * đảm bảo banner luôn nổi trên mọi Dialog đang mở tại thời điểm gọi.
+ * Nếu đang có Dialog mở (đăng ký qua [CurrentDialogHolder], ví dụ [ProgressBarDialog]),
+ * banner sẽ được add vào chính Window của Dialog đó để chắc chắn nổi lên trên — vì Dialog
+ * là 1 Window riêng biệt luôn nổi trên Window của Activity, add vào content Activity sẽ bị
+ * Dialog che mất bất kể elevation. Nếu không có Dialog nào mở, banner add vào content
+ * của Activity như bình thường.
  *
  * Gọi từ shell: am broadcast -a <applicationId>.broadcast.BANNER --es text "..." --es type "success"
  */
@@ -83,20 +80,28 @@ object BannerNotificationManager {
         try {
             showOn(activity, req)
         } catch (e: Exception) {
-            // Activity có thể vừa bị hủy đúng lúc addView (BadTokenException...) -> bỏ qua, sang cái tiếp theo
             showNext()
         }
     }
 
+    /** Tìm ViewGroup gốc để add banner vào: ưu tiên Window của Dialog đang mở, nếu không có thì dùng content của Activity. */
+    private fun resolveRoot(activity: Activity): ViewGroup? {
+        val topDialog = CurrentDialogHolder.getTopVisible()
+        val dialogWindow = topDialog?.window
+        if (dialogWindow != null && dialogWindow.decorView.isAttachedToWindow) {
+            val dialogContent = dialogWindow.findViewById<ViewGroup>(android.R.id.content)
+            if (dialogContent != null) return dialogContent
+        }
+        return activity.findViewById(android.R.id.content)
+    }
+
     private fun showOn(activity: Activity, req: BannerRequest) {
-        val decorView = activity.window?.decorView
-        if (decorView == null || !decorView.isAttachedToWindow) {
+        val root = resolveRoot(activity)
+        if (root == null) {
             showNext()
             return
         }
-        val windowManager = activity.windowManager
-
-        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, null, false)
+        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, root, false)
 
         val bannerRoot = view.findViewById<View>(R.id.banner_root)
         val icon = view.findViewById<ImageView>(R.id.banner_icon)
@@ -130,21 +135,7 @@ object BannerNotificationManager {
             insets
         }
 
-        val params = WindowManager.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.TOP
-            token = decorView.windowToken
-        }
-
-        windowManager.addView(view, params)
+        root.addView(view)
         ViewCompat.requestApplyInsets(view)
 
         var dismissed = false
@@ -159,9 +150,9 @@ object BannerNotificationManager {
                     .setListener(object : AnimatorListenerAdapter() {
                         override fun onAnimationEnd(animation: Animator) {
                             try {
-                                windowManager.removeViewImmediate(view)
+                                root.removeView(view)
                             } catch (e: Exception) {
-                                // Window có thể đã bị hệ thống dọn (activity destroyed) -> bỏ qua
+                                // root (vd. Window của Dialog) có thể đã bị đóng -> bỏ qua
                             }
                             showNext()
                         }
