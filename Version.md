@@ -4,6 +4,7 @@
 
 **Version: 1.5.3 (27-7-2026)**
 
++ Fix patch vbmeta
 + Convert the input source code to use only TOML
 + XML language has been completely eliminated
 
