@@ -17,12 +17,12 @@ jobs:
 
       - name: Build add-on
         run: |
-          for vv in .github/addon/*/; do
+          for vv in .github/addon/*; do
             [ -d "$vv" ] || continue
             echo "Processing $vv"
             (
               cd "$vv"
-              7z a -t7z -y "../${vv%*\/}.add" .
+              7z a -t7z -y ../${vv%*/}.add
             )
           done
 
