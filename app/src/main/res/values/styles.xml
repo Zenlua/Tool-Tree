@@ -264,16 +264,16 @@
     </style>
 
     <style name="dialogChoiceBtn" parent="@style/Widget.AppCompat.Button.Borderless">
-        <item name="android:background">@drawable/btn_bg</item>
+        <!-- Dùng chung nền + hiệu ứng nhấn với nút "Sao chép" (btn_copy) để đồng bộ giao diện:
+             bo góc tròn, đổi màu khi ấn (state_pressed), thay vì màu nhấn đậm rời rạc trước đó. -->
+        <item name="android:background">@drawable/btn_bg_large_secondary</item>
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">38dp</item>
-        <item name="android:layout_marginEnd">8dp</item>
+        <item name="android:layout_height">42dp</item>
         <item name="android:minWidth">48dp</item>
-        <item name="android:paddingLeft">14dp</item>
-        <item name="android:paddingRight">14dp</item>
+        <item name="android:paddingLeft">18dp</item>
+        <item name="android:paddingRight">18dp</item>
         <item name="android:textSize">13sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textColor">?android:colorAccent</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:stateListAnimator">@null</item>
     </style>

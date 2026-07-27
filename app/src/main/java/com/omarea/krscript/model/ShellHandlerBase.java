@@ -220,13 +220,6 @@ public abstract class ShellHandlerBase extends Handler {
                 return;
             }
         }
-
-        // === TỰ ĐỘNG PHÁT HIỆN PROMPT CẦN INPUT ===
-        if (shouldShowInputPrompt(cleanLog)) {
-            onInputRequest(cleanLog);
-            // Gọi để DialogLogFragment hiển thị ô nhập
-            return;
-        }
     
         // Parser cũ giữ nguyên
         Matcher amMatcher = AM_PATTERN.matcher(cleanLog);
@@ -267,20 +260,6 @@ public abstract class ShellHandlerBase extends Handler {
         onReader(msg);
     }
     
-    /**
-     * Tự động phát hiện prompt cần người dùng nhập
-     */
-    private boolean shouldShowInputPrompt(String line) {
-        if (line == null || line.trim().isEmpty()) return false;
-        
-        String lower = line.toLowerCase(Locale.getDefault()).trim();
-        return 
-            lower.contains("(y/n)") ||
-            lower.contains("enter: ") ||
-            lower.contains("choice: ") ||
-            lower.contains("(yes/no)");
-    }
-
     protected void onReader(Object msg) {
         updateLog(msg, "#00cc55");
     }
