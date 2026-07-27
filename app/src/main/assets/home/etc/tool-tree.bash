@@ -646,6 +646,8 @@ Update() {
     echo
     taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1
     [ -f "$TMP/Tool-Tree.apk" ] && openfile "$TMP/Tool-Tree.apk"
+    echo
+    echo "'$save_text' $TMP/Tool-Tree.apk"
     else
     echo "'$update_text_4'"
     fi
