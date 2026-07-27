@@ -21,7 +21,7 @@ jobs:
           for vv in .github/addon/*; do
           if [ -d "$vv" ]; then
           cd "$vv"
-          7z a -t7z -y ../${vv##*/}.add
+          7z a -t7z -y ../${vv##*/}.add &
           cd ~
           fi
           done
