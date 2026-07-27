@@ -547,6 +547,7 @@ update_addon() {
 # Thư mục hiện tại
 MPAT="${0%/*}"
 pathsh="$MPAT/patch-rom"
+set_permis -R $TERMUX/py &>/dev/null
 
 # Ngôn ngữ mặc định
 eval "$(grep '="' "$MPAT/default.prop" | sed "/google_text=/d")"
