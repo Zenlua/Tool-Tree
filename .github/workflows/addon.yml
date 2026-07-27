@@ -21,7 +21,7 @@ jobs:
             echo "Processing: $vv"
             (
             cd "$vv"
-            7z a -t7z -y /home/runner/${vv%*/}.add
+            7z a -t7z -y /home/runner/${vv##*/}.add
             )
           done
 
