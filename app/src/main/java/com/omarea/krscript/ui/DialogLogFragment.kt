@@ -427,33 +427,58 @@ class DialogLogFragment : DialogFragment() {
          * "choose:[giá_trị|nhãn,...]"). Ấn vào 1 nút sẽ ghi thẳng [ChoiceOption.value] vào
          * stdin (giống như gõ tay rồi nhấn Enter), để lệnh `read` trong script nhận được kết quả.
          *
-         * Khoảng cách giữa các nút được tính toán 2 bước:
-         * 1) Dựng các nút với khoảng cách "chật" (COMPACT_GAP_DP) trước.
-         * 2) Sau khi layout xong, nếu tổng chiều rộng các nút còn NHỎ HƠN chiều rộng khả dụng
-         *    của hàng (tức không cần cuộn ngang), giãn đều khoảng cách ra để lấp đầy toàn bộ
-         *    chiều ngang — nhưng không vượt quá MAX_GAP_DP. Nếu có nhiều đáp án khiến tổng
-         *    chiều rộng đã vượt quá chiều rộng khả dụng (phải cuộn), khoảng cách sẽ tự động
-         *    giữ nguyên ở mức chật (nhỏ) thay vì bị kéo giãn.
+         * Cách bố trí: TÍNH TRƯỚC xem nếu chia đều chiều rộng khả dụng cho tất cả phương án
+         * (kiểu weight=1, giống hệt 2 nút "Sao chép"/"Hủy bỏ" bên dưới) thì mỗi nút có đủ rộng
+         * tối thiểu để đọc được không (>= MIN_COMFORTABLE_WIDTH_DP):
+         *   - Đủ rộng (ít đáp án) -> dùng chế độ "lấp đầy": mỗi nút weight=1, tự co giãn theo
+         *     tổng số đáp án, luôn lấp đầy trọn chiều ngang, không cuộn.
+         *   - Không đủ rộng (quá nhiều đáp án) -> chuyển sang chế độ "chip": mỗi nút chỉ rộng
+         *     vừa đủ nội dung (wrap_content), xếp cạnh nhau và cho phép cuộn ngang.
          */
         override fun onChooseRequest(options: MutableList<ChoiceOption>) {
             val logView = logViewRef.get()
             val container = chooseOptionsContainerRef.get() ?: return
             val row = chooseRowRef.get() ?: return
-            val compactGapPx = dpToPx(8f)
-            val maxGapPx = dpToPx(28f)
+
+            val gapPx = dpToPx(8f)
+            val minComfortableWidthPx = dpToPx(56f)
+            val buttonHeightPx = dpToPx(40f)
 
             (logView ?: row).post {
                 inputRowRef.get()?.visibility = View.GONE
-
                 container.removeAllViews()
+
+                val count = options.size
+                if (count == 0) return@post
+
+                // logView luôn match_parent theo chiều rộng của log_scroll_view, vốn cùng
+                // chiều rộng khả dụng với choose_row (cả hai đều match_parent trong cùng
+                // RelativeLayout cha) -> dùng làm chuẩn đo, KHÔNG phụ thuộc vào nội dung
+                // các nút đang dựng (tránh vòng lặp đo-rồi-lại-đo như trước).
+                val availableWidth = logView?.width ?: 0
+                val perButtonIfFilled = if (availableWidth > 0) {
+                    (availableWidth - gapPx * (count - 1)) / count
+                } else {
+                    0
+                }
+                val useFillMode = availableWidth > 0 && perButtonIfFilled >= minComfortableWidthPx
+
+                container.layoutParams = FrameLayout.LayoutParams(
+                    if (useFillMode) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+
                 for ((index, option) in options.withIndex()) {
                     val button = Button(row.context, null, 0, R.style.dialogChoiceBtn).apply {
                         text = option.label
-                        layoutParams = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            dpToPx(40f)
-                        ).also {
-                            if (index < options.size - 1) it.marginEnd = compactGapPx
+                        layoutParams = if (useFillMode) {
+                            // Chia đều trọn chiều ngang, tự co giãn theo số lượng đáp án
+                            LinearLayout.LayoutParams(0, buttonHeightPx, 1f)
+                        } else {
+                            // Quá nhiều đáp án: mỗi nút chỉ rộng vừa đủ nội dung, cho cuộn ngang
+                            LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, buttonHeightPx)
+                        }.also {
+                            if (index < count - 1) it.marginEnd = gapPx
                         }
                         setOnClickListener {
                             writeInput(option.value)
@@ -464,33 +489,6 @@ class DialogLogFragment : DialogFragment() {
                     container.addView(button)
                 }
                 row.visibility = View.VISIBLE
-
-                // Chờ đúng 1 lần layout/measure hoàn tất (onPreDraw) rồi mới đo lại chiều rộng
-                // thực tế để giãn khoảng cách — dùng post{} đơn thuần không đảm bảo layout đã
-                // xong, dễ đọc nhầm width = 0 hoặc giá trị cũ.
-                row.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-                    override fun onPreDraw(): Boolean {
-                        row.viewTreeObserver.removeOnPreDrawListener(this)
-
-                        val gapCount = container.childCount - 1
-                        val availableWidth = row.width
-                        val naturalWidth = container.width
-
-                        if (gapCount > 0 && availableWidth > 0 && naturalWidth in 1 until availableWidth) {
-                            val extraPerGap = ((availableWidth - naturalWidth) / gapCount)
-                                .coerceAtMost(maxGapPx - compactGapPx)
-                            if (extraPerGap > 0) {
-                                for (i in 0 until gapCount) {
-                                    val child = container.getChildAt(i)
-                                    val lp = child.layoutParams as? LinearLayout.LayoutParams ?: continue
-                                    lp.marginEnd = compactGapPx + extraPerGap
-                                    child.layoutParams = lp
-                                }
-                            }
-                        }
-                        return true
-                    }
-                })
             }
         }
 

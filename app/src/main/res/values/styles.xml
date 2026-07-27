@@ -267,6 +267,7 @@
         <!-- Dùng chung nền + hiệu ứng nhấn với nút "Sao chép" (btn_copy) để đồng bộ giao diện:
              bo góc tròn, đổi màu khi ấn (state_pressed), thay vì màu nhấn đậm rời rạc trước đó. -->
         <item name="android:background">@drawable/btn_bg_large_secondary</item>
+        <item name="android:textColor">@color/colorAccent</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">40dp</item>
         <item name="android:minWidth">40dp</item>
