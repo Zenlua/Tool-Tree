@@ -2151,9 +2151,9 @@ Homeadd() {
       type = "checkbox"
       script = """
         if [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ]; then
-            slog auto_trans_text_'${dirvad##*/}' 0
+        slog auto_trans_text_'${dirvad##*/}' 0
         else
-            slog auto_trans_text_'${dirvad##*/}' 1
+        slog auto_trans_text_'${dirvad##*/}' 1
         fi
       """ '
     fi
@@ -2165,12 +2165,12 @@ Homeadd() {
       title = "'$noti_update'"
       type = "checkbox"
       silent = true
-      box = "[ -f \"$dirvad\"/show ] && echo 1 || echo 0"
+      box = "[ -f '$dirvad'/show ] && echo 1 || echo 0"
       script = """
         if [ -f "'$dirvad'/show" ]; then
-            rm -f "'$dirvad'/show"
+        rm -f "'$dirvad'/show"
         else
-            echo > "'$dirvad'/show"
+        echo > "'$dirvad'/show"
         fi
       """ '
     fi
@@ -2179,8 +2179,8 @@ Homeadd() {
     [ "$(gprop summary)" ] && summss='summary = "'$(gprop summary)'" '
     [ "$(gprop shortcut)" == "true" ] && shortcut='key = "'${dirvad##*/}'" '
 
-    echo '
-[[group]]
+  echo '
+  [[group]]
   [[group.page]]
   '$farooot'
   '$shortcut'
@@ -2198,14 +2198,14 @@ Homeadd() {
   silent = true
   script = """
     if [ -f "'$dirvad'/pin" ]; then
-        rm -f "'$dirvad'/pin"
+    rm -f "'$dirvad'/pin"
     else
-        echo > "'$dirvad'/pin"
+    echo > "'$dirvad'/pin"
     fi
   """
 
   '"$code_option"'
-'
+  '
   fi
 }
 
@@ -2293,6 +2293,7 @@ Vips() {
     fi
     Vips
   done
+
 }
 
 # Điều hướng chính
