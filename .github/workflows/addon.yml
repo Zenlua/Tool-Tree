@@ -20,6 +20,7 @@ jobs:
           for vv in .github/addon/*; do
           if [ -d "$vv" ]; then
           cd "$vv"
+          echo $vv
           7z a -t7z -y ../${vv##*/}.add
           cd ~
           fi
