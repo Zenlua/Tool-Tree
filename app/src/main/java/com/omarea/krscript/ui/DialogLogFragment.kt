@@ -442,7 +442,11 @@ class DialogLogFragment : DialogFragment() {
             val measureView = logView ?: row
 
             val gapPx = dpToPx(8f)
-            val minComfortableWidthPx = dpToPx(56f)
+            // Ngưỡng chiều rộng tối thiểu (khi chia đều) để còn dùng chế độ "lấp đầy" thay vì
+            // co về chế độ "chip". Đặt bằng đúng android:minWidth (40dp) của dialogChoiceBtn -
+            // đây là giới hạn thấp nhất để nút còn đọc được nội dung, cho phép nhiều đáp án hơn
+            // (khoảng 7 thay vì 5 trước đây) vẫn được chia đều lấp đầy thay vì co lại thành chip.
+            val minComfortableWidthPx = dpToPx(40f)
             val buttonHeightPx = dpToPx(40f)
 
             fun buildButtons(availableWidth: Int) {
