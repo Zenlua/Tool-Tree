@@ -463,8 +463,16 @@ class DialogLogFragment : DialogFragment() {
                 }
                 val useFillMode = availableWidth > 0 && perButtonIfFilled >= minComfortableWidthPx
 
+                // LƯU Ý: container nằm bên trong HorizontalScrollView (choose_row). Một
+                // HorizontalScrollView luôn đo con của nó theo chiều ngang với
+                // MeasureSpec.UNSPECIFIED, nên layout_width="match_parent" trên container SẼ
+                // BỊ BỎ QUA (không có tác dụng) -> các nút bên trong dùng weight=1 sẽ không có
+                // chiều rộng cha xác định để chia theo tỉ lệ, kết quả là co cụm về kích thước
+                // nội dung tối thiểu (tròn, dồn về 1 góc) thay vì lấp đầy. Do đó ở chế độ "lấp
+                // đầy", phải gán MỘT SỐ PX CỤ THỂ (= availableWidth) thay vì cờ MATCH_PARENT,
+                // để LinearLayout biết chính xác chiều rộng khả dụng và chia đều weight đúng.
                 container.layoutParams = FrameLayout.LayoutParams(
-                    if (useFillMode) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT,
+                    if (useFillMode) availableWidth else ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
 
