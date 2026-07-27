@@ -1174,31 +1174,13 @@ Generate() {
     name = "type"
     label = "'$super_text_2'"
     value-sh = "glog typeheh"
-
-      [[group.action.params.options]]
-      val = "A"
-      title = "a_only"
-
-      [[group.action.params.options]]
-      val = "AB"
-      title = "ab"
-
-      [[group.action.params.options]]
-      val = "VAB"
-      title = "virtual_ab"
+    options-sh = "echo -e \"A|a_only\nAB|ab\nVAB|virtual_ab\""
 
     [[group.action.params]]
     name = "from"
     label = "'$super_text_3'"
     value-sh = "glog fromdjfh"
-
-      [[group.action.params.options]]
-      val = "raw"
-      title = "raw"
-
-      [[group.action.params.options]]
-      val = "sparse"
-      title = "sparse"
+    options-sh = "echo -e \"raw|raw\nsparse|sparse\""
 
     [[group.action.params]]
     name = "super_size"
@@ -1323,27 +1305,13 @@ Generate() {
     name = "amlogic_ver"
     label = "'$version_text'"
     value-sh = "glog amlogic_ver v2"
-
-      [[group.action.params.options]]
-      val = "v2"
-      title = "v2"
-
-      [[group.action.params.options]]
-      val = "v1"
-      title = "v1"
+    options-sh = "echo -e \"v2\nv1\""
 
     [[group.action.params]]
     name = "amlogic_align"
     label = "'$alignment_text'"
     value-sh = "glog amlogic_align 8"
-
-      [[group.action.params.options]]
-      val = "4"
-      title = "4"
-
-      [[group.action.params.options]]
-      val = "8"
-      title = "8 (Android 11+)"
+    options-sh = "echo -e \"4|4\n8|8 (Android 11+)\""
 
     [[group.action.params]]
     name = "FOLDER"
@@ -1505,30 +1473,7 @@ Utilities() {
     depend-on = "IMAGES"
     depend-value = "(erofs),(ext),(f2fs)"
     depend-mode = "show"
-
-      [[group.action.params.options]]
-      val = "raw"
-      title = "File.img (raw)"
-
-      [[group.action.params.options]]
-      val = "sparse"
-      title = "File.img (sparse)"
-
-      [[group.action.params.options]]
-      val = "zstd"
-      title = "File.img.zstd"
-
-      [[group.action.params.options]]
-      val = "zst"
-      title = "File.img.zst"
-
-      [[group.action.params.options]]
-      val = "dat"
-      title = "File.new.dat"
-
-      [[group.action.params.options]]
-      val = "br"
-      title = "File.new.dat.br"
+    options-sh = "echo -e \"raw|File.img (raw)\nsparse|File.img (sparse)\nzstd|File.img.zstd\nzst|File.img.zst\ndat|File.new.dat\nbr|File.new.dat.br\""
 
     [[group.action.params]]
     name = "nen_br"
@@ -1584,7 +1529,7 @@ Utilities() {
   config-sh = "'$ETC'/tool-tree.bash Generate"
   handler = """
     if [ "$menu_id" == "v1" ]; then
-        [ "$(glog hide_show_generate)" == 1 ] && slog hide_show_generate 0 || slog hide_show_generate 1
+    [ "$(glog hide_show_generate)" == 1 ] && slog hide_show_generate 0 || slog hide_show_generate 1
     fi
   """
 
@@ -1673,7 +1618,7 @@ Utilities() {
     slog nen_br "$nen_br"
     slog cboxksbhd "$cboxk"
     for vinput in $IMAGES; do
-        cover_img -i "$PTSD/$vinput" -o "$PTSD/out" -c $format_img -l $nen_br -d $cboxk
+    cover_img -i "$PTSD/$vinput" -o "$PTSD/out" -c $format_img -l $nen_br -d $cboxk
     done
     echo "'$save_text' $PTSD/out"
     echo
@@ -1691,46 +1636,7 @@ Utilities() {
     label = "'$option_text'"
     value-sh = "glog format_img raw"
     required = true
-
-      [[group.action.params.options]]
-      val = "raw"
-      title = "File.img (raw)"
-
-      [[group.action.params.options]]
-      val = "sparse"
-      title = "File.img (sparse)"
-
-      [[group.action.params.options]]
-      val = "zstd"
-      title = "File.img.zstd"
-
-      [[group.action.params.options]]
-      val = "zst"
-      title = "File.img.zst"
-
-      [[group.action.params.options]]
-      val = "lzma"
-      title = "File.img.lzma"
-
-      [[group.action.params.options]]
-      val = "lz4"
-      title = "File.img.lz4"
-
-      [[group.action.params.options]]
-      val = "xz"
-      title = "File.img.xz"
-
-      [[group.action.params.options]]
-      val = "gz"
-      title = "File.img.gz"
-
-      [[group.action.params.options]]
-      val = "dat"
-      title = "File.new.dat"
-
-      [[group.action.params.options]]
-      val = "br"
-      title = "File.new.dat.br"
+    options-sh = "echo -e \"raw|File.img (raw)\nsparse|File.img (sparse)\nzstd|File.img.zstd\nzst|File.img.zst\ndat|File.new.dat\nbr|File.new.dat.br\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz\""
 
     [[group.action.params]]
     name = "nen_br"
@@ -1752,7 +1658,7 @@ Utilities() {
     options-sh = "findfile 1 $PTSD"
     required = true
     multiple = true
-'
+  '
 
   if [ "$(glog hide_show_patch_rom 1)" == 1 ] && [ -f "$AON/patch_rom/addon.prop" ]; then
   dirvad="$AON/patch_rom"
@@ -1794,11 +1700,11 @@ Utilities() {
 
 Apex() {
     if [ "$(glog hide_show_apex)" == 1 ]; then
-        echo "[[group]]"
-        show_apkset
+    echo "[[group]]"
+    show_apkset
     else
-        desc_apkd="$path_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
-        desc_apkd1="$projects_text: $PTAH"
+    desc_apkd="$path_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_apkd1="$projects_text: $PTAH"
     fi
 
   echo '
@@ -1888,11 +1794,11 @@ Utiliapk() {
     [ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null &
 
     if [ "$(glog hide_show2 1)" == 1 ]; then
-        echo "[[group]]"
-        show_apkset
+    echo "[[group]]"
+    show_apkset
     else
-        desc_apks="$path_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
-        desc_apks1="$projects_text: $PTAH"
+    desc_apks="$path_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_apks1="$projects_text: $PTAH"
     fi
 
   echo '
@@ -1911,12 +1817,12 @@ Utiliapk() {
     slog mutiresk "$mutiresk"
     IFS=$'"'\n'"'
     for vapk in $FILE; do
-        if [ "$tooldecom" == "apkeditor" ]; then
-            apkeditor_d -i "$PTAD/$vapk" -t "$type_apk" -b "$xoa_debug_info" -d "$dexlib" -o "$APK/$PTAH"
-        else
-            apktool_d -i "$PTAD/$vapk" -r "$mutiresk" -b "$xoa_debug_info" -d "$dexlibk" -o "$APK/$PTAH"
-        fi
-        echo
+    if [ "$tooldecom" == "apkeditor" ]; then
+    apkeditor_d -i "$PTAD/$vapk" -t "$type_apk" -b "$xoa_debug_info" -d "$dexlib" -o "$APK/$PTAH"
+    else
+    apktool_d -i "$PTAD/$vapk" -r "$mutiresk" -b "$xoa_debug_info" -d "$dexlibk" -o "$APK/$PTAH"
+    fi
+    echo
     done
     echo "'$save_text' $APK/$PTAH"
     echo
@@ -1948,18 +1854,7 @@ Utiliapk() {
     depend-on = "tooldecom"
     depend-value = "apktool"
     depend-mode = "hide"
-
-      [[group.action.params.options]]
-      val = "raw"
-      title = "'$decom_apk_text_3'"
-
-      [[group.action.params.options]]
-      val = "xml"
-      title = "'$default_text'"
-
-      [[group.action.params.options]]
-      val = "reso"
-      title = "'$decom_apk_text_10'"
+    options-sh = "echo -e \"raw|'$decom_apk_text_3'\nxml|'$default_text'\nreso|'$decom_apk_text_10'\""
 
     [[group.action.params]]
     name = "dexlibk"
