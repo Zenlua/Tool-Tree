@@ -57,8 +57,8 @@ jobs:
           echo "Tool-Tree $VER"
           echo "VER=$VER" >> $GITHUB_ENV
           mkdir -p Up Beta
-          cp -rf app/build/outputs/apk/*/*.apk "Up/Tool-Tree.$VER.apk"
-          cp -rf app/build/outputs/apk/*/*.apk "Beta/Tool-Tree-beta.apk"
+          [ "$UPAPK" == "true" ] && cp -rf app/build/outputs/apk/*/*.apk "Up/Tool-Tree.$VER.apk"
+          [ "$UPAPK" == "true" ] || cp -rf app/build/outputs/apk/*/*.apk "Beta/Tool-Tree-beta.apk"
           ls Up
           echo -e "- ![Downloads](https://img.shields.io/github/downloads/Zenlua/Tool-Tree/V$VER/total?label=Downloads&color=%230072F4)\n- See version notes: [Changelog](https://zenlua.github.io/Tool-Tree/Version.html)" > change.txt
           if [ "$UPTG" == "true" ]; then
