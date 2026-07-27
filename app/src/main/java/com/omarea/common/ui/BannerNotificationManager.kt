@@ -3,12 +3,15 @@ package com.omarea.common.ui
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.Activity
+import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.ViewCompat
@@ -20,7 +23,13 @@ enum class BannerType { INFO, SUCCESS, WARNING, ERROR }
 /**
  * Hiện 1 banner thông báo đè lên trên cùng của Activity đang foreground.
  * Khác với Toast: hiển thị trong nội dung ứng dụng, có thể tùy biến màu/icon/tiêu đề,
- * và chỉ hoạt động khi app đang mở (cần 1 Activity foreground để addView vào).
+ * và chỉ hoạt động khi app đang mở (cần 1 Activity foreground để add vào).
+ *
+ * Banner được thêm vào dưới dạng 1 Window độc lập (WindowManager.addView), KHÔNG phải
+ * child view của content Activity. Lý do: nếu chỉ addView vào content, banner sẽ bị các
+ * Dialog/AlertDialog (vốn là 1 Window riêng nổi trên Window của Activity) che mất, vì
+ * Dialog luôn ở lớp trên bất kể elevation. Thêm dưới dạng Window riêng, add sau cùng,
+ * đảm bảo banner luôn nổi trên mọi Dialog đang mở tại thời điểm gọi.
  *
  * Gọi từ shell: am broadcast -a <applicationId>.broadcast.BANNER --es text "..." --es type "success"
  */
@@ -71,12 +80,23 @@ object BannerNotificationManager {
             return
         }
         isShowing = true
-        showOn(activity, req)
+        try {
+            showOn(activity, req)
+        } catch (e: Exception) {
+            // Activity có thể vừa bị hủy đúng lúc addView (BadTokenException...) -> bỏ qua, sang cái tiếp theo
+            showNext()
+        }
     }
 
     private fun showOn(activity: Activity, req: BannerRequest) {
-        val root = activity.findViewById<ViewGroup>(android.R.id.content)
-        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, root, false)
+        val decorView = activity.window?.decorView
+        if (decorView == null || !decorView.isAttachedToWindow) {
+            showNext()
+            return
+        }
+        val windowManager = activity.windowManager
+
+        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, null, false)
 
         val bannerRoot = view.findViewById<View>(R.id.banner_root)
         val icon = view.findViewById<ImageView>(R.id.banner_icon)
@@ -110,7 +130,21 @@ object BannerNotificationManager {
             insets
         }
 
-        root.addView(view)
+        val params = WindowManager.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP
+            token = decorView.windowToken
+        }
+
+        windowManager.addView(view, params)
         ViewCompat.requestApplyInsets(view)
 
         var dismissed = false
@@ -124,7 +158,11 @@ object BannerNotificationManager {
                     .setDuration(200)
                     .setListener(object : AnimatorListenerAdapter() {
                         override fun onAnimationEnd(animation: Animator) {
-                            root.removeView(view)
+                            try {
+                                windowManager.removeViewImmediate(view)
+                            } catch (e: Exception) {
+                                // Window có thể đã bị hệ thống dọn (activity destroyed) -> bỏ qua
+                            }
                             showNext()
                         }
                     })

@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="12dp"
     android:layout_marginEnd="12dp"
-    android:layout_marginTop="12dp"
+    android:layout_marginTop="?android:actionBarSize"
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:background="@drawable/banner_bg"
