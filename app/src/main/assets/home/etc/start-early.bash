@@ -23,6 +23,7 @@ fi
 
 (
 if checkonline; then
+
     # Thông báo cập nhật
     link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
@@ -34,25 +35,34 @@ if checkonline; then
     fi
 
     websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
-    websize="$(echo "$websums" | jq -r '.assets[0].size')"
+    websize="$(echo "$websums" | jq -r '.assets[0].size' | coverbyte)"
     filesum="$(checksum "$PATH_APK")"
+    name_apk="$(echo "$websums" | jq -r .name)"
+    url_dowload="$(echo "$websums" | jq -r ".assets[0].browser_download_url")"
 
+    echo "Name: $name_apk"
     echo "Tag: $tagname"
     echo "Sum online: $websum"
     echo "Sum apk: $filesum"
     echo "Size: $websize"
+    echo "Url: $url_dowload"
 
     if [[ "${PACKAGE_VERSION_NAME//./}" == "$tagname" ]]; then
-        if [[ "$websum" != "$filesum" ]] && [[ "$websum" ]]; then
-            if [ ! -f $TEMP/update ] && [ -n "$tagname" ]; then
-                showtoast "$update_text_6"
+        if [[ "$websum" == "$filesum" ]] && [[ "$websum" ]]; then
+            rm -fr $TEMP/size $TEMP/update
+        else
+            if [ -n "$tagname" ]; then
+                echo "$url_dowload" > $TEMP/update
+                echo "$websize" > $TEMP/size
             fi
         fi
     else
-        if [ ! -f $TEMP/update ] && [ -n "$tagname" ]; then
-            showtoast "$update_text_6"
+        if [ -n "$tagname" ]; then
+            echo "$url_dowload" > $TEMP/update
+            echo "$websize" > $TEMP/size
         fi
     fi
+    [ -f $TEMP/update ] && showtoast "$update_text_6"
 fi
 ) &
 

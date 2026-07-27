@@ -610,35 +610,10 @@ Info() {
 }
 
 Update() {
-  # Thông báo cập nhật
-  link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
-  if checkonline; then
-    if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
-    websums="$(xem $link_url/tags/beta 2>/dev/null)"
-    tagname="${PACKAGE_VERSION_NAME//./}"
-    else
-    websums="$(xem $link_url/latest 2>/dev/null)"
-    tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
-    fi
-    websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
-    filesum="$(checksum "$PATH_APK" 2>/dev/null)"
-    websize="$(echo "$websums" | jq -r '.assets[0].size')"
-    name_apk="$(echo "$websums" | jq -r .name)"
-    url_dowload="$(echo "$websums" | jq -r ".assets[0].browser_download_url")"
-    text_desc_size="$sizes_text: $(coverbyte $websize 2>/dev/null)"
-    if [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
-      if [[ "$websum" != "$filesum" ]] && [[ "$websum" ]]; then
-        if [[ "$tagname" ]]; then
-        show_update=1
-        fi
-      fi
-    else
-      if [ -n "$tagname" ]; then
-      show_update=1
-      fi
-    fi
+  if [ -f $TEMP/update ]; then
+  url_dowload="$(cat $TEMP/update 2>/dev/null)"
+  show_update=1
   fi
-
   echo '
   [[group]]
   [[group.page]]
@@ -655,27 +630,22 @@ Update() {
   [[group]]
   [[group.action]]
   title = "'$update_text'"
-  desc = "'$text_desc_size'"
+  desc = "'$sizes_text': '$(cat $TEMP/size 2>/dev/null)'"
   icon = "'`urlpng update`'"
   warn = "'$use_network_text'"
   support = "echo '$show_update'"
   script = """
     echo "'$update_text_2'"
-    if [[ "'$websum'" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
+    if [[ -f "$TMP/Tool-Tree.apk" ]]; then
     openfile "$TMP/Tool-Tree.apk"
     exit
     fi
     echo
-    if [[ "'$websum'" != "'$filesum'" ]] || [[ "'$show_update'" == 1 ]]; then
+    if [[ "'$show_update'" == 1 ]]; then
     echo "'$update_text_3'"
     echo
     taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1
-    if [[ "'$websum'" == "$(checksum "$TMP/Tool-Tree.apk")" ]]; then
-    cp -rf "$TMP/Tool-Tree.apk" "$SDCARD_PATH/Download/'$name_apk'.apk"
-    echo
-    echo "'$save_text' $SDCARD_PATH/Download/'$name_apk'.apk"
-    openfile "$TMP/Tool-Tree.apk"
-    fi
+    [ -f "$TMP/Tool-Tree.apk" ] && openfile "$TMP/Tool-Tree.apk"
     else
     echo "'$update_text_4'"
     fi
