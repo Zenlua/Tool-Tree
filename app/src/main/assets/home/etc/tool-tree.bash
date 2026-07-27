@@ -673,7 +673,7 @@ Update() {
     exit
     fi
     echo
-    if [[ "'$websum'" != "'$filesum'" ]]; then
+    if [[ "'$websum'" != "'$filesum'" ]] || [[ "'$show_update'" == 1 ]]; then
     echo "'$update_text_3'"
     echo
     taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1
