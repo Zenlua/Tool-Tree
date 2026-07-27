@@ -47,7 +47,7 @@
                 android:paddingBottom="4dp"
                 android:text="1"
                 android:textColor="?android:attr/textColorSecondary"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:typeface="monospace" />
 
             <!-- Dải ngăn cách -->
@@ -84,7 +84,7 @@
                     android:paddingBottom="4dp"
                     android:textColor="?android:attr/textColorPrimary"
                     android:textColorHint="?android:attr/textColorSecondary"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     android:typeface="monospace" />
 
             </FrameLayout>
