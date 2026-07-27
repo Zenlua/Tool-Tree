@@ -14,23 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Build add-on
         run: |
-          for vv in .github/addon/*; do
+          for vv in $HOME/.github/addon/*; do
             [ -d "$vv" ] || continue
-            echo "Processing $vv"
-            (
+            echo "Processing: $vv"
               cd "$vv"
-              7z a -t7z -y ../${vv%*/}.add
-            )
+              7z a -t7z -y $HOME/.github/addon/${vv%*/}.add
           done
-          cd ~
 
       - name: Upload module
         uses: softprops/action-gh-release@v2
         with:
           name: "Tmp"
           tag_name: "V1"
-          files: |
-            .github/addon/*.add
+          files: .github/addon/*.add
