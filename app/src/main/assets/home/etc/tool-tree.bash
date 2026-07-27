@@ -540,11 +540,6 @@ Info() {
     type = "default"
     title = "'$share_text'"
     silent = true
-  
-    [[group.page.options]]
-    type = "refresh"
-    style = "fab"
-    icon = "'$ETC'/icon/Loading.png"
 
   [[group]]
   [[group.page]]
