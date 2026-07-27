@@ -385,8 +385,10 @@ class ActionPage : AppCompatActivity() {
 
         loadPageJob = lifecycleScope.launch(Dispatchers.IO) {
             if (config.beforeRead.isNotEmpty()) {
-                withContext(Dispatchers.Main) {
-                    progressBarDialog.showDialog(getString(R.string.kr_page_before_load))
+                if (showLoading) {
+                    withContext(Dispatchers.Main) {
+                        progressBarDialog.showDialog(getString(R.string.kr_page_before_load))
+                    }
                 }
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.beforeRead, config)
             }
@@ -657,4 +659,3 @@ class ActionPage : AppCompatActivity() {
         }
     }
 }
-
