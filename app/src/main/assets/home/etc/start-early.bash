@@ -42,23 +42,17 @@ if checkonline; then
     echo "Sum apk: $filesum"
     echo "Size: $websize"
 
-    if [[ ${PACKAGE_VERSION_NAME//./} -gt $tagname ]]; then
-        [ -f $TEMP/update ] && rm -f $TEMP/update
-    elif [[ ${PACKAGE_VERSION_NAME//./} == $tagname ]]; then
-        if [[ "$websum" != "$filesum" ]] && [[ -n $websum ]]; then
+    if [[ "${PACKAGE_VERSION_NAME//./}" == "$tagname" ]]; then
+        if [[ "$websum" != "$filesum" ]] && [[ "$websum" ]]; then
             if [ ! -f $TEMP/update ] && [ -n "$tagname" ]; then
-                echo "$websize" > $TEMP/update
+                showtoast "$update_text_6"
             fi
-        else
-            [ -f $TEMP/update ] && rm -f $TEMP/update
         fi
     else
         if [ ! -f $TEMP/update ] && [ -n "$tagname" ]; then
-            echo "$websize" > $TEMP/update
+            showtoast "$update_text_6"
         fi
     fi
-
-    [ -f $TEMP/update ] && showtoast "$update_text_6"
 fi
 ) &
 
