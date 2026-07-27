@@ -25,10 +25,11 @@ jobs:
               7z a -t7z -y ../${vv%*/}.add
             )
           done
+          cd ~
 
       - name: Upload module
         uses: softprops/action-gh-release@v2
         with:
           name: "Tmp"
           tag_name: "V1"
-          files: ./.github/addon/*.add
+          files: .github/addon/*.add
