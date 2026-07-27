@@ -277,6 +277,18 @@ object AnsiColorParser {
 
             var url = text.substring(start, end)
 
+            // CHỈ coi là link khi văn bản THỰC SỰ bắt đầu bằng http:// hoặc https://.
+            // Patterns.WEB_URL của Android mặc định khớp CẢ domain trần không có scheme
+            // (vd "Kakathic.com", "example.com") -> nếu không lọc lại ở đây, những đoạn
+            // text bình thường như "echo "Kakathic.com"" cũng sẽ bị biến thành link, dù
+            // người dùng không hề gõ http(s)://. Bỏ qua (không gắn URLSpan) cho mọi match
+            // không có scheme http/https tường minh, và KHÔNG tự thêm "http://" vào nữa.
+            if (!url.startsWith("http://", ignoreCase = true) &&
+                !url.startsWith("https://", ignoreCase = true)
+            ) {
+                continue
+            }
+
             // Bỏ các dấu câu/ngoặc thường bị dính vào cuối URL do nằm trong câu văn
             // (vd: "xem tại https://example.com." hoặc "(https://example.com)")
             while (end > start && url.isNotEmpty() && url.last() in ".,;:!?)]}\"'") {
@@ -285,15 +297,7 @@ object AnsiColorParser {
             }
             if (url.isEmpty()) continue
 
-            // Patterns.WEB_URL cho phép URL không có scheme (vd "example.com"); URLSpan cần scheme
-            // đầy đủ để Intent.ACTION_VIEW mở đúng trình duyệt.
-            val fullUrl = if (url.startsWith("http://", ignoreCase = true) ||
-                url.startsWith("https://", ignoreCase = true)
-            ) {
-                url
-            } else {
-                "http://$url"
-            }
+            val fullUrl = url
 
             builder.setSpan(
                 URLSpan(fullUrl),
