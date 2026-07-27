@@ -439,23 +439,19 @@ class DialogLogFragment : DialogFragment() {
             val logView = logViewRef.get()
             val container = chooseOptionsContainerRef.get() ?: return
             val row = chooseRowRef.get() ?: return
+            val measureView = logView ?: row
 
             val gapPx = dpToPx(8f)
             val minComfortableWidthPx = dpToPx(56f)
             val buttonHeightPx = dpToPx(40f)
 
-            (logView ?: row).post {
+            fun buildButtons(availableWidth: Int) {
                 inputRowRef.get()?.visibility = View.GONE
                 container.removeAllViews()
 
                 val count = options.size
-                if (count == 0) return@post
+                if (count == 0) return
 
-                // logView luôn match_parent theo chiều rộng của log_scroll_view, vốn cùng
-                // chiều rộng khả dụng với choose_row (cả hai đều match_parent trong cùng
-                // RelativeLayout cha) -> dùng làm chuẩn đo, KHÔNG phụ thuộc vào nội dung
-                // các nút đang dựng (tránh vòng lặp đo-rồi-lại-đo như trước).
-                val availableWidth = logView?.width ?: 0
                 val perButtonIfFilled = if (availableWidth > 0) {
                     (availableWidth - gapPx * (count - 1)) / count
                 } else {
@@ -497,6 +493,34 @@ class DialogLogFragment : DialogFragment() {
                     container.addView(button)
                 }
                 row.visibility = View.VISIBLE
+            }
+
+            // Yêu cầu "choose" có thể tới ngay khi script vừa khởi động, tức là TRƯỚC KHI
+            // Dialog hoàn tất lượt layout đầu tiên. Lúc đó measureView.width vẫn là 0, và một
+            // post{} DUY NHẤT là KHÔNG ĐỦ TIN CẬY: nếu view chưa attach vào window, runnable
+            // post() sẽ được chạy ngay tại thời điểm attach - tức là VẪN TRƯỚC lượt đo/layout
+            // đầu tiên -> width vẫn đọc ra 0, khiến hệ thống luôn rơi vào "chế độ chip" (nút
+            // tròn nhỏ dồn 1 góc) dù có đủ chỗ trống để lấp đầy. Do đó cần chờ bằng
+            // OnGlobalLayoutListener, chỉ build nút SAU KHI đã đo được width thật (> 0), thay vì
+            // build ngay dựa trên width = 0.
+            if (measureView.width > 0) {
+                buildButtons(measureView.width)
+            } else {
+                val vto = measureView.viewTreeObserver
+                vto.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                    override fun onGlobalLayout() {
+                        if (measureView.width > 0) {
+                            if (vto.isAlive) {
+                                vto.removeOnGlobalLayoutListener(this)
+                            }
+                            buildButtons(measureView.width)
+                        }
+                        // Nếu width vẫn = 0, giữ listener lại chờ lượt layout kế tiếp.
+                    }
+                })
+                // Chủ động yêu cầu 1 lượt layout, phòng trường hợp view đã attach nhưng chưa
+                // có lượt layout nào được lên lịch (ví dụ view vừa addView() xong).
+                measureView.requestLayout()
             }
         }
 
