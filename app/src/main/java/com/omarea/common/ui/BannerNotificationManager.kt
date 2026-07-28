@@ -7,7 +7,6 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -112,12 +111,13 @@ object BannerNotificationManager {
         }
         messageView.text = req.message
 
-        // Toast mặc định wrap_content theo nội dung -> ép chiều rộng gần bằng màn hình
-        // (trừ lề 2 bên) để có dáng banner tràn ngang như mong muốn.
+        // Toast luôn tự set kích thước cửa sổ kiểu wrap_content theo nội dung, gán layoutParams
+        // cho view KHÔNG có tác dụng ép độ rộng (window cha quyết định MeasureSpec, không phải
+        // layoutParams của view con). Phải dùng minimumWidth để ép độ rộng tối thiểu khi tự đo.
         val density = activity.resources.displayMetrics.density
         val marginPx = (12 * density).toInt()
         val screenWidth = activity.resources.displayMetrics.widthPixels
-        view.layoutParams = ViewGroup.LayoutParams(screenWidth - marginPx * 2, ViewGroup.LayoutParams.WRAP_CONTENT)
+        view.minimumWidth = screenWidth - marginPx * 2
 
         val toast = Toast(activity.applicationContext)
         toast.duration = Toast.LENGTH_LONG
