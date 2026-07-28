@@ -20,22 +20,10 @@ enum class BannerPosition { TOP, BOTTOM }
  * đang có Dialog mở (ví dụ ProgressBarDialog).
  *
  * Kỹ thuật: dùng chính cơ chế của Toast (custom view Toast, type cửa sổ TYPE_TOAST) thay vì
- * tự add view vào content của Activity/Dialog. Lý do: Dialog là 1 Window riêng, kích thước
- * chỉ vừa đủ khung dialog (không phải full màn hình), nên add view thường vào bên trong nó
- * sẽ bị bó hẹp/cắt theo đúng khung dialog nhỏ đó. TYPE_TOAST là loại cửa sổ đặc biệt của hệ
- * thống luôn nổi trên mọi Dialog/Activity của app (đây cũng chính là lý do ToastReceiver có
- * sẵn của bạn luôn hiện được dù đang có dialog hay không).
- *
- * Đánh đổi: cửa sổ Toast KHÔNG nhận sự kiện chạm (không bấm tắt sớm được), và không thể tùy
- * chỉnh thời gian hiển thị (Android giới hạn cứng ở mức LENGTH_LONG ~3.5s cho mọi Toast).
- *
- * Gọi từ shell: am broadcast -a <applicationId>.broadcast.BANNER --es text "..." --es type "success" --es position "bottom"
+ * tự add view vào content của Activity/Dialog.
  */
 object BannerNotificationManager {
     private val mainHandler = Handler(Looper.getMainLooper())
-
-    // Thời gian hiển thị thực tế của Toast.LENGTH_LONG do hệ thống quy định, dùng để giãn cách
-    // các banner trong hàng đợi, tránh cái sau ghi đè ngay lên cái trước.
     private const val TOAST_LONG_DURATION_MS = 3500L
 
     private data class BannerRequest(
@@ -49,12 +37,6 @@ object BannerNotificationManager {
     private val queue = ArrayDeque<BannerRequest>()
     private var isShowing = false
 
-    /**
-     * @param icon Tên resource drawable/mipmap tùy chỉnh (vd "ic_my_icon"). Nếu bỏ trống hoặc
-     * không tìm thấy resource tương ứng, mặc định dùng icon của chính app.
-     * @param onNoActivity gọi khi không có Activity nào đang foreground (app ở background),
-     * dùng để nơi gọi có thể fallback sang Toast thường hoặc bỏ qua.
-     */
     fun show(
         title: String? = null,
         message: String,
@@ -120,33 +102,25 @@ object BannerNotificationManager {
         messageView.text = req.message
 
         val density = activity.resources.displayMetrics.density
+        val yOffset = (50 * density).toInt()
 
         val toast = Toast(activity.applicationContext)
         toast.duration = Toast.LENGTH_LONG
         @Suppress("DEPRECATION")
         toast.view = view
 
-        when (req.position) {
-            BannerPosition.TOP -> toast.setGravity(
-                Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (50 * density).toInt()
-            )
-            BannerPosition.BOTTOM -> toast.setGravity(
-                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, (50 * density).toInt()
-            )
+        // Xác định gravity gọn gàng, tránh lỗi ngắt dòng khi gọi hàm
+        val gravity = when (req.position) {
+            BannerPosition.TOP -> Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            BannerPosition.BOTTOM -> Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         }
+        toast.setGravity(gravity, 0, yOffset)
+
         toast.show()
 
-        // Toast tự ẩn theo thời lượng hệ thống quy định (LENGTH_LONG), chỉ cần đợi tương ứng
-        // rồi xử lý banner tiếp theo trong hàng đợi (nếu có).
         mainHandler.postDelayed({ showNext() }, TOAST_LONG_DURATION_MS)
     }
 
-    /**
-     * Tìm drawable cho icon theo thứ tự ưu tiên:
-     * 1. Nếu `name` là đường dẫn file ảnh tồn tại trên máy (vd "/sdcard/.../icon.png") -> decode trực tiếp từ file.
-     * 2. Nếu `name` là tên resource drawable/mipmap có sẵn trong app -> dùng resource đó.
-     * 3. Nếu không có gì khớp -> mặc định trả về icon của chính app.
-     */
     private fun resolveIcon(activity: Activity, name: String?): android.graphics.drawable.Drawable? {
         if (!name.isNullOrEmpty()) {
             if (name.startsWith("/") || name.startsWith("file://")) {
