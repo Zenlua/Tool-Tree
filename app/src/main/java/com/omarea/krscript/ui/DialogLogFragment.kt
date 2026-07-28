@@ -621,6 +621,22 @@ class DialogLogFragment : DialogFragment() {
         private fun updateLogWithColor(text: String, forcedColor: Int?) {
             var parsedLog: CharSequence = AnsiColorParser.parse(text)
 
+            // Lệnh `clear` trong script sẽ phát ra mã CSI xoá màn hình (ESC[2J/ESC[3J), được
+            // AnsiColorParser nhận diện ở trên. Xoá sạch logBuffer ngay tại đây (background
+            // thread) và đánh dấu invalid từ vị trí 0 để lần flushToUi() kế tiếp thay thế TOÀN
+            // BỘ nội dung cũ đang hiển thị bằng nội dung mới (thường là rỗng), giống hệt cách
+            // xử lý ghi đè do '\r' - không cần đụng trực tiếp vào UI thread, tránh race với
+            // pendingUiUpdate/flushToUi.
+            if (AnsiColorParser.consumePendingClear()) {
+                synchronized(logBuffer) {
+                    logBuffer.clear()
+                    lineCount = 0
+                    lineStart = 0
+                    pendingOverwrite = false
+                    markInvalidFrom(0)
+                }
+            }
+
             if (forcedColor != null && !text.contains("\u001B[")) {
                 val spannable = SpannableStringBuilder(parsedLog)
                 spannable.setSpan(

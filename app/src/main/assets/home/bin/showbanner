@@ -1,7 +1,11 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
 show_help(){
-echo "Use: notiservice -d|--delete false -id|--id 123 -t|--title 'Hello' -m|--message 'Xin chào'"
+echo "Use: showbanner -t|--title 'Hello' -m|--message 'Xin chào'"
+echo
+echo "-ty|--type: info, warning, success, error"
+echo "-i|--icon: path/icon.png, kr_shortcut_logo"
+echo "-p|--position: top, bottom"
 }
 
 if [[ $# -eq 0 || "$1" != -* ]]; then
@@ -9,15 +13,19 @@ show_help >&2
 exit 1
 fi
 
-DELETE=""; ID=""; TITLE=""; MESSAGE="";
+TYPE=""; ICON=""; TITLE=""; MESSAGE=""; POSITION=""; AMON="";
 while [ $# -gt 0 ]; do
   case "$1" in
-    -d|--delete)
-      DELETE="$2"
+    -ty|--type)
+      TYPE="$2"
       shift 2
       ;;
-    -id|--id)
-      ID="$2"
+    -i|--icon)
+      ICON="$2"
+      shift 2
+      ;;
+    -p|--position)
+      POSITION="$2"
       shift 2
       ;;
     -t|--title)
@@ -36,17 +44,18 @@ while [ $# -gt 0 ]; do
       show_help
       ;;
     *)
-      echo "Unknown option: $1"
+      echo "Unknown option: $1" >&2
       exit 1
       ;;
   esac
 done
 
 # Mặc định
-CMDs="startservice -n com.tool.tree/com.tool.tree.NotiService "
+CMDs="broadcast -n com.tool.tree/com.tool.tree.BannerReceiver -a com.tool.tree.broadcast.BANNER "
 
-[ "$DELETE" == "true" ] && CMDs+="--ez delete true "
-[ "$ID" ] && CMDs+="--ei id $ID "
+[ "$TYPE" ] && CMDs+="--es type \"$TYPE\" "
+[ "$ICON" ] && CMDs+="--es icon \"$ICON\" "
+[ "$POSITION" ] && CMDs+="--es position \"$POSITION\" "
 [ "$TITLE" ] && CMDs+="--es title \"$TITLE\" "
 [ "$MESSAGE" ] && CMDs+="--es message \"$MESSAGE\" "
 

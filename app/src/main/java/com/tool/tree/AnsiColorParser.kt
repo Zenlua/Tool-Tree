@@ -44,6 +44,11 @@ object AnsiColorParser {
     private var isReverse = false
     private var isDim = false
 
+    // Cờ báo hiệu đã gặp mã CSI xoá toàn bộ màn hình (ESC[2J / ESC[3J) trong lần parse() gần
+    // nhất, để nơi gọi (DialogLogFragment) biết cần xoá sạch log buffer + UI, mô phỏng đúng
+    // hành vi lệnh `clear` trong terminal thật (trước đây các mã này bị bỏ qua hoàn toàn).
+    private var clearScreenRequested = false
+
     private val ANSI_16_COLORS = intArrayOf(
         Color.BLACK,
         Color.RED,
@@ -107,8 +112,15 @@ object AnsiColorParser {
                         val finalByte = m.group(3)
                         if (finalByte == "m") {
                             parseAnsiParameters(params)
+                        } else if (finalByte == "J") {
+                            // Erase in Display: 2 = xoá toàn màn hình, 3 = xoá toàn màn hình + scrollback
+                            // (phần mở rộng của xterm, ncurses hiện đại thường phát cả 2 mã này khi
+                            // chạy lệnh `clear`). 0/1 chỉ xoá một phần màn hình nên không coi là "clear".
+                            if (params == "2" || params == "3") {
+                                clearScreenRequested = true
+                            }
                         }
-                        // Các CSI khác (cursor move, clear line, hide cursor...) -> bỏ qua, không render
+                        // Các CSI khác (cursor move, hide cursor...) -> bỏ qua, không render
                         i = m.end()
                     } else {
                         i++ // escape hỏng/không đầy đủ, bỏ qua 1 ký tự để tránh vòng lặp vô hạn
@@ -425,5 +437,17 @@ object AnsiColorParser {
 
     fun reset() {
         resetToDefault()
+        clearScreenRequested = false
+    }
+
+    /**
+     * Kiểm tra xem lần gọi parse() gần nhất có gặp mã xoá toàn màn hình (lệnh `clear`) hay
+     * không, đồng thời "tiêu thụ" (reset) cờ này để lần gọi sau không bị báo lại. Nơi gọi
+     * (DialogLogFragment) cần gọi hàm này ngay sau parse() để biết có cần xoá log buffer + UI.
+     */
+    fun consumePendingClear(): Boolean {
+        val result = clearScreenRequested
+        clearScreenRequested = false
+        return result
     }
 }
