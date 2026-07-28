@@ -13,6 +13,7 @@ import android.widget.Toast
 import com.tool.tree.R
 
 enum class BannerType { INFO, SUCCESS, WARNING, ERROR }
+enum class BannerPosition { TOP, BOTTOM }
 
 /**
  * Hiện 1 banner thông báo đè lên trên cùng của Activity đang foreground -- KỂ CẢ khi
@@ -25,24 +26,27 @@ enum class BannerType { INFO, SUCCESS, WARNING, ERROR }
  * thống luôn nổi trên mọi Dialog/Activity của app (đây cũng chính là lý do ToastReceiver có
  * sẵn của bạn luôn hiện được dù đang có dialog hay không).
  *
- * Đánh đổi: cửa sổ Toast KHÔNG nhận sự kiện chạm, nên banner không thể bấm để tắt sớm --
- * sẽ tự động biến mất sau đúng thời gian `durationMs` được yêu cầu.
+ * Đánh đổi: cửa sổ Toast KHÔNG nhận sự kiện chạm (không bấm tắt sớm được), và không thể tùy
+ * chỉnh thời gian hiển thị (Android giới hạn cứng ở mức LENGTH_LONG ~3.5s cho mọi Toast).
  *
- * Gọi từ shell: am broadcast -a <applicationId>.broadcast.BANNER --es text "..." --es type "success"
+ * Gọi từ shell: am broadcast -a <applicationId>.broadcast.BANNER --es text "..." --es type "success" --es position "bottom"
  */
 object BannerNotificationManager {
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    // Thời gian hiển thị thực tế của Toast.LENGTH_LONG do hệ thống quy định, dùng để giãn cách
+    // các banner trong hàng đợi, tránh cái sau ghi đè ngay lên cái trước.
+    private const val TOAST_LONG_DURATION_MS = 3500L
 
     private data class BannerRequest(
         val title: String?,
         val message: String,
         val type: BannerType,
-        val durationMs: Long
+        val position: BannerPosition
     )
 
     private val queue = ArrayDeque<BannerRequest>()
     private var isShowing = false
-    private var currentToast: Toast? = null
 
     /**
      * @param onNoActivity gọi khi không có Activity nào đang foreground (app ở background),
@@ -52,7 +56,7 @@ object BannerNotificationManager {
         title: String? = null,
         message: String,
         type: BannerType = BannerType.INFO,
-        durationMs: Long = 3000L,
+        position: BannerPosition = BannerPosition.TOP,
         onNoActivity: (() -> Unit)? = null
     ) {
         if (CurrentActivityHolder.get() == null) {
@@ -60,7 +64,7 @@ object BannerNotificationManager {
             return
         }
         mainHandler.post {
-            queue.addLast(BannerRequest(title, message, type, durationMs))
+            queue.addLast(BannerRequest(title, message, type, position))
             if (!isShowing) showNext()
         }
     }
@@ -123,32 +127,16 @@ object BannerNotificationManager {
         toast.duration = Toast.LENGTH_LONG
         @Suppress("DEPRECATION")
         toast.view = view
-        // Offset nhỏ để không dính sát mép trên / bị status bar che
-        toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (24 * density).toInt())
-        currentToast = toast
 
-        // Toast chỉ hỗ trợ 2 mốc thời gian cố định (LENGTH_SHORT ~2s / LENGTH_LONG ~3.5s),
-        // không có API để đặt số ms tùy ý. Để đạt đúng `durationMs` yêu cầu, gọi lại show()
-        // theo chu kỳ (làm mới thời gian hiển thị) cho tới khi đủ thời lượng mong muốn.
-        val startTime = android.os.SystemClock.uptimeMillis()
-        val refreshInterval = 3000L // nhỏ hơn LENGTH_LONG (~3.5s) để không bị chớp tắt giữa 2 lần show
-        lateinit var keepAliveRunnable: Runnable
-        keepAliveRunnable = Runnable {
-            val elapsed = android.os.SystemClock.uptimeMillis() - startTime
-            if (elapsed < req.durationMs) {
-                toast.show()
-                val remaining = req.durationMs - elapsed
-                mainHandler.postDelayed(keepAliveRunnable, minOf(refreshInterval, remaining))
-            } else {
-                try {
-                    toast.cancel()
-                } catch (e: Exception) {
-                }
-                currentToast = null
-                showNext()
-            }
+        val offsetPx = (24 * density).toInt()
+        when (req.position) {
+            BannerPosition.TOP -> toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, offsetPx)
+            BannerPosition.BOTTOM -> toast.setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, offsetPx)
         }
         toast.show()
-        mainHandler.postDelayed(keepAliveRunnable, minOf(refreshInterval, req.durationMs))
+
+        // Toast tự ẩn theo thời lượng hệ thống quy định (LENGTH_LONG), chỉ cần đợi tương ứng
+        // rồi xử lý banner tiếp theo trong hàng đợi (nếu có).
+        mainHandler.postDelayed({ showNext() }, TOAST_LONG_DURATION_MS)
     }
 }
