@@ -670,16 +670,6 @@ class DialogLogFragment : DialogFragment() {
         private fun updateLogWithColor(text: String, forcedColor: Int?) {
             var parsedLog: CharSequence = AnsiColorParser.parse(text)
 
-            if (AnsiColorParser.consumePendingClear()) {
-                synchronized(logBuffer) {
-                    logBuffer.clear()
-                    lineCount = 0
-                    lineStart = 0
-                    pendingOverwrite = false
-                    markInvalidFrom(0)
-                }
-            }
-
             if (forcedColor != null && !text.contains("\u001B[")) {
                 parsedLog = SpannableStringBuilder(parsedLog).apply {
                     setSpan(

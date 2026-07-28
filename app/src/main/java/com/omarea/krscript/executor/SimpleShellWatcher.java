@@ -26,69 +26,10 @@ public class SimpleShellWatcher {
             InputStreamReader isr = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
             StringBuilder buffer = new StringBuilder();
             int ch;
-            // Trạng thái nhận diện escape sequence đang đọc dở, để có thể flush ngay khi 1 escape
-            // sequence (vd ESC[2J của lệnh `clear`) vừa đọc xong, thay vì phải đợi tới '\n'/'\r'
-            // tiếp theo mới gửi đi. Rất nhiều escape sequence (clear màn hình, di chuyển con trỏ...)
-            // KHÔNG kèm theo newline, nên nếu chỉ flush theo '\n'/'\r' như trước đây, dữ liệu clear
-            // sẽ bị kẹt lại trong buffer của thread đọc này và không bao giờ tới được UI cho tới khi
-            // có dòng output tiếp theo (hoặc tiến trình kết thúc) -> lệnh `clear` trông như "không xoá"
-            // hoặc xoá bị trễ/xoá nhầm nội dung không liên quan.
-            // 0 = bình thường, 1 = vừa gặp ESC (chờ ký tự kế tiếp để biết loại), 2 = trong chuỗi CSI
-            // (ESC[...), chờ finalByte, 3 = trong chuỗi OSC (ESC]...), chờ BEL hoặc ESC\, 4 = trong
-            // OSC vừa gặp ESC, chờ '\' để xác nhận kết thúc (ST).
-            int escState = 0;
             while ((ch = isr.read()) != -1) {
                 char c = (char) ch;
                 buffer.append(c);
-                boolean flush = false;
-
-                switch (escState) {
-                    case 0:
-                        if (c == '\u001B') {
-                            escState = 1;
-                        } else if (c == '\n' || c == '\r') {
-                            flush = true;
-                        }
-                        break;
-                    case 1:
-                        if (c == '[') {
-                            escState = 2; // CSI
-                        } else if (c == ']') {
-                            escState = 3; // OSC
-                        } else {
-                            // Escape đơn (vd ESC( ESC) ESC= ESC>...) coi như đã hoàn chỉnh ngay sau
-                            // ký tự này -> flush luôn để không bị kẹt buffer.
-                            escState = 0;
-                            flush = true;
-                        }
-                        break;
-                    case 2:
-                        // CSI kết thúc bằng 1 finalByte trong khoảng '@'..'~' (ECMA-48), vd 'J' (xoá
-                        // màn hình), 'm' (màu SGR), 'H' (di chuyển con trỏ)...
-                        if (c >= '@' && c <= '~') {
-                            escState = 0;
-                            flush = true;
-                        }
-                        break;
-                    case 3:
-                        if (c == '\u0007') {
-                            escState = 0;
-                            flush = true;
-                        } else if (c == '\u001B') {
-                            escState = 4;
-                        }
-                        break;
-                    case 4:
-                        if (c == '\\') {
-                            escState = 0;
-                            flush = true;
-                        } else {
-                            escState = 3;
-                        }
-                        break;
-                }
-
-                if (flush) {
+                if (c == '\n' || c == '\r') {
                     String segment = buffer.toString();
                     shellHandlerBase.sendMessage(
                         shellHandlerBase.obtainMessage(what, shellTranslation.resolveRow(segment))
