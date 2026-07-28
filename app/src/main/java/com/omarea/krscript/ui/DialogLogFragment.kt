@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.DialogInterface
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
@@ -12,8 +13,11 @@ import android.text.Editable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.TextPaint
 import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
+import android.text.style.UnderlineSpan
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -313,6 +317,25 @@ class DialogLogFragment : DialogFragment() {
         fun onCompleted()
     }
 
+    /**
+     * Span dùng để hiển thị 1 đáp án của "choose:[...]" dưới dạng link có thể ấn NGAY TRONG
+     * log (tương tự URLSpan cho hyperlink), bên cạnh cách chọn bằng nút bấm đã có sẵn.
+     * Không giữ tham chiếu tới View/Editable - chỉ gọi callback [onTap] với giá trị tương ứng,
+     * để nơi gọi (onChooseRequest) tự quyết định phải làm gì tiếp theo (ghi stdin, cập nhật
+     * giao diện...). Nhờ vậy có thể tái sử dụng đúng 1 luồng xử lý dùng chung cho cả nút bấm
+     * lẫn link trong log.
+     */
+    private class ChoiceSpan(val value: String, private val onTap: (String) -> Unit) : ClickableSpan() {
+        override fun onClick(widget: View) {
+            onTap(value)
+        }
+
+        override fun updateDrawState(ds: TextPaint) {
+            super.updateDrawState(ds)
+            ds.isUnderlineText = true
+        }
+    }
+
     class MyShellHandler(
         context: Context,
         private var actionEventHandler: IActionEventHandler?,
@@ -335,6 +358,14 @@ class DialogLogFragment : DialogFragment() {
         private val basicColor = getColor(R.color.kr_shell_log_basic)
         private val scriptColor = getColor(R.color.kr_shell_log_script)
         private val endColor = getColor(R.color.kr_shell_log_end)
+
+        // Màu cho các đáp án "choose:[...]" hiển thị dạng link ngay trong log (giống URL):
+        // - choiceLinkColor: màu đáp án còn có thể ấn (chưa trả lời)
+        // - choiceAnsweredColor: màu đáp án ĐÃ chọn, dùng để đánh dấu kết quả
+        // - choiceDisabledColor: màu các đáp án còn lại (không được chọn) sau khi đã trả lời
+        private val choiceLinkColor = Color.parseColor("#4FC3F7")
+        private val choiceAnsweredColor = Color.parseColor("#7CFC00")
+        private val choiceDisabledColor = Color.parseColor("#808080")
         private var hasError = false
         private var lineCount = 0
 
@@ -449,6 +480,34 @@ class DialogLogFragment : DialogFragment() {
             val minComfortableWidthPx = dpToPx(40f)
             val buttonHeightPx = dpToPx(40f)
 
+            // Người dùng có 2 cách trả lời: ấn nút bên dưới, HOẶC ấn thẳng vào đáp án hiển thị
+            // dạng link ngay trong log. Cờ này đảm bảo dù chọn cách nào trước, đáp án cũng chỉ
+            // được gửi (writeInput) đúng 1 lần, và cách còn lại sẽ được vô hiệu hoá/cập nhật
+            // giao diện ngay sau đó.
+            val answered = AtomicBoolean(false)
+            val choiceSpans = mutableListOf<ChoiceSpan>()
+
+            fun onAnswered(value: String) {
+                if (!answered.compareAndSet(false, true)) return
+                writeInput(value)
+                row.visibility = View.GONE
+                container.removeAllViews()
+
+                // Vô hiệu hoá + tô lại màu các link trong log: đáp án vừa chọn được tô sáng,
+                // các đáp án còn lại chuyển màu xám (không còn ấn được vì đã gỡ ClickableSpan).
+                val editable = logViewRef.get()?.editableText ?: return
+                for (span in choiceSpans) {
+                    val start = editable.getSpanStart(span)
+                    val end = editable.getSpanEnd(span)
+                    if (start < 0 || end < 0) continue
+                    editable.removeSpan(span)
+                    editable.setSpan(
+                        ForegroundColorSpan(if (span.value == value) choiceAnsweredColor else choiceDisabledColor),
+                        start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+            }
+
             fun buildButtons(availableWidth: Int) {
                 inputRowRef.get()?.visibility = View.GONE
                 container.removeAllViews()
@@ -488,9 +547,7 @@ class DialogLogFragment : DialogFragment() {
                             if (index < count - 1) it.marginEnd = gapPx
                         }
                         setOnClickListener {
-                            writeInput(option.value)
-                            row.visibility = View.GONE
-                            container.removeAllViews()
+                            onAnswered(option.value)
                         }
                     }
                     container.addView(button)
@@ -525,6 +582,81 @@ class DialogLogFragment : DialogFragment() {
                 // có lượt layout nào được lên lịch (ví dụ view vừa addView() xong).
                 measureView.requestLayout()
             }
+
+            // Đồng thời chèn các đáp án dạng link ngay trong log (giống hyperlink URL), đi qua
+            // ĐÚNG cơ chế dispatchLogUpdate() như mọi dòng log khác, để logBuffer/uiAppliedLength
+            // luôn nhất quán - không thao tác trực tiếp lên editableText ở đây.
+            val builder = SpannableStringBuilder()
+            builder.append('\n')
+            for (option in options) {
+                val start = builder.length
+                builder.append(option.label)
+                val end = builder.length
+                val span = ChoiceSpan(option.value) { value -> onAnswered(value) }
+                choiceSpans.add(span)
+                builder.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                builder.setSpan(ForegroundColorSpan(choiceLinkColor), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                builder.setSpan(UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                builder.append('\n')
+            }
+            dispatchLogUpdate(builder)
+        }
+
+        /**
+         * Hiện các đáp án dưới dạng LINK ngay trong log (không có nút bấm riêng), cho cú pháp
+         * "pick:[...]" / "pickv:[...]" (dọc) / "pickh:[...]" (ngang). Tách biệt hoàn toàn với
+         * onChooseRequest() ở trên - không tạo nút, không dùng chooseRow/chooseOptionsContainer.
+         */
+        override fun onPickRequest(options: MutableList<ChoiceOption>, vertical: Boolean) {
+            val answered = AtomicBoolean(false)
+            val choiceSpans = mutableListOf<ChoiceSpan>()
+
+            fun onAnswered(value: String) {
+                if (!answered.compareAndSet(false, true)) return
+                writeInput(value)
+
+                val editable = logViewRef.get()?.editableText ?: return
+                for (span in choiceSpans) {
+                    val start = editable.getSpanStart(span)
+                    val end = editable.getSpanEnd(span)
+                    if (start < 0 || end < 0) continue
+                    editable.removeSpan(span)
+                    editable.setSpan(
+                        ForegroundColorSpan(if (span.value == value) choiceAnsweredColor else choiceDisabledColor),
+                        start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+            }
+
+            fun appendChoice(builder: SpannableStringBuilder, text: String, value: String) {
+                val start = builder.length
+                builder.append(text)
+                val end = builder.length
+                val span = ChoiceSpan(value) { v -> onAnswered(v) }
+                choiceSpans.add(span)
+                builder.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                builder.setSpan(ForegroundColorSpan(choiceLinkColor), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                builder.setSpan(UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
+            val builder = SpannableStringBuilder()
+            builder.append('\n')
+            if (vertical) {
+                // Xếp DỌC: mỗi đáp án 1 dòng, dạng "1. Nhãn", cách nhau 1 dòng trống để tạo
+                // vùng chạm đủ lớn trên di động. Toàn bộ "1. Nhãn" (kể cả số thứ tự) đều bấm được.
+                options.forEachIndexed { index, option ->
+                    appendChoice(builder, "${index + 1}. ${option.label}", option.value)
+                    builder.append("\n\n")
+                }
+            } else {
+                // Xếp NGANG: dạng "[ Nhãn ]" nối cạnh nhau trên cùng 1 dòng.
+                options.forEachIndexed { index, option ->
+                    appendChoice(builder, "[ ${option.label} ]", option.value)
+                    if (index != options.lastIndex) builder.append("  ")
+                }
+                builder.append('\n')
+            }
+            dispatchLogUpdate(builder)
         }
 
         override fun handleMessage(msg: Message) {
@@ -621,20 +753,60 @@ class DialogLogFragment : DialogFragment() {
         private fun updateLogWithColor(text: String, forcedColor: Int?) {
             var parsedLog: CharSequence = AnsiColorParser.parse(text)
 
-            // Lệnh `clear` trong script sẽ phát ra mã CSI xoá màn hình (ESC[2J/ESC[3J), được
-            // AnsiColorParser nhận diện ở trên. Xoá sạch logBuffer ngay tại đây (background
-            // thread) và đánh dấu invalid từ vị trí 0 để lần flushToUi() kế tiếp thay thế TOÀN
-            // BỘ nội dung cũ đang hiển thị bằng nội dung mới (thường là rỗng), giống hệt cách
-            // xử lý ghi đè do '\r' - không cần đụng trực tiếp vào UI thread, tránh race với
-            // pendingUiUpdate/flushToUi.
-            if (AnsiColorParser.consumePendingClear()) {
-                synchronized(logBuffer) {
-                    logBuffer.clear()
-                    lineCount = 0
-                    lineStart = 0
-                    pendingOverwrite = false
-                    markInvalidFrom(0)
+            // Lệnh `clear` (hoặc chương trình vẽ lại 1 phần màn hình như progress bar) sẽ phát ra
+            // mã CSI "Erase in Display" (ESC[nJ), được AnsiColorParser nhận diện ở trên. Vì log
+            // buffer ở đây chỉ append tuần tự (không theo dõi toạ độ cursor thật như terminal),
+            // ta xấp xỉ "vị trí cursor" như sau:
+            // - Nếu vừa gặp '\r' (pendingOverwrite = true, đang chờ ghi đè dòng hiện tại) -> cursor
+            //   coi như đang ở ĐẦU dòng hiện tại (lineStart).
+            // - Ngược lại (append bình thường, chưa ghi đè gì) -> cursor coi như đang ở CUỐI buffer.
+            // Xấp xỉ này khớp chính xác với các chương trình dùng '\r' để vẽ lại dòng (progress
+            // bar, spinner...), nhưng sẽ không chính xác nếu chương trình dùng CUP (ESC[r;cH) để
+            // di chuyển cursor tự do - các mã di chuyển cursor này hiện chưa được theo dõi.
+            when (AnsiColorParser.consumePendingErase()) {
+                2, 3 -> {
+                    // Xoá toàn bộ màn hình (lệnh `clear`)
+                    synchronized(logBuffer) {
+                        logBuffer.clear()
+                        lineCount = 0
+                        lineStart = 0
+                        pendingOverwrite = false
+                        markInvalidFrom(0)
+                    }
                 }
+                0 -> {
+                    // Xoá từ cursor (xấp xỉ) tới hết buffer
+                    synchronized(logBuffer) {
+                        val cursorPos = (if (pendingOverwrite) lineStart else logBuffer.length)
+                            .coerceIn(0, logBuffer.length)
+                        if (cursorPos < logBuffer.length) {
+                            logBuffer.delete(cursorPos, logBuffer.length)
+                            markInvalidFrom(cursorPos)
+                        }
+                        pendingOverwrite = false
+                    }
+                }
+                1 -> {
+                    // Xoá từ đầu buffer tới cursor (xấp xỉ). Vì phần đầu bị xoá, mọi toạ độ phía
+                    // sau đều dịch chuyển - xử lý tương tự logic "cắt tỉa 5000 dòng" bên dưới.
+                    synchronized(logBuffer) {
+                        val cursorPos = (if (pendingOverwrite) lineStart else logBuffer.length)
+                            .coerceIn(0, logBuffer.length)
+                        if (cursorPos > 0) {
+                            var removedLines = 0
+                            for (k in 0 until cursorPos) {
+                                if (logBuffer[k] == '\n') removedLines++
+                            }
+                            logBuffer.delete(0, cursorPos)
+                            lineCount = (lineCount - removedLines).coerceAtLeast(0)
+                            lineStart = (lineStart - cursorPos).coerceAtLeast(0)
+                            uiAppliedLength = (uiAppliedLength - cursorPos).coerceAtLeast(0)
+                            uiInvalidFrom = 0
+                        }
+                        pendingOverwrite = false
+                    }
+                }
+                else -> {}
             }
 
             if (forcedColor != null && !text.contains("\u001B[")) {

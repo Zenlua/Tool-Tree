@@ -47,6 +47,10 @@ public abstract class ShellHandlerBase extends Handler {
     // (hiếm gặp trong thực tế vì choose thường chiếm trọn 1 dòng echo riêng), phần đó sẽ bị
     // gộp nhầm vào bên trong. Chấp nhận đánh đổi này để ưu tiên đúng cho trường hợp phổ biến.
     private static final Pattern CHOOSE_PATTERN = Pattern.compile("choose:\\[(.*)\\]");
+    // "pick:[...]" / "pickv:[...]" / "pickh:[...]" - giống choose:[...] nhưng KHÔNG hiện nút
+    // bấm riêng, chỉ hiện đáp án dạng link ngay trong log. Nhóm 1 là "v"/"h"/null (hướng xếp),
+    // nhóm 2 là nội dung phương án (định dạng giống hệt choose:[...]).
+    private static final Pattern PICK_PATTERN = Pattern.compile("pick(v|h)?:\\[(.*)\\]");
     private static final Pattern EXIT_PATTERN = Pattern.compile("exit:\\[(.*?)\\]");
 
     protected abstract void onProgress(int current, int total);
@@ -138,6 +142,19 @@ public abstract class ShellHandlerBase extends Handler {
     }
 
     /**
+     * Được gọi khi script yêu cầu hiển thị các đáp án dưới dạng LINK ngay trong log, KHÔNG có
+     * nút bấm riêng (khác với onChooseRequest ở trên), thông qua cú pháp:
+     *   echo "pick:[1|Yes,2|No]"    -> mặc định xếp DỌC
+     *   echo "pickv:[1|Yes,2|No]"   -> xếp DỌC, mỗi đáp án 1 dòng dạng "1. Nhãn"
+     *   echo "pickh:[1|Yes,2|No]"   -> xếp NGANG, các đáp án dạng "[ Nhãn ]" nối cạnh nhau
+     * Nội dung phương án cùng định dạng "giá_trị|nhãn" như choose:[...]. Khi người dùng ấn vào
+     * 1 đáp án, giá trị tương ứng được ghi vào stdin (kèm xuống dòng) y hệt onChooseRequest.
+     * Mặc định không làm gì; lớp con override để hiển thị.
+     */
+    protected void onPickRequest(java.util.List<ChoiceOption> options, boolean vertical) {
+    }
+
+    /**
      * Parse nội dung bên trong "choose:[...]" thành danh sách phương án.
      * Định dạng mỗi phương án: "giá_trị|nhãn", các phương án cách nhau bởi dấu phẩy.
      * Nếu 1 phương án không có dấu '|' (chỉ có giá trị), nhãn sẽ dùng luôn giá trị đó.
@@ -217,6 +234,18 @@ public abstract class ShellHandlerBase extends Handler {
             java.util.List<ChoiceOption> options = parseChooseOptions(chooseMatcher.group(1).trim());
             if (!options.isEmpty()) {
                 onChooseRequest(options);
+                return;
+            }
+        }
+
+        // === PHÁT HIỆN YÊU CẦU CHỌN ĐÁP ÁN DẠNG LINK TRONG LOG (KHÔNG CÓ NÚT RIÊNG):
+        //     pick:[...] / pickv:[...] (dọc, mặc định) / pickh:[...] (ngang) ===
+        Matcher pickMatcher = PICK_PATTERN.matcher(cleanLog);
+        if (pickMatcher.find()) {
+            java.util.List<ChoiceOption> options = parseChooseOptions(pickMatcher.group(2).trim());
+            if (!options.isEmpty()) {
+                boolean vertical = !"h".equals(pickMatcher.group(1)); // mặc định dọc, trừ khi "pickh:"
+                onPickRequest(options, vertical);
                 return;
             }
         }
