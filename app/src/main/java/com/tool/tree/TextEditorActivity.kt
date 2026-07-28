@@ -1,5 +1,6 @@
 package com.tool.tree
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
@@ -12,6 +13,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
@@ -313,19 +315,59 @@ class TextEditorActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupEditorTouchAndFocus() {
         val focusAndShowKeyboard = {
             binding.editorContent.requestFocus()
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
             imm?.showSoftInput(binding.editorContent, InputMethodManager.SHOW_IMPLICIT)
+        }
+
+        binding.mainListText.setOnClickListener {
+            focusAndShowKeyboard()
             if (binding.editorContent.selectionStart < 0) {
                 binding.editorContent.setSelection(binding.editorContent.text?.length ?: 0)
             }
         }
 
-        binding.mainListText.setOnClickListener { focusAndShowKeyboard() }
-        binding.editorLineNumbers.setOnClickListener { focusAndShowKeyboard() }
-        binding.editorContentContainer.setOnClickListener { focusAndShowKeyboard() }
+        binding.editorContentContainer.setOnClickListener {
+            focusAndShowKeyboard()
+            if (binding.editorContent.selectionStart < 0) {
+                binding.editorContent.setSelection(binding.editorContent.text?.length ?: 0)
+            }
+        }
+
+        // Xử lý khi nhấn vào khu vực số dòng -> đặt con trỏ về đầu dòng tương ứng
+        binding.editorLineNumbers.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_UP) {
+                v.performClick()
+                focusAndShowKeyboard()
+
+                val editText = binding.editorContent
+                val layout = editText.layout
+                val text = editText.text
+
+                if (layout != null && !text.isNullOrEmpty()) {
+                    // Quy đổi tọa độ Y tương ứng với EditText
+                    val yInEditText = event.y + binding.editorLineNumbers.top - editText.top
+                    val yInLayout = yInEditText - editText.paddingTop
+                    val clampedY = yInLayout.coerceIn(0f, (layout.height - 1).toFloat())
+
+                    // Xác định dòng được nhấn
+                    val line = layout.getLineForVertical(clampedY.toInt())
+
+                    // Tìm vị trí ký tự đầu dòng logic (hoạt động tốt cả khi bật Word Wrap)
+                    var lineStart = layout.getLineStart(line)
+                    while (lineStart > 0 && text[lineStart - 1] != '\n') {
+                        lineStart--
+                    }
+
+                    // Đặt con trỏ về đầu dòng
+                    editText.setSelection(lineStart.coerceIn(0, text.length))
+                }
+            }
+            true
+        }
     }
 
     private fun setupUnifiedTextWatcher() {
