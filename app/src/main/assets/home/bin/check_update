@@ -30,15 +30,19 @@ if checkonline; then
         if [[ "$websum" == "$filesum" ]] && [[ "$websum" ]]; then
             rm -fr $TEMP/size $TEMP/update
         else
-            if [ -n "$tagname" ]; then
+            if [ -n "$tagname" ] && [ "$tagname" != "null" ]; then
                 echo "$url_dowload" > $TEMP/update
                 echo "$websize" > $TEMP/size
+            else
+                rm -fr $TEMP/size $TEMP/update
             fi
         fi
     else
-        if [ -n "$tagname" ]; then
+        if [ -n "$tagname" ] && [ "$tagname" != "null" ]; then
             echo "$url_dowload" > $TEMP/update
             echo "$websize" > $TEMP/size
+        else
+            rm -fr $TEMP/size $TEMP/update
         fi
     fi
 

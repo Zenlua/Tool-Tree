@@ -636,7 +636,11 @@ Update() {
   else
   check_update &>/dev/null
   fi
-  [ "$(glog gg_trans_ver 1)" == 1 ] && link_vers="version_trans.txt" || link_vers="version.txt"
+  if [ "$(glog gg_trans_ver 1)" == 1 ] && [ -f $TEMP/version_trans.txt ]; then
+  link_vers="version_trans.txt"
+  else
+  link_vers="version.txt"
+  fi
   echo '
   [[group]]
   [[group.page]]
