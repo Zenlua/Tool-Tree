@@ -119,23 +119,20 @@ object BannerNotificationManager {
         }
         messageView.text = req.message
 
-        // Toast luôn tự set kích thước cửa sổ kiểu wrap_content theo nội dung, gán layoutParams
-        // cho view KHÔNG có tác dụng ép độ rộng (window cha quyết định MeasureSpec, không phải
-        // layoutParams của view con). Phải dùng minimumWidth để ép độ rộng tối thiểu khi tự đo.
         val density = activity.resources.displayMetrics.density
-        val marginPx = (12 * density).toInt()
-        val screenWidth = activity.resources.displayMetrics.widthPixels
-        view.minimumWidth = screenWidth - marginPx * 2
 
         val toast = Toast(activity.applicationContext)
         toast.duration = Toast.LENGTH_LONG
         @Suppress("DEPRECATION")
         toast.view = view
 
-        val offsetPx = (24 * density).toInt()
         when (req.position) {
-            BannerPosition.TOP -> toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, offsetPx)
-            BannerPosition.BOTTOM -> toast.setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, offsetPx)
+            BannerPosition.TOP -> toast.setGravity(
+                Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (80 * density).toInt()
+            )
+            BannerPosition.BOTTOM -> toast.setGravity(
+                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, (110 * density).toInt()
+            )
         }
         toast.show()
 
