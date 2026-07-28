@@ -128,10 +128,10 @@ object BannerNotificationManager {
 
         when (req.position) {
             BannerPosition.TOP -> toast.setGravity(
-                Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (50 * density).toInt()
+                Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (60 * density).toInt()
             )
             BannerPosition.BOTTOM -> toast.setGravity(
-                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, (70 * density).toInt()
+                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, (80 * density).toInt()
             )
         }
         toast.show()
