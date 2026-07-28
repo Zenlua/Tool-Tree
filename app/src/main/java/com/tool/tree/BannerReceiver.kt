@@ -17,10 +17,15 @@ import com.omarea.krscript.config.StringResRef
  *     --es title "Thành công" \
  *     --es text "Đã cài đặt module xong" \
  *     --es type "success" \
- *     --es position "bottom"
+ *     --es position "bottom" \
+ *     --es icon "ic_my_custom_icon"
  *
  * Extra "type" nhận 1 trong: info (mặc định) | success | warning | error
  * Extra "position" nhận 1 trong: top (mặc định) | bottom
+ * Extra "icon" (tùy chọn): có thể là
+ *   - đường dẫn file ảnh trên máy, vd "/sdcard/Download/icon.png"
+ *   - hoặc tên resource drawable/mipmap có sẵn trong app, vd "ic_banner_success"
+ * Bỏ trống hoặc không tìm thấy -> mặc định dùng icon của chính app.
  * Nếu app đang ở background (không có Activity foreground), sẽ tự rơi về hiện Toast thường.
  */
 class BannerReceiver : BroadcastReceiver() {
@@ -38,12 +43,14 @@ class BannerReceiver : BroadcastReceiver() {
             "bottom" -> BannerPosition.BOTTOM
             else -> BannerPosition.TOP
         }
+        val icon = intent.getStringExtra("icon")
 
         BannerNotificationManager.show(
             title = title,
             message = message,
             type = type,
             position = position,
+            icon = icon,
             onNoActivity = {
                 // App đang ở background, không có nơi để hiện banner -> fallback Toast
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()

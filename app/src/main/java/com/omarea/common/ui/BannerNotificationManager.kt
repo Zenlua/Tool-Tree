@@ -42,13 +42,16 @@ object BannerNotificationManager {
         val title: String?,
         val message: String,
         val type: BannerType,
-        val position: BannerPosition
+        val position: BannerPosition,
+        val icon: String?
     )
 
     private val queue = ArrayDeque<BannerRequest>()
     private var isShowing = false
 
     /**
+     * @param icon Tên resource drawable/mipmap tùy chỉnh (vd "ic_my_icon"). Nếu bỏ trống hoặc
+     * không tìm thấy resource tương ứng, mặc định dùng icon của chính app.
      * @param onNoActivity gọi khi không có Activity nào đang foreground (app ở background),
      * dùng để nơi gọi có thể fallback sang Toast thường hoặc bỏ qua.
      */
@@ -57,6 +60,7 @@ object BannerNotificationManager {
         message: String,
         type: BannerType = BannerType.INFO,
         position: BannerPosition = BannerPosition.TOP,
+        icon: String? = null,
         onNoActivity: (() -> Unit)? = null
     ) {
         if (CurrentActivityHolder.get() == null) {
@@ -64,7 +68,7 @@ object BannerNotificationManager {
             return
         }
         mainHandler.post {
-            queue.addLast(BannerRequest(title, message, type, position))
+            queue.addLast(BannerRequest(title, message, type, position, icon))
             if (!isShowing) showNext()
         }
     }
@@ -96,16 +100,16 @@ object BannerNotificationManager {
         val titleView = view.findViewById<TextView>(R.id.banner_title)
         val messageView = view.findViewById<TextView>(R.id.banner_message)
 
-        val (colorRes, iconRes) = when (req.type) {
-            BannerType.INFO -> R.color.banner_info to R.drawable.ic_banner_info
-            BannerType.SUCCESS -> R.color.banner_success to R.drawable.ic_banner_success
-            BannerType.WARNING -> R.color.banner_warning to R.drawable.ic_banner_warning
-            BannerType.ERROR -> R.color.banner_error to R.drawable.ic_banner_error
+        val colorRes = when (req.type) {
+            BannerType.INFO -> R.color.banner_info
+            BannerType.SUCCESS -> R.color.banner_success
+            BannerType.WARNING -> R.color.banner_warning
+            BannerType.ERROR -> R.color.banner_error
         }
         (bannerRoot.background?.mutate() as? GradientDrawable)?.setColor(
             activity.resources.getColor(colorRes, activity.theme)
         )
-        icon.setImageResource(iconRes)
+        icon.setImageDrawable(resolveIcon(activity, req.icon))
 
         if (!req.title.isNullOrEmpty()) {
             titleView.text = req.title
@@ -138,5 +142,45 @@ object BannerNotificationManager {
         // Toast tự ẩn theo thời lượng hệ thống quy định (LENGTH_LONG), chỉ cần đợi tương ứng
         // rồi xử lý banner tiếp theo trong hàng đợi (nếu có).
         mainHandler.postDelayed({ showNext() }, TOAST_LONG_DURATION_MS)
+    }
+
+    /**
+     * Tìm drawable cho icon theo thứ tự ưu tiên:
+     * 1. Nếu `name` là đường dẫn file ảnh tồn tại trên máy (vd "/sdcard/.../icon.png") -> decode trực tiếp từ file.
+     * 2. Nếu `name` là tên resource drawable/mipmap có sẵn trong app -> dùng resource đó.
+     * 3. Nếu không có gì khớp -> mặc định trả về icon của chính app.
+     */
+    private fun resolveIcon(activity: Activity, name: String?): android.graphics.drawable.Drawable? {
+        if (!name.isNullOrEmpty()) {
+            if (name.startsWith("/") || name.startsWith("file://")) {
+                try {
+                    val path = name.removePrefix("file://")
+                    val file = java.io.File(path)
+                    if (file.exists() && file.isFile) {
+                        val bitmap = android.graphics.BitmapFactory.decodeFile(file.absolutePath)
+                        if (bitmap != null) {
+                            return android.graphics.drawable.BitmapDrawable(activity.resources, bitmap)
+                        }
+                    }
+                } catch (e: Exception) {
+                }
+            } else {
+                try {
+                    var resId = activity.resources.getIdentifier(name, "drawable", activity.packageName)
+                    if (resId == 0) {
+                        resId = activity.resources.getIdentifier(name, "mipmap", activity.packageName)
+                    }
+                    if (resId != 0) {
+                        return androidx.core.content.ContextCompat.getDrawable(activity, resId)
+                    }
+                } catch (e: Exception) {
+                }
+            }
+        }
+        return try {
+            activity.packageManager.getApplicationIcon(activity.packageName)
+        } catch (e: Exception) {
+            null
+        }
     }
 }
