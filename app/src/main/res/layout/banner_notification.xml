@@ -1,50 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/banner_root"
+<!--
+    Lưu ý: view này được dùng làm Toast.view (xem BannerNotificationManager.kt).
+    Toast KHÔNG đặt view vào trong 1 ViewGroup cha khi hiển thị, nên các thuộc tính
+    layout_margin... trên view gốc sẽ bị bỏ qua hoàn toàn. Vì vậy phải dùng 1 FrameLayout
+    ngoài cùng với padding (padding luôn có tác dụng, không phụ thuộc parent) để tạo
+    khoảng cách với mép màn hình, thay vì đặt margin trực tiếp lên banner_root.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:background="@drawable/banner_bg"
-    android:elevation="8dp"
-    android:layout_marginStart="16dp"
-    android:layout_marginEnd="16dp"
     android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingTop="14dp"
-    android:paddingBottom="14dp">
-
-    <ImageView
-        android:id="@+id/banner_icon"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_gravity="top"
-        android:src="@drawable/ic_banner_info" />
+    android:paddingEnd="16dp">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:id="@+id/banner_root"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_marginStart="12dp"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/banner_bg"
+        android:elevation="8dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp">
 
-        <TextView
-            android:id="@+id/banner_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+        <ImageView
+            android:id="@+id/banner_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="top"
+            android:src="@drawable/ic_banner_info" />
 
-        <TextView
-            android:id="@+id/banner_message"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:maxLines="4" />
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/banner_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/banner_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:maxLines="4" />
+        </LinearLayout>
+
     </LinearLayout>
 
-</LinearLayout>
+</FrameLayout>
