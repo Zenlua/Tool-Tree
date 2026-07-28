@@ -396,7 +396,6 @@ class DialogHelper {
                     setBackgroundDrawableResource(android.R.color.transparent)
                 }
             }
-            CurrentDialogHolder.register(dialog)
 
             return setOutsideTouchDismiss(view, DialogWrap(dialog).setCancelable(cancelable))
         }

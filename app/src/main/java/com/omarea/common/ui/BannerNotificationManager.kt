@@ -1,32 +1,33 @@
 package com.omarea.common.ui
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import android.widget.Toast
 import com.tool.tree.R
 
 enum class BannerType { INFO, SUCCESS, WARNING, ERROR }
 
 /**
- * Hiện 1 banner thông báo đè lên trên cùng của Activity (hoặc Dialog) đang hiển thị.
- * Khác với Toast: hiển thị trong nội dung ứng dụng, có thể tùy biến màu/icon/tiêu đề,
- * và chỉ hoạt động khi app đang mở (cần 1 Activity foreground để add vào).
+ * Hiện 1 banner thông báo đè lên trên cùng của Activity đang foreground -- KỂ CẢ khi
+ * đang có Dialog mở (ví dụ ProgressBarDialog).
  *
- * Nếu đang có Dialog mở (đăng ký qua [CurrentDialogHolder], ví dụ [ProgressBarDialog]),
- * banner sẽ được add vào chính Window của Dialog đó để chắc chắn nổi lên trên — vì Dialog
- * là 1 Window riêng biệt luôn nổi trên Window của Activity, add vào content Activity sẽ bị
- * Dialog che mất bất kể elevation. Nếu không có Dialog nào mở, banner add vào content
- * của Activity như bình thường.
+ * Kỹ thuật: dùng chính cơ chế của Toast (custom view Toast, type cửa sổ TYPE_TOAST) thay vì
+ * tự add view vào content của Activity/Dialog. Lý do: Dialog là 1 Window riêng, kích thước
+ * chỉ vừa đủ khung dialog (không phải full màn hình), nên add view thường vào bên trong nó
+ * sẽ bị bó hẹp/cắt theo đúng khung dialog nhỏ đó. TYPE_TOAST là loại cửa sổ đặc biệt của hệ
+ * thống luôn nổi trên mọi Dialog/Activity của app (đây cũng chính là lý do ToastReceiver có
+ * sẵn của bạn luôn hiện được dù đang có dialog hay không).
+ *
+ * Đánh đổi: cửa sổ Toast KHÔNG nhận sự kiện chạm, nên banner không thể bấm để tắt sớm --
+ * sẽ tự động biến mất sau đúng thời gian `durationMs` được yêu cầu.
  *
  * Gọi từ shell: am broadcast -a <applicationId>.broadcast.BANNER --es text "..." --es type "success"
  */
@@ -42,10 +43,11 @@ object BannerNotificationManager {
 
     private val queue = ArrayDeque<BannerRequest>()
     private var isShowing = false
+    private var currentToast: Toast? = null
 
     /**
      * @param onNoActivity gọi khi không có Activity nào đang foreground (app ở background),
-     * dùng để nơi gọi có thể fallback sang Toast hoặc bỏ qua.
+     * dùng để nơi gọi có thể fallback sang Toast thường hoặc bỏ qua.
      */
     fun show(
         title: String? = null,
@@ -72,7 +74,6 @@ object BannerNotificationManager {
         }
         val activity = CurrentActivityHolder.get()
         if (activity == null) {
-            // Không còn Activity nào để hiện -> bỏ qua item này, thử item tiếp theo
             showNext()
             return
         }
@@ -84,30 +85,13 @@ object BannerNotificationManager {
         }
     }
 
-    /** Tìm ViewGroup gốc để add banner vào: ưu tiên Window của Dialog đang mở, nếu không có thì dùng content của Activity. */
-    private fun resolveRoot(activity: Activity): ViewGroup? {
-        val topDialog = CurrentDialogHolder.getTopVisible()
-        val dialogWindow = topDialog?.window
-        if (dialogWindow != null && dialogWindow.decorView.isAttachedToWindow) {
-            val dialogContent = dialogWindow.findViewById<ViewGroup>(android.R.id.content)
-            if (dialogContent != null) return dialogContent
-        }
-        return activity.findViewById(android.R.id.content)
-    }
-
     private fun showOn(activity: Activity, req: BannerRequest) {
-        val root = resolveRoot(activity)
-        if (root == null) {
-            showNext()
-            return
-        }
-        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, root, false)
+        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, null, false)
 
         val bannerRoot = view.findViewById<View>(R.id.banner_root)
         val icon = view.findViewById<ImageView>(R.id.banner_icon)
         val titleView = view.findViewById<TextView>(R.id.banner_title)
         val messageView = view.findViewById<TextView>(R.id.banner_message)
-        val closeButton = view.findViewById<View>(R.id.banner_close)
 
         val (colorRes, iconRes) = when (req.type) {
             BannerType.INFO -> R.color.banner_info to R.drawable.ic_banner_info
@@ -128,54 +112,30 @@ object BannerNotificationManager {
         }
         messageView.text = req.message
 
-        // Tránh banner bị che bởi status bar / notch
-        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
-            val top = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
-            v.setPadding(v.paddingLeft, top, v.paddingRight, v.paddingBottom)
-            insets
-        }
+        // Toast mặc định wrap_content theo nội dung -> ép chiều rộng gần bằng màn hình
+        // (trừ lề 2 bên) để có dáng banner tràn ngang như mong muốn.
+        val density = activity.resources.displayMetrics.density
+        val marginPx = (12 * density).toInt()
+        val screenWidth = activity.resources.displayMetrics.widthPixels
+        view.layoutParams = ViewGroup.LayoutParams(screenWidth - marginPx * 2, ViewGroup.LayoutParams.WRAP_CONTENT)
 
-        root.addView(view)
-        ViewCompat.requestApplyInsets(view)
+        val toast = Toast(activity.applicationContext)
+        toast.duration = Toast.LENGTH_LONG
+        @Suppress("DEPRECATION")
+        toast.view = view
+        // Offset nhỏ để không dính sát mép trên / bị status bar che
+        toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (24 * density).toInt())
+        toast.show()
+        currentToast = toast
 
-        var dismissed = false
-        val dismiss = {
-            if (!dismissed) {
-                dismissed = true
-                mainHandler.removeCallbacksAndMessages(view)
-                view.animate()
-                    .translationY(-(view.height.takeIf { it > 0 } ?: 300).toFloat())
-                    .alpha(0f)
-                    .setDuration(200)
-                    .setListener(object : AnimatorListenerAdapter() {
-                        override fun onAnimationEnd(animation: Animator) {
-                            try {
-                                root.removeView(view)
-                            } catch (e: Exception) {
-                                // root (vd. Window của Dialog) có thể đã bị đóng -> bỏ qua
-                            }
-                            showNext()
-                        }
-                    })
-                    .start()
+        val runnable = Runnable {
+            try {
+                toast.cancel()
+            } catch (e: Exception) {
             }
+            currentToast = null
+            showNext()
         }
-
-        closeButton.setOnClickListener { dismiss() }
-        view.setOnClickListener { dismiss() }
-
-        view.alpha = 0f
-        view.translationY = -200f
-        view.post {
-            view.translationY = -(view.height.takeIf { it > 0 } ?: 300).toFloat()
-            view.animate()
-                .translationY(0f)
-                .alpha(1f)
-                .setDuration(250)
-                .start()
-        }
-
-        val runnable = Runnable { dismiss() }
-        mainHandler.postAtTime(runnable, view, android.os.SystemClock.uptimeMillis() + req.durationMs)
+        mainHandler.postDelayed(runnable, req.durationMs)
     }
 }

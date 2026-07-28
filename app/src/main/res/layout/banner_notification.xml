@@ -3,15 +3,12 @@
     android:id="@+id/banner_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="12dp"
-    android:layout_marginEnd="12dp"
-    android:layout_marginTop="?android:actionBarSize"
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:background="@drawable/banner_bg"
     android:elevation="8dp"
     android:paddingStart="16dp"
-    android:paddingEnd="12dp"
+    android:paddingEnd="16dp"
     android:paddingTop="14dp"
     android:paddingBottom="14dp">
 
@@ -47,14 +44,5 @@
             android:textSize="14sp"
             android:maxLines="4" />
     </LinearLayout>
-
-    <ImageView
-        android:id="@+id/banner_close"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_gravity="top"
-        android:padding="8dp"
-        android:src="@drawable/ic_banner_close"
-        android:background="?attr/selectableItemBackgroundBorderless" />
 
 </LinearLayout>
