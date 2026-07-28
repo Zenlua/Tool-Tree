@@ -753,60 +753,20 @@ class DialogLogFragment : DialogFragment() {
         private fun updateLogWithColor(text: String, forcedColor: Int?) {
             var parsedLog: CharSequence = AnsiColorParser.parse(text)
 
-            // Lệnh `clear` (hoặc chương trình vẽ lại 1 phần màn hình như progress bar) sẽ phát ra
-            // mã CSI "Erase in Display" (ESC[nJ), được AnsiColorParser nhận diện ở trên. Vì log
-            // buffer ở đây chỉ append tuần tự (không theo dõi toạ độ cursor thật như terminal),
-            // ta xấp xỉ "vị trí cursor" như sau:
-            // - Nếu vừa gặp '\r' (pendingOverwrite = true, đang chờ ghi đè dòng hiện tại) -> cursor
-            //   coi như đang ở ĐẦU dòng hiện tại (lineStart).
-            // - Ngược lại (append bình thường, chưa ghi đè gì) -> cursor coi như đang ở CUỐI buffer.
-            // Xấp xỉ này khớp chính xác với các chương trình dùng '\r' để vẽ lại dòng (progress
-            // bar, spinner...), nhưng sẽ không chính xác nếu chương trình dùng CUP (ESC[r;cH) để
-            // di chuyển cursor tự do - các mã di chuyển cursor này hiện chưa được theo dõi.
-            when (AnsiColorParser.consumePendingErase()) {
-                2, 3 -> {
-                    // Xoá toàn bộ màn hình (lệnh `clear`)
-                    synchronized(logBuffer) {
-                        logBuffer.clear()
-                        lineCount = 0
-                        lineStart = 0
-                        pendingOverwrite = false
-                        markInvalidFrom(0)
-                    }
+            // Lệnh `clear` trong script sẽ phát ra mã CSI xoá màn hình (ESC[2J/ESC[3J), được
+            // AnsiColorParser nhận diện ở trên. Xoá sạch logBuffer ngay tại đây (background
+            // thread) và đánh dấu invalid từ vị trí 0 để lần flushToUi() kế tiếp thay thế TOÀN
+            // BỘ nội dung cũ đang hiển thị bằng nội dung mới (thường là rỗng), giống hệt cách
+            // xử lý ghi đè do '\r' - không cần đụng trực tiếp vào UI thread, tránh race với
+            // pendingUiUpdate/flushToUi.
+            if (AnsiColorParser.consumePendingClear()) {
+                synchronized(logBuffer) {
+                    logBuffer.clear()
+                    lineCount = 0
+                    lineStart = 0
+                    pendingOverwrite = false
+                    markInvalidFrom(0)
                 }
-                0 -> {
-                    // Xoá từ cursor (xấp xỉ) tới hết buffer
-                    synchronized(logBuffer) {
-                        val cursorPos = (if (pendingOverwrite) lineStart else logBuffer.length)
-                            .coerceIn(0, logBuffer.length)
-                        if (cursorPos < logBuffer.length) {
-                            logBuffer.delete(cursorPos, logBuffer.length)
-                            markInvalidFrom(cursorPos)
-                        }
-                        pendingOverwrite = false
-                    }
-                }
-                1 -> {
-                    // Xoá từ đầu buffer tới cursor (xấp xỉ). Vì phần đầu bị xoá, mọi toạ độ phía
-                    // sau đều dịch chuyển - xử lý tương tự logic "cắt tỉa 5000 dòng" bên dưới.
-                    synchronized(logBuffer) {
-                        val cursorPos = (if (pendingOverwrite) lineStart else logBuffer.length)
-                            .coerceIn(0, logBuffer.length)
-                        if (cursorPos > 0) {
-                            var removedLines = 0
-                            for (k in 0 until cursorPos) {
-                                if (logBuffer[k] == '\n') removedLines++
-                            }
-                            logBuffer.delete(0, cursorPos)
-                            lineCount = (lineCount - removedLines).coerceAtLeast(0)
-                            lineStart = (lineStart - cursorPos).coerceAtLeast(0)
-                            uiAppliedLength = (uiAppliedLength - cursorPos).coerceAtLeast(0)
-                            uiInvalidFrom = 0
-                        }
-                        pendingOverwrite = false
-                    }
-                }
-                else -> {}
             }
 
             if (forcedColor != null && !text.contains("\u001B[")) {
