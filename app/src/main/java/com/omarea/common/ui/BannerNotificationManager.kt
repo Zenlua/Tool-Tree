@@ -125,17 +125,30 @@ object BannerNotificationManager {
         toast.view = view
         // Offset nhỏ để không dính sát mép trên / bị status bar che
         toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (24 * density).toInt())
-        toast.show()
         currentToast = toast
 
-        val runnable = Runnable {
-            try {
-                toast.cancel()
-            } catch (e: Exception) {
+        // Toast chỉ hỗ trợ 2 mốc thời gian cố định (LENGTH_SHORT ~2s / LENGTH_LONG ~3.5s),
+        // không có API để đặt số ms tùy ý. Để đạt đúng `durationMs` yêu cầu, gọi lại show()
+        // theo chu kỳ (làm mới thời gian hiển thị) cho tới khi đủ thời lượng mong muốn.
+        val startTime = android.os.SystemClock.uptimeMillis()
+        val refreshInterval = 3000L // nhỏ hơn LENGTH_LONG (~3.5s) để không bị chớp tắt giữa 2 lần show
+        lateinit var keepAliveRunnable: Runnable
+        keepAliveRunnable = Runnable {
+            val elapsed = android.os.SystemClock.uptimeMillis() - startTime
+            if (elapsed < req.durationMs) {
+                toast.show()
+                val remaining = req.durationMs - elapsed
+                mainHandler.postDelayed(keepAliveRunnable, minOf(refreshInterval, remaining))
+            } else {
+                try {
+                    toast.cancel()
+                } catch (e: Exception) {
+                }
+                currentToast = null
+                showNext()
             }
-            currentToast = null
-            showNext()
         }
-        mainHandler.postDelayed(runnable, req.durationMs)
+        toast.show()
+        mainHandler.postDelayed(keepAliveRunnable, minOf(refreshInterval, req.durationMs))
     }
 }
