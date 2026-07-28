@@ -59,7 +59,7 @@ object BannerNotificationManager {
         title: String? = null,
         message: String,
         type: BannerType = BannerType.INFO,
-        position: BannerPosition = BannerPosition.TOP,
+        position: BannerPosition = BannerPosition.BOTTOM,
         icon: String? = null,
         onNoActivity: (() -> Unit)? = null
     ) {

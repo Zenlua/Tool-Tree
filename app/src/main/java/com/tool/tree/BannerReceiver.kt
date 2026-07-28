@@ -40,8 +40,8 @@ class BannerReceiver : BroadcastReceiver() {
             else -> BannerType.INFO
         }
         val position = when (intent.getStringExtra("position")?.lowercase()) {
-            "bottom" -> BannerPosition.BOTTOM
-            else -> BannerPosition.TOP
+            "top" -> BannerPosition.TOP
+            else -> BannerPosition.BOTTOM
         }
         val icon = intent.getStringExtra("icon")
 
