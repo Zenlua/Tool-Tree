@@ -542,6 +542,20 @@ Info() {
   """
 
     [[group.page.options]]
+    title = "'$google_translate_text'"
+    box = "glog gg_trans_ver"
+    reload = true
+    silent = true
+    type = "checkbox"
+    script = """
+      if [ "$(glog gg_trans_ver)" == 1 ]; then
+      slog gg_trans_ver 0
+      else
+      slog gg_trans_ver 1
+      fi
+    """
+    
+    [[group.page.options]]
     key = "share"
     type = "default"
     title = "'$share_text'"
@@ -619,7 +633,10 @@ Update() {
   if [ -f $TEMP/update ]; then
   url_dowload="$(cat $TEMP/update 2>/dev/null)"
   show_update=1
+  else
+  check_update &>/dev/null
   fi
+  [ "$(glog gg_trans_ver 1)" == 1 ] && link_vers="version_trans.txt" || link_vers="version.txt"
   echo '
   [[group]]
   [[group.page]]
@@ -660,7 +677,7 @@ Update() {
   """
 
   [[group.text]]
-  desc = """'"$(cat $TEMP/version.txt 2>/dev/null)"'"""
+  desc = """'"$(cat $TEMP/$link_vers 2>/dev/null)"'"""
   [[group.text.rows]]
   photo = "'$ETC'/icon/tool-tree.jpg"
 '
@@ -1505,7 +1522,6 @@ Utilities() {
     title = "'$input_folder_text'"
     box = "glog hide_show_generate"
     silent = true
-    auto-off = true
     reload = true
 
   [[group]]
@@ -1647,9 +1663,8 @@ Utilities() {
     type = "checkbox"
     title = "'$google_translate_text'"
     box = "glog auto_trans_text_patch_rom"
-    auto-off = true
+    silent = true
     reload = true
-    interruptible = false
 
     [[group.page.options]]
     type = "refresh"
@@ -2113,7 +2128,6 @@ Homeadd() {
       box = "glog auto_trans_text_'${dirvad##*/}'"
       reload = true
       silent = true
-      auto-off = true
       type = "checkbox"
       script = """
         if [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ]; then

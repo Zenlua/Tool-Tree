@@ -1,7 +1,6 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 
-source language 2>/dev/null
 unset shell_progres
 
 # Dọn dẹp tmp
@@ -15,55 +14,15 @@ if checkonline; then
     timeout 20 taive -s 'https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/Version.md' $TEMP/Version.md
 
     if [[ -f $TEMP/Version.md ]] && [[ "$(glog sum_ver_boot)" != "$(checksum $TEMP/Version.md)" ]]; then
-        sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=7 {printf "Version:%s", $0}' | trans -b "$LANGUAGE-$COUNTRY" > $TEMP/version.txt
+        sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=7 {printf "Version:%s", $0}' > $TEMP/version.txt
+        cat $TEMP/version.txt | trans -b "$LANGUAGE-$COUNTRY" >  $TEMP/version_trans.txt
         slog sum_ver_boot "$(checksum $TEMP/Version.md)"
     fi
 fi
 ) &
 
 (
-if checkonline; then
-
-    # Thông báo cập nhật
-    link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
-    if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
-        websums="$(xem $link_url/tags/beta)"
-        tagname="${PACKAGE_VERSION_NAME//./}"
-    else
-        websums="$(xem $link_url/latest)"
-        tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
-    fi
-
-    websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
-    websize="$(echo "$websums" | jq -r '.assets[0].size' | coverbyte)"
-    filesum="$(checksum "$PATH_APK")"
-    name_apk="$(echo "$websums" | jq -r .name)"
-    url_dowload="$(echo "$websums" | jq -r ".assets[0].browser_download_url")"
-
-    echo "Name: $name_apk"
-    echo "Tag: $tagname"
-    echo "Sum online: $websum"
-    echo "Sum apk: $filesum"
-    echo "Size: $websize"
-    echo "Url: $url_dowload"
-
-    if [[ "${PACKAGE_VERSION_NAME//./}" == "$tagname" ]]; then
-        if [[ "$websum" == "$filesum" ]] && [[ "$websum" ]]; then
-            rm -fr $TEMP/size $TEMP/update
-        else
-            if [ -n "$tagname" ]; then
-                echo "$url_dowload" > $TEMP/update
-                echo "$websize" > $TEMP/size
-            fi
-        fi
-    else
-        if [ -n "$tagname" ]; then
-            echo "$url_dowload" > $TEMP/update
-            echo "$websize" > $TEMP/size
-        fi
-    fi
-    [ -f $TEMP/update ] && showtoast "$update_text_6"
-fi
+    check_update boot
 ) &
 
 (
