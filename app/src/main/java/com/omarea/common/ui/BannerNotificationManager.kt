@@ -59,7 +59,7 @@ object BannerNotificationManager {
         title: String? = null,
         message: String,
         type: BannerType = BannerType.INFO,
-        position: BannerPosition = BannerPosition.BOTTOM,
+        position: BannerPosition = BannerPosition.TOP,
         icon: String? = null,
         onNoActivity: (() -> Unit)? = null
     ) {
@@ -128,10 +128,10 @@ object BannerNotificationManager {
 
         when (req.position) {
             BannerPosition.TOP -> toast.setGravity(
-                Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (40 * density).toInt()
+                Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (50 * density).toInt()
             )
             BannerPosition.BOTTOM -> toast.setGravity(
-                // Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, (50 * density).toInt()
+                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, (50 * density).toInt()
             )
         }
         toast.show()
