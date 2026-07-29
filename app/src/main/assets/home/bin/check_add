@@ -4,8 +4,7 @@ show_all() {
     [ "$toast" == 1 ] && showbanner -y "$1" -t "$name_add" -m "$2" || echo "$2"
 }
 
-[ -f "$1/show" ] && toast=1
-name_add=''; file_name=''; check_sum_onl=''; version_add=''; versionc_add='';
+[ "$(glog show_toast_${1##*/})" == 1 ] && toast=1
 if checkonline; then
     source language 2>/dev/null
     name_add="$(gprop name $1/download.prop)"
