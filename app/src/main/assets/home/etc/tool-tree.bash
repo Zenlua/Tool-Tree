@@ -2142,12 +2142,12 @@ Homeadd() {
       title = "'$noti_update'"
       type = "checkbox"
       silent = true
-      box = "[ -f '$dirvad'/show ] && echo 1 || echo 0"
+      box = "glog show_toast_'${dirvad##*/}'"
       script = """
-        if [ -f "'$dirvad'/show" ]; then
-        rm -f "'$dirvad'/show"
+        if [ "$(glog show_toast_'${dirvad##*/}')" == 1 ]; then
+        slog show_toast_'${dirvad##*/}' 0
         else
-        echo > "'$dirvad'/show"
+        slog show_toast_'${dirvad##*/}' 1
         fi
       """ '
     fi
@@ -2222,7 +2222,7 @@ Vips() {
   # Load trang tính năng
   if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
     [ -f "$dirvad/uninstall.bash" ] && $dirvad/uninstall.bash
-    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' -exec rm -rf {} +
+    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' ! -name 'pin' ! -name 'status' -exec rm -rf {} +
   elif [ "$index_adds" == 1 ]; then
     Features status
   elif [ "$index_adds" == 2 ]; then
