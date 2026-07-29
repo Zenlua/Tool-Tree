@@ -33,10 +33,10 @@ search_plurals() {
 home() {
 echo '[[group]]
 
-  [[group.group]]
+  [[group]]
   title = "'$google_text'"
 
-    [[group.group.picker]]
+    [[group.picker]]
     shell = "hidden"
     reload = "true"
     options-sh = "'$MPAT'/index.bash search_pro"
@@ -47,9 +47,9 @@ echo '[[group]]
     [ "$state" ] && slog project_apk_clean "$state"
     """
 
-  [[group.group]]
+  [[group]]
 
-    [[group.group.action]]
+    [[group.action]]
     reload = "true"
     visible = "echo '$show_clean'"
     title = "'$clean_text_3'"
@@ -65,21 +65,21 @@ echo '[[group]]
     done
     """
 
-      [[group.group.action.params]]
+      [[group.action.params]]
       name = "LIST"
       title = "strings"
       desc = "'$clean_text_4'"
       multiple = "multiple"
       options-sh = "'$MPAT'/index.bash search_values"
 
-      [[group.group.action.params]]
+      [[group.action.params]]
       name = "LIST2"
       title = "arrays"
       desc = "'$clean_text_4'"
       multiple = "multiple"
       options-sh = "'$MPAT'/index.bash search_array"
 
-      [[group.group.action.params]]
+      [[group.action.params]]
       name = "LIST3"
       title = "plurals"
       desc = "'$clean_text_4'"
