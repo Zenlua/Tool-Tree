@@ -14,7 +14,7 @@ fi
 [ -f "$1/$file_props" ] || exit 1
 
 # ngôn ngữ mặc định
-eval "$(grep '="' "$file_props" | sed "/google_text=/d")"
+eval "$(grep '="' "$1/$file_props" | sed "/google_text=/d")"
 [ -f "$1/language.bash" ] && source "$1/language.bash"
 
 if [ "$(glog "auto_trans_text_${1##*/}")" == 1 ]; then
