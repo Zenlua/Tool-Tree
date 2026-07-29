@@ -565,6 +565,11 @@ Info() {
     key = "beta"
     type = "default"
     title = "'$download_text' beta"
+    
+    [[group.page.options]]
+    type = "refresh"
+    style = "fab"
+    icon = "'$ETC'/icon/Loading.png"
 
   [[group]]
   [[group.page]]
