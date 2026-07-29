@@ -141,11 +141,11 @@ fi
 source language 2>/dev/null
 
 # Thông tin
-text_id_1="$(glog show_infor_text_1 "ROOT: $ROOT  |  Android: $ANDROID_RELEASE  -  SDK: $API  |  CPU: $CPU_ABI")"
-text_id_2="$(glog show_infor_text_2 "$trademark_text: $ANDROID_BRAND  |  $device_text: $ANDROID_DEVICE  |  $version_text: $PACKAGE_VERSION_NAME")"
+text_id_1="$(glog show_infor_text_1 "ROOT: \$ROOT  |  Android: \$ANDROID_RELEASE  -  SDK: \$API  |  CPU: \$CPU_ABI")"
+text_id_2="$(glog show_infor_text_2 "\$trademark_text: \$ANDROID_BRAND  |  \$device_text: \$ANDROID_DEVICE  |  \$version_text: \$PACKAGE_VERSION_NAME")"
 
 [ -z "$text_id_2" ] || text_id_3="\n\n"
-Vip_text_infor="${text_id_1}${text_id_3}${text_id_2}"
+Vip_text_infor="$(eval echo "\"${text_id_1}${text_id_3}${text_id_2}\"")"
 
 # Văn bản
 Home() {
@@ -564,7 +564,7 @@ Info() {
     [[group.page.options]]
     key = "beta"
     type = "default"
-    title = "Tool-Tree-beta.apk"
+    title = "'$download_text' beta"
 
   [[group]]
   [[group.page]]
@@ -1395,7 +1395,7 @@ Utilities() {
     slog nen_br "$nen_br"
     slog build_times "$build_times"
     for vkl in $IMAGES; do
-        repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD" -n "$dang_nen" -l "$muc_nen" -k "$dinh_dang" -s "$build_size" -d "$boolbox" -c "$format_img" -p "$offfscontex"
+        repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD/out" -n "$dang_nen" -l "$muc_nen" -k "$dinh_dang" -s "$build_size" -d "$boolbox" -c "$format_img" -p "$offfscontex"
     done
     echo "'$save_text' $PTSD/out"
     echo

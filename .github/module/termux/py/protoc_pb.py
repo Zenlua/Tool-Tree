@@ -1,13 +1,11 @@
 #!/data/data/com.tool.tree/files/home/termux/bin/python
 # -*- coding: utf-8 -*-
 
-import json
 import argparse
-import sys
+import json
 import os
+import sys
 import xml.etree.ElementTree as ET
-from google.protobuf.internal.decoder import _DecodeVarint
-from google.protobuf.internal.encoder import _VarintEncoder
 
 # ---------- WIRE TYPES ----------
 
@@ -17,17 +15,34 @@ WIRE_LEN    = 2
 WIRE_32BIT  = 5
 
 
-# ---------- VARINT ----------
+# ---------- PURE PYTHON VARINT ----------
 
 def encode_varint(v: int) -> bytes:
-    out = []
-    _VarintEncoder()(out.append, v, False)
-    return b"".join(out)
+    out = bytearray()
+    while True:
+        bits = v & 0x7F
+        v >>= 7
+        if v:
+            out.append(bits | 0x80)
+        else:
+            out.append(bits)
+            break
+    return bytes(out)
 
 
-def decode_varint(buf, pos):
-    v, pos = _DecodeVarint(buf, pos)
-    return v, pos
+def decode_varint(buf: bytes, pos: int):
+    res = 0
+    shift = 0
+    while True:
+        if pos >= len(buf):
+            raise ValueError("Truncated data while decoding varint")
+        b = buf[pos]
+        pos += 1
+        res |= (b & 0x7F) << shift
+        if not (b & 0x80):
+            break
+        shift += 7
+    return res, pos
 
 
 # ---------- BYTES <-> TEXT (BYTE-EXACT) ----------
@@ -68,23 +83,29 @@ def decode_message(buf: bytes):
             entry["text"] = str(val)
 
         elif wire == WIRE_64BIT:
+            if pos + 8 > len(buf):
+                raise ValueError("Truncated 64-bit field data")
             raw = buf[pos:pos+8]
             pos += 8
             entry["text"] = bytes_to_text(raw)
 
         elif wire == WIRE_32BIT:
+            if pos + 4 > len(buf):
+                raise ValueError("Truncated 32-bit field data")
             raw = buf[pos:pos+4]
             pos += 4
             entry["text"] = bytes_to_text(raw)
 
         elif wire == WIRE_LEN:
             size, pos = decode_varint(buf, pos)
+            if pos + size > len(buf):
+                raise ValueError(f"Truncated length-delimited data (expected {size} bytes)")
             raw = buf[pos:pos+size]
             pos += size
             entry["text"] = bytes_to_text(raw)
 
         else:
-            raise ValueError("Unknown wire type")
+            raise ValueError(f"Invalid wire type: {wire}")
 
         out.append(entry)
 
@@ -116,24 +137,33 @@ def encode_message(entries):
             out += raw
 
         else:
-            raise ValueError("Unknown wire type")
+            raise ValueError(f"Invalid wire type: {wire}")
 
     return out
 
 
 # ---------- JSON ----------
 
-def json_dump(data):
-    print(json.dumps(data, indent=2, ensure_ascii=False))
+def json_dump(data, out_path=None):
+    content = json.dumps(data, indent=2, ensure_ascii=False)
+    if out_path:
+        dir_name = os.path.dirname(out_path)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(content)
+    else:
+        print(content)
 
 
 def json_load(path):
-    return json.load(open(path, "r", encoding="utf-8"))
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 # ---------- XML ----------
 
-def xml_dump(entries):
+def xml_dump(entries, out_path=None):
     root = ET.Element("protobuf")
 
     for e in entries:
@@ -145,10 +175,17 @@ def xml_dump(entries):
         text = ET.SubElement(item, "text")
         text.text = text_to_xml(e["text"])
 
-    ET.indent(root, space="  ")
-    ET.ElementTree(root).write(
-        sys.stdout, encoding="unicode", xml_declaration=False
-    )
+    if hasattr(ET, "indent"):
+        ET.indent(root, space="  ")
+
+    tree = ET.ElementTree(root)
+    if out_path:
+        dir_name = os.path.dirname(out_path)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+        tree.write(out_path, encoding="utf-8", xml_declaration=False)
+    else:
+        tree.write(sys.stdout, encoding="unicode", xml_declaration=False)
 
 
 def xml_load(path):
@@ -171,21 +208,26 @@ def xml_load(path):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="Protobuf TEXT-only codec (JSON / XML / PB, byte-exact)"
+        description="Protobuf TEXT-only codec (XML / JSON / PB, byte-exact)"
     )
-    ap.add_argument("-d", "--decode", help="decode pb -> json/xml")
-    ap.add_argument("-e", "--encode", help="encode json/xml -> pb")
-    ap.add_argument("--xml", action="store_true", help="use XML instead of JSON")
-    ap.add_argument("-o", "--out", help="output pb file")
+    ap.add_argument("-d", "--decode", help="decode pb -> xml/json")
+    ap.add_argument("-e", "--encode", help="encode xml/json -> pb")
+    ap.add_argument("--json", action="store_true", help="use JSON instead of XML")
+    ap.add_argument("-o", "--out", help="output file path")
     ap.add_argument("-c", "--delete_input", action="store_true", help="delete input file after processing")
     args = ap.parse_args()
 
     # ---- DECODE ----
     if args.decode:
         in_file = args.decode
-        data = open(in_file, "rb").read()
+        with open(in_file, "rb") as f:
+            data = f.read()
+
         decoded = decode_message(data)
-        xml_dump(decoded) if args.xml else json_dump(decoded)
+        if args.json:
+            json_dump(decoded, args.out)
+        else:
+            xml_dump(decoded, args.out)
 
         if args.delete_input:
             try:
@@ -197,11 +239,15 @@ def main():
     # ---- ENCODE ----
     if args.encode:
         in_file = args.encode
-        entries = xml_load(in_file) if args.xml else json_load(in_file)
+        entries = json_load(in_file) if args.json else xml_load(in_file)
         pb = encode_message(entries)
 
         if args.out:
-            open(args.out, "wb").write(pb)
+            dir_name = os.path.dirname(args.out)
+            if dir_name:
+                os.makedirs(dir_name, exist_ok=True)
+            with open(args.out, "wb") as f:
+                f.write(pb)
         else:
             print(pb.hex())
 

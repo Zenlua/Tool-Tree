@@ -3,7 +3,7 @@
 show_help(){
 echo "Use: showbanner -t|--title 'Hello' -m|--message 'Xin chào'"
 echo
-echo "-ty|--type: info, warning, success, error"
+echo "-y|--type: info, warning, success, error"
 echo "-i|--icon: path/icon.png, kr_shortcut_logo"
 echo "-p|--position: top, bottom"
 }
@@ -16,7 +16,7 @@ fi
 TYPE=""; ICON=""; TITLE=""; MESSAGE=""; POSITION=""; AMON="";
 while [ $# -gt 0 ]; do
   case "$1" in
-    -ty|--type)
+    -y|--type)
       TYPE="$2"
       shift 2
       ;;

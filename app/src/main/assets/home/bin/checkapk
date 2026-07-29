@@ -1,27 +1,33 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 
-if [ "$#" -ne 1 ] || [ -z "$1" ] || [ "$1" == '-h' ]; then
-    echo "Usage: checkapk <file>"
-    exit 1
+if [[ $# -ne 1 || "$1" == "-h" || -z "$1" ]]; then
+echo "Usage: checkapk <file>";
+exit 1;
 fi
 
-List_unzip="$(unzip -ql "$1")"
+result=$(unzip -ql "$1" 2>/dev/null | awk '
+    { fn = $NF }
+    fn == "original_apex" || / original_apex$/ { capex = 1 }
+    fn == "apex_payload.img" || / apex_payload\.img$/ { apex = 1 }
+    /(classes\.dex|AndroidManifest\.xml|resources\.arsc)$/ { apk++ }
+    /classes[0-9]*\.dex$/ { dex = 1 }
+    /\.class$/ { class = 1 }
+    index(fn, "/") == 0 && fn ~ /\.apk$/ { root_apk++ }
+    END {
+        if (capex) print "capex"
+        else if (apex) print "apex"
+        else if (apk >= 2) print "apk"
+        else if (dex) print "dex"
+        else if (class) print "class"
+        else if (root_apk >= 2) print "apks"
+        else if (root_apk == 1) print "zipapk"
+        else exit 1
+    }
+')
 
-if [ "$(echo "$List_unzip" | grep -icm1 ' original_apex'$)" == 1 ]; then
-echo capex
-elif [ "$(echo "$List_unzip" | grep -icm1 ' apex_payload.img'$)" == 1 ]; then
-echo apex
-elif [ "$(echo "$List_unzip" | grep -ic -e ' classes.dex'$ -e 'AndroidManifest.xml'$ -e ' resources.arsc'$)" -ge 2 ]; then
-echo apk
-elif [ "$(echo "$List_unzip" | grep -ic -e ' classes.dex'$ -e ' classes[0-9]*.dex'$)" -ge 1 ]; then
-echo dex
-elif [ "$(echo "$List_unzip" | grep -ic '.*.\.class'$)" -ge 1 ]; then
-echo class
-elif [ "$(echo "$List_unzip" | sed '/\//d' | grep -ic '.*.\.apk'$)" -ge 2 ]; then
-echo apks
-elif [ "$(echo "$List_unzip" | sed '/\//d' | grep -ic '.*.\.apk'$)" -ge 1 ]; then
-echo zipapk
+if [[ $? -eq 0 && -n "$result" ]]; then
+    echo "$result"
 else
-checktype "$1"
+    checktype "$1"
 fi

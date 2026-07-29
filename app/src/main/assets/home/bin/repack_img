@@ -80,7 +80,7 @@ info="${INPUT%/*}/config/${INPUT##*/}_info"
 fs_config="${INPUT%/*}/config/${INPUT##*/}_fs_config"
 file_contexts="${INPUT%/*}/config/${INPUT##*/}_file_contexts"
 fs_options="${INPUT%/*}/config/${INPUT##*/}_fs_options"
-saved="$OUTPUT/out/${INPUT##*/}.img"
+saved="$OUTPUT/${INPUT##*/}.img"
 info_size="${INPUT%/*}/config/${INPUT##*/}_size.txt"
 kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
 dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
@@ -126,7 +126,7 @@ else
 [ "$LVLNEN" -gt 22 ] && zlsize=",22" || zlsize=",$LVLNEN"
 fi
 
-[ -e "$OUTPUT/out" ] || mkdir -p "$OUTPUT/out"
+[ -e "$OUTPUT" ] || mkdir -p "$OUTPUT"
 echo -e "$replag_text_2: ${INPUT##*/} ($partition) ➠ ($CONVER)...\n"
 
 process_count(){
@@ -308,10 +308,10 @@ elif [ "$partition" == "ext" ]; then
 fi
 
 if [[ -f $PTSD/dynamic_partitions_op_list ]] && [[ "$partition" =~ ^(ext|f2fs|erofs)$ ]]; then
-    cp -f $PTSD/dynamic_partitions_op_list $OUTPUT/out/dynamic_partitions_op_list
+    cp -f $PTSD/dynamic_partitions_op_list $OUTPUT/dynamic_partitions_op_list
     if [ -f "$saved" ]; then
     img_size=$(stat -c %s "$saved")
-    sed -i "s/resize ${INPUT##*/} [^*]*/resize ${INPUT##*/} $img_size/" $OUTPUT/out/dynamic_partitions_op_list
+    sed -i "s/resize ${INPUT##*/} [^*]*/resize ${INPUT##*/} $img_size/" $OUTPUT/dynamic_partitions_op_list
     fi
 fi
 
@@ -333,12 +333,12 @@ if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]]; then
     elif [ "$CONVER" == 'dat' ] || [ "$CONVER" == 'br' ]; then
     img2simg "$saved"
     echo 1
-    img2sdat "$saved" -o "$OUTPUT/out" -v 4 -p "${INPUT##*/}" >$TMP/img2sdat.log
+    img2sdat "$saved" -o "$OUTPUT" -v 4 -p "${INPUT##*/}" >$TMP/img2sdat.log
     echo 2
-    [ -f "$OUTPUT/out/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed"
+    [ -f "$OUTPUT/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed"
         if [ "$CONVER" == 'br' ]; then
         LEVEL="$(echo "$lvnen / 2" | bc)"
-        brotli -fq "$LEVEL" "$OUTPUT/out/${INPUT##*/}.new.dat" -o "$OUTPUT/out/${INPUT##*/}.new.dat.br" >$TMP/brotli_build.log && rm -f "$OUTPUT/out/${INPUT##*/}.new.dat"
+        brotli -fq "$LEVEL" "$OUTPUT/${INPUT##*/}.new.dat" -o "$OUTPUT/${INPUT##*/}.new.dat.br" >$TMP/brotli_build.log && rm -f "$OUTPUT/${INPUT##*/}.new.dat"
         fi
     elif [ "$CONVER" == 'sparse' ]; then
     img2simg "$saved" "$out_saved" >/dev/null
