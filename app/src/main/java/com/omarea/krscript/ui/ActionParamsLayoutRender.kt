@@ -541,6 +541,16 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         (inputView.layoutParams as FrameLayout.LayoutParams).gravity = Gravity.CENTER_VERTICAL
 
         actionParamInfo.name?.let { rowViews[it] = layout }
+
+        // ========== FIX: readonly tĩnh (readonly="true"/"1"/shell) không tự mờ/khóa ==========
+        // Trước đây chỉ có nhánh depend-readonly gọi setRowInteractive() để làm mờ + khóa
+        // tương tác. Param có readonly="true" cố định nhưng KHÔNG kèm depend-readonly thì
+        // không hề bị disable ở đâu cả -> vẫn sáng bình thường và bấm/sửa được như thường.
+        // Áp dụng ngay tại đây để mọi trường hợp readonly tĩnh đều bị khóa từ lúc khởi tạo,
+        // không phụ thuộc vào có depend-on/depend-readonly hay không.
+        if (actionParamInfo.readonly) {
+            setRowInteractive(layout, false)
+        }
     }
 
     private fun getFieldTips(actionParamInfo: ActionParamInfo): String {
