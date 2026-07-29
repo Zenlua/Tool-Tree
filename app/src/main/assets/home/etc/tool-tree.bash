@@ -689,7 +689,8 @@ Update() {
   desc = """'"$(cat $TEMP/$link_vers 2>/dev/null)"'"""
   [[group.text.rows]]
   photo = "'$ETC'/icon/tool-tree.jpg"
-'
+  '
+
 }
 
 Project() {
@@ -1465,6 +1466,7 @@ Utilities() {
     depend-on = "IMAGES"
     depend-value = "(erofs),(ext),(f2fs)"
     depend-mode = "show"
+    depend-readonly = true
     options-sh = "echo -e \"raw|File.img (raw)\nsparse|File.img (sparse)\nzstd|File.img.zstd\nzst|File.img.zst\ndat|File.new.dat\nbr|File.new.dat.br\""
 
     [[group.action.params]]
@@ -1490,6 +1492,7 @@ Utilities() {
     depend-on = "IMAGES"
     depend-value = "(erofs),(ext),(f2fs)"
     depend-mode = "show"
+    depend-readonly = true
 
     [[group.action.params]]
     name = "offfscontex"
@@ -1500,6 +1503,7 @@ Utilities() {
     depend-on = "IMAGES"
     depend-value = "(erofs),(ext),(f2fs)"
     depend-mode = "show"
+    depend-readonly = true
 
     [[group.action.params]]
     name = "build_size"

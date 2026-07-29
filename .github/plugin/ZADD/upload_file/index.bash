@@ -15,7 +15,7 @@ title = "'$google_text'"
       [ -z "$urls" ] && urls="upload.gofile.io" || urls="$urls.gofile.io"
       echo "'$gofile_text_1' $urls"
       echo
-      curl -L -H "$WEBS" -F "file=@$FILE" "https://$urls/contents/uploadfile" 2>&1 | jq || killtree "'$gofile_text_2'"
+      curl -s -L -H "$WEBS" -F "file=@$FILE" "https://$urls/contents/uploadfile" | jq || killtree "'$gofile_text_2'"
       echo
       echo "'$gofile_text_3' $(jq -r .data.downloadPage "$TMP/Upload.log")"
       echo
@@ -40,7 +40,7 @@ title = "'$google_text'"
   if [ -f "$FILE" ]; then
       echo "'$gofile_text_1' pixeldrain.com"
       echo
-      curl -T "$FILE" -u ":$TEXT" https://pixeldrain.com/api/file 2>&1 | jq -r .id | awk '"'{print \"https://pixeldrain.com/u/\"\$1}'"' || killtree "'$gofile_text_2'"
+      curl -s -T "$FILE" -u ":$TEXT" https://pixeldrain.com/api/file | jq -r .id | awk '"'{print \"https://pixeldrain.com/u/\"\$1}'"' || killtree "'$gofile_text_2'"
       echo
       echo "'$gofile_text_3' $(cat "$TMP/Upload.log")"
       echo
