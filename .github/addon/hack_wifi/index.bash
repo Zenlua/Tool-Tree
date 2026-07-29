@@ -2,23 +2,15 @@
 # Kakathic
 
 MPAT="${0%/*}"
+source trans_add "$MPAT"
+[ "$(glog wifi_tool_customize)" == 1 ] && number_wifi_pin=1
 
+(
 if [ "$(cmd wifi status | grep -cm1 'Wifi is disabled')" == 1 ]; then
   cmd wifi set-wifi-enabled enabled
   sleep 1
 fi
-
-[ "$(glog wifi_tool_customize)" == 1 ] && number_wifi_pin=1
-
-# Ngôn ngữ mặc định
-eval "$(grep '="' "$MPAT/english.prop" | sed "/google_text=/d")"
-[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
-
-# Google dịch
-if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
-  trans_add "$MPAT"
-  [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
-fi
+) &
 
 if [ "$1" == "home" ]; then
   echo '

@@ -547,17 +547,7 @@ update_addon() {
 # Thư mục hiện tại
 MPAT="${0%/*}"
 pathsh="$MPAT/patch-rom"
-set_permis -R $TERMUX/py &>/dev/null
-
-# Ngôn ngữ mặc định
-eval "$(grep '="' "$MPAT/default.prop" | sed "/google_text=/d")"
-[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
-
-# Google dịch
-if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
-  trans_add "$MPAT"
-  [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
-fi
+source trans_add "$MPAT"
 
 # Điền dữ liệu mặc định
 if [ -z "$(glog ime_color_dark)" ]; then
