@@ -1151,54 +1151,6 @@ Generate() {
   echo '
   [[group]]
   [[group.action]]
-  title = "'$generate_text' Super"
-  icon = "'`urlpng build_super`'"
-  script = """
-    slog typeheh "$type"
-    slog fromdjfh "$from"
-    slog super_sizedj "$super_size"
-    slog super_group "$super_group"
-    repack_super -m "$IMAGES" -g "$super_group" -s "$super_size" -f "$from" -t "$type" -i "$PTSD"
-    echo
-    checktime
-  """
-
-    [[group.action.params]]
-    name = "type"
-    label = "'$super_text_2'"
-    value-sh = "glog typeheh"
-    options-sh = "echo -e \"A|a_only\nAB|ab\nVAB|virtual_ab\""
-
-    [[group.action.params]]
-    name = "from"
-    label = "'$super_text_3'"
-    value-sh = "glog fromdjfh"
-    options-sh = "echo -e \"raw|raw\nsparse|sparse\""
-
-    [[group.action.params]]
-    name = "super_size"
-    label = "'$sizes_text'"
-    desc = "'$default_text': 8.5GB"
-    type = "number"
-    value-sh = "glog super_sizedj 8.5"
-    required = true
-
-    [[group.action.params]]
-    name = "super_group"
-    label = "'$super_text_5'"
-    desc = "'$super_text_6'"
-    value-sh = "glog super_group qti_dynamic_partitions"
-    required = true
-
-    [[group.action.params]]
-    name = "IMAGES"
-    desc = "'$super_text_7'"
-    options-sh = "findfile 3 $PTSD"
-    required = true
-    multiple = true
-
-  [[group]]
-  [[group.action]]
   title = "'$generate_text' Payload"
   icon = "'`urlpng build_payload`'"
   script = """
@@ -1538,6 +1490,53 @@ Utilities() {
     reload = true
 
   [[group]]
+  [[group.action]]
+  title = "'$generate_text' Super"
+  icon = "'`urlpng build_super`'"
+  script = """
+    slog typeheh "$type"
+    slog fromdjfh "$from"
+    slog super_sizedj "$super_size"
+    slog super_group "$super_group"
+    repack_super -m "$IMAGES" -g "$super_group" -s "$super_size" -f "$from" -t "$type" -i "$PTSD"
+    echo
+    checktime
+  """
+
+    [[group.action.params]]
+    name = "type"
+    label = "'$super_text_2'"
+    value-sh = "glog typeheh"
+    options-sh = "echo -e \"A|a_only\nAB|ab\nVAB|virtual_ab\""
+
+    [[group.action.params]]
+    name = "from"
+    label = "'$super_text_3'"
+    value-sh = "glog fromdjfh"
+    options-sh = "echo -e \"raw|raw\nsparse|sparse\""
+
+    [[group.action.params]]
+    name = "super_size"
+    label = "'$sizes_text'"
+    desc = "'$default_text': 8.5GB"
+    type = "number"
+    value-sh = "glog super_sizedj 8.5"
+    required = true
+
+    [[group.action.params]]
+    name = "super_group"
+    label = "'$super_text_5'"
+    desc = "'$super_text_6'"
+    value-sh = "glog super_group qti_dynamic_partitions"
+    required = true
+
+    [[group.action.params]]
+    name = "IMAGES"
+    desc = "'$super_text_7'"
+    options-sh = "findfile 3 $PTSD"
+    required = true
+    multiple = true
+
   [[group.action]]
   title = "'$super_split_text_1'"
   icon = "'`urlpng super_split`'"
