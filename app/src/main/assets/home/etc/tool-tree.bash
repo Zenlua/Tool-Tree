@@ -596,11 +596,12 @@ Info() {
 }
 
 Update() {
+  if [ ! -f $TEMP/update ]; then
+  check_update &>/dev/null
+  fi
   if [ -f $TEMP/update ]; then
   url_dowload="$(cat $TEMP/update 2>/dev/null)"
   show_update=1
-  else
-  check_update &>/dev/null
   fi
   if [ "$(glog gg_trans_ver 1)" == 1 ] && [ -f $TEMP/version_trans.txt ]; then
   link_vers="version_trans.txt"
