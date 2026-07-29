@@ -130,18 +130,14 @@ title = "'$google_text'"
   for vvc in $FILE; do
   if [ $(file $PTSD/$vvc | grep -cm1 "data") == 1 ]; then
     if [ "$LIST" == "Xml" ]; then
-    protoc_pb.py --xml -d "$PTSD/$vvc" > "$PTSD/${vvc%.*}.xml"
+    protoc_pb.py -d "$PTSD/$vvc" > "$PTSD/${vvc%.*}.xml"
     echo "'$save_text': $PTSD/${vvc%.*}.xml"
     else
-    protoc_pb.py -d "$PTSD/$vvc" > "$PTSD/${vvc%.*}.json"
+    protoc_pb.py --json -d "$PTSD/$vvc" > "$PTSD/${vvc%.*}.json"
     echo "'$save_text': $PTSD/${vvc%.*}.json"
     fi
   elif [ $(file $PTSD/$vvc | grep -cm1 "text") == 1 ]; then
-    if [ "${vvc##*.}" == "xml" ]; then
-    protoc_pb.py --xml -e "$PTSD/$vvc" -o "$PTSD/${vvc%.*}_new.pb"
-    else
     protoc_pb.py -e "$PTSD/$vvc" -o "$PTSD/${vvc%.*}_new.pb"
-    fi
     [ -f "$PTSD/${vvc%.*}_new.pb" ] && echo "'$save_text': $PTSD/${vvc%.*}_new.pb"
   else
     echo "'$error_text' $vvc" >&2

@@ -1701,7 +1701,7 @@ Apex() {
   script = """
     IFS=$'"'\n'"'
     for vv in $FILE; do
-        apexeditor -s decom -i "$PTAD/$vv" -o "$APK/$PTAH"
+        apexeditor d -i "$PTAD/$vv" -o "$APK/$PTAH"
         echo
     done
     echo "'$save_text' $APK/$PTAH"
@@ -1721,18 +1721,14 @@ Apex() {
   desc = "'$desc_apkd1'"
   icon = "'`urlpng build`'"
   script = """
-    slog gobo_apex "$gobo_apex"
     slog nen_apex "$nen_apex"
-    slog apis_apex "$APIs"
     slog payload_type "$payload_type"
     slog signs_apex "$SIGNS"
     IFS=$'"'\n'"'
     for vv in $FILE; do
-        apexeditor -s build -f "$payload_type" -k "$SIGNS" -a "$APIs" -c "$nen_apex" -d "$gobo_apex" -i "$APK/$PTAH/$vv" -o "$PTAD/out"
+        apexeditor b -d "$gobo_apex" -k "$SIGNS" -c "$nen_apex" -i "$APK/$PTAH/$vv" -o "$PTAD/out"
         echo
     done
-    echo "'$save_text' $PTAD/out"
-    echo
     checktime
   """
 
@@ -1743,28 +1739,17 @@ Apex() {
     value-sh = "glog gobo_apex"
 
     [[group.action.params]]
+    title = "'$apex_text_1'"
+    name = "nen_apex"
+    label = "'$option_text'"
+    value-sh = "glog nen_apex auto"
+    options-sh = "echo -e \"auto|'$default_text'\n0|'$off_text'\n1|'$on_text'\""
+
+    [[group.action.params]]
     name = "SIGNS"
     label = "'$sign_text'"
     value-sh = "glog signs_apex com.android.example.apex"
     options-sh = "findfile file $ETC/key/4096 .pem | sed \"s|.pem||\""
-
-    [[group.action.params]]
-    name = "APIs"
-    label = "API"
-    value-sh = "glog apis_apex auto"
-    options-sh = "echo -e \"auto|'$default_text'\n30\n31\n32\n33\n34\n35\n36\""
-
-    [[group.action.params]]
-    name = "nen_apex"
-    label = "'$apex_text_1'"
-    type = "switch"
-    value-sh = "glog nen_apex"
-
-    [[group.action.params]]
-    name = "payload_type"
-    label = "'$super_text_2'"
-    value-sh = "glog payload_type auto"
-    options-sh = "echo -e \"auto|'$default_text'\next4\nerofs\nf2fs\""
 
     [[group.action.params]]
     name = "FILE"

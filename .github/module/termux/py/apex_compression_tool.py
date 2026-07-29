@@ -54,10 +54,17 @@ def AddOriginalApexDigestToManifest(capex_manifest_path, apex_image_path, verbos
     return True
 
 
-def SignCapex(input_capex, output_capex, verbose=False):
-    key_dir = "tmp"
-    pem = os.path.join(key_dir, "apex.key.x509.pem")
-    pk8 = os.path.join(key_dir, "apex.key.pk8")
+def SignCapex(input_capex, output_capex, key_name="testkey", verbose=False):
+    key_dir = "etc/key"
+    
+    # Kiểm tra file .pem (hoặc .x509.pem nếu định dạng file có đuôi mở rộng này)
+    pem = os.path.join(key_dir, f"{key_name}.pem")
+    if not os.path.exists(pem):
+        pem_alt = os.path.join(key_dir, f"{key_name}.x509.pem")
+        if os.path.exists(pem_alt):
+            pem = pem_alt
+
+    pk8 = os.path.join(key_dir, f"{key_name}.pk8")
 
     cmd = [
         "java", "-jar",
@@ -126,7 +133,7 @@ def RunCompress(args, work_dir):
     print(f"I: Compressed (unsigned) APEX created: {temp_output}")
 
     # Sign và ghi đè file gốc
-    SignCapex(temp_output, args.output, verbose=args.verbose)
+    SignCapex(temp_output, args.output, key_name=args.key, verbose=args.verbose)
 
     # Xóa file tạm _unsign
     os.remove(temp_output)
@@ -142,6 +149,7 @@ def ParseArgs(argv):
 
     parser_compress = subparsers.add_parser('compress', help='Compress an APEX')
     parser_compress.add_argument('-v', '--verbose', action='store_true', help='verbose execution')
+    parser_compress.add_argument('-k', '--key', type=str, default='testkey', help='Key name in etc/key (default: testkey)')
     parser_compress.add_argument('--input', type=str, required=True, help='Input APEX file path')
     parser_compress.add_argument('--output', type=str, required=True, help='Output compressed APEX path')
     parser_compress.set_defaults(func=RunCompress)
