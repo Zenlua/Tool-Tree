@@ -249,11 +249,26 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         progressBarDialog.showDialog(getString(R.string.kr_param_options_load))
 
         activeLoadJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            if (item.getState != null) {
-                paramInfo.valueFromShell = executeScriptGetResult(item.getState!!, item)
+            // ========== TỐI ƯU: GỘP getState + optionsSh thành 1 lần gọi shell ==========
+            // Trước đây 2 script này được gọi riêng (2 round-trip qua shell root dùng
+            // chung, có khóa -> luôn chạy tuần tự). Gộp lại còn 1 round-trip duy nhất.
+            val scripts = LinkedHashMap<String, String>()
+            if (!item.getState.isNullOrEmpty()) {
+                scripts["state"] = item.getState!!
+            }
+            if (paramInfo.optionsSh.isNotEmpty()) {
+                scripts["options"] = paramInfo.optionsSh
             }
 
-            val options = getParamOptions(paramInfo, item)
+            val shellResults = if (scripts.isNotEmpty()) {
+                ScriptEnvironmen.executeMultipleResultRoot(requireContext(), scripts, item)
+            } else {
+                LinkedHashMap()
+            }
+
+            shellResults["state"]?.let { paramInfo.valueFromShell = it }
+
+            val options = parseOptionsResult(paramInfo, shellResults["options"])
             val optionsSorted = if (options != null) {
                 ActionParamsLayoutRender.setParamOptionsSelectedStatus(paramInfo, options)
                 options
@@ -316,17 +331,41 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             progressBarDialog.showDialog(getString(R.string.onloading))
 
             activeLoadJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                // ========== TỐI ƯU: GỘP TOÀN BỘ valueShell + optionsSh CỦA MỌI PARAM ==========
+                // THÀNH 1 LẦN GỌI SHELL DUY NHẤT.
+                // Trước đây: mỗi param tốn tới 2 round-trip riêng (valueShell rồi optionsSh),
+                // chạy TUẦN TỰ cho từng param -> N param có valueShell+optionsSh sẽ tốn 2N
+                // round-trip qua shell root (1 tiến trình dùng chung, có khóa, nên các lệnh
+                // luôn phải xếp hàng dù có gọi song song bằng coroutine). Ngoài ra còn 2N lần
+                // cập nhật progress dialog (chuyển ngữ cảnh Main<->IO liên tục).
+                //
+                // Giờ: gộp tất cả script thành 1 khối lệnh, gọi doCmdSync() ĐÚNG 1 LẦN, rồi
+                // tách kết quả theo tag để gán lại cho từng param.
+                withContext(Dispatchers.Main) {
+                    progressBarDialog.showDialog(getString(R.string.kr_param_options_load))
+                }
+
+                val scripts = LinkedHashMap<String, String>()
                 for (param in actionParamInfos) {
-                    withContext(Dispatchers.Main) {
-                        progressBarDialog.showDialog(getString(R.string.kr_param_load) + (param.label ?: param.name))
+                    val name = param.name ?: continue
+                    if (!param.valueShell.isNullOrEmpty()) {
+                        scripts["value:$name"] = param.valueShell!!
                     }
-                    if (param.valueShell != null) {
-                        param.valueFromShell = executeScriptGetResult(param.valueShell!!, action)
+                    if (param.optionsSh.isNotEmpty()) {
+                        scripts["options:$name"] = param.optionsSh
                     }
-                    withContext(Dispatchers.Main) {
-                        progressBarDialog.showDialog(getString(R.string.kr_param_options_load) + (param.label ?: param.name))
-                    }
-                    param.optionsFromShell = getParamOptions(param, action)
+                }
+
+                val shellResults = if (scripts.isNotEmpty()) {
+                    ScriptEnvironmen.executeMultipleResultRoot(requireContext(), scripts, action)
+                } else {
+                    LinkedHashMap()
+                }
+
+                for (param in actionParamInfos) {
+                    val name = param.name ?: continue
+                    shellResults["value:$name"]?.let { param.valueFromShell = it }
+                    param.optionsFromShell = parseOptionsResult(param, shellResults["options:$name"])
                 }
 
                 withContext(Dispatchers.Main) {
@@ -386,15 +425,17 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         actionExecute(action, script, onExit, null)
     }
 
-    private fun getParamOptions(actionParamInfo: ActionParamInfo, nodeInfoBase: NodeInfoBase): ArrayList<SelectItem>? {
+    // ========== TỐI ƯU: TÁCH RIÊNG PHẦN PARSE, KHÔNG TỰ GỌI SHELL NỮA ==========
+    // Trước đây hàm này (getParamOptions) tự gọi executeScriptGetResult() bên trong, nghĩa
+    // là mỗi param một round-trip shell riêng. Giờ shellResult đã được lấy từ TRƯỚC (gộp
+    // chung 1 lần gọi cho mọi param qua ScriptEnvironmen.executeMultipleResultRoot), hàm
+    // này chỉ còn nhiệm vụ parse chuỗi kết quả thành danh sách SelectItem như cũ.
+    private fun parseOptionsResult(actionParamInfo: ActionParamInfo, shellResult: String?): ArrayList<SelectItem>? {
         val options = ArrayList<SelectItem>()
-        var shellResult = ""
-        if (actionParamInfo.optionsSh.isNotEmpty()) {
-            shellResult = executeScriptGetResult(actionParamInfo.optionsSh, nodeInfoBase)
-        }
+        val result = shellResult ?: ""
 
-        if (!(shellResult == "error" || shellResult == "null" || shellResult.isEmpty())) {
-            for (item in shellResult.split("\n").filter { it.isNotEmpty() }) {
+        if (!(result == "error" || result == "null" || result.isEmpty())) {
+            for (item in result.split("\n").filter { it.isNotEmpty() }) {
                 if (item.contains("|")) {
                     val itemSplit = item.split("|")
                     options.add(SelectItem().apply {
@@ -410,10 +451,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         } else return null
 
         return options
-    }
-
-    private fun executeScriptGetResult(shellScript: String, nodeInfoBase: NodeInfoBase): String {
-        return ScriptEnvironmen.executeResultRoot(this.requireContext(), shellScript, nodeInfoBase)
     }
 
     var hiddenTaskRunning = false

@@ -22,6 +22,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import android.provider.Settings;
@@ -265,6 +266,122 @@ public class ScriptEnvironmen {
         } else {
             return privateShell.doCmdSync(stringBuilder.toString());
         }
+    }
+
+    // ========== TỐI ƯU: GỘP NHIỀU SCRIPT THÀNH 1 LẦN GỌI SHELL DUY NHẤT ==========
+    // Dùng khi cần đọc value/options của NHIỀU ActionParam cùng lúc (ví dụ khi mở dialog
+    // nhập tham số của 1 action có nhiều param, mỗi param có thể có valueShell/optionsSh
+    // riêng). Trước đây mỗi script được gọi qua 1 lần executeResultRoot() -> 1 round-trip
+    // riêng qua shell root (vốn là 1 tiến trình DÙNG CHUNG, có khóa ReentrantLock, nên các
+    // lệnh luôn phải xếp hàng chạy TUẦN TỰ dù gọi bằng coroutine song song). Với N script,
+    // cách cũ tốn N lần ghi/đọc qua BufferedReader + N lần kiểm tra/tạo cache file (MD5 +
+    // File.exists()).
+    //
+    // Hàm này gộp toàn bộ N script thành 1 khối lệnh duy nhất (mỗi script vẫn được cache
+    // ra file như cũ, chỉ gộp lúc GỌI shell), bọc mỗi script bằng 1 marker echo riêng dựa
+    // trên hash của tag, rồi gọi doCmdSync() ĐÚNG 1 LẦN. Sau đó tách kết quả theo marker để
+    // trả về map tag -> kết quả (giữ đúng ngữ nghĩa như executeResultRoot cho từng script).
+    //
+    // scripts: key = tag định danh duy nhất do caller tự đặt (ví dụ "value:tenParam",
+    //          "options:tenParam"), value = nội dung script (null/rỗng sẽ được bỏ qua,
+    //          trả về "" cho tag đó, KHÔNG tốn round-trip).
+    public static LinkedHashMap<String, String> executeMultipleResultRoot(
+            Context context,
+            LinkedHashMap<String, String> scripts,
+            NodeInfoBase nodeInfoBase) {
+
+        LinkedHashMap<String, String> results = new LinkedHashMap<>();
+        if (scripts == null || scripts.isEmpty()) {
+            return results;
+        }
+
+        if (!inited) {
+            init(context);
+        }
+
+        // Lọc bỏ script rỗng/null ngay từ đầu, không tốn chỗ trong lệnh gộp
+        LinkedHashMap<String, String> validScripts = new LinkedHashMap<>();
+        for (Map.Entry<String, String> entry : scripts.entrySet()) {
+            String script = entry.getValue();
+            if (script != null && !script.trim().isEmpty()) {
+                validScripts.put(entry.getKey(), script);
+            } else {
+                results.put(entry.getKey(), "");
+            }
+        }
+        if (validScripts.isEmpty()) {
+            return results;
+        }
+
+        // Chỉ có 1 script hợp lệ thì không cần gộp, dùng thẳng hàm cũ cho đơn giản
+        if (validScripts.size() == 1) {
+            Map.Entry<String, String> only = validScripts.entrySet().iterator().next();
+            results.put(only.getKey(), executeResultRoot(context, only.getValue(), nodeInfoBase));
+            return results;
+        }
+
+        StringBuilder cmd = new StringBuilder();
+        cmd.append("\n");
+
+        // Các biến môi trường phụ thuộc trang (PAGE_CONFIG_DIR...) chỉ cần export 1 LẦN
+        // cho cả khối lệnh gộp, thay vì lặp lại cho từng script như trước.
+        if (nodeInfoBase != null && !nodeInfoBase.getCurrentPageConfigPath().isEmpty()) {
+            String parentPageConfigDir = nodeInfoBase.getPageConfigDir();
+            String currentPageConfigPath = nodeInfoBase.getCurrentPageConfigPath();
+            cmd.append("export PAGE_CONFIG_DIR='").append(parentPageConfigDir).append("'\n");
+            cmd.append("export PAGE_CONFIG_FILE='").append(currentPageConfigPath).append("'\n");
+
+            if (currentPageConfigPath.startsWith("file:///android_asset/")) {
+                cmd.append("export PAGE_WORK_DIR='").append(new ExtractAssets(context).getExtractPath(parentPageConfigDir)).append("'\n");
+                cmd.append("export PAGE_WORK_FILE='").append(new ExtractAssets(context).getExtractPath(currentPageConfigPath)).append("'\n");
+            } else {
+                cmd.append("export PAGE_WORK_DIR='").append(parentPageConfigDir).append("'\n");
+                cmd.append("export PAGE_WORK_FILE='").append(currentPageConfigPath).append("'\n");
+            }
+        }
+        cmd.append("\n");
+
+        ArrayList<String> orderedTags = new ArrayList<>(validScripts.keySet());
+
+        for (String tag : orderedTags) {
+            String script = validScripts.get(tag);
+            String script2 = script.trim();
+            String path;
+            if (script2.startsWith(ASSETS_FILE)) {
+                path = extractScript(context, script2);
+            } else {
+                path = createShellCache(context, script);
+            }
+
+            String marker = "KRBATCH_" + md5(tag);
+            cmd.append("echo '>>>").append(marker).append("'\n");
+            if (path != null && !path.isEmpty()) {
+                cmd.append(environmentPath).append(" \"").append(path).append("\"\n");
+            }
+            cmd.append("echo '<<<").append(marker).append("'\n");
+        }
+
+        String rawOutput = privateShell.doCmdSync(cmd.toString());
+        if (shellTranslation != null) {
+            rawOutput = shellTranslation.resolveRow(rawOutput);
+        }
+
+        // Tách kết quả gộp thành từng phần theo marker của mỗi tag
+        for (String tag : orderedTags) {
+            String marker = "KRBATCH_" + md5(tag);
+            String startMarker = ">>>" + marker;
+            String endMarker = "<<<" + marker;
+            int startIdx = rawOutput.indexOf(startMarker);
+            int endIdx = rawOutput.indexOf(endMarker);
+            if (startIdx >= 0 && endIdx > startIdx) {
+                String section = rawOutput.substring(startIdx + startMarker.length(), endIdx);
+                results.put(tag, section.trim());
+            } else {
+                results.put(tag, "error");
+            }
+        }
+
+        return results;
     }
 
     private static String getStartPath(Context context) {
