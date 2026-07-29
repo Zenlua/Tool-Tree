@@ -251,7 +251,7 @@ apkb_text_6="Sử dụng chữ ký:"
 
 # add lang
 addlang_text_2="Nén thư viện"
-addlang_text_3="Nếu đăt apk ở hệ thống thì nên chọn “Tắt” nếu có thư mục lib trong apk, còn lại mặc định"
+addlang_text_3="Nếu đăt apk ở hệ thống thì nên chọn (Tắt) nếu có thư mục lib trong apk, còn lại mặc định"
 
 # backup apk
 backups_text_1="Chỉ sao lưu tệp apk, apks không sao lưu dữ liệu"
