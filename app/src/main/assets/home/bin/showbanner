@@ -57,7 +57,7 @@ CMDs="broadcast -n com.tool.tree/com.tool.tree.BannerReceiver -a com.tool.tree.b
 [ "$ICON" ] && CMDs+="--es icon \"$ICON\" "
 [ "$POSITION" ] && CMDs+="--es position \"$POSITION\" "
 [ "$TITLE" ] && CMDs+="--es title \"$TITLE\" "
-[ "$MESSAGE" ] && CMDs+="--es message \"$MESSAGE\" "
+[ "$MESSAGE" ] && CMDs+="--es text \"$MESSAGE\" "
 
 if [ "$AMON" == 1 ] || [ -z "$shell_progres" ]; then
     eval "am $CMDs" &>/dev/null
