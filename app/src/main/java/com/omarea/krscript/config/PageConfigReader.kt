@@ -146,6 +146,23 @@ class PageConfigReader {
         return v == "1" || v == "true" || extraTruthyValues.any { it == v }
     }
 
+    // Cho phép các thuộc tính kiểu boolean (vd readonly) nhận giá trị true/false/1/0
+    // NHƯ CŨ, nhưng nếu giá trị không khớp các từ khoá đó thì coi là 1 đoạn lệnh shell,
+    // chạy lệnh đó và coi kết quả trả về "1" là true, còn lại là false.
+    // Ví dụ: readonly="echo 1"  ->  chạy `echo 1`, kết quả "1" -> readonly = true
+    //        readonly="test -f /sdcard/lock && echo 1" -> readonly = true nếu file tồn tại
+    private fun resolveBoolOrShell(raw: String?, vararg extraTruthyValues: String): Boolean {
+        if (raw == null) return false
+        val v = raw.trim()
+        val lower = v.lowercase(getDefault())
+        return when {
+            lower.isEmpty() -> false
+            lower == "1" || lower == "true" || extraTruthyValues.any { it == lower } -> true
+            lower == "0" || lower == "false" -> false
+            else -> executeResultRoot(context, v).trim() == "1"
+        }
+    }
+
     // Đọc 1 khoá `key` trong bảng `parent`, chấp nhận cả 2 dạng: bảng đơn [key] (1 ngoặc)
     // hoặc mảng bảng [[key]] (2 ngoặc). Luôn trả về danh sách để xử lý đồng nhất.
     private fun tomlEntries(parent: TomlTable, key: String): List<TomlTable> {
@@ -248,7 +265,7 @@ class PageConfigReader {
 
     private fun mainNodeToml(nodeInfoBase: NodeInfoBase, table: TomlTable): NodeInfoBase? {
         tomlGet(table, "support", "visible")?.let {
-            if (executeResultRoot(context, it) != "1") return null
+            if (!resolveBoolOrShell(it, "support", "visible")) return null
         }
         tomlGet(table, "key", "index", "id")?.let { nodeInfoBase.key = it.trim() }
         tomlGet(table, "title")?.let { nodeInfoBase.title = StringResRef.resolve(context, it) }
@@ -321,7 +338,7 @@ class PageConfigReader {
         val group = GroupNode(pageConfigAbsPath)
         tomlGet(table, "key", "index", "id")?.let { group.key = it.trim() }
         tomlGet(table, "title")?.let { group.title = StringResRef.resolve(context, it) }
-        tomlGet(table, "support", "visible")?.let { group.supported = executeResultRoot(context, it) == "1" }
+        tomlGet(table, "support", "visible")?.let { group.supported = resolveBoolOrShell(it, "support", "visible") }
         return group
     }
 
@@ -460,7 +477,7 @@ class PageConfigReader {
         }
         tomlGet(table, "mime")?.let { p.mime = it.lowercase(getDefault()) }
         tomlGet(table, "path-home", "home-path", "pathhome")?.let { p.pathHome = it.trim() }
-        tomlGet(table, "readonly")?.let { p.readonly = tomlTruthy(it, "readonly") }
+        tomlGet(table, "readonly")?.let { p.readonly = resolveBoolOrShell(it, "readonly") }
         tomlGet(table, "maxlength")?.let { p.maxLength = it.trim().toIntOrNull() ?: p.maxLength }
         tomlGet(table, "min")?.let { p.min = it.trim().toIntOrNull() ?: p.min }
         tomlGet(table, "max")?.let { p.max = it.trim().toIntOrNull() ?: p.max }
@@ -471,7 +488,7 @@ class PageConfigReader {
             p.optionsSh = it
         }
         tomlGet(table, "support", "visible")?.let {
-            if (executeResultRoot(context, it) != "1") p.supported = false
+            if (!resolveBoolOrShell(it, "support", "visible")) p.supported = false
         }
         tomlGet(table, "multiple")?.let { p.multiple = tomlTruthy(it, "multiple") }
         tomlGet(table, "editable")?.let { p.editable = tomlTruthy(it, "editable") }
@@ -543,7 +560,7 @@ class PageConfigReader {
         tomlGet(table, "file", "path")?.let { editor.file = it.trim() }
         tomlGet(table, "wrap")?.let { editor.wrap = !(it == "0" || it == "false" || it == "off" || it == "no-wrap") }
         tomlGet(table, "placeholder")?.let { editor.placeholder = it }
-        tomlGet(table, "readonly")?.let { editor.readonly = (it == "true" || it == "1") }
+        tomlGet(table, "readonly")?.let { editor.readonly = resolveBoolOrShell(it) }
         tomlGet(table, "need-input")?.let { editor.needInput = (it == "true" || it == "1") }
         tomlGet(table, "value-sh")?.let { editor.valueSh = it }
         tomlGet(table, "value")?.let { editor.value = it }
