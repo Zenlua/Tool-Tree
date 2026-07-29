@@ -2,7 +2,6 @@
 
 MPAT="${0%/*}"
 
-if [ -f $ETC/error.toml ]; then
   echo '
   [[group.page.options]]
   type = "default"
@@ -20,4 +19,3 @@ if [ -f $ETC/error.toml ]; then
   style = "fab"
   icon = "'$ETC'/icon/Loading.png"
   '
-fi

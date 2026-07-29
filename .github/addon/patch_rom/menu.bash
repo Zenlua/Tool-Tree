@@ -1,18 +1,15 @@
 # Kakathic
 
 MPAT="${0%/*}"
-if [ -f $ETC/error.toml ]; then
   echo '
   [[group.page.options]]
   type = "refresh"
-  title = "@string/refresh_text"
+  style = "fab"
+  icon = "'$ETC'/icon/Loading.png"
   
   [[group.page.options]]
-  key = "123"
   type = "default"
   title = "@string/update_text add-on"
   auto-finish = true
-  script = """
-  [ "$menu_id" == "123" ] && '$MPAT'/index.bash update_addon
-  """ '
-fi
+  script = "'$MPAT'/index.bash update_addon" '
+  

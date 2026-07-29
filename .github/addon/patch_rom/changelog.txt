@@ -1,5 +1,6 @@
 Update log:
 
+3.2: The add-on has been updated and is now more stable.
 3.1: Add the KaoriosToolbox patch
 3.0: Upgrade the app's experimental features.
 2.9: Added some new features and fixed code and bugs.

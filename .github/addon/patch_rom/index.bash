@@ -8,7 +8,7 @@ echo '
 
   [[group.action]]
   title = "'$desc_patch_prop'"
-  warn = "'$desc_patch_prop_long'"
+  warn = """'"$desc_patch_prop_long"'"""
   reload = true
   script = "'$pathsh' sprop_pris"
 
@@ -35,6 +35,7 @@ echo '
     desc = "'$string_text_2': product"
     type = "bool"
     value-sh = "'$pathsh' get_patch_1"
+    readonly = "'$pathsh' get_patch_1"
 
     [[group.action.params]]
     name = "delete_gms"
@@ -42,6 +43,7 @@ echo '
     desc = "'$string_text_2': product"
     type = "bool"
     value-sh = "'$pathsh' get_patch_2"
+    readonly = "'$pathsh' get_patch_2"
 
 [[group]]
   [[group.action]]
@@ -49,28 +51,40 @@ echo '
   summary = "Xiaomi"
   warn = "'$warn_delete_gms'"
   reload = true
+  auto-off = true
   script = "'$pathsh' rw_rom_ext"
 
     [[group.action.params]]
     name = "diss_ovelsy"
     label = "'$diss_ovelsy_text'"
-    desc = "'$string_text_2': vendor, vendor_boot"
+    desc = "'$string_text_2': vendor"
     type = "bool"
     value-sh = "'$pathsh' get_rw_rom_1"
+    readonly = "'$pathsh' get_rw_rom_1"
+    
+    [[group.action.params]]
+    name = "diss_ovelsy_boot"
+    label = "'$diss_ovelsy_text'"
+    desc = "'$string_text_2': vendor_boot"
+    type = "bool"
+    value-sh = "'$pathsh' get_rw_rom_2"
+    readonly = "'$pathsh' get_rw_rom_2"
 
     [[group.action.params]]
     name = "move_pangu"
     label = "'$move_pangu_text'"
     desc = "'$string_text_2': product, system"
     type = "bool"
-    value-sh = "'$pathsh' get_rw_rom_2"
+    value-sh = "'$pathsh' get_rw_rom_3"
+    readonly = "'$pathsh' get_rw_rom_3"
 
     [[group.action.params]]
     name = "move_miext"
     label = "'$move_miext_text'"
-    desc = "'$string_text_2': system, product, system_ext, mi_ext"
+    desc = "'$string_text_2': mi_ext, system, product, system_ext"
     type = "bool"
-    value-sh = "'$pathsh' get_rw_rom_3"
+    value-sh = "'$pathsh' get_rw_rom_4"
+    readonly = "'$pathsh' get_rw_rom_4"
 
 [[group]]
   [[group.action]]
@@ -103,13 +117,14 @@ echo '
     placeholder = "VoiceAssist Sogou"
     value-sh = "glog del_app_patch \"BaidulME MIGalleryLockscreen MIService MIUIEmail MIUIVirtualSim MIUIXiaoAiSpeechEngine OS2VipAccount SmartHome XMRemoteController iFlytekIME CarWith MITSMClient MIS MINextpay VoiceAssistAndroidT VoiceTrigger UPTsmService Music MIUIgreenguard MIUIQuickSearchBox MIUIBrowser MiGameCenterSDKService YouTube YTMusic\""
     required = true
-'
+  '
 }
 
 home() {
   [ -z "$google_text" ] && google_text="$version_text: $(gprop version $MPAT/addon.prop)"
 
   # Điền dữ liệu mặc định
+  (
   if [ -z "$(glog ime_color_dark)" ]; then
     slog ime_dimen '<dimen name="input_method_seek_bar_margin">6.5999756dp</dimen>
   <dimen name="input_bottom_height">45.599976dp</dimen>
@@ -119,6 +134,8 @@ home() {
     slog ime_color '#f0f3f8'
     slog ime_color_dark '#1e1f21'
   fi
+  ) &
+  
   echo '
 [[group]]
   title = "'$google_text'"
@@ -133,6 +150,7 @@ home() {
 
   [[group.action]]
   title = "'$title_framework_patch'"
+  warn = "'$warning_notes_text'"
   summary = "Android 12+"
   script = """
     slog toolbox_patch_os "$FILE"
@@ -142,7 +160,8 @@ home() {
 
     [[group.action.params]]
     name = "FILE"
-    desc = "'$string_text_1': Project/'$PTSH', '${PTAD/$SDCARD_PATH/\/sdcard}'"
+    title = "'$list_file_text'"
+    desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
     options-sh = "'$pathsh' search framework.jar services.jar miui-services.jar"
     value-sh = "glog toolbox_patch_os"
     required = true
@@ -168,6 +187,7 @@ home() {
 
   [[group.action]]
   title = "'$title_cn_global'"
+  warn = "'$warning_notes_text'"
   summary = "Xiaomi, Android 12+"
   script = """
     slog fix_noti_patch_os "$FILE"
@@ -177,7 +197,8 @@ home() {
 
     [[group.action.params]]
     name = "FILE"
-    desc = "'$string_text_1': Project/'$PTSH', '${PTAD/$SDCARD_PATH/\/sdcard}'"
+    title = "'$list_file_text'"
+    desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
     options-sh = "'$pathsh' search miui-framework.jar miui-services.jar PowerKeeper.apk MiuiSystemUI.apk Settings.apk"
     value-sh = "glog fix_noti_patch_os"
     required = true
@@ -221,8 +242,8 @@ home() {
 
   [[group.action]]
   title = "'$title_ime'"
+  warn = "Note: MiuiSystemUI.apk (global),\n'$warning_notes_text'"
   summary = "Xiaomi"
-  warn = "Note: MiuiSystemUI.apk (global)"
   script = """
     slog ime_app "$ime_app"
     slog ime_color "$ime_color"
@@ -235,7 +256,8 @@ home() {
 
     [[group.action.params]]
     name = "FILE"
-    desc = "'$string_text_1': Project/'$PTSH', '${PTAD/$SDCARD_PATH/\/sdcard}'"
+    title = "'$list_file_text'"
+    desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
     options-sh = "'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk"
     value-sh = "glog fix_key_patch_os"
     required = true
@@ -273,6 +295,7 @@ home() {
 
   [[group.action]]
   title = "'$title_many_patch'"
+  warn = "'$warning_notes_text'"
   summary = "Xiaomi, Android 12+"
   script = """
     slog fix_manyo_patch_os "$FILE"
@@ -282,7 +305,8 @@ home() {
 
     [[group.action.params]]
     name = "FILE"
-    desc = "'$string_text_1': Project/'$PTSH', '${PTAD/$SDCARD_PATH/\/sdcard}'"
+    title = "'$list_file_text'"
+    desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
     options-sh = "'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar"
     value-sh = "glog fix_manyo_patch_os"
     required = true
@@ -320,6 +344,7 @@ home() {
 
   [[group.action]]
   title = "'$title_app_patch'"
+  warn = "'$warning_notes_text'"
   summary = "Xiaomi"
   script = """
     slog fix_manyo_patch_os "$FILE"
@@ -329,7 +354,8 @@ home() {
 
     [[group.action.params]]
     name = "FILE"
-    desc = "'$string_text_1': Project/'$PTSH', '${PTAD/$SDCARD_PATH/\/sdcard}'"
+    title = "'$list_file_text'"
+    desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
     options-sh = "'$pathsh' search *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk Provision.apk MIUIGallery.apk *SecurityCenter.apk *ThemeManager.apk"
     value-sh = "glog fix_manyo_patch_os"
     required = true
@@ -396,7 +422,7 @@ home() {
     name = "kill_apk_list"
     title = "'"$param1_title"'"
     label = "'"$param1_label"'"
-    desc = "'$string_text_1': Project/'$PTSH', '${PTAD/$SDCARD_PATH/\/sdcard}'"
+    desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
     options-sh = "'$pathsh' list_apk_file"
     value-sh = "glog kill_apk_list"
     required = true
@@ -556,6 +582,7 @@ update_addon() {
 
 # Thư mục hiện tại
 MPAT="${0%/*}"
+sdcard_text="${PTAD/$SDCARD_PATH/\/sdcard}"
 pathsh="$MPAT/patch-rom"
 source trans_add "$MPAT"
 
