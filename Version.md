@@ -2,6 +2,13 @@
 
 + **[Download](https://github.com/Zenlua/Tool-Tree/releases/latest)**
 
+**Version: 1.5.4 (29-7-2026)**
+
++ Modify the extraction and build Apex.
++ Fix some errors
++ Optimize list loading
++ Code upgrade
+
 **Version: 1.5.3 (27-7-2026)**
 
 + Fix patch vbmeta
