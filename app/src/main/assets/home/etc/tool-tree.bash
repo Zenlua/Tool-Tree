@@ -106,8 +106,8 @@ shell_bash() {
   icon = "'`urlpng shell`'" '
 }
 
-# dịch ngôn ngữ
-auto_trans
+# Dịch ngôn ngữ
+auto_trans &>/dev/null
 
 # Tạo thư mục
 (
