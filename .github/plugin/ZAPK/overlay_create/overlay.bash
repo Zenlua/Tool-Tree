@@ -34,12 +34,12 @@ for vv in "$overlay_folder"/*; do
         demso=$((demso + 1))
 
         if [ -z "$calssname" ]; then
-            echo "$demso: ${vv##*/}: $overlay_text_7" >&2
+            echo -e "\033[0;31m$demso: ${vv##*/}: $overlay_text_7"
             continue
         fi
 
         if [ -f "$overlay_folder/1out/${vv##*/}" ]; then
-            echo "$demso: ${vv##*/}: $overlay_text_6"
+            echo -e "\033[0;32m$demso: ${vv##*/}: $overlay_text_6"
             continue
         fi
 
@@ -76,7 +76,7 @@ doNotCompress:
         android:extractNativeLibs="false"/>
 </manifest>'
 
-        echo "$demso: ${vv##*/}: $overlay_text_5"
+        echo -ne "\r\033[0;33m$demso: ${vv##*/}: $overlay_text_5"
         [ -f "$vv/apktool.yml" ] || echo "$file_apktool" > "$vv/apktool.yml"
         [ -f "$vv/AndroidManifest.xml" ] || echo "$file_manifest" > "$vv/AndroidManifest.xml"
 
@@ -105,6 +105,8 @@ doNotCompress:
 
         sign -i "$TMP/${vv##*/}" -o "$overlay_folder/1out/${vv##*/}"
         rm -f "$TMP/${vv##*/}"
+        echo -ne "\r\033[0;32m$demso: ${vv##*/}: $overlay_text_6"
+        echo
     fi
 done
 
