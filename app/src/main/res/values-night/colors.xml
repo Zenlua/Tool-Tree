@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="kr_shell_log_basic">#8EA7C1</color>
+    <color name="kr_shell_log_end">#1986DC</color>
 </resources>
