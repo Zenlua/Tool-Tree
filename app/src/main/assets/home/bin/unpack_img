@@ -358,7 +358,9 @@ fi
 
 if [[ "$dang_tep" =~ ^(sparse|zstd|dat|br|payload|super|zip)$ ]]; then
     [ "$xoazip" == 1 ] && rm -rf "$INPUT" "$TMP/*.transfer.list"
-    if [ "$NODECO" != 1 ]; then
+    if [ "$NODECO" == 1 ]; then
+    rm -fr "$TMP/*.new.dat"
+    else
     [ -f "$file_img" ] && rm -f "$file_img"
     [ "$dang_tep" == "br" ] || [ "$dang_tep" == "dat" ] && rm -f "${file_img%.*}.new.dat" "${file_img%.*}.new"
     fi

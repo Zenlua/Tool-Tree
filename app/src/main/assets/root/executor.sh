@@ -47,6 +47,7 @@ export PIP_ROOT_USER_ACTION=ignore
 export COLORTERM=truecolor
 export PATH="$BIN:$TERMUX/bin:$TERMUX/py:$PATH"
 export TERM=xterm-256color
+export SHLVL=1
 # export LD_LIBRARY_PATH="$LIB"
 export PTSD="$(glog PTSD $SDC/ROM 2>/dev/null)"; # $PTSD
 export PTSH="$(glog PTSH ROM 2>/dev/null)"; # $SDH/$PTSH

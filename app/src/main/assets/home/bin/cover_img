@@ -79,7 +79,7 @@ process_count "$size_zstd" "$logcv"
 elif [ "$dang_type" == 'br' ]; then
 echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
 brotli -vf -d "$INPUT" -o "$TMP/$namerd" &>>$logcv
-    if [ "$(checktype "$TMP/$namerd")" == 'dat' ]; then
+    if [ "$(grep -cm1 '\.dat' <<<"$INPUT")" == 1 ]; then
     [ -f "${INPUT%%.*}.transfer.list" ] || killtree "Missing file: ${INPUT%%.*}.transfer.list"
     sdat2img "${INPUT%%.*}.transfer.list" "$TMP/$namerd" "$TMP/2_$namerd" &>>$logcv
     [ -f "$TMP/2_$namerd" ] && mv "$TMP/2_$namerd" "$TMP/$namerd" || killtree "Conversion failed error !!!"
@@ -148,7 +148,7 @@ else
     if [ "$file_img" == "$INPUT" ]; then
     killtree "Nothing to convert !!!"
     else
-    mv -f "$file_img" "$OUTPUT/$namesv.img"
+    mv "$file_img" "$OUTPUT/$namesv.img"
     fi
 fi
 
