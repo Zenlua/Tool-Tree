@@ -29,7 +29,7 @@ for vv in "$extract_folder_lang"/*.apk; do
         demso=$((demso + 1))
 
         if [ -f "$extract_folder_lang/1out/${vv##*/}" ]; then
-            echo "$demso: ${vv##*/}: $overlay_text_6"
+            echo -e "\033[0;32m$demso: ${vv##*/}: $overlay_text_6"
             continue
         fi
 
@@ -99,7 +99,7 @@ doNotCompress:
 </resources>' > "${vv%.*}/res/values/public.xml"
         fi
 
-        echo "$demso: ${vv##*/}: $overlay_text_5"
+        echo -ne "\033[0;33m$demso: ${vv##*/}: $overlay_text_5"
         for vc in $(find "${vv%.*}/res" -type f | sed "/\/values\//d"); do
             if [ "$(echo "$vc" | grep -c -e "values\-" -e "\.xml")" -ge 1 ]; then
                 filter_xml.py "$vc" >/dev/null
@@ -115,6 +115,7 @@ doNotCompress:
 
         sign -i "$TMP/${vv##*/}" -o "$extract_folder_lang/1out/${vv##*/}"
         rm -fr "$TMP/${vv##*/}" "${vv%.*}"
+        echo -ne "\r\033[0;32m$demso: ${vv##*/}: $overlay_text_6\n"
     fi
 done
 
