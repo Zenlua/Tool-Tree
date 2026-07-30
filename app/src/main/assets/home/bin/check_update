@@ -8,14 +8,14 @@ if checkonline; then
         tagname="${PACKAGE_VERSION_NAME//./}"
     else
         websums="$(xem $link_url/latest)"
-        tagname="$(echo "$websums" | jq -r .tag_name | sed -e 's|\.||g' -e 's|V||')"
+        tagname="$(echo "$websums" | jq -r '.tag_name // empty' | sed -e 's|\.||g' -e 's|V||')"
     fi
 
     websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
     websize="$(echo "$websums" | jq -r '.assets[0].size' | coverbyte)"
     filesum="$(checksum "$PATH_APK")"
     name_apk="$(echo "$websums" | jq -r .name)"
-    url_dowload="$(echo "$websums" | jq -r ".assets[0].browser_download_url")"
+    url_dowload="$(echo "$websums" | jq -r ".assets[0].browser_download_url // empty")"
 
     if [ "$1" == "boot" ]; then
         echo "Name: $name_apk"
@@ -46,6 +46,7 @@ if checkonline; then
         fi
     fi
 
+    [ "$(cat $TEMP/update 2>/dev/null)" == "null" ] && rm -fr $TEMP/size $TEMP/update
     if [ -f $TEMP/update ] && [ "$1" == "boot" ]; then
         showbanner -t "$update_text" -m "$update_text_6"
     fi
