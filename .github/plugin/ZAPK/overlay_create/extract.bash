@@ -4,13 +4,7 @@
 MPAT="${0%/*}"
 
 # Ngôn ngữ mặc định
-eval "$(grep '="' "$MPAT/addon.prop")"
-[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
-
-# Google dịch
-if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
-    [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
-fi
+source trans_add "$MPAT"
 
 [ -d "$extract_folder_lang" ] || killtree "$overlay_text_1"
 [ "$extract_folder_lang_text" ] && text_filters="$(echo "$extract_folder_lang_text" | tr ',' ' ')"

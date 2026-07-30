@@ -4,18 +4,13 @@
 MPAT="${0%/*}"
 
 # Ngôn ngữ mặc định
-eval "$(grep '="' "$MPAT/addon.prop")"
-[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
-
-# Google dịch
-if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
-    [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
-fi
+source trans_add "$MPAT"
 
 [ -d "$overlay_folder" ] || killtree "$overlay_text_1"
 
 if [ "$(ls "$overlay_folder")" ]; then
     if [ ! -f "$overlay_folder/1out/1list_overlay.prop" ]; then
+        mkdir -p "$overlay_folder/1out"
         echo "$overlay_text_2 $overlay_folder/1out/1list_overlay.prop" >&2
         echo "#Test.apk=com.test" > "$overlay_folder/1out/1list_overlay.prop"
         cd "$overlay_folder"

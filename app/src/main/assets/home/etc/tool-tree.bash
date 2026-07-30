@@ -1691,6 +1691,7 @@ Apex() {
   desc = "'$desc_apkd1'"
   icon = "'`urlpng build`'"
   script = """
+    slog gobo_apex "$gobo_apex"
     slog nen_apex "$nen_apex"
     slog payload_type "$payload_type"
     slog signs_apex "$SIGNS"
@@ -1718,7 +1719,7 @@ Apex() {
     [[group.action.params]]
     name = "SIGNS"
     label = "'$sign_text'"
-    value-sh = "glog signs_apex com.android.example.apex"
+    value-sh = "glog signs_apex testkey"
     options-sh = "findfile file $ETC/key/4096 .pem | sed \"s|.pem||\""
 
     [[group.action.params]]

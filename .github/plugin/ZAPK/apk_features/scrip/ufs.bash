@@ -2,13 +2,7 @@
 # kakathic
 
 # Ngôn ngữ mặc định
-eval "$(grep '="' "$MPAT/addon.prop")"
-[ -f "$MPAT/language.bash" ] && source "$MPAT/language.bash"
-
-# Google dịch
-if [ "$(glog "auto_trans_text_${MPAT##*/}")" == 1 ]; then
-    [ -f "$MPAT/auto.sh" ] && source "$MPAT/auto.sh"
-fi
+source trans_add "$MPAT"
 
 bDeviceLifeTimeEstA=""
 
