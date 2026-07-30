@@ -52,6 +52,7 @@ input_file_text="Berkas masukan"
 input_folder_text="Folder masukan"
 path_text="Jalur"
 build_time_text_2="Saat ini:"
+api_key_text="Kunci API"
 
 # Home
 home_text_1="Informasi dan fitur aplikasi"

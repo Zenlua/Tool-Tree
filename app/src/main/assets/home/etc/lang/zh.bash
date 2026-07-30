@@ -52,6 +52,7 @@ input_file_text="输入文件"
 input_folder_text="输入文件夹"
 path_text="路径"
 build_time_text_2="当前："
+api_key_text="API 密钥"
 
 # Home
 home_text_1="应用信息与功能"

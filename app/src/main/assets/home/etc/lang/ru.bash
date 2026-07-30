@@ -52,6 +52,7 @@ input_file_text="Входной файл"
 input_folder_text="Входная папка"
 path_text="Путь"
 build_time_text_2="Текущий:"
+api_key_text="API-ключ"
 
 # Home
 home_text_1="Информация и функции приложения"

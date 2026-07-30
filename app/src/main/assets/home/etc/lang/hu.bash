@@ -52,6 +52,7 @@ input_file_text="Bemeneti fájl"
 input_folder_text="Bemeneti mappa"
 path_text="Elérési út"
 build_time_text_2="Jelenleg:"
+api_key_text="API-kulcs"
 
 # Főoldal
 home_text_1="Az alkalmazás információi és funkciói"

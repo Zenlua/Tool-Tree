@@ -853,6 +853,20 @@ Feature() {
     suffix = "jpg"
     editable = true
     value-sh = "glog uri_change_background"
+  
+  [[group]]
+  [[group.action]]
+  title = "'$api_key_text'"
+  icon = "'`urlpng apikey`'"
+  shell = "hidden"
+  script = """
+    slog api_genmini "$(tokenenc "$api_genmini")"
+  """
+    [[group.action.params]]
+    name = "api_genmini"
+    title = "Genmini API"
+    type = "text"
+    desc = "*************"
   '
 }
 
