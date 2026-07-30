@@ -1592,7 +1592,7 @@ Utilities() {
     label = "'$option_text'"
     value-sh = "glog format_img raw"
     required = true
-    options-sh = "echo -e \"raw|File.img (raw)\nsparse|File.img (sparse)\nzstd|File.img.zstd\nzst|File.img.zst\ndat|File.new.dat\nbr|File.new.dat.br\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz\""
+    options-sh = "echo -e \"raw|File.img (raw)\nsparse|File.img (sparse)\ndat|File.new.dat\nbr|File.new.dat.br\nzstd|File.img.zstd\nzst|File.img.zst\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz\""
 
     [[group.action.params]]
     name = "nen_br"

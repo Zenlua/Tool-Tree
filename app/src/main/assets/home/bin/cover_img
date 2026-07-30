@@ -1,10 +1,12 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 set -o pipefail
 source language
-#threads=$(nproc)
+
+VALID_TYPES=("raw" "sparse" "br" "dat" "zstd")
+
 show_help() {
   echo
-  echo "Usage: cover_img -i <input> -o <output> -c <conver> -l <level> -d <delete>"
+  echo "Usage: cover_img -i <input> -o <output> -c <convert> -l <level> -d <delete>"
   echo
   echo "  -i    input file path"
   echo "  -o    output folder path"
@@ -16,11 +18,25 @@ show_help() {
   exit 1
 }
 
+is_valid_type() {
+  local t="$1" v
+  for v in "${VALID_TYPES[@]}"; do
+    [[ "$t" == "$v" ]] && return 0
+  done
+  return 1
+}
+
+cleanup() {
+  [[ -n "${TMP_RAW:-}" && -f "$TMP_RAW" ]] && rm -f "$TMP_RAW"
+  [[ -n "${TMP_SPARSE:-}" && -f "$TMP_SPARSE" ]] && rm -f "$TMP_SPARSE"
+}
+trap cleanup EXIT
+
 if [[ $# -eq 0 || "$1" != -* ]]; then
-show_help
+  show_help
 fi
 
-INPUT=''; OUTPUT=''; CONVER=''; LEVEL=''; DELETE=''; show_help='';
+INPUT=''; OUTPUT=''; CONVER=''; LEVEL=''; DELETE=''
 while getopts ":i:o:c:l:d:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
@@ -34,128 +50,171 @@ while getopts ":i:o:c:l:d:h" opt; do
   esac
 done
 
-if [[ -z "$INPUT" ]] || [[ -z "$OUTPUT" ]] || [[ -z "$CONVER" ]]; then
-echo "Incorrect input, output or conversion format, please check again" >&2
-show_help
+if [[ -z "$INPUT" || -z "$OUTPUT" || -z "$CONVER" ]]; then
+  echo "Incorrect input, output or conversion format, please check again" >&2
+  show_help
 fi
 
-[[ -z "$LEVEL" ]] && LEVEL=4
-[[ -z "$DELETE" ]] && DELETE=0
+if [[ ! -f "$INPUT" ]]; then
+  echo "! Input file not found: $INPUT" >&2
+  exit 1
+fi
 
-# kiểm tra dạng file đầu vào
+if ! is_valid_type "$CONVER"; then
+  echo "! Invalid target format: $CONVER (allowed: ${VALID_TYPES[*]})" >&2
+  show_help
+fi
+
+[[ -z "$LEVEL" ]] && LEVEL=8
+if ! [[ "$LEVEL" =~ ^[0-9]+$ ]] || (( LEVEL < 0 || LEVEL > 22 )); then
+  echo "! Invalid compression level: $LEVEL (must be an integer 0-22)" >&2
+  exit 1
+fi
+
+[[ -z "$DELETE" ]] && DELETE=0
+if [[ "$DELETE" != "0" && "$DELETE" != "1" ]]; then
+  echo "! Invalid -d value: $DELETE (must be 0 or 1)" >&2
+  exit 1
+fi
+
+[[ -z "${TMP:-}" ]] && TMP="${TMPDIR:-/tmp}"
+mkdir -p "$TMP" "$OUTPUT" || { echo "! Cannot create TMP/OUTPUT dir" >&2; exit 1; }
+
 dang_type="$(checktype "$INPUT")"
 logcv="$TMP/log_conver.txt"
-namerd="raw_tmp_$RANDOM.img"
-namesv="$(echo "${INPUT##*/}" | sed 's/\..*$//')"
+rm -f "$logcv"
 
-process_count(){
-PIDK=$!
-num1="$1"; num2="$2";
-while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$num2" ]; then
-    num3=$(tr '\r' '\n' < "$num2" | awk '/ : /{v=$3} END{print v}')
-    if [ "${num3:-0}" != 0 ]; then
-    [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
-    num4="$num3"
-    fi
-fi
-sleep 1
-done
-progress -1/0
-}
+nameraw="${INPUT##*/}"
+namesv="${nameraw%%.*}"
+TRANSFER_LIST="${INPUT%%.*}.transfer.list"
+BR_LEVEL=$(( LEVEL / 2 ))
 
 if [[ "$dang_type" == "$CONVER" ]]; then
-killtree "The input file is: $namesv ($dang_type), and you want to convert to: ($CONVER) ???"
-fi
-rm -f "$logcv"
-mkdir -p "$OUTPUT"
-
-# Xử lý các tệp nén
-if [ "$dang_type" == 'zstd' ] || [ "$dang_type" == 'gz' ] || [ "$dang_type" == 'xz' ] || [ "$dang_type" == 'lz4' ] || [ "$dang_type" == 'lzma' ]; then
-echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
-size_zstd="$(zstd -lv "$INPUT" 2>/dev/null | awk -F'[()]' '/Decompressed Size/ {print $2}' | awk '{print $1}')"
-zstd --progress -vv -f -d -k "$INPUT" -o "$TMP/$namerd" &>>$logcv || killtree "Error: $unpack_text_2 $logcv" &
-process_count "$size_zstd" "$logcv"
-elif [ "$dang_type" == 'br' ]; then
-echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
-brotli -vf -d "$INPUT" -o "$TMP/$namerd" &>>$logcv
-    if [ "$(grep -cm1 '\.dat' <<<"$INPUT")" == 1 ]; then
-    [ -f "${INPUT%%.*}.transfer.list" ] || killtree "Missing file: ${INPUT%%.*}.transfer.list"
-    sdat2img "${INPUT%%.*}.transfer.list" "$TMP/$namerd" "$TMP/2_$namerd" &>>$logcv
-    [ -f "$TMP/2_$namerd" ] && mv "$TMP/2_$namerd" "$TMP/$namerd" || killtree "Conversion failed error !!!"
-    fi
-elif [ "$dang_type" == 'dat' ]; then
-[ -f "${INPUT%%.*}.transfer.list" ] || killtree "Missing file: ${INPUT%%.*}.transfer.list"
-echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
-sdat2img "${INPUT%%.*}.transfer.list" "$INPUT" "$TMP/$namerd" &>>$logcv
+  killtree "The input file is already: $namesv ($dang_type); nothing to convert to ($CONVER)."
 fi
 
-# xử lý sparse
-if [ "$(checktype "$INPUT")" == 'sparse' ]; then
-echo -e "$unpack_text_0 (${INPUT##*/}) ➠ ($CONVER)...\n"
-simg2img "$INPUT" "$TMP/$namerd" &>>$logcv
-fi
+# ============================================================
+# Các đường đi "tắt" - không cần giải nén hết về raw rồi đóng
+# gói lại nếu định dạng nguồn và đích có thể chuyển trực tiếp.
+# ============================================================
 
-# nhận file
-if [ -f "$TMP/$namerd" ]; then
-file_img="$TMP/$namerd"
+# dat <-> br chỉ khác nhau ở việc new.dat có bị brotli nén hay
+# không; transfer.list dùng chung, không cần đụng tới raw/sparse.
+dat_to_br_direct() {
+  echo -e "$unpack_text_0 (${nameraw}) ➠ (br)...\n"
+  [[ -f "$TRANSFER_LIST" ]] || killtree "Missing file: $TRANSFER_LIST"
+  cp -f "$TRANSFER_LIST" "$OUTPUT/$namesv.transfer.list" || killtree "Error copying transfer.list"
+  brotli -vfq "$BR_LEVEL" "$INPUT" -o "$OUTPUT/$namesv.new.dat.br" &>>"$logcv" || killtree "Error brotli compress"
+}
+
+br_to_dat_direct() {
+  echo -e "$unpack_text_0 (${nameraw}) ➠ (dat)...\n"
+  [[ -f "$TRANSFER_LIST" ]] || killtree "Missing file: $TRANSFER_LIST"
+  cp -f "$TRANSFER_LIST" "$OUTPUT/$namesv.transfer.list" || killtree "Error copying transfer.list"
+  brotli -vf -d "$INPUT" -o "$OUTPUT/$namesv.new.dat" &>>"$logcv" || killtree "Error brotli decompress"
+}
+
+# sparse -> dat: img2sdat nhận thẳng ảnh sparse, không cần
+# simg2img về raw rồi img2simg đóng lại sparse (dư 2 bước).
+sparse_to_dat_direct() {
+  echo -e "$unpack_text_0 (${nameraw}) ➠ (dat)...\n"
+  img2sdat "$INPUT" -o "$OUTPUT" -v 4 -p "$namesv" &>>"$logcv" || killtree "img2sdat error cover !!"
+}
+
+# sparse -> br: giống trên, xong nén new.dat lại bằng brotli.
+sparse_to_br_direct() {
+  sparse_to_dat_direct
+  [[ -f "$OUTPUT/$namesv.new.dat" ]] || killtree "Error creating file $namesv.new.dat failed !!!"
+  brotli -vfq "$BR_LEVEL" "$OUTPUT/$namesv.new.dat" -o "$OUTPUT/$namesv.new.dat.br" &>>"$logcv" || killtree "Error brotli compress"
+  rm -f "$OUTPUT/$namesv.new.dat"
+}
+
+case "${dang_type}:${CONVER}" in
+  dat:br)      dat_to_br_direct;      exit 0 ;;
+  br:dat)      br_to_dat_direct;      exit 0 ;;
+  sparse:dat)  sparse_to_dat_direct;  exit 0 ;;
+  sparse:br)   sparse_to_br_direct;   exit 0 ;;
+esac
+
+# ============================================================
+# Đường đi tổng quát: đưa input về raw, rồi đóng gói sang đích.
+# Dùng cho mọi cặp còn lại (raw<->sparse, ->zstd/gz/xz/lz4/lzma,
+# dat/br -> raw hoặc sparse, raw/zstd... -> dat/br, v.v.)
+# ============================================================
+
+TMP_RAW="$TMP/raw_tmp_$$_$RANDOM.img"
+
+case "$dang_type" in
+  zstd|gz|xz|lz4|lzma)
+    echo -e "$unpack_text_0 (${nameraw}) ➠ ($CONVER)...\n"
+    zstd --progress -vv -f -d -k "$INPUT" -o "$TMP_RAW" 2>&1 || killtree "Error zstd cover"
+    ;;
+  br)
+    echo -e "$unpack_text_0 (${nameraw}) ➠ ($CONVER)...\n"
+    brotli -vf -d "$INPUT" -o "$TMP/$namesv.new.dat" 2>&1 || killtree "Error brotli cover"
+    [[ -f "$TRANSFER_LIST" ]] || killtree "Missing file: $TRANSFER_LIST"
+    sdat2img "$TRANSFER_LIST" "$TMP/$namesv.new.dat" "$TMP_RAW" &>>"$logcv" || killtree "sdat2img error cover !!!"
+    rm -f "$TMP/$namesv.new.dat"
+    ;;
+  dat)
+    [[ -f "$TRANSFER_LIST" ]] || killtree "Missing file: $TRANSFER_LIST"
+    echo -e "$unpack_text_0 (${nameraw}) ➠ ($CONVER)...\n"
+    sdat2img "$TRANSFER_LIST" "$INPUT" "$TMP_RAW" &>>"$logcv" || killtree "sdat2img error cover !!!"
+    ;;
+  sparse)
+    echo -e "$unpack_text_0 (${nameraw}) ➠ ($CONVER)...\n"
+    simg2img "$INPUT" "$TMP_RAW" || killtree "Error simg2img cover"
+    ;;
+esac
+
+if [[ -f "$TMP_RAW" ]]; then
+  file_img="$TMP_RAW"
 else
-file_img="$INPUT"
+  file_img="$INPUT"
 fi
 
 echo -e "$unpack_text_0 (${file_img##*/}) ➠ ($CONVER)...\n"
 
-# chuyển đổi
-if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'zst' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ]; then
-    [ "$CONVER" == 'zst' ] && FORMATS='zstd' || FORMATS="$CONVER"
-    zstd --progress -f -$LEVEL --format=$FORMATS --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" &>>$logcv || killtree "Error: $unpack_text_2 $logcv" &
-    PIDK=$!
-    while kill -0 $PIDK 2>/dev/null; do
-    if [ -f "$logcv" ]; then
-    num2="$(tr '\r' '\n' < "$logcv" | awk '/Read:/{r=$2*($3=="GiB"?1024:1); t=$5*($6=="GiB"?1024:1)} END{print (t>0?int(r/t*100):0)}')"
-    [ $num2 == 0 ] && num2="$(tr '\r' '\n' < "$logcv" | awk '/^Read/{r=$3; t=$5} END{print (t>0?int(r/t*100):0)}')"
-        if [ "${num2:-0}" != 0 ]; then
-        [ "${num2:-0}" == "${num4:-1}" ] || progress "$num2/100"
-        num4="$num2"
-        fi
-    fi
-    sleep 1
-    done
-    progress -1/0
-elif [ "$CONVER" == 'dat' ]; then
-    if [ -f "$TMP/$namerd" ]; then
-    img2simg $file_img &>>$logcv
+to_sparse_dat() {
+  local src="$1"
+  TMP_SPARSE="$TMP/sparse_tmp_$$_$RANDOM.img"
+  img2simg "$src" "$TMP_SPARSE" &>>"$logcv" || killtree "img2simg error cover"
+  img2sdat "$TMP_SPARSE" -o "$OUTPUT" -v 4 -p "$namesv" &>>"$logcv" || killtree "img2sdat error cover !!"
+  rm -f "$TMP_SPARSE"
+}
+
+case "$CONVER" in
+  zstd|zst|gz|xz|lz4|lzma)
+    if [[ "$CONVER" == 'zst' ]]; then FORMATS='zstd'; else FORMATS="$CONVER"; fi
+    zstd --progress -f "-$LEVEL" --format="$FORMATS" --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" 2>&1 \
+      || killtree "Error: $unpack_text_2 $logcv"
+    ;;
+  dat)
+    to_sparse_dat "$file_img"
+    ;;
+  br)
+    to_sparse_dat "$file_img"
+    [[ -f "$OUTPUT/$namesv.new.dat" ]] || killtree "Error creating file $namesv.new.dat failed !!!"
+    brotli -vfq "$BR_LEVEL" "$OUTPUT/$namesv.new.dat" -o "$OUTPUT/$namesv.new.dat.br" &>>"$logcv" \
+      || killtree "Error brotli compress"
+    rm -f "$OUTPUT/$namesv.new.dat"
+    ;;
+  sparse)
+    img2simg "$file_img" "$OUTPUT/$namesv.img" &>>"$logcv" || killtree "Error img2simg cover"
+    ;;
+  raw)
+    if [[ "$file_img" == "$INPUT" ]]; then
+      killtree "Nothing to convert !!!"
     else
-    img2simg "$file_img" "$TMP/$namerd" &>>$logcv
-    file_img="$TMP/$namerd"
+      mv "$file_img" "$OUTPUT/$namesv.img"
     fi
-img2sdat "$file_img" -o "$OUTPUT" -v 4 -p $namesv &>>$logcv
-elif [ "$CONVER" == 'br' ]; then
-LEVEL="$(echo "$LEVEL / 2" | bc)"
-    if [ -f "$TMP/$namerd" ]; then
-    img2simg $file_img &>>$logcv
-    else
-    img2simg "$file_img" "$TMP/$namerd" &>>$logcv
-    file_img="$TMP/$namerd"
-    fi
-img2sdat "$file_img" -o "$OUTPUT" -v 4 -p $namesv &>>$logcv
-[ -f "$OUTPUT/$namesv.new.dat" ] || killtree "Error creating file $namesv.new.dat failed !!!"
-brotli -vfq "$LEVEL" "$OUTPUT/$namesv.new.dat" -o "$OUTPUT/$namesv.new.dat.br" &>>$logcv
-rm -fr "$OUTPUT/$namesv.new.dat"
-elif [ "$CONVER" == 'sparse' ]; then
-img2simg "$file_img" "$OUTPUT/$namesv.img"
-else
-    if [ "$file_img" == "$INPUT" ]; then
-    killtree "Nothing to convert !!!"
-    else
-    mv "$file_img" "$OUTPUT/$namesv.img"
-    fi
+    ;;
+esac
+
+if [[ "$file_img" != "$INPUT" && -f "$file_img" ]]; then
+  rm -f "$file_img"
 fi
 
-# xác nhận để xóa rác
-if [ "$file_img" != "$INPUT" ]; then
-[ -f "$file_img" ] && rm -fr "$file_img"
-fi
+[[ "$DELETE" == 1 ]] && rm -f "$INPUT"
 
-# xoá file cũ
-[ "$DELETE" == 1 ] && rm -fr "$INPUT"
+exit 0
