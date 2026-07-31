@@ -9,7 +9,7 @@ versionCode=100
 root=false
 
 # language
-google_text="Currently using google translate"
+google_text="Currently using a translation tool"
 
 fs_text_1="Run fstrim to clean up blocks"
 fs_text_2="Clean block"

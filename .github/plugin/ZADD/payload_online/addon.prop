@@ -10,7 +10,7 @@ versionCode=100
 root=false
 
 # language
-google_text="Currently using google translate"
+google_text="Currently using a translation tool"
 payload_text_1="Import url path"
 payload_text_2="Link:"
 payload_text_3="Partition list"

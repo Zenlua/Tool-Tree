@@ -9,7 +9,7 @@ versionCode=100
 root=false
 
 # language
-google_text="Currently using google translate"
+google_text="Currently using a translation tool"
 
 home_text_1="Create overlay"
 home_text_2="Create an overlay from the language directory"

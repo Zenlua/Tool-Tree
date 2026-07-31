@@ -9,7 +9,7 @@ versionCode=100
 root=false
 
 # language
-google_text="Currently using google translate"
+google_text="Currently using a translation tool"
 gofile_text_1="Uploading to server:"
 gofile_text_2="Upload file error !"
 gofile_text_3="Link download:"

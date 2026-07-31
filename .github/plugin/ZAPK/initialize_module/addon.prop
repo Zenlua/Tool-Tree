@@ -10,7 +10,7 @@ versionCode=100
 root=true
 
 # language
-google_text="Currently using google translate"
+google_text="Currently using a translation tool"
 lang_action_warn="This add-on copies the selected files into Magisk, KSU, APatch modules, etc., to create a new module. After rebooting, it will be applied to the system just like any other module."
 lang_title="Import files"
 lang_summary_path="Path: "
