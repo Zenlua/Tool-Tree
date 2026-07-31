@@ -233,7 +233,13 @@ home() {
     label = "'$global_mod_text_4'"
     desc = "'$required_files_text': miui-services.jar"
     type = "bool"
-
+    
+    [[group.action.params]]
+    name = "open_app"
+    label = "'$open_app_text'"
+    desc = "'$required_files_text': miui-services.jar"
+    type = "bool"
+    
     [[group.action.params]]
     name = "font_fix"
     label = "'$global_mod_text_5'"

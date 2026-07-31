@@ -88,6 +88,7 @@ diss_ovelsy_text="Vô hiệu hóa overlay fstab"
 move_pangu_text="Di chuyển mục pangu vào system"
 move_miext_text="Di chuyển các mục trong mi_ext"
 label_fix_enforce="Loại bỏ hạn chế enforceVersionPolicy"
+open_app_text="Loại bỏ thông báo cho phép mở ứng dụng"
 elif [ "$LANGUAGE-$COUNTRY" == "hu-HU" ]; then
 project_text="Projekt"
 save_text="Mentés ide:"
@@ -176,4 +177,5 @@ diss_ovelsy_text="Átfedés letiltása (overlay fstab)"
 move_pangu_text="Helyezd át a pangu elemet a system könyvtárba"
 move_miext_text="Elemek áthelyezése a mi_ext-ben"
 label_fix_enforce="enforceVersionPolicy korlátozás eltávolítása"
+open_app_text="Értesítés eltávolítása az alkalmazás megnyitásának engedélyezéséhez"
 fi
