@@ -21,7 +21,7 @@ if [ "$(glog "transai_text_${1##*/}")" == 1 ]; then
   # Xử lý dịch
   sum_md5="$(sha256sum "$1/$file_props" | awk '{print $1}')"
   if [ "$sum_md5" != "$(glog "sum_md5_${1##*/}")" ] || [ ! -f "$1/auto.sh" ]; then
-    if transai -c; then
+    if transai -c &>/dev/null; then
     transai "$(grep '="' "$1/$file_props")" > "$1/auto.sh"
     slog "sum_md5_${1##*/}" "$sum_md5"
     fi
