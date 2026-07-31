@@ -107,7 +107,7 @@ shell_bash() {
 }
 
 # Dịch ngôn ngữ
-auto_trans &>/dev/null
+[ "$1" == "Home" ] && auto_trans &>/dev/null
 
 # Tạo thư mục
 (
