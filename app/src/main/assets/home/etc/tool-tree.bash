@@ -778,13 +778,6 @@ Feature() {
   get = "glog shellc"
   set = "slog shellc $state"
 
-  [[group.switch]]
-  title = "'$scroll_ngang_text'"
-  icon = "'`urlpng log_ngang`'"
-  shell = "hidden"
-  get = "glog scroll_ngang"
-  set = "slog scroll_ngang $state"
-
   [[group]]
   [[group.action]]
   title = "'$project_text_10'"
