@@ -71,11 +71,21 @@ class ParamsSingleSelect(
         } else {
             val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_spinner, null)
 
+            // Chỉ bật tính năng "ô trống chưa chọn" khi action param khai báo rõ
+            // allow-no-selection="true". Mặc định TẮT: nếu chưa có value/valueFromShell nào
+            // khớp, tự chọn mục đầu tiên - đúng hành vi gốc của Android Spinner (Spinner luôn
+            // cần có 1 giá trị hiệu lực để hoạt động hiệu quả, tránh gây khó hiểu/lỗi khi
+            // getValue() trả về rỗng ngoài ý muốn ở phần lớn trường hợp sử dụng).
+            val allowNoSelection = actionParamInfo.allowNoSelection
+            if (!allowNoSelection && (selectedIndex < 0 || selectedIndex >= options.size) && options.isNotEmpty()) {
+                selectedIndex = 0
+            }
+
             // Chèn 1 mục placeholder RỖNG ở đầu danh sách khi chưa có lựa chọn nào khớp
             // (selectedIndex == -1), để Spinner hiển thị "chưa chọn gì" thay vì hành vi mặc
             // định của Android là tự sáng mục đầu tiên trong danh sách (gây hiểu lầm cho
             // người dùng là mục đó đang được chọn dù thực ra chưa hề chọn).
-            val hasNoSelection = selectedIndex < 0 || selectedIndex >= options.size
+            val hasNoSelection = allowNoSelection && (selectedIndex < 0 || selectedIndex >= options.size)
             val displayOptions: List<SelectItem> = if (hasNoSelection) {
                 ArrayList<SelectItem>(options.size + 1).apply {
                     add(SelectItem()) // title/value đều null -> SelectItem.toString() trả về rỗng
@@ -103,7 +113,14 @@ class ParamsSingleSelect(
                     override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
                         val view = super.getView(position, convertView, parent)
                         if (hasNoSelection && position == 0) {
-                            (view as? TextView)?.text = context.getString(R.string.kr_please_select)
+                            // Dùng thuộc tính "hint" (không phải "text") để TextView tự vẽ chữ
+                            // bằng màu ?android:attr/textColorHint mặc định của theme - đúng
+                            // cơ chế mà ParamsMultipleSelect đang dùng, nên độ sáng/màu sắc
+                            // đồng bộ với nhau mà không cần tự set màu thủ công.
+                            (view as? TextView)?.apply {
+                                text = null
+                                hint = context.getString(R.string.kr_please_select)
+                            }
                         }
                         return view
                     }

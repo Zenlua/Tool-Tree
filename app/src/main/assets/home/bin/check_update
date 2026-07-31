@@ -5,12 +5,13 @@ if checkonline; then
 
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
         websums="$(xem $link_url/tags/beta)"
+        tagname="${PACKAGE_VERSION_NAME//./}"
     else
         websums="$(xem $link_url/latest)"
+        tagname="$(echo "$websums" | jq -r '.tag_name // empty' | sed -e 's|\.||g' -e 's|V||')"
     fi
 
-    tagname="$(echo "$websums" | jq -r '.tag_name // empty' | sed -e 's|\.||g' -e 's|V||')"
-    websum="$(echo "$websums" | jq -r .assets[0].digest | cut -d: -f2)"
+    websum="$(echo "$websums" | jq -r '.assets[0].digest // empty' | cut -d: -f2)"
     websize="$(echo "$websums" | jq -r '.assets[0].size' | coverbyte)"
     filesum="$(checksum "$PATH_APK")"
     name_apk="$(echo "$websums" | jq -r .name)"
@@ -25,19 +26,10 @@ if checkonline; then
         echo "Url: $url_dowload"
     fi
 
-    if [[ "${PACKAGE_VERSION_NAME//./}" == "$tagname" ]]; then
-        if [[ "$websum" == "$filesum" ]] && [[ "$websum" ]]; then
-            rm -fr $TEMP/size $TEMP/update
-        else
-            if [[ "$tagname" ]] && [[ "$tagname" != "null" ]]; then
-                echo "$url_dowload" > $TEMP/update
-                echo "$websize" > $TEMP/size
-            else
-                rm -fr $TEMP/size $TEMP/update
-            fi
-        fi
+    if [[ "$websum" == "$filesum" ]]; then
+        rm -fr $TEMP/size $TEMP/update
     else
-        if [[ "$tagname" ]] && [[ "$tagname" != "null" ]]; then
+        if [[ "$url_dowload" ]]; then
             echo "$url_dowload" > $TEMP/update
             echo "$websize" > $TEMP/size
         else

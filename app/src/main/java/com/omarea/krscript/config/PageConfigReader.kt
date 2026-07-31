@@ -541,6 +541,7 @@ class PageConfigReader {
         tomlGet(table, "depend-cascade")?.let { p.dependCascade = !(it == "false" || it == "0") }
         tomlGet(table, "depend-onchange", "depend-on-change", "depend-callback")?.let { p.dependOnChangeCallback = it }
         tomlGet(table, "depend-readonly")?.let { p.dependReadonly = tomlTruthy(it) }
+        tomlGet(table, "allow-no-selection", "no-select")?.let { p.allowNoSelection = tomlTruthy(it) }
 
         val paramOptions = tomlEntries(table, "options")
         if (paramOptions.isNotEmpty()) {

@@ -148,4 +148,14 @@ class ActionParamInfo {
     //        -> Khi mode != advanced, param vẫn hiện nhưng bị mờ và khóa tương tác,
     //           thay vì biến mất như mặc định.
     var dependReadonly: Boolean = false
+
+    // ========== TÍNH NĂNG MỚI: CHO PHÉP SPINNER ĐỂ TRỐNG (allow-no-selection) ==========
+    // Chỉ áp dụng cho ParamsSingleSelect khi hiển thị dạng Spinner (options.size <= 6).
+    // - false (MẶC ĐỊNH): giữ hành vi gốc của Android Spinner - luôn tự chọn sẵn mục đầu
+    //   tiên trong danh sách nếu chưa có value/valueFromShell nào khớp (không hiện ô trống
+    //   "Vui lòng chọn"). Phù hợp đa số trường hợp vì Spinner luôn cần có 1 giá trị hiệu lực.
+    // - true: cho phép hiển thị trạng thái "chưa chọn gì" (ô trống + hint "Vui lòng chọn"),
+    //   dùng khi thực sự cần phân biệt rõ giữa "người dùng chưa chọn" và "đã chọn mục đầu".
+    // Ví dụ: allow-no-selection="true" (hoặc viết tắt: no-select="true")
+    var allowNoSelection: Boolean = false
 }
