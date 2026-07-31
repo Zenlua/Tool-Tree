@@ -93,7 +93,27 @@ class ParamsSingleSelect(
                 tag = actionParamInfo.name
                 spinnerView = this
 
-                adapter = ArrayAdapter(context, R.layout.kr_spinner_default, R.id.text, displayOptions).apply {
+                // Adapter tuỳ chỉnh: mục placeholder (rỗng) chỉ dùng để ô Spinner lúc ĐÓNG
+                // hiển thị trống - còn khi bấm mở danh sách xổ xuống thì ẨN HẲN dòng đó đi
+                // (cao 0, không bấm được) để người dùng không thấy/chọn nhầm 1 dòng trống.
+                adapter = object : ArrayAdapter<SelectItem>(context, R.layout.kr_spinner_default, R.id.text, displayOptions) {
+                    override fun getDropDownView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
+                        if (hasNoSelection && position == 0) {
+                            return convertView?.takeIf { it.tag == "kr_spinner_placeholder_hidden" }
+                                ?: View(context).apply {
+                                    layoutParams = android.widget.AbsListView.LayoutParams(0, 0)
+                                    tag = "kr_spinner_placeholder_hidden"
+                                }
+                        }
+                        return super.getDropDownView(position, convertView, parent)
+                    }
+
+                    override fun areAllItemsEnabled(): Boolean = !hasNoSelection
+
+                    override fun isEnabled(position: Int): Boolean {
+                        return !(hasNoSelection && position == 0)
+                    }
+                }.apply {
                     setDropDownViewResource(R.layout.kr_spinner_dropdown)
                 }
                 isEnabled = !actionParamInfo.readonly

@@ -648,7 +648,7 @@ Update() {
   """
 
   [[group.text]]
-  desc = """'"$(cat $TEMP/$link_vers 2>/dev/null)"'"""
+  desc-sh = "cat $TEMP/'$link_vers' 2>/dev/null"
   [[group.text.rows]]
   photo = "'$ETC'/icon/tool-tree.jpg"
   '
@@ -866,7 +866,7 @@ Feature() {
     name = "api_genmini"
     title = "Genmini API"
     type = "text"
-    desc = "'$(transai -c)'"
+    desc-sh = "transai -c"
   '
 }
 
@@ -1482,13 +1482,13 @@ Utilities() {
     [[group.action.params]]
     name = "type"
     label = "'$super_text_2'"
-    value-sh = "glog typeheh"
+    value-sh = "glog typeheh VAB"
     options-sh = "echo -e \"A|a_only\nAB|ab\nVAB|virtual_ab\""
 
     [[group.action.params]]
     name = "from"
     label = "'$super_text_3'"
-    value-sh = "glog fromdjfh"
+    value-sh = "glog fromdjfh raw"
     options-sh = "echo -e \"raw|raw\nsparse|sparse\""
 
     [[group.action.params]]
@@ -1915,7 +1915,7 @@ Utiliapk() {
     name = "comlib"
     label = "'$addlang_text_2'"
     desc = "'$addlang_text_3'"
-    value-sh = "glog comlib"
+    value-sh = "glog comlib manifest"
     options-sh = "echo -e \"manifest|'$default_text'\ntrue|'$on_text'\nfalse|'$off_text'\""
 
     [[group.action.params]]
