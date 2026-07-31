@@ -196,12 +196,6 @@ Home() {
     echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$SDH/$PTSH]"
     fi
   """
-
-    [[group.page.options]]
-    type = "default"
-    title = "'$setting_text' - '$setting_text_3'"
-    config-sh = "'$ETC'/tool-tree.bash Project"
-
     [[group.page.options]]
     key = "v1"
     type = "checkbox"
@@ -222,6 +216,11 @@ Home() {
     type = "default"
     title = "'$open_activity_text' (data-root)"
     silent = true
+
+    [[group.page.options]]
+    type = "default"
+    title = "'$setting_text' - '$setting_text_3'"
+    config-sh = "'$ETC'/tool-tree.bash Project"
 
   [[group]]
   [[group.page]]
@@ -858,6 +857,7 @@ Feature() {
   [[group.action]]
   title = "'$api_key_text'"
   icon = "'`urlpng apikey`'"
+  placeholder = "*******************"
   shell = "hidden"
   script = """
     slog api_genmini "$(tokenenc "$api_genmini")"
