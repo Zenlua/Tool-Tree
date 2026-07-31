@@ -81,11 +81,12 @@ class ParamsSingleSelect(
                 selectedIndex = 0
             }
 
-            // Chèn 1 mục placeholder RỖNG ở đầu danh sách khi chưa có lựa chọn nào khớp
-            // (selectedIndex == -1), để Spinner hiển thị "chưa chọn gì" thay vì hành vi mặc
-            // định của Android là tự sáng mục đầu tiên trong danh sách (gây hiểu lầm cho
-            // người dùng là mục đó đang được chọn dù thực ra chưa hề chọn).
-            val hasNoSelection = allowNoSelection && (selectedIndex < 0 || selectedIndex >= options.size)
+            // Chèn 1 mục placeholder RỖNG ở đầu danh sách khi:
+            // - chưa có lựa chọn nào khớp và tính năng allow-no-selection đang bật, HOẶC
+            // - danh sách `options` hoàn toàn RỖNG (không có mục nào cả) - trường hợp này
+            //   luôn cần hiện hint "Vui lòng chọn" thay vì để ô Spinner trống trơn không rõ
+            //   lý do, bất kể allow-no-selection có bật hay không.
+            val hasNoSelection = options.isEmpty() || (allowNoSelection && (selectedIndex < 0 || selectedIndex >= options.size))
             val displayOptions: List<SelectItem> = if (hasNoSelection) {
                 ArrayList<SelectItem>(options.size + 1).apply {
                     add(SelectItem()) // title/value đều null -> SelectItem.toString() trả về rỗng
@@ -148,7 +149,7 @@ class ParamsSingleSelect(
                 }.apply {
                     setDropDownViewResource(R.layout.kr_spinner_dropdown)
                 }
-                isEnabled = !actionParamInfo.readonly
+                isEnabled = !actionParamInfo.readonly && options.isNotEmpty()
 
                 setSelection(if (hasNoSelection) 0 else selectedIndex + indexOffset)
 
