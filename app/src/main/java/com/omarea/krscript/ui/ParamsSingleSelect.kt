@@ -118,9 +118,14 @@ class ParamsSingleSelect(
                             // bằng màu ?android:attr/textColorHint mặc định của theme - đúng
                             // cơ chế mà ParamsMultipleSelect đang dùng, nên độ sáng/màu sắc
                             // đồng bộ với nhau mà không cần tự set màu thủ công.
+                            // Phân biệt 2 tình huống khác nhau về ngữ nghĩa:
+                            // - options rỗng: không có gì để chọn -> "Không có tùy chọn khả dụng"
+                            // - options có dữ liệu nhưng chưa khớp lựa chọn nào -> "Vui lòng chọn"
                             (view as? TextView)?.apply {
                                 text = null
-                                hint = context.getString(R.string.kr_please_select)
+                                hint = context.getString(
+                                    if (options.isEmpty()) R.string.picker_not_item else R.string.kr_please_select
+                                )
                             }
                         }
                         return view
