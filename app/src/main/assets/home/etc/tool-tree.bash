@@ -575,15 +575,21 @@ Info() {
   warn = "'$permis_text_3'"
   auto-kill = true
   auto-off = true
-  option-sh = "echo -e \"|'$default_text'\nauto|'$google_translate_text'\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia\""
+  option-sh = "echo -e \"|'$default_text'\nauto|'$google_translate_text'\nai|Genmini\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia\""
   get = "glog language_kkts"
   set = """
-    slog language_kkts "$state"
     if [ "$state" == "auto" ]; then
-    auto_trans
+      slog language_kkts "$state"
+      auto_trans
+    elif [ "$state" == "ai" ]; then
+      if transai -c; then
+        slog language_kkts "$state"
+        auto_trans
+      fi
     else
-    [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
-    slog language "$state"
+      slog language_kkts "$state"
+      [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
+      slog language "$state"
     fi
   """
 
@@ -879,6 +885,7 @@ Feature() {
     placeholder = "gemini-3.5-flash-lite"
     title = "Models Genmini"
     type = "text"
+    value-sh = "glog models_genmini \"gemini-3.1-flash-lite\""
   '
 }
 
