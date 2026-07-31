@@ -103,15 +103,7 @@ class ParamsSingleSelect(
                     override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
                         val view = super.getView(position, convertView, parent)
                         if (hasNoSelection && position == 0) {
-                            (view as? TextView)?.apply {
-                                text = context.getString(R.string.kr_please_select)
-                                setTextColor(currentTextColor.let {
-                                    val hintColor = android.R.attr.textColorHint
-                                    val typedValue = android.util.TypedValue()
-                                    context.theme.resolveAttribute(hintColor, typedValue, true)
-                                    typedValue.data
-                                })
-                            }
+                            (view as? TextView)?.text = context.getString(R.string.kr_please_select)
                         }
                         return view
                     }
