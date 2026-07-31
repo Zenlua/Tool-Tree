@@ -562,6 +562,11 @@ Info() {
   icon = "'`urlpng feature`'"
   config-sh = "'$ETC'/tool-tree.bash Feature"
 
+    [[group.page.options]]
+    link = "https://aistudio.google.com/api-keys"
+    title = "'$generate_text' Genmini API"
+    silent = true
+
   [[group]]
   [[group.picker]]
   title = "'$permis_text_2'"
@@ -857,16 +862,23 @@ Feature() {
   [[group.action]]
   title = "'$api_key_text'"
   icon = "'`urlpng apikey`'"
-  placeholder = "*******************"
   shell = "hidden"
   script = """
-    slog api_genmini "$(tokenenc "$api_genmini")"
+    [ -z "$models_genmini" ] && slog -d models_genmini || slog models_genmini "$models_genmini"
+    [ -z "$api_genmini" ] || slog api_genmini "$(tokenenc "$api_genmini")"
   """
     [[group.action.params]]
     name = "api_genmini"
     title = "Genmini API"
+    placeholder = "*******************"
     type = "text"
     desc-sh = "transai -c"
+    
+    [[group.action.params]]
+    name = "models_genmini"
+    placeholder = "gemini-3.5-flash-lite"
+    title = "Models Genmini"
+    type = "text"
   '
 }
 
