@@ -106,13 +106,12 @@ shell_bash() {
   icon = "'`urlpng shell`'" '
 }
 
-# Dịch ngôn ngữ
-[ "$1" == "Home" ] && auto_trans &>/dev/null &
-
-# Tạo thư mục
 (
+  # Tạo thư mục
   [ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null
   [ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null
+  # Dịch ngôn ngữ
+  [[ "$1" == "Home" || "$1" == "More" ]] && auto_trans &>/dev/null
 ) &
 
 # Ngôn ngữ

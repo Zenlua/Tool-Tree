@@ -26,7 +26,7 @@ if [ "$(glog language_kkts)" == 'auto' ]; then
 elif [ "$(glog language_kkts)" == 'ai' ]; then
   [ -f $ETC/lang/$LANGUAGE.bash ] && texgg=default.bash || texgg=vi.bash
   sum_md5_kk="$(checksum $ETC/lang/$texgg)"
-  if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]]; then
+  if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]] || [[ ! -f $ETC/lang/auto.sh ]]; then
     showtoast -a "Currently translating by Genmini..."
     transai_file "$ETC/lang/$texgg" "$ETC/lang/auto.sh"
     slog sum_md5_kk "$sum_md5_kk"
