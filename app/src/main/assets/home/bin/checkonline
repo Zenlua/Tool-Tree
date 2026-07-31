@@ -1,4 +1,4 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-nc -z google.com 80 &>/dev/null || nc -z baidu.com 80 &>/dev/null && exit 0 || exit 1
+ping -c 1 -w 2 1.1.1.1 &>/dev/null || ping -c 1 -w 2 8.8.8.8 &>/dev/null && exit 0 || exit 1
 

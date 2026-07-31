@@ -563,7 +563,7 @@ Info() {
 
     [[group.page.options]]
     link = "https://aistudio.google.com/api-keys"
-    title = "'$generate_text' Genmini API"
+    title = "'$generate_text' Gemini API"
     silent = true
 
   [[group]]
@@ -574,7 +574,7 @@ Info() {
   warn = "'$permis_text_3'"
   auto-kill = true
   auto-off = true
-  option-sh = "echo -e \"|'$default_text'\nauto|'$google_translate_text'\nai|Genmini\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia\""
+  option-sh = "echo -e \"|'$default_text'\nauto|'$google_translate_text'\nai|Gemini\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia\""
   get = "glog language_kkts"
   set = """
     if [ "$state" == "auto" ]; then
@@ -868,7 +868,7 @@ Feature() {
   """
     [[group.action.params]]
     name = "api_genmini"
-    title = "Genmini API"
+    title = "Gemini API"
     placeholder = "*******************"
     type = "text"
     desc-sh = "transai -c"
@@ -876,7 +876,7 @@ Feature() {
     [[group.action.params]]
     name = "models_genmini"
     placeholder = "gemini-3.5-flash-lite"
-    title = "Models Genmini"
+    title = "Models Gemini"
     type = "text"
     value-sh = "glog models_genmini \"gemini-3.1-flash-lite\""
   '
@@ -2125,7 +2125,7 @@ Homeadd() {
       """
       
       [[group.page.options]]
-      title = "Genmini"
+      title = "Gemini"
       box = "glog transai_text_'${dirvad##*/}'"
       reload = true
       silent = true
