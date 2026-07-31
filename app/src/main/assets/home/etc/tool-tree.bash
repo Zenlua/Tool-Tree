@@ -862,6 +862,7 @@ Feature() {
   title = "'$api_key_text'"
   icon = "'`urlpng apikey`'"
   shell = "hidden"
+  warn = "'$note_genmini_text'"
   script = """
     [ -z "$models_genmini" ] && slog -d models_genmini || slog models_genmini "$models_genmini"
     [ -z "$api_genmini" ] || slog api_genmini "$(tokenenc "$api_genmini")"

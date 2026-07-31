@@ -297,3 +297,4 @@ config_text_2="创建新项目或选择文件夹"
 
 # boot
 boot_text_1="Java 正在安装，请在 1~2 分钟后重新打开..."
+note_genmini_text="点击右上角的 3 点菜单以生成免费的 API 密钥。"

@@ -299,3 +299,4 @@ config_text_2="Create a new project or choose a folder"
 
 # boot
 boot_text_1="Java is installing, reopen after 1~2 minutes..."
+note_genmini_text="Click the 3-dot menu in the top right corner to create a free API key."

@@ -301,3 +301,4 @@ config_text_2="Tạo dự án mới hoặc chọn thư mục"
 
 # boot
 boot_text_1="Java đang cài đặt, mở lại sau 1~2 phút..."
+note_genmini_text="Nhấn menu 3 chấm ở góc phải để tạo khoá API miễn phí"
