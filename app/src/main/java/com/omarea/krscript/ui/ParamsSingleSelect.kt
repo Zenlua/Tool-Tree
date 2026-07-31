@@ -105,7 +105,11 @@ class ParamsSingleSelect(
                                     tag = "kr_spinner_placeholder_hidden"
                                 }
                         }
-                        return super.getDropDownView(position, convertView, parent)
+                        // Tránh crash "Failed to find view with ID .../text": convertView có thể là
+                        // view placeholder ẩn (View trống, không có id/text) bị recycle từ position 0
+                        // sang đây. Nếu vậy, không tái sử dụng nó, để ArrayAdapter tự inflate view mới.
+                        val safeConvertView = convertView?.takeIf { it.tag != "kr_spinner_placeholder_hidden" }
+                        return super.getDropDownView(position, safeConvertView, parent)
                     }
 
                     override fun areAllItemsEnabled(): Boolean = !hasNoSelection
