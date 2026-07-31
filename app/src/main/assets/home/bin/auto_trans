@@ -1,7 +1,7 @@
 
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ]; then
-  [ -f $ETC/lang/$LANGUAGE.bash ] && texgg="$LANGUAGE.bash" || texgg=vi.bash
+  [ -f $ETC/lang/$LANGUAGE.bash ] && texgg=default.bash || texgg=vi.bash
   sum_md5_kk="$(checksum $ETC/lang/$texgg)"
     if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]] || [[ "$(grep -cm1 '=""' $ETC/lang/auto.sh 2>/dev/null)" == 1 ]] || [[ ! -f $ETC/lang/auto.sh ]]; then
     source $ETC/lang/$texgg
@@ -23,9 +23,10 @@ if [ "$(glog language_kkts)" == 'auto' ]; then
     fi
   error_txxt_bug=''; texgg=''; sum_md5_kk=''
 elif [ "$(glog language_kkts)" == 'ai' ]; then
-  sum_md5_kk="$(checksum $ETC/lang/vi.bash)"
+  [ -f $ETC/lang/$LANGUAGE.bash ] && texgg=default.bash || texgg=vi.bash
+  sum_md5_kk="$(checksum $ETC/lang/$texgg)"
   if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]]
-    transai_file "$ETC/lang/vi.bash" "$ETC/lang/auto.sh"
+    transai_file "$ETC/lang/$texgg" "$ETC/lang/auto.sh"
     slog sum_md5_kk "$sum_md5_kk"
   fi
 fi
