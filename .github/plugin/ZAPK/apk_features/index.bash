@@ -9,6 +9,23 @@ echo '
 title = "'$google_text'"
 
   [[group.action]]
+  title = "'$transai_text_1'"
+  desc = "'$transai_text_2'"
+  script = """
+  if [ -f "$FILE" ]; then
+    if transai -c; then
+      transai_file "$FILE" "${FILE%/*}/transai_file_new.txt"
+      echo "'$transai_text_3' ${FILE%/*}/transai_file_new.txt"
+    fi
+  fi
+  """
+  [[group.action.params]]
+    name = "FILE"
+    type = "file"
+    required = "true"
+
+[[group]]
+  [[group.action]]
   title = "'$check_ufs_text'"
   summary = "'$text_root'"
   lock = """
@@ -20,7 +37,6 @@ title = "'$google_text'"
   """
 
 [[group]]
-
   [[group.action]]
   title = "'$fs_text_2'"
   desc = "'$text_rr'"

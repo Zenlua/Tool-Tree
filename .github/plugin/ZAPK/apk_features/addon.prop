@@ -26,3 +26,7 @@ ufs_text_6="Normal"
 check_ufs_text="UFS check"
 check_ufs_text_1="Measuring reading speed..."
 check_ufs_text_2="Measuring recording speed..."
+
+transai_text_1="Translate large files"
+transai_text_2="Supports translation of large text and code files."
+transai_text_3="Save at:"

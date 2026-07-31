@@ -15,6 +15,10 @@ ufs_text_6="Bình thường"
 check_ufs_text="Kiểm tra UFS"
 check_ufs_text_1="Đang đo tốc độ đọc..."
 check_ufs_text_2="Đang đo tốc độ ghi..."
+
+transai_text_1="Dịch tệp lớn"
+transai_text_2="Hỗ trợ dịch tệp lớn văn bản, code"
+transai_text_3="Lưu ở:"
 elif [ "$LANGUAGE-$COUNTRY" == "hu-HU" ]; then
 fs_text_1="Futtassa az fstrim parancsot a memóriablokkok tisztításához"
 fs_text_2="Blokk törlése"
@@ -31,4 +35,8 @@ ufs_text_6="Normál"
 check_ufs_text="UFS-ellenőrzés"
 check_ufs_text_1="Olvasási sebesség mérése..."
 check_ufs_text_2="Rögzítési sebesség mérése..."
+
+transai_text_1="Nagy fájlok fordítása"
+transai_text_2="Nagy szöveges fájlok és kódok fordításának támogatása"
+transai_text_3="Mentés ide:"
 fi
