@@ -2,6 +2,12 @@
 
 + **[Download](https://github.com/Zenlua/Tool-Tree/releases/latest)**
 
+**Version: 1.5.5 (31-7-2026)**
+
++ Added language translation feature to genmini.
++ Add the API key; it will be useful later.
++ System optimization, adding some other features.
+
 **Version: 1.5.4 (29-7-2026)**
 
 + Modify the extraction and build Apex.
