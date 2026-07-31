@@ -2121,8 +2121,25 @@ Homeadd() {
         slog auto_trans_text_'${dirvad##*/}' 0
         else
         slog auto_trans_text_'${dirvad##*/}' 1
+        slog transai_text_'${dirvad##*/}' 0
         fi
-      """ '
+      """
+      
+      [[group.page.options]]
+      title = "Genmini"
+      box = "glog transai_text_'${dirvad##*/}'"
+      reload = true
+      silent = true
+      type = "checkbox"
+      script = """
+        if [ "$(glog transai_text_'${dirvad##*/}')" == 1 ]; then
+        slog transai_text_'${dirvad##*/}' 0
+        else
+        slog auto_trans_text_'${dirvad##*/}' 0
+        slog transai_text_'${dirvad##*/}' 1
+        fi
+      """ 
+      '
     fi
 
     # Xác nhận có show toast
