@@ -97,6 +97,25 @@ class ParamsSingleSelect(
                 // hiển thị trống - còn khi bấm mở danh sách xổ xuống thì ẨN HẲN dòng đó đi
                 // (cao 0, không bấm được) để người dùng không thấy/chọn nhầm 1 dòng trống.
                 adapter = object : ArrayAdapter<SelectItem>(context, R.layout.kr_spinner_default, R.id.text, displayOptions) {
+                    // getView() vẽ ô đang hiển thị (Spinner lúc ĐÓNG). Khi đó là mục placeholder
+                    // (chưa chọn gì), hiện chữ gợi ý "Vui lòng chọn" giống bên nhiều-lựa-chọn,
+                    // vì Spinner chuẩn không tự hỗ trợ android:hint như TextView/EditText.
+                    override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
+                        val view = super.getView(position, convertView, parent)
+                        if (hasNoSelection && position == 0) {
+                            (view as? TextView)?.apply {
+                                text = context.getString(R.string.kr_please_select)
+                                setTextColor(currentTextColor.let {
+                                    val hintColor = android.R.attr.textColorHint
+                                    val typedValue = android.util.TypedValue()
+                                    context.theme.resolveAttribute(hintColor, typedValue, true)
+                                    typedValue.data
+                                })
+                            }
+                        }
+                        return view
+                    }
+
                     override fun getDropDownView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
                         if (hasNoSelection && position == 0) {
                             return convertView?.takeIf { it.tag == "kr_spinner_placeholder_hidden" }
