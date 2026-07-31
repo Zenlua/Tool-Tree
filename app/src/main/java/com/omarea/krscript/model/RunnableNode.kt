@@ -6,6 +6,8 @@ open class RunnableNode(currentConfigXml: String) : ClickableNode(currentConfigX
     var confirm: Boolean = false
     // 警示信息
     var warning: String = ""
+    // 警示信息（脚本）
+    var warningSh: String = ""
     // 执行完成后是否自动关闭日志界面
     var autoOff: Boolean = false
     // 是否可中断执行

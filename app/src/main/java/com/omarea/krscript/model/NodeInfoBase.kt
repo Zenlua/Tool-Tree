@@ -24,6 +24,8 @@ open class NodeInfoBase(val currentPageConfigPath: String) : Serializable {
     val index: String = UUID.randomUUID().toString()
     // 标题
     var title: String = ""
+    // 标题（脚本）
+    var titleSh: String = ""
     // 描述
     var desc: String = ""
     // 描述（脚本）

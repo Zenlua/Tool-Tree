@@ -866,7 +866,7 @@ Feature() {
     name = "api_genmini"
     title = "Genmini API"
     type = "text"
-    desc-sh = "transai -c"
+    desc = "'$(transai -c)'"
   '
 }
 

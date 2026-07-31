@@ -268,7 +268,13 @@ class PageConfigReader {
             if (!resolveBoolOrShell(it, "support", "visible")) return null
         }
         tomlGet(table, "key", "index", "id")?.let { nodeInfoBase.key = it.trim() }
-        tomlGet(table, "title")?.let { nodeInfoBase.title = StringResRef.resolve(context, it) }
+        tomlGet(table, "title-sh")?.let {
+            nodeInfoBase.titleSh = it
+            nodeInfoBase.title = executeResultRoot(context, it)
+        }
+        if (nodeInfoBase.title.isEmpty()) {
+            tomlGet(table, "title")?.let { nodeInfoBase.title = StringResRef.resolve(context, it) }
+        }
         tomlGet(table, "desc-sh")?.let {
             nodeInfoBase.descSh = it
             nodeInfoBase.desc = executeResultRoot(context, it)
@@ -306,7 +312,13 @@ class PageConfigReader {
     private fun runnableNodeToml(node: RunnableNode, table: TomlTable): RunnableNode? {
         return (clickableNodeToml(node, table) as RunnableNode?)?.apply {
             tomlGet(table, "confirm")?.let { confirm = tomlTruthy(it, "confirm") }
-            tomlGet(table, "warn", "warning")?.let { warning = it }
+            tomlGet(table, "warn-sh", "warning-sh")?.let {
+                warningSh = it
+                warning = executeResultRoot(context, it)
+            }
+            if (warning.isEmpty()) {
+                tomlGet(table, "warn", "warning")?.let { warning = it }
+            }
             tomlGet(table, "auto-off", "auto-close")?.let { autoOff = tomlTruthy(it, "auto-close", "auto-off") }
             tomlGet(table, "auto-finish")?.let { autoFinish = tomlTruthy(it, "auto-finish") }
             tomlGet(table, "auto-kill")?.let { autoKill = tomlTruthy(it, "auto-kill") }
@@ -337,7 +349,13 @@ class PageConfigReader {
     private fun groupNodeToml(table: TomlTable): GroupNode {
         val group = GroupNode(pageConfigAbsPath)
         tomlGet(table, "key", "index", "id")?.let { group.key = it.trim() }
-        tomlGet(table, "title")?.let { group.title = StringResRef.resolve(context, it) }
+        tomlGet(table, "title-sh")?.let {
+            group.titleSh = it
+            group.title = executeResultRoot(context, it)
+        }
+        if (group.title.isEmpty()) {
+            tomlGet(table, "title")?.let { group.title = StringResRef.resolve(context, it) }
+        }
         tomlGet(table, "support", "visible")?.let { group.supported = resolveBoolOrShell(it, "support", "visible") }
         return group
     }
@@ -389,7 +407,11 @@ class PageConfigReader {
         tomlGet(table, "config-sh")?.let { option.pageConfigSh = it }
         // Script chạy riêng cho option này, không cần dựa vào pageHandlerSh + $menu_id nữa
         tomlGet(table, "script", "set", "setstate")?.let { option.script = it }
-        tomlGet(table, "title", "text")?.let { option.title = StringResRef.resolve(context, it) }
+        // title-sh đã được xử lý ở mainNodeToml() (qua runnableNodeToml ở trên); ở đây chỉ
+        // đọc thêm alias "text" và chỉ áp dụng khi chưa có title-sh (tránh ghi đè kết quả shell)
+        if (option.title.isEmpty()) {
+            tomlGet(table, "title", "text")?.let { option.title = StringResRef.resolve(context, it) }
+        }
         if (option.key.isEmpty()) option.key = option.title
         return option
     }
@@ -409,6 +431,20 @@ class PageConfigReader {
         return switchNode
     }
 
+    private fun selectItemToml(optTable: TomlTable): SelectItem {
+        val item = SelectItem()
+        tomlGet(optTable, "val", "value")?.let { item.value = it }
+        tomlGet(optTable, "title-sh")?.let {
+            item.titleSh = it
+            item.title = executeResultRoot(context, it)
+        }
+        if (item.title.isNullOrEmpty()) {
+            tomlGet(optTable, "title", "text")?.let { item.title = StringResRef.resolve(context, it) }
+        }
+        if (item.value == null) item.value = item.title
+        return item
+    }
+
     private fun pickerNodeToml(table: TomlTable): PickerNode? {
         val picker = runnableNodeToml(PickerNode(pageConfigAbsPath), table) as PickerNode? ?: return null
         tomlGet(table, "option-sh", "options-sh", "options-su")?.let {
@@ -425,11 +461,7 @@ class PageConfigReader {
         if (pickerOptions.isNotEmpty()) {
             if (picker.options == null) picker.options = ArrayList()
             for (optTable in pickerOptions) {
-                val item = SelectItem()
-                tomlGet(optTable, "val", "value")?.let { item.value = it }
-                tomlGet(optTable, "title", "text")?.let { item.title = StringResRef.resolve(context, it) }
-                if (item.value == null) item.value = item.title
-                picker.options!!.add(item)
+                picker.options!!.add(selectItemToml(optTable))
             }
         }
         resourceNodeToml(table)
@@ -465,9 +497,13 @@ class PageConfigReader {
         val p = ActionParamInfo()
         tomlGet(table, "name")?.let { p.name = it }
         tomlGet(table, "label")?.let { p.label = it }
+        tomlGet(table, "label-sh")?.let { p.labelSh = it }
         tomlGet(table, "placeholder")?.let { p.placeholder = it }
+        tomlGet(table, "placeholder-sh")?.let { p.placeholderSh = it }
         tomlGet(table, "title")?.let { p.title = it }
+        tomlGet(table, "title-sh")?.let { p.titleSh = it }
         tomlGet(table, "desc")?.let { p.desc = it }
+        tomlGet(table, "desc-sh")?.let { p.descSh = it }
         tomlGet(table, "value")?.let { p.value = it }
         tomlGet(table, "type")?.let { p.type = it.lowercase(getDefault()).trim() }
         tomlGet(table, "suffix")?.let {
@@ -510,11 +546,7 @@ class PageConfigReader {
         if (paramOptions.isNotEmpty()) {
             if (p.options == null) p.options = ArrayList()
             for (optTable in paramOptions) {
-                val item = SelectItem()
-                tomlGet(optTable, "val", "value")?.let { item.value = it }
-                tomlGet(optTable, "title", "text")?.let { item.title = StringResRef.resolve(context, it) }
-                if (item.value == null) item.value = item.title
-                p.options!!.add(item)
+                p.options!!.add(selectItemToml(optTable))
             }
         }
 

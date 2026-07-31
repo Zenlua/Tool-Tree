@@ -354,6 +354,18 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                     if (param.optionsSh.isNotEmpty()) {
                         scripts["options:$name"] = param.optionsSh
                     }
+                    if (!param.titleSh.isNullOrEmpty()) {
+                        scripts["title:$name"] = param.titleSh!!
+                    }
+                    if (!param.labelSh.isNullOrEmpty()) {
+                        scripts["label:$name"] = param.labelSh!!
+                    }
+                    if (!param.descSh.isNullOrEmpty()) {
+                        scripts["desc:$name"] = param.descSh!!
+                    }
+                    if (!param.placeholderSh.isNullOrEmpty()) {
+                        scripts["placeholder:$name"] = param.placeholderSh!!
+                    }
                 }
 
                 val shellResults = if (scripts.isNotEmpty()) {
@@ -366,6 +378,10 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                     val name = param.name ?: continue
                     shellResults["value:$name"]?.let { param.valueFromShell = it }
                     param.optionsFromShell = parseOptionsResult(param, shellResults["options:$name"])
+                    shellResults["title:$name"]?.let { param.title = it }
+                    shellResults["label:$name"]?.let { param.label = it }
+                    shellResults["desc:$name"]?.let { param.desc = it }
+                    shellResults["placeholder:$name"]?.let { param.placeholder = it }
                 }
 
                 withContext(Dispatchers.Main) {

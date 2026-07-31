@@ -7,11 +7,18 @@ class ActionParamInfo {
     var name: String? = null
 
     var title: String? = null
+    // Kịch bản shell sinh title động (nếu có, sẽ được gộp chạy cùng value-sh/options-sh
+    // khi mở dialog action, rồi ghi đè lên title tĩnh)
+    var titleSh: String? = null
 
     var label: String? = null
+    // Kịch bản shell sinh label động
+    var labelSh: String? = null
 
     // 描述
     var desc: String? = null
+    // Kịch bản shell sinh desc động
+    var descSh: String? = null
 
     // 值
     var value: String? = null
@@ -32,6 +39,8 @@ class ActionParamInfo {
     var supported: Boolean = true
     // 文本框的水印（提示占位符）
     var placeholder: String = ""
+    // Kịch bản shell sinh placeholder động
+    var placeholderSh: String? = null
     // 文件mime类型（仅限type=file有效）
     var mime: String = ""
     // 文件后缀（仅限type=file有效），支持用逗号分隔多个后缀，例如 "zip,apk,7z"

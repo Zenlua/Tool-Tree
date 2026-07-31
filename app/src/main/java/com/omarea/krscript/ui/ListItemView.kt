@@ -68,6 +68,11 @@ open class ListItemView(private val context: Context,
         }
 
     open fun updateViewByShell() {
+        if (config.titleSh.isNotEmpty()) {
+            config.title = ScriptEnvironmen.executeResultRoot(context, config.titleSh, config)
+            title = config.title
+        }
+
         if (config.descSh.isNotEmpty()) {
             config.desc = ScriptEnvironmen.executeResultRoot(context, config.descSh, config)
             desc = config.desc
