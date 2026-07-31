@@ -51,7 +51,12 @@ class SplashActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
+        // Ép TMPDIR trỏ về cache dir riêng của app (luôn ghi được, kể cả non-root) để tránh
+        // lỗi "Permission denied" khi script dùng `source`/mktemp/ghi file tạm mà TMPDIR mặc
+        // định của hệ thống (thường /data/local/tmp) app không có quyền ghi.
+        ShellExecutor.setTmpDir(cacheDir.absolutePath)
+
         // 1. Kiểm tra nếu script đã chạy hoặc đang chạy thì vào thẳng Home
         if (ScriptEnvironmen.isInited() && isTaskRoot &&
             !intent.getBooleanExtra("force_reset", false)) {

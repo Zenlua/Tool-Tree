@@ -8,12 +8,21 @@ public class ShellExecutor {
     private static String extraEnvPath = "";
     private static String defaultEnvPath = ""; // /sbin:/system/sbin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin
 
+    // Thư mục tạm mà app CHẮC CHẮN có quyền ghi (khuyến nghị: context.getCacheDir().getAbsolutePath()).
+    // Dùng để ép TMPDIR trỏ vào đây thay vì giá trị mặc định của hệ thống.
+    private static String extraTmpDir = "";
+
     public static void setExtraEnvPath(String extraEnvPath) {
         ShellExecutor.extraEnvPath = extraEnvPath;
     }
 
+    // Gọi 1 lần lúc khởi động app, ví dụ:
+    //   ShellExecutor.setTmpDir(context.getCacheDir().getAbsolutePath());
+    public static void setTmpDir(String tmpDir) {
+        ShellExecutor.extraTmpDir = tmpDir == null ? "" : tmpDir;
+    }
+
     private static String getEnvPath() {
-        // FIXME:非root模式下，默认的 TMPDIR=/data/local/tmp 变量可能会导致某些需要写缓存的场景（例如使用source指令）脚本执行失败！
         if (extraEnvPath != null && !extraEnvPath.isEmpty()) {
             if (defaultEnvPath.isEmpty()) {
                 try {
@@ -48,23 +57,34 @@ public class ShellExecutor {
         return null;
     }
 
-    private static Process getProcess(String run) throws IOException {
-        String env = getEnvPath();
-        Runtime runtime = Runtime.getRuntime();
-        /*
-        // 部分机型会有Aborted错误
-        if (env != null) {
-            return runtime.exec(run, new String[]{
-                env
-            });
+    // FIXED (trước đây là FIXME): ở chế độ non-root, biến TMPDIR mặc định của tiến trình
+    // (thường là /data/local/tmp) app KHÔNG có quyền ghi -> các script dùng lệnh `source`,
+    // `mktemp` hoặc bất kỳ thao tác nào cần ghi file tạm sẽ báo lỗi "Permission denied".
+    // Ép TMPDIR trỏ về thư mục cache riêng của app (do setTmpDir() cung cấp, luôn ghi được
+    // dù có root hay không) để tránh lỗi này. Nếu chưa gọi setTmpDir(), giữ nguyên hành vi
+    // cũ (không export TMPDIR, để hệ thống tự quyết định).
+    private static String buildEnvExportScript() {
+        StringBuilder script = new StringBuilder();
+
+        String envPath = getEnvPath();
+        if (envPath != null) {
+            script.append("export ").append(envPath).append("\n");
         }
-        */
+
+        if (extraTmpDir != null && !extraTmpDir.isEmpty()) {
+            script.append("export TMPDIR='").append(extraTmpDir).append("'\n");
+        }
+
+        return script.length() > 0 ? script.toString() : null;
+    }
+
+    private static Process getProcess(String run) throws IOException {
+        String env = buildEnvExportScript();
+        Runtime runtime = Runtime.getRuntime();
         Process process = runtime.exec(run);
         if (env != null) {
             OutputStream outputStream = process.getOutputStream();
-            outputStream.write("export ".getBytes());
             outputStream.write(env.getBytes());
-            outputStream.write("\n".getBytes());
             outputStream.flush();
         }
         return process;

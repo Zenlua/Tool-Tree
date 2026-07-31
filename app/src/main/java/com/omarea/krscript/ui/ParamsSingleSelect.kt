@@ -71,23 +71,38 @@ class ParamsSingleSelect(
         } else {
             val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_spinner, null)
 
-            // TODO:设置Spinner默认不选中任何项
+            // Chèn 1 mục placeholder RỖNG ở đầu danh sách khi chưa có lựa chọn nào khớp
+            // (selectedIndex == -1), để Spinner hiển thị "chưa chọn gì" thay vì hành vi mặc
+            // định của Android là tự sáng mục đầu tiên trong danh sách (gây hiểu lầm cho
+            // người dùng là mục đó đang được chọn dù thực ra chưa hề chọn).
+            val hasNoSelection = selectedIndex < 0 || selectedIndex >= options.size
+            val displayOptions: List<SelectItem> = if (hasNoSelection) {
+                ArrayList<SelectItem>(options.size + 1).apply {
+                    add(SelectItem()) // title/value đều null -> SelectItem.toString() trả về rỗng
+                    addAll(options)
+                }
+            } else {
+                options
+            }
+            // Vì placeholder (nếu có) luôn nằm ở vị trí 0 và danh sách không đổi sau khi dựng,
+            // độ lệch này giữ nguyên trong suốt vòng đời view - vị trí Spinner (pos) trừ đi
+            // indexOffset luôn ra đúng index thật trong `options`.
+            val indexOffset = if (hasNoSelection) 1 else 0
+
             layout.findViewById<Spinner>(R.id.kr_param_spinner).run {
                 tag = actionParamInfo.name
                 spinnerView = this
 
-                adapter = ArrayAdapter(context, R.layout.kr_spinner_default, R.id.text, options).apply {
+                adapter = ArrayAdapter(context, R.layout.kr_spinner_default, R.id.text, displayOptions).apply {
                     setDropDownViewResource(R.layout.kr_spinner_dropdown)
                 }
                 isEnabled = !actionParamInfo.readonly
 
-                if (selectedIndex > -1 && selectedIndex < options.size) {
-                    setSelection(selectedIndex)
-                }
+                setSelection(if (hasNoSelection) 0 else selectedIndex + indexOffset)
 
                 onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                        selectedIndex = pos
+                        selectedIndex = pos - indexOffset
                         onValueChanged?.invoke()
                     }
                     override fun onNothingSelected(p: AdapterView<*>?) {}

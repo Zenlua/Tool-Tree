@@ -110,7 +110,8 @@ class ParamsMultipleSelect(
                     selected = status[i]
                 })
             }
-            // TODO:深色模式、浅色模式
+            // Dark/light mode đã được xử lý qua tham số `darkMode` truyền vào DialogItemChooser
+            // (rồi xuống DialogFullScreen) - không cần xử lý thêm ở đây.
             DialogItemChooser(darkMode, ArrayList(items), true, object : DialogItemChooser.Callback {
                 override fun onConfirm(selected: List<SelectItem>, result: BooleanArray) {
                     result.forEachIndexed { index, value ->
