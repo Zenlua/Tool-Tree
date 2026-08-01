@@ -864,6 +864,7 @@ Feature() {
   title = "'$api_key_text'"
   warn = "'$note_genmini_text'"
   icon = "'`urlpng apikey`'"
+  reload = true
   shell = "hidden"
   script = """
     [ -z "$models_genmini" ] && slog -d models_genmini || slog models_genmini "$models_genmini"
@@ -874,7 +875,6 @@ Feature() {
     title = "Gemini API"
     placeholder = "*******************"
     type = "text"
-    reload = true
     desc-sh = "transai -c 2>&1"
     
     [[group.action.params]]
