@@ -2111,39 +2111,43 @@ Homeadd() {
   if [ "$(gprop name)" ]; then
 
     # Xác nhận có google dịch
-    if grep -q "trans_add" "$dirvad/index.bash" 2>/dev/null; then
-      google_trankk='
-      [[group.page.options]]
-      title = "'$google_translate_text'"
-      box = "glog auto_trans_text_'${dirvad##*/}'"
-      reload = true
-      silent = true
-      type = "checkbox"
-      script = """
-        if [ "$(glog auto_trans_text_'${dirvad##*/}')" == 1 ]; then
-        slog auto_trans_text_'${dirvad##*/}' 0
-        else
-        slog auto_trans_text_'${dirvad##*/}' 1
-        slog transai_text_'${dirvad##*/}' 0
+    google_trankk='
+    [[group.page.options]]
+    title = "'$google_translate_text'"
+    box = "glog auto_trans_text_'$idadd'"
+    reload = true
+    silent = true
+    type = "checkbox"
+    script = """
+      if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
+        slog auto_trans_text_'$idadd' 0
+      else
+        if [ "$(glog transai_text_'$idadd')" == 1 ]; then
+        rm -fr '$dirvad'/auto.sh
+        slog transai_text_'$idadd' 0
         fi
-      """
-      
-      [[group.page.options]]
-      title = "Gemini"
-      box = "glog transai_text_'${dirvad##*/}'"
-      reload = true
-      silent = true
-      type = "checkbox"
-      script = """
-        if [ "$(glog transai_text_'${dirvad##*/}')" == 1 ]; then
-        slog transai_text_'${dirvad##*/}' 0
-        else
-        slog auto_trans_text_'${dirvad##*/}' 0
-        slog transai_text_'${dirvad##*/}' 1
+        slog auto_trans_text_'$idadd' 1
+      fi
+    """
+    
+    [[group.page.options]]
+    title = "Gemini"
+    box = "glog transai_text_'$idadd'"
+    reload = true
+    silent = true
+    type = "checkbox"
+    script = """
+      if [ "$(glog transai_text_'$idadd')" == 1 ]; then
+        slog transai_text_'$idadd' 0
+      else
+        if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
+        rm -fr '$dirvad'/auto.sh
+        slog auto_trans_text_'$idadd' 0
         fi
-      """ 
-      '
-    fi
+        slog transai_text_'$idadd' 1
+      fi
+    """
+    '
 
     # Xác nhận có show toast
     if [ -f "$dirvad/download.prop" ]; then
@@ -2152,19 +2156,19 @@ Homeadd() {
       title = "'$noti_update'"
       type = "checkbox"
       silent = true
-      box = "glog show_toast_'${dirvad##*/}'"
+      box = "glog show_toast_'$idadd'"
       script = """
-        if [ "$(glog show_toast_'${dirvad##*/}')" == 1 ]; then
-        slog show_toast_'${dirvad##*/}' 0
+        if [ "$(glog show_toast_'$idadd')" == 1 ]; then
+        slog show_toast_'$idadd' 0
         else
-        slog show_toast_'${dirvad##*/}' 1
+        slog show_toast_'$idadd' 1
         fi
       """ '
     fi
 
     # phát hiện tính năng
     [ "$(gprop summary)" ] && summss='summary = "'$(gprop summary)'" '
-    [ "$(gprop shortcut)" == "true" ] && shortcut='key = "'${dirvad##*/}'" '
+    [ "$(gprop shortcut)" == "true" ] && shortcut='key = "'$idadd'" '
 
   echo '
   [[group]]
@@ -2252,6 +2256,7 @@ Vips() {
   for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
+    idadd="${dirvad##*/}"
     pin_text_add="$unpin_text"
     [ -f "$dirvad/pin" ] || continue
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
@@ -2263,6 +2268,7 @@ Vips() {
   for vadd in $PATHADD/*/addon.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
+    idadd="${dirvad##*/}"
     pin_text_add="$pin_text"
     [ -f "$dirvad/pin" ] && continue
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
@@ -2274,6 +2280,7 @@ Vips() {
   for vadd in $PATHADD/*/download.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
+    idadd="${dirvad##*/}"
     pin_text_add="$pin_text"
     if [[ -f "$dirvad/pin" || -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
       continue

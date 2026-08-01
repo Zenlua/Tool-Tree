@@ -30,8 +30,6 @@ import com.omarea.krscript.ui.PageMenuLoader
 import com.tool.tree.databinding.ActivityActionPageBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -214,24 +212,27 @@ class ActionPage : AppCompatActivity() {
     
         checkboxRefreshJob = lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val results = checkboxOptions.map { option ->
-                    async {
-                        val result = ScriptEnvironmen.executeResultRoot(
-                            this@ActionPage,
-                            option.checkedSh,
-                            config
-                        )?.trim()
-                        option to result
-                    }
-                }.awaitAll()
+                // Root shell dùng chung 1 tiến trình duy nhất (có ReentrantLock bên trong),
+                // nên dù gọi executeResultRoot() song song bằng N coroutine, các lệnh vẫn
+                // phải xếp hàng chạy TUẦN TỰ, mỗi lệnh tốn round-trip riêng (ghi lệnh, chờ
+                // đọc kết quả). Với 3 checkbox trở lên, tổng thời gian chờ tăng tuyến tính
+                // dù mỗi lệnh chỉ là getprop đơn giản -> đó là lý do menu hiện dấu tích chậm.
+                // Gộp toàn bộ checkedSh thành 1 lần gọi shell duy nhất để chỉ tốn 1 round-trip.
+                val scripts = LinkedHashMap<String, String>()
+                checkboxOptions.forEachIndexed { index, option ->
+                    scripts[index.toString()] = option.checkedSh
+                }
+    
+                val results = ScriptEnvironmen.executeMultipleResultRoot(this@ActionPage, scripts, config)
     
                 withContext(Dispatchers.Main) {
                     if (isFinishing || isDestroyed) return@withContext
     
                     var changed = false
-                    results.forEach { (option, result) ->
+                    checkboxOptions.forEachIndexed { index, option ->
                         val uniqueItemId = option.key.hashCode()
                         if (!justClickedItemIds.contains(uniqueItemId)) {
+                            val result = results[index.toString()]?.trim() ?: ""
                             val newChecked = result == "1" || result.equals("true", ignoreCase = true)
                             if (option.checked != newChecked) changed = true
                             option.checked = newChecked
