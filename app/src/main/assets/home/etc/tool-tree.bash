@@ -571,7 +571,6 @@ Info() {
   title = "'$permis_text_2'"
   desc = "'$permis_text_5'"
   icon = "'`urlpng language`'"
-  warn = "'$permis_text_3'"
   auto-kill = true
   auto-off = true
   option-sh = "echo -e \"|'$default_text'\nauto|'$google_translate_text'\nai|Gemini\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia\""
@@ -859,6 +858,7 @@ Feature() {
   [[group]]
   [[group.action]]
   title = "'$api_key_text'"
+  warn = "'$note_genmini_text'"
   icon = "'`urlpng apikey`'"
   shell = "hidden"
   script = """

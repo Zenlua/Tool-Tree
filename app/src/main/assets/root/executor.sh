@@ -48,11 +48,14 @@ export COLORTERM=truecolor
 export PATH="$BIN:$TERMUX/bin:$TERMUX/py:$PATH"
 export TERM=xterm-256color
 export SHLVL=1
+
 # export LD_LIBRARY_PATH="$LIB"
 export PTSD="$(glog PTSD $SDC/ROM 2>/dev/null)"; # $PTSD
 export PTSH="$(glog PTSH ROM 2>/dev/null)"; # $SDH/$PTSH
 export PTAD="$(glog PTAD $SDC/APK 2>/dev/null)"; # $PTAD
 export PTAH="$(glog PTAH APK 2>/dev/null)"; # $APK/$PTAH
+
+# Không giới hạn ngang
 [ "$(glog scroll_ngang)" == 1 ] || export COLUMNS=47
 
 # User web
@@ -88,7 +91,7 @@ if command -v taskset &>/dev/null; then
 fi
 
 if [ -f "$1" ]; then
-    chmod 755 "$1" 2>/dev/null
+    # chmod 755 "$1" 2>/dev/null
     export shell_progres="$2";
     cd "$HOME";
     source "$1";
