@@ -571,23 +571,27 @@ Info() {
   title = "'$permis_text_2'"
   desc = "'$permis_text_5'"
   icon = "'`urlpng language`'"
-  auto-kill = true
-  auto-off = true
   option-sh = "echo -e \"|'$default_text'\nauto|'$google_translate_text'\nai|Gemini\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia\""
   get = "glog language_kkts"
   set = """
     if [ "$state" == "auto" ]; then
       slog language_kkts "$state"
       auto_trans
+      echo "exit:[kill]"
+      exit
     elif [ "$state" == "ai" ]; then
       if transai -c; then
         slog language_kkts "$state"
         auto_trans
+        echo "exit:[kill]"
+        exit
       fi
     else
       slog language_kkts "$state"
       [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
       slog language "$state"
+      echo "exit:[kill]"
+      exit
     fi
   """
 
