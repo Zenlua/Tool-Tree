@@ -285,9 +285,9 @@ home() {
 
     [[group.action.params]]
     name = "app_ime"
-    label = "LatinImeGoogle"
+    label = "'$install_text' LatinImeGoogle"
     desc = "'$string_text_2': product"
-    type = "bool"
+    type = "switch"
 
     [[group.action.params]]
     name = "ime_color"
@@ -362,13 +362,13 @@ home() {
 
     [[group.action.params]]
     name = "fix_window"
-    label = "'$install_text' '$label_fix_window'"
+    label = "'$label_fix_window'"
     desc = "'$required_files_text': miui-services.jar, miui-framework.jar"
-    type = "switch"
+    type = "bool"
 
     [[group.action.params]]
     name = "app_setup"
-    label = "SetupWizard"
+    label = "'$install_text' SetupWizard"
     desc = "'$required_files_text': miui-services.jar"
     type = "bool"
     
