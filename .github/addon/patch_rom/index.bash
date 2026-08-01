@@ -355,6 +355,12 @@ home() {
     type = "bool"
 
     [[group.action.params]]
+    name = "fix_window"
+    label = "'$label_fix_window'"
+    desc = "'$required_files_text': miui-services.jar, miui-framework.jar"
+    type = "bool"
+
+    [[group.action.params]]
     name = "app_setup"
     label = "SetupWizard"
     desc = "'$required_files_text': miui-services.jar"
