@@ -343,22 +343,43 @@ public class ScriptEnvironmen {
 
         ArrayList<String> orderedTags = new ArrayList<>(validScripts.keySet());
 
+        // ===== TỐI ƯU (v2) =====
+        // Bản gộp trước chỉ gộp được 1 ROUND-TRIP qua doCmdSync(), nhưng bên TRONG round-trip
+        // đó vẫn gọi "environmentPath <path>" RIÊNG cho từng script -> mỗi lần gọi là 1 TIẾN
+        // TRÌNH MỚI phải chạy lại toàn bộ nội dung executor.sh (export TOOLKIT, START_DIR,
+        // PATH...) dù các biến này giống hệt nhau giữa các script trong cùng 1 lần refresh.
+        // Với N checkbox, tốn N lần spawn + setup lại executor -> đây mới là phần thực sự
+        // gây chậm (không phải bản thân lệnh getprop), nên N càng lớn càng chậm rõ dù chỉ có
+        // 1 round-trip qua shell.
+        //
+        // Cách khắc phục: gộp toàn bộ N script (kèm marker echo) thành 1 FILE DUY NHẤT, rồi
+        // chỉ gọi "environmentPath <mergedPath>" ĐÚNG 1 LẦN. executor.sh chỉ setup môi trường
+        // 1 LẦN rồi thực thi mergedPath; bên trong mergedPath mỗi script con được bọc trong
+        // "( ... )" - 1 subshell nhẹ (chỉ fork, KHÔNG chạy lại executor) để cô lập cd/exit của
+        // từng script với nhau, giữ đúng ngữ nghĩa cũ.
+        StringBuilder merged = new StringBuilder();
         for (String tag : orderedTags) {
             String script = validScripts.get(tag);
             String script2 = script.trim();
-            String path;
-            if (script2.startsWith(ASSETS_FILE)) {
-                path = extractScript(context, script2);
-            } else {
-                path = createShellCache(context, script);
-            }
-
             String marker = "KRBATCH_" + md5(tag);
-            cmd.append("echo '>>>").append(marker).append("'\n");
-            if (path != null && !path.isEmpty()) {
-                cmd.append(environmentPath).append(" \"").append(path).append("\"\n");
+
+            merged.append("echo '>>>").append(marker).append("'\n");
+            merged.append("(\n");
+            if (script2.startsWith(ASSETS_FILE)) {
+                String assetPath = extractScript(context, script2);
+                if (assetPath != null && !assetPath.isEmpty()) {
+                    merged.append(". \"").append(assetPath).append("\"\n");
+                }
+            } else {
+                merged.append(script2).append("\n");
             }
-            cmd.append("echo '<<<").append(marker).append("'\n");
+            merged.append(")\n");
+            merged.append("echo '<<<").append(marker).append("'\n");
+        }
+
+        String mergedPath = createShellCache(context, merged.toString());
+        if (mergedPath != null && !mergedPath.isEmpty()) {
+            cmd.append(environmentPath).append(" \"").append(mergedPath).append("\"\n");
         }
 
         String rawOutput = privateShell.doCmdSync(cmd.toString());
