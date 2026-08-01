@@ -278,6 +278,12 @@ home() {
     required = true
 
     [[group.action.params]]
+    name = "app_ime"
+    label = "LatinImeGoogle"
+    desc = "'$string_text_2': product"
+    type = "bool"
+
+    [[group.action.params]]
     name = "ime_color"
     desc = "'$desc_color_light'"
     placeholder = "#f0f3f8"
@@ -348,6 +354,12 @@ home() {
     desc = "'$required_files_text': miui-services.jar"
     type = "bool"
 
+    [[group.action.params]]
+    name = "app_setup"
+    label = "SetupWizard"
+    desc = "'$required_files_text': miui-services.jar"
+    type = "bool"
+    
   [[group.action]]
   title = "'$title_app_patch'"
   warn = "'$warning_notes_text'"
@@ -478,6 +490,49 @@ home() {
     desc = "'$string_text_2': product"
     type = "bool"
 
+    [[group.action.params]]
+    name = "app_playstore"
+    label = "Play Store"
+    desc = "'$string_text_2': product"
+    type = "bool"
+
+    [[group.action.params]]
+    name = "app_restore"
+    label = "Google Restore"
+    desc = "'$string_text_2': product"
+    type = "bool"
+
+    [[group.action.params]]
+    name = "app_velvet"
+    label = "Google, Gemini"
+    desc = "'$string_text_2': product"
+    type = "bool"
+
+    [[group.action.params]]
+    name = "app_auto"
+    label = "AndroidAuto"
+    desc = "'$string_text_2': product"
+    type = "bool"
+    
+    [[group.action.params]]
+    name = "app_tts"
+    label = "Google TTS"
+    desc = "'$string_text_2': product"
+    type = "bool"
+    
+    [[group.action.params]]
+    name = "app_carrier"
+    label = "Carrier Servicesi"
+    desc = "'$string_text_2': product"
+    type = "bool"
+    
+    [[group.action.params]]
+    name = "app_gps"
+    label = "LocationHistory"
+    desc = "'$string_text_2': product"
+    type = "bool"
+    
+    
 [[group]]
   [[group.action]]
   title = "'$title_boot_patch'"

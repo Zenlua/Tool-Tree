@@ -897,10 +897,10 @@ Root() {
         su -mm -c umount -l $SDH/raw/${kkh%.*}
     fi
     mkdir -p $SDH/raw/${kkh%.*}
-    if [ "$(checktype $PTSD/$kkh)" == "ext" ]; then
-    su -mm -c mount -w $PTSD/$kkh $SDH/raw/${kkh%.*}
+    if [ "$(checktype $PTSD/$kkh)" == "erofs" ]; then
+    su -mm -c mount -r -t erofs $PTSD/$kkh $SDH/raw/${kkh%.*}
     else
-    su -mm -c mount -r $PTSD/$kkh $SDH/raw/${kkh%.*}
+    su -mm -c mount -w $PTSD/$kkh $SDH/raw/${kkh%.*}
     fi
     done
     echo "'$save_text' $SDH/raw"
