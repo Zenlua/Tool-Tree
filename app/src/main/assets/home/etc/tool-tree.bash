@@ -874,6 +874,7 @@ Feature() {
     title = "Gemini API"
     placeholder = "*******************"
     type = "text"
+    reload = true
     desc-sh = "transai -c 2>&1"
     
     [[group.action.params]]
