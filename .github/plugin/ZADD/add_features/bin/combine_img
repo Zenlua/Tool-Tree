@@ -1,14 +1,13 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
-[[ -z "$1" ]] && exit 1
 
-MPAT="${0%/*}"
+[[ -z "$1" ]] && exit 1
 
 # Ngôn ngữ mặc định
 source trans_add "$MPAT"
 
 # Run code
 for v in $3 $4; do
-unpack_img -i "$PTSD/$v" -o "$SDH/$PTSH" -n 0 -d $1
+unpack_img -i "$PTSD/$v" -o "$SDH/$PTSH"
 tm="$(echo "$v" | cut -d "/" -f2 | cut -d "." -f1 \
 | sed -e 's|.img||' -e 's|.new.img||')"
     if [ "$tm" != "system" ];then
