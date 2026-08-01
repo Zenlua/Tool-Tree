@@ -1659,20 +1659,10 @@ Utilities() {
   icon = "'`urladd icon`'"
   config-sh = "'$dirvad'/index.bash home"
   handler = """
-    if [ "$menu_id" == "v1" ]; then
-        [ "$(glog auto_trans_text_patch_rom)" == 1 ] && slog auto_trans_text_patch_rom 0 || slog auto_trans_text_patch_rom 1
-    elif [ "$menu_id" == "123" ]; then
+    if [ "$menu_id" == "123" ]; then
         '$dirvad'/index.bash update_addon
     fi
   """
-
-    [[group.page.options]]
-    key = "v1"
-    type = "checkbox"
-    title = "'$google_translate_text'"
-    box = "glog auto_trans_text_patch_rom"
-    silent = true
-    reload = true
 
     [[group.page.options]]
     type = "refresh"
