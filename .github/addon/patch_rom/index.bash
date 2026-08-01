@@ -325,7 +325,7 @@ home() {
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
-    options-sh = "'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar"
+    options-sh = "'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar ExternalStorageProvider.apk"
     value-sh = "glog fix_manyo_patch_os"
     required = true
     multiple = true
@@ -371,6 +371,13 @@ home() {
     label = "'$install_text' SetupWizard"
     desc = "'$required_files_text': miui-services.jar"
     type = "bool"
+    
+    [[group.action.params]]
+    name = "fix_data"
+    label = "'$label_fix_data'"
+    desc = "'$required_files_text': ExternalStorageProvider.apk"
+    type = "bool"
+    
     
   [[group.action]]
   title = "'$title_app_patch'"

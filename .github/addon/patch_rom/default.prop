@@ -91,3 +91,4 @@ warning_notes_text="Note: Below each checkbox, the required item is indicated. I
 open_app_text="Remove notification to allow opening the app"
 install_text="Install app"
 global_mod_text_6="Press and hold the power button to open the reboot menu"
+label_fix_data="Unlock access to Android/data/obb"
