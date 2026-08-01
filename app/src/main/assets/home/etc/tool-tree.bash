@@ -861,7 +861,6 @@ Feature() {
   title = "'$api_key_text'"
   icon = "'`urlpng apikey`'"
   shell = "hidden"
-  warn = "'$note_genmini_text'"
   script = """
     [ -z "$models_genmini" ] && slog -d models_genmini || slog models_genmini "$models_genmini"
     [ -z "$api_genmini" ] || slog api_genmini "$(tokenenc "$api_genmini")"
@@ -871,7 +870,7 @@ Feature() {
     title = "Gemini API"
     placeholder = "*******************"
     type = "text"
-    desc-sh = "transai -c"
+    desc-sh = "transai -c 2>&1"
     
     [[group.action.params]]
     name = "models_genmini"
@@ -2134,7 +2133,7 @@ Homeadd() {
     title = "Gemini"
     box = "glog transai_text_'$idadd'"
     reload = true
-    silent = true
+    auto-off = true
     type = "checkbox"
     script = """
       if [ "$(glog transai_text_'$idadd')" == 1 ]; then
@@ -2144,7 +2143,7 @@ Homeadd() {
         rm -fr '$dirvad'/auto.sh
         slog auto_trans_text_'$idadd' 0
         fi
-        slog transai_text_'$idadd' 1
+        transai -c && slog transai_text_'$idadd' 1
       fi
     """
     '
