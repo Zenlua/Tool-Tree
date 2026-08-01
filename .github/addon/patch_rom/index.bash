@@ -229,6 +229,12 @@ home() {
     type = "bool"
 
     [[group.action.params]]
+    name = "sceen_lock"
+    label = "'$global_mod_text_6'"
+    desc = "'$required_files_text': MiuiSystemUI.apk"
+    type = "bool"
+
+    [[group.action.params]]
     name = "dark_show"
     label = "'$global_mod_text_4'"
     desc = "'$required_files_text': miui-services.jar"
