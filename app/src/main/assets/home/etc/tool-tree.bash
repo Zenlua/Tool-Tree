@@ -897,7 +897,11 @@ Root() {
         su -mm -c umount -l $SDH/raw/${kkh%.*}
     fi
     mkdir -p $SDH/raw/${kkh%.*}
+    if [ "$(checktype $PTSD/$kkh)" == "ext" ]; then
     su -mm -c mount -w $PTSD/$kkh $SDH/raw/${kkh%.*}
+    else
+    su -mm -c mount -r $PTSD/$kkh $SDH/raw/${kkh%.*}
+    fi
     done
     echo "'$save_text' $SDH/raw"
   """
@@ -920,9 +924,9 @@ Root() {
     su -mm -c umount -l $SDH/raw/$kkh
     rm -fr $SDH/raw/$kkh
     if [ "$(checktype $PTSD/${kkh}.img)" == "ext" ]; then
-    [ -f $PTSD/${kkh}.img ] && e2fsck -yf $PTSD/${kkh}.img &>/dev/null
+    [ -f $PTSD/${kkh}.img ] && e2fsck -yf $PTSD/${kkh}.img
     elif [ "$(checktype $PTSD/${kkh}.img)" == "f2fs" ]; then
-    [ -f $PTSD/${kkh}.img ] && fsck.f2fs -yf $PTSD/${kkh}.img &>/dev/null
+    [ -f $PTSD/${kkh}.img ] && fsck.f2fs -yf $PTSD/${kkh}.img
     fi
     done
     echo "'$umount_text_2'"
