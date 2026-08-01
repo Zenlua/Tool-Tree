@@ -551,6 +551,12 @@ home() {
     desc = "'$string_text_2': product"
     type = "bool"
     
+    [[group.action.params]]
+    name = "app_monet"
+    label = "ThemePicker"
+    desc = "'$string_text_2': system_ext"
+    type = "bool"
+    
     
 [[group]]
   [[group.action]]
