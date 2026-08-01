@@ -2138,7 +2138,7 @@ Homeadd() {
     title = "Gemini"
     box = "glog transai_text_'$idadd'"
     reload = true
-    auto-off = true
+    silent = true
     type = "checkbox"
     script = """
       if [ "$(glog transai_text_'$idadd')" == 1 ]; then
@@ -2148,7 +2148,7 @@ Homeadd() {
         rm -fr '$dirvad'/auto.sh
         slog auto_trans_text_'$idadd' 0
         fi
-        transai -c && slog transai_text_'$idadd' 1
+        transai -c && slog transai_text_'$idadd' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
       fi
     """
     '
