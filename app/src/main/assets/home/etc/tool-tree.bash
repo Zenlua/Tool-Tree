@@ -882,7 +882,7 @@ Feature() {
     placeholder = "gemini-3.5-flash-lite"
     title = "Models Gemini"
     type = "text"
-    value-sh = "glog models_genmini \"gemini-3.1-flash-lite\""
+    value-sh = "glog models_genmini \"gemini-3.5-flash-lite\""
   '
 }
 
