@@ -28,14 +28,17 @@ if [ "$total_lines" -gt 200 ]; then
     while [ -z "$transcc" ] || [ "$transcc" = "null" ]; do
       transcc="$(transai "$chunk")"
       if [ -z "$transcc" ] || [ "$transcc" = "null" ]; then
-        echo "  -> Transai is null, trying again...."
-        if [ "$retry_count" == 5 ]; then
+        ((retry_count++))
+        echo "  -> Transai is null, trying again ($retry_count/10)...."
+        
+        if [ "$retry_count" -eq 5 ]; then
           if [[ "$model_ai" == 'gemini-3.5-flash-lite' ]]; then
             slog models_genmini 'gemini-3.1-flash-lite'
           else
             slog models_genmini 'gemini-3.5-flash-lite'
           fi
         fi
+        
         if [ "$retry_count" -ge 10 ]; then
           slog models_genmini "$model_ai"
           echo "  [Error] Tried 10 times but the API still returns null. I stopped the entire program !"
@@ -50,4 +53,3 @@ if [ "$total_lines" -gt 200 ]; then
 else
   transai "$(cat "$file_input")" > "$file_ouput"
 fi
-

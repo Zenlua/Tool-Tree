@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Message
@@ -44,7 +45,9 @@ import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
 import com.tool.tree.AnsiColorParser
 import com.tool.tree.R
+import com.tool.tree.WakeLockService
 import com.tool.tree.databinding.KrDialogLogBinding
+import android.app.ActivityManager
 import java.io.File
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
@@ -412,6 +415,30 @@ class DialogLogFragment : DialogFragment() {
             chooseOptionsContainerRef.clear()
             unbindStdin()
             actionEventHandler = null
+        }
+
+        // Được gọi bởi ShellHandlerBase.killApp() ngay trước khi tiến trình bị kill (do
+        // script echo "exit:[kill]" / "exit:[restart]"). Nếu không dọn dẹp ở đây, WakeLockService
+        // (foreground service, onStartCommand() trả về START_STICKY) đang chạy nền sẽ bị hệ thống
+        // coi là "chết bất thường" và TỰ ĐỘNG KHỞI ĐỘNG LẠI service đó -> tiến trình app bị hồi
+        // sinh, gây cảm giác app tự restart thay vì thoát hẳn. Xử lý y hệt logic dọn dẹp đã dùng
+        // ở ActionPage.killApp() / MainActivity (nhánh autoKill): dừng WakeLockService một cách
+        // tường minh (stopSelf từ trong service) rồi đóng hết task, để tránh kích hoạt START_STICKY.
+        override fun onKillRequest() {
+            try {
+                context.startService(Intent(context, WakeLockService::class.java).apply {
+                    action = WakeLockService.ACTION_END_WAKELOCK
+                })
+            } catch (ignored: Exception) {
+                // Service có thể không chạy hoặc context không cho phép startService lúc này -> bỏ qua
+            }
+
+            try {
+                val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+                activityManager?.appTasks?.forEach { task -> task.finishAndRemoveTask() }
+            } catch (ignored: Exception) {
+                // Không để lỗi dọn task cản trở việc kill process phía sau
+            }
         }
 
         override fun onInputRequest(prompt: String) {
