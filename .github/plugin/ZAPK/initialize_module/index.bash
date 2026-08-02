@@ -1,19 +1,24 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 
+# home
 home() {
-echo '[[group]]
-title = "'$google_text'"
+echo '
+  [[group]]
+  title = "'$google_text'"
 
   [[group.action]]
   warn = "'$lang_action_warn'"
   title = "'$lang_title'"
   summary = "'$lang_summary_path''$path_modun'"
+  reload = "true"
   script = """
+  
   slog uri_adb_moduls "$uri_adb_moduls"
   slog uri_file_modun "$uri_file_modun"
   [ -f '$path_modun'/remove ] && rm -fr '$path_modun'/remove
   mkdir -p '$path_modun' '$path_modun2'
+  
   if [ "$uri_adb_moduls" ]; then
     mkdir -p "'$path_modun2'${uri_adb_moduls%/*}"
     cp -rf "$uri_file_modun" "'$path_modun2'$uri_adb_moduls"
@@ -32,6 +37,7 @@ title = "'$google_text'"
       echo "'$lang_not_found'${uri_file_modun##*/}'$lang_input_notice'"
     fi
   fi
+  
   echo "id=Tool-Tree
   name=Tool-Tree Module
   version=1.0
@@ -41,7 +47,6 @@ title = "'$google_text'"
   touch '$path_modun'/update
   set_permis -R -o 0:0 -c u:object_r:system_file:s0 '$path_modun2'/system
   """
-
     [[group.action.params]]
     name = "uri_file_modun"
     value-sh = "glog uri_file_modun"
@@ -56,8 +61,7 @@ title = "'$google_text'"
     value-sh = "glog uri_adb_moduls"
     type = "text"
 
-[[group]]
-
+  [[group]]
   [[group.editor]]
   title = "'$lang_desc_prop'"
   file = "'$path_modun2'/system.prop"
@@ -65,12 +69,12 @@ title = "'$google_text'"
   placeholder = "ro.control_privapp_permissions=log"
   visible = "'$visisj'"
 
-[[group]]
-
+  [[group]]
   [[group.action]]
   title = "'$lang_del_tile'"
   desc = "'$lang_del_desc'"
   visible = "'$visisj'"
+  reload = "true"
   script = """
   for vcx in $del_file_modun; do
       echo "Delete file: $vcx"
@@ -87,10 +91,10 @@ title = "'$google_text'"
     required = "required"
     multiple = "true"
 
-[[text]]
-desc = "'$list_modul'"
-summary-sh = "find '$path_modun' -type f"
-'
+  [[text]]
+  desc = "'$list_modul'"
+  summary-sh = "tree '$path_modun'; echo; tree '$path_modun2'"
+  '
 }
 
 # Thư mục hiện tại
