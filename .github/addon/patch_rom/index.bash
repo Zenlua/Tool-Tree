@@ -25,7 +25,6 @@ echo '
   title = "'$quick_custom_text'"
   summary = "Xiaomi"
   warn = "'$warn_delete_gms'"
-  auto-off = true
   reload = true
   script = "'$pathsh' custom_patch"
 
