@@ -44,6 +44,14 @@ echo '
     type = "bool"
     value-sh = "'$pathsh' get_patch_2"
     readonly = "'$pathsh' get_patch_2"
+    
+    [[group.action.params]]
+    name = "xeu_toolbox"
+    label = "'$label_xeu_toolbox'"
+    desc = "'$string_text_2': system_ext"
+    type = "bool"
+    value-sh = "'$pathsh' check_xeu"
+    readonly = "'$pathsh' check_xeu"
 
 [[group]]
   [[group.action]]
