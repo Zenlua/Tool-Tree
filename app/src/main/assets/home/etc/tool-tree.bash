@@ -2157,7 +2157,7 @@ Homeadd() {
       title = "'$noti_update'"
       type = "checkbox"
       silent = true
-      box = "glog show_toast_'$idadd'"
+      box = "glog show_toast_'$idadd' 1"
       script = """
         if [ "$(glog show_toast_'$idadd')" == 1 ]; then
         slog show_toast_'$idadd' 0
