@@ -2,6 +2,7 @@
 # Kakathic
 path_modun="/data/adb/modules/Tool-Tree"
 path_modun2="/data/adb/modules_update/Tool-Tree"
+[ -d $path_modun ] && visisj=1 || visisj=0
 
 home() {
 echo '[[group]]
@@ -50,10 +51,9 @@ title = "'$google_text'"
     [[group.action.params]]
     name = "uri_file_modun"
     value-sh = "glog uri_file_modun"
-    options-sh = "findfile files $PTAD"
+    path-home = "'$PTAD'/out"
     required = "required"
-    label = "@string/options_text"
-    multiple = "true"
+    type="file"
 
     [[group.action.params]]
     name = "uri_adb_moduls"
@@ -67,13 +67,16 @@ title = "'$google_text'"
   [[group.editor]]
   title = "'$lang_desc_prop'"
   file = "'$path_modun'/system.prop"
+  value = "ro.control_privapp_permissions=log"
   placeholder = "ro.control_privapp_permissions=log"
+  visible = "'$visisj'"
 
 [[group]]
 
   [[group.action]]
   title = "'$lang_del_tile'"
   desc = "'$lang_del_desc'"
+  visible = "'$visisj'"
   script = """
   for vcx in $del_file_modun; do
       echo "Delete file: $vcx"
