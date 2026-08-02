@@ -95,6 +95,7 @@ echo '
   title = "@string/remove_text Module"
   get = "[ -f '$path_modun'/remove ] && echo 1"
   reload = "true"
+  shell = "hidden"
   set = """
   if [ "$state" == 1 ]; then
   [ -d '$path_modun' ] && touch '$path_modun'/remove
