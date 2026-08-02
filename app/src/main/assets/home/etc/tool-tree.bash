@@ -2201,8 +2201,8 @@ Homeadd() {
 
 Vips() {
   # Xoá giá trị cũ
-  code_option=''; farooot=''; index_adds=''; atextx=''; noti_texts='';
-  google_trankk=''; shortcut=''; beforesh='';
+  code_option=''; farooot=''; index_adds=''; atextx='';
+  google_trankk=''; shortcut=''; beforesh=''; noti_texts='';
   
   # Chọn bên
   if [ "$PATHADD" == "$AON" ]; then
@@ -2220,12 +2220,6 @@ Vips() {
   if [ "$(gprop root)" == "true" ]; then
     farooot='lock = "[ $ROT == 0 ] && echo \"'$root_warning_text'\" || echo 0"'
   fi
-
-  # tên và desc
-  name_vb="$(gprop name)"
-  desc_vb="$(gprop version) $(gprop author)$description_text"
-  url_vb="$(gprop url)"
-  icon_vb="$(urladd icon)"
 
   # phát hiện tính năng
   summss="$(gprop summary)"
@@ -2245,6 +2239,12 @@ Vips() {
       [ "$description_text" ] && description_text=" | $description_text"
     fi
   fi
+
+  # tên và desc
+  name_vb="$(gprop name)"
+  desc_vb="$(gprop version) $(gprop author)$description_text"
+  url_vb="$(gprop url)"
+  icon_vb="$(urladd icon)"
 
   # Load trang tính năng
   if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
