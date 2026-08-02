@@ -93,7 +93,11 @@ echo '
 
   [[text]]
   desc = "'$list_modul'"
-  summary-sh = "tree '$path_modun'; echo; tree '$path_modun2'"
+  summary-sh = """
+  [ -d '$path_modun' ] && tree '$path_modun';
+  echo;
+  [ -d '$path_modun2' ] && tree '$path_modun2'
+  """
   '
 }
 

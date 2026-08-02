@@ -12,7 +12,7 @@ lang_input_notice=", hãy nhập đường dẫn để tạo mới"
 lang_del_tile="Xoá tệp nhanh"
 lang_del_desc="Lựa chọn tệp tin bất kỳ trong module để xóa bỏ"
 lang_del_desc2="Xoá tệp tin bất kỳ trong:"
-list_modul="Danh sách tệp được áp dụng"
+list_modul="Danh sách tệp ở trong mô-đun"
 elif [ "$LANGUAGE-$COUNTRY" == "hu-HU" ]; then
 lang_action_warn="Ez a kiegészítő a kijelölt fájlokat egy Magisk-, KSU- vagy APatch-modulba másolja; újraindítás után a modul ugyanúgy aktiválódik a rendszerben, mint bármely más modul."
 lang_title="Fájl importálása"
