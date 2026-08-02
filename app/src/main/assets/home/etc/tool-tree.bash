@@ -508,11 +508,16 @@ Info() {
     if [ "$menu_id" == "share" ]; then
     echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
     elif [ "$menu_id" == "beta" ]; then
+    echo "'$update_text_3'"
+    echo
     if [ -f "$TMP/Tool-Tree.apk" ]; then
     openfile "$TMP/Tool-Tree.apk"
+    exit
     else
     taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
     openfile "$TMP/Tool-Tree.apk"
+    echo
+    echo "'$save_text' $TMP/Tool-Tree.apk"
     fi
     fi
   """
@@ -648,8 +653,6 @@ Update() {
     fi
     echo
     if [[ "'$show_update'" == 1 ]]; then
-    echo "'$update_text_3'"
-    echo
     taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1
     [ -f "$TMP/Tool-Tree.apk" ] && openfile "$TMP/Tool-Tree.apk"
     echo
