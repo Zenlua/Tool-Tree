@@ -1,5 +1,6 @@
 Update log:
 
+3.5: Fix notification v2
 3.4: Add Google Gapps apps
 3.3: Fixes notifications, adds some features
 3.2: The add-on has been updated and is now more stable.
