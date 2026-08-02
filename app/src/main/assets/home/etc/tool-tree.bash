@@ -2094,6 +2094,10 @@ Homeadd() {
     pagesh='config = "'$ETC'/error.toml"'
   fi
 
+  if [ -f "$dirvad/before-load.bash" ]; then
+    beforesh='before-load = "'$dirvad'/before-load.bash"'
+  fi
+
   # Load menu
   if [ -f "$dirvad/menu.bash" ]; then
     code_option="$($dirvad/menu.bash 2>/dev/null)"
@@ -2171,6 +2175,7 @@ Homeadd() {
   '$shortcut'
   '$pagesh'
   '$summss'
+  '$beforesh'
   title = "'$(gprop name)'"
   desc = "'$(gprop version) $(gprop author)$description_text'"
   icon = "'`urladd icon`'"
@@ -2197,7 +2202,7 @@ Homeadd() {
 Vips() {
   # Xoá giá trị cũ
   code_option=''; farooot=''; index_adds=''; atextx=''; noti_texts='';
-  summss=''; google_trankk=''; shortcut=''; description_text='';
+  summss=''; google_trankk=''; shortcut=''; description_text=''; beforesh='';
   
   # Chọn bên
   if [ "$PATHADD" == "$AON" ]; then
@@ -2218,10 +2223,8 @@ Vips() {
 
   # Desc ngôn ngữ
   if [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ]; then
-    [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ] && \
     description_text=" | $(gprop 'description_'$LANGUAGE'_'$COUNTRY'')"
   elif [ "$(gprop 'description_'$LANGUAGE'')" ]; then
-    [ "$(gprop description_$LANGUAGE)" ] && \
     description_text=" | $(gprop description_$LANGUAGE)"
   else
     [ "$(gprop description)" ] && description_text=" | $(gprop description)"
