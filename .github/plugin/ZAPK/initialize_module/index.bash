@@ -72,7 +72,6 @@ echo '
   [[group]]
   [[group.action]]
   title = "'$lang_del_tile'"
-  desc = "'$lang_del_desc'"
   visible = "'$visisj'"
   reload = "true"
   script = """
@@ -90,6 +89,20 @@ echo '
     options-sh = "[ -d '$path_modun2' ] && find '$path_modun2'/system -type f -printf '"'%p|%f\\n'"'"
     required = "required"
     multiple = "true"
+  [[group]]
+  [[group.switch]]
+  title = "@string/remove_text Module"
+  get = "[ -f '$path_modun'/remove ] && echo 1"
+  set = """
+  if [ "$state" == 1 ]; then
+  [ -d '$path_modun' ] && touch '$path_modun'/remove
+  [ -d '$path_modun2' ] && rm -fr '$path_modun2'
+  else
+  rm -fr '$path_modun'/remove
+  fi
+  """
+  confirm = true
+  visible = "'$visisj'"
 
   [[text]]
   desc = "'$list_modul'"
