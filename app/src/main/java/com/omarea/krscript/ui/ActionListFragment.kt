@@ -366,6 +366,9 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                     if (!param.placeholderSh.isNullOrEmpty()) {
                         scripts["placeholder:$name"] = param.placeholderSh!!
                     }
+                    if (!param.readonlySh.isNullOrEmpty()) {
+                        scripts["readonly:$name"] = param.readonlySh!!
+                    }
                 }
 
                 val shellResults = if (scripts.isNotEmpty()) {
@@ -382,6 +385,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                     shellResults["label:$name"]?.let { param.label = it }
                     shellResults["desc:$name"]?.let { param.desc = it }
                     shellResults["placeholder:$name"]?.let { param.placeholder = it }
+                    shellResults["readonly:$name"]?.let { param.readonly = it.trim() == "1" }
                 }
 
                 withContext(Dispatchers.Main) {

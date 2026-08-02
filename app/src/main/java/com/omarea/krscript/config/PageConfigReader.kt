@@ -86,6 +86,38 @@ class PageConfigReader {
         return ScriptEnvironmen.executeResultRoot(context, scriptIn, vitualRootNode)
     }
 
+    // ========== TỐI ƯU: HÀNG CHỜ getState CỦA MỌI SWITCH/PICKER TRONG TRANG ==========
+    // Thay vì mỗi switch/picker tự chạy getState riêng lẻ ngay lúc parse (N mục = N
+    // round-trip shell TUẦN TỰ - nguyên nhân gây delay khi menu có từ 3 checkbox trở lên),
+    // switchNodeToml()/pickerNodeToml() chỉ ĐĂNG KÝ script vào đây. Toàn bộ được gộp và
+    // chạy ĐÚNG 1 LẦN ở cuối readConfigToml() qua resolvePendingStates().
+    private val pendingSwitchStates = ArrayList<Pair<SwitchNode, String>>()
+    private val pendingPickerStates = ArrayList<Pair<PickerNode, String>>()
+
+    private fun resolvePendingStates() {
+        if (pendingSwitchStates.isEmpty() && pendingPickerStates.isEmpty()) return
+
+        val scripts = LinkedHashMap<String, String>()
+        pendingSwitchStates.forEachIndexed { index, pair -> scripts["switch:$index"] = pair.second }
+        pendingPickerStates.forEachIndexed { index, pair -> scripts["picker:$index"] = pair.second }
+
+        if (vitualRootNode == null) {
+            vitualRootNode = NodeInfoBase(pageConfigAbsPath)
+        }
+        val results = ScriptEnvironmen.executeMultipleResultRoot(context, scripts, vitualRootNode)
+
+        pendingSwitchStates.forEachIndexed { index, pair ->
+            val shellResult = results["switch:$index"] ?: ""
+            pair.first.checked = shellResult != "error" && (shellResult == "1" || shellResult.lowercase(getDefault()) == "true")
+        }
+        pendingPickerStates.forEachIndexed { index, pair ->
+            results["picker:$index"]?.let { pair.first.value = it }
+        }
+
+        pendingSwitchStates.clear()
+        pendingPickerStates.clear()
+    }
+
     // =====================================================================================
     // Hỗ trợ đọc cấu hình dạng TOML (định dạng đầu vào duy nhất - đã loại bỏ hỗ trợ XML)
     //
@@ -187,7 +219,9 @@ class PageConfigReader {
                 Log.e("KrConfig Fail！", message)
                 return null
             }
-            tomlChildren(result)
+            val nodes = tomlChildren(result)
+            resolvePendingStates()
+            nodes
         } catch (ex: Exception) {
             Handler(Looper.getMainLooper()).post {
                 Toast.makeText(context, "Failed to parse configuration file\n" + ex.message, Toast.LENGTH_LONG).show()
@@ -423,8 +457,16 @@ class PageConfigReader {
         tomlGet(table, "lock", "lock-state")?.let { switchNode.lockShell = it }
         resourceNodeToml(table)
 
-        val shellResult = executeResultRoot(context, switchNode.getState)
-        switchNode.checked = shellResult != "error" && (shellResult == "1" || shellResult.lowercase(getDefault()) == "true")
+        // ========== FIX: KHÔNG chạy getState riêng lẻ ngay tại đây nữa ==========
+        // Trước đây mỗi switch/checkbox tự gọi executeResultRoot() ngay lúc parse trang,
+        // nghĩa là N checkbox trong menu = N round-trip shell TUẦN TỰ (nguyên nhân gây
+        // delay 1-2s khi menu có từ 3 checkbox trở lên). Giờ chỉ ĐĂNG KÝ script vào hàng
+        // chờ pendingSwitchStates; toàn bộ sẽ được gộp và chạy ĐÚNG 1 LẦN ở cuối
+        // readConfigToml() qua resolvePendingStates().
+        switchNode.checked = false // giá trị mặc định tạm thời, tới khi có kết quả gộp
+        if (switchNode.getState.isNotEmpty()) {
+            pendingSwitchStates.add(switchNode to switchNode.getState)
+        }
         if (switchNode.setState == null) {
             switchNode.setState = ""
         }
@@ -466,10 +508,11 @@ class PageConfigReader {
         }
         resourceNodeToml(table)
 
-        if (picker.getState == null) {
+        // ========== FIX: KHÔNG chạy getState riêng lẻ ngay tại đây nữa (giống switch) ==========
+        if (picker.getState.isNullOrEmpty()) {
             picker.getState = ""
         } else {
-            picker.value = executeResultRoot(context, "" + picker.getState)
+            pendingPickerStates.add(picker to picker.getState!!)
         }
         if (picker.setState == null) picker.setState = ""
         return picker
@@ -513,7 +556,27 @@ class PageConfigReader {
         }
         tomlGet(table, "mime")?.let { p.mime = it.lowercase(getDefault()) }
         tomlGet(table, "path-home", "home-path", "pathhome")?.let { p.pathHome = it.trim() }
-        tomlGet(table, "readonly")?.let { p.readonly = resolveBoolOrShell(it, "readonly") }
+        tomlGet(table, "readonly")?.let { raw ->
+            // ========== FIX: readonly dạng shell không còn chạy NGAY lúc parse trang ==========
+            // Trước đây gọi thẳng resolveBoolOrShell() -> executeResultRoot() ngay tại đây,
+            // nghĩa là readonly="...lệnh shell..." bị thực thi ngay khi mở trang/menu (lúc
+            // đọc config), dù người dùng chưa hề bấm vào action đó.
+            // Giờ: nếu là giá trị tĩnh (true/false/1/0) thì giữ nguyên hành vi cũ, xử lý ngay.
+            // Nếu là lệnh shell thì CHỈ LƯU LẠI vào readonlySh, không thực thi ở đây nữa.
+            // readonlySh sau đó được gộp chạy cùng value-sh/options-sh (xem
+            // ActionListFragment.actionExecute) đúng lúc người dùng mở dialog nhập tham số.
+            val v = raw.trim()
+            val lower = v.lowercase(getDefault())
+            when {
+                lower.isEmpty() -> p.readonly = false
+                lower == "1" || lower == "true" || lower == "readonly" -> p.readonly = true
+                lower == "0" || lower == "false" -> p.readonly = false
+                else -> {
+                    p.readonly = false // giá trị mặc định tạm thời, tới khi có kết quả shell
+                    p.readonlySh = v
+                }
+            }
+        }
         tomlGet(table, "maxlength")?.let { p.maxLength = it.trim().toIntOrNull() ?: p.maxLength }
         tomlGet(table, "min")?.let { p.min = it.trim().toIntOrNull() ?: p.min }
         tomlGet(table, "max")?.let { p.max = it.trim().toIntOrNull() ?: p.max }

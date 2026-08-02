@@ -29,7 +29,13 @@ class ActionParamInfo {
     var max: Int = Int.MAX_VALUE // seekbar only
     var min: Int = Int.MIN_VALUE // seekbar only
     var required: Boolean = false // 是否是必需的
+    // Giá trị readonly tĩnh (true/false/1/0) hoặc kết quả tạm thời (mặc định false) khi
+    // readonlySh chưa được thực thi. Khi readonlySh có giá trị, readonly sẽ được ghi đè
+    // bằng kết quả shell ngay khi mở dialog action (giống cơ chế của valueShell).
     var readonly: Boolean = false
+    // Kịch bản shell kiểm tra readonly (nếu có, sẽ được gộp chạy cùng value-sh/options-sh
+    // khi mở dialog action, giống valueShell - KHÔNG chạy ngay lúc parse trang nữa)
+    var readonlySh: String? = null
     var options: ArrayList<SelectItem>? = null
     var optionsFromShell: ArrayList<SelectItem>? = null
     var optionsSh = ""
