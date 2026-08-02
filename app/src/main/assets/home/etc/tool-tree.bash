@@ -577,20 +577,20 @@ Info() {
     if [ "$state" == "auto" ]; then
       slog language_kkts "$state"
       auto_trans
-      echo "exit:[kill]"
+      echo "exit:[restart]"
       exit
     elif [ "$state" == "ai" ]; then
       if transai -c; then
         slog language_kkts "$state"
         auto_trans
-        echo "exit:[kill]"
+        echo "exit:[restart]"
         exit
       fi
     else
       slog language_kkts "$state"
       [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
       slog language "$state"
-      echo "exit:[kill]"
+      echo "exit:[restart]"
       exit
     fi
   """
