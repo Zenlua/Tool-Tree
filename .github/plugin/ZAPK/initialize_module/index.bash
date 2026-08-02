@@ -14,26 +14,24 @@ title = "'$google_text'"
   slog uri_file_modun "$uri_file_modun"
   [ -f '$path_modun'/remove ] && rm -fr '$path_modun'/remove
   mkdir -p '$path_modun' '$path_modun2'
-  for vcc in $uri_file_modun; do
-    if [ "$uri_adb_moduls" ]; then
-      mkdir -p "'$path_modun2'${uri_adb_moduls%/*}"
-      cp -rf "$PTAD/$vcc" "'$path_modun2'$uri_adb_moduls"
-      echo "'$lang_save_at''$path_modun2'$uri_adb_moduls"
+  if [ "$uri_adb_moduls" ]; then
+    mkdir -p "'$path_modun2'${uri_adb_moduls%/*}"
+    cp -rf "$uri_file_modun" "'$path_modun2'$uri_adb_moduls"
+    echo "'$lang_save_at''$path_modun2'$uri_adb_moduls"
+    echo
+  else
+    echo "'$lang_searching'"
+    echo
+    link_find_file="$(find -L /system -name "${uri_file_modun##*/}" -type f -print -quit)"
+    if [ "$link_find_file" ]; then
+      mkdir -p "'$path_modun2'${link_find_file%/*}"
+      cp -rf "$uri_file_modun" "'$path_modun2'$link_find_file"
+      echo "'$lang_save_at''$path_modun2'$link_find_file"
       echo
     else
-      echo "'$lang_searching'"
-      echo
-      link_find_file="$(find -L /system -name "$vcc" -type f -print -quit)"
-      if [ "$link_find_file" ]; then
-        mkdir -p "'$path_modun2'${link_find_file%/*}"
-        cp -rf "$PTAD/$vcc" "'$path_modun2'$link_find_file"
-        echo "'$lang_save_at''$path_modun2'$link_find_file"
-        echo
-      else
-        echo "'$lang_not_found'\\$vcc'$lang_input_notice'"
-      fi
+      echo "'$lang_not_found'${uri_file_modun##*/}'$lang_input_notice'"
     fi
-  done
+  fi
   echo "id=Tool-Tree
   name=Tool-Tree Module
   version=1.0
