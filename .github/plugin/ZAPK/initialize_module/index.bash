@@ -89,10 +89,12 @@ echo '
     options-sh = "[ -d '$path_modun2' ] && find '$path_modun2'/system -type f -printf '"'%p|%f\\n'"'"
     required = "required"
     multiple = "true"
+
   [[group]]
   [[group.switch]]
   title = "@string/remove_text Module"
   get = "[ -f '$path_modun'/remove ] && echo 1"
+  reload = "true"
   set = """
   if [ "$state" == 1 ]; then
   [ -d '$path_modun' ] && touch '$path_modun'/remove
