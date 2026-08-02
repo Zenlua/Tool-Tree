@@ -2150,24 +2150,6 @@ Homeadd() {
     """
     '
 
-    # Xác nhận có show toast
-    if [ -f "$dirvad/download.prop" ]; then
-      noti_texts='
-      [[group.page.options]]
-      title = "'$noti_update'"
-      type = "checkbox"
-      silent = true
-      box = "glog show_toast_'$idadd' 1"
-      script = """
-        if [ "$(glog show_toast_'$idadd')" == 1 ]; then
-        slog show_toast_'$idadd' 0
-        else
-        slog show_toast_'$idadd' 1
-        fi
-      """ '
-    fi
-
-
   echo '
   [[group]]
   [[group.page]]
@@ -2180,7 +2162,6 @@ Homeadd() {
   desc = "'$desc_vb'"
   icon = "'$icon_vb'"
 
-  '"$noti_texts"'
   '"$google_trankk"'
   [[group.page.options]]
   title = "'$pin_text_add'"
@@ -2202,7 +2183,7 @@ Homeadd() {
 Vips() {
   # Xoá giá trị cũ
   code_option=''; farooot=''; index_adds=''; atextx='';
-  google_trankk=''; shortcut=''; beforesh=''; noti_texts='';
+  google_trankk=''; shortcut=''; beforesh='';
   
   # Chọn bên
   if [ "$PATHADD" == "$AON" ]; then

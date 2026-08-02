@@ -331,7 +331,7 @@ class SplashActivity : AppCompatActivity() {
                 }
                 rows.add(log)
             }
-            binding.startStateText.text = rows.joinToString("\n", if (ignored) "…......…\n" else "")
+            binding.startStateText.text = rows.joinToString("\n", if (ignored) "……………\n" else "")
         }
     }
 }
