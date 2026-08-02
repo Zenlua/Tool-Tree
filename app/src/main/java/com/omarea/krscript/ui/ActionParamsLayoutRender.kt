@@ -220,8 +220,20 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) = evaluateDependencies()
                 override fun onNothingSelected(p: AdapterView<*>?) {}
             }
-            is CheckBox -> target.setOnCheckedChangeListener { _, _ -> evaluateDependencies() }
-            is Switch -> target.setOnCheckedChangeListener { _, _ -> evaluateDependencies() }
+            is CheckBox -> {
+                updateDescOnToggle(info, target.isChecked)
+                target.setOnCheckedChangeListener { _, isChecked ->
+                    updateDescOnToggle(info, isChecked)
+                    evaluateDependencies()
+                }
+            }
+            is Switch -> {
+                updateDescOnToggle(info, target.isChecked)
+                target.setOnCheckedChangeListener { _, isChecked ->
+                    updateDescOnToggle(info, isChecked)
+                    evaluateDependencies()
+                }
+            }
             is EditText -> target.addTextChangedListener(object : android.text.TextWatcher {
                 override fun afterTextChanged(s: android.text.Editable?) = evaluateDependencies()
                 override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
@@ -232,6 +244,25 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 override fun onStartTrackingTouch(sb: SeekBar?) {}
                 override fun onStopTrackingTouch(sb: SeekBar?) {}
             })
+        }
+    }
+
+    // ========== TÍNH NĂNG MỚI: desc-on - đổi ghi chú khi checkbox/switch được bật ==========
+    // Khi param có khai báo desc-on="..." (xem ActionParamInfo.descOn), phần ghi chú
+    // (kr_param_desc) sẽ tự đổi qua lại giữa desc-on (lúc bật) và desc gốc (lúc tắt) ngay
+    // khi người dùng gạt/tích chọn - không cần chạy shell hay reload lại dialog. Được gọi
+    // cả lúc khởi tạo (để đồng bộ đúng trạng thái ban đầu) lẫn mỗi khi checked thay đổi.
+    private fun updateDescOnToggle(info: ActionParamInfo, isChecked: Boolean) {
+        if (info.descOn.isNullOrEmpty()) return
+        val name = info.name ?: return
+        val row = rowViews[name] ?: return
+        val descView = row.findViewById<TextView>(R.id.kr_param_desc)
+        val text = if (isChecked) info.descOn else info.desc
+        if (!text.isNullOrEmpty()) {
+            descView.text = text
+            descView.visibility = View.VISIBLE
+        } else {
+            descView.visibility = View.GONE
         }
     }
 

@@ -547,6 +547,9 @@ class PageConfigReader {
         tomlGet(table, "title-sh")?.let { p.titleSh = it }
         tomlGet(table, "desc")?.let { p.desc = it }
         tomlGet(table, "desc-sh")?.let { p.descSh = it }
+        // Ghi chú riêng khi checkbox/switch đang bật (xem ActionParamInfo.descOn)
+        tomlGet(table, "desc-on", "on-desc", "desc-checked")?.let { p.descOn = it }
+        tomlGet(table, "desc-on-sh", "on-desc-sh", "desc-checked-sh")?.let { p.descOnSh = it }
         tomlGet(table, "value")?.let { p.value = it }
         tomlGet(table, "type")?.let { p.type = it.lowercase(getDefault()).trim() }
         tomlGet(table, "suffix")?.let {

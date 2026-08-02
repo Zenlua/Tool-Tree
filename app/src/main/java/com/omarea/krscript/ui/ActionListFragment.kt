@@ -363,6 +363,9 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                     if (!param.descSh.isNullOrEmpty()) {
                         scripts["desc:$name"] = param.descSh!!
                     }
+                    if (!param.descOnSh.isNullOrEmpty()) {
+                        scripts["desc-on:$name"] = param.descOnSh!!
+                    }
                     if (!param.placeholderSh.isNullOrEmpty()) {
                         scripts["placeholder:$name"] = param.placeholderSh!!
                     }
@@ -384,6 +387,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                     shellResults["title:$name"]?.let { param.title = it }
                     shellResults["label:$name"]?.let { param.label = it }
                     shellResults["desc:$name"]?.let { param.desc = it }
+                    shellResults["desc-on:$name"]?.let { param.descOn = it }
                     shellResults["placeholder:$name"]?.let { param.placeholder = it }
                     shellResults["readonly:$name"]?.let { param.readonly = it.trim() == "1" }
                 }

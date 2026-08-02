@@ -20,6 +20,17 @@ class ActionParamInfo {
     // Kịch bản shell sinh desc động
     var descSh: String? = null
 
+    // ========== TÍNH NĂNG MỚI: GHI CHÚ RIÊNG KHI CHECKBOX/SWITCH ĐANG BẬT ==========
+    // Chỉ áp dụng cho type="bool"/"checkbox"/"switch". Khi có khai báo, phần ghi chú
+    // (kr_param_desc) sẽ tự động đổi thành nội dung này ngay khi người dùng bật (check/on),
+    // và tự đổi lại về `desc` gốc khi tắt (off) - không cần chờ chạy shell hay reload dialog.
+    // Ví dụ: desc="Tắt để giữ tần số CPU mặc định" desc-on="Đã bật: CPU sẽ bị khoá ở mức tối đa"
+    var descOn: String? = null
+    // Kịch bản shell sinh desc-on động (nếu có, được gộp chạy CÙNG 1 LẦN với
+    // value-sh/desc-sh/... khi mở dialog action - KHÔNG chạy lại mỗi lần gạt/tích chọn,
+    // để tránh tái tạo lại tình trạng chậm do gọi shell liên tục)
+    var descOnSh: String? = null
+
     // 值
     var value: String? = null
     var valueShell: String? = null
