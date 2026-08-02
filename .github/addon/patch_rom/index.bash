@@ -501,6 +501,7 @@ home() {
   warn = "'$add_another_app_text_2', '$add_another_app_text_3'"
   script = """
     '$pathsh' online_app
+    echo
     checktime
   """
 
