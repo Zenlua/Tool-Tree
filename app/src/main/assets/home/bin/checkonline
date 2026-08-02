@@ -2,6 +2,7 @@
 
 check_network() {
     curl -s --connect-timeout 2 http://clients3.google.com/generate_204 &>/dev/null && return 0
+    wget -q --no-check-certificate --spider -T 2 http://clients3.google.com/generate_204 &>/dev/null && return 0
     ping -c 1 -w 2 1.1.1.1 &>/dev/null && return 0
     ping -c 1 -w 2 8.8.8.8 &>/dev/null && return 0
     timeout 2 bash -c 'cat < /dev/null > /dev/tcp/1.1.1.1/53' &>/dev/null && return 0
