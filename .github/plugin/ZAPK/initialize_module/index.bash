@@ -1,8 +1,5 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
-path_modun="/data/adb/modules/Tool-Tree"
-path_modun2="/data/adb/modules_update/Tool-Tree"
-[ -d $path_modun ] && visisj=1 || visisj=0
 
 home() {
 echo '[[group]]
@@ -104,6 +101,10 @@ MPAT="${0%/*}"
 
 # Ngôn ngữ & Google dịch
 source trans_add "$MPAT"
+
+path_modun="/data/adb/modules/Tool-Tree"
+path_modun2="/data/adb/modules_update/Tool-Tree"
+[ -d $path_modun ] && visisj=1 || visisj=0
 
 # index
 "$@"

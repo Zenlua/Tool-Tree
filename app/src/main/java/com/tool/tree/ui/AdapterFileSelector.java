@@ -1,6 +1,7 @@
 package com.tool.tree.ui;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -25,7 +26,7 @@ public class AdapterFileSelector extends BaseAdapter {
     private Runnable fileSelected;
     private File currentDir;
     private File selectedFile;
-    private final Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private ProgressBarDialog progressBarDialog;
     // Danh sách đuôi file được phép (đã có dấu chấm ở đầu, chữ thường), null/rỗng = không giới hạn
     private String[] extensions;
@@ -114,14 +115,20 @@ public class AdapterFileSelector extends BaseAdapter {
     private void loadDir(final File dir) {
         // progressBarDialog.showDialog("Loading...");
         new Thread(() -> {
+            // Tính toán trên background thread, nhưng KHÔNG ghi vào field của adapter ở đây.
+            // Mọi field (fileArray/currentDir/hasParent) chỉ được gán trên UI thread, ngay
+            // trước khi gọi notifyDataSetChanged(), để tránh khoảng hở khiến ListView layout
+            // với dữ liệu đã đổi nhưng chưa được notify (-> IllegalStateException).
+            final boolean newHasParent;
             File parent = dir.getParentFile();
             if (parent != null) {
                 String parentPath = parent.getAbsolutePath();
-                hasParent = parent.exists() && parent.canRead() && (leaveRootDir || !(rootDir.startsWith(parentPath) && rootDir.length() > parentPath.length()));
+                newHasParent = parent.exists() && parent.canRead() && (leaveRootDir || !(rootDir.startsWith(parentPath) && rootDir.length() > parentPath.length()));
             } else {
-                hasParent = false;
+                newHasParent = false;
             }
 
+            File[] newFileArray = null;
             if (dir.exists() && dir.canRead()) {
                 File[] files = dir.listFiles(new FileFilter() {
                     @Override
@@ -134,26 +141,36 @@ public class AdapterFileSelector extends BaseAdapter {
                     }
                 });
 
-                // 文件排序
-                for (int i = 0; i < files.length; i++) {
-                    for (int j = i + 1; j < files.length; j++) {
-                        if ((files[j].isDirectory() && files[i].isFile())) {
-                            File t = files[i];
-                            files[i] = files[j];
-                            files[j] = t;
-                        } else if (files[j].isDirectory() == files[i].isDirectory() && (files[j].getName().toLowerCase().compareTo(files[i].getName().toLowerCase()) < 0)) {
-                            File t = files[i];
-                            files[i] = files[j];
-                            files[j] = t;
+                if (files != null) {
+                    // 文件排序
+                    for (int i = 0; i < files.length; i++) {
+                        for (int j = i + 1; j < files.length; j++) {
+                            if ((files[j].isDirectory() && files[i].isFile())) {
+                                File t = files[i];
+                                files[i] = files[j];
+                                files[j] = t;
+                            } else if (files[j].isDirectory() == files[i].isDirectory() && (files[j].getName().toLowerCase().compareTo(files[i].getName().toLowerCase()) < 0)) {
+                                File t = files[i];
+                                files[i] = files[j];
+                                files[j] = t;
+                            }
                         }
                     }
                 }
-                fileArray = files;
+                newFileArray = files;
             }
-            currentDir = dir;
+
+            final File[] finalFileArray = newFileArray;
             handler.post(new Runnable() {
                 @Override
                 public void run() {
+                    // Gán dữ liệu và notify trong cùng một lượt trên UI thread, không có
+                    // background thread nào chen vào giữa hai bước này.
+                    hasParent = newHasParent;
+                    if (finalFileArray != null) {
+                        fileArray = finalFileArray;
+                    }
+                    currentDir = dir;
                     notifyDataSetChanged();
                     progressBarDialog.hideDialog();
                     if (selectionChangedListener != null) {
