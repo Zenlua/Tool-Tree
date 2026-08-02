@@ -2053,19 +2053,19 @@ Utiliapk() {
 Addon() {
 
 Download() {
-  if [ "$(gprop url)" ]; then
+  if [ "$url_vb" ]; then
   echo '[[group]]
   [[group.action]]
   '$farooot'
   warn = "'$use_network_text'"
-  icon = "'`urladd icon`'"
+  icon = "'$icon_vb'"
   reload = true
-  title = "'$(gprop name)'"
-  desc = "'$(gprop version)' '$(gprop author)$description_text'"
+  title = "'$name_vb'"
+  desc = "'$desc_vb'"
   script = """
     echo "'$update_text_3'"
     echo
-    installadd '$(gprop url)' "'${dirvad%/*}'"
+    installadd '$url_vb' "'${dirvad%/*}'"
   """'
   fi
 }
@@ -2075,9 +2075,9 @@ Features() {
   echo '[[group]]
   [[group.switch]]
   warn = "'$atextx'"
-  title = "'$(gprop name)'"
-  desc = "'$(gprop version)' '$(gprop author)$description_text'"
-  icon = "'`urladd icon`'"
+  title = "'$name_vb'"
+  desc = "'$desc_vb'"
+  icon = "'$icon_vb'"
   shell = "hidden"
   get = "cat '$dirvad'/'$1'"
   set = "echo \"$state\" > '$dirvad'/'$1'" '
@@ -2106,7 +2106,7 @@ Homeadd() {
   fi
 
   # Load trang
-  if [ "$(gprop name)" ]; then
+  if [ "$name_vb" ]; then
 
     # Xác nhận có google dịch
     google_trankk='
@@ -2164,9 +2164,6 @@ Homeadd() {
       """ '
     fi
 
-    # phát hiện tính năng
-    [ "$(gprop summary)" ] && summss='summary = "'$(gprop summary)'" '
-    [ "$(gprop shortcut)" == "true" ] && shortcut='key = "'$idadd'" '
 
   echo '
   [[group]]
@@ -2176,9 +2173,9 @@ Homeadd() {
   '$pagesh'
   '$summss'
   '$beforesh'
-  title = "'$(gprop name)'"
-  desc = "'$(gprop version) $(gprop author)$description_text'"
-  icon = "'`urladd icon`'"
+  title = "'$name_vb'"
+  desc = "'$desc_vb'"
+  icon = "'$icon_vb'"
 
   '"$noti_texts"'
   '"$google_trankk"'
@@ -2202,7 +2199,7 @@ Homeadd() {
 Vips() {
   # Xoá giá trị cũ
   code_option=''; farooot=''; index_adds=''; atextx=''; noti_texts='';
-  summss=''; google_trankk=''; shortcut=''; description_text=''; beforesh='';
+  google_trankk=''; shortcut=''; beforesh='';
   
   # Chọn bên
   if [ "$PATHADD" == "$AON" ]; then
@@ -2221,13 +2218,29 @@ Vips() {
     farooot='lock = "[ $ROT == 0 ] && echo \"'$root_warning_text'\" || echo 0"'
   fi
 
+  # tên và desc
+  name_vb="$(gprop name)"
+  desc_vb="$(gprop version) $(gprop author)$description_text"
+  url_vb="$(gprop url)"
+  icon_vb="$(urladd icon)"
+
+  # phát hiện tính năng
+  summss="$(gprop summary)"
+  [ "$summss" ] && summss='summary = "'$summss'" '
+  [ "$(gprop shortcut)" == "true" ] && shortcut='key = "'$idadd'" '
+
   # Desc ngôn ngữ
-  if [ "$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')" ]; then
-    description_text=" | $(gprop 'description_'$LANGUAGE'_'$COUNTRY'')"
-  elif [ "$(gprop 'description_'$LANGUAGE'')" ]; then
-    description_text=" | $(gprop description_$LANGUAGE)"
+  description_text="$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')"
+  if [ "$description_text" ]; then
+    description_text=" | $description_text"
   else
-    [ "$(gprop description)" ] && description_text=" | $(gprop description)"
+    description_text="$(gprop 'description_'$LANGUAGE'')"
+    if [ "$description_text" ]; then
+      description_text=" | $description_text"
+    else
+      description_text="$(gprop description)"
+      [ "$description_text" ] && description_text=" | $description_text"
+    fi
   fi
 
   # Load trang tính năng
