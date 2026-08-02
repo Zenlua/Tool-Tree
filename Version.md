@@ -2,6 +2,10 @@
 
 + **[Download](https://github.com/Zenlua/Tool-Tree/releases/latest)**
 
+**Version: 1.5.6 (2-8-2026)**
+
++ Optimize application tab loading speed.
+
 **Version: 1.5.5 (31-7-2026)**
 
 + Added language translation feature to genmini.
