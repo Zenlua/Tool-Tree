@@ -11,9 +11,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 public class SimpleShellWatcher {
-    // Số ký tự tối đa đọc mỗi lần cho 1 stream trong 1 vòng lặp, để không "nuốt" hết dữ liệu
-    // đang chờ của 1 stream (vd stdout) trước khi kiểm tra stream còn lại (stderr), giúp giữ
-    // đúng thứ tự xen kẽ giữa 2 luồng.
+    // Số ký tự tối đa đọc mỗi lần gọi read() cho 1 stream. Với những dòng dài hơn giá trị này,
+    // vòng lặp bên dưới sẽ tự động gọi read() nhiều lần liên tiếp (miễn ready() còn true) để
+    // đọc CẠN dữ liệu hiện có trước khi chuyển qua stream còn lại - xem giải thích trong
+    // readStreams().
     private static final int READ_CHUNK_SIZE = 512;
     // Khi cả 2 stream đều chưa có dữ liệu sẵn để đọc ngay, nghỉ 1 khoảng ngắn trước khi kiểm
     // tra lại, tránh busy-loop ngốn CPU. Đây cũng chính là chu kỳ "xả" (flush) phần output
@@ -35,6 +36,19 @@ public class SimpleShellWatcher {
      * Vẫn giữ nguyên cách đọc từng ký tự và giữ nguyên '\r'/'\n' (không dùng readLine()) để
      * không phá vỡ cơ chế ghi đè dòng progress dùng "\r" đã fix trước đó.
      *
+     * LƯU Ý VỀ THỨ TỰ KHI 1 DÒNG DÀI HƠN READ_CHUNK_SIZE: với 1 dòng echo dài (vd > 512 ký
+     * tự), toàn bộ dữ liệu của nó thường đã nằm sẵn nguyên khối trong pipe ngay khi shell ghi
+     * xong (echo ghi 1 lần, đồng bộ). Nếu mỗi vòng lặp chỉ gọi read() đúng 1 lần (tối đa
+     * READ_CHUNK_SIZE ký tự) rồi lập tức chuyển qua kiểm tra stream còn lại, thì 1 dòng ngắn ở
+     * stream kia (được ghi SAU nhưng đọc/gửi xong chỉ trong 1 lần vì đủ ngắn) có thể "vượt mặt"
+     * và hiển thị TRƯỚC khi dòng dài kia được gửi hết lên UI - dù dòng dài được ghi trước. Vì
+     * vậy, khi 1 stream vẫn còn ready() sau khi đọc, nghĩa là dữ liệu đó chắc chắn đã có sẵn từ
+     * trước, ta đọc cạn nó (nhiều lần read() liên tiếp) trước khi nhường lượt cho stream kia,
+     * để thứ tự message gửi lên UI khớp với thứ tự ghi thực tế của shell. Đánh đổi: nếu 1 tiến
+     * trình ghi liên tục không ngừng vào 1 stream (vd vòng lặp in log tốc độ cao), stream còn
+     * lại có thể phải đợi lâu hơn bình thường mới được đọc - chấp nhận được vì đây là trường
+     * hợp hiếm trong các script thực tế của app.
+     *
      * @param inputStream      stdout của process
      * @param errorStream      stderr của process
      * @param shellHandlerBase handler để gửi message
@@ -55,12 +69,23 @@ public class SimpleShellWatcher {
             while (!doneOut || !doneErr) {
                 boolean progressed = false;
 
+                // Đọc CẠN hết dữ liệu đang sẵn có (ready()) của stdout trước khi chuyển qua
+                // kiểm tra stderr, thay vì chỉ đọc 1 lần read() (tối đa READ_CHUNK_SIZE) rồi
+                // lập tức nhường lượt. Lý do: nếu ready() vẫn còn true nghĩa là dữ liệu đó chắc
+                // chắn đã được process ghi vào pipe từ TRƯỚC đó rồi (vd 1 dòng echo dài ghi 1
+                // lần), nên phải xử lý dứt điểm nó trước khi xét tới dữ liệu ở stream kia -
+                // đúng thứ tự ghi thực tế của shell. Trước đây, việc chỉ đọc 1 chunk rồi bỏ dở
+                // để đi đọc stderr là nguyên nhân khiến 1 dòng lỗi ngắn (echo ... >&2, đọc/gửi
+                // xong trong 1 lần vì đủ ngắn) "vượt mặt" hiển thị trước 1 dòng stdout dài hơn
+                // 512 ký tự dù dòng dài được ghi trước - vì dòng dài cần NHIỀU vòng lặp mới đọc
+                // hết và mới gặp '\n' để gửi message lên UI.
                 if (!doneOut) {
                     try {
-                        if (isrOut.ready()) {
+                        while (isrOut.ready()) {
                             int n = isrOut.read(chunk, 0, chunk.length);
                             if (n == -1) {
                                 doneOut = true;
+                                break;
                             } else {
                                 appendAndFlushTerminated(chunk, n, bufOut, ShellHandlerBase.EVENT_REDE, shellHandlerBase, shellTranslation);
                                 progressed = true;
@@ -73,10 +98,11 @@ public class SimpleShellWatcher {
 
                 if (!doneErr) {
                     try {
-                        if (isrErr.ready()) {
+                        while (isrErr.ready()) {
                             int n = isrErr.read(chunk, 0, chunk.length);
                             if (n == -1) {
                                 doneErr = true;
+                                break;
                             } else {
                                 appendAndFlushTerminated(chunk, n, bufErr, ShellHandlerBase.EVENT_READ_ERROR, shellHandlerBase, shellTranslation);
                                 progressed = true;
