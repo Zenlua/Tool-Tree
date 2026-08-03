@@ -506,19 +506,21 @@ Info() {
   config-sh = "'$ETC'/tool-tree.bash Update"
   handler = """
     if [ "$menu_id" == "share" ]; then
-    echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
+      echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
+    elif [ "$menu_id" == "data" ]; then
+      slog boot_ver_code 1
     elif [ "$menu_id" == "beta" ]; then
-    echo "'$update_text_3'"
-    echo
-    if [ -f "$TMP/Tool-Tree.apk" ]; then
-    openfile "$TMP/Tool-Tree.apk"
-    exit
-    else
-    taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
-    openfile "$TMP/Tool-Tree.apk"
-    echo
-    echo "'$save_text' $TMP/Tool-Tree.apk"
-    fi
+      echo "'$update_text_3'"
+      echo
+      if [ -f "$TMP/Tool-Tree.apk" ]; then
+        openfile "$TMP/Tool-Tree.apk"
+        exit
+        else
+        taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
+        openfile "$TMP/Tool-Tree.apk"
+        echo
+        echo "'$save_text' $TMP/Tool-Tree.apk"
+      fi
     fi
   """
 
@@ -546,6 +548,13 @@ Info() {
     key = "beta"
     type = "default"
     title = "'$download_text' beta"
+    
+    [[group.page.options]]
+    key = "data"
+    auto-restart = true
+    silent = true
+    type = "default"
+    title = "'$download_text' data"
     
     [[group.page.options]]
     type = "refresh"
