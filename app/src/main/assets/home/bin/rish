@@ -1,4 +1,5 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
+
 DEX="$ETC"/rish_shizuku.dex
 
 if [ ! -f "$DEX" ]; then
@@ -6,22 +7,14 @@ if [ ! -f "$DEX" ]; then
   exit 1
 fi
 
-if [ $(getprop ro.build.version.sdk) -ge 34 ]; then
-  if [ -w $DEX ]; then
-    chmod 400 $DEX
-  fi
-  if [ -w $DEX ]; then
-    echo "Cannot remove the write permission of $DEX."
-    echo "You can copy to file to terminal app's private directory (/data/data/<package>, so that remove write permission is possible"
-    exit 1
-  fi
-fi
+export RISH_APPLICATION_ID="com.tool.tree"
+[ $API -ge 34 ] && chmod 400 $DEX
 
-# Replace "PKG" with the application id of your terminal app
-[ -z "$RISH_APPLICATION_ID" ] && export RISH_APPLICATION_ID="com.tool.tree"
 if [ "$1" == '-c' ] && [ "$2" ]; then
-/system/bin/app_process -Djava.class.path="$DEX" /system/bin --nice-name=rish rikka.shizuku.shell.ShizukuShellLoader "$@" &
+  /system/bin/app_process -Djava.class.path="$DEX" /system/bin \
+  --nice-name=rish rikka.shizuku.shell.ShizukuShellLoader "$@" &
 wait
 else
-/system/bin/app_process -Djava.class.path="$DEX" /system/bin --nice-name=rish rikka.shizuku.shell.ShizukuShellLoader "$@"
+  /system/bin/app_process -Djava.class.path="$DEX" /system/bin \
+  --nice-name=rish rikka.shizuku.shell.ShizukuShellLoader "$@"
 fi

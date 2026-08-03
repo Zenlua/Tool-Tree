@@ -2,7 +2,6 @@
 # Kakathic
 
 unset shell_progres
-
 # Dọn dẹp tmp
 find "$TMPDIR" -maxdepth 1 ! -path "$TMPDIR" ! -name '*.log' -exec rm -rf {} + &
 rm -fr $TEMP/documents $TEMP/WebView &
@@ -26,6 +25,27 @@ fi
 ) &
 
 (
+# Nếu được cấp quyền rish
+rish -c "
+    [ -e /data/local/TOOL ] || ln -sf '$APK' /data/local/TOOL
+    [ -e /data/local/TREE ] || ln -sf '$SDH' /data/local/TREE
+    dumpsys deviceidle whitelist +$PACKAGE_NAME &>/dev/null
+    am set-inactive --user 0 $PACKAGE_NAME false &>/dev/null
+    am set-standby-bucket $PACKAGE_NAME active &>/dev/null
+    am set-bg-restriction-level --user 0 $PACKAGE_NAME unrestricted
+    am unfreeze --sticky $PACKAGE_NAME &>/dev/null
+    cmd appops set $PACKAGE_NAME RUN_IN_BACKGROUND allow
+    cmd appops set $PACKAGE_NAME RUN_ANY_IN_BACKGROUND allow
+    cmd appops set $PACKAGE_NAME WAKE_LOCK allow
+    cmd appops set $PACKAGE_NAME 10022 allow
+    cmd appops set $PACKAGE_NAME GET_USAGE_STATS allow
+    [ "$API" -ge 30 ] && cmd appops set $PACKAGE_NAME QUERY_ALL_PACKAGES allow
+    cmd appops set $PACKAGE_NAME 10017 allow
+    search_image &>/dev/null
+"
+) &
+
+(
 # Cấp quyền tự động nếu đã root
 if [ "$ROT" == 1 ]; then
     chown -R 0:0 $HOME/.cache
@@ -37,7 +57,7 @@ if [ "$ROT" == 1 ]; then
     dumpsys deviceidle whitelist +$PACKAGE_NAME &>/dev/null
     am set-inactive --user 0 $PACKAGE_NAME false &>/dev/null
     am set-standby-bucket $PACKAGE_NAME active &>/dev/null
-    am set-bg-restriction-level --user 0 $PACKAGE_NAME unrestricted &>/dev/null
+    am set-bg-restriction-level --user 0 $PACKAGE_NAME unrestricted
     am unfreeze --sticky $PACKAGE_NAME &>/dev/null
     cmd appops set $PACKAGE_NAME RUN_IN_BACKGROUND allow
     cmd appops set $PACKAGE_NAME RUN_ANY_IN_BACKGROUND allow
