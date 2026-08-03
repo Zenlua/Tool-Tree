@@ -1,3 +1,4 @@
+#!/data/data/com.tool.tree/files/home/termux/bin/python
 import sys
 import os
 import struct
