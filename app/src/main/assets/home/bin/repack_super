@@ -100,5 +100,5 @@ lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.txt
 if [ $? == 0 ]; then
 echo -e "\n$supers_text_2"
 else
-killtree "\n$supers_text_1\n\n$(cat $TMP/super_log.txt 2>/dev/null)" "$INPUT/out/super.img"
+killtree "\n$supers_text_1\n$(cat $TMP/super_log.txt 2>/dev/null)" "$INPUT/out/super.img"
 fi
