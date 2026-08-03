@@ -6,7 +6,7 @@ MPAT="${0%/*}"
   type = "default"
   title = "@string/update_text"
   script = """
-  '$MPAT'/index.bash
+  '$MPAT'/index.bash update_addon
   """
   '
   
