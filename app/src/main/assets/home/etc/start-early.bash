@@ -77,6 +77,9 @@ fi
 ) &
 
 (
+# Dọn bộ đếm
+rm -fr $AON/*/check $AOK/*/check
+
 # Khởi động các file shell ở add-on
 set_permis $AON/*/* $AOK/*/* &>/dev/null
 for vadd in $AON/* $AOK/*; do

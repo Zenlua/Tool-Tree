@@ -4,8 +4,7 @@ show_all() {
   showbanner -y "$1" -t "$name_add" -m "$2"
 }
 
-check_num="$(glog "check_addon_open_${1##*/}" 2)"
-if [ "$check_num" -ge 2 ]; then
+if [ ! -f "$1/check" ]; then
   if checkonline; then
     source language 2>/dev/null
     name_add="$(gprop name $1/download.prop)"
@@ -18,7 +17,5 @@ if [ "$check_num" -ge 2 ]; then
   else
     echo "Network error $name_add"
   fi
-  slog "check_addon_open_${1##*/}" 0
-else
-  slog "check_addon_open_${1##*/}" "$((check_num + 1))"
+  echo > "$1/check"
 fi
