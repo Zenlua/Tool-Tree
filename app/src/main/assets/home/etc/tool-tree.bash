@@ -551,10 +551,10 @@ Info() {
     
     [[group.page.options]]
     key = "data"
-    auto-restart = true
+    auto-kill = true
     silent = true
     type = "default"
-    title = "'$download_text'"
+    title = "'$reset_data_text'"
     
     [[group.page.options]]
     type = "refresh"
