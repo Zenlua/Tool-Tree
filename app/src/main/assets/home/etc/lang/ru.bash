@@ -53,6 +53,7 @@ input_folder_text="Входная папка"
 path_text="Путь"
 build_time_text_2="Текущий:"
 api_key_text="API-ключ"
+reset_data_text="Сбросить данные"
 
 # Home
 home_text_1="Информация и функции приложения"
@@ -292,6 +293,8 @@ list_partition_text="Список декомпилированных разде�
 xoaoat_text_1="Очистка элементов oat и odex"
 open_activity_text="Открыть папку:"
 patch_text_fscontex="Исправить fs_config и fs_contexts"
+patch_text_fsdesc="Автоматически добавить необходимые разрешения для нового элемента."
+
 config_text_1="Конвертировать существующий проект"
 config_text_2="Создать новый проект или выбрать папку"
 

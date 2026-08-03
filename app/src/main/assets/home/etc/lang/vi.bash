@@ -54,6 +54,7 @@ path_text="Đường dẫn"
 build_time_text_2="Hiện tại:"
 noti_update="Hiện toast cập nhật"
 api_key_text="Mã khóa API"
+reset_data_text="Cài lại data"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"

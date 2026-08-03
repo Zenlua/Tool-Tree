@@ -554,7 +554,7 @@ Info() {
     auto-restart = true
     silent = true
     type = "default"
-    title = "'$download_text' data"
+    title = "'$download_text'"
     
     [[group.page.options]]
     type = "refresh"

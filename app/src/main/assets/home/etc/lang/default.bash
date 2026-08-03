@@ -54,6 +54,7 @@ path_text="Path"
 build_time_text_2="Current:"
 noti_update="Toast update"
 api_key_text="API Key"
+reset_data_text="Reinstall data"
 
 # Home
 home_text_1="App information and features"
