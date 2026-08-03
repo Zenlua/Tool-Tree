@@ -93,7 +93,7 @@ fi
 [ "$DANGIMG" == "sparse" ] && argvs+="--sparse "
 
 mkdir -p out
-echo "Free: $(((super_sizek - p_size) / 1024 / 1024)) MB"
+echo "Free: $(((super_sizek - p_total) / 1024 / 1024)) MB"
 echo
 echo "lpmake ${argvs}-F --output $INPUT/out/super.img" | sed -z 's| --|\n--|g'
 lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.txt
