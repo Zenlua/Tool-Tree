@@ -39,7 +39,7 @@ title = "'$google_text'"
     label = "'$select_text'"
     multiple = "true"
     options-sh = """
-    findfile 3 $PTSD | sed "/^system./d"
+    findfile 3 $PTSD | sed "/^system\\./d"
     """
 [[group]]
   [[group.action]]
