@@ -11,5 +11,11 @@ gofile_text_2="Fájlfeltöltési hiba!"
 gofile_text_3="Letöltési link:"
 gofile_text_5="A fájl nem létezik!"
 gofile_text_6="Regisztrálnod kell egy fiókot, és létre kell hoznod egy tokent az API-szekcióban: pixeldrain.com"
+elif [ "$LANGUAGE-$COUNTRY" == "es-ES" ]; then
+gofile_text_1="Subiendo archivo al servidor:"
+gofile_text_2="¡Error al subir el archivo!"
+gofile_text_3="Enlace de descarga:"
+gofile_text_5="¡El archivo no existe!"
+gofile_text_6="Debes registrar una cuenta y crear un token en la sección de API en: pixeldrain.com"
 fi
 

@@ -39,4 +39,24 @@ check_ufs_text_2="Rögzítési sebesség mérése..."
 transai_text_1="Nagy fájlok fordítása"
 transai_text_2="Nagy szöveges fájlok és kódok fordításának támogatása"
 transai_text_3="Mentés ide:"
+elif [ "$LANGUAGE-$COUNTRY" == "es-ES" ]; then
+fs_text_1="Ejecutar fstrim para limpiar los bloques de memoria"
+fs_text_2="Limpiar bloque"
+fs_text_3="Requiere permisos de Root"
+fs_text_4="Limpiar los bloques"
+
+ufs_text_1="Estado de vida útil (EOL):"
+ufs_text_2="Desconocido"
+ufs_text_3="Nivel de desgaste:"
+ufs_text_4="Vida útil superada"
+ufs_text_5="Advertencia"
+ufs_text_6="Normal"
+
+check_ufs_text="Comprobar UFS"
+check_ufs_text_1="Midiendo velocidad de lectura..."
+check_ufs_text_2="Midiendo velocidad de escritura..."
+
+transai_text_1="Traducir archivo grande"
+transai_text_2="Admite la traducción de archivos grandes de texto y código"
+transai_text_3="Guardar en:"
 fi

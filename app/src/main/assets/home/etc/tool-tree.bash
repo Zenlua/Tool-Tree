@@ -585,7 +585,9 @@ Info() {
   title = "'$permis_text_2'"
   desc = "'$permis_text_5'"
   icon = "'`urlpng language`'"
-  option-sh = "echo -e \"|'$default_text'\nauto|'$google_translate_text'\nai|Gemini\nen-US|English\nvi-VN|Việt nam\nru-RU|Русский\nzh-CN|简体中文\nhu-HU|Hungarian\nid-ID|Indonesia\""
+  option-sh = """
+  echo -e "|'$default_text'\nauto|'$google_translate_text'\nai|Gemini\nen|English\nvi|Việt nam\nru|Русский\nzh|简体中文\nhu|Hungarian\nid|Indonesia\nes|Spanish"
+  """
   get = "glog language_kkts"
   set = """
     if [ "$state" == "auto" ]; then
