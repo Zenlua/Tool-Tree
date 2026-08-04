@@ -1,11 +1,17 @@
 package com.omarea.krscript.ui
 
 import android.app.Dialog
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Message
@@ -32,6 +38,7 @@ import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.RemoteViews
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -127,7 +134,7 @@ class DialogLogFragment : DialogFragment() {
 
         setupClickListeners(
             onForceStop = { forceStopRunnable },
-            nodeInterruptable = nodeInfo.interruptable
+            nodeInfo = nodeInfo
         )
 
         val handler = MyShellHandler(
@@ -181,7 +188,9 @@ class DialogLogFragment : DialogFragment() {
         return handler
     }
 
-    private fun setupClickListeners(onForceStop: () -> Runnable?, nodeInterruptable: Boolean) {
+    private fun setupClickListeners(onForceStop: () -> Runnable?, nodeInfo: RunnableNode) {
+        val nodeInterruptable = nodeInfo.interruptable
+
         binding.btnWrap.setOnClickListener {
             wrapEnabled = !wrapEnabled
             applyWrapState()
@@ -190,6 +199,10 @@ class DialogLogFragment : DialogFragment() {
 
         binding.btnHide.setOnClickListener {
             uiVisible = false
+            // Đẩy toàn bộ log đã có + log tiếp theo (đến khi script kết thúc) lên thông báo
+            // tiến trình hệ thống, giống cách BgTaskThread.ServiceShellHandler hiển thị, để
+            // người dùng vẫn theo dõi được tiến trình dù đã đóng dialog.
+            currentHandler?.enableNotificationMode(nodeInfo)
             offScreen()
             closeView()
         }
@@ -387,8 +400,178 @@ class DialogLogFragment : DialogFragment() {
 
         private val pendingUiUpdate = AtomicBoolean(false)
 
+        // === Notification mode (kích hoạt khi ấn btnHide) ===
+        // Khi bật, toàn bộ log (đã có sẵn trong logBuffer + log phát sinh về sau) sẽ được đẩy
+        // vào 1 thông báo tiến trình hệ thống, dùng chung layout/kiểu hiển thị với
+        // BgTaskThread.ServiceShellHandler, để người dùng vẫn theo dõi được dù đã đóng dialog.
+        private var notificationMode = false
+        private var notificationId = 0
+        private var notificationManager: NotificationManager? = null
+        private var notificationTitle = ""
+        private var notificationInterruptable = false
+        private val notificationRows = ArrayList<String>()
+        private var notificationRowsTrimmed = false
+        private var notificationShortMsg = ""
+        private var notificationFinished = false
+        private var notificationProgressCurrent = 0
+        private var notificationProgressTotal = 0
+        private var forceStopRunnable: Runnable? = null
+        private var stopActionName: String? = null
+        private var stopReceiver: BroadcastReceiver? = null
+        private var stopPendingIntent: PendingIntent? = null
+
         init {
             logView?.setText("", TextView.BufferType.EDITABLE)
+        }
+
+        /**
+         * Được gọi khi người dùng ấn btnHide: chuyển sang chế độ đẩy log lên thông báo tiến
+         * trình hệ thống thay vì hiển thị trong dialog (dialog sắp bị đóng). Có thể gọi an
+         * toàn nhiều lần, chỉ lần đầu có tác dụng.
+         */
+        fun enableNotificationMode(nodeInfo: RunnableNode) {
+            if (notificationMode) return
+            notificationMode = true
+
+            notificationTitle = nodeInfo.title
+            notificationInterruptable = nodeInfo.interruptable
+            notificationShortMsg = context.getString(R.string.kr_script_task_running)
+            notificationId = nextNotificationId()
+            notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+
+            // Lấy toàn bộ log đã hiển thị trong dialog làm nội dung khởi đầu cho thông báo
+            val existingLines = synchronized(logBuffer) {
+                logBuffer.toString().split("\n").filter { it.isNotEmpty() }
+            }
+            synchronized(notificationRows) {
+                existingLines.forEach { notificationRows.add("$it\n") }
+                trimNotificationRows()
+            }
+
+            if (nodeInfo.interruptable) {
+                val actionName = context.packageName + ".TaskStop.Hide." + notificationId
+                stopActionName = actionName
+                stopPendingIntent = PendingIntent.getBroadcast(
+                    context, 0, Intent(actionName),
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                stopReceiver = object : BroadcastReceiver() {
+                    override fun onReceive(ctx: Context?, intent: Intent?) {
+                        forceStopRunnable?.run()
+                    }
+                }
+                runCatching { context.registerReceiver(stopReceiver, IntentFilter(actionName)) }
+            }
+
+            updateNotification()
+        }
+
+        private fun trimNotificationRows() {
+            if (notificationRows.size > 8) {
+                notificationRows.removeAt(0)
+                notificationRowsTrimmed = true
+            }
+        }
+
+        private fun appendNotificationRow(text: String) {
+            synchronized(notificationRows) {
+                notificationRows.add(text)
+                trimNotificationRows()
+            }
+            updateNotification()
+        }
+
+        private fun updateNotification() {
+            val nm = notificationManager ?: return
+            val id = notificationId
+
+            val expandView = RemoteViews(context.packageName, R.layout.kr_task_notification)
+            expandView.setTextViewText(R.id.kr_task_title, "$notificationTitle ($id)")
+            expandView.setTextViewText(
+                R.id.kr_task_log,
+                notificationRows.joinToString("", if (notificationRowsTrimmed) "……\n" else "").trim()
+            )
+            expandView.setProgressBar(
+                R.id.kr_task_progress,
+                notificationProgressTotal,
+                notificationProgressCurrent,
+                notificationProgressTotal < 0
+            )
+            expandView.setViewVisibility(
+                R.id.kr_task_progress,
+                if (notificationProgressTotal == notificationProgressCurrent) View.GONE else View.VISIBLE
+            )
+            expandView.setViewVisibility(
+                R.id.kr_task_stop,
+                if (stopPendingIntent == null || notificationFinished) View.GONE else View.VISIBLE
+            )
+            stopPendingIntent?.let { pending ->
+                if (!notificationFinished) {
+                    expandView.setOnClickPendingIntent(R.id.kr_task_stop, pending)
+                }
+            }
+
+            val notificationBuilder = Notification.Builder(context, NOTIFICATION_CHANNEL_ID)
+                .setContentTitle("$notificationTitle ($id)")
+                .setContentText("$notificationShortMsg >> ${notificationRows.lastOrNull().orEmpty()}")
+                .setSmallIcon(R.drawable.kr_run)
+                .setAutoCancel(true)
+                .setWhen(System.currentTimeMillis())
+            if (notificationProgressTotal != notificationProgressCurrent) {
+                notificationBuilder.setProgress(notificationProgressTotal, notificationProgressCurrent, notificationProgressTotal < 0)
+            }
+            notificationBuilder.setCustomBigContentView(expandView)
+
+            if (!notificationChannelCreated) {
+                val channel = NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID,
+                    context.getString(R.string.kr_script_task_notification),
+                    NotificationManager.IMPORTANCE_DEFAULT
+                )
+                channel.enableLights(false)
+                channel.enableVibration(false)
+                channel.setSound(null, null)
+                nm.createNotificationChannel(channel)
+                notificationChannelCreated = true
+            }
+            notificationBuilder.setChannelId(NOTIFICATION_CHANNEL_ID)
+
+            val notification = notificationBuilder.build()
+            if (!notificationFinished) {
+                notification.flags = Notification.FLAG_NO_CLEAR or Notification.FLAG_ONGOING_EVENT
+            }
+            nm.notify(id, notification)
+        }
+
+        private fun finishNotification(success: Boolean, code: Int) {
+            notificationFinished = true
+            notificationShortMsg = context.getString(R.string.kr_script_task_finished)
+            val finishText = if (success) {
+                context.getString(R.string.kr_shell_completed)
+            } else {
+                "${context.getString(R.string.kr_shell_finish_error)} $code"
+            }
+            appendNotificationRow("\n$finishText")
+            runCatching { stopReceiver?.let { context.unregisterReceiver(it) } }
+            stopReceiver = null
+        }
+
+        companion object {
+            // Dùng riêng kênh thông báo cho chế độ "Ẩn" (btnHide), tách biệt với kênh của
+            // BgTaskThread.ServiceShellHandler dù cùng nội dung hiển thị, để tránh phụ thuộc
+            // trạng thái channelCreated giữa 2 class không liên quan tới nhau.
+            private const val NOTIFICATION_CHANNEL_ID = "kr_script_task_notification_hide"
+            private var notificationChannelCreated = false
+
+            // Base ID tách khỏi dải ID mà BgTaskThread.notificationCounter (bắt đầu từ 34050)
+            // sử dụng, để tránh 2 chế độ (chạy nền từ đầu / ấn Hide giữa chừng) đè thông báo lẫn nhau.
+            private var notificationIdCounter = 54050
+
+            @Synchronized
+            private fun nextNotificationId(): Int {
+                notificationIdCounter += 1
+                return notificationIdCounter
+            }
         }
 
         private fun getColor(resId: Int): Int = ContextCompat.getColor(context, resId)
@@ -675,6 +858,11 @@ class DialogLogFragment : DialogFragment() {
                     }
                 }
             }
+
+            // Đồng bộ tiến độ vào thông báo hệ thống (nếu đang ở chế độ ẩn dialog)
+            notificationProgressCurrent = current
+            notificationProgressTotal = total
+            if (notificationMode) updateNotification()
         }
 
         override fun onStart(msg: Any?) {
@@ -683,8 +871,14 @@ class DialogLogFragment : DialogFragment() {
 
         override fun onExit(msg: Any?) {
             val code = (msg as? Int) ?: -1
-            updateLogWithColor(context.getString(R.string.kr_shell_completed), endColor)
-            if (!hasError && code == 0) {
+            val success = !hasError && code == 0
+            updateLogWithColor(context.getString(R.string.kr_shell_completed), endColor, pushToNotification = false)
+
+            if (notificationMode) {
+                finishNotification(success, code)
+            }
+
+            if (success) {
                 actionEventHandler?.onSuccess()
             }
             actionEventHandler?.onCompleted()
@@ -694,7 +888,7 @@ class DialogLogFragment : DialogFragment() {
             msg?.let { dispatchLogUpdate(it) }
         }
 
-        private fun updateLogWithColor(text: String, forcedColor: Int?) {
+        private fun updateLogWithColor(text: String, forcedColor: Int?, pushToNotification: Boolean = true) {
             var parsedLog: CharSequence = AnsiColorParser.parse(text)
 
             if (forcedColor != null && !text.contains("\u001B[")) {
@@ -709,6 +903,27 @@ class DialogLogFragment : DialogFragment() {
             }
 
             dispatchLogUpdate(parsedLog)
+
+            // Nếu đang ở chế độ thông báo (đã ấn btnHide), tiếp tục đẩy log phát sinh mới
+            // vào thông báo hệ thống, không chỉ log tại thời điểm bấm nút. Dòng log kết thúc
+            // (onExit) được finishNotification() tự thêm riêng nên bỏ qua ở đây để tránh lặp.
+            if (notificationMode && pushToNotification) {
+                pushNotificationLog(text)
+            }
+        }
+
+        /**
+         * Tách text log mới thành các dòng và thêm vào thông báo hệ thống. Dùng chung logic
+         * trim (giữ tối đa 8 dòng gần nhất) với phần khởi tạo trong enableNotificationMode().
+         */
+        private fun pushNotificationLog(text: String) {
+            val lines = text.replace("\r", "\n").split("\n").filter { it.isNotEmpty() }
+            if (lines.isEmpty()) return
+            synchronized(notificationRows) {
+                lines.forEach { notificationRows.add("$it\n") }
+                trimNotificationRows()
+            }
+            updateNotification()
         }
 
         private fun markInvalidFrom(from: Int) {
