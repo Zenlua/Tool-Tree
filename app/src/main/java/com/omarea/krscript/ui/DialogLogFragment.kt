@@ -486,7 +486,7 @@ class DialogLogFragment : DialogFragment() {
             val id = notificationId
 
             val expandView = RemoteViews(context.packageName, R.layout.kr_task_notification)
-            expandView.setTextViewText(R.id.kr_task_title, "$notificationTitle ($id)")
+            expandView.setTextViewText(R.id.kr_task_title, "$notificationTitle")
             expandView.setTextViewText(
                 R.id.kr_task_log,
                 notificationRows.joinToString("", if (notificationRowsTrimmed) "……\n" else "").trim()
@@ -512,7 +512,7 @@ class DialogLogFragment : DialogFragment() {
             }
 
             val notificationBuilder = Notification.Builder(context, NOTIFICATION_CHANNEL_ID)
-                .setContentTitle("$notificationTitle ($id)")
+                .setContentTitle("$notificationTitle")
                 .setContentText("$notificationShortMsg >> ${notificationRows.lastOrNull().orEmpty()}")
                 .setSmallIcon(R.drawable.kr_run)
                 .setAutoCancel(true)

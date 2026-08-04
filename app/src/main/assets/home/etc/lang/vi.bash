@@ -303,3 +303,6 @@ config_text_2="Tạo dự án mới hoặc chọn thư mục"
 # boot
 boot_text_1="Java đang cài đặt, mở lại sau 1~2 phút..."
 note_genmini_text="Nhấn menu 3 chấm ở góc phải để tạo khoá API miễn phí"
+
+custom_size="Tùy chỉnh kích thước"
+custom_size_desc="Thêm hoặc thay đổi kích thước mặc định cho mỗi phân vùng khi xây dựng lại, chỉ áp dụng cho ext và f2fs, đơn vị kích thước tính bằng Bytes."

@@ -116,13 +116,13 @@ shell_bash() {
 
 # Ngôn ngữ
 source language 2>/dev/null
-
-# Thông tin
-text_id_1="$(glog show_infor_text_1 "ROOT: \$ROOT  |  Android: \$ANDROID_RELEASE  -  SDK: \$API  |  CPU: \$CPU_ABI")"
-text_id_2="$(glog show_infor_text_2 "\$trademark_text: \$ANDROID_BRAND  |  \$device_text: \$ANDROID_DEVICE  |  \$version_text: \$PACKAGE_VERSION_NAME")"
-
-[ -z "$text_id_2" ] || text_id_3="\n\n"
-Vip_text_infor="$(eval echo "\"${text_id_1}${text_id_3}${text_id_2}\"")"
+if [[ "$1" == "Home" || "$1" == "More" ]]; then
+    # Thông tin
+    text_id_1="$(glog show_infor_text_1 "ROOT: \$ROOT  |  Android: \$ANDROID_RELEASE  -  SDK: \$API  |  CPU: \$CPU_ABI")"
+    text_id_2="$(glog show_infor_text_2 "\$trademark_text: \$ANDROID_BRAND  |  \$device_text: \$ANDROID_DEVICE  |  \$version_text: \$PACKAGE_VERSION_NAME")"
+    [ -z "$text_id_2" ] || text_id_3="\n\n"
+    Vip_text_infor="$(eval echo "\"${text_id_1}${text_id_3}${text_id_2}\"")"
+fi
 
 # Văn bản
 Home() {
@@ -568,6 +568,10 @@ Info() {
   icon = "'`urlpng project`'"
   config-sh = "'$ETC'/tool-tree.bash Project"
 
+    [[group.page.options]]
+    type = "refresh"
+    title = "'$refresh_text'"
+    
   [[group]]
   [[group.page]]
   title = "'$setting_text_7'"
@@ -767,6 +771,37 @@ Project() {
     value-sh = "glog re_tool_f2fs 0"
     options-sh = "echo -e \"0|sload_f2fs\""
   '
+
+  for vvsskk in $SDH/$PTSH/*; do
+  [[ -d "$vvsskk" ]] && namept="${vvsskk##*/}" || continue
+  [[ "$namept" == *config* || "$namept" == *raw* ]] && continue
+  sload+='[[ -n "$name_'$namept'" ]] && echo "$name_'$namept'" > $SDH/$PTSH/config/'$namept'_size.txt
+  '
+  vbload+='
+  [[group.action.params]]
+  name = "name_'$namept'"
+  type = "number"
+  placeholder = "0"
+  label = "'$namept'"
+  value-sh = "cat $SDH/$PTSH/config/'$namept'_size.txt 2>/dev/null"
+  '
+  done
+  
+  if [ -n "$(ls -1d "$SDH/$PTSH"/* 2>/dev/null | grep -vE '/(raw|config)')" ]; then
+  echo '[[group]]
+  [[group.action]]
+  title = "'$custom_size'"
+  warn = "'$custom_size_desc'"
+  icon = "'`urlpng size_icon`'"
+  shell = "hidden"
+  reload = true
+  script = """
+  '"$sload"'
+  """
+  '"$vbload"'
+  '
+  fi
+  
 }
 
 Feature() {
