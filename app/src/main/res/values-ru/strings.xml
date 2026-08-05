@@ -68,9 +68,9 @@
     <string name="btn_confirm">Подтвердить</string>
     <string name="btn_execute">Выполнить</string>
     <string name="onloading">Загрузка данных…</string>
-    <string name="kr_shell_completed">\nВыполнение скрипта завершено</string>
+    <string name="kr_shell_completed">Выполнение скрипта завершено</string>
     <string name="kr_shell_finish_error">Выполнение завершено, но произошла ошибка</string>
-    <string name="script_losted">Отсутствуют ресурсы скрипта\n</string>
+    <string name="script_losted">Отсутствуют ресурсы скрипта</string>
     <string name="btn_copy_output">Копировать</string>
     <string name="copy_fail">Копирование не удалось</string>
     <string name="do_not_empty">Не может быть пустым</string>

@@ -85,8 +85,7 @@
     <string name="kr_sdk_message">Ez a funkció csak %1$d és %2$d közötti SDK-val rendelkező rendszereken fut</string>
     <string name="kr_sdk_overtop">A rendszer verziója túl magas</string>
     <string name="kr_sdk_too_low">A rendszer verziója túl alacsony</string>
-    <string name="kr_shell_completed">
-A szkript végrehajtása befejeződött</string>
+    <string name="kr_shell_completed">A szkript végrehajtása befejeződött</string>
     <string name="kr_shell_finish_error">A végrehajtás befejeződött, de hiba történt</string>
     <string name="kr_shortcut_create">Parancsikon hozzáadása</string>
     <string name="kr_shortcut_create_desc">Szeretné hozzáadni a(z) „%s” elemet a kezdőképernyőhöz a gyors eléréshez?</string>
@@ -109,7 +108,7 @@ A szkript végrehajtása befejeződött</string>
     <string name="open_in_browser">Megnyitás böngészővel</string>
     <string name="options_text">Beállítások</string>
     <string name="password_toggle_content_description">Jelszó megjelenítése</string>
-    <string name="permission_dialog_message">Felhasználói figyelmeztetés:
+    <string name="permission_dialog_message">"Felhasználói figyelmeztetés:
 
 • Legyen óvatos a ROM módosításakor
 • Ne használjon nem megbízható forrásból származó kiegészítőket
@@ -124,7 +123,7 @@ Szükséges engedélyek:
 • Kezdőképernyő parancsikonok létrehozása
 • Hálózati hozzáférés
 
-Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz.</string>
+Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz."</string>
     <string name="permission_dialog_title">Az alkalmazás használati feltételei</string>
     <string name="picker_not_item">Nincsenek elérhető lehetőségek</string>
     <string name="picker_select_none">Nincs kiválasztott elem</string>
@@ -158,7 +157,7 @@ Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz.</string>
     <string name="theme_wallpaper_light">Háttérkép + Világos</string>
     <string name="theme_wallpaper_system">Háttérkép + Alapértelmezett</string>
     <string name="title_activity_action_page">Funkciók oldala</string>
-    <string name="title_activity_file_selector">Kérjük, válasszon fájlt </string>
+    <string name="title_activity_file_selector">"Kérjük, válasszon fájlt "</string>
     <string name="title_activity_folder_selector">Kérjük, válasszon mappát</string>
     <string name="toast_invalid_number">Kérjük, adjon meg egy számot</string>
     <string name="toast_out_of_range">A számnak %1$d és %2$d között kell lennie</string>

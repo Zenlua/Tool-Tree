@@ -21,7 +21,7 @@
     <string name="pio_starting">~•-•~</string>
     <string name="pop_before_start">Preparing to start the application…</string>
     <string name="pop_started">Start application</string>
-    <string name="title_activity_file_selector">Please select a file</string>
+    <string name="title_activity_file_selector">"Please select a file "</string>
     <string name="title_activity_folder_selector">Please select a directory</string>
     <string name="text_power_shutdown">Shutdown</string>
     <string name="text_power_reboot">Restart</string>
@@ -80,9 +80,9 @@ If you agree, press the confirm button to continue."</string>
     <string name="btn_confirm">Confirm</string>
     <string name="btn_execute">Execute</string>
     <string name="onloading">Loading data…</string>
-    <string name="kr_shell_completed">\nScript execution completed</string>
+    <string name="kr_shell_completed">Script execution completed</string>
     <string name="kr_shell_finish_error">Execution finished, but errors occurred</string>
-    <string name="script_losted">Script resources are missing\n</string>
+    <string name="script_losted">Script resources are missing</string>
     <string name="btn_copy_output">Copy</string>
     <string name="hint_shell_input">Enter text and send to the script</string>
     <string name="btn_send_input">Send</string>

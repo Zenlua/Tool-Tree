@@ -26,7 +26,7 @@
 
 • Hãy cẩn thận khi chỉnh sửa ROM
 • Không sử dụng add-on từ nguồn không đáng tin cậy
-• Không chỉnh sửa ROM nếu bạn không có kinh nghiệm 
+• Không chỉnh sửa ROM nếu bạn không có kinh nghiệm
 
 Yêu cầu các quyền sau:
 
@@ -66,7 +66,7 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="btn_confirm">Xác nhận</string>
     <string name="btn_execute">Thực hiện</string>
     <string name="onloading">Đang tải dữ liệu…</string>
-    <string name="kr_shell_completed">\nThực thi script hoàn tất</string>
+    <string name="kr_shell_completed">Thực thi script hoàn tất</string>
     <string name="kr_shell_finish_error">Thực thi đã kết thúc nhưng có lỗi xảy ra</string>
     <string name="btn_copy_output">Sao chép</string>
     <string name="hint_shell_input">Nhập nội dung để gửi cho script</string>

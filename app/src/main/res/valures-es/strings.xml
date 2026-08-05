@@ -16,7 +16,7 @@
     <string name="copy_success">Copia realizada correctamente</string>
     <string name="pop_before_start">Preparando el inicio de la aplicación…</string>
     <string name="pop_started">Iniciar aplicación</string>
-    <string name="title_activity_file_selector">Selecciona un archivo</string>
+    <string name="title_activity_file_selector">"Selecciona un archivo "</string>
     <string name="title_activity_folder_selector">Selecciona un directorio</string>
     <string name="text_power_shutdown">Apagar</string>
     <string name="text_power_reboot">Reiniciar</string>
@@ -69,9 +69,9 @@ Si estás de acuerdo, pulsa el botón de confirmar para continuar."</string>
     <string name="btn_confirm">Confirmar</string>
     <string name="btn_execute">Ejecutar</string>
     <string name="onloading">Cargando datos…</string>
-    <string name="kr_shell_completed">\nEjecución del script completada</string>
+    <string name="kr_shell_completed">Ejecución del script completada</string>
     <string name="kr_shell_finish_error">Ejecución finalizada, pero se produjeron errores</string>
-    <string name="script_losted">Faltan recursos del script\n</string>
+    <string name="script_losted">Faltan recursos del script</string>
     <string name="btn_copy_output">Copiar</string>
     <string name="hint_shell_input">Introduce el texto y envíalo al script</string>
     <string name="btn_send_input">Enviar</string>
