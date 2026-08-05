@@ -63,10 +63,16 @@ class BgTaskThread(private var process: Process) : Thread() {
             expandView.setTextViewText(R.id.kr_task_log, notificationMessageRows.joinToString("", if (someIgnored) "……\n" else "").trim())
             expandView.setProgressBar(R.id.kr_task_progress, progressTotal, progressCurrent, progressTotal < 0)
             expandView.setViewVisibility(R.id.kr_task_progress, if (progressTotal == progressCurrent) View.GONE else View.VISIBLE)
-            expandView.setViewVisibility(R.id.kr_task_stop, if ((forceStop == null && !runnableNode.interruptable) || isFinished) View.GONE else View.VISIBLE)
+            // Layout kr_task_notification.xml giờ dùng chung id "kr_task_action" cho nút hành
+            // động (được DialogLogFragment tái sử dụng làm nút Hủy bỏ/Kết thúc); class này chỉ
+            // cần nút dừng nên vẫn dùng như cũ, chỉ đổi tên id cho khớp layout.
+            expandView.setViewVisibility(R.id.kr_task_action, if ((forceStop == null && !runnableNode.interruptable) || isFinished) View.GONE else View.VISIBLE)
             if (runnableNode.interruptable && forceStop != null && !isFinished) {
-                expandView.setOnClickPendingIntent(R.id.kr_task_stop, stopIntent)
+                expandView.setOnClickPendingIntent(R.id.kr_task_action, stopIntent)
             }
+            // Class này luôn hiển thị log đầy đủ qua setCustomBigContentView (không có chế độ
+            // thu gọn/mở rộng thủ công riêng), nên ẩn hẳn nút chevron mở rộng của layout dùng chung.
+            expandView.setViewVisibility(R.id.kr_task_expand, View.GONE)
 
             val notificationBuilder = Notification.Builder(context, channelId)
                     .setContentTitle("$notificationTitle ($notificationID)")
