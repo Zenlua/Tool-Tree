@@ -420,6 +420,13 @@ class DialogLogFragment : DialogFragment() {
         private var stopReceiver: BroadcastReceiver? = null
         private var stopPendingIntent: PendingIntent? = null
 
+        // Trạng thái mở rộng thủ công (giống nút chevron của Telegram): mặc định thu gọn,
+        // chỉ hiện dòng log mới nhất; bấm vào mũi tên để xem toàn bộ log + progress + nút dừng.
+        private var notificationExpanded = false
+        private var expandActionName: String? = null
+        private var expandReceiver: BroadcastReceiver? = null
+        private var expandPendingIntent: PendingIntent? = null
+
         init {
             logView?.setText("", TextView.BufferType.EDITABLE)
         }
@@ -463,6 +470,22 @@ class DialogLogFragment : DialogFragment() {
                 runCatching { context.registerReceiver(stopReceiver, IntentFilter(actionName)) }
             }
 
+            // Nút mũi tên mở rộng/thu gọn (giống Telegram) — bấm vào sẽ đảo trạng thái và
+            // vẽ lại thông báo, không phụ thuộc cử chỉ vuốt/expand mặc định của hệ thống.
+            val expandAction = context.packageName + ".TaskExpand.Hide." + notificationId
+            expandActionName = expandAction
+            expandPendingIntent = PendingIntent.getBroadcast(
+                context, 0, Intent(expandAction),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            expandReceiver = object : BroadcastReceiver() {
+                override fun onReceive(ctx: Context?, intent: Intent?) {
+                    notificationExpanded = !notificationExpanded
+                    updateNotification()
+                }
+            }
+            runCatching { context.registerReceiver(expandReceiver, IntentFilter(expandAction)) }
+
             updateNotification()
         }
 
@@ -485,34 +508,10 @@ class DialogLogFragment : DialogFragment() {
             val nm = notificationManager ?: return
             val id = notificationId
 
-            val expandView = RemoteViews(context.packageName, R.layout.kr_task_notification)
-            expandView.setTextViewText(R.id.kr_task_title, "$notificationTitle")
-            expandView.setTextViewText(
-                R.id.kr_task_log,
-                notificationRows.joinToString("", if (notificationRowsTrimmed) "……\n" else "").trim()
-            )
-            expandView.setProgressBar(
-                R.id.kr_task_progress,
-                notificationProgressTotal,
-                notificationProgressCurrent,
-                notificationProgressTotal < 0
-            )
-            expandView.setViewVisibility(
-                R.id.kr_task_progress,
-                if (notificationProgressTotal == notificationProgressCurrent) View.GONE else View.VISIBLE
-            )
-            expandView.setViewVisibility(
-                R.id.kr_task_stop,
-                if (stopPendingIntent == null || notificationFinished) View.GONE else View.VISIBLE
-            )
-            stopPendingIntent?.let { pending ->
-                if (!notificationFinished) {
-                    expandView.setOnClickPendingIntent(R.id.kr_task_stop, pending)
-                }
-            }
+            val view = buildNotificationView()
 
             val notificationBuilder = Notification.Builder(context, NOTIFICATION_CHANNEL_ID)
-                .setContentTitle("$notificationTitle")
+                .setContentTitle("$notificationTitle ($id)")
                 .setContentText("$notificationShortMsg >> ${notificationRows.lastOrNull().orEmpty()}")
                 .setSmallIcon(R.drawable.kr_run)
                 .setAutoCancel(true)
@@ -520,7 +519,12 @@ class DialogLogFragment : DialogFragment() {
             if (notificationProgressTotal != notificationProgressCurrent) {
                 notificationBuilder.setProgress(notificationProgressTotal, notificationProgressCurrent, notificationProgressTotal < 0)
             }
-            notificationBuilder.setCustomBigContentView(expandView)
+            // Dùng chung 1 layout cho cả 2 trạng thái: nội dung thật sự hiển thị (log đầy đủ
+            // hay chỉ dòng cuối) do notificationExpanded (nút chevron) quyết định, không phụ
+            // thuộc việc hệ thống đang thu gọn hay đã kéo giãn thông báo — giống cách Telegram
+            // dùng 1 nút mũi tên cố định để mở/đóng nội dung.
+            notificationBuilder.setCustomContentView(view)
+            notificationBuilder.setCustomBigContentView(view)
 
             if (!notificationChannelCreated) {
                 val channel = NotificationChannel(
@@ -543,6 +547,48 @@ class DialogLogFragment : DialogFragment() {
             nm.notify(id, notification)
         }
 
+        /**
+         * Dựng RemoteViews của thông báo theo trạng thái notificationExpanded hiện tại.
+         * Thu gọn: chỉ hiện tiêu đề + dòng log mới nhất, mũi tên chỉ xuống (gợi ý "mở rộng").
+         * Mở rộng: hiện toàn bộ log đã lưu + progress bar + nút dừng, mũi tên chỉ lên ("thu gọn").
+         */
+        private fun buildNotificationView(): RemoteViews {
+            val view = RemoteViews(context.packageName, R.layout.kr_task_notification)
+            view.setTextViewText(R.id.kr_task_title, "$notificationTitle ($notificationId)")
+
+            val logText = if (notificationExpanded) {
+                notificationRows.joinToString("", if (notificationRowsTrimmed) "……\n" else "").trim()
+            } else {
+                notificationRows.lastOrNull()?.trim().orEmpty()
+            }
+            view.setTextViewText(R.id.kr_task_log, logText)
+
+            val showProgress = notificationExpanded && notificationProgressTotal != notificationProgressCurrent
+            view.setProgressBar(
+                R.id.kr_task_progress,
+                notificationProgressTotal,
+                notificationProgressCurrent,
+                notificationProgressTotal < 0
+            )
+            view.setViewVisibility(R.id.kr_task_progress, if (showProgress) View.VISIBLE else View.GONE)
+
+            val showStop = notificationExpanded && stopPendingIntent != null && !notificationFinished
+            view.setViewVisibility(R.id.kr_task_stop, if (showStop) View.VISIBLE else View.GONE)
+            stopPendingIntent?.let { pending ->
+                if (!notificationFinished) {
+                    view.setOnClickPendingIntent(R.id.kr_task_stop, pending)
+                }
+            }
+
+            // Xoay mũi tên (vốn chỉ sang phải): thu gọn -> chỉ xuống (90°), mở rộng -> chỉ lên (-90°)
+            view.setFloat(R.id.kr_task_expand, "setRotation", if (notificationExpanded) -90f else 90f)
+            expandPendingIntent?.let { pending ->
+                view.setOnClickPendingIntent(R.id.kr_task_expand, pending)
+            }
+
+            return view
+        }
+
         private fun finishNotification(success: Boolean, code: Int) {
             notificationFinished = true
             notificationShortMsg = context.getString(R.string.kr_script_task_finished)
@@ -551,9 +597,13 @@ class DialogLogFragment : DialogFragment() {
             } else {
                 "${context.getString(R.string.kr_shell_finish_error)} $code"
             }
+            // Tự mở rộng khi xong để người dùng thấy ngay kết quả cuối mà không cần bấm chevron
+            notificationExpanded = true
             appendNotificationRow("\n$finishText")
             runCatching { stopReceiver?.let { context.unregisterReceiver(it) } }
             stopReceiver = null
+            runCatching { expandReceiver?.let { context.unregisterReceiver(it) } }
+            expandReceiver = null
         }
 
         companion object {

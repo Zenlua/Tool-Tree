@@ -29,6 +29,15 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:breakStrategy="simple" />
+
+        <ImageButton
+            android:id="@+id/kr_task_expand"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:background="@android:color/transparent"
+            android:scaleType="centerInside"
+            android:layout_marginStart="6dp"
+            android:src="@drawable/kr_arrow" />
     </LinearLayout>
 
     <TextView
