@@ -423,11 +423,6 @@ class DialogLogFragment : DialogFragment() {
         private var dismissReceiver: BroadcastReceiver? = null
         private var dismissPendingIntent: PendingIntent? = null
 
-        // Nút "Sao chép log": chép toàn bộ log hiện có (theo thứ tự cũ -> mới) vào clipboard.
-        private var copyActionName: String? = null
-        private var copyReceiver: BroadcastReceiver? = null
-        private var copyPendingIntent: PendingIntent? = null
-
         init {
             logView?.setText("", TextView.BufferType.EDITABLE)
         }
@@ -494,40 +489,32 @@ class DialogLogFragment : DialogFragment() {
                 ContextCompat.registerReceiver(context, dismissReceiver, IntentFilter(dismissAction), ContextCompat.RECEIVER_NOT_EXPORTED)
             }
 
-            // Nút "Sao chép log" — chép toàn bộ log (thứ tự thời gian bình thường: cũ -> mới)
-            // vào clipboard, dùng được cả khi đang chạy lẫn khi đã xong.
-            val copyAction = context.packageName + ".TaskCopyLog.Hide." + notificationId
-            copyActionName = copyAction
-            copyPendingIntent = PendingIntent.getBroadcast(
-                context, 0, Intent(copyAction),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            copyReceiver = object : BroadcastReceiver() {
-                override fun onReceive(ctx: Context?, intent: Intent?) {
-                    copyLogToClipboard()
-                }
-            }
-            runCatching {
-                ContextCompat.registerReceiver(context, copyReceiver, IntentFilter(copyAction), ContextCompat.RECEIVER_NOT_EXPORTED)
-            }
-
             updateNotification()
         }
 
-        private fun copyLogToClipboard() {
+        /**
+         * Intent mở NotificationCopyLogActivity (ẩn, trong suốt) để chép log vào clipboard.
+         * Dùng Activity thay vì BroadcastReceiver: từ Android 10, ClipboardManager.setPrimaryClip()
+         * gọi từ 1 tiến trình không ở foreground (như BroadcastReceiver do nút thông báo kích
+         * hoạt) có thể bị hệ thống âm thầm bỏ qua — Toast vẫn hiện nhưng clipboard không thực
+         * sự có nội dung. Build lại mỗi lần updateNotification() (FLAG_UPDATE_CURRENT) để log
+         * đính kèm luôn là bản mới nhất tại thời điểm bấm nút.
+         */
+        private fun buildCopyLogPendingIntent(): PendingIntent {
             val text = synchronized(notificationRows) { notificationRows.joinToString("") }.trim()
-            runCatching {
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                clipboard?.setPrimaryClip(ClipData.newPlainText("text", text))
-                Toast.makeText(context, R.string.kr_task_notify_copied, Toast.LENGTH_SHORT).show()
+            val copyIntent = Intent(context, NotificationCopyLogActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(NotificationCopyLogActivity.EXTRA_LOG_TEXT, text)
             }
+            return PendingIntent.getActivity(
+                context, notificationId, copyIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         private fun cleanupNotificationReceivers() {
             runCatching { stopReceiver?.let { context.unregisterReceiver(it) } }
             stopReceiver = null
-            runCatching { copyReceiver?.let { context.unregisterReceiver(it) } }
-            copyReceiver = null
             runCatching { dismissReceiver?.let { context.unregisterReceiver(it) } }
             dismissReceiver = null
         }
