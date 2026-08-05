@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:layout_gravity="fill"
     android:orientation="vertical">
 
@@ -11,16 +11,19 @@
         android:layout_marginBottom="4dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
+        <!-- Nút hành động: icon/đích bấm đổi động trong code — "Hủy bỏ" khi đang chạy,
+             "Kết thúc" khi đã xong. Luôn hiển thị, không phụ thuộc trạng thái mở rộng. -->
         <ImageButton
-            android:id="@+id/kr_task_stop"
+            android:id="@+id/kr_task_action"
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:background="@android:color/transparent"
             android:scaleType="centerInside"
             android:layout_marginEnd="6dp"
-            android:src="@drawable/kr_stop" />
+            android:src="@drawable/kr_cancel" />
 
         <TextView
             android:id="@+id/kr_task_title"
@@ -30,23 +33,29 @@
             android:layout_height="wrap_content"
             android:breakStrategy="simple" />
 
+        <!-- Nút chevron mở/thu gọn — thu nhỏ hơn nút hành động vì chỉ là phụ trợ -->
         <ImageButton
             android:id="@+id/kr_task_expand"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:padding="1dp"
             android:background="@android:color/transparent"
             android:scaleType="centerInside"
             android:layout_marginStart="6dp"
             android:src="@drawable/kr_arrow" />
     </LinearLayout>
 
+    <!-- Chiếm hết phần chiều cao còn lại mà hệ thống cho phép (thu gọn hay mở rộng), căn
+         trên để không bị dồn xuống giữa vùng thừa -->
     <TextView
         android:paddingStart="6dp"
         android:paddingEnd="6dp"
         android:id="@+id/kr_task_log"
         style="@style/TextAppearance.Compat.Notification.Info"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="top"
         android:overScrollMode="always"
         android:breakStrategy="simple" />
 

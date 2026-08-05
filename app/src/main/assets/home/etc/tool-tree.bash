@@ -775,7 +775,11 @@ Project() {
   for vvsskk in $SDH/$PTSH/*; do
   [[ -d "$vvsskk" ]] && namept="${vvsskk##*/}" || continue
   [[ "$namept" == *config* || "$namept" == *raw* ]] && continue
-  sload+='[[ -n "$name_'$namept'" ]] && echo "$name_'$namept'" > $SDH/$PTSH/config/'$namept'_size.txt
+  sload+='if [[ -z "$name_'$namept'" || "$name_'$namept'" == 0 ]]; then
+  rm -rf $SDH/$PTSH/config/'$namept'_size.txt
+  else
+  echo "$name_'$namept'" > $SDH/$PTSH/config/'$namept'_size.txt
+  fi
   '
   vbload+='
   [[group.action.params]]
