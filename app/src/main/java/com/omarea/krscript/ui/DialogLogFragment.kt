@@ -56,6 +56,11 @@ import com.tool.tree.R
 import com.tool.tree.WakeLockService
 import com.tool.tree.databinding.KrDialogLogBinding
 import android.app.ActivityManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.Icon
 import java.io.File
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
@@ -77,7 +82,6 @@ class DialogLogFragment : DialogFragment() {
     private var onDismissRunnable: Runnable? = null
     private var currentHandler: MyShellHandler? = null
 
-    // Trạng thái bật/tắt soft wrap của log output (giống Text Editor Activity)
     private var wrapEnabled = true
     private var noWrapContainer: HorizontalScrollView? = null
 
@@ -105,8 +109,6 @@ class DialogLogFragment : DialogFragment() {
         nodeInfo?.let { node ->
             val shellHandler = openExecutor(node)
 
-            // Đặt sau openExecutor() để không bị ghi đè bởi logic hiển thị btnHide
-            // dựa theo nodeInfo.interruptable bên trong openExecutor().
             if (node.reloadPage) {
                 binding.btnHide.visibility = View.GONE
             }
@@ -127,7 +129,6 @@ class DialogLogFragment : DialogFragment() {
         canceled = false
         uiVisible = true
 
-        // Cho phép ấn vào các URLSpan (hyperlink OSC 8 hoặc URL trần) trong log để mở trình duyệt.
         binding.shellOutput.movementMethod = LinkMovementMethod.getInstance()
 
         wrapEnabled = readWrapEnabled(requireContext().applicationContext)
@@ -242,11 +243,11 @@ class DialogLogFragment : DialogFragment() {
             binding.btnCancel.visibility = View.GONE
         }
 
-        binding.title.text = nodeInfo?.title?.takeIf { it.isNotEmpty() } ?: run {
+        binding.title.text = nodeInfo.title.takeIf { it.isNotEmpty() } ?: run {
             binding.title.visibility = View.GONE
             ""
         }
-        binding.desc.text = nodeInfo?.desc?.takeIf { it.isNotEmpty() } ?: run {
+        binding.desc.text = nodeInfo.desc.takeIf { it.isNotEmpty() } ?: run {
             binding.desc.visibility = View.GONE
             ""
         }
@@ -398,6 +399,7 @@ class DialogLogFragment : DialogFragment() {
         private var notificationManager: NotificationManager? = null
         private var notificationTitle = ""
         private var iconPath = ""
+        private var currentConfigXml = ""
         private var notificationInterruptable = false
         private val notificationRows = ArrayList<String>()
         private var notificationRowsTrimmed = false
@@ -423,6 +425,7 @@ class DialogLogFragment : DialogFragment() {
 
             notificationTitle = nodeInfo.title
             iconPath = nodeInfo.iconPath
+            currentConfigXml = nodeInfo.currentConfigXml
             notificationInterruptable = nodeInfo.interruptable
             notificationId = nextNotificationId()
             notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
@@ -471,6 +474,22 @@ class DialogLogFragment : DialogFragment() {
             updateNotification()
         }
 
+        private fun drawableToIcon(drawable: Drawable?): Icon? {
+            if (drawable == null) return null
+            if (drawable is BitmapDrawable) {
+                drawable.bitmap?.let {
+                    return Icon.createWithBitmap(it)
+                }
+            }
+            val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 96
+            val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 96
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            return Icon.createWithBitmap(bitmap)
+        }
+
         private fun buildCopyLogPendingIntent(): PendingIntent {
             val text = synchronized(notificationRows) { notificationRows.joinToString("") }.trim()
             val copyIntent = Intent(context, NotificationCopyLogActivity::class.java).apply {
@@ -503,18 +522,18 @@ class DialogLogFragment : DialogFragment() {
 
             val shortLog = notificationRows.lastOrNull()?.trim().orEmpty()
 
-            // Khởi tạo RunnableNode thông thường để tránh lỗi ghi đè thuộc tính
             val personIcon = if (notificationTitle.isNotEmpty()) {
                 val tempNode = RunnableNode().apply {
                     title = notificationTitle
                     this.iconPath = this@MyShellHandler.iconPath
+                    this.currentConfigXml = this@MyShellHandler.currentConfigXml
                 }
                 if (iconPath.isNotEmpty()) {
-                    IconPathAnalysis().loadLogo(context, tempNode, false)
+                    val drawable = IconPathAnalysis().loadLogo(context, tempNode, false, currentConfigXml)
+                    drawableToIcon(drawable)
                 } else null
             } else null
 
-            // Sử dụng android.app.Person đúng chuẩn
             val sender = android.app.Person.Builder()
                 .setName(notificationTitle)
                 .setIcon(personIcon)
