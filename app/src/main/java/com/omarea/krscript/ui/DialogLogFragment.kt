@@ -12,7 +12,11 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Message
 import android.text.Editable
@@ -38,7 +42,6 @@ import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
-import android.widget.RemoteViews
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -47,6 +50,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import com.omarea.common.ui.DialogHelper
+import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
@@ -420,12 +424,9 @@ class DialogLogFragment : DialogFragment() {
         private var stopReceiver: BroadcastReceiver? = null
         private var stopPendingIntent: PendingIntent? = null
 
-        // Trạng thái mở rộng thủ công (giống nút chevron của Telegram): mặc định thu gọn,
-        // chỉ hiện dòng log mới nhất; bấm vào mũi tên để xem toàn bộ log + progress.
-        private var notificationExpanded = false
-        private var expandActionName: String? = null
-        private var expandReceiver: BroadcastReceiver? = null
-        private var expandPendingIntent: PendingIntent? = null
+        // Icon riêng của tác vụ (nếu cấu hình có khai báo), dùng làm large icon của thông báo;
+        // nếu không có thì rơi về icon app. Chỉ đọc từ đĩa 1 lần lúc bật notification mode.
+        private var notificationLargeIcon: Bitmap? = null
 
         // Nút "Kết thúc": hiện khi shell đã chạy xong, bấm vào để đóng hẳn thông báo.
         private var dismissActionName: String? = null
@@ -450,6 +451,7 @@ class DialogLogFragment : DialogFragment() {
             notificationShortMsg = context.getString(R.string.kr_script_task_running)
             notificationId = nextNotificationId()
             notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+            notificationLargeIcon = loadNotificationLargeIcon(nodeInfo)
 
             // Lấy toàn bộ log đã hiển thị trong dialog làm nội dung khởi đầu cho thông báo
             val existingLines = synchronized(logBuffer) {
@@ -480,24 +482,6 @@ class DialogLogFragment : DialogFragment() {
                 }
             }
 
-            // Nút mũi tên mở rộng/thu gọn (giống Telegram) — bấm vào sẽ đảo trạng thái và
-            // vẽ lại thông báo, không phụ thuộc cử chỉ vuốt/expand mặc định của hệ thống.
-            val expandAction = context.packageName + ".TaskExpand.Hide." + notificationId
-            expandActionName = expandAction
-            expandPendingIntent = PendingIntent.getBroadcast(
-                context, 0, Intent(expandAction),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            expandReceiver = object : BroadcastReceiver() {
-                override fun onReceive(ctx: Context?, intent: Intent?) {
-                    notificationExpanded = !notificationExpanded
-                    updateNotification()
-                }
-            }
-            runCatching {
-                ContextCompat.registerReceiver(context, expandReceiver, IntentFilter(expandAction), ContextCompat.RECEIVER_NOT_EXPORTED)
-            }
-
             // Nút "Kết thúc" (chỉ dùng được sau khi shell chạy xong) — đóng hẳn thông báo và
             // dọn dẹp tất cả receiver. Cũng được dùng làm deleteIntent khi người dùng vuốt bỏ
             // thông báo, để luôn dọn dẹp dù người dùng không bấm nút.
@@ -520,18 +504,40 @@ class DialogLogFragment : DialogFragment() {
             updateNotification()
         }
 
+        /** Icon riêng của node nếu có khai báo trong cấu hình, ngược lại dùng icon của app. */
+        private fun loadNotificationLargeIcon(nodeInfo: RunnableNode): Bitmap? {
+            if (nodeInfo.iconPath.isNotEmpty()) {
+                runCatching { IconPathAnalysis().loadIcon(context, nodeInfo) }.getOrNull()?.let {
+                    return drawableToBitmap(it)
+                }
+            }
+            return runCatching { context.packageManager.getApplicationIcon(context.packageName) }
+                .getOrNull()?.let { drawableToBitmap(it) }
+        }
+
+        private fun drawableToBitmap(drawable: Drawable): Bitmap? {
+            if (drawable is BitmapDrawable && drawable.bitmap != null) return drawable.bitmap
+            val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
+            val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
+            return runCatching {
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                bitmap
+            }.getOrNull()
+        }
+
         private fun cleanupNotificationReceivers() {
             runCatching { stopReceiver?.let { context.unregisterReceiver(it) } }
             stopReceiver = null
-            runCatching { expandReceiver?.let { context.unregisterReceiver(it) } }
-            expandReceiver = null
             runCatching { dismissReceiver?.let { context.unregisterReceiver(it) } }
             dismissReceiver = null
         }
 
         private fun trimNotificationRows() {
-            // Lưu nhiều dòng hơn để khi mở rộng có đủ log hiển thị (phần UI sẽ tự chiếm hết
-            // không gian cho phép), nhưng vẫn giới hạn để tránh RemoteViews quá nặng.
+            // Lưu nhiều dòng hơn để khi mở rộng có đủ log hiển thị, nhưng vẫn giới hạn để
+            // tránh Notification quá nặng.
             if (notificationRows.size > 20) {
                 notificationRows.removeAt(0)
                 notificationRowsTrimmed = true
@@ -550,37 +556,40 @@ class DialogLogFragment : DialogFragment() {
             val nm = notificationManager ?: return
             val id = notificationId
 
-            val view = buildNotificationView()
+            val shortLog = notificationRows.lastOrNull()?.trim().orEmpty()
+
+            // Log đầy đủ, MỚI NHẤT LÊN TRÊN CÙNG để nếu bị Android cắt bớt do quá dài (khi mở
+            // rộng) thì phần bị cắt luôn là log CŨ, còn log mới nhất luôn được giữ lại.
+            val fullLog = run {
+                val rows = synchronized(notificationRows) { notificationRows.toList() }
+                val sb = StringBuilder()
+                for (i in rows.indices.reversed()) sb.append(rows[i])
+                if (notificationRowsTrimmed) sb.append("……\n")
+                sb.toString().trim()
+            }
 
             val notificationBuilder = Notification.Builder(context, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle(notificationTitle)
-                .setContentText("$notificationShortMsg >> ${notificationRows.lastOrNull()?.trim().orEmpty()}")
+                .setContentText("$notificationShortMsg >> $shortLog")
                 .setSmallIcon(R.drawable.kr_run)
                 .setAutoCancel(true)
                 .setWhen(System.currentTimeMillis())
+                // Dùng style mặc định của Android: hệ thống tự vẽ mũi tên mở rộng và cho phép
+                // ấn giữ/vuốt để xem toàn bộ log, không cần tự vẽ layout hay nút toggle riêng.
+                .setStyle(
+                    Notification.BigTextStyle()
+                        .bigText(fullLog)
+                        .setSummaryText(notificationShortMsg)
+                )
+            notificationLargeIcon?.let { notificationBuilder.setLargeIcon(it) }
             if (notificationProgressTotal != notificationProgressCurrent) {
                 notificationBuilder.setProgress(notificationProgressTotal, notificationProgressCurrent, notificationProgressTotal < 0)
             }
-            // Dùng chung 1 layout cho cả 2 trạng thái: nội dung thật sự hiển thị (log đầy đủ
-            // hay chỉ dòng cuối) do notificationExpanded quyết định, không phụ thuộc việc hệ
-            // thống đang thu gọn hay đã kéo giãn thông báo.
-            notificationBuilder.setCustomContentView(view)
-            notificationBuilder.setCustomBigContentView(view)
 
             // Chạm vào thông báo (ngoài các nút) sẽ mở lại app, giống WakeLockService.
             buildContentPendingIntent()?.let { notificationBuilder.setContentIntent(it) }
 
-            // Các nút hành động hiển thị ở HÀNG DƯỚI CÙNG do hệ thống tự vẽ (giống WakeLockService),
-            // thay vì icon tự vẽ trong RemoteViews — luôn hiện đầy đủ ở cả trạng thái thu gọn
-            // lẫn mở rộng, không cần custom click target.
-            val expandLabel = if (notificationExpanded) {
-                context.getString(R.string.kr_task_notify_collapse)
-            } else {
-                context.getString(R.string.kr_task_notify_expand)
-            }
-            expandPendingIntent?.let {
-                notificationBuilder.addAction(R.drawable.kr_arrow, expandLabel, it)
-            }
+            // Nút hành động hiển thị ở HÀNG DƯỚI CÙNG do hệ thống tự vẽ (giống WakeLockService).
             if (notificationFinished) {
                 dismissPendingIntent?.let {
                     notificationBuilder.addAction(R.drawable.kr_close, context.getString(R.string.kr_task_notify_dismiss), it)
@@ -627,42 +636,6 @@ class DialogLogFragment : DialogFragment() {
             )
         }
 
-        /**
-         * Dựng RemoteViews của thông báo theo trạng thái notificationExpanded hiện tại.
-         * Thu gọn: chỉ hiện tiêu đề + dòng log mới nhất.
-         * Mở rộng: hiện toàn bộ log đã lưu (mới nhất ở trên cùng để không bị hệ thống cắt mất
-         * khi vùng hiển thị không đủ chỗ) + progress bar.
-         */
-        private fun buildNotificationView(): RemoteViews {
-            val view = RemoteViews(context.packageName, R.layout.kr_task_notification)
-            view.setTextViewText(R.id.kr_task_title, notificationTitle)
-
-            val logText = if (notificationExpanded) {
-                val rows = synchronized(notificationRows) { notificationRows.toList() }
-                val sb = StringBuilder()
-                for (i in rows.indices.reversed()) {
-                    sb.append(rows[i])
-                }
-                if (notificationRowsTrimmed) sb.append("……\n")
-                sb.toString().trim()
-            } else {
-                notificationRows.lastOrNull()?.trim().orEmpty()
-            }
-            view.setTextViewText(R.id.kr_task_log, logText)
-
-            val showProgress = notificationExpanded && notificationProgressTotal != notificationProgressCurrent
-            view.setProgressBar(
-                R.id.kr_task_progress,
-                notificationProgressTotal,
-                notificationProgressCurrent,
-                notificationProgressTotal < 0
-            )
-            view.setViewVisibility(R.id.kr_task_progress, if (showProgress) View.VISIBLE else View.GONE)
-
-
-            return view
-        }
-
 
         private fun finishNotification(success: Boolean, code: Int) {
             notificationFinished = true
@@ -672,11 +645,9 @@ class DialogLogFragment : DialogFragment() {
             } else {
                 "${context.getString(R.string.kr_shell_finish_error)} $code"
             }
-            // Tự mở rộng khi xong để người dùng thấy ngay kết quả cuối mà không cần bấm chevron.
-            // Không huỷ đăng ký expandReceiver/dismissReceiver ở đây — nút mũi tên và nút
-            // "Kết thúc" vẫn phải dùng được sau khi task đã chạy xong; chỉ dọn dẹp khi người
-            // dùng thật sự đóng thông báo (bấm "Kết thúc" hoặc vuốt bỏ), xem cleanupNotificationReceivers().
-            notificationExpanded = true
+            // Không huỷ đăng ký dismissReceiver ở đây — nút "Kết thúc" vẫn phải dùng được sau
+            // khi task đã chạy xong; chỉ dọn dẹp khi người dùng thật sự đóng thông báo (bấm
+            // "Kết thúc" hoặc vuốt bỏ), xem cleanupNotificationReceivers().
             appendNotificationRow("\n$finishText")
         }
 

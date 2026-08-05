@@ -8,12 +8,15 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.SpannableString
-import android.view.View
-import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import com.omarea.common.ui.DialogHelper
+import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
@@ -62,37 +65,71 @@ class BgTaskThread(private var process: Process) : Thread() {
             )
         }
 
+        /** Icon riêng của node nếu có khai báo trong cấu hình, ngược lại dùng icon của app. */
+        private val notificationLargeIcon: Bitmap? by lazy {
+            if (runnableNode.iconPath.isNotEmpty()) {
+                runCatching { IconPathAnalysis().loadIcon(context, runnableNode) }.getOrNull()?.let {
+                    return@lazy drawableToBitmap(it)
+                }
+            }
+            runCatching { context.packageManager.getApplicationIcon(context.packageName) }
+                .getOrNull()?.let { drawableToBitmap(it) }
+        }
+
+        private fun drawableToBitmap(drawable: Drawable): Bitmap? {
+            if (drawable is BitmapDrawable && drawable.bitmap != null) return drawable.bitmap
+            val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
+            val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
+            return runCatching {
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                bitmap
+            }.getOrNull()
+        }
+
         private fun updateNotification() {
-            if (notificationMessageRows.size > 8) {
+            if (notificationMessageRows.size > 20) {
                 synchronized(notificationMessageRows) {
                     notificationMessageRows.remove(notificationMessageRows.first())
                     someIgnored = true
                 }
             }
 
-            val expandView = RemoteViews(context.packageName, R.layout.kr_task_notification)
-            expandView.setTextViewText(R.id.kr_task_title, "$notificationTitle ($notificationID)")
-            expandView.setTextViewText(R.id.kr_task_log, notificationMessageRows.joinToString("", if (someIgnored) "……\n" else "").trim())
-            expandView.setProgressBar(R.id.kr_task_progress, progressTotal, progressCurrent, progressTotal < 0)
-            expandView.setViewVisibility(R.id.kr_task_progress, if (progressTotal == progressCurrent) View.GONE else View.VISIBLE)
+            val shortLog = notificationMessageRows.lastOrNull()?.trim().orEmpty()
+            // Log đầy đủ, MỚI NHẤT LÊN TRÊN CÙNG để nếu bị Android cắt bớt do quá dài (khi mở
+            // rộng) thì phần bị cắt luôn là log CŨ, còn log mới nhất luôn được giữ lại.
+            val fullLog = run {
+                val rows = synchronized(notificationMessageRows) { notificationMessageRows.toList() }
+                val sb = StringBuilder()
+                for (i in rows.indices.reversed()) sb.append(rows[i])
+                if (someIgnored) sb.append("……\n")
+                sb.toString().trim()
+            }
 
             val notificationBuilder = Notification.Builder(context, channelId)
-                    .setContentTitle("$notificationTitle ($notificationID)")
-                    .setContentText("" + notificationMShortMsg + " >> " + notificationMessageRows.lastOrNull())
+                    .setContentTitle(notificationTitle)
+                    .setContentText("$notificationMShortMsg >> $shortLog")
                     .setSmallIcon(R.drawable.kr_run)
                     .setAutoCancel(true)
                     .setWhen(System.currentTimeMillis())
+                    // Dùng style mặc định của Android: hệ thống tự vẽ mũi tên mở rộng và cho
+                    // phép ấn giữ/vuốt để xem toàn bộ log, không cần tự vẽ layout riêng.
+                    .setStyle(
+                        Notification.BigTextStyle()
+                            .bigText(fullLog)
+                            .setSummaryText(notificationMShortMsg)
+                    )
+            notificationLargeIcon?.let { notificationBuilder.setLargeIcon(it) }
             if (progressTotal != progressCurrent) {
                 notificationBuilder.setProgress(progressTotal, progressCurrent, progressTotal < 0)
             }
 
-            notificationBuilder.setCustomBigContentView(expandView)
-
             // Chạm vào thông báo (ngoài vùng nút) sẽ mở lại app, giống WakeLockService.
             buildContentPendingIntent()?.let { notificationBuilder.setContentIntent(it) }
 
-            // Nút "Hủy bỏ" hiển thị ở hàng dưới cùng do hệ thống tự vẽ (giống WakeLockService),
-            // thay vì icon tự vẽ trong RemoteViews.
+            // Nút "Hủy bỏ" hiển thị ở hàng dưới cùng do hệ thống tự vẽ (giống WakeLockService).
             if (runnableNode.interruptable && forceStop != null && !isFinished) {
                 notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.kr_task_notify_cancel), stopIntent)
             }
