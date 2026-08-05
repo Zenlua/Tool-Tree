@@ -10,6 +10,11 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.text.SpannableString
 import android.widget.Toast
@@ -85,6 +90,20 @@ class BgTaskThread(private var process: Process) : Thread() {
             )
         }
 
+        private fun drawableToIcon(drawable: Drawable?): Icon? {
+            if (drawable == null) return null
+            if (drawable is BitmapDrawable) {
+                drawable.bitmap?.let { return Icon.createWithBitmap(it) }
+            }
+            val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 96
+            val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 96
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            return Icon.createWithBitmap(bitmap)
+        }
+
         private fun updateNotification() {
             if (notificationMessageRows.size > 20) {
                 synchronized(notificationMessageRows) {
@@ -95,9 +114,10 @@ class BgTaskThread(private var process: Process) : Thread() {
 
             val shortLog = notificationMessageRows.lastOrNull()?.trim().orEmpty()
 
-            // Load icon từ runnableNode.iconPath, tương tự cách lấy icon từ tiêu đề
+            // Load icon từ runnableNode.iconPath và truyền đầy đủ currentConfigXml, sau đó đổi sang Icon
             val personIcon = if (runnableNode.iconPath.isNotEmpty()) {
-                IconPathAnalysis().loadLogo(context, runnableNode, false)
+                val drawable = IconPathAnalysis().loadLogo(context, runnableNode, false, runnableNode.currentConfigXml)
+                drawableToIcon(drawable)
             } else null
 
             // Sử dụng android.app.Person đúng chuẩn để tránh lỗi Unresolved reference 'Person'
