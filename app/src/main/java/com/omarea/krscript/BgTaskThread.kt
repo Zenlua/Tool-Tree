@@ -100,21 +100,22 @@ class BgTaskThread(private var process: Process) : Thread() {
                 IconPathAnalysis().loadLogo(context, runnableNode, false)
             } else null
 
-            // Dùng MessagingStyle để hỗ trợ hiển thị icon
-            val messagingStyle = Notification.MessagingStyle(
-                Notification.Person.Builder()
-                    .setName(notificationTitle)
-                    .setIcon(personIcon)
-                    .build()
-            )
+            // Sử dụng android.app.Person đúng chuẩn để tránh lỗi Unresolved reference 'Person'
+            val sender = android.app.Person.Builder()
+                .setName(notificationTitle)
+                .setIcon(personIcon)
+                .build()
 
-            // Thêm từng dòng log vào MessagingStyle (MỚI NHẤT LÊN CUỐI cùng để logic đảo chiều dễ nhìn)
+            // Dùng MessagingStyle để hỗ trợ hiển thị icon
+            val messagingStyle = Notification.MessagingStyle(sender)
+
+            // Thêm từng dòng log vào MessagingStyle bằng cách sử dụng Notification.MessagingStyle.Message
             val rows = synchronized(notificationMessageRows) { notificationMessageRows.toList() }
             if (someIgnored) {
-                messagingStyle.addMessage("……", System.currentTimeMillis(), null)
+                messagingStyle.addMessage(Notification.MessagingStyle.Message("……", System.currentTimeMillis(), (null as android.app.Person?)))
             }
             rows.forEach { row ->
-                messagingStyle.addMessage(row.trim(), System.currentTimeMillis(), null)
+                messagingStyle.addMessage(Notification.MessagingStyle.Message(row.trim(), System.currentTimeMillis(), (null as android.app.Person?)))
             }
 
             val notificationBuilder = Notification.Builder(context, channelId)
@@ -235,12 +236,6 @@ class BgTaskThread(private var process: Process) : Thread() {
                     nodeInfo,
                     script,
                     {
-                        /*
-                        try {
-                            process.destroy()
-                        } catch (ex: java.lang.Exception) {
-                        }
-                        */
                         try {
                             onExit.run()
                             onDismiss.run()
@@ -255,7 +250,6 @@ class BgTaskThread(private var process: Process) : Thread() {
                 bundle.putSerializable("params", params)
             }
             DialogHelper.helpInfo(context, context.getString(R.string.kr_bg_task_start), context.getString(R.string.kr_bg_task_start_desc))
-            // Toast.makeText(applicationContext, applicationContext.getString(R.string.kr_bg_task_start), Toast.LENGTH_SHORT).show()
         }
     }
 }

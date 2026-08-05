@@ -200,9 +200,6 @@ class DialogLogFragment : DialogFragment() {
 
         binding.btnHide.setOnClickListener {
             uiVisible = false
-            // Đẩy toàn bộ log đã có + log tiếp theo (đến khi script kết thúc) lên thông báo
-            // tiến trình hệ thống, giống cách BgTaskThread.ServiceShellHandler hiển thị, để
-            // người dùng vẫn theo dõi được tiến trình dù đã đóng dialog.
             currentHandler?.enableNotificationMode(nodeInfo)
             offScreen()
             closeView()
@@ -278,11 +275,6 @@ class DialogLogFragment : DialogFragment() {
         }
     }
 
-    /**
-     * Áp dụng trạng thái bật/tắt soft wrap cho log output:
-     * - wrapEnabled = true: shellOutput nằm trực tiếp trong ScrollView (cuộn dọc), tự động xuống dòng.
-     * - wrapEnabled = false: shellOutput được bọc trong HorizontalScrollView, cho phép cuộn ngang.
-     */
     private fun applyWrapState() {
         val b = _binding ?: return
         val logView = b.shellOutput
@@ -401,10 +393,6 @@ class DialogLogFragment : DialogFragment() {
 
         private val pendingUiUpdate = AtomicBoolean(false)
 
-        // === Notification mode (kích hoạt khi ấn btnHide) ===
-        // Khi bật, toàn bộ log (đã có sẵn trong logBuffer + log phát sinh về sau) sẽ được đẩy
-        // vào 1 thông báo tiến trình hệ thống, dùng chung layout/kiểu hiển thị với
-        // BgTaskThread.ServiceShellHandler, để người dùng vẫn theo dõi được dù đã đóng dialog.
         private var notificationMode = false
         private var notificationId = 0
         private var notificationManager: NotificationManager? = null
@@ -421,7 +409,6 @@ class DialogLogFragment : DialogFragment() {
         private var stopReceiver: BroadcastReceiver? = null
         private var stopPendingIntent: PendingIntent? = null
 
-        // Nút "Kết thúc": hiện khi shell đã chạy xong, bấm vào để đóng hẳn thông báo.
         private var dismissActionName: String? = null
         private var dismissReceiver: BroadcastReceiver? = null
         private var dismissPendingIntent: PendingIntent? = null
@@ -430,11 +417,6 @@ class DialogLogFragment : DialogFragment() {
             logView?.setText("", TextView.BufferType.EDITABLE)
         }
 
-        /**
-         * Được gọi khi người dùng ấn btnHide: chuyển sang chế độ đẩy log lên thông báo tiến
-         * trình hệ thống thay vì hiển thị trong dialog (dialog sắp bị đóng). Có thể gọi an
-         * toàn nhiều lần, chỉ lần đầu có tác dụng.
-         */
         fun enableNotificationMode(nodeInfo: RunnableNode) {
             if (notificationMode) return
             notificationMode = true
@@ -445,7 +427,6 @@ class DialogLogFragment : DialogFragment() {
             notificationId = nextNotificationId()
             notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
 
-            // Lấy toàn bộ log đã hiển thị trong dialog làm nội dung khởi đầu cho thông báo
             val existingLines = synchronized(logBuffer) {
                 logBuffer.toString().split("\n").filter { it.isNotEmpty() }
             }
@@ -466,17 +447,11 @@ class DialogLogFragment : DialogFragment() {
                         forceStopRunnable?.run()
                     }
                 }
-                // Android 13+ (API 33) bắt buộc phải khai báo rõ RECEIVER_EXPORTED/NOT_EXPORTED,
-                // thiếu cờ này registerReceiver() sẽ ném SecurityException — trước đây bị
-                // runCatching nuốt mất lỗi âm thầm nên receiver không hề được đăng ký.
                 runCatching {
                     ContextCompat.registerReceiver(context, stopReceiver, IntentFilter(actionName), ContextCompat.RECEIVER_NOT_EXPORTED)
                 }
             }
 
-            // Nút "Kết thúc" (chỉ dùng được sau khi shell chạy xong) — đóng hẳn thông báo và
-            // dọn dẹp tất cả receiver. Cũng được dùng làm deleteIntent khi người dùng vuốt bỏ
-            // thông báo, để luôn dọn dẹp dù người dùng không bấm nút.
             val dismissAction = context.packageName + ".TaskDismiss.Hide." + notificationId
             dismissActionName = dismissAction
             dismissPendingIntent = PendingIntent.getBroadcast(
@@ -496,14 +471,6 @@ class DialogLogFragment : DialogFragment() {
             updateNotification()
         }
 
-        /**
-         * Intent mở NotificationCopyLogActivity (ẩn, trong suốt) để chép log vào clipboard.
-         * Dùng Activity thay vì BroadcastReceiver: từ Android 10, ClipboardManager.setPrimaryClip()
-         * gọi từ 1 tiến trình không ở foreground (như BroadcastReceiver do nút thông báo kích
-         * hoạt) có thể bị hệ thống âm thầm bỏ qua — Toast vẫn hiện nhưng clipboard không thực
-         * sự có nội dung. Build lại mỗi lần updateNotification() (FLAG_UPDATE_CURRENT) để log
-         * đính kèm luôn là bản mới nhất tại thời điểm bấm nút.
-         */
         private fun buildCopyLogPendingIntent(): PendingIntent {
             val text = synchronized(notificationRows) { notificationRows.joinToString("") }.trim()
             val copyIntent = Intent(context, NotificationCopyLogActivity::class.java).apply {
@@ -524,8 +491,6 @@ class DialogLogFragment : DialogFragment() {
         }
 
         private fun trimNotificationRows() {
-            // Lưu nhiều dòng hơn để khi mở rộng có đủ log hiển thị, nhưng vẫn giới hạn để
-            // tránh Notification quá nặng.
             if (notificationRows.size > 20) {
                 notificationRows.removeAt(0)
                 notificationRowsTrimmed = true
@@ -538,32 +503,31 @@ class DialogLogFragment : DialogFragment() {
 
             val shortLog = notificationRows.lastOrNull()?.trim().orEmpty()
 
-            // Load icon từ nodeInfo.iconPath, tương tự cách lấy icon từ tiêu đề
+            // Khởi tạo RunnableNode thông thường để tránh lỗi ghi đè thuộc tính
             val personIcon = if (notificationTitle.isNotEmpty()) {
-                // Tạo một RunnableNode tạm thời hoặc lấy từ biến lưu trữ
-                val nodeInfo = object : com.omarea.krscript.model.ClickableNode("") {
-                    override val title: String = notificationTitle
+                val tempNode = RunnableNode().apply {
+                    title = notificationTitle
+                    this.iconPath = this@MyShellHandler.iconPath
                 }
                 if (iconPath.isNotEmpty()) {
-                    IconPathAnalysis().loadLogo(context, nodeInfo, false)
+                    IconPathAnalysis().loadLogo(context, tempNode, false)
                 } else null
             } else null
 
-            // Dùng MessagingStyle để hỗ trợ hiển thị icon
-            val messagingStyle = Notification.MessagingStyle(
-                Notification.Person.Builder()
-                    .setName(notificationTitle)
-                    .setIcon(personIcon)
-                    .build()
-            )
+            // Sử dụng android.app.Person đúng chuẩn
+            val sender = android.app.Person.Builder()
+                .setName(notificationTitle)
+                .setIcon(personIcon)
+                .build()
 
-            // Thêm từng dòng log vào MessagingStyle
+            val messagingStyle = Notification.MessagingStyle(sender)
+
             val rows = synchronized(notificationRows) { notificationRows.toList() }
             if (notificationRowsTrimmed) {
-                messagingStyle.addMessage("……", System.currentTimeMillis(), null)
+                messagingStyle.addMessage(Notification.MessagingStyle.Message("……", System.currentTimeMillis(), (null as android.app.Person?)))
             }
             rows.forEach { row ->
-                messagingStyle.addMessage(row.trim(), System.currentTimeMillis(), null)
+                messagingStyle.addMessage(Notification.MessagingStyle.Message(row.trim(), System.currentTimeMillis(), (null as android.app.Person?)))
             }
 
             val notificationBuilder = Notification.Builder(context, NOTIFICATION_CHANNEL_ID)
@@ -578,10 +542,8 @@ class DialogLogFragment : DialogFragment() {
                 notificationBuilder.setProgress(notificationProgressTotal, notificationProgressCurrent, notificationProgressTotal < 0)
             }
 
-            // Chạm vào thông báo (ngoài các nút) sẽ mở lại app, giống WakeLockService.
             buildContentPendingIntent()?.let { notificationBuilder.setContentIntent(it) }
 
-            // Nút hành động hiển thị ở HÀNG DƯỚI CÙNG do hệ thống tự vẽ (giống WakeLockService).
             if (notificationFinished) {
                 dismissPendingIntent?.let {
                     notificationBuilder.addAction(R.drawable.kr_close, context.getString(R.string.btn_confirm), it)
@@ -591,16 +553,10 @@ class DialogLogFragment : DialogFragment() {
                     notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.btn_cancel), it)
                 }
             }
-            // Nút "Sao chép log" — luôn hiện cạnh nút Hủy bỏ/Kết thúc, dùng được ở mọi trạng thái.
-            // Gọi buildCopyLogPendingIntent() ngay tại đây (thay vì lưu vào 1 property) để mỗi
-            // lần updateNotification() chạy, PendingIntent luôn được build lại với FLAG_UPDATE_CURRENT
-            // và log mới nhất tại thời điểm đó.
             buildCopyLogPendingIntent().let {
                 notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.btn_copy_output), it)
             }
 
-            // Dọn dẹp receiver mỗi khi thông báo bị người dùng vuốt bỏ, kể cả khi họ không
-            // bấm nút "Kết thúc" trước đó.
             dismissPendingIntent?.let { notificationBuilder.setDeleteIntent(it) }
 
             if (!notificationChannelCreated) {
@@ -624,7 +580,6 @@ class DialogLogFragment : DialogFragment() {
             nm.notify(id, notification)
         }
 
-        /** Intent mở lại app khi chạm vào thông báo (không tính vùng nút), giống WakeLockService. */
         private fun buildContentPendingIntent(): PendingIntent? {
             val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
@@ -635,7 +590,6 @@ class DialogLogFragment : DialogFragment() {
             )
         }
 
-
         private fun finishNotification(success: Boolean, code: Int) {
             notificationFinished = true
             val finishText = if (success) {
@@ -643,24 +597,12 @@ class DialogLogFragment : DialogFragment() {
             } else {
                 "${context.getString(R.string.kr_shell_finish_error)} $code"
             }
-            
-            // Không huỷ đăng ký dismissReceiver ở đây — nút "Kết thúc" vẫn phải dùng được sau
-            // khi task đã chạy xong; chỉ dọn dẹp khi người dùng thật sự đóng thông báo (bấm
-            // "Kết thúc" hoặc vuốt bỏ), xem cleanupNotificationReceivers().
-            // Dùng pushNotificationLog() (thay vì tự thêm "\n" trước chuỗi) để dòng kết thúc
-            // luôn có "\n" kết thúc đúng cách — trước đây bị dính liền vào dòng log kế tiếp.
             pushNotificationLog(finishText)
         }
 
         companion object {
-            // Dùng riêng kênh thông báo cho chế độ "Ẩn" (btnHide), tách biệt với kênh của
-            // BgTaskThread.ServiceShellHandler dù cùng nội dung hiển thị, để tránh phụ thuộc
-            // trạng thái channelCreated giữa 2 class không liên quan tới nhau.
             private const val NOTIFICATION_CHANNEL_ID = "kr_script_task_notification_hide"
             private var notificationChannelCreated = false
-
-            // Base ID tách khỏi dải ID mà BgTaskThread.notificationCounter (bắt đầu từ 34050)
-            // sử dụng, để tránh 2 chế độ (chạy nền từ đầu / ấn Hide giữa chừng) đè thông báo lẫn nhau.
             private var notificationIdCounter = 54050
 
             @Synchronized
@@ -696,27 +638,18 @@ class DialogLogFragment : DialogFragment() {
             actionEventHandler = null
         }
 
-        // Được gọi bởi ShellHandlerBase.killApp() ngay trước khi tiến trình bị kill (do
-        // script echo "exit:[kill]" / "exit:[restart]"). Nếu không dọn dẹp ở đây, WakeLockService
-        // (foreground service, onStartCommand() trả về START_STICKY) đang chạy nền sẽ bị hệ thống
-        // coi là "chết bất thường" và TỰ ĐỘNG KHỞI ĐỘNG LẠI service đó -> tiến trình app bị hồi
-        // sinh, gây cảm giác app tự restart thay vì thoát hẳn. Xử lý y hệt logic dọn dẹp đã dùng
-        // ở ActionPage.killApp() / MainActivity (nhánh autoKill): dừng WakeLockService một cách
-        // tường minh (stopSelf từ trong service) rồi đóng hết task, để tránh kích hoạt START_STICKY.
         override fun onKillRequest() {
             try {
                 context.startService(Intent(context, WakeLockService::class.java).apply {
                     action = WakeLockService.ACTION_END_WAKELOCK
                 })
             } catch (ignored: Exception) {
-                // Service có thể không chạy hoặc context không cho phép startService lúc này -> bỏ qua
             }
 
             try {
                 val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
                 activityManager?.appTasks?.forEach { task -> task.finishAndRemoveTask() }
             } catch (ignored: Exception) {
-                // Không để lỗi dọn task cản trở việc kill process phía sau
             }
         }
 
@@ -924,8 +857,6 @@ class DialogLogFragment : DialogFragment() {
 
         override fun onStart(forceStop: Runnable?) {
             resetLogState()
-            // Bug: thiếu dòng này khiến nút "Hủy bỏ" trong thông báo gọi forceStopRunnable?.run()
-            // trên 1 field luôn null -> bấm không có tác dụng gì, shell vẫn chạy tiếp.
             forceStopRunnable = forceStop
             actionEventHandler?.onStart(forceStop)
         }
@@ -958,7 +889,6 @@ class DialogLogFragment : DialogFragment() {
                 }
             }
 
-            // Đồng bộ tiến độ vào thông báo hệ thống (nếu đang ở chế độ ẩn dialog)
             notificationProgressCurrent = current
             notificationProgressTotal = total
             if (notificationMode) updateNotification()
@@ -1003,18 +933,11 @@ class DialogLogFragment : DialogFragment() {
 
             dispatchLogUpdate(parsedLog)
 
-            // Nếu đang ở chế độ thông báo (đã ấn btnHide), tiếp tục đẩy log phát sinh mới
-            // vào thông báo hệ thống, không chỉ log tại thời điểm bấm nút. Dòng log kết thúc
-            // (onExit) được finishNotification() tự thêm riêng nên bỏ qua ở đây để tránh lặp.
             if (notificationMode && pushToNotification) {
                 pushNotificationLog(text)
             }
         }
 
-        /**
-         * Tách text log mới thành các dòng và thêm vào thông báo hệ thống. Dùng chung logic
-         * trim (giữ tối đa 8 dòng gần nhất) với phần khởi tạo trong enableNotificationMode().
-         */
         private fun pushNotificationLog(text: String) {
             val lines = text.replace("\r", "\n").split("\n").filter { it.isNotEmpty() }
             if (lines.isEmpty()) return
