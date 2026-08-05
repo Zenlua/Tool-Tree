@@ -41,7 +41,7 @@
 
 如果同意，请点击确认按钮继续。"</string>
     <string name="permission_dialog_title">应用使用条款</string>
-    <string name="notification_ui">"通知 "</string>
+    <string name="notification_ui">通知</string>
     <string name="wakelock_service_running">WakeLock 服务正在运行</string>
     <string name="service_active_with_wakelock">正在后台运行</string>
     <string name="stop">停止</string>
@@ -74,8 +74,7 @@
     <string name="btn_copy_output">复制</string>
     <string name="copy_fail">复制失败</string>
     <string name="do_not_empty">不能为空</string>
-    <string name="kr_param_load">"获取状态 "</string>
-    <string name="kr_param_options_load">"正在加载列表 "</string>
+    <string name="kr_param_options_load">正在加载列表</string>
     <string name="kr_params_render">正在构建界面…</string>
     <string name="kr_please_choose_folder">请选择文件夹</string>
     <string name="kr_please_choose_file">请选择文件</string>

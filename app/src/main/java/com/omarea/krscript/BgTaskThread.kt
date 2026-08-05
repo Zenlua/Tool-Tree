@@ -69,7 +69,7 @@ class BgTaskThread(private var process: Process) : Thread() {
             runCatching {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                 clipboard?.setPrimaryClip(ClipData.newPlainText("text", text))
-                Toast.makeText(context, R.string.kr_task_notify_copied, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.copy_success, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -121,10 +121,10 @@ class BgTaskThread(private var process: Process) : Thread() {
 
             // Nút "Hủy bỏ" hiển thị ở hàng dưới cùng do hệ thống tự vẽ (giống WakeLockService).
             if (runnableNode.interruptable && forceStop != null && !isFinished) {
-                notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.kr_task_notify_cancel), stopIntent)
+                notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.btn_cancel), stopIntent)
             }
             // Nút "Sao chép log" — luôn hiện cạnh nút Hủy bỏ, dùng được ở mọi trạng thái.
-            notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.kr_task_notify_copy), copyIntent)
+            notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.btn_copy_output), copyIntent)
 
             if (!channelCreated) {
                 val channel = NotificationChannel(channelId, context.getString(R.string.kr_script_task_notification), NotificationManager.IMPORTANCE_DEFAULT)

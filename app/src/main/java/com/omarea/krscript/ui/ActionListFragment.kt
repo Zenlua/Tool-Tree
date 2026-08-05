@@ -246,7 +246,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         progressBarDialog.setCancelCallback {
             activeLoadJob?.cancel()
         }
-        progressBarDialog.showDialog(getString(R.string.kr_param_options_load))
+        progressBarDialog.showDialog(getString(R.string.kr_param_options_load) + " ");
 
         activeLoadJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             // ========== TỐI ƯU: GỘP getState + optionsSh thành 1 lần gọi shell ==========
@@ -342,7 +342,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 // Giờ: gộp tất cả script thành 1 khối lệnh, gọi doCmdSync() ĐÚNG 1 LẦN, rồi
                 // tách kết quả theo tag để gán lại cho từng param.
                 withContext(Dispatchers.Main) {
-                    progressBarDialog.showDialog(getString(R.string.kr_param_options_load))
+                    progressBarDialog.showDialog(getString(R.string.kr_param_options_load) + " ");
                 }
 
                 val scripts = LinkedHashMap<String, String>()

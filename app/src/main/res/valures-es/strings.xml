@@ -42,7 +42,7 @@ Permisos necesarios:
 
 Si estás de acuerdo, pulsa el botón de confirmar para continuar."</string>
     <string name="permission_dialog_title">Condiciones de uso de la aplicación</string>
-    <string name="notification_ui">"Notificación "</string>
+    <string name="notification_ui">Notificación</string>
     <string name="wakelock_service_running">Servicio WakeLock en ejecución</string>
     <string name="service_active_with_wakelock">Ejecutándose en segundo plano</string>
     <string name="stop">Detener</string>
@@ -78,8 +78,7 @@ Si estás de acuerdo, pulsa el botón de confirmar para continuar."</string>
     <string name="input_send_fail">No se puede enviar, el script ha finalizado</string>
     <string name="copy_fail">Error al copiar</string>
     <string name="do_not_empty">No puede estar vacío</string>
-    <string name="kr_param_load">Obteniendo estado\u0020</string>
-    <string name="kr_param_options_load">Cargando lista de candidatos\u0020</string>
+    <string name="kr_param_options_load">Cargando lista de candidatos</string>
     <string name="kr_params_render">Renderizando interfaz…</string>
     <string name="hint_answer">Introduce el valor...</string>
     <string name="btn_send">Hecho</string>

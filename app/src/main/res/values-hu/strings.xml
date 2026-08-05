@@ -69,8 +69,7 @@
     <string name="kr_page_loading">Konfiguráció elemzése</string>
     <string name="kr_page_sh_file_permission">A megadott konfigurációs fájl nem létezik vagy nincs olvasási jogosultság</string>
     <string name="kr_page_sh_invalid">Érvénytelen oldal konfigurációs kimenet</string>
-    <string name="kr_param_load">Állapot lekérése </string>
-    <string name="kr_param_options_load">Lista betöltése </string>
+    <string name="kr_param_options_load">Lista betöltése</string>
     <string name="kr_params_render">Felület felépítése…</string>
     <string name="kr_please_choose_app">Kérjük, válasszon alkalmazást</string>
     <string name="kr_please_choose_file">Kérjük, válasszon fájlt</string>
@@ -105,7 +104,7 @@ A szkript végrehajtása befejeződött</string>
     <string name="mtrl_checkbox_state_description_unchecked">Nincs bejelölve</string>
     <string name="mtrl_exceed_max_badge_number_content_description">Több mint %1$d új értesítés</string>
     <string name="no_files_in_directory">A mappa üres és nem tartalmaz fájlokat!</string>
-    <string name="notification_ui">Értesítés </string>
+    <string name="notification_ui">Értesítés</string>
     <string name="onloading">Adatok betöltése…</string>
     <string name="open_in_browser">Megnyitás böngészővel</string>
     <string name="options_text">Beállítások</string>

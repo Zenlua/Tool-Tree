@@ -564,11 +564,11 @@ class DialogLogFragment : DialogFragment() {
             // Nút hành động hiển thị ở HÀNG DƯỚI CÙNG do hệ thống tự vẽ (giống WakeLockService).
             if (notificationFinished) {
                 dismissPendingIntent?.let {
-                    notificationBuilder.addAction(R.drawable.kr_close, context.getString(R.string.kr_task_notify_dismiss), it)
+                    notificationBuilder.addAction(R.drawable.kr_close, context.getString(R.string.btn_confirm), it)
                 }
             } else {
                 stopPendingIntent?.let {
-                    notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.kr_task_notify_cancel), it)
+                    notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.btn_cancel), it)
                 }
             }
             // Nút "Sao chép log" — luôn hiện cạnh nút Hủy bỏ/Kết thúc, dùng được ở mọi trạng thái.
@@ -576,7 +576,7 @@ class DialogLogFragment : DialogFragment() {
             // lần updateNotification() chạy, PendingIntent luôn được build lại với FLAG_UPDATE_CURRENT
             // và log mới nhất tại thời điểm đó.
             buildCopyLogPendingIntent().let {
-                notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.kr_task_notify_copy), it)
+                notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.btn_copy_output), it)
             }
 
             // Dọn dẹp receiver mỗi khi thông báo bị người dùng vuốt bỏ, kể cả khi họ không

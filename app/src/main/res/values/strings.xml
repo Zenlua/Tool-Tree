@@ -53,7 +53,7 @@ Required Permissions:
 
 If you agree, press the confirm button to continue."</string>
     <string name="permission_dialog_title">Application Terms of Use</string>
-    <string name="notification_ui">"Notification "</string>
+    <string name="notification_ui">Notification</string>
     <string name="wakelock_service_running">WakeLock Service Running</string>
     <string name="service_active_with_wakelock">Running in the background</string>
     <string name="stop">Stop</string>
@@ -89,8 +89,7 @@ If you agree, press the confirm button to continue."</string>
     <string name="input_send_fail">Unable to send, the script has ended</string>
     <string name="copy_fail">Copy failed</string>
     <string name="do_not_empty">Cannot be empty</string>
-    <string name="kr_param_load">Get status\u0020</string>
-    <string name="kr_param_options_load">Loading candidate list\u0020</string>
+    <string name="kr_param_options_load">Loading candidate list</string>
     <string name="kr_params_render">Rendering UI…</string>
     <string name="hint_answer">Please enter the value...</string>
     <string name="btn_send">Done</string>
@@ -122,12 +121,7 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_script_task_running">Execution started</string>
     <string name="kr_script_task_has_error">An error occurred</string>
     <string name="kr_script_task_finished">Task finished</string>
-    <string name="kr_task_notify_cancel">Cancel</string>
-    <string name="kr_task_notify_dismiss">Finish</string>
-    <string name="kr_task_notify_copy">Copy log</string>
-    <string name="kr_task_notify_copied">Log copied</string>
     <string name="kr_task_notify_copy_empty">No log to copy yet</string>
-    <string name="kr_task_notify_copy_failed">Failed to copy log</string>
     <string name="kr_bg_task_start_desc">You can view the task progress and logs through the system notification center</string>
     <string name="kr_slice_script_result">Script output</string>
     <string name="kr_slice_activity_fail">Unable to open activity~</string>

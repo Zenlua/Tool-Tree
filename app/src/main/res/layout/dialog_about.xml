@@ -34,7 +34,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:button="@null"
-                    android:text="@string/notification_ui"
+                    android:text="@string/notification_ui\u0020"
                     android:alpha="0.6"
                     android:drawableEnd="?android:attr/listChoiceIndicatorMultiple" />
             </LinearLayout>

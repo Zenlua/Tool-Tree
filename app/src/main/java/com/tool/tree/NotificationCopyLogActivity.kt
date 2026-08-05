@@ -55,7 +55,7 @@ class NotificationCopyLogActivity : Activity() {
                 // Trước đây runCatching nuốt lỗi âm thầm rồi vẫn báo "đã sao chép" dù thao tác
                 // thất bại (ví dụ ClipboardManager null hoặc bị chặn bởi OEM); giờ phân biệt rõ
                 // 2 trường hợp để Toast phản ánh đúng kết quả thực tế.
-                if (copied) R.string.kr_task_notify_copied else R.string.kr_task_notify_copy_failed
+                if (copied) R.string.copy_success else R.string.copy_fail
             }
         }
         Toast.makeText(this, messageRes, Toast.LENGTH_SHORT).show()
