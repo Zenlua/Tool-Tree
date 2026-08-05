@@ -35,11 +35,12 @@ show_help() {
 }
 
 if [[ $# -eq 0 || "$1" != -* ]]; then
-show_help
+  show_help
 fi
 
 OUTPUT=''; NENEROFS=''; CONVER=''; LVLNEN=''; 
-SAINEN=''; TTBUILDI=''; CDELIMG=''; show_help=''; DISATFS='';
+SAINEN=''; TTBUILDI=''; CDELIMG=''; DISATFS='';
+
 while getopts ":i:o:n:l:c:s:k:d:p:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
@@ -58,10 +59,10 @@ while getopts ":i:o:n:l:c:s:k:d:p:h" opt; do
 done
 
 if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
-echo "Lack of value:
+  echo "Lack of value:
 -i $INPUT
 -o $OUTPUT" >&2
-exit 1
+  exit 1
 fi
 
 [[ -z "$NENEROFS" ]] && NENEROFS='lz4hc'
@@ -72,10 +73,12 @@ fi
 [[ -z "$CONVER" ]] && CONVER='raw'
 [[ -z "$DISATFS" ]] && DISATFS=1
 
-[ -f $ETC/mke2fs.conf ] && export MKE2FS_CONFIG="$ETC/mke2fs.conf"
+[ -f "$ETC/mke2fs.conf" ] && export MKE2FS_CONFIG="$ETC/mke2fs.conf"
+
 # Thời gian build
 time_build="$(glog build_times)"
 [ -z "$time_build" ] && time_build="1230768000"
+
 info="${INPUT%/*}/config/${INPUT##*/}_info"
 fs_config="${INPUT%/*}/config/${INPUT##*/}_fs_config"
 file_contexts="${INPUT%/*}/config/${INPUT##*/}_file_contexts"
@@ -84,7 +87,7 @@ saved="$OUTPUT/${INPUT##*/}.img"
 info_size="${INPUT%/*}/config/${INPUT##*/}_size.txt"
 kernel_dts_md5="${INPUT%/*}/config/${INPUT##*/}_kernel_dts_md5.txt"
 dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
-lvnen="$(glog nen_br 4)"
+lvnenbr="$(glog nen_br 4)"
 info_type="$(cat "$info" 2>/dev/null)"
 tool_ext="$(glog re_tool_ext4 1)"
 tool_erofs="$(glog re_tool_erofs)"
@@ -92,14 +95,14 @@ tool_f2fs="$(glog re_tool_f2fs)"
 
 # Ép build mặc định đối với định dạng sau
 if [[ "$info_type" =~ ^(vendor_boot|logo|squashfs|boot|vbmeta|vbmeta_system|dtbo)$ ]]; then
-TTBUILDI=0
-CONVER='raw'
+  TTBUILDI=0
+  CONVER='raw'
 fi
 
 # Đổi biến
 if [ "$CONVER" != "raw" ]; then
-out_saved="$saved"
-saved="$TMP/${saved##*/}"
+  out_saved="$saved"
+  saved="$TMP/${saved##*/}"
 fi
 
 # Xoá file cũ nếu tồn tại
@@ -107,101 +110,97 @@ fi
 
 # Chọn định dạng tệp phân vùng
 if [ "$TTBUILDI" == 1 ]; then
-partition='erofs'
+  partition='erofs'
 elif [ "$TTBUILDI" == 2 ]; then
-partition='ext'
+  partition='ext'
 elif [ "$TTBUILDI" == 3 ] || [ "$TTBUILDI" == 4 ]; then
-partition='f2fs'
+  partition='f2fs'
 else
-partition="$info_type"
+  partition="$info_type"
 fi
 
 if [ "$NENEROFS" == "lz4" ]; then
-[ "$tool_erofs" == 1 ] && zlsize=',0' || zlsize=''
+  [ "$tool_erofs" == 1 ] && zlsize=',0' || zlsize=''
 elif [ "$NENEROFS" == "lz4hc" ]; then
-[ "$LVLNEN" -gt 12 ] && zlsize=",12" || zlsize=",$LVLNEN"
+  [ "$LVLNEN" -gt 12 ] && zlsize=",12" || zlsize=",$LVLNEN"
 elif [ "$NENEROFS" == "deflate" ] || [ "$NENEROFS" == "lzma" ]; then
-[ "$LVLNEN" -gt 9 ] && zlsize=",9" || zlsize=",$LVLNEN"
+  [ "$LVLNEN" -gt 9 ] && zlsize=",9" || zlsize=",$LVLNEN"
 else
-[ "$LVLNEN" -gt 22 ] && zlsize=",22" || zlsize=",$LVLNEN"
+  [ "$LVLNEN" -gt 22 ] && zlsize=",22" || zlsize=",$LVLNEN"
 fi
 
 [ -e "$OUTPUT" ] || mkdir -p "$OUTPUT"
 echo -e "$replag_text_2: ${INPUT##*/} ($partition) ➠ ($CONVER)...\n"
 
 process_count(){
-PIDK=$!
-num1="$1"; num2="$2";
-while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$num2" ]; then
-    num3=$(stat -c %s "$num2")
-    if [ "${num3:-0}" != 0 ]; then
-    [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
-    num4="$num3"
+  PIDK=$!
+  local num1="$1" local num2="$2"
+  while kill -0 "$PIDK" 2>/dev/null; do
+    if [ -f "$num2" ]; then
+      num3=$(stat -c %s "$num2")
+      if [ "${num3:-0}" != 0 ]; then
+        [ "${num3:-0}" == "${num4:-1}" ] || progress "$((num3 * 100 / num1))/100"
+        num4="$num3"
+      fi
     fi
-fi
-sleep 1
-done
-progress -1/0
+    sleep 1
+  done
+  progress -1/0
 }
 
 process_erofss(){
-PIDK=$!
-while kill -0 $PIDK 2>/dev/null; do
-if [ -f "$1" ]; then
-    num1="$(grep "^loaded .*. fs_config entries" $1 | awk '{print $2}')"
-    num2="$(echo "$(grep -c 'Processing' $1) + 1" | bc)"
-    if [ "${num2:-0}" != 0 ]; then
-    [ "${num2:-0}" == "${num4:-1}" ] || progress "$((num2 * 100 / num1))/100"
-    num4="$num2"
+  PIDK=$!
+  while kill -0 "$PIDK" 2>/dev/null; do
+    if [ -f "$1" ]; then
+      num1="$(grep "^loaded .*. fs_config entries" "$1" | awk '{print $2}')"
+      num2="$(echo "$(grep -c 'Processing' "$1") + 1" | bc)"
+      if [ "${num2:-0}" != 0 ]; then
+        [ "${num2:-0}" == "${num4:-1}" ] || progress "$((num2 * 100 / num1))/100"
+        num4="$num2"
+      fi
     fi
-fi
-done
-progress -1/0
+  done
+  progress -1/0
 }
 
-
 if [ "$partition" == "erofs" ]; then
-    [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
+    [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >"$TMP/patch_fs.log"
     if [ "$tool_erofs" == 1 ]; then
-    imgkit_scuti pack --type erofs -s "$INPUT" -o "$saved" --compress $NENEROFS --compress-level ${zlsize/,/} --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" | tee $TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti" "$saved"
+        imgkit_scuti pack --type erofs -s "$INPUT" -o "$saved" --compress "$NENEROFS" --compress-level "${zlsize/,/}" --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" | tee "$TMP/imgkit_repack.log" || killtree "Error build process imgkit_scuti" "$saved"
     elif [ "$tool_erofs" == 2 ]; then
-    $TERMUX/lib/theft/mkfs.erofs -E^xattr-name-filter -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" > $TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs)" "$saved" &
-    process_erofss $TMP/mkfs_erofs.log
+        "$TERMUX/lib/theft/mkfs.erofs" -E^xattr-name-filter -T "$time_build" -z"${NENEROFS}${zlsize}" --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" > "$TMP/mkfs_erofs.log" || killtree "Error build process mkfs.erofs" "$saved" &
+        process_erofss "$TMP/mkfs_erofs.log"
     else
-    mkfs.erofs -E^xattr-name-filter -T $time_build -z${NENEROFS}${zlsize} --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" > $TMP/mkfs_erofs.log || killtree "Error build process mkfs.erofs" "$saved" &
-    process_erofss $TMP/mkfs_erofs.log
+        mkfs.erofs -E^xattr-name-filter -T "$time_build" -z"${NENEROFS}${zlsize}" --mount-point="/${INPUT##*/}" --fs-config-file="$fs_config" --file-contexts="$file_contexts" "$saved" "$INPUT" > "$TMP/mkfs_erofs.log" || killtree "Error build process mkfs.erofs" "$saved" &
+        process_erofss "$TMP/mkfs_erofs.log"
     fi
 elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
-    # xây dựng cpio
     for vch in $(cat "$INPUT/cache/cpio" 2>/dev/null); do
-    cd "$INPUT/${vch%.*}"
-    find | sed 1d | cpio -H newc -R 0:0 -o -F "$INPUT/$vch"
+        cd "$INPUT/${vch%.*}"
+        find | sed 1d | cpio -H newc -R 0:0 -o -F "$INPUT/$vch"
     done
-    # xây dựng dtb
-    cd "$INPUT"
+    cd "$INPUT" || exit
     if [ "$(cat dts_* 2>/dev/null | checksum)" != "$(cat cache/md5_dts 2>/dev/null)" ]; then
         for redts in $(ls -1d dts_*.+([0-9]) 2>/dev/null | grep -v "\.bak$" | sort -n -t . -k 2); do
-        nrep="${redts/dts_/}"
-        echo "Build DTB: $redts"
-        dtc -q -I dts -O dtb -@ -o ${nrep} $redts
-        [ "$?" != 0 ] && killtree "Error: Build DTB"
+            nrep="${redts/dts_/}"
+            echo "Build DTB: $redts"
+            dtc -q -I dts -O dtb -@ -o "${nrep}" "$redts"
+            [ "$?" != 0 ] && killtree "Error: Build DTB"
         done
         for bdts in $(ls -1d cache/type_* 2>/dev/null); do
             nedts="${bdts/cache\/type_/}"
-            tydbs="$(cat $bdts)"
+            tydbs="$(cat "$bdts")"
             if [ "$tydbs" == 'dtb' ] || [ "$tydbs" == 'dtbo' ]; then
-            [ "$tydbs" == 'dtb' ] && merge_dtb.py $nedts $(ls -1d $nedts.* | sort -n -t . -k 2) >/dev/null
-            [ "$tydbs" == 'dtbo' ] && dtbo create $nedts $(ls -1d $nedts.* | sort -n -t . -k 2) >/dev/null
+                [ "$tydbs" == 'dtb' ] && merge_dtb.py "$nedts" $(ls -1d "$nedts".* | sort -n -t . -k 2) >/dev/null
+                [ "$tydbs" == 'dtbo' ] && dtbo create "$nedts" $(ls -1d "$nedts".* | sort -n -t . -k 2) >/dev/null
             fi
-            rm -f $nedts.*
+            rm -f "$nedts".*
         done
     fi
-    # xây dựng boot
     magiskboot repack "${INPUT##*/}.img" "$saved" 2>&1
     echo
 elif [ "$partition" = "vbmeta_system" ] || [ "$partition" = "vbmeta" ]; then
-    cd $INPUT
+    cd "$INPUT"
     cp -rf "${INPUT##*/}.img" "$saved"
 elif [ "$partition" = "logo" ]; then
     logo_dumper.py --out "$INPUT/new-logo.img" --bmpdir "$INPUT" "$INPUT/logo.img" repack
@@ -211,13 +210,13 @@ elif [ "$partition" = "dtbo" ]; then
     cd "$INPUT"
     if [ "$(cat dts.* | checksum)" != "$(cat cache/md5_dts)" ]; then
         for dtbo in $(ls -1d dts.* | grep -v "\.bak$" | sort -n -t . -k 2); do
-        echo "Build dtb: $dtbo"
-        dtc -q -I dts -O dtb -@ -o dtb.${dtbo##*.} $dtbo
-        [ "$?" != 0 ] && killtree "Error: Build dtb"
+            echo "Build dtb: $dtbo"
+            dtc -q -I dts -O dtb -@ -o "dtb.${dtbo##*.}" "$dtbo"
+            [ "$?" != 0 ] && killtree "Error: Build dtb"
         done
-    dtbo create dtbo.img $(ls -1d dtb.* | sort -n -t . -k 2) >$TMP/dtbo_create.log
-    rm -fr dtb.*
-    echo
+        dtbo create dtbo.img $(ls -1d dtb.* | sort -n -t . -k 2) >"$TMP/dtbo_create.log"
+        rm -fr dtb.*
+        echo
     fi
     cp -f dtbo.img "$saved"
 elif [ "$partition" == "squashfs" ]; then
@@ -228,126 +227,125 @@ elif [ "$partition" == "squashfs" ]; then
     [ -z "$loai_block" ] && loai_block=131072
     loai_attrs="$(grep -cm1 '^Xattrs are compressed' "$fs_options")"
     [ -z "$loai_attrs" ] || loai_attrs='-xattrs'
-    mksquashfs "$INPUT" "${saved%.*}.squashfs" -comp "$loai_nen" -b $loai_block -Xdict-size 100% $loai_attrs -noappend | tee $TMP/mksquashfs.log || killtree "\nError build process mksquashfs" "${saved%.*}.squashfs"
+    mksquashfs "$INPUT" "${saved%.*}.squashfs" -comp "$loai_nen" -b "$loai_block" -Xdict-size 100% "$loai_attrs" -noappend | tee "$TMP/mksquashfs.log" || killtree "\nError build process mksquashfs" "${saved%.*}.squashfs"
     echo
 elif [ "$partition" == "f2fs" ]; then
-    [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
+    [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >"$TMP/patch_fs.log"
     if [ -f "$info_size" ] && [ "$info_type" == "f2fs" ]; then
-    size_real=$(cat $info_size 2>/dev/null);
-    size_real="$(echo "$SAINEN * 1024 * 1024 + $size_real" | bc)"
+        size_real=$(cat "$info_size" 2>/dev/null);
+        size_real="$(echo "$SAINEN * 1024 * 1024 + $size_real" | bc)"
     else
-    size_orig="$(du -bs "$INPUT" | awk '{ print $1 }')"
-    size_real="$(echo "($SAINEN + 6) * 1024 * 1024 + $size_orig" | bc)"
+        size_orig="$(du -bs "$INPUT" | awk '{ print $1 }')"
+        size_real="$(echo "($SAINEN + 6) * 1024 * 1024 + $size_orig" | bc)"
     fi
-    truncate -s $size_real "$saved"
+    truncate -s "$size_real" "$saved"
     if [ -f "$INPUT/system/build.prop" ]; then
-    mount_dir="/"
-    cp -rf "$fs_config" "${fs_config}_s"
-    cp -rf "$file_contexts" "${file_contexts}_s"
-    fs_config="${fs_config}_s"
-    file_contexts="${file_contexts}_s"
-    sed -i -e "/^${INPUT##*/} 0/d" -e "s|^${INPUT##*/}/|/|" "$fs_config"
-    sed -i -e "/^\/${INPUT##*/} u/d" -e "/^\/${INPUT##*/}\/ u/d" -e "s|^/${INPUT##*/}||" "$file_contexts"
+        mount_dir="/"
+        cp -rf "$fs_config" "${fs_config}_s"
+        cp -rf "$file_contexts" "${file_contexts}_s"
+        fs_config="${fs_config}_s"
+        file_contexts="${file_contexts}_s"
+        sed -i -e "/^${INPUT##*/} 0/d" -e "s|^${INPUT##*/}/|/|" "$fs_config"
+        sed -i -e "/^\/${INPUT##*/} u/d" -e "/^\/${INPUT##*/}\/ u/d" -e "s|^/${INPUT##*/}||" "$file_contexts"
     else
-    mount_dir="/${INPUT##*/}"
+        mount_dir="/${INPUT##*/}"
     fi
     if [ "$TTBUILDI" == 0 ]; then
-    [ "$(cat "$fs_options" 2>/dev/null | grep 'superblock features' | grep -cm1 ro)" == 1 ] && TTBUILDI=3 || TTBUILDI=4
+        [ "$(cat "$fs_options" 2>/dev/null | grep 'superblock features' | grep -cm1 ro)" == 1 ] && TTBUILDI=3 || TTBUILDI=4
     fi
     if [ "$TTBUILDI" == 4 ]; then
-    make_f2fs -g android -O compression,extra_attr -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real | tee $TMP/make_f2fs.log || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
-    sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" -c "$saved" 2>&1 | tee $TMP/sload_f2fs.log
-    #| sed -u -e "/Free segments:/d" -e "/Not enough space/d"
+        make_f2fs -g android -O compression,extra_attr -r -w 4096 -l "${INPUT##*/}" -f "$saved" "$size_real" | tee "$TMP/make_f2fs.log" || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
+        sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T "$time_build" -f "$INPUT" -c "$saved" 2>&1 | tee "$TMP/sload_f2fs.log"
     else
-    make_f2fs -t 0 -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" $size_real | tee $TMP/make_f2fs.log || killtree "Error build make_f2fs" "$saved"
-    sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T $time_build -f "$INPUT" "$saved" 2>&1 | tee $TMP/sload_f2fs.log
-    #| sed -u -e "/Free segments:/d" -e "/Not enough space/d"
+        make_f2fs -t 0 -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" "$size_real" | tee "$TMP/make_f2fs.log" || killtree "Error build make_f2fs" "$saved"
+        sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T "$time_build" -f "$INPUT" "$saved" 2>&1 | tee "$TMP/sload_f2fs.log"
     fi
-    [ "$(grep -cm1 'Done:' $TMP/sload_f2fs.log 2>/dev/null)" == 0 ] && killtree "Error build sload_f2fs, Suggestion: Increase free MB" "$saved";
+    [ "$(grep -cm1 'Done:' "$TMP/sload_f2fs.log" 2>/dev/null)" == 0 ] && killtree "Error build sload_f2fs, Suggestion: Increase free MB" "$saved"
     [ -f "$INPUT/system/build.prop" ] && rm -f "$file_contexts" "$fs_config"
     echo
 elif [ "$partition" == "ext" ]; then
-    [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >$TMP/patch_fs.log
-    size_real=$(cat $info_size 2>/dev/null);
+    [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >"$TMP/patch_fs.log"
+    size_real=$(cat "$info_size" 2>/dev/null)
     size_orig="$(du -sb "$INPUT" | awk '{ print $1 }')"
     if test "$size_orig" -le "52428800"; then
-    size_orig=209715200
+        size_orig=209715200
     else
-    size_orig="$(echo "$size_orig * 1.1" | bc | cut -d. -f1)"
+        size_orig="$(echo "$size_orig * 1.1" | bc | cut -d. -f1)"
     fi
     inodes=$(find "$INPUT" | wc -l)
     inodes=$(( inodes + 64 ))
     if [ "$SAINEN" == 0 ] && [ "$info_type" == "ext" ] && [ -f "$info_size" ]; then
         if [ "$tool_ext" == 1 ]; then
-        size="$(echo "$size_real / 4096" | bc)";
-        mke2fs -O ^has_journal -t ext4 -N "$inodes" -b 4096 -m 0 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
-        e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
+            size="$(echo "$size_real / 4096" | bc)"
+            mke2fs -O ^has_journal -t ext4 -N "$inodes" -b 4096 -m 0 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" "$size" 2>&1
+            e2fsdroid -e -T "$time_build" -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
         elif [ "$tool_ext" == 2 ]; then
-        imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z $size_real --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" | tee $TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti" "$saved"
+            imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z "$size_real" --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" | tee "$TMP/imgkit_repack.log" || killtree "Error build process imgkit_scuti" "$saved"
         else
-        make_ext4fs -J -T -1 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_real -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
-        process_count $size_real "$saved"
-        echo
+            make_ext4fs -J -T -1 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l "$size_real" -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
+            process_count "$size_real" "$saved"
+            echo
         fi
     else
         if [ "$tool_ext" == 1 ]; then
-        size="$(echo "$size_orig / 4096" | bc)";
-        mke2fs -O ^has_journal -t ext4 -N "$inodes" -b 4096 -m 0 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" $size 2>&1
-        e2fsdroid -e -T $time_build -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
+            size="$(echo "$size_orig / 4096" | bc)"
+            mke2fs -O ^has_journal -t ext4 -N "$inodes" -b 4096 -m 0 -I 256 -L "${INPUT##*/}" -M "/${INPUT##*/}" "$saved" "$size" 2>&1
+            e2fsdroid -e -T "$time_build" -C "$fs_config" -S "$file_contexts" -f "$INPUT" -a "/${INPUT##*/}" "$saved" || killtree "Error build process e2fsdroid" "$saved"
         elif [ "$tool_ext" == 2 ]; then
-        imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z $size_orig --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" | tee $TMP/imgkit_repack.log || killtree "Error build process imgkit_scuti" "$saved"
+            imgkit_scuti pack --type ext4 -s "$INPUT" -o "$saved" -z "$size_orig" --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" --label "${INPUT##*/}" | tee "$TMP/imgkit_repack.log" || killtree "Error build process imgkit_scuti" "$saved"
         else
-        make_ext4fs -J -T -1 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l $size_orig -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
-        process_count $size_orig "$saved"
-        echo
+            make_ext4fs -J -T -1 -L "${INPUT##*/}" -S "$file_contexts" -C "$fs_config" -l "$size_orig" -a "/${INPUT##*/}" "$saved" "$INPUT" || killtree "Error build process make_ext4fs" "$saved" &
+            process_count "$size_orig" "$saved"
+            echo
         fi
         resize2fs -M "$saved" 2>&1
         if [[ "$SAINEN" != 0 ]]; then
-        kichthuoc="$(resize2fs -P "$saved" 2>/dev/null | grep -o '[0-9]*')"
-        resize2fs -f "$saved" $(echo "$SAINEN * 1024 / 4 + $kichthuoc" | bc) &>/dev/null
+            kichthuoc="$(resize2fs -P "$saved" 2>/dev/null | grep -o '[0-9]*')"
+            resize2fs -f "$saved" "$(echo "$SAINEN * 1024 / 4 + $kichthuoc" | bc)" &>/dev/null
         fi
     fi
 fi
 
-if [[ -f $PTSD/dynamic_partitions_op_list ]] && [[ "$partition" =~ ^(ext|f2fs|erofs)$ ]]; then
-    cp -f $PTSD/dynamic_partitions_op_list $OUTPUT/dynamic_partitions_op_list
+if [[ -f "$PTSD/dynamic_partitions_op_list" ]] && [[ "$partition" =~ ^(ext|f2fs|erofs)$ ]]; then
+    cp -f "$PTSD/dynamic_partitions_op_list" "$OUTPUT/dynamic_partitions_op_list"
     if [ -f "$saved" ]; then
-    img_size=$(stat -c %s "$saved")
-    sed -i "s/resize ${INPUT##*/} [^*]*/resize ${INPUT##*/} $img_size/" $OUTPUT/dynamic_partitions_op_list
+        img_size=$(stat -c %s "$saved")
+        sed -i "s/resize ${INPUT##*/} [^*]*/resize ${INPUT##*/} $img_size/" "$OUTPUT/dynamic_partitions_op_list"
     fi
 fi
 
 if [[ "$partition" =~ ^(erofs|f2fs|ext)$ ]]; then
-    [ "$img_size" ] && text_sizes="$img_size" || text_sizes=$(stat -c %s "$saved")
-    echo "$sizes_text: ${saved##*/} $(coverbyte $text_sizes) ($text_sizes)"
+    [ -n "$img_size" ] && text_sizes="$img_size" || text_sizes=$(stat -c %s "$saved")
+    echo "$sizes_text: ${saved##*/} $(coverbyte "$text_sizes") ($text_sizes)"
     echo
     if [ "$partition" == "ext" ]; then
-    tune2fs -l "$saved" | awk '/Free blocks:/{f=$3}/Block size:/{b=$3}END{print "Free: " int(f*b/1048576) " MB"}'
-    echo
+        tune2fs -l "$saved" | awk '/Free blocks:/{f=$3}/Block size:/{b=$3}END{print "Free: " int(f*b/1048576) " MB"}'
+        echo
     fi
     if [ "$CONVER" != "raw" ]; then
-    echo -e "$unpack_text_0 ${INPUT##*/} (raw) ➠ ($CONVER)..."
-    echo
+        echo -e "$unpack_text_0 ${INPUT##*/} (raw) ➠ ($CONVER)..."
+        echo
     fi
-    if [ "$CONVER" == 'zstd' ] || [ "$CONVER" == 'zst' ] || [ "$CONVER" == 'gz' ] || [ "$CONVER" == 'xz' ] || [ "$CONVER" == 'lz4' ] || [ "$CONVER" == 'lzma' ]; then
-    [ "$CONVER" == 'zst' ] && FORMATS='zstd' || FORMATS="$CONVER"
-    zstd --progress -f -$lvnen --format=$FORMATS --compress "$saved" -o "${out_saved%.*}.img.$CONVER" 2>&1 | tee "$TMP/repzstd.log" || killtree "Conver $FORMATS error"
+    if [[ "$CONVER" =~ ^(zstd|zst|gz|xz|lz4|lzma)$ ]]; then
+        [ "$CONVER" == 'zst' ] && FORMATS='zstd' || FORMATS="$CONVER"
+        zstd --progress -f -"$LVLNEN" --format="$FORMATS" --compress "$saved" -o "${out_saved%.*}.img.$CONVER" 2>&1 | tee "$TMP/repzstd.log" || killtree "Conver $FORMATS error"
     elif [ "$CONVER" == 'dat' ] || [ "$CONVER" == 'br' ]; then
-    img2simg "$saved"
-    echo 1
-    img2sdat "$saved" -o "$OUTPUT" -v 4 -p "${INPUT##*/}" >$TMP/img2sdat.log
-    echo 2
-    [ -f "$OUTPUT/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed"
+        # Sửa lỗi chuyển đổi chuẩn cho dat/br
+        sparse_img="$TMP/${INPUT##*/}_sparse.img"
+        img2simg "$saved" "$sparse_img" || cp -f "$saved" "$sparse_img"
+        img2sdat "$sparse_img" -o "$OUTPUT" -v 4 -p "${INPUT##*/}" >"$TMP/img2sdat.log"
+        rm -f "$sparse_img"
+        [ -f "$OUTPUT/${INPUT##*/}.new.dat" ] || killtree "Error creating file ${INPUT##*/}.new.dat failed"
         if [ "$CONVER" == 'br' ]; then
-        LEVEL="$(echo "$lvnen / 2" | bc)"
-        brotli -fq "$LEVEL" "$OUTPUT/${INPUT##*/}.new.dat" -o "$OUTPUT/${INPUT##*/}.new.dat.br" >$TMP/brotli_build.log && rm -f "$OUTPUT/${INPUT##*/}.new.dat"
+            LEVEL="$(echo "$lvnenbr / 2" | bc)"
+            brotli -fq "$LEVEL" "$OUTPUT/${INPUT##*/}.new.dat" -o "$OUTPUT/${INPUT##*/}.new.dat.br" >"$TMP/brotli_build.log" && rm -f "$OUTPUT/${INPUT##*/}.new.dat"
         fi
     elif [ "$CONVER" == 'sparse' ]; then
-    img2simg "$saved" "$out_saved" >/dev/null
+        img2simg "$saved" "$out_saved" >/dev/null
     fi
     [ "$CONVER" != "raw" ] && rm -f "$saved"
 fi
 
 if [ "$CDELIMG" == 1 ]; then
-rm -fr "$INPUT" "$file_contexts" "$fs_config" "$info" "$fs_options" "$info_size"
+    rm -fr "$INPUT" "$file_contexts" "$fs_config" "$info" "$fs_options" "$info_size"
 fi

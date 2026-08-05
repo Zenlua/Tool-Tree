@@ -2,7 +2,7 @@
 set -o pipefail
 source language
 
-VALID_TYPES=("raw" "sparse" "br" "dat" "zstd")
+VALID_TYPES=("raw" "sparse" "br" "dat" "zstd" "zst")
 
 show_help() {
   echo
@@ -10,7 +10,7 @@ show_help() {
   echo
   echo "  -i    input file path"
   echo "  -o    output folder path"
-  echo "  -c    file type to convert to: raw, sparse, br, dat, zstd"
+  echo "  -c    file type to convert to: raw, sparse, br, dat, zstd, zst"
   echo "  -l    compression level: 0 ~ 22, default: 8"
   echo "  -d    delete original file after conversion:"
   echo "              1: true, 0: false"
@@ -31,6 +31,11 @@ cleanup() {
   [[ -n "${TMP_SPARSE:-}" && -f "$TMP_SPARSE" ]] && rm -f "$TMP_SPARSE"
 }
 trap cleanup EXIT
+
+finalize_exit() {
+  [[ "$DELETE" == 1 ]] && [[ -f "$INPUT" ]] && rm -f "$INPUT"
+  exit 0
+}
 
 if [[ $# -eq 0 || "$1" != -* ]]; then
   show_help
@@ -60,8 +65,12 @@ if [[ ! -f "$INPUT" ]]; then
   exit 1
 fi
 
+# Lưu lại giá trị gốc để giữ nguyên phần mở rộng đầu ra (zst hoặc zstd)
+ORIG_CONVER="$CONVER"
+[[ "$CONVER" == "zst" ]] && CONVER="zstd"
+
 if ! is_valid_type "$CONVER"; then
-  echo "! Invalid target format: $CONVER (allowed: ${VALID_TYPES[*]})" >&2
+  echo "! Invalid target format: $ORIG_CONVER (allowed: ${VALID_TYPES[*]})" >&2
   show_help
 fi
 
@@ -81,12 +90,20 @@ fi
 mkdir -p "$TMP" "$OUTPUT" || { echo "! Cannot create TMP/OUTPUT dir" >&2; exit 1; }
 
 dang_type="$(checktype "$INPUT")"
+[[ "$dang_type" == "zst" ]] && dang_type="zstd"
+
 logcv="$TMP/log_conver.txt"
 rm -f "$logcv"
 
 nameraw="${INPUT##*/}"
 namesv="${nameraw%%.*}"
-TRANSFER_LIST="${INPUT%%.*}.transfer.list"
+
+if [[ "$INPUT" == */* ]]; then
+  TRANSFER_LIST="${INPUT%/*}/$namesv.transfer.list"
+else
+  TRANSFER_LIST="$namesv.transfer.list"
+fi
+
 BR_LEVEL=$(( LEVEL / 2 ))
 
 if [[ "$dang_type" == "$CONVER" ]]; then
@@ -94,12 +111,9 @@ if [[ "$dang_type" == "$CONVER" ]]; then
 fi
 
 # ============================================================
-# Các đường đi "tắt" - không cần giải nén hết về raw rồi đóng
-# gói lại nếu định dạng nguồn và đích có thể chuyển trực tiếp.
+# Các đường đi "tắt" - không cần giải nén hết về raw rồi đóng gói
 # ============================================================
 
-# dat <-> br chỉ khác nhau ở việc new.dat có bị brotli nén hay
-# không; transfer.list dùng chung, không cần đụng tới raw/sparse.
 dat_to_br_direct() {
   echo -e "$unpack_text_0 (${nameraw}) ➠ (br)...\n"
   [[ -f "$TRANSFER_LIST" ]] || killtree "Missing file: $TRANSFER_LIST"
@@ -114,14 +128,11 @@ br_to_dat_direct() {
   brotli -vf -d "$INPUT" -o "$OUTPUT/$namesv.new.dat" &>>"$logcv" || killtree "Error brotli decompress"
 }
 
-# sparse -> dat: img2sdat nhận thẳng ảnh sparse, không cần
-# simg2img về raw rồi img2simg đóng lại sparse (dư 2 bước).
 sparse_to_dat_direct() {
   echo -e "$unpack_text_0 (${nameraw}) ➠ (dat)...\n"
   img2sdat "$INPUT" -o "$OUTPUT" -v 4 -p "$namesv" &>>"$logcv" || killtree "img2sdat error cover !!"
 }
 
-# sparse -> br: giống trên, xong nén new.dat lại bằng brotli.
 sparse_to_br_direct() {
   sparse_to_dat_direct
   [[ -f "$OUTPUT/$namesv.new.dat" ]] || killtree "Error creating file $namesv.new.dat failed !!!"
@@ -130,16 +141,14 @@ sparse_to_br_direct() {
 }
 
 case "${dang_type}:${CONVER}" in
-  dat:br)      dat_to_br_direct;      exit 0 ;;
-  br:dat)      br_to_dat_direct;      exit 0 ;;
-  sparse:dat)  sparse_to_dat_direct;  exit 0 ;;
-  sparse:br)   sparse_to_br_direct;   exit 0 ;;
+  dat:br)      dat_to_br_direct;      finalize_exit ;;
+  br:dat)      br_to_dat_direct;      finalize_exit ;;
+  sparse:dat)  sparse_to_dat_direct;  finalize_exit ;;
+  sparse:br)   sparse_to_br_direct;   finalize_exit ;;
 esac
 
 # ============================================================
 # Đường đi tổng quát: đưa input về raw, rồi đóng gói sang đích.
-# Dùng cho mọi cặp còn lại (raw<->sparse, ->zstd/gz/xz/lz4/lzma,
-# dat/br -> raw hoặc sparse, raw/zstd... -> dat/br, v.v.)
 # ============================================================
 
 TMP_RAW="$TMP/raw_tmp_$$_$RANDOM.img"
@@ -184,9 +193,8 @@ to_sparse_dat() {
 }
 
 case "$CONVER" in
-  zstd|zst|gz|xz|lz4|lzma)
-    if [[ "$CONVER" == 'zst' ]]; then FORMATS='zstd'; else FORMATS="$CONVER"; fi
-    zstd --progress -f "-$LEVEL" --format="$FORMATS" --compress "$file_img" -o "$OUTPUT/$namesv.img.$CONVER" 2>&1 \
+  zstd|gz|xz|lz4|lzma)
+    zstd --progress -f "-$LEVEL" --format="$CONVER" --compress "$file_img" -o "$OUTPUT/$namesv.img.$ORIG_CONVER" 2>&1 \
       || killtree "Error: $unpack_text_2 $logcv"
     ;;
   dat)
@@ -215,6 +223,4 @@ if [[ "$file_img" != "$INPUT" && -f "$file_img" ]]; then
   rm -f "$file_img"
 fi
 
-[[ "$DELETE" == 1 ]] && rm -f "$INPUT"
-
-exit 0
+finalize_exit

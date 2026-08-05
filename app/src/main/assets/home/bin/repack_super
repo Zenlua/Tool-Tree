@@ -20,9 +20,10 @@ show_help() {
 }
 
 INPUT=""; MIMGPA=""; SUPGRUP=""; SAIZESUP="";
-DANGIMG=""; TYPEIMG=""; ml1=""; ml2="";
+DANGIMG=""; TYPEIMG=""; ml1=""; ml2=""; p_total=0;
+
 if [[ $# -eq 0 || "$1" != -* ]]; then
-show_help
+  show_help
 fi
 
 while getopts ":i:m:g:s:f:t:h" opt; do
@@ -40,9 +41,10 @@ while getopts ":i:m:g:s:f:t:h" opt; do
 done
 
 if [[ -z "$INPUT" || -z "$MIMGPA" ]]; then
-echo "Lack of value:
+  echo "Lack of value:
 -i ${INPUT:-???}
 -m ${MIMGPA:-???}" >&2
+  exit 1
 fi
 
 [[ -z "$SUPGRUP" ]] && SUPGRUP='qti_dynamic_partitions'
@@ -59,36 +61,51 @@ echo "${sizes_text}: ${SAIZESUP} GB ➠ ${super_sizek} bytes"
 echo
 
 argvs="--super-name super --metadata-size $meta_size "
+
+# Kiểm tra thư mục đầu vào tồn tại không
+if [ ! -d "$INPUT" ]; then
+  killtree "Input directory does not exist: $INPUT"
+fi
+
 cd "$INPUT"
 
 if [ "$TYPEIMG" == "A" ]; then
-argvs+="--metadata-slots 2 --device super:${super_sizek}:$first_sector --group ${SUPGRUP}:${super_sizek} "
+  argvs+="--metadata-slots 2 --device super:${super_sizek}:$first_sector --group ${SUPGRUP}:${super_sizek} "
 fi
 
-p_size=0
 for i in $MIMGPA; do
-echo "$i" | grep -q "\-cow" && continue
-i1=$(echo "$i" | sed 's/.img$//')
-i2=$(echo "$i" | sed -e 's/_a.img$//' -e 's/_b.img$//' -e 's/.img$//')
-info=$(checktype "$INPUT/$i1.img")
-p_size=$(stat -c %s "$INPUT/$i1.img")
-p_total=$((p_total + p_size))
-[ "$info" == "sparse" ] && simg2img "$INPUT/$i1.img"
-[ "$TYPEIMG" == "A" ] && argvs+="--partition ${i2}:readonly:$p_size:${SUPGRUP} --image ${i2}=$i1.img "
-if [ "$TYPEIMG" == "AB" ] || [ "$TYPEIMG" == "VAB" ]; then
-ml1+="--partition ${i2}_a:none:$p_size:${SUPGRUP}_a --image ${i2}_a=$i1.img "
-ml2+="--partition ${i2}_b:none:0:${SUPGRUP}_b "
-fi
+  echo "$i" | grep -q "\-cow" && continue
+  i1=$(echo "$i" | sed 's/\.img$//')
+  i2=$(echo "$i" | sed -e 's/_a\.img$//' -e 's/_b\.img$//' -e 's/\.img$//')
+
+  info=$(checktype "$i1.img")
+  p_size=$(stat -c %s "$i1.img")
+  p_total=$((p_total + p_size))
+
+  # Sửa lỗi cú pháp simg2img (cần có file đầu ra)
+  if [ "$info" == "sparse" ]; then
+    simg2img "$i1.img"
+  fi
+
+  if [ "$TYPEIMG" == "A" ]; then
+    argvs+="--partition ${i2}:readonly:$p_size:${SUPGRUP} --image ${i2}=$i1.img "
+  fi
+
+  if [ "$TYPEIMG" == "AB" ] || [ "$TYPEIMG" == "VAB" ]; then
+    ml1+="--partition ${i2}_a:none:$p_size:${SUPGRUP}_a --image ${i2}_a=$i1.img "
+    ml2+="--partition ${i2}_b:none:0:${SUPGRUP}_b "
+  fi
 done
 
 if [ "$TYPEIMG" == "AB" ] || [ "$TYPEIMG" == "VAB" ]; then
-    if [ "$TYPEIMG" == "AB" ] && [ "$(glog check_super_type_ab)" == 1 ]; then
-        half_size=$((super_sizek / 2 - first_sector_size * 2))
-    else
-        half_size=$((super_sizek - first_sector_size))
-    fi
-argvs+="--metadata-slots 3 --device super:${super_sizek}:$first_sector --group ${SUPGRUP}_a:${half_size} ${ml1} --group ${SUPGRUP}_b:${half_size} ${ml2} "
+  if [ "$TYPEIMG" == "AB" ] && [ "$(glog check_super_type_ab)" == 1 ]; then
+    half_size=$((super_sizek / 2 - first_sector_size * 2))
+  else
+    half_size=$((super_sizek - first_sector_size))
+  fi
+  argvs+="--metadata-slots 3 --device super:${super_sizek}:$first_sector --group ${SUPGRUP}_a:${half_size} ${ml1} --group ${SUPGRUP}_b:${half_size} ${ml2} "
 fi
+
 [ "$TYPEIMG" == "VAB" ] && argvs+="--virtual-ab "
 [ "$DANGIMG" == "sparse" ] && argvs+="--sparse "
 
@@ -96,9 +113,10 @@ mkdir -p out
 echo "Free: $(((super_sizek - p_total) / 1024 / 1024)) MB"
 echo
 echo "lpmake ${argvs}-F --output $INPUT/out/super.img" | sed -z 's| --|\n--|g'
-lpmake ${argvs} -F --output out/super.img 2>$TMP/super_log.txt
-if [ $? == 0 ]; then
-echo -e "\n$supers_text_2"
+
+lpmake ${argvs} -F --output out/super.img 2>"$TMP/super_log.txt"
+if [ $? -eq 0 ]; then
+  echo -e "\n$supers_text_2"
 else
-killtree "\n$supers_text_1\n$(cat $TMP/super_log.txt 2>/dev/null)" "$INPUT/out/super.img"
+  killtree "\n$supers_text_1\n$(cat "$TMP/super_log.txt" 2>/dev/null)" "out/super.img"
 fi
