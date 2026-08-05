@@ -45,6 +45,7 @@ echo '
   author=Kakathic
   description=Modified system files" | tee '$path_modun'/module.prop
   touch '$path_modun'/update
+  cp -rf '$MPAT'/service.sh '$path_modun2'/service.sh
   set_permis -R -o 0:0 -c u:object_r:system_file:s0 '$path_modun2'/system
   """
     [[group.action.params]]

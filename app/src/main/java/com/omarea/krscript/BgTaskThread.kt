@@ -15,6 +15,7 @@ import android.text.SpannableString
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.omarea.common.ui.DialogHelper
+import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
@@ -93,14 +94,27 @@ class BgTaskThread(private var process: Process) : Thread() {
             }
 
             val shortLog = notificationMessageRows.lastOrNull()?.trim().orEmpty()
-            // Log đầy đủ, MỚI NHẤT LÊN TRÊN CÙNG để nếu bị Android cắt bớt do quá dài (khi mở
-            // rộng) thì phần bị cắt luôn là log CŨ, còn log mới nhất luôn được giữ lại.
-            val fullLog = run {
-                val rows = synchronized(notificationMessageRows) { notificationMessageRows.toList() }
-                val sb = StringBuilder()
-                for (i in rows.indices.reversed()) sb.append(rows[i])
-                if (someIgnored) sb.append("……\n")
-                sb.toString().trim()
+
+            // Load icon từ runnableNode.iconPath, tương tự cách lấy icon từ tiêu đề
+            val personIcon = if (runnableNode.iconPath.isNotEmpty()) {
+                IconPathAnalysis().loadLogo(context, runnableNode, false)
+            } else null
+
+            // Dùng MessagingStyle để hỗ trợ hiển thị icon
+            val messagingStyle = Notification.MessagingStyle(
+                Notification.Person.Builder()
+                    .setName(notificationTitle)
+                    .setIcon(personIcon)
+                    .build()
+            )
+
+            // Thêm từng dòng log vào MessagingStyle (MỚI NHẤT LÊN CUỐI cùng để logic đảo chiều dễ nhìn)
+            val rows = synchronized(notificationMessageRows) { notificationMessageRows.toList() }
+            if (someIgnored) {
+                messagingStyle.addMessage("……", System.currentTimeMillis(), null)
+            }
+            rows.forEach { row ->
+                messagingStyle.addMessage(row.trim(), System.currentTimeMillis(), null)
             }
 
             val notificationBuilder = Notification.Builder(context, channelId)
@@ -109,9 +123,8 @@ class BgTaskThread(private var process: Process) : Thread() {
                     .setSmallIcon(R.drawable.kr_run)
                     .setAutoCancel(true)
                     .setWhen(System.currentTimeMillis())
-                    // Dùng style mặc định của Android: hệ thống tự vẽ mũi tên mở rộng và cho
-                    // phép ấn giữ/vuốt để xem toàn bộ log, không cần tự vẽ layout riêng.
-                    .setStyle(Notification.BigTextStyle().bigText(fullLog))
+                    .setStyle(messagingStyle)
+            
             if (progressTotal != progressCurrent) {
                 notificationBuilder.setProgress(progressTotal, progressCurrent, progressTotal < 0)
             }

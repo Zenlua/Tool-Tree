@@ -46,6 +46,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import com.omarea.common.ui.DialogHelper
+import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
@@ -408,6 +409,7 @@ class DialogLogFragment : DialogFragment() {
         private var notificationId = 0
         private var notificationManager: NotificationManager? = null
         private var notificationTitle = ""
+        private var iconPath = ""
         private var notificationInterruptable = false
         private val notificationRows = ArrayList<String>()
         private var notificationRowsTrimmed = false
@@ -438,6 +440,7 @@ class DialogLogFragment : DialogFragment() {
             notificationMode = true
 
             notificationTitle = nodeInfo.title
+            iconPath = nodeInfo.iconPath
             notificationInterruptable = nodeInfo.interruptable
             notificationId = nextNotificationId()
             notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
@@ -535,14 +538,32 @@ class DialogLogFragment : DialogFragment() {
 
             val shortLog = notificationRows.lastOrNull()?.trim().orEmpty()
 
-            // Log đầy đủ, MỚI NHẤT LÊN TRÊN CÙNG để nếu bị Android cắt bớt do quá dài (khi mở
-            // rộng) thì phần bị cắt luôn là log CŨ, còn log mới nhất luôn được giữ lại.
-            val fullLog = run {
-                val rows = synchronized(notificationRows) { notificationRows.toList() }
-                val sb = StringBuilder()
-                for (i in rows.indices.reversed()) sb.append(rows[i])
-                if (notificationRowsTrimmed) sb.append("……\n")
-                sb.toString().trim()
+            // Load icon từ nodeInfo.iconPath, tương tự cách lấy icon từ tiêu đề
+            val personIcon = if (notificationTitle.isNotEmpty()) {
+                // Tạo một RunnableNode tạm thời hoặc lấy từ biến lưu trữ
+                val nodeInfo = object : com.omarea.krscript.model.ClickableNode("") {
+                    override val title: String = notificationTitle
+                }
+                if (iconPath.isNotEmpty()) {
+                    IconPathAnalysis().loadLogo(context, nodeInfo, false)
+                } else null
+            } else null
+
+            // Dùng MessagingStyle để hỗ trợ hiển thị icon
+            val messagingStyle = Notification.MessagingStyle(
+                Notification.Person.Builder()
+                    .setName(notificationTitle)
+                    .setIcon(personIcon)
+                    .build()
+            )
+
+            // Thêm từng dòng log vào MessagingStyle
+            val rows = synchronized(notificationRows) { notificationRows.toList() }
+            if (notificationRowsTrimmed) {
+                messagingStyle.addMessage("……", System.currentTimeMillis(), null)
+            }
+            rows.forEach { row ->
+                messagingStyle.addMessage(row.trim(), System.currentTimeMillis(), null)
             }
 
             val notificationBuilder = Notification.Builder(context, NOTIFICATION_CHANNEL_ID)
@@ -551,9 +572,8 @@ class DialogLogFragment : DialogFragment() {
                 .setSmallIcon(R.drawable.kr_run)
                 .setAutoCancel(true)
                 .setWhen(System.currentTimeMillis())
-                // Dùng style mặc định của Android: hệ thống tự vẽ mũi tên mở rộng và cho phép
-                // ấn giữ/vuốt để xem toàn bộ log, không cần tự vẽ layout hay nút toggle riêng.
-                .setStyle(Notification.BigTextStyle().bigText(fullLog))
+                .setStyle(messagingStyle)
+            
             if (notificationProgressTotal != notificationProgressCurrent) {
                 notificationBuilder.setProgress(notificationProgressTotal, notificationProgressCurrent, notificationProgressTotal < 0)
             }
@@ -618,11 +638,11 @@ class DialogLogFragment : DialogFragment() {
 
         private fun finishNotification(success: Boolean, code: Int) {
             notificationFinished = true
-            val finishText = (if (success) {
+            val finishText = if (success) {
                 context.getString(R.string.kr_script_task_finished)
             } else {
                 "${context.getString(R.string.kr_shell_finish_error)} $code"
-            }) + "\n"
+            }
             
             // Không huỷ đăng ký dismissReceiver ở đây — nút "Kết thúc" vẫn phải dùng được sau
             // khi task đã chạy xong; chỉ dọn dẹp khi người dùng thật sự đóng thông báo (bấm
@@ -996,16 +1016,10 @@ class DialogLogFragment : DialogFragment() {
          * trim (giữ tối đa 8 dòng gần nhất) với phần khởi tạo trong enableNotificationMode().
          */
         private fun pushNotificationLog(text: String) {
-            val lines = text.replace("\r", "").split("\n")
+            val lines = text.replace("\r", "\n").split("\n").filter { it.isNotEmpty() }
             if (lines.isEmpty()) return
             synchronized(notificationRows) {
-                for (line in lines) {
-                    if (line.isNotEmpty()) {
-                        notificationRows.add("$line\n")
-                    } else {
-                        notificationRows.add("\n")
-                    }
-                }
+                lines.forEach { notificationRows.add("$it\n") }
                 trimNotificationRows()
             }
             updateNotification()
