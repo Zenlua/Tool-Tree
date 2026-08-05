@@ -996,10 +996,16 @@ class DialogLogFragment : DialogFragment() {
          * trim (giữ tối đa 8 dòng gần nhất) với phần khởi tạo trong enableNotificationMode().
          */
         private fun pushNotificationLog(text: String) {
-            val lines = text.replace("\r", "\n").split("\n").filter { it.isNotEmpty() }
+            val lines = text.replace("\r", "").split("\n")
             if (lines.isEmpty()) return
             synchronized(notificationRows) {
-                lines.forEach { notificationRows.add("$it\n") }
+                for (line in lines) {
+                    if (line.isNotEmpty()) {
+                        notificationRows.add("$line\n")
+                    } else {
+                        notificationRows.add("\n")
+                    }
+                }
                 trimNotificationRows()
             }
             updateNotification()
