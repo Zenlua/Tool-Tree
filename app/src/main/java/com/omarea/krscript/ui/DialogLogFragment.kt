@@ -472,7 +472,12 @@ class DialogLogFragment : DialogFragment() {
                         forceStopRunnable?.run()
                     }
                 }
-                runCatching { context.registerReceiver(stopReceiver, IntentFilter(actionName)) }
+                // Android 13+ (API 33) bắt buộc phải khai báo rõ RECEIVER_EXPORTED/NOT_EXPORTED,
+                // thiếu cờ này registerReceiver() sẽ ném SecurityException — trước đây bị
+                // runCatching nuốt mất lỗi âm thầm nên receiver không hề được đăng ký.
+                runCatching {
+                    ContextCompat.registerReceiver(context, stopReceiver, IntentFilter(actionName), ContextCompat.RECEIVER_NOT_EXPORTED)
+                }
             }
 
             // Nút mũi tên mở rộng/thu gọn (giống Telegram) — bấm vào sẽ đảo trạng thái và
@@ -489,7 +494,9 @@ class DialogLogFragment : DialogFragment() {
                     updateNotification()
                 }
             }
-            runCatching { context.registerReceiver(expandReceiver, IntentFilter(expandAction)) }
+            runCatching {
+                ContextCompat.registerReceiver(context, expandReceiver, IntentFilter(expandAction), ContextCompat.RECEIVER_NOT_EXPORTED)
+            }
 
             // Nút "Kết thúc" (chỉ dùng được sau khi shell chạy xong) — đóng hẳn thông báo và
             // dọn dẹp tất cả receiver. Cũng được dùng làm deleteIntent khi người dùng vuốt bỏ
@@ -506,7 +513,9 @@ class DialogLogFragment : DialogFragment() {
                     cleanupNotificationReceivers()
                 }
             }
-            runCatching { context.registerReceiver(dismissReceiver, IntentFilter(dismissAction)) }
+            runCatching {
+                ContextCompat.registerReceiver(context, dismissReceiver, IntentFilter(dismissAction), ContextCompat.RECEIVER_NOT_EXPORTED)
+            }
 
             updateNotification()
         }
@@ -932,6 +941,9 @@ class DialogLogFragment : DialogFragment() {
 
         override fun onStart(forceStop: Runnable?) {
             resetLogState()
+            // Bug: thiếu dòng này khiến nút "Hủy bỏ" trong thông báo gọi forceStopRunnable?.run()
+            // trên 1 field luôn null -> bấm không có tác dụng gì, shell vẫn chạy tiếp.
+            forceStopRunnable = forceStop
             actionEventHandler?.onStart(forceStop)
         }
 

@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.text.SpannableString
 import android.view.View
 import android.widget.RemoteViews
+import androidx.core.content.ContextCompat
 import com.omarea.common.ui.DialogHelper
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
@@ -145,7 +146,11 @@ class BgTaskThread(private var process: Process) : Thread() {
 
         override fun onStart(forceStop: Runnable?) {
             this.forceStop = forceStop
-            context.registerReceiver(receiver, IntentFilter(STOP_CLICK_ACTION_NAME))
+            // Android 13+ (API 33) bắt buộc cờ RECEIVER_EXPORTED/NOT_EXPORTED, thiếu sẽ ném
+            // SecurityException khiến receiver không đăng ký được -> nút dừng trong thông báo vô tác dụng.
+            runCatching {
+                ContextCompat.registerReceiver(context, receiver, IntentFilter(STOP_CLICK_ACTION_NAME), ContextCompat.RECEIVER_NOT_EXPORTED)
+            }
 
             updateNotification()
         }
