@@ -50,6 +50,7 @@ import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
 import com.tool.tree.AnsiColorParser
+import com.tool.tree.NotificationCopyLogActivity
 import com.tool.tree.R
 import com.tool.tree.WakeLockService
 import com.tool.tree.databinding.KrDialogLogBinding
@@ -571,7 +572,10 @@ class DialogLogFragment : DialogFragment() {
                 }
             }
             // Nút "Sao chép log" — luôn hiện cạnh nút Hủy bỏ/Kết thúc, dùng được ở mọi trạng thái.
-            copyPendingIntent?.let {
+            // Gọi buildCopyLogPendingIntent() ngay tại đây (thay vì lưu vào 1 property) để mỗi
+            // lần updateNotification() chạy, PendingIntent luôn được build lại với FLAG_UPDATE_CURRENT
+            // và log mới nhất tại thời điểm đó.
+            buildCopyLogPendingIntent().let {
                 notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.kr_task_notify_copy), it)
             }
 
