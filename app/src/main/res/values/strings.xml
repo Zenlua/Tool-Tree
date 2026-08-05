@@ -126,6 +126,8 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_task_notify_dismiss">Finish</string>
     <string name="kr_task_notify_copy">Copy log</string>
     <string name="kr_task_notify_copied">Log copied</string>
+    <string name="kr_task_notify_copy_empty">No log to copy yet</string>
+    <string name="kr_task_notify_copy_failed">Failed to copy log</string>
     <string name="kr_bg_task_start_desc">You can view the task progress and logs through the system notification center</string>
     <string name="kr_slice_script_result">Script output</string>
     <string name="kr_slice_activity_fail">Unable to open activity~</string>

@@ -111,6 +111,8 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_task_notify_dismiss">Kết thúc</string>
     <string name="kr_task_notify_copy">Sao chép log</string>
     <string name="kr_task_notify_copied">Đã sao chép log</string>
+    <string name="kr_task_notify_copy_empty">Chưa có log để sao chép</string>
+    <string name="kr_task_notify_copy_failed">Sao chép log thất bại</string>
     <string name="kr_bg_task_start_desc">Bạn có thể xem tiến trình và log tác vụ thông qua trung tâm thông báo hệ thống</string>
     <string name="kr_slice_script_result">Kết quả script</string>
     <string name="kr_slice_activity_fail">Không thể mở activity~</string>

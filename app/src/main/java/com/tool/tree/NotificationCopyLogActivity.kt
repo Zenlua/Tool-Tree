@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 
@@ -21,15 +22,42 @@ import android.widget.Toast
 class NotificationCopyLogActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleIntent(intent)
+    }
 
+    // android:launchMode="singleInstance" khiến 1 instance của Activity này có thể được tái sử
+    // dụng cho lần bấm nút tiếp theo thay vì tạo instance mới — khi đó hệ thống gọi onNewIntent()
+    // chứ không phải onCreate(). Trước đây hàm này không được override nên nếu người dùng bấm
+    // nút "Sao chép log" một lần nữa trong lúc instance cũ chưa kịp finish() (ví dụ máy đang bận,
+    // Doze, hoặc thao tác rất nhanh), lần bấm đó sẽ không copy gì cả và có thể để lại 1 Activity
+    // trong suốt còn sống sót trong task stack.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
         val text = intent?.getStringExtra(EXTRA_LOG_TEXT).orEmpty()
-        runCatching {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-            clipboard?.setPrimaryClip(ClipData.newPlainText("text", text))
-        }
 
-        val messageRes = intent?.getIntExtra(EXTRA_TOAST_MESSAGE_RES, R.string.kr_task_notify_copied)
-            ?: R.string.kr_task_notify_copied
+        val messageRes = when {
+            text.isBlank() -> {
+                // Log rỗng (ví dụ tác vụ vừa mới bắt đầu, chưa có output): không ghi đè
+                // clipboard bằng chuỗi rỗng — người dùng có thể đang có nội dung hữu ích khác
+                // trong clipboard, việc xóa mất nó không mang lại lợi ích gì.
+                R.string.kr_task_notify_copy_empty
+            }
+            else -> {
+                val copied = runCatching {
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("text", text))
+                }.isSuccess
+                // Trước đây runCatching nuốt lỗi âm thầm rồi vẫn báo "đã sao chép" dù thao tác
+                // thất bại (ví dụ ClipboardManager null hoặc bị chặn bởi OEM); giờ phân biệt rõ
+                // 2 trường hợp để Toast phản ánh đúng kết quả thực tế.
+                if (copied) R.string.kr_task_notify_copied else R.string.kr_task_notify_copy_failed
+            }
+        }
         Toast.makeText(this, messageRes, Toast.LENGTH_SHORT).show()
 
         finish()
@@ -37,6 +65,5 @@ class NotificationCopyLogActivity : Activity() {
 
     companion object {
         const val EXTRA_LOG_TEXT = "log_text"
-        const val EXTRA_TOAST_MESSAGE_RES = "toast_message_res"
     }
 }
