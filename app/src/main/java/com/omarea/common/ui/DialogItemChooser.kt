@@ -42,7 +42,9 @@ class DialogItemChooser(
         }
 
         // 全选功能
-        val selectAll = view.findViewById<CompoundButton?>(R.id.select_all)
+        val selectAll = view.findViewById<CompoundButton?>(R.id.select_all)?.apply {
+            text = "$text "
+        }
         if (selectAll != null) {
             if (multiple) {
                 val adapter = (absListView.adapter as AdapterItemChooser?)

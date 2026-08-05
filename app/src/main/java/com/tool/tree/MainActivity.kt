@@ -381,9 +381,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         layout.findViewById<CheckBox>(R.id.notification_ui).apply {
+            text = "$text "
             isChecked = themeConfig.getAllowNotificationUI()
-            setOnCheckedChangeListener { _, isChecked -> themeConfig.setAllowNotificationUI(isChecked) }
+            setOnCheckedChangeListener { _, isChecked ->
+                themeConfig.setAllowNotificationUI(isChecked)
+            }
         }
+
 
         layout.findViewById<TextView>(R.id.appliction_authorText).setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://zenlua.github.io/Tool-Tree/website/Information.html")))

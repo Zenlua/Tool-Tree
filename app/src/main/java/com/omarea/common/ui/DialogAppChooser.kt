@@ -42,7 +42,11 @@ class DialogAppChooser(
         }
 
         // ===== 全选 (Select All) =====
-        selectAllCheckBox = view.findViewById(R.id.select_all)
+        selectAllCheckBox = view.findViewById<CompoundButton?>(R.id.select_all)?.apply {
+            if (text != null && !text.endsWith(" ")) {
+                text = "$text "
+            }
+        }
         val selectAll = selectAllCheckBox
 
         if (selectAll != null) {
@@ -158,8 +162,12 @@ class DialogAppChooser(
 
     fun setAllowAllSelect(allow: Boolean): DialogAppChooser {
         this.allowAllSelect = allow
-        view?.findViewById<CompoundButton?>(R.id.select_all)?.visibility =
-            if (allow) View.VISIBLE else View.GONE
+        view?.findViewById<CompoundButton?>(R.id.select_all)?.apply {
+            if (text != null && !text.endsWith(" ")) {
+                text = "$text "
+            }
+            visibility = if (allow) View.VISIBLE else View.GONE
+        }
         return this
     }
 

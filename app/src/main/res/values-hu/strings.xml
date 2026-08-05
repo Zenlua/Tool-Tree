@@ -136,7 +136,7 @@ Ha egyetért, nyomja meg a megerősítés gombot a folytatáshoz.</string>
     <string name="save_text">Mentés ide</string>
     <string name="script_losted">Hiányzó szkript erőforrás
 </string>
-    <string name="select_all">Összes kijelölése </string>
+    <string name="select_all">Összes kijelölése</string>
     <string name="service_active_with_wakelock">Háttérben fut</string>
     <string name="shell_executor">Szkript végrehajtó</string>
     <string name="side_sheet_accessibility_pane_title">Oldalsáv</string>

@@ -5,7 +5,7 @@ import android.util.AttributeSet;
 import android.widget.GridView;
 
 public class OverScrollGridView extends GridView {
-    private int mMaxOverScrollY = 400;//默认200
+    private int mMaxOverScrollY = 200; //默认200
 
     public OverScrollGridView(Context context) {
         super(context);

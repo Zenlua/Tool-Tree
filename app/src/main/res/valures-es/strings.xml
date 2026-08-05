@@ -57,7 +57,7 @@ Si estás de acuerdo, pulsa el botón de confirmar para continuar."</string>
     <string name="execute_wait">Ejecutando, espera por favor...</string>
     <string name="app_chooser_search_hint">Introduce el nombre de la aplicación o del paquete para buscar</string>
     <string name="item_chooser_search_hint">Buscar opciones</string>
-    <string name="select_all">"Seleccionar todo "</string>
+    <string name="select_all">Seleccionar todo</string>
     <string name="help_title">Instrucciones</string>
     <string name="confirm_message">Mensaje de aviso</string>
     <string name="confirm_title">Título del aviso</string>

@@ -68,7 +68,7 @@ If you agree, press the confirm button to continue."</string>
     <string name="execute_wait">Executing, please wait...</string>
     <string name="app_chooser_search_hint">Enter application name/package name to search</string>
     <string name="item_chooser_search_hint">Search options</string>
-    <string name="select_all">"Select All "</string>
+    <string name="select_all">Select all</string>
     <string name="help_title">Instructions</string>
     <string name="confirm_message">Reminder message</string>
     <string name="confirm_title">Reminder title</string>
