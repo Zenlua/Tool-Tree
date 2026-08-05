@@ -399,7 +399,6 @@ class DialogLogFragment : DialogFragment() {
         private var notificationManager: NotificationManager? = null
         private var notificationTitle = ""
         private var iconPath = ""
-        private var currentConfigXml = ""
         private var notificationInterruptable = false
         private val notificationRows = ArrayList<String>()
         private var notificationRowsTrimmed = false
@@ -425,7 +424,6 @@ class DialogLogFragment : DialogFragment() {
 
             notificationTitle = nodeInfo.title
             iconPath = nodeInfo.iconPath
-            currentConfigXml = nodeInfo.currentConfigXml
             notificationInterruptable = nodeInfo.interruptable
             notificationId = nextNotificationId()
             notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
@@ -526,10 +524,9 @@ class DialogLogFragment : DialogFragment() {
                 val tempNode = RunnableNode().apply {
                     title = notificationTitle
                     this.iconPath = this@MyShellHandler.iconPath
-                    this.currentConfigXml = this@MyShellHandler.currentConfigXml
                 }
                 if (iconPath.isNotEmpty()) {
-                    val drawable = IconPathAnalysis().loadLogo(context, tempNode, false, currentConfigXml)
+                    val drawable = IconPathAnalysis().loadLogo(context, tempNode, false)
                     drawableToIcon(drawable)
                 } else null
             } else null

@@ -57,7 +57,6 @@ class BgTaskThread(private var process: Process) : Thread() {
             }
         }
 
-        // Nút "Sao chép log" — chép toàn bộ log hiện có (thứ tự cũ -> mới) vào clipboard.
         private var COPY_CLICK_ACTION_NAME = context.packageName + ".TaskCopyLog." + "N" + notificationID
         private val copyIntent = PendingIntent.getBroadcast(context, 0, Intent(COPY_CLICK_ACTION_NAME).apply {
             putExtra("id", notificationID)
@@ -79,7 +78,6 @@ class BgTaskThread(private var process: Process) : Thread() {
             }
         }
 
-        /** Intent mở lại app khi chạm vào thông báo (không tính vùng nút), giống WakeLockService. */
         private fun buildContentPendingIntent(): PendingIntent? {
             val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
@@ -114,22 +112,19 @@ class BgTaskThread(private var process: Process) : Thread() {
 
             val shortLog = notificationMessageRows.lastOrNull()?.trim().orEmpty()
 
-            // Load icon từ runnableNode.iconPath và truyền đầy đủ currentConfigXml, sau đó đổi sang Icon
+            // Gọi loadLogo với đúng 3 tham số
             val personIcon = if (runnableNode.iconPath.isNotEmpty()) {
-                val drawable = IconPathAnalysis().loadLogo(context, runnableNode, false, runnableNode.currentConfigXml)
+                val drawable = IconPathAnalysis().loadLogo(context, runnableNode, false)
                 drawableToIcon(drawable)
             } else null
 
-            // Sử dụng android.app.Person đúng chuẩn để tránh lỗi Unresolved reference 'Person'
             val sender = android.app.Person.Builder()
                 .setName(notificationTitle)
                 .setIcon(personIcon)
                 .build()
 
-            // Dùng MessagingStyle để hỗ trợ hiển thị icon
             val messagingStyle = Notification.MessagingStyle(sender)
 
-            // Thêm từng dòng log vào MessagingStyle bằng cách sử dụng Notification.MessagingStyle.Message
             val rows = synchronized(notificationMessageRows) { notificationMessageRows.toList() }
             if (someIgnored) {
                 messagingStyle.addMessage(Notification.MessagingStyle.Message("……", System.currentTimeMillis(), (null as android.app.Person?)))
@@ -150,14 +145,11 @@ class BgTaskThread(private var process: Process) : Thread() {
                 notificationBuilder.setProgress(progressTotal, progressCurrent, progressTotal < 0)
             }
 
-            // Chạm vào thông báo (ngoài vùng nút) sẽ mở lại app, giống WakeLockService.
             buildContentPendingIntent()?.let { notificationBuilder.setContentIntent(it) }
 
-            // Nút "Hủy bỏ" hiển thị ở hàng dưới cùng do hệ thống tự vẽ (giống WakeLockService).
             if (runnableNode.interruptable && forceStop != null && !isFinished) {
                 notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.btn_cancel), stopIntent)
             }
-            // Nút "Sao chép log" — luôn hiện cạnh nút Hủy bỏ, dùng được ở mọi trạng thái.
             notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.btn_copy_output), copyIntent)
 
             if (!channelCreated) {
@@ -176,7 +168,7 @@ class BgTaskThread(private var process: Process) : Thread() {
                 notification.flags = Notification.FLAG_NO_CLEAR or Notification.FLAG_ONGOING_EVENT
             }
 
-            notificationManager.notify(notificationID, notification) // 发送通知
+            notificationManager.notify(notificationID, notification)
         }
 
         override fun updateLog(msg: SpannableString?) {
@@ -201,13 +193,10 @@ class BgTaskThread(private var process: Process) : Thread() {
 
         override fun onExit(msg: Any?) {
             try {
-                // context.unregisterReceiver(receiver)
             } catch (ex: java.lang.Exception) {
             }
             isFinished = true
             synchronized(notificationMessageRows) {
-                // Luôn kết thúc bằng "\n" và không có "\n" thừa ở đầu — trước đây dòng này bị
-                // dính liền vào dòng log kế tiếp do thiếu dấu xuống dòng ở cuối chuỗi.
                 if (msg == 0) {
                     notificationMessageRows.add(context.getString(R.string.kr_shell_completed) + "\n")
                 } else {
@@ -219,8 +208,6 @@ class BgTaskThread(private var process: Process) : Thread() {
 
         override fun onStart(forceStop: Runnable?) {
             this.forceStop = forceStop
-            // Android 13+ (API 33) bắt buộc cờ RECEIVER_EXPORTED/NOT_EXPORTED, thiếu sẽ ném
-            // SecurityException khiến receiver không đăng ký được -> nút dừng trong thông báo vô tác dụng.
             runCatching {
                 ContextCompat.registerReceiver(context, receiver, IntentFilter(STOP_CLICK_ACTION_NAME), ContextCompat.RECEIVER_NOT_EXPORTED)
             }
