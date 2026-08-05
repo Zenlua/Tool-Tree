@@ -562,11 +562,35 @@ class DialogLogFragment : DialogFragment() {
                 notificationBuilder.setProgress(notificationProgressTotal, notificationProgressCurrent, notificationProgressTotal < 0)
             }
             // Dùng chung 1 layout cho cả 2 trạng thái: nội dung thật sự hiển thị (log đầy đủ
-            // hay chỉ dòng cuối) do notificationExpanded (nút chevron) quyết định, không phụ
-            // thuộc việc hệ thống đang thu gọn hay đã kéo giãn thông báo — giống cách Telegram
-            // dùng 1 nút mũi tên cố định để mở/đóng nội dung.
+            // hay chỉ dòng cuối) do notificationExpanded quyết định, không phụ thuộc việc hệ
+            // thống đang thu gọn hay đã kéo giãn thông báo.
             notificationBuilder.setCustomContentView(view)
             notificationBuilder.setCustomBigContentView(view)
+
+            // Chạm vào thông báo (ngoài các nút) sẽ mở lại app, giống WakeLockService.
+            buildContentPendingIntent()?.let { notificationBuilder.setContentIntent(it) }
+
+            // Các nút hành động hiển thị ở HÀNG DƯỚI CÙNG do hệ thống tự vẽ (giống WakeLockService),
+            // thay vì icon tự vẽ trong RemoteViews — luôn hiện đầy đủ ở cả trạng thái thu gọn
+            // lẫn mở rộng, không cần custom click target.
+            val expandLabel = if (notificationExpanded) {
+                context.getString(R.string.kr_task_notify_collapse)
+            } else {
+                context.getString(R.string.kr_task_notify_expand)
+            }
+            expandPendingIntent?.let {
+                notificationBuilder.addAction(R.drawable.kr_arrow, expandLabel, it)
+            }
+            if (notificationFinished) {
+                dismissPendingIntent?.let {
+                    notificationBuilder.addAction(R.drawable.kr_close, context.getString(R.string.kr_task_notify_dismiss), it)
+                }
+            } else {
+                stopPendingIntent?.let {
+                    notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.kr_task_notify_cancel), it)
+                }
+            }
+
             // Dọn dẹp receiver mỗi khi thông báo bị người dùng vuốt bỏ, kể cả khi họ không
             // bấm nút "Kết thúc" trước đó.
             dismissPendingIntent?.let { notificationBuilder.setDeleteIntent(it) }
@@ -592,12 +616,22 @@ class DialogLogFragment : DialogFragment() {
             nm.notify(id, notification)
         }
 
+        /** Intent mở lại app khi chạm vào thông báo (không tính vùng nút), giống WakeLockService. */
+        private fun buildContentPendingIntent(): PendingIntent? {
+            val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+            } ?: return null
+            return PendingIntent.getActivity(
+                context, 0, launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
         /**
          * Dựng RemoteViews của thông báo theo trạng thái notificationExpanded hiện tại.
-         * Thu gọn: chỉ hiện tiêu đề + dòng log mới nhất, mũi tên chỉ xuống (gợi ý "mở rộng").
+         * Thu gọn: chỉ hiện tiêu đề + dòng log mới nhất.
          * Mở rộng: hiện toàn bộ log đã lưu (mới nhất ở trên cùng để không bị hệ thống cắt mất
-         * khi vùng hiển thị không đủ chỗ) + progress bar, mũi tên chỉ lên ("thu gọn").
-         * Nút hành động bên trái luôn hiển thị: "Hủy bỏ" khi đang chạy, "Kết thúc" khi đã xong.
+         * khi vùng hiển thị không đủ chỗ) + progress bar.
          */
         private fun buildNotificationView(): RemoteViews {
             val view = RemoteViews(context.packageName, R.layout.kr_task_notification)
@@ -625,29 +659,6 @@ class DialogLogFragment : DialogFragment() {
             )
             view.setViewVisibility(R.id.kr_task_progress, if (showProgress) View.VISIBLE else View.GONE)
 
-            // Nút hành động: "Hủy bỏ" khi còn đang chạy (có thể dừng được), "Kết thúc" khi đã
-            // xong — luôn hiển thị bất kể đang thu gọn hay mở rộng, không như trước đây phải
-            // mở rộng mới bấm được.
-            if (notificationFinished) {
-                view.setViewVisibility(R.id.kr_task_action, View.VISIBLE)
-                view.setImageViewResource(R.id.kr_task_action, R.drawable.kr_close)
-                dismissPendingIntent?.let { view.setOnClickPendingIntent(R.id.kr_task_action, it) }
-            } else {
-                val stopIntent = stopPendingIntent
-                if (stopIntent != null) {
-                    view.setViewVisibility(R.id.kr_task_action, View.VISIBLE)
-                    view.setImageViewResource(R.id.kr_task_action, R.drawable.kr_cancel)
-                    view.setOnClickPendingIntent(R.id.kr_task_action, stopIntent)
-                } else {
-                    view.setViewVisibility(R.id.kr_task_action, View.GONE)
-                }
-            }
-
-            // Xoay mũi tên (vốn chỉ sang phải): thu gọn -> chỉ xuống (90°), mở rộng -> chỉ lên (-90°)
-            view.setFloat(R.id.kr_task_expand, "setRotation", if (notificationExpanded) -90f else 90f)
-            expandPendingIntent?.let { pending ->
-                view.setOnClickPendingIntent(R.id.kr_task_expand, pending)
-            }
 
             return view
         }

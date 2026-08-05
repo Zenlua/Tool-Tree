@@ -51,6 +51,17 @@ class BgTaskThread(private var process: Process) : Thread() {
             }
         }
 
+        /** Intent mở lại app khi chạm vào thông báo (không tính vùng nút), giống WakeLockService. */
+        private fun buildContentPendingIntent(): PendingIntent? {
+            val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+            } ?: return null
+            return PendingIntent.getActivity(
+                context, 0, launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
         private fun updateNotification() {
             if (notificationMessageRows.size > 8) {
                 synchronized(notificationMessageRows) {
@@ -64,16 +75,6 @@ class BgTaskThread(private var process: Process) : Thread() {
             expandView.setTextViewText(R.id.kr_task_log, notificationMessageRows.joinToString("", if (someIgnored) "……\n" else "").trim())
             expandView.setProgressBar(R.id.kr_task_progress, progressTotal, progressCurrent, progressTotal < 0)
             expandView.setViewVisibility(R.id.kr_task_progress, if (progressTotal == progressCurrent) View.GONE else View.VISIBLE)
-            // Layout kr_task_notification.xml giờ dùng chung id "kr_task_action" cho nút hành
-            // động (được DialogLogFragment tái sử dụng làm nút Hủy bỏ/Kết thúc); class này chỉ
-            // cần nút dừng nên vẫn dùng như cũ, chỉ đổi tên id cho khớp layout.
-            expandView.setViewVisibility(R.id.kr_task_action, if ((forceStop == null && !runnableNode.interruptable) || isFinished) View.GONE else View.VISIBLE)
-            if (runnableNode.interruptable && forceStop != null && !isFinished) {
-                expandView.setOnClickPendingIntent(R.id.kr_task_action, stopIntent)
-            }
-            // Class này luôn hiển thị log đầy đủ qua setCustomBigContentView (không có chế độ
-            // thu gọn/mở rộng thủ công riêng), nên ẩn hẳn nút chevron mở rộng của layout dùng chung.
-            expandView.setViewVisibility(R.id.kr_task_expand, View.GONE)
 
             val notificationBuilder = Notification.Builder(context, channelId)
                     .setContentTitle("$notificationTitle ($notificationID)")
@@ -86,6 +87,15 @@ class BgTaskThread(private var process: Process) : Thread() {
             }
 
             notificationBuilder.setCustomBigContentView(expandView)
+
+            // Chạm vào thông báo (ngoài vùng nút) sẽ mở lại app, giống WakeLockService.
+            buildContentPendingIntent()?.let { notificationBuilder.setContentIntent(it) }
+
+            // Nút "Hủy bỏ" hiển thị ở hàng dưới cùng do hệ thống tự vẽ (giống WakeLockService),
+            // thay vì icon tự vẽ trong RemoteViews.
+            if (runnableNode.interruptable && forceStop != null && !isFinished) {
+                notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.kr_task_notify_cancel), stopIntent)
+            }
 
             if (!channelCreated) {
                 val channel = NotificationChannel(channelId, context.getString(R.string.kr_script_task_notification), NotificationManager.IMPORTANCE_DEFAULT)
