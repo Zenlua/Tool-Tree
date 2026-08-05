@@ -618,11 +618,12 @@ class DialogLogFragment : DialogFragment() {
 
         private fun finishNotification(success: Boolean, code: Int) {
             notificationFinished = true
-            val finishText = if (success) {
-                context.getString(R.string.kr_shell_completed)
+            val finishText = (if (success) {
+                context.getString(R.string.kr_script_task_finished)
             } else {
                 "${context.getString(R.string.kr_shell_finish_error)} $code"
-            }
+            }) + "\n"
+            
             // Không huỷ đăng ký dismissReceiver ở đây — nút "Kết thúc" vẫn phải dùng được sau
             // khi task đã chạy xong; chỉ dọn dẹp khi người dùng thật sự đóng thông báo (bấm
             // "Kết thúc" hoặc vuốt bỏ), xem cleanupNotificationReceivers().
