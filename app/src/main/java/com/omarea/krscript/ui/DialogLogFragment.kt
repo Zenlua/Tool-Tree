@@ -54,7 +54,6 @@ import com.tool.tree.AnsiColorParser
 import com.tool.tree.NotificationCopyLogActivity
 import com.tool.tree.R
 import com.tool.tree.WakeLockService
-import com.tool.tree.databinding.KrDialogLogBinding
 import android.app.ActivityManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -68,7 +67,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class DialogLogFragment : DialogFragment() {
 
-    private var _binding: KrDialogLogBinding? = null
+    private var _binding: com.tool.tree.databinding.KrDialogLogBinding? = null
     private val binding get() = _binding!!
 
     private var running = false
@@ -90,7 +89,7 @@ class DialogLogFragment : DialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = KrDialogLogBinding.inflate(inflater, container, false)
+        _binding = com.tool.tree.databinding.KrDialogLogBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -399,6 +398,7 @@ class DialogLogFragment : DialogFragment() {
         private var notificationManager: NotificationManager? = null
         private var notificationTitle = ""
         private var iconPath = ""
+        private var currentConfigXml = ""
         private var notificationInterruptable = false
         private val notificationRows = ArrayList<String>()
         private var notificationRowsTrimmed = false
@@ -424,6 +424,7 @@ class DialogLogFragment : DialogFragment() {
 
             notificationTitle = nodeInfo.title
             iconPath = nodeInfo.iconPath
+            currentConfigXml = nodeInfo.currentConfigXml
             notificationInterruptable = nodeInfo.interruptable
             notificationId = nextNotificationId()
             notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
@@ -524,9 +525,11 @@ class DialogLogFragment : DialogFragment() {
                 val tempNode = RunnableNode().apply {
                     title = notificationTitle
                     this.iconPath = this@MyShellHandler.iconPath
+                    this.currentConfigXml = this@MyShellHandler.currentConfigXml
                 }
                 if (iconPath.isNotEmpty()) {
-                    val drawable = IconPathAnalysis().loadLogo(context, tempNode, false)
+                    // Truyền đầy đủ currentConfigXml vào loadLogo
+                    val drawable = IconPathAnalysis().loadLogo(context, tempNode, false, currentConfigXml)
                     drawableToIcon(drawable)
                 } else null
             } else null
