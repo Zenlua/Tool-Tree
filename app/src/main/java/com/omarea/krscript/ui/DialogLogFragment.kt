@@ -12,11 +12,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Message
 import android.text.Editable
@@ -50,7 +46,6 @@ import androidx.fragment.app.DialogFragment
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import com.omarea.common.ui.DialogHelper
-import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
@@ -415,7 +410,6 @@ class DialogLogFragment : DialogFragment() {
         private var notificationInterruptable = false
         private val notificationRows = ArrayList<String>()
         private var notificationRowsTrimmed = false
-        private var notificationShortMsg = ""
         private var notificationFinished = false
         private var notificationProgressCurrent = 0
         private var notificationProgressTotal = 0
@@ -424,14 +418,15 @@ class DialogLogFragment : DialogFragment() {
         private var stopReceiver: BroadcastReceiver? = null
         private var stopPendingIntent: PendingIntent? = null
 
-        // Icon riêng của tác vụ (nếu cấu hình có khai báo), dùng làm large icon của thông báo;
-        // nếu không có thì rơi về icon app. Chỉ đọc từ đĩa 1 lần lúc bật notification mode.
-        private var notificationLargeIcon: Bitmap? = null
-
         // Nút "Kết thúc": hiện khi shell đã chạy xong, bấm vào để đóng hẳn thông báo.
         private var dismissActionName: String? = null
         private var dismissReceiver: BroadcastReceiver? = null
         private var dismissPendingIntent: PendingIntent? = null
+
+        // Nút "Sao chép log": chép toàn bộ log hiện có (theo thứ tự cũ -> mới) vào clipboard.
+        private var copyActionName: String? = null
+        private var copyReceiver: BroadcastReceiver? = null
+        private var copyPendingIntent: PendingIntent? = null
 
         init {
             logView?.setText("", TextView.BufferType.EDITABLE)
@@ -448,10 +443,8 @@ class DialogLogFragment : DialogFragment() {
 
             notificationTitle = nodeInfo.title
             notificationInterruptable = nodeInfo.interruptable
-            notificationShortMsg = context.getString(R.string.kr_script_task_running)
             notificationId = nextNotificationId()
             notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-            notificationLargeIcon = loadNotificationLargeIcon(nodeInfo)
 
             // Lấy toàn bộ log đã hiển thị trong dialog làm nội dung khởi đầu cho thông báo
             val existingLines = synchronized(logBuffer) {
@@ -501,36 +494,40 @@ class DialogLogFragment : DialogFragment() {
                 ContextCompat.registerReceiver(context, dismissReceiver, IntentFilter(dismissAction), ContextCompat.RECEIVER_NOT_EXPORTED)
             }
 
+            // Nút "Sao chép log" — chép toàn bộ log (thứ tự thời gian bình thường: cũ -> mới)
+            // vào clipboard, dùng được cả khi đang chạy lẫn khi đã xong.
+            val copyAction = context.packageName + ".TaskCopyLog.Hide." + notificationId
+            copyActionName = copyAction
+            copyPendingIntent = PendingIntent.getBroadcast(
+                context, 0, Intent(copyAction),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            copyReceiver = object : BroadcastReceiver() {
+                override fun onReceive(ctx: Context?, intent: Intent?) {
+                    copyLogToClipboard()
+                }
+            }
+            runCatching {
+                ContextCompat.registerReceiver(context, copyReceiver, IntentFilter(copyAction), ContextCompat.RECEIVER_NOT_EXPORTED)
+            }
+
             updateNotification()
         }
 
-        /** Icon riêng của node nếu có khai báo trong cấu hình, ngược lại dùng icon của app. */
-        private fun loadNotificationLargeIcon(nodeInfo: RunnableNode): Bitmap? {
-            if (nodeInfo.iconPath.isNotEmpty()) {
-                runCatching { IconPathAnalysis().loadIcon(context, nodeInfo) }.getOrNull()?.let {
-                    return drawableToBitmap(it)
-                }
+        private fun copyLogToClipboard() {
+            val text = synchronized(notificationRows) { notificationRows.joinToString("") }.trim()
+            runCatching {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                clipboard?.setPrimaryClip(ClipData.newPlainText("text", text))
+                Toast.makeText(context, R.string.kr_task_notify_copied, Toast.LENGTH_SHORT).show()
             }
-            return runCatching { context.packageManager.getApplicationIcon(context.packageName) }
-                .getOrNull()?.let { drawableToBitmap(it) }
-        }
-
-        private fun drawableToBitmap(drawable: Drawable): Bitmap? {
-            if (drawable is BitmapDrawable && drawable.bitmap != null) return drawable.bitmap
-            val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
-            val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
-            return runCatching {
-                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bitmap)
-                drawable.setBounds(0, 0, canvas.width, canvas.height)
-                drawable.draw(canvas)
-                bitmap
-            }.getOrNull()
         }
 
         private fun cleanupNotificationReceivers() {
             runCatching { stopReceiver?.let { context.unregisterReceiver(it) } }
             stopReceiver = null
+            runCatching { copyReceiver?.let { context.unregisterReceiver(it) } }
+            copyReceiver = null
             runCatching { dismissReceiver?.let { context.unregisterReceiver(it) } }
             dismissReceiver = null
         }
@@ -542,14 +539,6 @@ class DialogLogFragment : DialogFragment() {
                 notificationRows.removeAt(0)
                 notificationRowsTrimmed = true
             }
-        }
-
-        private fun appendNotificationRow(text: String) {
-            synchronized(notificationRows) {
-                notificationRows.add(text)
-                trimNotificationRows()
-            }
-            updateNotification()
         }
 
         private fun updateNotification() {
@@ -570,18 +559,13 @@ class DialogLogFragment : DialogFragment() {
 
             val notificationBuilder = Notification.Builder(context, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle(notificationTitle)
-                .setContentText("$notificationShortMsg >> $shortLog")
+                .setContentText(shortLog)
                 .setSmallIcon(R.drawable.kr_run)
                 .setAutoCancel(true)
                 .setWhen(System.currentTimeMillis())
                 // Dùng style mặc định của Android: hệ thống tự vẽ mũi tên mở rộng và cho phép
                 // ấn giữ/vuốt để xem toàn bộ log, không cần tự vẽ layout hay nút toggle riêng.
-                .setStyle(
-                    Notification.BigTextStyle()
-                        .bigText(fullLog)
-                        .setSummaryText(notificationShortMsg)
-                )
-            notificationLargeIcon?.let { notificationBuilder.setLargeIcon(it) }
+                .setStyle(Notification.BigTextStyle().bigText(fullLog))
             if (notificationProgressTotal != notificationProgressCurrent) {
                 notificationBuilder.setProgress(notificationProgressTotal, notificationProgressCurrent, notificationProgressTotal < 0)
             }
@@ -598,6 +582,10 @@ class DialogLogFragment : DialogFragment() {
                 stopPendingIntent?.let {
                     notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.kr_task_notify_cancel), it)
                 }
+            }
+            // Nút "Sao chép log" — luôn hiện cạnh nút Hủy bỏ/Kết thúc, dùng được ở mọi trạng thái.
+            copyPendingIntent?.let {
+                notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.kr_task_notify_copy), it)
             }
 
             // Dọn dẹp receiver mỗi khi thông báo bị người dùng vuốt bỏ, kể cả khi họ không
@@ -639,7 +627,6 @@ class DialogLogFragment : DialogFragment() {
 
         private fun finishNotification(success: Boolean, code: Int) {
             notificationFinished = true
-            notificationShortMsg = context.getString(R.string.kr_script_task_finished)
             val finishText = if (success) {
                 context.getString(R.string.kr_shell_completed)
             } else {
@@ -648,7 +635,9 @@ class DialogLogFragment : DialogFragment() {
             // Không huỷ đăng ký dismissReceiver ở đây — nút "Kết thúc" vẫn phải dùng được sau
             // khi task đã chạy xong; chỉ dọn dẹp khi người dùng thật sự đóng thông báo (bấm
             // "Kết thúc" hoặc vuốt bỏ), xem cleanupNotificationReceivers().
-            appendNotificationRow("\n$finishText")
+            // Dùng pushNotificationLog() (thay vì tự thêm "\n" trước chuỗi) để dòng kết thúc
+            // luôn có "\n" kết thúc đúng cách — trước đây bị dính liền vào dòng log kế tiếp.
+            pushNotificationLog(finishText)
         }
 
         companion object {

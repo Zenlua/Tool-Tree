@@ -5,18 +5,16 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.SpannableString
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.omarea.common.ui.DialogHelper
-import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
@@ -34,7 +32,6 @@ class BgTaskThread(private var process: Process) : Thread() {
         private var notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         private val notificationTitle = runnableNode.title
         private var notificationMessageRows = ArrayList<String>()
-        private var notificationMShortMsg = ""
         private var progressCurrent = 0
         private var progressTotal = 0
         private var someIgnored = false
@@ -54,6 +51,28 @@ class BgTaskThread(private var process: Process) : Thread() {
             }
         }
 
+        // Nút "Sao chép log" — chép toàn bộ log hiện có (thứ tự cũ -> mới) vào clipboard.
+        private var COPY_CLICK_ACTION_NAME = context.packageName + ".TaskCopyLog." + "N" + notificationID
+        private val copyIntent = PendingIntent.getBroadcast(context, 0, Intent(COPY_CLICK_ACTION_NAME).apply {
+            putExtra("id", notificationID)
+        }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        private val copyReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent != null && intent.hasExtra("id") && intent.getIntExtra("id", 0) == notificationID) {
+                    copyLogToClipboard()
+                }
+            }
+        }
+
+        private fun copyLogToClipboard() {
+            val text = synchronized(notificationMessageRows) { notificationMessageRows.joinToString("") }.trim()
+            runCatching {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                clipboard?.setPrimaryClip(ClipData.newPlainText("text", text))
+                Toast.makeText(context, R.string.kr_task_notify_copied, Toast.LENGTH_SHORT).show()
+            }
+        }
+
         /** Intent mở lại app khi chạm vào thông báo (không tính vùng nút), giống WakeLockService. */
         private fun buildContentPendingIntent(): PendingIntent? {
             val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
@@ -63,30 +82,6 @@ class BgTaskThread(private var process: Process) : Thread() {
                 context, 0, launchIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-        }
-
-        /** Icon riêng của node nếu có khai báo trong cấu hình, ngược lại dùng icon của app. */
-        private val notificationLargeIcon: Bitmap? by lazy {
-            if (runnableNode.iconPath.isNotEmpty()) {
-                runCatching { IconPathAnalysis().loadIcon(context, runnableNode) }.getOrNull()?.let {
-                    return@lazy drawableToBitmap(it)
-                }
-            }
-            runCatching { context.packageManager.getApplicationIcon(context.packageName) }
-                .getOrNull()?.let { drawableToBitmap(it) }
-        }
-
-        private fun drawableToBitmap(drawable: Drawable): Bitmap? {
-            if (drawable is BitmapDrawable && drawable.bitmap != null) return drawable.bitmap
-            val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
-            val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
-            return runCatching {
-                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bitmap)
-                drawable.setBounds(0, 0, canvas.width, canvas.height)
-                drawable.draw(canvas)
-                bitmap
-            }.getOrNull()
         }
 
         private fun updateNotification() {
@@ -110,18 +105,13 @@ class BgTaskThread(private var process: Process) : Thread() {
 
             val notificationBuilder = Notification.Builder(context, channelId)
                     .setContentTitle(notificationTitle)
-                    .setContentText("$notificationMShortMsg >> $shortLog")
+                    .setContentText(shortLog)
                     .setSmallIcon(R.drawable.kr_run)
                     .setAutoCancel(true)
                     .setWhen(System.currentTimeMillis())
                     // Dùng style mặc định của Android: hệ thống tự vẽ mũi tên mở rộng và cho
                     // phép ấn giữ/vuốt để xem toàn bộ log, không cần tự vẽ layout riêng.
-                    .setStyle(
-                        Notification.BigTextStyle()
-                            .bigText(fullLog)
-                            .setSummaryText(notificationMShortMsg)
-                    )
-            notificationLargeIcon?.let { notificationBuilder.setLargeIcon(it) }
+                    .setStyle(Notification.BigTextStyle().bigText(fullLog))
             if (progressTotal != progressCurrent) {
                 notificationBuilder.setProgress(progressTotal, progressCurrent, progressTotal < 0)
             }
@@ -133,6 +123,8 @@ class BgTaskThread(private var process: Process) : Thread() {
             if (runnableNode.interruptable && forceStop != null && !isFinished) {
                 notificationBuilder.addAction(R.drawable.kr_cancel, context.getString(R.string.kr_task_notify_cancel), stopIntent)
             }
+            // Nút "Sao chép log" — luôn hiện cạnh nút Hủy bỏ, dùng được ở mọi trạng thái.
+            notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.kr_task_notify_copy), copyIntent)
 
             if (!channelCreated) {
                 val channel = NotificationChannel(channelId, context.getString(R.string.kr_script_task_notification), NotificationManager.IMPORTANCE_DEFAULT)
@@ -164,7 +156,6 @@ class BgTaskThread(private var process: Process) : Thread() {
         }
 
         override fun onError(msg: Any?) {
-            notificationMShortMsg = context.getString(R.string.kr_script_task_has_error)
             synchronized(notificationMessageRows) {
                 notificationMessageRows.add("" + msg?.toString())
                 updateNotification()
@@ -180,12 +171,13 @@ class BgTaskThread(private var process: Process) : Thread() {
             } catch (ex: java.lang.Exception) {
             }
             isFinished = true
-            notificationMShortMsg = context.getString(R.string.kr_script_task_finished)
             synchronized(notificationMessageRows) {
+                // Luôn kết thúc bằng "\n" và không có "\n" thừa ở đầu — trước đây dòng này bị
+                // dính liền vào dòng log kế tiếp do thiếu dấu xuống dòng ở cuối chuỗi.
                 if (msg == 0) {
-                    notificationMessageRows.add("\n" + context.getString(R.string.kr_shell_completed))
+                    notificationMessageRows.add(context.getString(R.string.kr_shell_completed) + "\n")
                 } else {
-                    notificationMessageRows.add("\n" + context.getString(R.string.kr_shell_finish_error) + " " + msg?.toString())
+                    notificationMessageRows.add("${context.getString(R.string.kr_shell_finish_error)} $msg\n")
                 }
                 updateNotification()
             }
@@ -198,12 +190,14 @@ class BgTaskThread(private var process: Process) : Thread() {
             runCatching {
                 ContextCompat.registerReceiver(context, receiver, IntentFilter(STOP_CLICK_ACTION_NAME), ContextCompat.RECEIVER_NOT_EXPORTED)
             }
+            runCatching {
+                ContextCompat.registerReceiver(context, copyReceiver, IntentFilter(COPY_CLICK_ACTION_NAME), ContextCompat.RECEIVER_NOT_EXPORTED)
+            }
 
             updateNotification()
         }
 
         override fun onStart(msg: Any?) {
-            notificationMShortMsg = context.getString(R.string.kr_script_task_running)
         }
 
         override fun onProgress(current: Int, total: Int) {
