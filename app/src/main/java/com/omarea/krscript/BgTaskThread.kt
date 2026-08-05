@@ -112,9 +112,9 @@ class BgTaskThread(private var process: Process) : Thread() {
 
             val shortLog = notificationMessageRows.lastOrNull()?.trim().orEmpty()
 
-            // Gọi loadLogo với đúng 3 tham số
+            // Truyền đầy đủ runnableNode.currentConfigXml vào loadLogo
             val personIcon = if (runnableNode.iconPath.isNotEmpty()) {
-                val drawable = IconPathAnalysis().loadLogo(context, runnableNode, false)
+                val drawable = IconPathAnalysis().loadLogo(context, runnableNode, false, runnableNode.currentConfigXml)
                 drawableToIcon(drawable)
             } else null
 
