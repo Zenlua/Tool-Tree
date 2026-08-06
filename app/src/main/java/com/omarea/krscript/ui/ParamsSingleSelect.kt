@@ -79,24 +79,26 @@ class ParamsSingleSelect(
     }
 
     private fun openListPopupWindow(anchorView: View, valueView: TextView, textView: TextView) {
-        // Chống nhấp nhanh
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastOpenTime < 400) {
-            return
-        }
+        if (currentTime - lastOpenTime < 400) return
         lastOpenTime = currentTime
-
-        val listPopupWindow = ListPopupWindow(context).apply {
-            this.anchorView = anchorView
-            isModal = true // Chạm bên ngoài sẽ tự đóng Popup
-        }
-
-        // Tạo danh sách tiêu đề hiển thị
+    
         val displayTitles = options.map { it.title ?: "" }
         val adapter = ArrayAdapter(context, R.layout.kr_spinner_dropdown, R.id.text, displayTitles)
-
-        listPopupWindow.setAdapter(adapter)
-
+    
+        val listPopupWindow = ListPopupWindow(context).apply {
+            this.anchorView = anchorView
+            isModal = true
+            setAdapter(adapter)
+    
+            // Chiều rộng: mở rộng theo chữ dài nhất
+            val contentWidth = measureContentWidth(adapter)
+            width = maxOf(anchorView.width, contentWidth)
+    
+            // Chiều cao: tự co giãn hiện trọn vẹn tối đa 6 ô
+            height = ListPopupWindow.WRAP_CONTENT
+        }
+    
         listPopupWindow.setOnItemClickListener { _, _, position, _ ->
             if (selectedIndex != position) {
                 selectedIndex = position
@@ -105,9 +107,10 @@ class ParamsSingleSelect(
             }
             listPopupWindow.dismiss()
         }
-
+    
         listPopupWindow.show()
     }
+
 
     private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
         val currentTime = System.currentTimeMillis()
