@@ -149,7 +149,7 @@ builds_text_3="Phương pháp nén của erofs"
 builds_text_4="Mức nén"
 builds_text_6="Cấp độ"
 builds_text_7="Lưu ý: Giá trị 0 tương ứng với 0Mb trống, thêm kích thước trống chỉ áp dụng cho phân vùng ext4, f2fs"
-builds_text_8="Vô hiệu hóa AVB, fstab, recovery gốc"
+builds_text_8="Vá avb, fstab, recovery gốc"
 
 # build super
 super_text_2="Loại gói"

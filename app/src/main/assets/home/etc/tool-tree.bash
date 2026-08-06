@@ -1403,7 +1403,7 @@ Utilities() {
     
     [[group.action.params]]
     name = "IMAGES"
-    desc = "'$decode_text_3': br, dat, img, zst, zstd, bin, zip, payload"
+    desc = "'$decode_text_3': br, dat, img, zst, zstd, bin, zip"
     options-sh = "findfile 2 $PTSD"
     required = true
     multiple = true
