@@ -19,6 +19,8 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -413,6 +415,14 @@ class DialogLogFragment : DialogFragment() {
         private var dismissReceiver: BroadcastReceiver? = null
         private var dismissPendingIntent: PendingIntent? = null
 
+        // Debounce Notification Rate Limit
+        private val notificationHandler = Handler(Looper.getMainLooper())
+        private var pendingNotificationUpdate = false
+        private val updateNotificationRunnable = Runnable {
+            pendingNotificationUpdate = false
+            updateNotificationInternal()
+        }
+
         init {
             logView?.setText("", TextView.BufferType.EDITABLE)
         }
@@ -470,7 +480,7 @@ class DialogLogFragment : DialogFragment() {
                 ContextCompat.registerReceiver(context, dismissReceiver, IntentFilter(dismissAction), ContextCompat.RECEIVER_NOT_EXPORTED)
             }
 
-            updateNotification()
+            updateNotificationImmediately()
         }
 
         private fun drawableToIcon(drawable: Drawable?, targetSizePx: Int = 200): Icon? {
@@ -508,7 +518,7 @@ class DialogLogFragment : DialogFragment() {
             }
         }
 
-        private fun updateNotification() {
+        private fun updateNotificationInternal() {
             val nm = notificationManager ?: return
             val id = notificationId
 
@@ -589,6 +599,20 @@ class DialogLogFragment : DialogFragment() {
             nm.notify(id, notification)
         }
 
+        private fun updateNotification() {
+            if (!notificationMode) return
+            if (!pendingNotificationUpdate) {
+                pendingNotificationUpdate = true
+                notificationHandler.postDelayed(updateNotificationRunnable, 300)
+            }
+        }
+
+        private fun updateNotificationImmediately() {
+            notificationHandler.removeCallbacks(updateNotificationRunnable)
+            pendingNotificationUpdate = false
+            updateNotificationInternal()
+        }
+
         private fun buildContentPendingIntent(): PendingIntent? {
             val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
@@ -607,6 +631,7 @@ class DialogLogFragment : DialogFragment() {
                 "${context.getString(R.string.kr_shell_finish_error)} $code"
             }
             pushNotificationLog(finishText)
+            updateNotificationImmediately()
         }
 
         companion object {
@@ -637,6 +662,7 @@ class DialogLogFragment : DialogFragment() {
         }
 
         fun release() {
+            notificationHandler.removeCallbacks(updateNotificationRunnable)
             logViewRef.clear()
             progressRef.clear()
             inputRowRef.clear()

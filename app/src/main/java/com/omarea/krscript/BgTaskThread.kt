@@ -15,6 +15,8 @@ import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.SpannableString
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -34,8 +36,14 @@ class BgTaskThread(private var process: Process) : Thread() {
         }
     }
 
-    class ServiceShellHandler(private val context: Context, private val runnableNode: RunnableNode, private val notificationID: Int) : ShellHandlerBase(context) {
-        private var notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    class ServiceShellHandler(
+        private val context: Context,
+        private val runnableNode: RunnableNode,
+        private val notificationID: Int
+    ) : ShellHandlerBase(context) {
+
+        private var notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         private val notificationTitle = runnableNode.title
         private var notificationMessageRows = ArrayList<String>()
         private var progressCurrent = 0
@@ -43,10 +51,22 @@ class BgTaskThread(private var process: Process) : Thread() {
         private var someIgnored = false
         private var forceStop: Runnable? = null
         private var isFinished = false
+
+        // Handler quản lý Trì hoãn Notification (Rate Limiting)
+        private val notificationHandler = Handler(Looper.getMainLooper())
+        private var pendingNotificationUpdate = false
+        private val updateNotificationRunnable = Runnable {
+            pendingNotificationUpdate = false
+            updateNotificationInternal()
+        }
+
+        private var isReceiverRegistered = false
         private var STOP_CLICK_ACTION_NAME = context.packageName + ".TaskStop." + "N" + notificationID
-        private val stopIntent = PendingIntent.getBroadcast(context, 0, Intent(STOP_CLICK_ACTION_NAME).apply {
-            putExtra("id", notificationID)
-        }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        private val stopIntent = PendingIntent.getBroadcast(
+            context, 0, Intent(STOP_CLICK_ACTION_NAME).apply {
+                putExtra("id", notificationID)
+            }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         private val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent != null && intent.hasExtra("id")) {
@@ -58,14 +78,24 @@ class BgTaskThread(private var process: Process) : Thread() {
         }
 
         private var COPY_CLICK_ACTION_NAME = context.packageName + ".TaskCopyLog." + "N" + notificationID
-        private val copyIntent = PendingIntent.getBroadcast(context, 0, Intent(COPY_CLICK_ACTION_NAME).apply {
-            putExtra("id", notificationID)
-        }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        private val copyIntent = PendingIntent.getBroadcast(
+            context, 0, Intent(COPY_CLICK_ACTION_NAME).apply {
+                putExtra("id", notificationID)
+            }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         private val copyReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent != null && intent.hasExtra("id") && intent.getIntExtra("id", 0) == notificationID) {
                     copyLogToClipboard()
                 }
+            }
+        }
+
+        private fun cleanupReceivers() {
+            if (isReceiverRegistered) {
+                runCatching { context.unregisterReceiver(receiver) }
+                runCatching { context.unregisterReceiver(copyReceiver) }
+                isReceiverRegistered = false
             }
         }
 
@@ -97,15 +127,17 @@ class BgTaskThread(private var process: Process) : Thread() {
             return Icon.createWithBitmap(bitmap)
         }
 
-        private fun updateNotification() {
-            if (notificationMessageRows.size > 20) {
-                synchronized(notificationMessageRows) {
-                    notificationMessageRows.remove(notificationMessageRows.first())
+        private fun updateNotificationInternal() {
+            synchronized(notificationMessageRows) {
+                if (notificationMessageRows.size > 20) {
+                    notificationMessageRows.removeAt(0)
                     someIgnored = true
                 }
             }
 
-            val shortLog = notificationMessageRows.lastOrNull()?.trim().orEmpty()
+            val shortLog = synchronized(notificationMessageRows) {
+                notificationMessageRows.lastOrNull()?.trim().orEmpty()
+            }
 
             val personIcon = (if (runnableNode.iconPath.isNotEmpty() || runnableNode.logoPath.isNotEmpty()) {
                 val drawable = IconPathAnalysis().loadLogo(context, runnableNode, false)
@@ -128,13 +160,13 @@ class BgTaskThread(private var process: Process) : Thread() {
             }
 
             val notificationBuilder = Notification.Builder(context, channelId)
-                    .setContentTitle(notificationTitle)
-                    .setContentText(shortLog)
-                    .setSmallIcon(R.drawable.kr_run)
-                    .setAutoCancel(true)
-                    .setWhen(System.currentTimeMillis())
-                    .setStyle(messagingStyle)
-            
+                .setContentTitle(notificationTitle)
+                .setContentText(shortLog)
+                .setSmallIcon(R.drawable.kr_run)
+                .setAutoCancel(true)
+                .setWhen(System.currentTimeMillis())
+                .setStyle(messagingStyle)
+
             if (progressTotal != progressCurrent) {
                 notificationBuilder.setProgress(progressTotal, progressCurrent, progressTotal < 0)
             }
@@ -147,13 +179,17 @@ class BgTaskThread(private var process: Process) : Thread() {
             notificationBuilder.addAction(R.drawable.kr_copy, context.getString(R.string.btn_copy_output), copyIntent)
 
             if (!channelCreated) {
-                val channel = NotificationChannel(channelId, context.getString(R.string.kr_script_task_notification), NotificationManager.IMPORTANCE_DEFAULT)
+                val channel = NotificationChannel(
+                    channelId,
+                    context.getString(R.string.kr_script_task_notification),
+                    NotificationManager.IMPORTANCE_DEFAULT
+                )
                 channel.enableLights(false)
                 channel.enableVibration(false)
                 channel.setSound(null, null)
                 notificationManager.createNotificationChannel(channel)
+                channelCreated = true
             }
-            channelCreated = true
             notificationBuilder.setChannelId(channelId)
 
             val notification = notificationBuilder.build()
@@ -165,30 +201,44 @@ class BgTaskThread(private var process: Process) : Thread() {
             notificationManager.notify(notificationID, notification)
         }
 
-        override fun updateLog(msg: SpannableString?) {
+        private fun updateNotification() {
+            if (!pendingNotificationUpdate) {
+                pendingNotificationUpdate = true
+                notificationHandler.postDelayed(updateNotificationRunnable, 300)
+            }
         }
 
+        private fun updateNotificationImmediately() {
+            notificationHandler.removeCallbacks(updateNotificationRunnable)
+            pendingNotificationUpdate = false
+            updateNotificationInternal()
+        }
+
+        override fun updateLog(msg: SpannableString?) {}
+
         override fun onReader(msg: Any?) {
-            synchronized(notificationMessageRows) {
-                notificationMessageRows.add(AnsiColorParser.stripToPlainText(msg?.toString()))
+            val text = AnsiColorParser.stripToPlainText(msg?.toString())
+            if (text.isNotEmpty()) {
+                synchronized(notificationMessageRows) {
+                    notificationMessageRows.add(text)
+                }
                 updateNotification()
             }
         }
 
         override fun onError(msg: Any?) {
-            synchronized(notificationMessageRows) {
-                notificationMessageRows.add(AnsiColorParser.stripToPlainText(msg?.toString()))
+            val text = AnsiColorParser.stripToPlainText(msg?.toString())
+            if (text.isNotEmpty()) {
+                synchronized(notificationMessageRows) {
+                    notificationMessageRows.add(text)
+                }
                 updateNotification()
             }
         }
 
-        override fun onWrite(msg: Any?) {
-        }
+        override fun onWrite(msg: Any?) {}
 
         override fun onExit(msg: Any?) {
-            try {
-            } catch (ex: java.lang.Exception) {
-            }
             isFinished = true
             synchronized(notificationMessageRows) {
                 if (msg == 0) {
@@ -196,24 +246,30 @@ class BgTaskThread(private var process: Process) : Thread() {
                 } else {
                     notificationMessageRows.add("${context.getString(R.string.kr_shell_finish_error)} $msg\n")
                 }
-                updateNotification()
             }
+            // Bắt buộc đẩy dòng hoàn thành lên Notification ngay lập tức
+            updateNotificationImmediately()
+            
+            // Dọn dẹp BroadcastReceiver giải phóng bộ nhớ
+            cleanupReceivers()
         }
 
         override fun onStart(forceStop: Runnable?) {
             this.forceStop = forceStop
             runCatching {
-                ContextCompat.registerReceiver(context, receiver, IntentFilter(STOP_CLICK_ACTION_NAME), ContextCompat.RECEIVER_NOT_EXPORTED)
-            }
-            runCatching {
-                ContextCompat.registerReceiver(context, copyReceiver, IntentFilter(COPY_CLICK_ACTION_NAME), ContextCompat.RECEIVER_NOT_EXPORTED)
+                ContextCompat.registerReceiver(
+                    context, receiver, IntentFilter(STOP_CLICK_ACTION_NAME), ContextCompat.RECEIVER_NOT_EXPORTED
+                )
+                ContextCompat.registerReceiver(
+                    context, copyReceiver, IntentFilter(COPY_CLICK_ACTION_NAME), ContextCompat.RECEIVER_NOT_EXPORTED
+                )
+                isReceiverRegistered = true
             }
 
-            updateNotification()
+            updateNotificationImmediately()
         }
 
-        override fun onStart(msg: Any?) {
-        }
+        override fun onStart(msg: Any?) {}
 
         override fun onProgress(current: Int, total: Int) {
             progressCurrent = current
@@ -227,30 +283,42 @@ class BgTaskThread(private var process: Process) : Thread() {
         private const val channelId = "kr_script_task_notification"
         private var notificationCounter = 34050
 
-        fun startTask(context: Context, script: String, params: HashMap<String, String>?, nodeInfo: RunnableNode, onExit: Runnable, onDismiss: Runnable) {
+        fun startTask(
+            context: Context,
+            script: String,
+            params: HashMap<String, String>?,
+            nodeInfo: RunnableNode,
+            onExit: Runnable,
+            onDismiss: Runnable
+        ) {
             val applicationContext = context.applicationContext
             notificationCounter += 1
 
             val handler = ServiceShellHandler(applicationContext, nodeInfo, notificationCounter)
             ShellExecutor().execute(
-                    context,
-                    nodeInfo,
-                    script,
-                    {
-                        try {
-                            onExit.run()
-                            onDismiss.run()
-                        } catch (ex: Exception) {
-                        }
-                    },
-                    params,
-                    handler)
+                context,
+                nodeInfo,
+                script,
+                {
+                    try {
+                        onExit.run()
+                        onDismiss.run()
+                    } catch (ex: Exception) {
+                    }
+                },
+                params,
+                handler
+            )
 
             val bundle = Bundle()
             params?.run {
                 bundle.putSerializable("params", params)
             }
-            DialogHelper.helpInfo(context, context.getString(R.string.kr_bg_task_start), context.getString(R.string.kr_bg_task_start_desc))
+            DialogHelper.helpInfo(
+                context,
+                context.getString(R.string.kr_bg_task_start),
+                context.getString(R.string.kr_bg_task_start_desc)
+            )
         }
     }
 }
