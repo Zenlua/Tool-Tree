@@ -79,7 +79,7 @@ class ParamsColorPicker(private val actionParamInfo: ActionParamInfo, private va
     private fun openColorPicker(textView: TextView, invalidView: ImageView, preview: View) {
         // >>> CHẶN TẠI ĐÂY: Tránh việc nhấn nhanh nút chọn màu mở đè 2 Hộp thoại ColorPicker
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastOpenTime < 1000) {
+        if (currentTime - lastOpenTime < 800) {
             return
         }
         lastOpenTime = currentTime

@@ -97,7 +97,7 @@ class ParamsMultipleSelect(
 
         // [CHẶN CHIẾN LƯỢC 2]: Chặn click quá nhanh bằng thời gian hệ thống (phòng trường hợp FragmentManager chưa kịp cập nhật tag)
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastOpenTime < 1000) {
+        if (currentTime - lastOpenTime < 800) {
             return
         }
         lastOpenTime = currentTime

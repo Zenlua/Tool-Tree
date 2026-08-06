@@ -174,7 +174,7 @@ class ParamsSingleSelect(
     private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
         // >>> CHẶN TẠI ĐÂY: Tránh việc nhấn nhanh mở 2 DialogItemChooser cùng lúc
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastOpenTime < 1000) {
+        if (currentTime - lastOpenTime < 800) {
             return
         }
         lastOpenTime = currentTime
