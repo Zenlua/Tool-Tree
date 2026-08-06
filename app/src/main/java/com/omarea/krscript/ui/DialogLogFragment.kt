@@ -514,7 +514,7 @@ class DialogLogFragment : DialogFragment() {
 
             val shortLog = notificationRows.lastOrNull()?.trim().orEmpty()
 
-            val personIcon = if (iconPath.isNotEmpty() || logoPath.isNotEmpty()) {
+            val personIcon = (if (iconPath.isNotEmpty() || logoPath.isNotEmpty()) {
                 val tempNode = RunnableNode(currentConfigXml).apply {
                     title = notificationTitle
                     this.iconPath = this@MyShellHandler.iconPath
@@ -522,7 +522,7 @@ class DialogLogFragment : DialogFragment() {
                 }
                 val drawable = IconPathAnalysis().loadLogo(context, tempNode, false)
                 drawableToIcon(drawable, 200)
-            } else null
+            } else null) ?: Icon.createWithResource(context, R.drawable.kr_shortcut_logo)
 
             val sender = android.app.Person.Builder()
                 .setName(notificationTitle)
