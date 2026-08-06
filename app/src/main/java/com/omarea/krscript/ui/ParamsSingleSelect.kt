@@ -38,7 +38,7 @@ class ParamsSingleSelect(
         } else {
             valueView.text = ""
             textView.text = ""
-            // Hiển thị hint khi chưa chọn hoặc danh sách rỗng
+            // Hiển thị hint khi chưa chọn (allowNoSelection = true) hoặc danh sách rỗng
             textView.hint = context.getString(
                 if (options.isEmpty()) R.string.picker_not_item else R.string.kr_please_select
             )
@@ -80,25 +80,27 @@ class ParamsSingleSelect(
 
     private fun openListPopupWindow(anchorView: View, valueView: TextView, textView: TextView) {
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastOpenTime < 400) return
+        if (currentTime - lastOpenTime < 400) {
+            return
+        }
         lastOpenTime = currentTime
-    
+
         val displayTitles = options.map { it.title ?: "" }
         val adapter = ArrayAdapter(context, R.layout.kr_spinner_dropdown, R.id.text, displayTitles)
-    
+
         val listPopupWindow = ListPopupWindow(context).apply {
             this.anchorView = anchorView
             isModal = true
             setAdapter(adapter)
-    
-            // Chiều rộng: mở rộng theo chữ dài nhất
+
+            // Chiều rộng: mở rộng tự động theo độ dài chữ của item dài nhất
             val contentWidth = measureContentWidth(adapter)
             width = maxOf(anchorView.width, contentWidth)
-    
-            // Chiều cao: tự co giãn hiện trọn vẹn tối đa 6 ô
+
+            // Chiều cao: tự co giãn theo số lượng dòng (tối đa 6 ô)
             height = ListPopupWindow.WRAP_CONTENT
         }
-    
+
         listPopupWindow.setOnItemClickListener { _, _, position, _ ->
             if (selectedIndex != position) {
                 selectedIndex = position
@@ -107,10 +109,29 @@ class ParamsSingleSelect(
             }
             listPopupWindow.dismiss()
         }
-    
+
         listPopupWindow.show()
+
+        // Ẩn thanh cuộn dọc nếu có
+        listPopupWindow.listView?.isVerticalScrollBarEnabled = false
     }
 
+    // Hàm phụ trợ đo chiều rộng tối đa của các dòng chữ trong adapter
+    private fun measureContentWidth(adapter: ArrayAdapter<String>): Int {
+        var maxWidth = 0
+        var itemView: View? = null
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+
+        for (i in 0 until adapter.count) {
+            itemView = adapter.getView(i, itemView, null)
+            itemView.measure(widthSpec, heightSpec)
+            if (itemView.measuredWidth > maxWidth) {
+                maxWidth = itemView.measuredWidth
+            }
+        }
+        return maxWidth
+    }
 
     private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
         val currentTime = System.currentTimeMillis()
