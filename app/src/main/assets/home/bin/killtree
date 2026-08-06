@@ -8,9 +8,8 @@ done
 }
 
 # xử lý
-[ -z "$1" ] || echo -e "$1" >&2;
+[ -z "$1" ] || echo -e "$1\n" >&2;
 [ -e "$2" ] && rm -fr "$2"
 
-echo
 pid_goc="$(pgrep -f $shell_progres)"
 kill $(listkill $pid_goc) 2>/dev/null

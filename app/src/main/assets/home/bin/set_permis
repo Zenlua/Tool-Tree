@@ -1,5 +1,5 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
-# kakathic
+# kakathic - Optimized for speed
 
 show_help() {
 echo "Usage: set_permis [options] <file|dir>..."
@@ -19,7 +19,7 @@ echo "  set_permis -R dir"
 echo "  set_permis -v -o system:system bin/tool"
 }
 
-context="$(ls -Zd $HOME | awk '{print $1}')"
+context="$(ls -Zd $HOME 2>/dev/null | awk '{print $1}')"
 while [ $# -gt 0 ]; do
     case "$1" in
         -o|--owner)
@@ -64,21 +64,48 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-# nếu không có file
+# Kiểm tra tham số đầu vào
 [ $# -eq 0 ] && { show_help; exit 0; }
 [ -z "$owner" ] && owner="$APP_UID:$APP_UID"
 [ -z "$perm" ] && perm="0755"
 
-for path in "$@"; do
-    [ -e "$path" ] || continue
-    [ "${verbose:-0}" = 1 ] && echo "$path $perm $owner ${context:-none}"
-    if [ "${recursive-0}" = 1 ] && [ -d "$path" ]; then
-        chmod -R "$perm" "$path"
-        [ -n "$owner" ] && chown -R "$owner" "$path"
-        [ -n "$context" ] && chcon -R "$context" "$path"
-    else
-        chmod "$perm" "$path"
-        [ -n "$owner" ] && chown "$owner" "$path"
-        [ -n "$context" ] && chcon "$context" "$path"
+# Xử lý theo chế độ đệ quy hoặc gom nhóm không đệ quy để tăng tốc
+if [ "${recursive:-0}" = 1 ]; then
+    for path in "$@"; do
+        [ -e "$path" ] || continue
+        [ "${verbose:-0}" = 1 ] && echo "$path $perm $owner ${context:-none}"
+        if [ -d "$path" ]; then
+            chmod -R "$perm" "$path"
+            [ -n "$owner" ] && chown -R "$owner" "$path"
+            [ -n "$context" ] && chcon -R "$context" "$path"
+        else
+            chmod "$perm" "$path"
+            [ -n "$owner" ] && chown "$owner" "$path"
+            [ -n "$context" ] && chcon "$context" "$path"
+        fi
+    done
+else
+    # Gom nhóm các đường dẫn hợp lệ để chạy 1 lệnh duy nhất (Cải thiện tốc độ vượt trội)
+    valid_paths=()
+    for path in "$@"; do
+        [ -e "$path" ] && valid_paths+=("$path")
+    done
+
+    if [ ${#valid_paths[@]} -gt 0 ]; then
+        if [ "${verbose:-0}" = 1 ]; then
+            for p in "${valid_paths[@]}"; do
+                echo "$p $perm $owner ${context:-none}"
+            done
+        fi
+
+        if [ "${force:-0}" = 1 ]; then
+            chmod "$perm" "${valid_paths[@]}"
+            [ -n "$owner" ] && chown "$owner" "${valid_paths[@]}"
+            [ -n "$context" ] && chcon "$context" "${valid_paths[@]}"
+        else
+            chmod "$perm" "${valid_paths[@]}" 2>/dev/null
+            [ -n "$owner" ] && chown "$owner" "${valid_paths[@]}" 2>/dev/null
+            [ -n "$context" ] && chcon "$context" "${valid_paths[@]}" 2>/dev/null
+        fi
     fi
-done
+fi
