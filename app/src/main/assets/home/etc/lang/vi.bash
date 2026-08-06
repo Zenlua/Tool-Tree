@@ -58,6 +58,7 @@ reset_data_text="Cài lại data"
 disable_text="Vô hiệu hóa"
 patch_text="Vá"
 customize_text="Tùy chỉnh"
+number_text="Số lượng"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"

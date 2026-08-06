@@ -20,6 +20,9 @@ show_help() {
   echo "  -b    debug information:"
   echo "          0: keep the information intact"
   echo "          1: clean up debug info"
+  echo "  -s    enable redivision dex:"
+  echo "          0: off"
+  echo "          1: on"
   echo "  -h    show help"
   exit 1
 }
@@ -28,14 +31,15 @@ if [[ $# -eq 0 || "$1" != -* ]]; then
 show_help
 fi
 
-INPUT=''; OUTPUT=''; TYPEAPK=''; DECODEX=''; DEBUGA=''; show_help='';
-while getopts ":i:o:t:d:b:h" opt; do
+INPUT=''; OUTPUT=''; TYPEAPK=''; DECODEX=''; DEBUGA=''; REDIVIS='';
+while getopts ":i:o:t:d:s:b:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
     o) OUTPUT="$OPTARG" ;;
     t) TYPEAPK="$OPTARG" ;;
     d) DECODEX="$OPTARG" ;;
     b) DEBUGA="$OPTARG" ;;
+    s) REDIVIS="$OPTARG" ;;
     h) show_help ;;
     \?) echo "! Not understand -$OPTARG"; show_help ;;
     :) echo "! Lack of value for -$OPTARG"; show_help ;;
@@ -52,6 +56,7 @@ fi
 [[ -z "$TYPEAPK" ]] && TYPEAPK='xml'
 [[ -z "$DECODEX" ]] && DECODEX='smali'
 [[ -z "$DEBUGA" ]] && DEBUGA=1
+[[ -z "$REDIVIS" ]] && REDIVIS=0
 IFS=$'\n'
 
 echo "$more_text_4 $INPUT"
@@ -109,6 +114,16 @@ mkdir -p "$Tout/.cache"
 
 # giải mã smali
 if [ "$DECODEX" == "smali" ]; then
+    if [ "$REDIVIS" == 1 ]; then
+      if [ -f "$Tout/AndroidManifest.xml" ]; then
+      maindexlist="$(extract_dex.py "$Tout/AndroidManifest.xml")"
+      elif [ -f "$Tout/AndroidManifest.xml.bin" ]; then
+      axmlprinter "$Tout/AndroidManifest.xml.bin" > "$Tout/AndroidManifest.xml"
+      maindexlist="$(extract_dex.py "$Tout/AndroidManifest.xml")"
+      rm -f "$Tout/AndroidManifest.xml"
+      fi
+      dexsplitter "$Tout/dex" "$(glog dex_methods)" $maindexlist
+    fi
     [ "$DEBUGA" == 1 ] && hhhhfdr="--debug-info false -l" || hhhhfdr="--debug-info true"
     for vkn in "$Tout"/dex/classes*.dex; do
     [ -f "$vkn" ] || continue

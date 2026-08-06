@@ -19,9 +19,6 @@ show_help() {
   echo "  -c    copy signature file and AndroidManifest.xml:"
   echo "          0: do not copy"
   echo "          1: copy"
-  echo "  -r    enable redivision dex:"
-  echo "          0: off"
-  echo "          1: on"
   echo "  -x    extractNativeLibs: manifest"
   echo "          manifest: read and apply from manifest"
   echo "          false: uncompress libraries and set 4096"
@@ -34,8 +31,8 @@ if [[ $# -eq 0 || "$1" != -* ]]; then
 show_help
 fi
 
-INPUT=''; OUTPUT=""; SIGNAP=''; FIRTVB=''; XDELF=''; COPYX=''; show_help='';
-while getopts ":i:o:s:n:d:r:c:x:h" opt; do
+INPUT=''; OUTPUT=""; SIGNAP=''; FIRTVB=''; XDELF=''; COPYX='';
+while getopts ":i:o:s:n:d:c:x:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
     o) OUTPUT="$OPTARG" ;;
@@ -43,7 +40,6 @@ while getopts ":i:o:s:n:d:r:c:x:h" opt; do
     n) FIRTVB="$OPTARG" ;;
     d) XDELF="$OPTARG" ;;
     c) COPYX="$OPTARG" ;;
-    r) REDIVIS="$OPTARG" ;;
     x) XTRALIB="$OPTARG" ;;
     h) show_help ;;
     \?) echo "! Not understand -$OPTARG"; show_help ;;
@@ -62,7 +58,6 @@ fi
 [[ -z "$FIRTVB" ]] && FIRTVB=1
 [[ -z "$XDELF" ]] && XDELF=0
 [[ -z "$COPYX" ]] && COPYX=0
-[[ -z "$REDIVIS" ]] && REDIVIS=0
 IFS=$'\n'
 
 echo "$apkb_text_1 ${INPUT##*/}"
@@ -89,10 +84,6 @@ fi
 
 echo "$replag_text_2..."
 echo
-
-if [ "$REDIVIS" == 1 ] && [ ! -f "$INPUT/.cache/redivision.log" ]; then
-redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
-fi
 
 if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ]; then
 # Tạo dex

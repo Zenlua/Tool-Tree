@@ -21,9 +21,6 @@ show_help() {
   echo "  -d    delete build folder after build is complete:"
   echo "          0: do not delete project"
   echo "          1: delete project"
-  echo "  -r    enable redivision dex:"
-  echo "          0: off"
-  echo "          1: on"
   echo "  -h    show help"
   exit 1
 }
@@ -32,8 +29,8 @@ if [[ $# -eq 0 || "$1" != -* ]]; then
 show_help
 fi
 
-INPUT=''; OUTPUT=''; SIGNAP=''; XTRALIB=''; FIRTVB=''; XDELF=''; show_help=''; REDIVIS='';
-while getopts ":i:o:s:x:n:d:b:r:h" opt; do
+INPUT=''; OUTPUT=''; SIGNAP=''; XTRALIB=''; FIRTVB=''; XDELF='';
+while getopts ":i:o:s:x:n:d:b:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
     o) OUTPUT="$OPTARG" ;;
@@ -41,7 +38,6 @@ while getopts ":i:o:s:x:n:d:b:r:h" opt; do
     x) XTRALIB="$OPTARG" ;;
     n) FIRTVB="$OPTARG" ;;
     d) XDELF="$OPTARG" ;;
-    r) REDIVIS="$OPTARG" ;;
     h) show_help ;;
     \?) echo "! Not understand -$OPTARG"; show_help ;;
     :) echo "! Lack of value for -$OPTARG"; show_help ;;
@@ -58,7 +54,6 @@ fi
 [ -z "$SIGNAP" ] && SIGNAP='default'
 [ -z "$FIRTVB" ] && FIRTVB=1
 [ -z "$XDELF" ] && XDELF=0
-[ -z "$REDIVIS" ] && REDIVIS=0
 
 IFS=$'\n'
 
@@ -87,10 +82,6 @@ fi
 
 echo "$replag_text_2..."
 echo
-
-if [ "$REDIVIS" == 1 ] && [ ! -f "$INPUT/.cache/redivision.log" ]; then
-redivision.py "$INPUT" > "$INPUT/.cache/redivision.log"
-fi
 
 # xây dựng smali
 if [ -f "$INPUT/dex/classes.dex" ] && [ -d "$INPUT/smali" ]; then

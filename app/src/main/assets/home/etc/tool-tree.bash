@@ -1854,12 +1854,13 @@ Utiliapk() {
     slog type_apk "$type_apk"
     slog dexlibk "$dexlibk"
     slog mutiresk "$mutiresk"
+    slog redivdd "$redivdd"
     IFS=$'"'\n'"'
     for vapk in $FILE; do
     if [ "$tooldecom" == "apkeditor" ]; then
-    apkeditor_d -i "$PTAD/$vapk" -t "$type_apk" -b "$xoa_debug_info" -d "$dexlib" -o "$APK/$PTAH"
+    apkeditor_d -i "$PTAD/$vapk" -t "$type_apk" -b "$xoa_debug_info" -d "$dexlib" -o "$APK/$PTAH" -s "$redivdd"
     else
-    apktool_d -i "$PTAD/$vapk" -r "$mutiresk" -b "$xoa_debug_info" -d "$dexlibk" -o "$APK/$PTAH"
+    apktool_d -i "$PTAD/$vapk" -r "$mutiresk" -b "$xoa_debug_info" -d "$dexlibk" -o "$APK/$PTAH" -s "$redivdd"
     fi
     echo
     done
@@ -1928,6 +1929,29 @@ Utiliapk() {
     depend-logic = "priority"
 
     [[group.action.params]]
+    name = "redivdd"
+    label = "'$decom_apk_text_14'"
+    type = "switch"
+    value-sh = "glog redivdd 0"
+    depend-on = "dexlib|dexlibk"
+    depend-value = "smali|2"
+    depend-mode = "show|show"
+    depend-default = "hide"
+    depend-readonly = true
+
+    [[group.action.params]]
+    name = "dex_methods"
+    label = "'$number_text'"
+    type = "number"
+    min = 40000
+    max = 65535
+    value-sh = "glog dex_methods 64000"
+    depend-on = "redivdd"
+    depend-value = "1"
+    depend-mode = "show"
+    depend-default = "hide"
+
+    [[group.action.params]]
     name = "FILE"
     title = "'$decom_apk_text_9'"
     desc = "'$input_file_text': apk, apks, apkm, xapk, jar, zip"
@@ -1946,15 +1970,14 @@ Utiliapk() {
     slog sstring "$sstring"
     slog xoatm "$xoatm"
     slog copysign "$copysign"
-    slog redivdd "$redivdd"
     IFS=$'"'\n'"'
     for vbapk in $FOLDER; do
-        if [ -f "$APK/$PTAH/$vbapk/archive-info.json" ]; then
-            apkeditor_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib" -r "$redivdd"
-        else
-            apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm" -r "$redivdd" -x "$comlib"
-        fi
-        echo
+      if [ -f "$APK/$PTAH/$vbapk/archive-info.json" ]; then
+        apkeditor_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib"
+      else
+        apktool_b -i "$APK/$PTAH/$vbapk" -o "$PTAD/out" -c "$copysign" -s "$sign" -n "$sstring" -d "$xoatm" -x "$comlib"
+      fi
+      echo
     done
     echo "'$save_text' $PTAD/out"
     echo
@@ -1978,12 +2001,6 @@ Utiliapk() {
     label = "'$build_apk_text_1'"
     type = "switch"
     value-sh = "glog sstring 1"
-
-    [[group.action.params]]
-    name = "redivdd"
-    label = "'$decom_apk_text_14'"
-    type = "switch"
-    value-sh = "glog redivdd"
 
     [[group.action.params]]
     name = "copysign"

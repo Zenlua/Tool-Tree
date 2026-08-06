@@ -58,6 +58,7 @@ reset_data_text="Reinstall data"
 disable_text="Disable"
 patch_text="Patch"
 customize_text="Customize"
+number_text="Quantity"
 
 # Home
 home_text_1="App information and features"

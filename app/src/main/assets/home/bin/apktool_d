@@ -18,6 +18,9 @@ show_help() {
   echo "  -b    remove debug-info when decoding smali"
   echo "          0: keep the same"
   echo "          1: remove all (default)"
+  echo "  -s    enable redivision dex:"
+  echo "          0: off"
+  echo "          1: on"
   echo "  -h    show help"
   exit 1
 }
@@ -26,14 +29,15 @@ if [[ $# -eq 0 || "$1" != -* ]]; then
 show_help
 fi
 
-INPUT=''; OUTPUT=''; RESAPK=''; DECODEX=''; DEBUGA=''; show_help='';
-while getopts ":i:o:r:d:b:h" opt; do
+INPUT=''; OUTPUT=''; RESAPK=''; DECODEX=''; DEBUGA=''; REDIVIS='';
+while getopts ":i:o:r:d:s:b:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
     o) OUTPUT="$OPTARG" ;;
     r) RESAPK="$OPTARG" ;;
     d) DECODEX="$OPTARG" ;;
     b) DEBUGA="$OPTARG" ;;
+    s) REDIVIS="$OPTARG" ;;
     h) show_help ;;
     \?) echo "! Not understand -$OPTARG"; show_help ;;
     :) echo "! Lack of value for -$OPTARG"; show_help ;;
@@ -50,6 +54,7 @@ fi
 [[ -z "$DECODEX" ]] && DECODEX=2
 [[ -z "$DEBUGA" ]] && DEBUGA=1
 [[ -z "$RESAPK" ]] && RESAPK=1
+[[ -z "$REDIVIS" ]] && REDIVIS=0
 IFS=$'\n'
 
 # xác định tệp
@@ -70,10 +75,6 @@ apkskk=1
 elif [ "$typefile" == "apk" ] || [ "$typefile" == "dex" ]; then
 ptpk="$INPUT"
 fi
-
-# kiểm tra AndroidManifest.xml
-gwngfds="$(unzip -ql "$ptpk" AndroidManifest.xml | grep -cm1 'AndroidManifest.xml')"
-[ "$gwngfds" == 1 ] && apktool if "$ptpk" &>/dev/null
 
 # xác định tệp
 if [ -f "$ptpk" ]; then
@@ -111,6 +112,16 @@ mkdir -p "$Tout/.cache"
 
 # giải mã smali
 if [ "$DECODEX" == 2 ]; then
+    if [ "$REDIVIS" == 1 ]; then
+      if [ "$(grep -cm1 'android:name' "$Tout/AndroidManifest.xml")" == 1 ]; then
+      maindexlist="$(extract_dex.py "$Tout/AndroidManifest.xml")"
+      else
+      echo "$Lay_api" > "$Tout/AndroidManifest.xmls"
+      maindexlist="$(extract_dex.py "$Tout/AndroidManifest.xmls")"
+      rm -f "$Tout/AndroidManifest.xmls"
+      fi
+      dexsplitter "$Tout" "$(glog dex_methods)" $maindexlist
+    fi
     [ "$DEBUGA" == 1 ] && hhhhfdr="--debug-info false -l" || hhhhfdr="--debug-info true"
     for vkn in "$Tout"/classes*.dex; do
     [ -f "$vkn" ] || continue
