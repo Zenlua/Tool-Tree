@@ -58,9 +58,8 @@ case "$1" in
 
   4)
     for vv in $(ls -1d *); do
-      [[ -d "$vv" && $(ls "$vv" 2>/dev/null) ]] || continue
-      size=$(du -sm "$vv" | awk '{print $1}')
-      echo "$vv|$vv (${size}Mb)"
+      [[ -d "$vv" && -n "$(ls "$vv" 2>/dev/null)" ]] || continue
+      echo "$vv"
     done
     ;;
 
