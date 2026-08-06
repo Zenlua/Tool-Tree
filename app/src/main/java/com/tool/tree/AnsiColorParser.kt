@@ -426,4 +426,17 @@ object AnsiColorParser {
     fun reset() {
         resetToDefault()
     }
+
+    /**
+     * Lọc bỏ toàn bộ mã ANSI escape (mã màu, style, hyperlink OSC 8, các CSI khác...)
+     * khỏi chuỗi, chỉ giữ lại phần văn bản thuần. Dùng cho các nơi hiển thị không hỗ trợ
+     * Spannable (vd nội dung thông báo/Notification), tránh hiện ký tự điều khiển thừa.
+     */
+    fun stripToPlainText(text: String?): String {
+        if (text.isNullOrEmpty()) return text ?: ""
+        var result = CSI_PATTERN.matcher(text).replaceAll("")
+        result = OSC_PATTERN.matcher(result).replaceAll("")
+        result = SIMPLE_ESC_PATTERN.matcher(result).replaceAll("")
+        return result
+    }
 }

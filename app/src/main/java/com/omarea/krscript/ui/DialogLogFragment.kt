@@ -514,16 +514,13 @@ class DialogLogFragment : DialogFragment() {
 
             val shortLog = notificationRows.lastOrNull()?.trim().orEmpty()
 
-            val personIcon = if (notificationTitle.isNotEmpty()) {
+            val personIcon = if (iconPath.isNotEmpty() || logoPath.isNotEmpty()) {
                 val tempNode = RunnableNode(currentConfigXml).apply {
                     title = notificationTitle
                     this.iconPath = this@MyShellHandler.iconPath
                     this.logoPath = this@MyShellHandler.logoPath
                 }
-                val drawable = if (iconPath.isNotEmpty() || logoPath.isNotEmpty()) {
-                    IconPathAnalysis().loadLogo(context, tempNode, false)
-                } else null ?: ContextCompat.getDrawable(context, R.drawable.kr_run)
-
+                val drawable = IconPathAnalysis().loadLogo(context, tempNode, false)
                 drawableToIcon(drawable, 200)
             } else null
 
@@ -951,7 +948,8 @@ class DialogLogFragment : DialogFragment() {
         }
 
         private fun pushNotificationLog(text: String) {
-            val lines = text.replace("\r", "\n").split("\n").filter { it.isNotEmpty() }
+            val plainText = AnsiColorParser.stripToPlainText(text)
+            val lines = plainText.replace("\r", "\n").split("\n").filter { it.isNotEmpty() }
             if (lines.isEmpty()) return
             synchronized(notificationRows) {
                 lines.forEach { notificationRows.add("$it\n") }

@@ -23,6 +23,7 @@ import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
+import com.tool.tree.AnsiColorParser
 import com.tool.tree.R
 
 class BgTaskThread(private var process: Process) : Thread() {
@@ -106,11 +107,10 @@ class BgTaskThread(private var process: Process) : Thread() {
 
             val shortLog = notificationMessageRows.lastOrNull()?.trim().orEmpty()
 
-            val drawable = if (runnableNode.iconPath.isNotEmpty() || runnableNode.logoPath.isNotEmpty()) {
-                IconPathAnalysis().loadLogo(context, runnableNode, false)
-            } else null ?: ContextCompat.getDrawable(context, R.drawable.kr_run)
-
-            val personIcon = drawableToIcon(drawable, 200)
+            val personIcon = if (runnableNode.iconPath.isNotEmpty() || runnableNode.logoPath.isNotEmpty()) {
+                val drawable = IconPathAnalysis().loadLogo(context, runnableNode, false)
+                drawableToIcon(drawable, 200)
+            } else null
 
             val sender = android.app.Person.Builder()
                 .setName(notificationTitle)
@@ -170,14 +170,14 @@ class BgTaskThread(private var process: Process) : Thread() {
 
         override fun onReader(msg: Any?) {
             synchronized(notificationMessageRows) {
-                notificationMessageRows.add("" + msg?.toString())
+                notificationMessageRows.add(AnsiColorParser.stripToPlainText(msg?.toString()))
                 updateNotification()
             }
         }
 
         override fun onError(msg: Any?) {
             synchronized(notificationMessageRows) {
-                notificationMessageRows.add("" + msg?.toString())
+                notificationMessageRows.add(AnsiColorParser.stripToPlainText(msg?.toString()))
                 updateNotification()
             }
         }
