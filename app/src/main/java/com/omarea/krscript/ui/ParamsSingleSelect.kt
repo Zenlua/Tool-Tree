@@ -93,11 +93,15 @@ class ParamsSingleSelect(
             isModal = true
             setAdapter(adapter)
 
-            // Chiều rộng: mở rộng tự động theo độ dài chữ của item dài nhất
-            val contentWidth = measureContentWidth(adapter)
-            width = maxOf(anchorView.width, contentWidth)
+            // 1. Giới hạn độ rộng tối đa không tràn khỏi màn hình (trừ 32dp lề 2 bên)
+            val displayMetrics = context.resources.displayMetrics
+            val maxScreenWidth = displayMetrics.widthPixels - (32 * displayMetrics.density).toInt()
 
-            // Chiều cao: tự co giãn theo số lượng dòng (tối đa 6 ô)
+            // 2. Chiều rộng co giãn theo chữ dài nhất nhưng trong khoảng [anchorView.width ... maxScreenWidth]
+            val contentWidth = measureContentWidth(adapter)
+            width = maxOf(anchorView.width, minOf(contentWidth, maxScreenWidth))
+
+            // 3. Chiều cao tự động co giãn vừa đủ hiện các dòng (tối đa 6 ô)
             height = ListPopupWindow.WRAP_CONTENT
         }
 
@@ -112,11 +116,11 @@ class ParamsSingleSelect(
 
         listPopupWindow.show()
 
-        // Ẩn thanh cuộn dọc nếu có
+        // Ẩn thanh cuộn dọc bên trong popup
         listPopupWindow.listView?.isVerticalScrollBarEnabled = false
     }
 
-    // Hàm phụ trợ đo chiều rộng tối đa của các dòng chữ trong adapter
+    // Hàm phụ trợ đo chiều rộng thực tế của item chữ dài nhất
     private fun measureContentWidth(adapter: ArrayAdapter<String>): Int {
         var maxWidth = 0
         var itemView: View? = null
