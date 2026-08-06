@@ -2,13 +2,38 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
     android:gravity="center_vertical"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:paddingStart="8dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="4dp">
 
-    <Spinner
+    <!-- TextView chính hiển thị tiêu đề lựa chọn (có biểu tượng mũi tên xổ xuống) -->
+    <TextView
         android:id="@+id/kr_param_spinner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:background="@drawable/abc_spinner_mtrl_am_alpha"
-        android:hint="@string/kr_please_select"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:paddingStart="4dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="8dp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="14sp" />
+
+    <!-- TextView ẩn dùng lưu/truy xuất giá trị (value) cho script -->
+    <TextView
+        android:id="@+id/kr_param_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
 </LinearLayout>

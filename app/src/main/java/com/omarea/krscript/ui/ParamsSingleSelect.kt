@@ -1,13 +1,10 @@
 package com.omarea.krscript.ui
 
-import android.content.res.Configuration
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Spinner
 import android.widget.TextView
+import androidx.appcompat.widget.ListPopupWindow
 import androidx.fragment.app.FragmentActivity
 import com.omarea.common.model.SelectItem
 import com.omarea.common.ui.DialogItemChooser
@@ -18,179 +15,126 @@ import com.tool.tree.ThemeModeState
 class ParamsSingleSelect(
         private var actionParamInfo: ActionParamInfo,
         private var context: FragmentActivity,
-        // Được gọi mỗi khi người dùng thay đổi lựa chọn - áp dụng cho cả 2 kiểu hiển thị
-        // (Spinner khi <=6 lựa chọn, dialog khi > 6 lựa chọn), dùng để các param khác
-        // "depend-on" param này biết mà cập nhật ẩn/hiện.
+        // Được gọi mỗi khi người dùng thay đổi lựa chọn (dùng cho cơ chế depend-on)
         private val onValueChanged: (() -> Unit)? = null
 ) {
 
     private val darkMode: Boolean = ThemeModeState.isDarkMode()
     val options = actionParamInfo.optionsFromShell!!
-    var selectedIndex = ActionParamsLayoutRender.getParamOptionsCurrentIndex(actionParamInfo, options) // 获取当前选中项索引
+    var selectedIndex = ActionParamsLayoutRender.getParamOptionsCurrentIndex(actionParamInfo, options)
 
-    // Thêm biến lưu thời gian click lúc mở danh sách chọn
+    // Thời gian click gần nhất để chống nhấp nhanh / mở trùng Popup
     private var lastOpenTime: Long = 0
 
-    // Chỉ khác null khi render() dùng nhánh Spinner (<=6 lựa chọn)
-    private var spinnerView: Spinner? = null
-
-    // Đọc giá trị hiện tại đang được chọn (dùng cho cơ chế depend-on), áp dụng cho cả 2 kiểu
-    // hiển thị (Spinner khi <=6 lựa chọn, dialog khi > 6 lựa chọn).
+    // Đọc giá trị hiện tại đang được chọn
     fun getValue(): String {
-        spinnerView?.let { spinner ->
-            return (spinner.selectedItem as? SelectItem)?.value ?: ""
-        }
-        return if (selectedIndex > -1 && selectedIndex < options.size) options[selectedIndex].value ?: "" else ""
+        return if (selectedIndex in options.indices) options[selectedIndex].value ?: "" else ""
     }
 
     private fun updateValueView(valueView: TextView, textView: TextView) {
-        if (selectedIndex > -1 && selectedIndex < options.size) {
-            valueView.text = options[(selectedIndex)].value
-            textView.text = options[(selectedIndex)].title
+        if (selectedIndex in options.indices) {
+            valueView.text = options[selectedIndex].value
+            textView.text = options[selectedIndex].title
         } else {
             valueView.text = ""
             textView.text = ""
+            // Hiển thị hint khi chưa chọn hoặc danh sách rỗng
+            textView.hint = context.getString(
+                if (options.isEmpty()) R.string.picker_not_item else R.string.kr_please_select
+            )
         }
     }
 
     fun render(): View {
-        if (options.size > 6) {
-            val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_single_select, null)
-            val textView = layout.findViewById<TextView>(R.id.kr_param_single_select)
-            val valueView = layout.findViewById<TextView>(R.id.kr_param_value).apply {
-                tag = actionParamInfo.name
-                updateValueView(this, textView)
-            }
-            textView.run {
-                setOnClickListener {
-                    openSingleSelectDialog(valueView, textView)
-                }
-            }
-
-            return layout
-        } else {
-            val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_spinner, null)
-
-            // Chỉ bật tính năng "ô trống chưa chọn" khi action param khai báo rõ
-            // allow-no-selection="true". Mặc định TẮT: nếu chưa có value/valueFromShell nào
-            // khớp, tự chọn mục đầu tiên - đúng hành vi gốc của Android Spinner (Spinner luôn
-            // cần có 1 giá trị hiệu lực để hoạt động hiệu quả, tránh gây khó hiểu/lỗi khi
-            // getValue() trả về rỗng ngoài ý muốn ở phần lớn trường hợp sử dụng).
-            val allowNoSelection = actionParamInfo.allowNoSelection
-            if (!allowNoSelection && (selectedIndex < 0 || selectedIndex >= options.size) && options.isNotEmpty()) {
-                selectedIndex = 0
-            }
-
-            // Chèn 1 mục placeholder RỖNG ở đầu danh sách khi:
-            // - chưa có lựa chọn nào khớp và tính năng allow-no-selection đang bật, HOẶC
-            // - danh sách `options` hoàn toàn RỖNG (không có mục nào cả) - trường hợp này
-            //   luôn cần hiện hint "Vui lòng chọn" thay vì để ô Spinner trống trơn không rõ
-            //   lý do, bất kể allow-no-selection có bật hay không.
-            val hasNoSelection = options.isEmpty() || (allowNoSelection && (selectedIndex < 0 || selectedIndex >= options.size))
-            val displayOptions: List<SelectItem> = if (hasNoSelection) {
-                ArrayList<SelectItem>(options.size + 1).apply {
-                    add(SelectItem()) // title/value đều null -> SelectItem.toString() trả về rỗng
-                    addAll(options)
-                }
-            } else {
-                options
-            }
-            // Vì placeholder (nếu có) luôn nằm ở vị trí 0 và danh sách không đổi sau khi dựng,
-            // độ lệch này giữ nguyên trong suốt vòng đời view - vị trí Spinner (pos) trừ đi
-            // indexOffset luôn ra đúng index thật trong `options`.
-            val indexOffset = if (hasNoSelection) 1 else 0
-
-            layout.findViewById<Spinner>(R.id.kr_param_spinner).run {
-                tag = actionParamInfo.name
-                spinnerView = this
-
-                // Adapter tuỳ chỉnh: mục placeholder (rỗng) chỉ dùng để ô Spinner lúc ĐÓNG
-                // hiển thị trống - còn khi bấm mở danh sách xổ xuống thì ẨN HẲN dòng đó đi
-                // (cao 0, không bấm được) để người dùng không thấy/chọn nhầm 1 dòng trống.
-                adapter = object : ArrayAdapter<SelectItem>(context, R.layout.kr_spinner_default, R.id.text, displayOptions) {
-                    // getView() vẽ ô đang hiển thị (Spinner lúc ĐÓNG). Khi đó là mục placeholder
-                    // (chưa chọn gì), hiện chữ gợi ý "Vui lòng chọn" giống bên nhiều-lựa-chọn,
-                    // vì Spinner chuẩn không tự hỗ trợ android:hint như TextView/EditText.
-                    override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
-                        val view = super.getView(position, convertView, parent)
-                        if (hasNoSelection && position == 0) {
-                            // Dùng thuộc tính "hint" (không phải "text") để TextView tự vẽ chữ
-                            // bằng màu ?android:attr/textColorHint mặc định của theme - đúng
-                            // cơ chế mà ParamsMultipleSelect đang dùng, nên độ sáng/màu sắc
-                            // đồng bộ với nhau mà không cần tự set màu thủ công.
-                            // Phân biệt 2 tình huống khác nhau về ngữ nghĩa:
-                            // - options rỗng: không có gì để chọn -> "Không có tùy chọn khả dụng"
-                            // - options có dữ liệu nhưng chưa khớp lựa chọn nào -> "Vui lòng chọn"
-                            (view as? TextView)?.apply {
-                                text = null
-                                hint = context.getString(
-                                    if (options.isEmpty()) R.string.picker_not_item else R.string.kr_please_select
-                                )
-                            }
-                        }
-                        return view
-                    }
-
-                    override fun getDropDownView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
-                        if (hasNoSelection && position == 0) {
-                            return convertView?.takeIf { it.tag == "kr_spinner_placeholder_hidden" }
-                                ?: View(context).apply {
-                                    layoutParams = android.widget.AbsListView.LayoutParams(0, 0)
-                                    tag = "kr_spinner_placeholder_hidden"
-                                }
-                        }
-                        // Tránh crash "Failed to find view with ID .../text": convertView có thể là
-                        // view placeholder ẩn (View trống, không có id/text) bị recycle từ position 0
-                        // sang đây. Nếu vậy, không tái sử dụng nó, để ArrayAdapter tự inflate view mới.
-                        val safeConvertView = convertView?.takeIf { it.tag != "kr_spinner_placeholder_hidden" }
-                        return super.getDropDownView(position, safeConvertView, parent)
-                    }
-
-                    override fun areAllItemsEnabled(): Boolean = !hasNoSelection
-
-                    override fun isEnabled(position: Int): Boolean {
-                        return !(hasNoSelection && position == 0)
-                    }
-                }.apply {
-                    setDropDownViewResource(R.layout.kr_spinner_dropdown)
-                }
-                isEnabled = !actionParamInfo.readonly && options.isNotEmpty()
-
-                setSelection(if (hasNoSelection) 0 else selectedIndex + indexOffset)
-
-                onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                        selectedIndex = pos - indexOffset
-                        onValueChanged?.invoke()
-                    }
-                    override fun onNothingSelected(p: AdapterView<*>?) {}
-                }
-            }
-
-            return layout
+        val allowNoSelection = actionParamInfo.allowNoSelection
+        if (!allowNoSelection && selectedIndex !in options.indices && options.isNotEmpty()) {
+            selectedIndex = 0
         }
+
+        val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_spinner, null)
+        val textView = layout.findViewById<TextView>(R.id.kr_param_spinner)
+        val valueView = layout.findViewById<TextView>(R.id.kr_param_value).apply {
+            tag = actionParamInfo.name
+        }
+
+        updateValueView(valueView, textView)
+
+        val isEnabled = !actionParamInfo.readonly && options.isNotEmpty()
+        layout.isEnabled = isEnabled
+        textView.isEnabled = isEnabled
+
+        if (isEnabled) {
+            val clickListener = View.OnClickListener {
+                if (options.size > 6) {
+                    openSingleSelectDialog(valueView, textView)
+                } else {
+                    openListPopupWindow(layout, valueView, textView)
+                }
+            }
+            layout.setOnClickListener(clickListener)
+            textView.setOnClickListener(clickListener)
+        }
+
+        return layout
+    }
+
+    private fun openListPopupWindow(anchorView: View, valueView: TextView, textView: TextView) {
+        // Chống nhấp nhanh
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastOpenTime < 400) {
+            return
+        }
+        lastOpenTime = currentTime
+
+        val listPopupWindow = ListPopupWindow(context).apply {
+            this.anchorView = anchorView
+            isModal = true // Chạm bên ngoài sẽ tự đóng Popup
+        }
+
+        // Tạo danh sách tiêu đề hiển thị
+        val displayTitles = options.map { it.title ?: "" }
+        val adapter = ArrayAdapter(context, R.layout.kr_spinner_dropdown, R.id.text, displayTitles)
+
+        listPopupWindow.setAdapter(adapter)
+
+        listPopupWindow.setOnItemClickListener { _, _, position, _ ->
+            if (selectedIndex != position) {
+                selectedIndex = position
+                updateValueView(valueView, textView)
+                onValueChanged?.invoke()
+            }
+            listPopupWindow.dismiss()
+        }
+
+        listPopupWindow.show()
     }
 
     private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
-        // >>> CHẶN TẠI ĐÂY: Tránh việc nhấn nhanh mở 2 DialogItemChooser cùng lúc
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastOpenTime < 800) {
             return
         }
         lastOpenTime = currentTime
 
-        DialogItemChooser(darkMode, ArrayList(options.mapIndexed{index, item->
-            SelectItem().apply {
-                title = item.title
-                selected = index == selectedIndex
+        DialogItemChooser(
+            darkMode,
+            ArrayList(options.mapIndexed { index, item ->
+                SelectItem().apply {
+                    title = item.title
+                    selected = index == selectedIndex
+                }
+            }),
+            false,
+            object : DialogItemChooser.Callback {
+                override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
+                    val newIndex = status.indexOf(true)
+                    if (newIndex != selectedIndex) {
+                        selectedIndex = newIndex
+                        updateValueView(valueView, textView)
+                        onValueChanged?.invoke()
+                    }
+                }
             }
-        }), false, object : DialogItemChooser.Callback {
-            override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
-                // Không chặn nút xác nhận theo yêu cầu
-                selectedIndex = status.indexOf(true)
-                updateValueView(valueView, textView)
-                onValueChanged?.invoke()
-            }
-        }).show(context.supportFragmentManager, "params-single-select")
+        ).show(context.supportFragmentManager, "params-single-select")
     }
 }
