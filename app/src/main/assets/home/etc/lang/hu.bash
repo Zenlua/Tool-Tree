@@ -135,7 +135,7 @@ flash_text_12="Kész"
 
 # Decode
 decode_text_1="IMG fájlok ne legyenek dekódolva"
-decode_text_3="Beviteli fájlok listája: .br .dat .img .zst .zstd .bin .zip"
+decode_text_3="Beviteli fájlok listája"
 
 # Build
 builds_text_1="Korábban dekompilált projektek építése"
@@ -144,7 +144,7 @@ builds_text_3="EROFS tömörítési mód"
 builds_text_4="Tömörítési szint"
 builds_text_6="Szint"
 builds_text_7="Megjegyzés: a 0 érték 0 MB szabad helynek felel meg; a szabad hely hozzáadása csak ext4 és f2fs partícióknál alkalmazható"
-builds_text_8="Az avb, vbmeta és fstab fájlok javítása"
+builds_text_8="AVB, fstab, gyári recovery letiltása"
 
 # build super
 super_text_2="Csomagtípus"
@@ -161,7 +161,6 @@ payload_text_4="Csak akkor érvényes, ha a dinamikus partíció engedélyezve v
 # cover img
 convert_text_1="Fájl átalakítása"
 convert_text_2="A br és zstd fájlok tömörítési szintje; magasabb értékek esetén a tömörítés tovább tart"
-convert_text_3="Beviteli fájlok listája: .br .dat .zstd .img"
 
 # split super
 super_split_text_1="Super feldarabolása"
@@ -289,7 +288,7 @@ apex_text_2="Támogatott fájllista: apex, capex"
 build_time_text_1="ROM építési idő"
 convert_img_text="Az építés befejezése után folytatja az átalakítást"
 list_partition_text="A dekompilált partíciók listája"
-xoaoat_text_1="OAT és ODEX elemek tisztítása"
+xoaoat_text_1="Rendszer ART & Odex gyorsítótár törlése"
 open_activity_text="Mappa megnyitása:"
 patch_text_fscontex="fs_config és fs_contexts javítása"
 config_text_1="Meglévő projekt átalakítása"

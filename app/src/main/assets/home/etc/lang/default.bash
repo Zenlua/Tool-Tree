@@ -55,6 +55,9 @@ build_time_text_2="Current:"
 noti_update="Toast update"
 api_key_text="API Key"
 reset_data_text="Reinstall data"
+disable_text="Disable"
+patch_text="Patch"
+customize_text="Customize"
 
 # Home
 home_text_1="App information and features"
@@ -137,7 +140,7 @@ flash_text_12="Done"
 
 # Decode
 decode_text_1="Do not decode IMG files"
-decode_text_3="List of input files: .br .dat .img .zst .zstd .bin .zip"
+decode_text_3="List of input files"
 
 # Build
 builds_text_1="Build previously decompiled projects"
@@ -146,7 +149,7 @@ builds_text_3="EROFS compression method"
 builds_text_4="Compression level"
 builds_text_6="Level"
 builds_text_7="Note: A value of 0 means 0 MB free. Adding free space only applies to ext4 and f2fs partitions."
-builds_text_8="Patch avb, vbmeta, and fstab files"
+Builds_text_8="Disable AVB, fstab, stock recovery"
 
 # build super
 super_text_2="Package type"
@@ -163,7 +166,6 @@ payload_text_4="Only takes effect when dynamic partition is enabled"
 # cover img
 convert_text_1="Convert file"
 convert_text_2="Compression level for br and zstd files; higher values take longer to compress"
-convert_text_3="List of input files: .br .dat .zstd .img"
 
 # split super
 super_split_text_1="Split Super"
@@ -291,7 +293,7 @@ apex_text_2="Supported file list: apex, capex"
 build_time_text_1="ROM build time"
 convert_img_text="Continue converting after the build is complete"
 list_partition_text="List of decompiled partitions"
-xoaoat_text_1="Clean up oat and odex items"
+xoaoat_text_1="Clean system ART cache & Odex"
 open_activity_text="Open folder:"
 patch_text_fscontex="Patch fs_config and fs_contexts"
 patch_text_fsdesc="Auto add required permissions for newly added items"

@@ -135,7 +135,7 @@ flash_text_12="完成"
 
 # Decode
 decode_text_1="不解码 IMG 文件"
-decode_text_3="输入文件列表：.br .dat .img .zst .zstd .bin .zip"
+decode_text_3="输入文件列表"
 
 # Build
 builds_text_1="构建之前已反编译的项目"
@@ -144,7 +144,7 @@ builds_text_3="EROFS 压缩方式"
 builds_text_4="压缩级别"
 builds_text_6="级别"
 builds_text_7="注意：值 0 表示 0MB 空闲空间，增加空闲空间仅适用于 ext4、f2fs 分区"
-builds_text_8="修补 avb、vbmeta 和 fstab 文件"
+builds_text_8="禁用 AVB、fstab、官方 recovery"
 
 # build super
 super_text_2="包类型"
@@ -161,7 +161,6 @@ payload_text_4="仅在启用动态分区时生效"
 # cover img
 convert_text_1="转换文件"
 convert_text_2="br、zstd 文件的压缩级别，数值越高压缩时间越长"
-convert_text_3="输入文件列表：.br .dat .zstd .img"
 
 # split super
 super_split_text_1="拆分 Super"
@@ -289,7 +288,7 @@ apex_text_2="支持的文件列表：apex、capex"
 build_time_text_1="ROM 构建时间"
 convert_img_text="构建完成后继续转换"
 list_partition_text="已解包分区列表"
-xoaoat_text_1="清理 oat 和 odex 项"
+xoaoat_text_1="清除系统 ART & Odex 缓存"
 open_activity_text="打开文件夹："
 patch_text_fscontex="修补 fs_config 和 fs_contexts"
 config_text_1="转换现有项目"

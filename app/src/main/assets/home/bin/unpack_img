@@ -12,6 +12,11 @@ print_help() {
   echo "  -a    if you want to patch avb to value 1: 0"
   echo "            0: false"
   echo "            1: true"
+  echo "  -m    VB Meta patching types: 0"
+  echo "            0: No patch"
+  echo "            1: Disable dm-verity"
+  echo "            2: Disable Verification"
+  echo "            3: Disable dm-verity + Verification"
   echo "  -n    do not decode image: 0"
   echo "            0: false"
   echo "            1: true"
@@ -30,9 +35,9 @@ if [[ $# -eq 0 || "$1" != -* ]]; then
 fi
 
 INPUT=''; OUTPUT=''; NODECO=''; XOAIMG=''; PVUGBIN='';
-XOAOAT=''; AVBIMG='';
+XOAOAT=''; AVBIMG=''; PTVBMETA='';
 
-while getopts ":i:o:a:n:d:p:r:h" opt; do
+while getopts ":i:o:a:n:d:p:m:r:h" opt; do
   case $opt in
     i) INPUT="$OPTARG" ;;
     o) OUTPUT="$OPTARG" ;;
@@ -41,6 +46,7 @@ while getopts ":i:o:a:n:d:p:r:h" opt; do
     d) XOAIMG="$OPTARG" ;;
     r) XOAOAT="$OPTARG" ;;
     p) PVUGBIN="$OPTARG" ;;
+    m) PTVBMETA="$OPTARG" ;;
     h) print_help ;;
     \?) echo "! Not understand -$OPTARG"; print_help ;;
     :) echo "! Lack of value for -$OPTARG"; print_help ;;
@@ -58,6 +64,7 @@ fi
 [[ -z "$NODECO" ]] && NODECO=0
 [[ -z "$XOAOAT" ]] && XOAOAT=0
 [[ -z "$AVBIMG" ]] && AVBIMG=0
+[[ -z "$PTVBMETA" ]] && PTVBMETA=0
 
 source language 2>/dev/null
 dang_tep="$(checktype "$INPUT")"
@@ -238,7 +245,13 @@ if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [
         echo
     elif [ "$dang_file" == 'vbmeta' ] || [ "$dang_file" == 'vbmeta_system' ]; then
         cp -f "$file_img" "$in_name"
-        if [ "$AVBIMG" == 1 ]; then
+        if [ "$PTVBMETA" == 1 ]; then
+            magiskboot hexpatch "$in_name/${file_img##*/}" 0000000000000000617662746F6F6C20 0000000100000000617662746F6F6C20 2>&1 || killtree "Avb Failure !"
+            echo
+        elif [ "$PTVBMETA" == 2 ]; then
+            magiskboot hexpatch "$in_name/${file_img##*/}" 0000000000000000617662746F6F6C20 0000000200000000617662746F6F6C20 2>&1 || killtree "Avb Failure !"
+            echo
+        elif [ "$PTVBMETA" == 3 ]; then
             magiskboot hexpatch "$in_name/${file_img##*/}" 0000000000000000617662746F6F6C20 0000000300000000617662746F6F6C20 2>&1 || killtree "Avb Failure !"
             echo
         fi
@@ -370,16 +383,17 @@ fi
 
 if [ "$XOAOAT" == 1 ] && [ "$NODECO" != 1 ]; then
     {
-        find "$in_name" -type d -name "oat" -print -exec rm -rf {} +
+    for voat in $(glog text_oat_boot | tr ',' '\n'); do
+      if [ "$voat" == "oat" ]; then
+      find "$in_name" -type d -name "oat" -print -exec rm -rf {} +
         if [ -d "$in_name/system/framework" ]; then
-            find "$in_name/system/framework" -type d -name "arm64" -print -exec rm -rf {} +
-            find "$in_name/system/framework" -type d -name "arm" -print -exec rm -rf {} +
+        find "$in_name/system/framework" -type d -name "arm64" -print -exec rm -rf {} +
+        find "$in_name/system/framework" -type d -name "arm" -print -exec rm -rf {} +
         fi
-        find "$in_name" -type f -name "*.fsv_meta" -delete -print
-        find "$in_name" -type f -name "*.bprof" -delete -print
-        find "$in_name" -type f -name "*.prof" -delete -print
-        find "$in_name" -type f -name "*.vdex" -delete -print
-        find "$in_name" -type f -name "*.odex" -delete -print
+      else
+      find "$in_name" -type f -name "*.$voat" -delete -print
+      fi
+    done
     } &>"$TMP/delete_oat.log"
 fi
 

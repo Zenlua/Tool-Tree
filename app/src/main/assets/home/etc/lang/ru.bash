@@ -136,7 +136,7 @@ flash_text_12="Готово"
 
 # Decode
 decode_text_1="Не декодировать IMG-файлы"
-decode_text_3="Список входных файлов: .br .dat .img .zst .zstd .bin .zip"
+decode_text_3="Список входных файлов"
 
 # Build
 builds_text_1="Сборка ранее декомпилированных проектов"
@@ -145,7 +145,7 @@ builds_text_3="Метод сжатия EROFS"
 builds_text_4="Уровень сжатия"
 builds_text_6="Уровень"
 builds_text_7="Примечание: значение 0 соответствует 0 МБ свободного места; добавление свободного места применяется только к разделам ext4 и f2fs"
-builds_text_8="Исправление файлов avb, vbmeta и fstab"
+builds_text_8="Отключить AVB, fstab, стоковый recovery"
 
 # build super
 super_text_2="Тип пакета"
@@ -162,7 +162,6 @@ payload_text_4="Работает только при включённом дин
 # cover img
 convert_text_1="Конвертировать файл"
 convert_text_2="Уровень сжатия для файлов br и zstd; более высокие значения требуют больше времени"
-convert_text_3="Список входных файлов: .br .dat .zstd .img"
 
 # split super
 super_split_text_1="Разделить Super"
@@ -290,7 +289,7 @@ apex_text_2="Поддерживаемые файлы: apex, capex"
 build_time_text_1="Время сборки ROM"
 convert_img_text="После завершения сборки продолжить конвертацию"
 list_partition_text="Список декомпилированных разделов"
-xoaoat_text_1="Очистка элементов oat и odex"
+xoaoat_text_1="Очистить ART кэш и Odex системы"
 open_activity_text="Открыть папку:"
 patch_text_fscontex="Исправить fs_config и fs_contexts"
 patch_text_fsdesc="Автоматически добавить необходимые разрешения для нового элемента."

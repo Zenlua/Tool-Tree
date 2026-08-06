@@ -1338,12 +1338,14 @@ Utilities() {
     slog vavbbgdf "$vavb"
     slog xoa_oat_boot "$xoa_oat_boot"
     slog dkjdj "$nounpak"
+    slog pcvbmeta "$pcvbmeta"
     slog dkhdh "$cboxk"
+    slog text_oat_boot "$text_oat_boot"
     for vkl in $IMAGES; do
     if [ -f "$PTSD/${vkl#*=}" ]; then
-    unpack_img -i "$PTSD/${vkl#*=}" -p "${vkl%%=*}" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb
+    unpack_img -i "$PTSD/${vkl#*=}" -p "${vkl%%=*}" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
     else
-    unpack_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb
+    unpack_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
     fi
     done
     checktime
@@ -1372,6 +1374,16 @@ Utilities() {
     depend-readonly = true
 
     [[group.action.params]]
+    name = "text_oat_boot"
+    label = "'$customize_text'"
+    type = "text"
+    value-sh = "glog text_oat_boot \"oat,vdex,odex,prof,bprof,fsv_meta\""
+    depend-on = "xoa_oat_boot"
+    depend-value = "1"
+    depend-mode = "show"
+    depend-default = "hide"
+
+    [[group.action.params]]
     name = "vavb"
     label = "'$builds_text_8'"
     type = "switch"
@@ -1381,8 +1393,18 @@ Utilities() {
     depend-readonly = true
 
     [[group.action.params]]
+    name = "pcvbmeta"
+    label = "'$patch_text' vbmeta"
+    value-sh = "glog pcvbmeta 0"
+    options-sh = "echo -e \"0|'$default_text'\n1|'$disable_text' dm-verity\n2|'$disable_text' Verification\n3|'$disable_text' dm-verity + Verification\""
+    depend-on = "nounpak"
+    depend-value = "1"
+    depend-mode = "hide"
+    depend-readonly = true
+    
+    [[group.action.params]]
     name = "IMAGES"
-    desc = "'$decode_text_3'"
+    desc = "'$decode_text_3': br,dat,img,zst,zstd,bin,zip,payload"
     options-sh = "findfile 2 $PTSD"
     required = true
     multiple = true
@@ -1697,7 +1719,7 @@ Utilities() {
 
     [[group.action.params]]
     name = "IMAGES"
-    desc = "'$convert_text_3'"
+    desc = "'$decode_text_3': br,dat,zstd,img"
     options-sh = "findfile 1 $PTSD"
     required = true
     multiple = true

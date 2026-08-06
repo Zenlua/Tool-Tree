@@ -55,6 +55,9 @@ build_time_text_2="Hiện tại:"
 noti_update="Hiện toast cập nhật"
 api_key_text="Mã khóa API"
 reset_data_text="Cài lại data"
+disable_text="Vô hiệu hóa"
+patch_text="Vá"
+customize_text="Tùy chỉnh"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"
@@ -137,7 +140,7 @@ flash_text_12="Hoàn thành"
 
 # Decode
 decode_text_1="Không giải mã tệp tin IMG"
-decode_text_3="Danh sách các tệp đầu vào .br .dat .img .zst .zstd .bin .zip"
+decode_text_3="Danh sách tệp đầu vào"
 
 # Build
 builds_text_1="Xây dựng các dự án đã giải mã trước đó"
@@ -146,8 +149,7 @@ builds_text_3="Phương pháp nén của erofs"
 builds_text_4="Mức nén"
 builds_text_6="Cấp độ"
 builds_text_7="Lưu ý: Giá trị 0 tương ứng với 0Mb trống, thêm kích thước trống chỉ áp dụng cho phân vùng ext4, f2fs"
-builds_text_8="Vá tệp avb, vbmeta và fstab"
-
+builds_text_8="Vô hiệu hóa AVB, fstab, recovery gốc"
 
 # build super
 super_text_2="Loại gói"
@@ -164,7 +166,6 @@ payload_text_4="Chỉ có tác dụng khi bật phân vùng động"
 # cover img
 convert_text_1="Chuyển đổi tệp"
 convert_text_2="Mức độ nén của file br, zstd giá trị cao hơn sẽ nén lâu hơn"
-convert_text_3="Danh sách các tệp đầu vào .br .dat .zstd .img"
 
 # split super
 super_split_text_1="Tách Super"
@@ -292,7 +293,7 @@ apex_text_2="Danh sách hỗ trợ tệp: apex, capex"
 build_time_text_1="Thời gian xây dựng rom"
 convert_img_text="Sau khi xây dựng xong sẽ tiếp tục chuyển đổi"
 list_partition_text="Danh sách phân vùng đã giải mã"
-xoaoat_text_1="Dọn dẹp mục oat và odex"
+xoaoat_text_1="Xóa cache ART & Odex hệ thống"
 open_activity_text="Mở thư mục:"
 patch_text_fscontex="Vá fs_config và fs_contexts"
 patch_text_fsdesc="Tự động thêm các quyền cần thiết cho mục mới thêm vào"

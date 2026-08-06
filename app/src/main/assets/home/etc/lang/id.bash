@@ -135,7 +135,7 @@ flash_text_12="Selesai"
 
 # Decode
 decode_text_1="Jangan dekompilasi file IMG"
-decode_text_3="Daftar file masukan .br .dat .img .zst .zstd .bin .zip"
+decode_text_3="Daftar file masukan"
 
 # Build
 builds_text_1="Bangun proyek yang sebelumnya telah didekompilasi"
@@ -144,7 +144,7 @@ builds_text_3="Metode kompresi erofs"
 builds_text_4="Tingkat kompresi"
 builds_text_6="Tingkat"
 builds_text_7="Catatan: Nilai 0 setara dengan 0 MB kosong. Penambahan ruang kosong hanya berlaku untuk partisi ext4 dan f2fs"
-builds_text_8="Patch file avb, vbmeta, dan fstab"
+builds_text_8="Nonaktifkan AVB, fstab, recovery bawaan"
 
 # build super
 super_text_2="Jenis paket"
@@ -161,7 +161,6 @@ payload_text_4="Hanya berlaku saat partisi dinamis diaktifkan"
 # cover img
 convert_text_1="Konversi file"
 convert_text_2="Tingkat kompresi file br, zstd; nilai yang lebih tinggi akan membuat kompresi lebih lama"
-convert_text_3="Daftar file masukan .br .dat .zstd .img"
 
 # split super
 super_split_text_1="Pisahkan Super"
@@ -289,7 +288,7 @@ apex_text_2="Daftar file yang didukung: apex, capex"
 build_time_text_1="Waktu membangun ROM"
 convert_img_text="Setelah pembangunan selesai, lanjutkan konversi"
 list_partition_text="Daftar partisi yang telah didekompilasi"
-xoaoat_text_1="Bersihkan item oat dan odex"
+xoaoat_text_1="Bersihkan cache ART & Odex sistem"
 open_activity_text="Buka folder:"
 patch_text_fscontex="Patch fs_config dan fs_contexts"
 config_text_1="Konversi proyek yang sudah ada"

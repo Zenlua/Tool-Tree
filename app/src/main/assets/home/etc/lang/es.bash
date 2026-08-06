@@ -136,7 +136,7 @@ flash_text_12="Hecho"
 
 # Decode
 decode_text_1="No decodificar archivos IMG"
-decode_text_3="Lista de archivos de entrada: .br .dat .img .zst .zstd .bin .zip"
+decode_text_3="Lista de archivos de entrada"
 
 # Build
 builds_text_1="Compilar proyectos descompilados previamente"
@@ -145,7 +145,7 @@ builds_text_3="Método de compresión EROFS"
 builds_text_4="Nivel de compresión"
 builds_text_6="Nivel"
 builds_text_7="Nota: un valor de 0 significa 0 MB libres. Añadir espacio libre solo se aplica a particiones ext4 y f2fs."
-builds_text_8="Parchear archivos avb, vbmeta y fstab"
+builds_text_8="Desactivar AVB, fstab, recovery stock"
 
 # build super
 super_text_2="Tipo de paquete"
@@ -162,7 +162,6 @@ payload_text_4="Solo tiene efecto cuando la partición dinámica está activada"
 # cover img
 convert_text_1="Convertir archivo"
 convert_text_2="Nivel de compresión para archivos br y zstd; valores más altos tardan más en comprimir"
-convert_text_3="Lista de archivos de entrada: .br .dat .zstd .img"
 
 # split super
 super_split_text_1="Dividir Super"
@@ -290,7 +289,7 @@ apex_text_2="Lista de archivos compatibles: apex, capex"
 build_time_text_1="Tiempo de compilación de la ROM"
 convert_img_text="Continuar convirtiendo tras finalizar la compilación"
 list_partition_text="Lista de particiones descompiladas"
-xoaoat_text_1="Limpiar elementos oat y odex"
+xoaoat_text_1="Limpiar caché ART y Odex del sistema"
 open_activity_text="Abrir carpeta:"
 patch_text_fscontex="Parchear fs_config y fs_contexts"
 patch_text_fsdesc="Añadir automáticamente los permisos necesarios para los elementos recién añadidos"
