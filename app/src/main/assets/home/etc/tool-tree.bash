@@ -1937,6 +1937,7 @@ Utiliapk() {
     depend-value = "smali|2"
     depend-mode = "show|show"
     depend-default = "hide"
+    depend-cascade = false
     depend-readonly = true
 
     [[group.action.params]]
