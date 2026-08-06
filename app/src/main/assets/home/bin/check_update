@@ -27,13 +27,14 @@ if checkonline; then
     fi
 
     if [[ "$websum" == "$filesum" ]]; then
-        rm -fr $TEMP/size $TEMP/update
+        rm -fr $TEMP/size $TEMP/update $TEMP/sum
     else
         if [[ "$url_dowload" ]]; then
             echo "$url_dowload" > $TEMP/update
             echo "$websize" > $TEMP/size
+            echo "$websum" > $TEMP/sum
         else
-            rm -fr $TEMP/size $TEMP/update
+            rm -fr $TEMP/size $TEMP/update $TEMP/sum
         fi
     fi
 

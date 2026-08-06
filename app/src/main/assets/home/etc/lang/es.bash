@@ -136,7 +136,6 @@ flash_text_12="Hecho"
 
 # Decode
 decode_text_1="No decodificar archivos IMG"
-decode_text_3="Lista de archivos de entrada"
 
 # Build
 builds_text_1="Compilar proyectos descompilados previamente"

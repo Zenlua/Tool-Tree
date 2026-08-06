@@ -135,7 +135,6 @@ flash_text_12="完成"
 
 # Decode
 decode_text_1="不解码 IMG 文件"
-decode_text_3="输入文件列表"
 
 # Build
 builds_text_1="构建之前已反编译的项目"

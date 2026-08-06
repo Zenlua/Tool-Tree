@@ -662,13 +662,13 @@ Update() {
   support = "echo '$show_update'"
   script = """
     echo "'$update_text_2'"
-    if [[ -f "$TMP/Tool-Tree.apk" ]]; then
+    if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$(checksum "$TMP/Tool-Tree.apk")" == "$(cat $TEMP/sum 2>/dev/null)" ]]; then
     openfile "$TMP/Tool-Tree.apk"
     exit
     fi
     echo
     if [[ "'$show_update'" == 1 ]]; then
-    taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1
+    taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1 || killtree "\n'$load_text_2'"
     [ -f "$TMP/Tool-Tree.apk" ] && openfile "$TMP/Tool-Tree.apk"
     echo
     echo "'$save_text' $TMP/Tool-Tree.apk"
@@ -1403,7 +1403,7 @@ Utilities() {
     
     [[group.action.params]]
     name = "IMAGES"
-    desc = "'$decode_text_3': br, dat, img, zst, zstd, bin, zip"
+    desc = "'$input_file_text': br, dat, img, zst, zstd, bin, zip"
     options-sh = "findfile 2 $PTSD"
     required = true
     multiple = true
@@ -1718,7 +1718,7 @@ Utilities() {
 
     [[group.action.params]]
     name = "IMAGES"
-    desc = "'$decode_text_3': br, dat, zstd, img"
+    desc = "'$input_file_text': br, dat, zstd, img"
     options-sh = "findfile 1 $PTSD"
     required = true
     multiple = true

@@ -135,7 +135,6 @@ flash_text_12="Kész"
 
 # Decode
 decode_text_1="IMG fájlok ne legyenek dekódolva"
-decode_text_3="Beviteli fájlok listája"
 
 # Build
 builds_text_1="Korábban dekompilált projektek építése"

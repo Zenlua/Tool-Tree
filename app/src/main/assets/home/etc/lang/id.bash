@@ -135,7 +135,6 @@ flash_text_12="Selesai"
 
 # Decode
 decode_text_1="Jangan dekompilasi file IMG"
-decode_text_3="Daftar file masukan"
 
 # Build
 builds_text_1="Bangun proyek yang sebelumnya telah didekompilasi"

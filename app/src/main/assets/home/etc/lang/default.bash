@@ -141,7 +141,6 @@ flash_text_12="Done"
 
 # Decode
 decode_text_1="Do not decode IMG files"
-decode_text_3="List of input files"
 
 # Build
 builds_text_1="Build previously decompiled projects"

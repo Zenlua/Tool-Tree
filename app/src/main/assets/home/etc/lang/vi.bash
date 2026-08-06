@@ -141,7 +141,6 @@ flash_text_12="Hoàn thành"
 
 # Decode
 decode_text_1="Không giải mã tệp tin IMG"
-decode_text_3="Danh sách tệp đầu vào"
 
 # Build
 builds_text_1="Xây dựng các dự án đã giải mã trước đó"
