@@ -12,7 +12,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
 import android.os.Bundle
@@ -88,16 +87,11 @@ class BgTaskThread(private var process: Process) : Thread() {
             )
         }
 
-        private fun drawableToIcon(drawable: Drawable?): Icon? {
+        private fun drawableToIcon(drawable: Drawable?, targetSizePx: Int = 200): Icon? {
             if (drawable == null) return null
-            if (drawable is BitmapDrawable) {
-                drawable.bitmap?.let { return Icon.createWithBitmap(it) }
-            }
-            val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 96
-            val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 96
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val bitmap = Bitmap.createBitmap(targetSizePx, targetSizePx, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
-            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.setBounds(0, 0, targetSizePx, targetSizePx)
             drawable.draw(canvas)
             return Icon.createWithBitmap(bitmap)
         }
@@ -112,10 +106,11 @@ class BgTaskThread(private var process: Process) : Thread() {
 
             val shortLog = notificationMessageRows.lastOrNull()?.trim().orEmpty()
 
-            val personIcon = if (runnableNode.iconPath.isNotEmpty() || runnableNode.logoPath.isNotEmpty()) {
-                val drawable = IconPathAnalysis().loadLogo(context, runnableNode, false)
-                drawableToIcon(drawable)
-            } else null
+            val drawable = if (runnableNode.iconPath.isNotEmpty() || runnableNode.logoPath.isNotEmpty()) {
+                IconPathAnalysis().loadLogo(context, runnableNode, false)
+            } else null ?: ContextCompat.getDrawable(context, R.drawable.kr_run)
+
+            val personIcon = drawableToIcon(drawable, 200)
 
             val sender = android.app.Person.Builder()
                 .setName(notificationTitle)
@@ -126,10 +121,10 @@ class BgTaskThread(private var process: Process) : Thread() {
 
             val rows = synchronized(notificationMessageRows) { notificationMessageRows.toList() }
             if (someIgnored) {
-                messagingStyle.addMessage(Notification.MessagingStyle.Message("……", System.currentTimeMillis(), (null as android.app.Person?)))
+                messagingStyle.addMessage(Notification.MessagingStyle.Message("……", System.currentTimeMillis(), sender))
             }
             rows.forEach { row ->
-                messagingStyle.addMessage(Notification.MessagingStyle.Message(row.trim(), System.currentTimeMillis(), (null as android.app.Person?)))
+                messagingStyle.addMessage(Notification.MessagingStyle.Message(row.trim(), System.currentTimeMillis(), sender))
             }
 
             val notificationBuilder = Notification.Builder(context, channelId)

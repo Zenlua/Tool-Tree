@@ -1,5 +1,6 @@
 package com.omarea.krscript.ui
 
+import android.app.ActivityManager
 import android.app.Dialog
 import android.app.Notification
 import android.app.NotificationChannel
@@ -12,10 +13,13 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.os.Message
-import android.text.Editable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -54,12 +58,6 @@ import com.tool.tree.AnsiColorParser
 import com.tool.tree.NotificationCopyLogActivity
 import com.tool.tree.R
 import com.tool.tree.WakeLockService
-import android.app.ActivityManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.Icon
 import java.io.File
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
@@ -475,18 +473,11 @@ class DialogLogFragment : DialogFragment() {
             updateNotification()
         }
 
-        private fun drawableToIcon(drawable: Drawable?): Icon? {
+        private fun drawableToIcon(drawable: Drawable?, targetSizePx: Int = 200): Icon? {
             if (drawable == null) return null
-            if (drawable is BitmapDrawable) {
-                drawable.bitmap?.let {
-                    return Icon.createWithBitmap(it)
-                }
-            }
-            val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 96
-            val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 96
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val bitmap = Bitmap.createBitmap(targetSizePx, targetSizePx, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
-            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.setBounds(0, 0, targetSizePx, targetSizePx)
             drawable.draw(canvas)
             return Icon.createWithBitmap(bitmap)
         }
@@ -529,10 +520,11 @@ class DialogLogFragment : DialogFragment() {
                     this.iconPath = this@MyShellHandler.iconPath
                     this.logoPath = this@MyShellHandler.logoPath
                 }
-                if (iconPath.isNotEmpty() || logoPath.isNotEmpty()) {
-                    val drawable = IconPathAnalysis().loadLogo(context, tempNode, false)
-                    drawableToIcon(drawable)
-                } else null
+                val drawable = if (iconPath.isNotEmpty() || logoPath.isNotEmpty()) {
+                    IconPathAnalysis().loadLogo(context, tempNode, false)
+                } else null ?: ContextCompat.getDrawable(context, R.drawable.kr_run)
+
+                drawableToIcon(drawable, 200)
             } else null
 
             val sender = android.app.Person.Builder()
@@ -544,10 +536,10 @@ class DialogLogFragment : DialogFragment() {
 
             val rows = synchronized(notificationRows) { notificationRows.toList() }
             if (notificationRowsTrimmed) {
-                messagingStyle.addMessage(Notification.MessagingStyle.Message("……", System.currentTimeMillis(), (null as android.app.Person?)))
+                messagingStyle.addMessage(Notification.MessagingStyle.Message("……", System.currentTimeMillis(), sender))
             }
             rows.forEach { row ->
-                messagingStyle.addMessage(Notification.MessagingStyle.Message(row.trim(), System.currentTimeMillis(), (null as android.app.Person?)))
+                messagingStyle.addMessage(Notification.MessagingStyle.Message(row.trim(), System.currentTimeMillis(), sender))
             }
 
             val notificationBuilder = Notification.Builder(context, NOTIFICATION_CHANNEL_ID)
