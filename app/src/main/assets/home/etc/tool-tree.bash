@@ -1375,7 +1375,6 @@ Utilities() {
 
     [[group.action.params]]
     name = "text_oat_boot"
-    label = "'$customize_text'"
     type = "text"
     value-sh = "glog text_oat_boot \"oat,vdex,odex,prof,bprof,fsv_meta\""
     depend-on = "xoa_oat_boot"
@@ -1404,7 +1403,7 @@ Utilities() {
     
     [[group.action.params]]
     name = "IMAGES"
-    desc = "'$decode_text_3': br,dat,img,zst,zstd,bin,zip,payload"
+    desc = "'$decode_text_3': br, dat, img, zst, zstd, bin, zip, payload"
     options-sh = "findfile 2 $PTSD"
     required = true
     multiple = true
@@ -1719,7 +1718,7 @@ Utilities() {
 
     [[group.action.params]]
     name = "IMAGES"
-    desc = "'$decode_text_3': br,dat,zstd,img"
+    desc = "'$decode_text_3': br, dat, zstd, img"
     options-sh = "findfile 1 $PTSD"
     required = true
     multiple = true
