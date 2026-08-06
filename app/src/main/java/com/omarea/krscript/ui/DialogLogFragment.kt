@@ -398,6 +398,7 @@ class DialogLogFragment : DialogFragment() {
         private var notificationManager: NotificationManager? = null
         private var notificationTitle = ""
         private var iconPath = ""
+        private var logoPath = ""
         private var currentConfigXml = ""
         private var notificationInterruptable = false
         private val notificationRows = ArrayList<String>()
@@ -424,6 +425,7 @@ class DialogLogFragment : DialogFragment() {
 
             notificationTitle = nodeInfo.title
             iconPath = nodeInfo.iconPath
+            logoPath = nodeInfo.logoPath
             currentConfigXml = nodeInfo.currentPageConfigPath
             notificationInterruptable = nodeInfo.interruptable
             notificationId = nextNotificationId()
@@ -525,8 +527,9 @@ class DialogLogFragment : DialogFragment() {
                 val tempNode = RunnableNode(currentConfigXml).apply {
                     title = notificationTitle
                     this.iconPath = this@MyShellHandler.iconPath
+                    this.logoPath = this@MyShellHandler.logoPath
                 }
-                if (iconPath.isNotEmpty()) {
+                if (iconPath.isNotEmpty() || logoPath.isNotEmpty()) {
                     val drawable = IconPathAnalysis().loadLogo(context, tempNode, false)
                     drawableToIcon(drawable)
                 } else null

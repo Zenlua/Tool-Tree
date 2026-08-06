@@ -6,7 +6,7 @@ unset shell_progres
 find "$TMPDIR" -maxdepth 1 ! -path "$TMPDIR" ! -name '*.log' -exec rm -rf {} + &
 rm -fr $TEMP/documents $TEMP/WebView &
 
-(
+{
 if checkonline; then
     # Tải về nhật ký
     echo -e "Download the log and the latest version..."
@@ -18,13 +18,11 @@ if checkonline; then
         slog sum_ver_boot "$(checksum $TEMP/Version.md)"
     fi
 fi
-) &
+} &
 
-(
-    check_update boot
-) &
+check_update boot &
 
-(
+{
 # Nếu được cấp quyền rish
 rish -c "
     [ -e /data/local/TOOL ] || ln -sf '$APK' /data/local/TOOL
@@ -43,9 +41,9 @@ rish -c "
     cmd appops set $PACKAGE_NAME 10017 allow
     search_image &>/dev/null
 "
-) &
+} &
 
-(
+{
 # Cấp quyền tự động nếu đã root
 if [ "$ROT" == 1 ]; then
     chown -R 0:0 $HOME/.cache
@@ -74,12 +72,11 @@ if [ "$ROT" == 1 ]; then
     # Loaded sẵn danh sách img
     search_image &>/dev/null
 fi
-) &
+} &
 
-(
+{
 # Dọn bộ đếm
 rm -fr $AON/*/check $AOK/*/check
-
 # Khởi động các file shell ở add-on
 set_permis $AON/*/* $AOK/*/* &>/dev/null
 for vadd in $AON/* $AOK/*; do
@@ -91,4 +88,4 @@ for vadd in $AON/* $AOK/*; do
         $vadd/early_start.sh &
     fi
 done
-) &
+} &

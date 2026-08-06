@@ -112,7 +112,7 @@ class BgTaskThread(private var process: Process) : Thread() {
 
             val shortLog = notificationMessageRows.lastOrNull()?.trim().orEmpty()
 
-            val personIcon = if (runnableNode.iconPath.isNotEmpty()) {
+            val personIcon = if (runnableNode.iconPath.isNotEmpty() || runnableNode.logoPath.isNotEmpty()) {
                 val drawable = IconPathAnalysis().loadLogo(context, runnableNode, false)
                 drawableToIcon(drawable)
             } else null
