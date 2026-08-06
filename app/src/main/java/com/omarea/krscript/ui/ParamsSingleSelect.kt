@@ -126,9 +126,10 @@ class ParamsSingleSelect(
         var itemView: View? = null
         val widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        val parent = android.widget.FrameLayout(context)
 
         for (i in 0 until adapter.count) {
-            itemView = adapter.getView(i, itemView, null)
+            itemView = adapter.getView(i, itemView, parent)
             itemView.measure(widthSpec, heightSpec)
             if (itemView.measuredWidth > maxWidth) {
                 maxWidth = itemView.measuredWidth
@@ -136,6 +137,7 @@ class ParamsSingleSelect(
         }
         return maxWidth
     }
+
 
     private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
         val currentTime = System.currentTimeMillis()
