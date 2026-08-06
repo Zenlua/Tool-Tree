@@ -1,5 +1,6 @@
 package com.tool.tree
 
+import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -7,20 +8,12 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.core.app.ActivityCompat
-import com.tool.tree.MainActivity
-import com.tool.tree.ThemeConfig
-import com.tool.tree.R
-import android.os.Process
-import android.app.ActivityManager
-import android.content.pm.ServiceInfo
 
 @Suppress("DEPRECATION")
 class WakeLockService : Service() {
@@ -36,7 +29,8 @@ class WakeLockService : Service() {
             ACTION_END_WAKELOCK -> endWakeLock()
             ACTION_STOP_SERVICE -> stopWakeLockAndService()
         }
-        return START_STICKY
+        // Trả về START_NOT_STICKY để không tự khôi phục lại service sau khi người dùng xóa Task
+        return START_NOT_STICKY
     }
 
     private fun enableWakeLock() {
@@ -54,29 +48,26 @@ class WakeLockService : Service() {
     
     private fun disableWakeLock() {
         if (isWakeLockActive) {
-            wakeLock?.release()
-            isWakeLockActive = false
+            releaseWakeLockSafely()
             updateNotification()
         }
     }
 
     private fun endWakeLock() {
-            stopForeground(true)
-            stopSelf()
-        }
+        releaseWakeLockSafely()
+        stopForegroundInternal()
+        stopSelf()
+    }
 
     private fun stopWakeLockAndService() {
-        wakeLock?.release()
-        wakeLock = null
-        isWakeLockActive = false
-        stopForeground(true)
+        releaseWakeLockSafely()
+        stopForegroundInternal()
         stopSelf()
         val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val appTasks = activityManager.appTasks
         appTasks.forEach { task ->
             task.finishAndRemoveTask()
         }
-        // System.exit(0)
     }
 
     private fun updateNotification() {
@@ -131,7 +122,6 @@ class WakeLockService : Service() {
             if (isWakeLockActive) ACTION_DISABLE_WAKELOCK
             else ACTION_ENABLE_WAKELOCK
     
-        // 🔥 Intent mở lại đúng task trước đó
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                     Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
@@ -156,7 +146,6 @@ class WakeLockService : Service() {
             .addAction(R.mipmap.ic_launcher, getString(R.string.stop), createPendingIntent(ACTION_STOP_SERVICE))
             .addAction(R.mipmap.ic_launcher, wakelockActionText, createPendingIntent(action))
     
-        // 🔥 Gắn click mở app (đúng màn hình trước đó)
         contentPendingIntent?.let {
             builder.setContentIntent(it)
         }
@@ -173,20 +162,33 @@ class WakeLockService : Service() {
     }
 
     override fun onDestroy() {
-        wakeLock?.release()
-        wakeLock = null
+        releaseWakeLockSafely()
         isServiceRunning = false
         super.onDestroy()
     }
 
-    // Xử lý khi swipe khỏi recents
+    // Xử lý khi swipe khỏi Recents
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        wakeLock?.release()
+        releaseWakeLockSafely()
+        stopForegroundInternal()
+        stopSelf()
+    }
+
+    private fun releaseWakeLockSafely() {
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
         wakeLock = null
         isWakeLockActive = false
-        stopForeground(true)
-        stopSelf()
+    }
+
+    private fun stopForegroundInternal() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            stopForeground(true)
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
