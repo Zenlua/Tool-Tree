@@ -632,7 +632,7 @@ class DialogLogFragment : DialogFragment() {
             val finishText = if (success) {
                 context.getString(R.string.kr_script_task_finished)
             } else {
-                "${context.getString(R.string.kr_shell_finish_error)} $code"
+                "${context.getString(R.string.kr_shell_finish_error)}"
             }
             pushNotificationLog(finishText)
             updateNotificationImmediately()
@@ -945,7 +945,9 @@ class DialogLogFragment : DialogFragment() {
             } else {
                 context.getString(R.string.kr_shell_finish_error)
             }
-            updateLogWithColor("\n" + finishText, endColor, pushToNotification = false)
+            
+            val finishColor = if (success) endColor else errorColor
+            updateLogWithColor("\n" + finishText, finishColor, pushToNotification = false)
 
             if (notificationMode) {
                 finishNotification(success, code)
