@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nền cho ListPopupWindow: dùng lại đúng màu nền mặc định của theme
+     (?android:attr/popupBackground - giống hệt màu Spinner/popup mặc định trước đây,
+     tự thích ứng sáng/tối theo theme, không tự định nghĩa màu riêng).
+     Bọc trong <inset> chỉ để chừa 16dp trái/phải, tránh dính sát 2 mép màn hình
+     khi popup dùng chiều rộng wrap_content. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="?android:attr/popupBackground"
+    android:insetLeft="@dimen/activity_horizontal_margin"
+    android:insetRight="@dimen/activity_horizontal_margin" />

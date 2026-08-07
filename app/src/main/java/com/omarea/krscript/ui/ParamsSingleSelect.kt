@@ -1,9 +1,11 @@
 package com.omarea.krscript.ui
 
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListPopupWindow
 import android.widget.TextView
@@ -120,8 +122,11 @@ class ParamsSingleSelect(
     }
 
     // Thay thế cho Spinner dropdown trước đây: dùng ListPopupWindow neo (anchor) vào chính ô
-    // đang hiển thị. Chiều rộng popup co giãn theo nội dung chữ (wrap_content) thay vì chiếm
-    // hết bề ngang màn hình, và nền có inset 16dp trái/phải để không dính sát mép màn hình.
+    // đang hiển thị. Nền dùng lại đúng màu mặc định của theme (kr_spinner_popup_bg, chỉ thêm
+    // inset 16dp trái/phải). Chiều rộng KHÔNG dựa vào cơ chế wrap_content mặc định của
+    // ListPopupWindow (có ROM đo sai làm chữ dài bị cắt) mà tự đo độ rộng mục dài nhất rồi
+    // set thẳng, đảm bảo khung luôn đủ rộng chứa hết chữ, đồng thời không tràn ra ngoài
+    // màn hình.
     private fun openSingleSelectPopup(anchor: TextView) {
         // Tránh việc nhấn nhanh mở 2 popup cùng lúc (dùng chung cơ chế chặn với dialog)
         val currentTime = System.currentTimeMillis()
@@ -131,17 +136,12 @@ class ParamsSingleSelect(
         lastOpenTime = currentTime
 
         val adapter = ArrayAdapter(context, R.layout.kr_spinner_dropdown, R.id.text, options)
+        val background = context.getDrawable(R.drawable.kr_spinner_popup_bg)
 
         val popup = ListPopupWindow(context)
         popup.anchorView = anchor
         popup.setAdapter(adapter)
-        // Mở rộng theo chữ (không chiếm hết chiều ngang màn hình) - nền popup được bọc
-        // trong <inset> 16dp trái/phải (kr_spinner_popup_bg_light/dark) để khung luôn
-        // cách mép màn hình 1 khoảng, không bị dính sát vào 2 bên.
-        popup.width = ListPopupWindow.WRAP_CONTENT
-        popup.setBackgroundDrawable(context.getDrawable(
-                if (darkMode) R.drawable.kr_spinner_popup_bg_dark else R.drawable.kr_spinner_popup_bg_light
-        ))
+        popup.setBackgroundDrawable(background)
         popup.isModal = true
         popup.setOnItemClickListener { _, _, position, _ ->
             selectedIndex = position
@@ -149,10 +149,45 @@ class ParamsSingleSelect(
             onValueChanged?.invoke()
             popup.dismiss()
         }
+
+        applyPopupWidthAndPosition(popup, anchor, background)
+
         popup.show()
         if (selectedIndex > -1 && selectedIndex < options.size) {
             popup.listView?.setSelection(selectedIndex)
         }
+    }
+
+    // Đo độ rộng lớn nhất cần thiết trong số các mục (dùng đúng layout kr_spinner_dropdown
+    // để đo cho chính xác font/padding thực tế), cộng thêm phần đệm từ nền (16dp mỗi bên),
+    // rồi giới hạn không vượt quá bề ngang màn hình. Nếu đặt khung tại đúng vị trí neo mà
+    // bị tràn ra ngoài mép phải màn hình thì dịch khung sang trái (horizontalOffset) vừa đủ
+    // để toàn bộ khung luôn nằm gọn trong màn hình.
+    private fun applyPopupWidthAndPosition(popup: ListPopupWindow, anchor: TextView, background: android.graphics.drawable.Drawable?) {
+        val inflater = LayoutInflater.from(context)
+        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        val parent = anchor.parent as? ViewGroup
+
+        var maxItemWidth = 0
+        for (item in options) {
+            val itemView = inflater.inflate(R.layout.kr_spinner_dropdown, parent, false)
+            itemView.findViewById<TextView>(R.id.text).text = item.title
+            itemView.measure(unspecified, unspecified)
+            if (itemView.measuredWidth > maxItemWidth) {
+                maxItemWidth = itemView.measuredWidth
+            }
+        }
+
+        val bgPadding = Rect()
+        background?.getPadding(bgPadding)
+        val screenWidth = context.resources.displayMetrics.widthPixels
+        val desiredWidth = (maxItemWidth + bgPadding.left + bgPadding.right).coerceAtMost(screenWidth)
+        popup.width = desiredWidth
+
+        val anchorLocation = IntArray(2)
+        anchor.getLocationOnScreen(anchorLocation)
+        val overflow = (anchorLocation[0] + desiredWidth) - screenWidth
+        popup.horizontalOffset = if (overflow > 0) -overflow else 0
     }
 
     private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
