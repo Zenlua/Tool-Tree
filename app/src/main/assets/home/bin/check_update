@@ -42,6 +42,7 @@ if checkonline; then
         notiservice \
         -t "$update_text" \
         -m "$update_text_6" \
+        -i "$ETC/icon/update.png" \
         -s "$(taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1 && openfile "$TMP/Tool-Tree.apk" || killtree "\n'$load_text_2'")"
     fi
 
