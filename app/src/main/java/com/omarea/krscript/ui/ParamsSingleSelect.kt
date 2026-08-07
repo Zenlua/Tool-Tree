@@ -1,10 +1,12 @@
 package com.omarea.krscript.ui
 
+import android.content.res.Configuration
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.ListPopupWindow
 import android.widget.TextView
-import androidx.appcompat.widget.ListPopupWindow
 import androidx.fragment.app.FragmentActivity
 import com.omarea.common.model.SelectItem
 import com.omarea.common.ui.DialogItemChooser
@@ -15,156 +17,158 @@ import com.tool.tree.ThemeModeState
 class ParamsSingleSelect(
         private var actionParamInfo: ActionParamInfo,
         private var context: FragmentActivity,
-        // Được gọi mỗi khi người dùng thay đổi lựa chọn (dùng cho cơ chế depend-on)
+        // Được gọi mỗi khi người dùng thay đổi lựa chọn - áp dụng cho cả 2 kiểu hiển thị
+        // (ListPopupWindow khi <=6 lựa chọn, dialog khi > 6 lựa chọn), dùng để các param khác
+        // "depend-on" param này biết mà cập nhật ẩn/hiện.
         private val onValueChanged: (() -> Unit)? = null
 ) {
 
     private val darkMode: Boolean = ThemeModeState.isDarkMode()
     val options = actionParamInfo.optionsFromShell!!
-    var selectedIndex = ActionParamsLayoutRender.getParamOptionsCurrentIndex(actionParamInfo, options)
+    var selectedIndex = ActionParamsLayoutRender.getParamOptionsCurrentIndex(actionParamInfo, options) // 获取当前选中项索引
 
-    // Thời gian click gần nhất để chống nhấp nhanh / mở trùng Popup
+    // Thêm biến lưu thời gian click lúc mở danh sách chọn (dùng chung cho cả dialog và
+    // ListPopupWindow để tránh việc nhấn nhanh mở 2 danh sách chọn cùng lúc)
     private var lastOpenTime: Long = 0
 
-    // Đọc giá trị hiện tại đang được chọn
+    // Chỉ khác null khi render() dùng nhánh ListPopupWindow (<=6 lựa chọn) - đây là view
+    // TextView đóng vai trò "ô hiển thị đang đóng" giống với Spinner trước đây, đồng thời là
+    // anchor để neo ListPopupWindow khi mở ra.
+    private var anchorView: TextView? = null
+
+    // Đọc giá trị hiện tại đang được chọn (dùng cho cơ chế depend-on), áp dụng cho cả 2 kiểu
+    // hiển thị (ListPopupWindow khi <=6 lựa chọn, dialog khi > 6 lựa chọn).
     fun getValue(): String {
-        return if (selectedIndex in options.indices) options[selectedIndex].value ?: "" else ""
+        return if (selectedIndex > -1 && selectedIndex < options.size) options[selectedIndex].value ?: "" else ""
     }
 
     private fun updateValueView(valueView: TextView, textView: TextView) {
-        if (selectedIndex in options.indices) {
-            valueView.text = options[selectedIndex].value
-            textView.text = options[selectedIndex].title
+        if (selectedIndex > -1 && selectedIndex < options.size) {
+            valueView.text = options[(selectedIndex)].value
+            textView.text = options[(selectedIndex)].title
         } else {
             valueView.text = ""
             textView.text = ""
-            // Hiển thị hint khi chưa chọn (allowNoSelection = true) hoặc danh sách rỗng
-            textView.hint = context.getString(
-                if (options.isEmpty()) R.string.picker_not_item else R.string.kr_please_select
+        }
+    }
+
+    // Cập nhật nội dung hiển thị của ô ListPopupWindow lúc ĐÓNG: hiện title của mục đang chọn,
+    // hoặc hiện chữ gợi ý (hint) khi chưa có lựa chọn nào - giống hệt hành vi trước đây của
+    // Spinner (mục placeholder rỗng dùng "hint" để vẽ chữ gợi ý bằng màu textColorHint).
+    private fun updateAnchorText(anchor: TextView) {
+        if (selectedIndex > -1 && selectedIndex < options.size) {
+            anchor.text = options[selectedIndex].title
+            anchor.hint = null
+        } else {
+            anchor.text = null
+            // Phân biệt 2 tình huống khác nhau về ngữ nghĩa, giống hệt logic gốc:
+            // - options rỗng: không có gì để chọn -> "Không có tùy chọn khả dụng"
+            // - options có dữ liệu nhưng chưa khớp lựa chọn nào -> "Vui lòng chọn"
+            anchor.hint = context.getString(
+                    if (options.isEmpty()) R.string.picker_not_item else R.string.kr_please_select
             )
         }
     }
 
     fun render(): View {
-        val allowNoSelection = actionParamInfo.allowNoSelection
-        if (!allowNoSelection && selectedIndex !in options.indices && options.isNotEmpty()) {
-            selectedIndex = 0
-        }
-
-        val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_spinner, null)
-        val textView = layout.findViewById<TextView>(R.id.kr_param_spinner)
-        val valueView = layout.findViewById<TextView>(R.id.kr_param_value).apply {
-            tag = actionParamInfo.name
-        }
-
-        updateValueView(valueView, textView)
-
-        val isEnabled = !actionParamInfo.readonly && options.isNotEmpty()
-        layout.isEnabled = isEnabled
-        textView.isEnabled = isEnabled
-
-        if (isEnabled) {
-            val clickListener = View.OnClickListener {
-                if (options.size > 6) {
+        if (options.size > 6) {
+            val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_single_select, null)
+            val textView = layout.findViewById<TextView>(R.id.kr_param_single_select)
+            val valueView = layout.findViewById<TextView>(R.id.kr_param_value).apply {
+                tag = actionParamInfo.name
+                updateValueView(this, textView)
+            }
+            textView.run {
+                setOnClickListener {
                     openSingleSelectDialog(valueView, textView)
-                } else {
-                    openListPopupWindow(layout, valueView, textView)
                 }
             }
-            layout.setOnClickListener(clickListener)
-            textView.setOnClickListener(clickListener)
-        }
 
-        return layout
-    }
+            return layout
+        } else {
+            val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_spinner, null)
 
-    private fun openListPopupWindow(anchorView: View, valueView: TextView, textView: TextView) {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastOpenTime < 400) {
-            return
-        }
-        lastOpenTime = currentTime
-
-        val displayTitles = options.map { it.title ?: "" }
-        val adapter = ArrayAdapter(context, R.layout.kr_spinner_dropdown, R.id.text, displayTitles)
-
-        val listPopupWindow = ListPopupWindow(context).apply {
-            this.anchorView = anchorView
-            isModal = true
-            setAdapter(adapter)
-
-            // 1. Giới hạn độ rộng tối đa không tràn khỏi màn hình (trừ 32dp lề 2 bên)
-            val displayMetrics = context.resources.displayMetrics
-            val maxScreenWidth = displayMetrics.widthPixels - (32 * displayMetrics.density).toInt()
-
-            // 2. Chiều rộng co giãn theo chữ dài nhất nhưng trong khoảng [anchorView.width ... maxScreenWidth]
-            val contentWidth = measureContentWidth(adapter)
-            width = maxOf(anchorView.width, minOf(contentWidth, maxScreenWidth))
-
-            // 3. Chiều cao tự động co giãn vừa đủ hiện các dòng (tối đa 6 ô)
-            height = ListPopupWindow.WRAP_CONTENT
-        }
-
-        listPopupWindow.setOnItemClickListener { _, _, position, _ ->
-            if (selectedIndex != position) {
-                selectedIndex = position
-                updateValueView(valueView, textView)
-                onValueChanged?.invoke()
+            // Chỉ bật tính năng "ô trống chưa chọn" khi action param khai báo rõ
+            // allow-no-selection="true". Mặc định TẮT: nếu chưa có value/valueFromShell nào
+            // khớp, tự chọn mục đầu tiên - đúng hành vi gốc (luôn cần có 1 giá trị hiệu lực để
+            // hoạt động hiệu quả, tránh gây khó hiểu/lỗi khi getValue() trả về rỗng ngoài ý
+            // muốn ở phần lớn trường hợp sử dụng).
+            val allowNoSelection = actionParamInfo.allowNoSelection
+            if (!allowNoSelection && (selectedIndex < 0 || selectedIndex >= options.size) && options.isNotEmpty()) {
+                selectedIndex = 0
             }
-            listPopupWindow.dismiss()
-        }
 
-        listPopupWindow.show()
-
-        // Ẩn thanh cuộn dọc bên trong popup
-        listPopupWindow.listView?.isVerticalScrollBarEnabled = false
-    }
-
-    // Hàm phụ trợ đo chiều rộng thực tế của item chữ dài nhất
-    private fun measureContentWidth(adapter: ArrayAdapter<String>): Int {
-        var maxWidth = 0
-        var itemView: View? = null
-        val widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        val parent = android.widget.FrameLayout(context)
-
-        for (i in 0 until adapter.count) {
-            itemView = adapter.getView(i, itemView, parent)
-            itemView.measure(widthSpec, heightSpec)
-            if (itemView.measuredWidth > maxWidth) {
-                maxWidth = itemView.measuredWidth
+            val anchor = layout.findViewById<TextView>(R.id.kr_param_spinner).apply {
+                tag = actionParamInfo.name
             }
+            anchorView = anchor
+            updateAnchorText(anchor)
+
+            val enabled = !actionParamInfo.readonly && options.isNotEmpty()
+            anchor.isEnabled = enabled
+            anchor.isClickable = enabled
+            anchor.isFocusable = enabled
+
+            if (enabled) {
+                anchor.setOnClickListener {
+                    openSingleSelectPopup(anchor)
+                }
+            }
+
+            return layout
         }
-        return maxWidth
     }
 
-
-    private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
+    // Thay thế cho Spinner dropdown trước đây: dùng ListPopupWindow neo (anchor) vào chính ô
+    // đang hiển thị, danh sách xổ xuống có độ rộng bằng đúng ô đó - giữ nguyên cảm giác giao
+    // diện của Spinner nhưng dùng ListPopupWindow.
+    private fun openSingleSelectPopup(anchor: TextView) {
+        // Tránh việc nhấn nhanh mở 2 popup cùng lúc (dùng chung cơ chế chặn với dialog)
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastOpenTime < 800) {
             return
         }
         lastOpenTime = currentTime
 
-        DialogItemChooser(
-            darkMode,
-            ArrayList(options.mapIndexed { index, item ->
-                SelectItem().apply {
-                    title = item.title
-                    selected = index == selectedIndex
-                }
-            }),
-            false,
-            object : DialogItemChooser.Callback {
-                override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
-                    val newIndex = status.indexOf(true)
-                    if (newIndex != selectedIndex) {
-                        selectedIndex = newIndex
-                        updateValueView(valueView, textView)
-                        onValueChanged?.invoke()
-                    }
-                }
+        val adapter = ArrayAdapter(context, R.layout.kr_spinner_dropdown, R.id.text, options)
+
+        val popup = ListPopupWindow(context)
+        popup.anchorView = anchor
+        popup.setAdapter(adapter)
+        popup.width = ListPopupWindow.MATCH_PARENT
+        popup.isModal = true
+        popup.setOnItemClickListener { _, _, position, _ ->
+            selectedIndex = position
+            updateAnchorText(anchor)
+            onValueChanged?.invoke()
+            popup.dismiss()
+        }
+        popup.show()
+        if (selectedIndex > -1 && selectedIndex < options.size) {
+            popup.listView?.setSelection(selectedIndex)
+        }
+    }
+
+    private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
+        // >>> CHẶN TẠI ĐÂY: Tránh việc nhấn nhanh mở 2 DialogItemChooser cùng lúc
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastOpenTime < 800) {
+            return
+        }
+        lastOpenTime = currentTime
+
+        DialogItemChooser(darkMode, ArrayList(options.mapIndexed{index, item->
+            SelectItem().apply {
+                title = item.title
+                selected = index == selectedIndex
             }
-        ).show(context.supportFragmentManager, "params-single-select")
+        }), false, object : DialogItemChooser.Callback {
+            override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
+                // Không chặn nút xác nhận theo yêu cầu
+                selectedIndex = status.indexOf(true)
+                updateValueView(valueView, textView)
+                onValueChanged?.invoke()
+            }
+        }).show(context.supportFragmentManager, "params-single-select")
     }
 }
