@@ -561,8 +561,23 @@ class DialogLogFragment : DialogFragment() {
                 .setWhen(System.currentTimeMillis())
                 .setStyle(messagingStyle)
             
-            if (notificationProgressTotal != notificationProgressCurrent) {
-                notificationBuilder.setProgress(notificationProgressTotal, notificationProgressCurrent, notificationProgressTotal < 0)
+            if (notificationProgressTotal < 0) {
+                // Tiến trình dạng không xác định (indeterminate): không truyền total/current âm
+                // cho setProgress vì API yêu cầu max/progress không âm khi indeterminate=true.
+                notificationBuilder.setProgress(0, 0, true)
+            } else if (notificationProgressTotal > 0) {
+                // Trước đây điều kiện là "total != current", nghĩa là khi tiến trình chạy xong
+                // (current == total, vd 100/100) thanh progress sẽ KHÔNG được vẽ nữa trong
+                // notify() tiếp theo -> tiến trình "biến mất"/đứng lại thay vì hiện đủ 100%.
+                notificationBuilder.setProgress(notificationProgressTotal, notificationProgressCurrent, false)
+
+                // Nguyên nhân chính khiến % bị "đơ": kể từ khi chuyển sang MessagingStyle, nhiều
+                // ROM (đặc biệt MIUI) không vẽ lại thanh setProgress() gốc ở các lần notify() sau
+                // lần đầu (khung hội thoại của MessagingStyle không re-layout phần progress mỗi
+                // lần update). Gắn thêm % vào setSubText để luôn có 1 phần tử chắc chắn được vẽ
+                // lại mỗi lần notify(), đảm bảo người dùng luôn thấy số % cập nhật.
+                val percent = (notificationProgressCurrent.toLong() * 100 / notificationProgressTotal).toInt().coerceIn(0, 100)
+                notificationBuilder.setSubText("$percent%")
             }
 
             buildContentPendingIntent()?.let { notificationBuilder.setContentIntent(it) }

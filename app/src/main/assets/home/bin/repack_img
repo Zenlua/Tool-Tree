@@ -38,8 +38,7 @@ if [[ $# -eq 0 || "$1" != -* ]]; then
   show_help
 fi
 
-OUTPUT=''; NENEROFS=''; CONVER=''; LVLNEN=''; 
-SAINEN=''; TTBUILDI=''; CDELIMG=''; DISATFS='';
+unset OUTPUT NENEROFS CONVER LVLNEN SAINEN TTBUILDI CDELIMG DISATFS
 
 while getopts ":i:o:n:l:c:s:k:d:p:h" opt; do
   case $opt in

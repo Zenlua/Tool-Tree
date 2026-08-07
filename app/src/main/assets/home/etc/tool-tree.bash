@@ -1415,8 +1415,10 @@ Utilities() {
   desc = "'$desc_rom1'"
   icon = "'`urlpng build`'"
   script = """
+  echo "$format_imgs"
+  exit
     slog dang_nen "$dang_nen"
-    slog format_imgs "$format_img"
+    slog format_imgs "$format_imgs"
     slog boolboxdjh "$boolbox"
     slog dinh_dang "$dinh_dang"
     slog build_size "$build_size"
@@ -1425,7 +1427,7 @@ Utilities() {
     slog nen_br "$nen_br"
     slog build_times "$build_times"
     for vkl in $IMAGES; do
-        repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD/out" -n "$dang_nen" -l "$muc_nen" -k "$dinh_dang" -s "$build_size" -d "$boolbox" -c "$format_img" -p "$offfscontex"
+        repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD/out" -n "$dang_nen" -l "$muc_nen" -k "$dinh_dang" -s "$build_size" -d "$boolbox" -c "$format_imgs" -p "$offfscontex"
     done
     echo "'$save_text' $PTSD/out"
     echo
@@ -1483,7 +1485,7 @@ Utilities() {
     depend-logic = "priority"
 
     [[group.action.params]]
-    name = "format_img"
+    name = "format_imgs"
     label = "'$convert_text'"
     desc = "'$convert_img_text'"
     value-sh = "glog format_imgs raw"
@@ -1491,7 +1493,9 @@ Utilities() {
     depend-value = "(erofs),(ext),(f2fs)"
     depend-mode = "show"
     depend-readonly = true
-    options-sh = "echo -e \"raw|File.img (raw)\nsparse|File.img (sparse)\nzstd|File.img.zstd\nzst|File.img.zst\ndat|File.new.dat\nbr|File.new.dat.br\""
+    options-sh = """
+    echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\nzstd|File.img.zstd\nzst|File.img.zst\ndat|File.new.dat\nbr|File.new.dat.br"
+    """
 
     [[group.action.params]]
     name = "nen_br"
@@ -1502,7 +1506,7 @@ Utilities() {
     max = 22
     value-sh = "glog nen_br 4"
     required = true
-    depend-on = "format_img"
+    depend-on = "format_imgs"
     depend-value = "raw,sparse,File.new.dat"
     depend-mode = "hide"
 
@@ -1702,7 +1706,9 @@ Utilities() {
     label = "'$option_text'"
     value-sh = "glog format_img raw"
     required = true
-    options-sh = "echo -e \"raw|File.img (raw)\nsparse|File.img (sparse)\ndat|File.new.dat\nbr|File.new.dat.br\nzstd|File.img.zstd\nzst|File.img.zst\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz\""
+    options-sh = """
+    echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\ndat|File.new.dat\nbr|File.new.dat.br\nzstd|File.img.zstd\nzst|File.img.zst\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz"
+    """
 
     [[group.action.params]]
     name = "nen_br"
