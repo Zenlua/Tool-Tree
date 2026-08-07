@@ -1415,8 +1415,6 @@ Utilities() {
   desc = "'$desc_rom1'"
   icon = "'`urlpng build`'"
   script = """
-  echo "$format_imgs"
-  exit
     slog dang_nen "$dang_nen"
     slog format_imgs "$format_imgs"
     slog boolboxdjh "$boolbox"
