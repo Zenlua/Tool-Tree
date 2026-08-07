@@ -2,6 +2,15 @@
 
 + **[Download](https://github.com/Zenlua/Tool-Tree/releases/latest)**
 
+**Version: 1.5.7 (7-8-2026)**
+
++ Fix some reported bugs.
++ Add some suggested features.
++ Add some features to the decoding section.
++ Use the new notification style
++ Update some commands
++ Optimizing code
+
 **Version: 1.5.6 (2-8-2026)**
 
 + Optimize application tab loading speed.
