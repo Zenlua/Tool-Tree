@@ -149,7 +149,7 @@ class NotiService : Service() {
             } else {
                 // 3. Lấy từ extra dạng String (Đường dẫn File / Uri String)
                 val pathOrUri = intent.getStringExtra("large_icon") ?: intent.getStringExtra("icon")
-                if (!pathOrUri.isNull_Or_Empty()) {
+                if (!pathOrUri.isNullOrEmpty()) {
                     bitmap = loadBitmapFromString(pathOrUri)
                 }
             }
