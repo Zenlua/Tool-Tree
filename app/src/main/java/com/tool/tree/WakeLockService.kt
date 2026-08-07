@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import androidx.core.app.Person
 import androidx.core.content.ContextCompat
 
 @Suppress("DEPRECATION")
@@ -135,11 +136,20 @@ class WakeLockService : Service() {
             }
             PendingIntent.getActivity(this, 0, it, flags)
         }
+
+        // Tạo đối tượng Person đại diện cho ứng dụng
+        val sender = Person.Builder()
+            .setName(getString(R.string.app_name))
+            .build()
+
+        // Định nghĩa nội dung tin nhắn dạng MessagingStyle
+        val messageText = getString(R.string.service_active_with_wakelock)
+        val messagingStyle = NotificationCompat.MessagingStyle(sender)
+            .addMessage(messageText, System.currentTimeMillis(), sender)
     
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText(getString(R.string.service_active_with_wakelock))
             .setSmallIcon(R.mipmap.ic_launcher)
+            .setStyle(messagingStyle)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
