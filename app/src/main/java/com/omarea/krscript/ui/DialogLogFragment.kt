@@ -309,7 +309,7 @@ class DialogLogFragment : DialogFragment() {
             scrollView.addView(hsv)
         }
 
-        b.btnWrap.alpha = if (wrapEnabled) 0.5f else 1f
+        b.btnWrap.alpha = if (wrapEnabled) 0.6f else 1f
         scrollView.post { scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
     }
 
