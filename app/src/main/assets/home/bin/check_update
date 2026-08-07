@@ -39,7 +39,10 @@ if checkonline; then
     fi
 
     if [ -f $TEMP/update ] && [ "$1" == "boot" ]; then
-        showbanner -t "$update_text" -m "$update_text_6"
+        notiservice \
+        -t "$update_text" \
+        -m "$update_text_6" \
+        -s "$(taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1 && openfile "$TMP/Tool-Tree.apk" || killtree "\n'$load_text_2'")"
     fi
 
 fi
