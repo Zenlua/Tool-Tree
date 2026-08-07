@@ -41,6 +41,7 @@
             android:text="@string/btn_cancel"
             android:layout_marginStart="70dp"
             android:layout_marginEnd="70dp"
+            android:layout_marginBottom="16dp"
             style="@style/dialogWarningBtn" />
     </LinearLayout>
 </FrameLayout>

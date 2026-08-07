@@ -120,8 +120,8 @@ class ParamsSingleSelect(
     }
 
     // Thay thế cho Spinner dropdown trước đây: dùng ListPopupWindow neo (anchor) vào chính ô
-    // đang hiển thị, danh sách xổ xuống có độ rộng bằng đúng ô đó - giữ nguyên cảm giác giao
-    // diện của Spinner nhưng dùng ListPopupWindow.
+    // đang hiển thị. Chiều rộng popup co giãn theo nội dung chữ (wrap_content) thay vì chiếm
+    // hết bề ngang màn hình, và nền có inset 16dp trái/phải để không dính sát mép màn hình.
     private fun openSingleSelectPopup(anchor: TextView) {
         // Tránh việc nhấn nhanh mở 2 popup cùng lúc (dùng chung cơ chế chặn với dialog)
         val currentTime = System.currentTimeMillis()
@@ -135,7 +135,13 @@ class ParamsSingleSelect(
         val popup = ListPopupWindow(context)
         popup.anchorView = anchor
         popup.setAdapter(adapter)
-        popup.width = ListPopupWindow.MATCH_PARENT
+        // Mở rộng theo chữ (không chiếm hết chiều ngang màn hình) - nền popup được bọc
+        // trong <inset> 16dp trái/phải (kr_spinner_popup_bg_light/dark) để khung luôn
+        // cách mép màn hình 1 khoảng, không bị dính sát vào 2 bên.
+        popup.width = ListPopupWindow.WRAP_CONTENT
+        popup.setBackgroundDrawable(context.getDrawable(
+                if (darkMode) R.drawable.kr_spinner_popup_bg_dark else R.drawable.kr_spinner_popup_bg_light
+        ))
         popup.isModal = true
         popup.setOnItemClickListener { _, _, position, _ ->
             selectedIndex = position
