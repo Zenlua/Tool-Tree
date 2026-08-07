@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Racing Pro - Ultimate Edition</title>
+    <style>
+        body { margin: 0; background: #2c3e50; overflow: hidden; touch-action: none; font-family: sans-serif; user-select: none; }
+        canvas { display: block; }
+        
+        #menu { 
+            position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.88); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 10; 
+        }
+
+        button.btn-menu { padding: 12px 25px; margin: 8px; font-size: 18px; border-radius: 10px; border: none; width: 220px; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
+        button.btn-menu:active { transform: scale(0.95); }
+        .btn-1 { background: #27ae60; color: white; } 
+        .btn-2 { background: #f39c12; color: white; }
+        .btn-3 { background: #e67e22; color: white; } 
+        .btn-4 { background: #c0392b; color: white; }
+        
+        /* Cụm 2 nút ngôn ngữ ở màn hình chính */
+        #langContainer {
+            display: flex; gap: 8px; margin-top: 15px; z-index: 20;
+        }
+        .btn-lang {
+            background: #34495e; color: #ecf0f1; border: 2px solid #7f8c8d; 
+            padding: 8px 16px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-lang.active {
+            background: #f39c12; color: #fff; border-color: #f1c40f; box-shadow: 0 0 10px rgba(243, 156, 18, 0.6);
+        }
+        
+        #ui { position: absolute; top: 15px; left: 15px; color: white; font-size: 15px; font-weight: bold; pointer-events: none; z-index: 5; text-shadow: 1px 1px 3px #000; }
+        #botWarn { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); color: #e74c3c; font-size: 20px; font-weight: bold; display: none; text-shadow: 0 0 8px #000; text-align: center; }
+        
+        #statusContainer { position: absolute; bottom: 25px; left: 20px; display: flex; gap: 12px; z-index: 6; pointer-events: none; }
+        .status-icon {
+            width: 50px; height: 50px; border-radius: 50%; display: none; justify-content: center; align-items: center; 
+            font-size: 20px; position: relative; box-shadow: 0 0 12px rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+        }
+        .status-badge {
+            position: absolute; bottom: -4px; right: -4px; background: #e74c3c; color: #fff; font-size: 11px; 
+            font-weight: bold; padding: 2px 6px; border-radius: 10px; border: 1px solid #fff;
+        }
+
+        #nitroBtn { 
+            position: absolute; bottom: 25px; right: 20px; width: 70px; height: 70px; border-radius: 50%; 
+            background: linear-gradient(135deg, #e74c3c, #f39c12); color: white; font-weight: bold; border: 3px solid #fff; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 13px; 
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.8); z-index: 6; cursor: pointer; transition: transform 0.1s;
+        }
+        #nitroBtn:active { transform: scale(0.9); }
+        #nitroBtn.disabled { opacity: 0.4; filter: grayscale(1); box-shadow: none; }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <span id="uiScoreLabel">Điểm</span>: <span id="scoreVal">0</span> | 
+    <span id="uiLifeLabel">Mạng</span>: <span id="lifeVal">3</span> | 
+    <span id="uiAmmoLabel">Đạn</span>: <span id="ammoVal" style="color: #f1c40f;">0</span><br>
+    <small style="font-size: 13px; color: #bdc3c7;">
+        <span id="uiBotCDLabel">Đếm ngược Bot</span>: <span id="botCountdownVal" style="color:#e74c3c;">100</span> | <span id="uiStatusLabel">Trạng thái</span>: <span id="botWaveVal" style="color:#f1c40f;">Đợt 1 (1 Bot Thường)</span>
+    </small>
+</div>
+
+<div id="statusContainer">
+    <div id="shieldIcon" class="status-icon" style="border: 2px solid #3498db; background: rgba(52, 152, 219, 0.35);">🛡️</div>
+    <div id="tripleIcon" class="status-icon" style="border: 2px solid #f1c40f; background: rgba(241, 196, 15, 0.35);">
+        💥 <span id="tripleBadge" class="status-badge">0s</span>
+    </div>
+    <div id="magnetIcon" class="status-icon" style="border: 2px solid #9b59b6; background: rgba(155, 89, 182, 0.35);">
+        🧲 <span id="magnetBadge" class="status-badge">0s</span>
+    </div>
+</div>
+
+<div id="botWarn">⚠️ CẢNH BÁO BOT XUẤT HIỆN! ⚠️</div>
+
+<div id="nitroBtn" class="disabled">
+    <span>NITRO</span>
+    <small id="nitroCdText" style="font-size: 10px;">SẴN SÀNG</small>
+</div>
+
+<!-- Menu Chính -->
+<div id="menu">
+    <h1>RACING PRO</h1>
+    <div style="margin-bottom: 15px; color: #f1c40f; font-size: 18px;">
+        <span id="menuHighScoreLabel">Kỷ lục</span>: <span id="highScoreText">0</span>
+    </div>
+    <button class="btn-menu btn-1" id="btnEasy" onclick="startGame(1)">DỄ</button>
+    <button class="btn-menu btn-2" id="btnNormal" onclick="startGame(2)">THƯỜNG</button>
+    <button class="btn-menu btn-3" id="btnHard" onclick="startGame(3)">KHÓ</button>
+    <button class="btn-menu btn-4" id="btnExtreme" onclick="startGame(4)">CỰC ĐỈNH</button>
+    
+    <!-- 2 Nút đổi ngôn ngữ tích hợp trong Menu Chính -->
+    <div id="langContainer">
+        <button class="btn-lang active" id="btnVi" onclick="setLanguage('vi')">TIẾNG VIỆT</button>
+        <button class="btn-lang" id="btnEn" onclick="setLanguage('en')">ENGLISH</button>
+    </div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+    // --- Hệ thống Ngôn Ngữ (Localization) ---
+    let currentLang = 'vi'; // 'vi' hoặc 'en'
+
+    const langData = {
+        vi: {
+            score: "Điểm",
+            life: "Mạng",
+            ammo: "Đạn",
+            botCD: "Đếm ngược Bot",
+            status: "Trạng thái",
+            wave1: "Đợt 1 (1 Bot thường)",
+            wave2: "Đợt 2 (2 Bot thường)",
+            wave3: "Đợt 3 (3 Bot thường)",
+            waveBoss: "Đợt BOSS LỚN (Bắn siêu nhanh)",
+            warn1: "⚠️ CẢNH BÁO: 1 BOT THƯỜNG XUẤT HIỆN! ⚠️",
+            warn2: "⚠️ CẢNH BÁO: 2 BOT THƯỜNG XUẤT HIỆN! ⚠️",
+            warn3: "⚠️ CẢNH BÁO: 3 BOT THƯỜNG XUẤT HIỆN! ⚠️",
+            warnBoss: "⚠️ CẢNH BÁO: BOT LỚN BÁ CHỦ XUẤT HIỆN (+1 ĐẠN)! ⚠️",
+            fightingBot: "ĐANG ĐẤU BOT",
+            highScore: "Kỷ lục",
+            btnEasy: "DỄ",
+            btnNormal: "THƯỜNG",
+            btnHard: "KHÓ",
+            btnExtreme: "CỰC ĐỈNH",
+            nitroReady: "SẴN SÀNG",
+            gameOver: "THUA RỒI!",
+            scoreText: "Điểm"
+        },
+        en: {
+            score: "Score",
+            life: "Lives",
+            ammo: "Ammo",
+            botCD: "Bot Countdown",
+            status: "Status",
+            wave1: "Wave 1 (1 Normal Bot)",
+            wave2: "Wave 2 (2 Normal Bots)",
+            wave3: "Wave 3 (3 Normal Bots)",
+            waveBoss: "Wave BIG BOSS (Super Fast Shooting)",
+            warn1: "⚠️ WARNING: 1 NORMAL BOT APPEARED! ⚠️",
+            warn2: "⚠️ WARNING: 2 NORMAL BOTS APPEARED! ⚠️",
+            warn3: "⚠️ WARNING: 3 NORMAL BOTS APPEARED! ⚠️",
+            warnBoss: "⚠️ WARNING: BIG BOSS APPEARED (+1 AMMO)! ⚠️",
+            fightingBot: "FIGHTING BOT",
+            highScore: "High Score",
+            btnEasy: "EASY",
+            btnNormal: "NORMAL",
+            btnHard: "HARD",
+            btnExtreme: "EXTREME",
+            nitroReady: "READY",
+            gameOver: "GAME OVER!",
+            scoreText: "Score"
+        }
+    };
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        document.getElementById('btnVi').classList.toggle('active', lang === 'vi');
+        document.getElementById('btnEn').classList.toggle('active', lang === 'en');
+        updateTexts();
+    }
+
+    function updateTexts() {
+        let t = langData[currentLang];
+        document.getElementById('uiScoreLabel').innerText = t.score;
+        document.getElementById('uiLifeLabel').innerText = t.life;
+        document.getElementById('uiAmmoLabel').innerText = t.ammo;
+        document.getElementById('uiBotCDLabel').innerText = t.botCD;
+        document.getElementById('uiStatusLabel').innerText = t.status;
+        
+        document.getElementById('menuHighScoreLabel').innerText = t.highScore;
+        document.getElementById('btnEasy').innerText = t.btnEasy;
+        document.getElementById('btnNormal').innerText = t.btnNormal;
+        document.getElementById('btnHard').innerText = t.btnHard;
+        document.getElementById('btnExtreme').innerText = t.btnExtreme;
+        
+        let nitroCdTextEl = document.getElementById('nitroCdText');
+        if(nitroCdTextEl.innerText === "SẴN SÀNG" || nitroCdTextEl.innerText === "READY") {
+            nitroCdTextEl.innerText = t.nitroReady;
+        }
+        updateUI();
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const w = canvas.width / 3;
+        targetX = (lane * w) + (w / 2) - 30;
+        if (!gameActive) {
+            playerX = targetX;
+        }
+    });
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        let now = audioCtx.currentTime;
+
+        if (type === 'shoot') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'explode') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, now);
+            osc.frequency.linearRampToValueAtTime(30, now + 0.25);
+            gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.25);
+            osc.start(now); osc.stop(now + 0.25);
+        } else if (type === 'item') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+            gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.15);
+            osc.start(now); osc.stop(now + 0.15);
+        } else if (type === 'nitro') {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(600, now + 0.4);
+            gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
+            osc.start(now); osc.stop(now + 0.4);
+        }
+    }
+
+    let lane = 1, enemies = [], items = [], hazards = [], particles = [], playerBullets = [], botBullets = [];
+    let speed = 5, baseSpeed = 5, score = 0, lives = 3, ammo = 0, lastAmmoThreshold = 0;
+    
+    let initialBotCountdown = 100;
+    let botCountdown = 100;
+    let botStage = 1; // 1: Bot 1, 2: Bot 2, 3: Bot 3, 4: Bot lớn (Boss)
+    let activeBots = [];     
+
+    let hasShield = false;
+    let tripleShotEndTime = 0;
+    let magnetEndTime = 0;
+    let nitroActiveEndTime = 0;
+    let nitroCooldownEndTime = 0;
+    let screenShakeTime = 0;
+
+    let gameActive = false, roadOffset = 0;
+    let lastPlayerShootTime = 0;
+    
+    let playerX = (canvas.width / 3) * 1 + (canvas.width / 6) - 30;
+    let targetX = playerX;
+    const playerY = canvas.height * 0.6;
+    let spawnInterval = 1200, lastSpawn = 0;
+
+    let bestScore = localStorage.getItem('racingBest') || 0;
+
+    updateMenuData();
+
+    function updateMenuData() {
+        document.getElementById('highScoreText').innerText = bestScore;
+    }
+
+    function decreaseBotCountdown(amount) {
+        if (activeBots.length === 0) {
+            botCountdown = Math.max(0, botCountdown - amount);
+            updateUI();
+        }
+    }
+
+    function startGame(level) {
+        initAudio();
+        score = 0;
+        lives = 3;
+        ammo = 0; lastAmmoThreshold = 0; 
+        initialBotCountdown = 100;
+        botCountdown = 100; 
+        botStage = 1;
+        hasShield = false; tripleShotEndTime = 0; magnetEndTime = 0; nitroActiveEndTime = 0; nitroCooldownEndTime = 0;
+        enemies = []; items = []; hazards = []; particles = []; playerBullets = []; botBullets = []; activeBots = [];
+        lane = 1;
+        const w = canvas.width / 3;
+        targetX = (1 * w) + (w / 2) - 30;
+        playerX = targetX;
+        
+        document.getElementById('botWarn').style.display = 'none';
+        
+        if (level === 1) { baseSpeed = 5; spawnInterval = 1500; }
+        else if (level === 2) { baseSpeed = 7; spawnInterval = 1200; }
+        else if (level === 3) { baseSpeed = 9; spawnInterval = 900; }
+        else { baseSpeed = 13; spawnInterval = 600; }
+        speed = baseSpeed;
+        
+        document.getElementById('menu').style.display = 'none';
+        gameActive = true;
+        updateUI();
+        update();
+    }
+
+    window.addEventListener('pointerdown', (e) => {
+        initAudio();
+        if (!gameActive) return;
+        if (e.target.closest('#nitroBtn') || e.target.closest('#menu')) return;
+
+        const laneWidth = window.innerWidth / 3;
+        const clickedLane = Math.floor(e.clientX / laneWidth);
+
+        if (clickedLane > lane) {
+            lane = Math.min(2, lane + 1);
+        } else if (clickedLane < lane) {
+            lane = Math.max(0, lane - 1);
+        }
+
+        const w = canvas.width / 3;
+        targetX = (lane * w) + (w / 2) - 30;
+    });
+
+    window.addEventListener('keydown', (e) => {
+        initAudio();
+        if (e.code === 'Space') triggerNitro();
+        const w = canvas.width / 3;
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+            lane = Math.max(0, lane - 1);
+            targetX = (lane * w) + (w / 2) - 30;
+        }
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+            lane = Math.min(2, lane + 1);
+            targetX = (lane * w) + (w / 2) - 30;
+        }
+    });
+
+    document.getElementById('nitroBtn').addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        triggerNitro();
+    });
+
+    function triggerNitro() {
+        let now = Date.now();
+        if (now >= nitroCooldownEndTime && gameActive) {
+            playSound('nitro');
+            nitroActiveEndTime = now + 2500;       
+            let cdTime = 12000;
+            nitroCooldownEndTime = now + cdTime;    
+            createExplosion(playerX + 30, playerY + 80, "#e74c3c");
+            screenShakeTime = 10;
+        }
+    }
+
+    function createExplosion(x, y, color = "#f39c12") {
+        playSound('explode');
+        for(let i=0; i<15; i++) {
+            particles.push({x: x, y: y, dx: (Math.random()-0.5)*12, dy: (Math.random()-0.5)*12, life: 25, color: color});
+        }
+    }
+
+    function updateUI() {
+        let now = Date.now();
+        let t = langData[currentLang];
+
+        document.getElementById('uiScoreLabel').innerText = t.score;
+        document.getElementById('uiLifeLabel').innerText = t.life;
+        document.getElementById('uiAmmoLabel').innerText = t.ammo;
+        document.getElementById('uiBotCDLabel').innerText = t.botCD;
+        document.getElementById('uiStatusLabel').innerText = t.status;
+        
+        document.getElementById('scoreVal').innerText = Math.floor(score);
+        document.getElementById('lifeVal').innerText = lives;
+        document.getElementById('ammoVal').innerText = activeBots.length > 0 ? "∞" : ammo;
+        
+        document.getElementById('botCountdownVal').innerText = activeBots.length > 0 ? t.fightingBot : botCountdown;
+        
+        let stageText = "";
+        if (botStage === 1) stageText = t.wave1;
+        else if (botStage === 2) stageText = t.wave2;
+        else if (botStage === 3) stageText = t.wave3;
+        else if (botStage === 4) stageText = t.waveBoss;
+        document.getElementById('botWaveVal').innerText = stageText;
+
+        document.getElementById('shieldIcon').style.display = hasShield ? 'flex' : 'none';
+
+        let tripleLeft = Math.max(0, Math.ceil((tripleShotEndTime - now) / 1000));
+        let tripleIcon = document.getElementById('tripleIcon');
+        if (tripleLeft > 0) {
+            tripleIcon.style.display = 'flex';
+            document.getElementById('tripleBadge').innerText = `${tripleLeft}s`;
+        } else {
+            tripleIcon.style.display = 'none';
+        }
+
+        let magLeft = Math.max(0, Math.ceil((magnetEndTime - now) / 1000));
+        let magnetIcon = document.getElementById('magnetIcon');
+        if (magLeft > 0) {
+            magnetIcon.style.display = 'flex';
+            document.getElementById('magnetBadge').innerText = `${magLeft}s`;
+        } else {
+            magnetIcon.style.display = 'none';
+        }
+
+        let nitroBtn = document.getElementById('nitroBtn');
+        let cdLeft = Math.max(0, Math.ceil((nitroCooldownEndTime - now) / 1000));
+        if (cdLeft > 0) {
+            nitroBtn.classList.add('disabled');
+            document.getElementById('nitroCdText').innerText = `${cdLeft}s`;
+        } else {
+            nitroBtn.classList.remove('disabled');
+            document.getElementById('nitroCdText').innerText = t.nitroReady;
+        }
+    }
+
+    function drawPlayer(x, y, tilt, isNitro, hasShieldActive) {
+        ctx.save(); 
+        ctx.translate(x + 30, y + 50); 
+        ctx.rotate(tilt * 0.1); 
+
+        if (isNitro) {
+            ctx.fillStyle = "#e74c3c";
+            ctx.beginPath();
+            ctx.moveTo(-15, 45); ctx.lineTo(0, 45 + Math.random()*40 + 20); ctx.lineTo(15, 45);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "#f1c40f";
+            ctx.beginPath();
+            ctx.moveTo(-8, 45); ctx.lineTo(0, 45 + Math.random()*20 + 10); ctx.lineTo(8, 45);
+            ctx.closePath(); ctx.fill();
+        }
+
+        let gradLeft = ctx.createLinearGradient(0, -50, -20, -180);
+        gradLeft.addColorStop(0, "rgba(255, 255, 200, 0.4)");
+        gradLeft.addColorStop(1, "rgba(255, 255, 200, 0)");
+        ctx.fillStyle = gradLeft;
+        ctx.beginPath();
+        ctx.moveTo(-25, -48); ctx.lineTo(-45, -180); ctx.lineTo(-10, -180); ctx.lineTo(-13, -48);
+        ctx.closePath(); ctx.fill();
+
+        let gradRight = ctx.createLinearGradient(0, -50, 20, -180);
+        gradRight.addColorStop(0, "rgba(255, 255, 200, 0.4)");
+        gradRight.addColorStop(1, "rgba(255, 255, 200, 0)");
+        ctx.fillStyle = gradRight;
+        ctx.beginPath();
+        ctx.moveTo(13, -48); ctx.lineTo(10, -180); ctx.lineTo(45, -180); ctx.lineTo(25, -48);
+        ctx.closePath(); ctx.fill();
+
+        let gradBack = ctx.createLinearGradient(0, 45, 0, 85);
+        gradBack.addColorStop(0, "rgba(255, 0, 0, 0.4)");
+        gradBack.addColorStop(1, "rgba(255, 0, 0, 0)");
+        ctx.fillStyle = gradBack;
+        ctx.beginPath();
+        ctx.moveTo(-25, 45); ctx.lineTo(-38, 85); ctx.lineTo(38, 85); ctx.lineTo(25, 45);
+        ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = isNitro ? "#e74c3c" : "#3498db"; 
+        ctx.beginPath(); ctx.roundRect(-30, -50, 60, 100, 10); ctx.fill();
+        ctx.fillStyle = "#111"; ctx.fillRect(-22, -28, 44, 22); ctx.fillRect(-20, 15, 40, 12);
+        
+        ctx.fillStyle = "#fff"; ctx.shadowColor = "#ffffa0"; ctx.shadowBlur = 8;
+        ctx.fillRect(-25, -48, 12, 6); ctx.fillRect(13, -48, 12, 6);
+        ctx.fillStyle = "#ff2222"; ctx.shadowColor = "#ff0000"; ctx.shadowBlur = 10;
+        ctx.fillRect(-25, 43, 12, 6); ctx.fillRect(13, 43, 12, 6);
+
+        if (hasShieldActive) {
+            ctx.strokeStyle = "#3498db";
+            ctx.lineWidth = 4;
+            ctx.shadowColor = "#00d2d3"; ctx.shadowBlur = 12;
+            ctx.beginPath(); ctx.arc(0, 0, 60, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    function drawEnemy(x, y) {
+        ctx.save();
+        let gradHead = ctx.createLinearGradient(x + 30, y + 100, x + 30, y + 170);
+        gradHead.addColorStop(0, "rgba(255, 255, 200, 0.3)");
+        gradHead.addColorStop(1, "rgba(255, 255, 200, 0)");
+        ctx.fillStyle = gradHead;
+        ctx.beginPath();
+        ctx.moveTo(x + 5, y + 95); ctx.lineTo(x - 10, y + 170); ctx.lineTo(x + 70, y + 170); ctx.lineTo(x + 55, y + 95);
+        ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = "#e67e22"; ctx.beginPath(); ctx.roundRect(x, y, 60, 100, 10); ctx.fill();
+        ctx.fillStyle = "#111"; ctx.fillRect(x + 8, y + 55, 44, 22); ctx.fillRect(x + 10, y + 18, 40, 12);
+        ctx.fillStyle = "#fff"; ctx.fillRect(x + 5, y + 92, 12, 6); ctx.fillRect(x + 43, y + 92, 12, 6);
+        ctx.restore();
+    }
+
+    function drawBot(bot) {
+        ctx.save();
+        let w = bot.width || 70;
+        let h = bot.height || 110;
+
+        if (bot.isBigBoss) {
+            ctx.fillStyle = "#8e44ad"; 
+            ctx.beginPath(); ctx.roundRect(bot.x, bot.y, w, h, 16); ctx.fill();
+            ctx.strokeStyle = "#f1c40f"; ctx.lineWidth = 4; ctx.stroke();
+
+            ctx.fillStyle = "#111"; 
+            ctx.fillRect(bot.x + 12, bot.y + 60, w - 24, 30); 
+            ctx.fillRect(bot.x + 15, bot.y + 20, w - 30, 20);
+
+            ctx.fillStyle = "#e74c3c"; 
+            ctx.fillRect(bot.x + 8, bot.y + h - 10, 25, 8); 
+            ctx.fillRect(bot.x + w - 33, bot.y + h - 10, 25, 8);
+
+            ctx.fillStyle = "rgba(0,0,0,0.7)"; 
+            ctx.fillRect(bot.x - 10, bot.y - 25, w + 20, 12);
+            ctx.fillStyle = "#e74c3c"; 
+            ctx.fillRect(bot.x - 10, bot.y - 25, (w + 20) * (bot.hp / bot.maxHp), 12);
+            ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(bot.x - 10, bot.y - 25, w + 20, 12);
+        } else {
+            ctx.fillStyle = "#8e44ad"; ctx.beginPath(); ctx.roundRect(bot.x, bot.y, w, h, 12); ctx.fill();
+            ctx.fillStyle = "#111"; ctx.fillRect(bot.x + 10, bot.y + 60, 50, 25); ctx.fillRect(bot.x + 12, bot.y + 20, 46, 15);
+            ctx.fillStyle = "#e74c3c"; ctx.fillRect(bot.x + 5, bot.y + 102, 15, 6); ctx.fillRect(bot.x + 50, bot.y + 102, 15, 6);
+
+            ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(bot.x - 5, bot.y - 20, 80, 10);
+            ctx.fillStyle = "#2ecc71"; ctx.fillRect(bot.x - 5, bot.y - 20, (bot.hp / bot.maxHp) * 80, 10);
+        }
+        ctx.restore();
+    }
+
+    function drawItem(item) {
+        ctx.save();
+        ctx.translate(item.x + 20, item.y + 20);
+        ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        
+        if (item.type === 'shield') {
+            ctx.fillStyle = "#3498db"; ctx.fill();
+            ctx.fillStyle = "#fff"; ctx.font = "14px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText("🛡️", 0, 0);
+        } else if (item.type === 'triple') {
+            ctx.fillStyle = "#f1c40f"; ctx.fill();
+            ctx.fillStyle = "#000"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText("3X", 0, 0);
+        } else if (item.type === 'magnet') {
+            ctx.fillStyle = "#9b59b6"; ctx.fill();
+            ctx.fillStyle = "#fff"; ctx.font = "14px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText("🧲", 0, 0);
+        }
+        ctx.restore();
+    }
+
+    function drawHazard(hz) {
+        ctx.save();
+        ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(hz.x + 25, hz.y + 15, 25, 15, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#333"; ctx.beginPath(); ctx.ellipse(hz.x + 25, hz.y + 15, 18, 10, 0, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+
+    function update() {
+        if (!gameActive) return;
+
+        let now = Date.now();
+        let isNitroActive = now < nitroActiveEndTime;
+        speed = isNitroActive ? baseSpeed * 1.8 : baseSpeed;
+
+        playerX += (targetX - playerX) * 0.2; 
+        
+        ctx.save();
+        if (screenShakeTime > 0) {
+            ctx.translate((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8);
+            screenShakeTime--;
+        }
+
+        ctx.fillStyle = "#2c3e50"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        let w = canvas.width / 3;
+        ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.lineWidth = 10;
+        ctx.setLineDash([40, 40]); ctx.lineDashOffset = roadOffset;
+        ctx.beginPath(); ctx.moveTo(w, 0); ctx.lineTo(w, canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(w*2, 0); ctx.lineTo(w*2, canvas.height); ctx.stroke();
+        roadOffset += speed;
+
+        if (botCountdown <= 0 && activeBots.length === 0) {
+            let t = langData[currentLang];
+            let warnText = "";
+            if (botStage === 1) {
+                activeBots.push({ isBigBoss: false, laneIndex: 1, x: (1 * w) + (w/2 - 35), y: -150, targetY: 80, width: 70, height: 110, hp: 15, maxHp: 15, lastShoot: now });
+                warnText = t.warn1;
+            } else if (botStage === 2) {
+                activeBots.push({ isBigBoss: false, laneIndex: 0, x: (0 * w) + (w/2 - 35), y: -150, targetY: 80, width: 70, height: 110, hp: 15, maxHp: 15, lastShoot: now });
+                activeBots.push({ isBigBoss: false, laneIndex: 2, x: (2 * w) + (w/2 - 35), y: -150, targetY: 80, width: 70, height: 110, hp: 15, maxHp: 15, lastShoot: now + 500 });
+                warnText = t.warn2;
+            } else if (botStage === 3) {
+                activeBots.push({ isBigBoss: false, laneIndex: 0, x: (0 * w) + (w/2 - 35), y: -150, targetY: 80, width: 70, height: 110, hp: 15, maxHp: 15, lastShoot: now });
+                activeBots.push({ isBigBoss: false, laneIndex: 1, x: (1 * w) + (w/2 - 35), y: -150, targetY: 80, width: 70, height: 110, hp: 15, maxHp: 15, lastShoot: now + 400 });
+                activeBots.push({ isBigBoss: false, laneIndex: 2, x: (2 * w) + (w/2 - 35), y: -150, targetY: 80, width: 70, height: 110, hp: 15, maxHp: 15, lastShoot: now + 800 });
+                warnText = t.warn3;
+            } else if (botStage === 4) {
+                let bossHp = 80;
+                activeBots.push({ 
+                    isBigBoss: true, laneIndex: 1, x: (1 * w) + (w/2 - 45), y: -180, targetY: 60, 
+                    width: 90, height: 130, hp: bossHp, maxHp: bossHp, lastShoot: now, moveTimer: now 
+                });
+                
+                ammo += 1;
+                warnText = t.warnBoss;
+            }
+
+            if (botStage < 4) enemies = [];
+
+            document.getElementById('botWarn').innerText = warnText;
+            document.getElementById('botWarn').style.display = 'block';
+            setTimeout(() => { document.getElementById('botWarn').style.display = 'none'; }, 3000);
+            updateUI();
+        }
+
+        let closeEnemyInLane = enemies.some(e => e.l === lane && (playerY - e.y) > 0 && (playerY - e.y) < 280);
+        let canShoot = (closeEnemyInLane && ammo > 0) || activeBots.length > 0;
+
+        if (canShoot && (now - lastPlayerShootTime > 200)) {
+            if (activeBots.length === 0) ammo--;
+            playSound('shoot');
+
+            let isTriple = now < tripleShotEndTime;
+            if (isTriple) {
+                playerBullets.push({ x: (0 * w) + (w/2), y: playerY - 10 });
+                playerBullets.push({ x: (1 * w) + (w/2), y: playerY - 10 });
+                playerBullets.push({ x: (2 * w) + (w/2), y: playerY - 10 });
+            } else {
+                playerBullets.push({ x: playerX + 30, y: playerY - 10 });
+            }
+            lastPlayerShootTime = now;
+            updateUI();
+        }
+
+        for (let bIndex = playerBullets.length - 1; bIndex >= 0; bIndex--) {
+            let b = playerBullets[bIndex];
+            b.y -= 22; 
+            ctx.fillStyle = "#f1c40f"; ctx.fillRect(b.x - 3, b.y, 6, 20);
+
+            for (let eIndex = enemies.length - 1; eIndex >= 0; eIndex--) {
+                let ex = (enemies[eIndex].l * w) + (w/2 - 30);
+                let ey = enemies[eIndex].y;
+                if (b.x >= ex && b.x <= ex + 60 && b.y >= ey && b.y <= ey + 100) {
+                    createExplosion(ex + 30, ey + 50);
+                    enemies.splice(eIndex, 1);
+                    playerBullets.splice(bIndex, 1);
+                    
+                    score += 5; 
+                    updateUI();
+                    break;
+                }
+            }
+
+            for (let botIdx = activeBots.length - 1; botIdx >= 0; botIdx--) {
+                let bot = activeBots[botIdx];
+                let bw = bot.width || 70;
+                let bh = bot.height || 110;
+
+                if (b.x >= bot.x && b.x <= bot.x + bw && b.y >= bot.y && b.y <= bot.y + bh) {
+                    createExplosion(b.x, b.y, "#9b59b6");
+                    playerBullets.splice(bIndex, 1);
+                    bot.hp--;
+                    
+                    if (bot.hp <= 0) {
+                        createExplosion(bot.x + bw/2, bot.y + bh/2, "#e74c3c");
+                        let isBig = bot.isBigBoss;
+                        activeBots.splice(botIdx, 1);
+                        
+                        if (isBig) {
+                            lives += 2;   
+                            score += 100; 
+                            
+                            botStage = 1;
+                            initialBotCountdown = 100;
+                            botCountdown = 100;
+                        } else {
+                            lives += 1;   
+                            score += 50;  
+                            
+                            botStage++;
+                            if (botStage > 4) botStage = 4;
+                            initialBotCountdown = Math.max(20, initialBotCountdown - 20);
+                            botCountdown = initialBotCountdown;
+                        }
+                        updateUI();
+                    }
+                    break;
+                }
+            }
+
+            if (b.y < -30) playerBullets.splice(bIndex, 1);
+        }
+
+        activeBots.forEach((bot) => {
+            if (bot.y < bot.targetY) bot.y += 2;
+
+            if (bot.isBigBoss && now - bot.moveTimer > 3000) {
+                bot.laneIndex = Math.floor(Math.random() * 3);
+                bot.moveTimer = now;
+            }
+
+            let bw = bot.width || 70;
+            let bh = bot.height || 110;
+            let targetBotX = (bot.laneIndex * w) + (w/2 - bw/2);
+            bot.x += (targetBotX - bot.x) * 0.05;
+            drawBot(bot);
+
+            let shootDiff = now - bot.lastShoot;
+            
+            // Cài đặt tốc độ bắn: Bot lớn (Boss) bắn đạn nhanh hơn (ngưỡng thời gian ngắn hơn)
+            let shootIntervalTrigger = bot.isBigBoss ? 600 : 1200; 
+            let warningLeadTime = bot.isBigBoss ? 300 : 900;
+
+            if (shootDiff > warningLeadTime && shootDiff < shootIntervalTrigger) {
+                ctx.save();
+                ctx.strokeStyle = "rgba(231, 76, 60, 0.6)"; ctx.lineWidth = 6; ctx.setLineDash([10, 10]);
+                ctx.beginPath(); 
+                if (bot.isBigBoss) {
+                    ctx.moveTo(bot.x + 20, bot.y + bh); ctx.lineTo(bot.x + 20, canvas.height);
+                    ctx.moveTo(bot.x + bw - 20, bot.y + bh); ctx.lineTo(bot.x + bw - 20, canvas.height);
+                } else {
+                    ctx.moveTo(bot.x + bw/2, bot.y + bh); ctx.lineTo(bot.x + bw/2, canvas.height);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            if (shootDiff >= shootIntervalTrigger) {
+                playSound('shoot');
+                if (bot.isBigBoss) {
+                    botBullets.push({ x: bot.x + 20, y: bot.y + bh });
+                    botBullets.push({ x: bot.x + bw - 20, y: bot.y + bh });
+                } else {
+                    botBullets.push({ x: bot.x + bw/2, y: bot.y + bh });
+                }
+                bot.lastShoot = now;
+            }
+        });
+
+        for (let bbIndex = botBullets.length - 1; bbIndex >= 0; bbIndex--) {
+            let bb = botBullets[bbIndex];
+            bb.y += speed * 0.3 + 6; 
+            ctx.fillStyle = "#e74c3c"; ctx.fillRect(bb.x - 4, bb.y, 8, 22);
+
+            if (Math.abs(bb.x - (playerX + 30)) < 35 && Math.abs(bb.y - (playerY + 50)) < 50) {
+                botBullets.splice(bbIndex, 1);
+                
+                if (isNitroActive) {
+                    createExplosion(bb.x, bb.y, "#f39c12");
+                } else if (hasShield) {
+                    hasShield = false;
+                    createExplosion(playerX + 30, playerY + 50, "#3498db");
+                    updateUI();
+                } else {
+                    createExplosion(playerX + 30, playerY + 50, "#e74c3c");
+                    screenShakeTime = 12;
+                    lives--;
+                    updateUI();
+                    if (lives <= 0) gameOver();
+                }
+            }
+            if (bb.y > canvas.height + 30) botBullets.splice(bbIndex, 1);
+        }
+
+        hazards.forEach((hz, idx) => {
+            hz.y += speed;
+            drawHazard(hz);
+
+            if (Math.abs(hz.x - playerX) < 40 && Math.abs(hz.y - playerY) < 40) {
+                screenShakeTime = 15;
+                targetX += (Math.random() > 0.5 ? 60 : -60);
+                hazards.splice(idx, 1);
+            } else if (hz.y > canvas.height + 50) {
+                hazards.splice(idx, 1);
+            }
+        });
+
+        let isMagnetActive = now < magnetEndTime;
+        items.forEach((item, index) => {
+            item.y += speed * 0.8;
+
+            if (isMagnetActive) {
+                item.x += (playerX - item.x) * 0.15;
+                item.y += (playerY - item.y) * 0.15;
+            }
+
+            drawItem(item);
+
+            if (Math.abs(item.x - playerX) < 40 && Math.abs(item.y - playerY) < 50) {
+                if (item.type === 'shield') { hasShield = true; playSound('item'); }
+                else if (item.type === 'triple') { tripleShotEndTime = now + 6000; playSound('item'); }
+                else if (item.type === 'magnet') { magnetEndTime = now + 6000; playSound('item'); }
+                
+                createExplosion(item.x + 20, item.y + 20, "#f1c40f");
+                items.splice(index, 1);
+                updateUI();
+            } else if (item.y > canvas.height + 50) {
+                items.splice(index, 1);
+            }
+        });
+
+        particles.forEach((p, index) => {
+            p.x += p.dx; p.y += p.dy; p.life--;
+            ctx.fillStyle = p.color || "#f39c12"; ctx.fillRect(p.x, p.y, 5, 5);
+            if(p.life <= 0) particles.splice(index, 1);
+        });
+
+        drawPlayer(playerX, playerY, (targetX - playerX) / 20, isNitroActive, hasShield);
+
+        let isNormalPhase = (activeBots.length === 0);
+        let isBossPhase = (activeBots.length > 0 && botStage === 4);
+        let canSpawnEnemies = isNormalPhase || isBossPhase;
+
+        if (canSpawnEnemies && (Date.now() - lastSpawn > spawnInterval)) {
+            let randSpawnType = Math.random();
+
+            if (randSpawnType < 0.01) { 
+                enemies.push({ l: 0, y: -150 });
+                enemies.push({ l: 1, y: -150 });
+                enemies.push({ l: 2, y: -150 });
+            } else if (randSpawnType < 0.13) {
+                let l1 = Math.floor(Math.random() * 3);
+                let l2 = (l1 + 1 + Math.floor(Math.random() * 2)) % 3;
+                enemies.push({ l: l1, y: -150 });
+                enemies.push({ l: l2, y: -180 });
+            } else {
+                let l1 = Math.floor(Math.random() * 3);
+                enemies.push({ l: l1, y: -150 });
+            }
+
+            if (Math.random() < 0.18) {
+                let itemLane = Math.floor(Math.random() * 3);
+                let randVal = Math.random();
+                let selectedType = 'shield';
+                if (randVal < 0.33) selectedType = 'shield';
+                else if (randVal < 0.66) selectedType = 'triple';
+                else selectedType = 'magnet';
+                
+                items.push({ x: (itemLane * w) + (w/2 - 20), y: -200, type: selectedType });
+            }
+
+            if (Math.random() < 0.08) {
+                let hzLane = Math.floor(Math.random() * 3);
+                hazards.push({ x: (hzLane * w) + (w/2 - 25), y: -180 });
+            }
+
+            lastSpawn = Date.now();
+        }
+
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            enemies[i].y += speed;
+            let ex = (enemies[i].l * w) + (w/2 - 30);
+            drawEnemy(ex, enemies[i].y);
+
+            if (Math.abs(enemies[i].y - playerY) < 90 && enemies[i].l === lane) {
+                if (isNitroActive) {
+                    createExplosion(ex + 30, enemies[i].y + 50, "#e74c3c");
+                    enemies.splice(i, 1);
+                    score += 2; 
+                    decreaseBotCountdown(1); 
+                    updateUI();
+                } else if (hasShield) {
+                    hasShield = false;
+                    createExplosion(ex + 30, enemies[i].y + 50, "#3498db");
+                    enemies.splice(i, 1);
+                    updateUI();
+                } else {
+                    createExplosion(ex + 30, enemies[i].y + 50);
+                    enemies.splice(i, 1);
+                    screenShakeTime = 12;
+                    lives--;
+                    updateUI();
+                    if (lives <= 0) gameOver();
+                }
+            }
+
+            if (enemies[i] && enemies[i].y > canvas.height) { 
+                enemies.splice(i, 1); 
+                score += 1; 
+                decreaseBotCountdown(1); 
+                baseSpeed += 0.02;
+
+                let currentThreshold = Math.floor(score / 10) * 10;
+                if (currentThreshold > lastAmmoThreshold) {
+                    ammo += 3;
+                    lastAmmoThreshold = currentThreshold;
+                }
+                updateUI();
+            }
+        }
+
+        ctx.restore();
+        updateUI();
+        requestAnimationFrame(update);
+    }
+
+    function gameOver() {
+        gameActive = false;
+        if(score > bestScore) {
+            bestScore = Math.floor(score);
+            localStorage.setItem('racingBest', bestScore);
+        }
+        let t = langData[currentLang];
+        setTimeout(() => { 
+            alert(`${t.gameOver}\n${t.scoreText}: ${Math.floor(score)}`); 
+            location.reload(); 
+        }, 200);
+    }
+</script>
+</body>
+</html>
