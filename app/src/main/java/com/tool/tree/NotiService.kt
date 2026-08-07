@@ -17,7 +17,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.IconCompat
+import com.omarea.krscript.NotiShellTaskLauncher
 import com.omarea.krscript.config.StringResRef
+import com.omarea.krscript.model.RunnableNode
 
 class NotiService : Service() {
     private val CHANNEL_ID = "notification_id_am"
@@ -33,15 +35,24 @@ class NotiService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val rawMessage = intent?.getStringExtra("message")
-        val rawTitle = intent?.getStringExtra("title")
         val id = intent?.getIntExtra("id", 1) ?: 1
 
         // Kiểm tra nếu muốn xóa thông báo
         if (intent?.getBooleanExtra("delete", false) == true) {
             deleteNotification(id)
             return START_NOT_STICKY
-        } else if (rawMessage != null) {
+        }
+
+        // Người dùng vừa bấm nút "btn_execute" trên thông báo -> chạy shell đính kèm
+        if (intent?.getBooleanExtra("execute", false) == true) {
+            executeShell(intent, id)
+            return START_NOT_STICKY
+        }
+
+        val rawMessage = intent?.getStringExtra("message")
+        val rawTitle = intent?.getStringExtra("title")
+
+        if (rawMessage != null) {
             // Giải mã tiêu đề và nội dung thông qua StringResRef
             val title = if (rawTitle != null) {
                 StringResRef.resolve(this, rawTitle)
@@ -55,6 +66,53 @@ class NotiService : Service() {
         }
 
         return START_NOT_STICKY
+    }
+
+    // Chạy shell đính kèm khi cờ "shell" được cấp, log tiến trình thông qua cơ chế thông báo của BgTaskThread
+    private fun executeShell(intent: Intent, id: Int) {
+        val shell = intent.getStringExtra("shell")
+        if (shell.isNullOrEmpty()) {
+            return
+        }
+
+        val rawTitle = intent.getStringExtra("title")
+        val title = if (rawTitle != null) {
+            StringResRef.resolve(this, rawTitle)
+        } else {
+            getString(R.string.app_name)
+        }
+
+        // Đóng thông báo gốc, tác vụ đang chạy sẽ có thông báo tiến trình riêng do BgTaskThread quản lý
+        deleteNotification(id)
+
+        val nodeInfo = RunnableNode("").apply {
+            this.title = title
+            this.shell = RunnableNode.shellModeBgTask
+            this.interruptable = true
+        }
+
+        NotiShellTaskLauncher.startTask(
+            applicationContext,
+            shell,
+            nodeInfo
+        )
+    }
+
+    // Tạo PendingIntent cho nút "btn_execute", bấm vào sẽ gửi lại cờ "execute" cùng nội dung shell để chạy
+    private fun buildExecutePendingIntent(id: Int, rawTitle: String?, shell: String): PendingIntent {
+        val executeIntent = Intent(this, NotiService::class.java).apply {
+            putExtra("execute", true)
+            putExtra("id", id)
+            putExtra("title", rawTitle)
+            putExtra("shell", shell)
+        }
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        }
+        // requestCode dùng id để tránh đè PendingIntent giữa các thông báo khác nhau
+        return PendingIntent.getService(this, id, executeIntent, flags)
     }
 
     // Hiển thị thông báo dạng tin nhắn
@@ -113,6 +171,13 @@ class NotiService : Service() {
             contentPendingIntent?.let {
                 setContentIntent(it)
             }
+        }
+
+        // Chỉ hiện nút xác nhận chạy shell (btn_execute) khi thông báo có cờ "shell"
+        val shell = intent.getStringExtra("shell")
+        if (!shell.isNullOrEmpty()) {
+            val executePendingIntent = buildExecutePendingIntent(id, intent.getStringExtra("title"), shell)
+            builder.addAction(R.drawable.kr_run, getString(R.string.btn_execute), executePendingIntent)
         }
 
         // Hiển thị thông báo
