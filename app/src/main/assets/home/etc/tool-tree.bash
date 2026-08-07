@@ -513,11 +513,11 @@ Info() {
       echo "'$update_text_3'"
       echo
       if [ -f "$TMP/Tool-Tree.apk" ]; then
-        openfile "$TMP/Tool-Tree.apk"
+        [ "$ROT" == 1 ] && pm install -r "$TMP/Tool-Tree.apk" || openfile "$TMP/Tool-Tree.apk"
         exit
         else
         taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
-        openfile "$TMP/Tool-Tree.apk"
+        [ "$ROT" == 1 ] && pm install -r "$TMP/Tool-Tree.apk" || openfile "$TMP/Tool-Tree.apk"
         echo
         echo "'$save_text' $TMP/Tool-Tree.apk"
       fi
@@ -663,13 +663,15 @@ Update() {
   script = """
     echo "'$update_text_2'"
     if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$(checksum "$TMP/Tool-Tree.apk")" == "$(cat $TEMP/sum 2>/dev/null)" ]]; then
-    openfile "$TMP/Tool-Tree.apk"
+    [ "$ROT" == 1 ] && pm install -r "$TMP/Tool-Tree.apk" || openfile "$TMP/Tool-Tree.apk"
     exit
     fi
     echo
     if [[ "'$show_update'" == 1 ]]; then
     taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1 || killtree "\n'$load_text_2'"
-    [ -f "$TMP/Tool-Tree.apk" ] && openfile "$TMP/Tool-Tree.apk"
+    if [ -f "$TMP/Tool-Tree.apk" ]; then
+    [ "$ROT" == 1 ] && pm install -r "$TMP/Tool-Tree.apk" || openfile "$TMP/Tool-Tree.apk"
+    fi
     echo
     echo "'$save_text' $TMP/Tool-Tree.apk"
     else
