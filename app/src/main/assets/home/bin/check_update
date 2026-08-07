@@ -43,7 +43,7 @@ if checkonline; then
         -t "$update_text" \
         -m "$update_text_6" \
         -i "$ETC/icon/update.png" \
-        -s "download '$url_dowload' '$TMP/Tool-Tree.apk' 2>&1 || killtree '$load_text_2'; \[ '$ROT' == 1 \] && pm install -r '$TMP/Tool-Tree.apk' || openfile '$TMP/Tool-Tree.apk'"
+        -s "taive '$url_dowload' '$TMP/Tool-Tree.apk' 2>&1 || killtree '$load_text_2'; \[ '$ROT' == 1 \] && pm install -r '$TMP/Tool-Tree.apk' || openfile '$TMP/Tool-Tree.apk'"
     fi
 
 fi
