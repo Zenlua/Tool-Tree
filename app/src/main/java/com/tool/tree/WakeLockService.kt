@@ -15,6 +15,7 @@ import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.IconCompat
 
 @Suppress("DEPRECATION")
 class WakeLockService : Service() {
@@ -137,9 +138,10 @@ class WakeLockService : Service() {
             PendingIntent.getActivity(this, 0, it, flags)
         }
 
-        // Tạo đối tượng Person đại diện cho ứng dụng
+        // Tạo đối tượng Person kèm avatar là icon của app
         val sender = Person.Builder()
             .setName(getString(R.string.app_name))
+            .setIcon(IconCompat.createWithResource(this, R.mipmap.ic_launcher))
             .build()
 
         // Định nghĩa nội dung tin nhắn dạng MessagingStyle
