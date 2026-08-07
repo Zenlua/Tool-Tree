@@ -35,7 +35,7 @@ class NotiService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val id = intent?.getIntExtra("id", 1) ?: 1
+        val id = intent?.getIntExtra("id", 10) ?: 10
 
         // Kiểm tra nếu muốn xóa thông báo
         if (intent?.getBooleanExtra("delete", false) == true) {
@@ -162,7 +162,7 @@ class NotiService : Service() {
 
         // 6. Xây dựng thông báo bằng NotificationCompat
         val builder = NotificationCompat.Builder(this, CHANNEL_ID).apply {
-            setSmallIcon(applicationInfo.icon)
+            setSmallIcon(R.drawable.tab_favorites)
             setStyle(messagingStyle)
             setLargeIcon(avatarBitmap) // Gắn thêm largeIcon giúp hiển thị ảnh lớn rõ nét
             setAutoCancel(true)

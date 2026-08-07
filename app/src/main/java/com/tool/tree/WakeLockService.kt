@@ -9,6 +9,10 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -139,9 +143,12 @@ class WakeLockService : Service() {
         }
 
         // Tạo đối tượng Person kèm avatar là icon của app
+        // Lấy icon qua PackageManager để được hệ thống áp mask hình dạng (bo tròn/bo góc) giống NotiService,
+        // thay vì dùng thẳng R.mipmap.ic_launcher (ảnh gốc vuông, không được mask)
+        val appIconBitmap = drawableToBitmap(packageManager.getApplicationIcon(applicationInfo))
         val sender = Person.Builder()
             .setName(getString(R.string.app_name))
-            .setIcon(IconCompat.createWithResource(this, R.mipmap.ic_launcher))
+            .setIcon(IconCompat.createWithBitmap(appIconBitmap))
             .build()
 
         // Định nghĩa nội dung tin nhắn dạng MessagingStyle
@@ -150,7 +157,7 @@ class WakeLockService : Service() {
             .addMessage(messageText, System.currentTimeMillis(), sender)
     
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.tab_favorites)
             .setStyle(messagingStyle)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -171,6 +178,21 @@ class WakeLockService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         } else PendingIntent.FLAG_UPDATE_CURRENT
         return PendingIntent.getService(this, action.hashCode(), intent, flags)
+    }
+
+    private fun drawableToBitmap(drawable: Drawable?): Bitmap {
+        val targetSize = 200
+        if (drawable == null) {
+            return Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888)
+        }
+        if (drawable is BitmapDrawable && drawable.bitmap != null) {
+            return Bitmap.createScaledBitmap(drawable.bitmap, targetSize, targetSize, true)
+        }
+        val bitmap = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, targetSize, targetSize)
+        drawable.draw(canvas)
+        return bitmap
     }
 
     override fun onDestroy() {

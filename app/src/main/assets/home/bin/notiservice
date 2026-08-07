@@ -1,7 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
 show_help(){
-echo "Use: notiservice -d|--delete false -id|--id 123 -t|--title 'Hello' -m|--message 'Xin chào' -i|--icon 'path/icon.png'"
+echo "Use: notiservice -d|--delete false -id|--id 123 -t|--title 'Hello' -m|--message 'Xin chào' -i|--icon 'path/icon.png' -s|--shell 'echo 1'"
 }
 
 if [[ $# -eq 0 || "$1" != -* ]]; then
@@ -9,7 +9,7 @@ show_help >&2
 exit 1
 fi
 
-DELETE=""; ID=""; TITLE=""; MESSAGE=""; ICONS="";
+DELETE=""; ID=""; TITLE=""; MESSAGE=""; ICONS=""; SHELLS="";
 while [ $# -gt 0 ]; do
   case "$1" in
     -d|--delete)
@@ -26,6 +26,10 @@ while [ $# -gt 0 ]; do
       ;;
     -m|--message)
       MESSAGE="$2"
+      shift 2
+      ;;
+    -s|--shell)
+      SHELLS="$2"
       shift 2
       ;;
     -i|--icon)
@@ -54,6 +58,7 @@ CMDs="startservice -n com.tool.tree/com.tool.tree.NotiService "
 [ "$TITLE" ] && CMDs+="--es title \"$TITLE\" "
 [ "$MESSAGE" ] && CMDs+="--es message \"$MESSAGE\" "
 [ "$ICONS" ] && CMDs+="--es large_icon \"$ICONS\" "
+[ "$SHELLS" ] && CMDs+="--es shell \"$SHELLS\" "
 
 if [ "$AMON" == 1 ] || [ -z "$shell_progres" ]; then
     eval "am $CMDs" &>/dev/null

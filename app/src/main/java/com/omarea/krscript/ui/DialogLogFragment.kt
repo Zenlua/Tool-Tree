@@ -532,7 +532,11 @@ class DialogLogFragment : DialogFragment() {
                 }
                 val drawable = IconPathAnalysis().loadLogo(context, tempNode, false)
                 drawableToIcon(drawable, 200)
-            } else null) ?: Icon.createWithResource(context, R.drawable.kr_shortcut_logo)
+            } else {
+                // Icon mặc định cũng vẽ qua Bitmap (drawableToIcon) thay vì dùng thẳng resource,
+                // tránh hiển thị vuông không đồng nhất với icon tùy chỉnh (iconPath/logoPath)
+                drawableToIcon(ContextCompat.getDrawable(context, R.drawable.kr_shortcut_logo), 200)
+            }) ?: Icon.createWithResource(context, R.drawable.kr_shortcut_logo)
 
             val sender = android.app.Person.Builder()
                 .setName(notificationTitle)
