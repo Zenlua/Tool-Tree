@@ -8,7 +8,7 @@
         <solid android:color="?android:attr/colorBackgroundFloating" />
         
         <!-- Đỉnh độ bo góc nhẹ (tăng/giảm dp tùy ý) -->
-        <corners android:radius="5dp" />
+        <corners android:radius="2dp" />
     </shape>
     
 </inset>

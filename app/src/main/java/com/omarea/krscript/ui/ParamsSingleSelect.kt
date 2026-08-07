@@ -181,7 +181,11 @@ class ParamsSingleSelect(
         val bgPadding = Rect()
         background?.getPadding(bgPadding)
         val screenWidth = context.resources.displayMetrics.widthPixels
-        val desiredWidth = (maxItemWidth + bgPadding.left + bgPadding.right).coerceAtMost(screenWidth)
+        val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
+        // Chiều rộng nhỏ nhất = chiều rộng của chính ô anchor (giống hành vi mặc định của
+        // Spinner gốc), để khung xổ xuống không bao giờ hẹp hơn ô đang đóng phía trên.
+        val minWidth = anchor.width
+        val desiredWidth = contentWidth.coerceAtLeast(minWidth).coerceAtMost(screenWidth)
         popup.width = desiredWidth
 
         val anchorLocation = IntArray(2)
