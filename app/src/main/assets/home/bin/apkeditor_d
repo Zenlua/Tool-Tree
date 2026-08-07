@@ -127,6 +127,7 @@ if [ "$DECODEX" == "smali" ]; then
     [ "$DEBUGA" == 1 ] && hhhhfdr="--debug-info false -l" || hhhhfdr="--debug-info true"
     for vkn in "$Tout"/dex/classes*.dex; do
     [ -f "$vkn" ] || continue
+    repair_dex.py "$vkn" >/dev/null
     Dex=$(dexupdater -g "$vkn" -printApi | awk '/Dex/ {print $2}')
     echo "I: Baksmali: v$Dex ${vkn##*/} ..."
     kout="$(basename $vkn .dex)"

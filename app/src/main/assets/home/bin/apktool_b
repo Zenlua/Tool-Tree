@@ -114,6 +114,7 @@ for vkn in "$INPUT"/classes*.dex; do
             dexupdater -g "$vkn" -e "$INPUT/$kout.dex" -o "$INPUT/${kout}_s.dex" -api $API -delete $(echo "$dkfjff" | grep "deleted:" | awk '{print $2}' | sed "s|\.smali||g") > "$INPUT/.cache/build_$kout.log"
             [ -f "$INPUT/${kout}_s.dex" ] && mv "$INPUT/${kout}_s.dex" "$vkn" || killtree "Dex update error: $kout"
             rm -fr "$INPUT/$kout.dex"
+            [ "$broken_dex" == 1 ] && dex_shield.py "$vkn" >/dev/null
         else
             mv "$INPUT/$kout.dex" "$vkn"
         fi

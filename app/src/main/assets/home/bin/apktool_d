@@ -125,6 +125,7 @@ if [ "$DECODEX" == 2 ]; then
     [ "$DEBUGA" == 1 ] && hhhhfdr="--debug-info false -l" || hhhhfdr="--debug-info true"
     for vkn in "$Tout"/classes*.dex; do
     [ -f "$vkn" ] || continue
+    repair_dex.py "$vkn" >/dev/null
     Dex=$(dexupdater -g "$vkn" -printApi | awk '/Dex/ {print $2}')
     echo "I: Baksmali: V$Dex ${vkn##*/}..."
     [ "${vkn##*/}" == "classes.dex" ] && thyedkm="smali" || thyedkm="smali_classes"
