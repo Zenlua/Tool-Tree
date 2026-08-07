@@ -1,25 +1,20 @@
 # Kakathic
 
 if [ -n "$shell_progres" ]; then
-    if [ "$2" ]; then
-    while true; do
-        bodem=$((bodem + 1))
-        echo -e "\nprogress:[$bodem/$2]"
-        if [ "$bodem" -ge $2 ]; then
-        echo -e "\nprogress:[-1/0]"
-        break
-        fi
-        sleep $1
-    done
-    elif [ "$1" ]; then
+    if [ -n "$1" ]; then
     echo "progress:[$1]"
     else
     echo "For: progress 1/100"
     fi
+else
+    spin=('▪▫▫▫' '▫▪▫▫' '▫▫▪▫' '▫▫▫▪' '▫▫▫▫')
+    if [ -n "$1" ]; then
+    cur="${1%/*}"
+    max="${1#*/}"
+    icon="${spin[$((cur % ${#spin[@]}))]}"
+    echo -ne " $icon ${cur}/${max}\r"
+    [ "$cur" -eq "$max" ] && echo -e " ✔ ${cur}/${max}\n"
+    else
+    echo "For: progress 1/100"
+    fi
 fi
-
-#VALUE="$1"; CURRENT=${VALUE%/*}; TOTAL=${VALUE#*/}
-#printf "\rprogress: %s" "$VALUE"
-#if [ "$CURRENT" -ge "$TOTAL" ]; then
-#printf "\n"
-#fi

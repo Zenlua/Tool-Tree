@@ -2,7 +2,7 @@
 source language
 
 URL="$1"
-OUT_FILE="${2:-out/file}"
+OUT_FILE="${2:-download.bin}"
 
 if [ -z "$URL" ]; then
   echo "Use: $0 <URL>"
@@ -21,7 +21,7 @@ while kill -0 $PID 2>/dev/null; do
     if [ -n "$TOTAL_BYTES" ] && [ "$TOTAL_BYTES" -gt 0 ] 2>/dev/null; then
       PERCENT=$(( CURRENT_BYTES * 100 / TOTAL_BYTES ))
       [ $PERCENT -gt 100 ] && PERCENT=100
-      progress "${PERCENT}/100"
+      progress "${PERCENT:-0}/100"
     else
       if [ $CURRENT_BYTES -ge 1048576 ]; then
         SIZE=$(awk "BEGIN {printf \"%.2f MB\", $CURRENT_BYTES/1048576}")
@@ -37,4 +37,4 @@ while kill -0 $PID 2>/dev/null; do
 done
 
 wait $PID
-echo -e "\n$save_text: $OUT_FILE"
+echo -e "\n$save_text $OUT_FILE"
