@@ -28,8 +28,6 @@ class ParamsMultipleSelect(
     private var lastOpenTime: Long = 0
 
     // Đọc giá trị hiện tại (các mục đang được chọn), nối bằng separator của param.
-    // Dùng cho cơ chế depend-on vì view trả về bởi render() là 1 layout tổng hợp,
-    // không phải 1 View đơn (Spinner/EditText/...) nên không tự đọc được bằng cách thông thường.
     fun getValue(): String {
         val result = ArrayList<String?>()
         for (index in status.indices) {
@@ -57,8 +55,23 @@ class ParamsMultipleSelect(
 
         setView(textView, valueView, countView)
 
-        textView.setOnClickListener {
-            openDialog(textView, valueView, countView)
+        // Kiểm tra xem danh sách có trống hoặc readonly hay không
+        val isEmptyOptions = options.isNullOrEmpty()
+        val enabled = !actionParamInfo.readonly && !isEmptyOptions
+
+        // Cập nhật trạng thái enabled/clickable cho layout hoặc trực tiếp vào textView chính
+        textView.isEnabled = enabled
+        textView.isClickable = enabled
+        textView.isFocusable = enabled
+
+        // Nếu không có dữ liệu, hiển thị string thông báo thay thế (tương tự ParamsSingleSelect)
+        if (isEmptyOptions) {
+            textView.text = null
+            textView.hint = context.getString(R.string.picker_not_item)
+        } else {
+            textView.setOnClickListener {
+                openDialog(textView, valueView, countView)
+            }
         }
 
         return layout
@@ -82,7 +95,18 @@ class ParamsMultipleSelect(
         val resultValueStr = "" + resultValues.joinToString(actionParamInfo.separator)
         val resultLabelStr = if (resultLables.isNotEmpty()) "" + resultLables.joinToString("，") else ""
 
-        textView.text = resultLabelStr
+        // Chỉ gán text khi có dữ liệu được chọn, nếu không để trống để hint hoạt động
+        if (resultLabelStr.isNotEmpty()) {
+            textView.text = resultLabelStr
+            textView.hint = null
+        } else if (options.isNullOrEmpty()) {
+            textView.text = null
+            textView.hint = context.getString(R.string.picker_not_item)
+        } else {
+            textView.text = resultLabelStr
+            textView.hint = null
+        }
+        
         valueView.text = resultValueStr
         countView.text = count.toString()
     }
@@ -95,7 +119,7 @@ class ParamsMultipleSelect(
             return
         }
 
-        // [CHẶN CHIẾN LƯỢC 2]: Chặn click quá nhanh bằng thời gian hệ thống (phòng trường hợp FragmentManager chưa kịp cập nhật tag)
+        // [CHẶN CHIẾN LƯỢC 2]: Chặn click quá nhanh bằng thời gian hệ thống
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastOpenTime < 800) {
             return
@@ -110,8 +134,7 @@ class ParamsMultipleSelect(
                     selected = status[i]
                 })
             }
-            // Dark/light mode đã được xử lý qua tham số `darkMode` truyền vào DialogItemChooser
-            // (rồi xuống DialogFullScreen) - không cần xử lý thêm ở đây.
+            
             DialogItemChooser(darkMode, ArrayList(items), true, object : DialogItemChooser.Callback {
                 override fun onConfirm(selected: List<SelectItem>, result: BooleanArray) {
                     result.forEachIndexed { index, value ->
