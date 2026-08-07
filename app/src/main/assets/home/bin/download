@@ -1,8 +1,40 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
+source language
 
-if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
-echo "download url://file.zip"
-exit
+URL="$1"
+OUT_FILE="${2:-out/file}"
+
+if [ -z "$URL" ]; then
+  echo "Use: $0 <URL>"
+  exit 1
 fi
 
-[ "$1" ] && am start -a android.intent.action.MAIN -n "com.tool.tree/com.tool.tree.ActionPageOnline" -c android.intent.category.LAUNCHER --es downloadUrl "$1" --ez autoClose true --es taskId "$RANDOM" 1 >/dev/null
+mkdir -p "$(dirname "$OUT_FILE")"
+
+TOTAL_BYTES=$(curl -sIL "$URL" | grep -i '^content-length:' | tail -n1 | tr -d '\r' | awk '{print $2}')
+curl -s -L -o "$OUT_FILE" "$URL" &
+PID=$!
+
+while kill -0 $PID 2>/dev/null; do
+  if [ -f "$OUT_FILE" ]; then
+    CURRENT_BYTES=$(stat -c%s "$OUT_FILE" 2>/dev/null || stat -f%z "$OUT_FILE" 2>/dev/null || echo 0)
+    if [ -n "$TOTAL_BYTES" ] && [ "$TOTAL_BYTES" -gt 0 ] 2>/dev/null; then
+      PERCENT=$(( CURRENT_BYTES * 100 / TOTAL_BYTES ))
+      [ $PERCENT -gt 100 ] && PERCENT=100
+      progress "${PERCENT}/100"
+    else
+      if [ $CURRENT_BYTES -ge 1048576 ]; then
+        SIZE=$(awk "BEGIN {printf \"%.2f MB\", $CURRENT_BYTES/1048576}")
+      elif [ $CURRENT_BYTES -ge 1024 ]; then
+        SIZE=$(awk "BEGIN {printf \"%.2f KB\", $CURRENT_BYTES/1024}")
+      else
+        SIZE="${CURRENT_BYTES} B"
+      fi
+      echo -ne "$sizes_text: ${SIZE}\r"
+    fi
+  fi
+  sleep 0.3
+done
+
+wait $PID
+echo -e "\n$save_text: $OUT_FILE"
