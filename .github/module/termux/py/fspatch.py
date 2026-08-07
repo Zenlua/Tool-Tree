@@ -112,9 +112,63 @@ def make_config(i: str, filepath: str) -> List[str]:
     return ["0", "0", "0644"]
 
 
-def find_insert_index(entries: List[FsEntry], new_path: str) -> int:
+def find_insert_index(entries: List[FsEntry], new_path: str, filepath: str, target_dir: str) -> int:
     norm = new_path.replace("\\", "/").strip("/")
     parts = [p for p in norm.split("/") if p]
+    if not parts:
+        return len(entries)
+
+    is_dir = os.path.isdir(filepath)
+    is_app_dir = is_dir and any(kw in norm for kw in ["/app/", "/priv-app/", "app/"])
+
+    # Hàm phụ kiểm tra đường dẫn entry có phải là file trên ổ đĩa không
+    def entry_is_file(entry_path: str) -> bool:
+        base = os.path.basename(target_dir)
+        rel = entry_path[len(base) + 1:] if entry_path.startswith(base + "/") else entry_path
+        disk_p = os.path.join(target_dir, rel)
+        return os.path.isfile(disk_p)
+
+    # Hàm phụ kiểm tra file .apk
+    def entry_is_apk(entry_path: str) -> bool:
+        return entry_path.lower().endswith(".apk")
+
+    # 1. Nếu là thư mục ở app -> kế thừa apk gần nhất
+    if is_app_dir:
+        app_prefix = ""
+        for idx, level in enumerate(parts):
+            if level in ("app", "priv-app"):
+                if idx + 1 < len(parts):
+                    app_prefix = "/".join(parts[:idx + 2])
+                break
+        
+        last_apk_idx = None
+        for idx, (path, _) in enumerate(entries):
+            p = path.replace("\\", "/").strip("/")
+            if entry_is_apk(path):
+                if app_prefix and (p == app_prefix or p.startswith(app_prefix + "/")):
+                    last_apk_idx = idx
+                elif not app_prefix:
+                    last_apk_idx = idx
+
+        if last_apk_idx is not None:
+            return last_apk_idx + 1
+
+    # 2. Nếu là file -> kế thừa từ file gần nhất trong cùng thư mục cha
+    if not is_dir:
+        parent_dir = "/".join(parts[:-1]) if len(parts) > 1 else ""
+        parent_slash = parent_dir + "/" if parent_dir else ""
+
+        last_file_idx = None
+        for idx, (path, _) in enumerate(entries):
+            p = path.replace("\\", "/").strip("/")
+            if parent_dir and (p == parent_dir or p.startswith(parent_slash)):
+                if entry_is_file(path):
+                    last_file_idx = idx
+
+        if last_file_idx is not None:
+            return last_file_idx + 1
+
+    # 3. Mặc định / Fallback: kế thừa từ thư mục mẹ
     if len(parts) <= 1:
         return len(entries)
 
@@ -154,13 +208,12 @@ def fs_patch(fs_entries: List[FsEntry], dir_path: str) -> Tuple[List[FsEntry], i
         if i in existing or i in seen_new:
             continue
 
-        # Tính đường dẫn thực tế chính xác trên ổ đĩa
         rel_path = i[len(base) + 1:] if i.startswith(base + "/") else i
         filepath = os.path.abspath(os.path.join(target_dir, rel_path))
 
         config = make_config(i, filepath)
 
-        insert_at = find_insert_index(entries, i)
+        insert_at = find_insert_index(entries, i, filepath, target_dir)
         entries.insert(insert_at, (i, config))
         seen_new.add(i)
         new_add += 1
