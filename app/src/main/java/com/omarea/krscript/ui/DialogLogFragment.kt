@@ -940,7 +940,12 @@ class DialogLogFragment : DialogFragment() {
         override fun onExit(msg: Any?) {
             val code = (msg as? Int) ?: -1
             val success = !hasError && code == 0
-            updateLogWithColor("\n" + context.getString(R.string.kr_shell_completed), endColor, pushToNotification = false)
+            val finishText = if (success) {
+                context.getString(R.string.kr_shell_completed)
+            } else {
+                context.getString(R.string.kr_shell_finish_error)
+            }
+            updateLogWithColor("\n" + finishText, endColor, pushToNotification = false)
 
             if (notificationMode) {
                 finishNotification(success, code)

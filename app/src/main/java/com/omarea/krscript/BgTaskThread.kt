@@ -248,7 +248,7 @@ class BgTaskThread(private var process: Process) : Thread() {
                 if (msg == 0) {
                     notificationMessageRows.add(context.getString(R.string.kr_shell_completed) + "\n")
                 } else {
-                    notificationMessageRows.add("${context.getString(R.string.kr_shell_finish_error)} $msg\n")
+                    notificationMessageRows.add("${context.getString(R.string.kr_shell_finish_error)}\n")
                 }
             }
             // Bắt buộc đẩy dòng hoàn thành lên Notification ngay lập tức

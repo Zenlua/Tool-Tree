@@ -60,7 +60,8 @@ def scan_dir(folder: str) -> list:
             rel_path = os.path.join(rel_root, file_).replace("\\", "/")
             allfiles.append(f"/{part_name}/{rel_path}".replace("//", "/"))
 
-    return sorted(set(allfiles), key=allfiles.index)
+    # Tối ưu hóa: Loại bỏ trùng lặp và giữ nguyên thứ tự với độ phức tạp O(N)
+    return list(dict.fromkeys(allfiles))
 
 
 def _default_permission(entries: List[ContextEntry]) -> list:

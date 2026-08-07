@@ -63,14 +63,13 @@ def islink(file_path: str) -> Optional[str]:
 def make_config(i: str, filepath: str) -> List[str]:
     path_norm = i.replace("\\", "/")
     
+    # Kiểm tra xem đường dẫn có nằm trong bin/xbin/vendor/bin ở bất kỳ cấp độ nào không
+    is_bin_path = any(b in path_norm for b in ("/bin/", "/xbin/", "/vendor/bin/"))
+    
     # 1. Thư mục
     if os.path.isdir(filepath):
         uid = "0"
-        gid = (
-            "2000"
-            if path_norm.startswith(("system/bin/", "system/xbin/", "vendor/bin/"))
-            else "0"
-        )
+        gid = "2000" if is_bin_path else "0"
         mode = "0755"
         return [uid, gid, mode]
 
@@ -82,13 +81,9 @@ def make_config(i: str, filepath: str) -> List[str]:
     link = islink(filepath)
     if link:
         uid = "0"
-        gid = (
-            "2000"
-            if path_norm.startswith(("system/bin/", "system/xbin/", "vendor/bin/"))
-            else "0"
-        )
+        gid = "2000" if is_bin_path else "0"
 
-        if "/bin/" in path_norm or "/xbin/" in path_norm:
+        if is_bin_path or path_norm.endswith(".so"):
             mode = "0755"
         elif path_norm.endswith(".sh"):
             mode = "0750"
@@ -97,18 +92,18 @@ def make_config(i: str, filepath: str) -> List[str]:
 
         return [uid, gid, mode, link]
 
-    # 4. File thực thi trong bin/xbin
-    if "/bin/" in path_norm or "/xbin/" in path_norm:
+    # 4. File thực thi trong bin/xbin hoặc thư viện native (.so / lib)
+    if is_bin_path or path_norm.endswith(".so") or "/lib/" in path_norm:
         uid = "0"
-        gid = (
-            "2000"
-            if path_norm.startswith(("system/bin/", "system/xbin/", "vendor/bin/"))
-            else "0"
-        )
+        gid = "2000" if is_bin_path else "0"
         mode = "0750" if path_norm.endswith(".sh") else "0755"
         return [uid, gid, mode]
 
-    # 5. File thông thường
+    # 5. Các tệp odex, vdex, art (chuẩn quyền 0644)
+    if path_norm.lower().endswith((".odex", ".vdex", ".art")):
+        return ["0", "0", "0644"]
+
+    # 6. File thông thường khác
     return ["0", "0", "0644"]
 
 
@@ -119,7 +114,7 @@ def find_insert_index(entries: List[FsEntry], new_path: str, filepath: str, targ
         return len(entries)
 
     is_dir = os.path.isdir(filepath)
-    is_app_dir = is_dir and any(kw in norm for kw in ["/app/", "/priv-app/", "app/"])
+    is_app_path = any(kw in norm for kw in ["/app/", "/priv-app/", "app/", "priv-app/"])
 
     # Hàm phụ kiểm tra đường dẫn entry có phải là file trên ổ đĩa không
     def entry_is_file(entry_path: str) -> bool:
@@ -132,8 +127,8 @@ def find_insert_index(entries: List[FsEntry], new_path: str, filepath: str, targ
     def entry_is_apk(entry_path: str) -> bool:
         return entry_path.lower().endswith(".apk")
 
-    # 1. Nếu là thư mục ở app -> kế thừa apk gần nhất
-    if is_app_dir:
+    # 1. Nếu nằm trong thư mục app/priv-app -> kế thừa từ .apk gần nhất của app đó
+    if is_app_path:
         app_prefix = ""
         for idx, level in enumerate(parts):
             if level in ("app", "priv-app"):
@@ -153,15 +148,15 @@ def find_insert_index(entries: List[FsEntry], new_path: str, filepath: str, targ
         if last_apk_idx is not None:
             return last_apk_idx + 1
 
-    # 2. Nếu là file -> kế thừa từ file gần nhất trong cùng thư mục cha
+    # 2. Nếu là file -> kế thừa từ file gần nhất CHÍNH XÁC trong cùng thư mục cha
     if not is_dir:
         parent_dir = "/".join(parts[:-1]) if len(parts) > 1 else ""
-        parent_slash = parent_dir + "/" if parent_dir else ""
 
         last_file_idx = None
         for idx, (path, _) in enumerate(entries):
             p = path.replace("\\", "/").strip("/")
-            if parent_dir and (p == parent_dir or p.startswith(parent_slash)):
+            # Đảm bảo file nằm đúng cấp thư mục cha, không bị quét nhầm vào thư mục con bên trong
+            if os.path.dirname(p) == parent_dir:
                 if entry_is_file(path):
                     last_file_idx = idx
 
