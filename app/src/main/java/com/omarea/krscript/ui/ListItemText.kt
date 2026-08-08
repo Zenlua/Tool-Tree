@@ -143,36 +143,40 @@ class ListItemText(private val context: Context,
         }
     }
 
-    // Nếu photoRealSize = true: hiện ảnh đúng kích thước thật (không phóng to full chiều ngang),
-    // căn giữa theo chiều ngang; ảnh lớn hơn khung chứa sẽ được thu nhỏ vừa khung (không bị tràn/méo).
+    // Nếu photoRealSize = true: hiển thị ảnh trong khung vuông (chiều rộng = chiều cao = chiều ngang màn hình),
+    // căn giữa theo chiều ngang; ảnh sẽ được scale vừa vặn trong khung bằng CENTER_INSIDE mà không bị méo.
     private fun applyPhotoRealSize(imageView: ImageView?, realSize: Boolean) {
         imageView ?: return
-        val params = imageView.layoutParams
+        val params = imageView.layoutParams ?: return
+        val maxSize = context.resources.displayMetrics.widthPixels
+    
         if (realSize) {
             imageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
             imageView.adjustViewBounds = true
-            val maxSize = context.resources.displayMetrics.widthPixels
             imageView.maxWidth = maxSize
             imageView.maxHeight = maxSize
-            if (params != null) {
-                params.width = LinearLayout.LayoutParams.WRAP_CONTENT
-                if (params is LinearLayout.LayoutParams) {
-                    params.gravity = Gravity.CENTER_HORIZONTAL
-                }
-                imageView.layoutParams = params
+            
+            // Cố định chiều rộng và chiều cao bằng nhau (tạo khung vuông bằng chiều rộng màn hình)
+            params.width = maxSize
+            params.height = maxSize
+            
+            if (params is LinearLayout.LayoutParams) {
+                params.gravity = Gravity.CENTER_HORIZONTAL
             }
+            imageView.layoutParams = params
         } else {
             imageView.scaleType = ImageView.ScaleType.FIT_CENTER
             imageView.adjustViewBounds = true
             imageView.maxWidth = Int.MAX_VALUE
             imageView.maxHeight = Int.MAX_VALUE
-            if (params != null) {
-                params.width = LinearLayout.LayoutParams.MATCH_PARENT
-                if (params is LinearLayout.LayoutParams) {
-                    params.gravity = Gravity.NO_GRAVITY
-                }
-                imageView.layoutParams = params
+            
+            params.width = LinearLayout.LayoutParams.MATCH_PARENT
+            params.height = LinearLayout.LayoutParams.WRAP_CONTENT
+            
+            if (params is LinearLayout.LayoutParams) {
+                params.gravity = Gravity.NO_GRAVITY
             }
+            imageView.layoutParams = params
         }
     }
 }

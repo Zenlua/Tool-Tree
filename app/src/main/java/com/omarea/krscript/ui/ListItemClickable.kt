@@ -87,32 +87,36 @@ open class ListItemClickable(context: Context,
     // căn giữa theo chiều ngang; ảnh lớn hơn khung chứa sẽ được thu nhỏ vừa khung (không bị tràn/méo).
     private fun applyPhotoRealSize(imageView: ImageView?, realSize: Boolean) {
         imageView ?: return
-        val params = imageView.layoutParams
+        val params = imageView.layoutParams ?: return
+        val maxSize = imageView.context.resources.displayMetrics.widthPixels
+    
         if (realSize) {
             imageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
             imageView.adjustViewBounds = true
-            val maxSize = imageView.context.resources.displayMetrics.widthPixels
             imageView.maxWidth = maxSize
             imageView.maxHeight = maxSize
-            if (params != null) {
-                params.width = RelativeLayout.LayoutParams.WRAP_CONTENT
-                if (params is RelativeLayout.LayoutParams) {
-                    params.addRule(RelativeLayout.CENTER_HORIZONTAL)
-                }
-                imageView.layoutParams = params
+            
+            // Cố định chiều rộng và chiều cao bằng nhau (khung vuông bằng chiều rộng màn hình)
+            params.width = maxSize
+            params.height = maxSize
+            
+            if (params is RelativeLayout.LayoutParams) {
+                params.addRule(RelativeLayout.CENTER_HORIZONTAL)
             }
+            imageView.layoutParams = params
         } else {
             imageView.scaleType = ImageView.ScaleType.FIT_CENTER
             imageView.adjustViewBounds = true
             imageView.maxWidth = Int.MAX_VALUE
             imageView.maxHeight = Int.MAX_VALUE
-            if (params != null) {
-                params.width = RelativeLayout.LayoutParams.MATCH_PARENT
-                if (params is RelativeLayout.LayoutParams) {
-                    params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0)
-                }
-                imageView.layoutParams = params
+            
+            params.width = RelativeLayout.LayoutParams.MATCH_PARENT
+            params.height = RelativeLayout.LayoutParams.WRAP_CONTENT
+            
+            if (params is RelativeLayout.LayoutParams) {
+                params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0)
             }
+            imageView.layoutParams = params
         }
     }
 
