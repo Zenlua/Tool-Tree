@@ -20,6 +20,8 @@ import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.TextNode
 import com.omarea.krscript.config.IconPathAnalysis
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.view.Gravity
 
 class ListItemText(private val context: Context,
                    layoutId: Int,
@@ -48,6 +50,7 @@ class ListItemText(private val context: Context,
                         IconPathAnalysis().loadtextPhoto(context, row, config.pageConfigDir)?.run {
                             extraIconView?.setImageDrawable(this)
                             extraIconView?.visibility = View.VISIBLE
+                            applyPhotoRealSize(extraIconView, row.photoRealSize)
                         }
                     }
                 }
@@ -136,6 +139,39 @@ class ListItemText(private val context: Context,
             }
         } else {
             rowsView?.visibility = View.GONE
+        }
+    }
+
+    // Nếu photoRealSize = true: hiện ảnh đúng kích thước thật (không phóng to full chiều ngang),
+    // căn giữa theo chiều ngang; ảnh lớn hơn khung chứa sẽ được thu nhỏ vừa khung (không bị tràn/méo).
+    private fun applyPhotoRealSize(imageView: ImageView?, realSize: Boolean) {
+        imageView ?: return
+        val params = imageView.layoutParams
+        if (realSize) {
+            imageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            imageView.adjustViewBounds = true
+            val maxSize = context.resources.displayMetrics.widthPixels
+            imageView.maxWidth = maxSize
+            imageView.maxHeight = maxSize
+            if (params != null) {
+                params.width = LinearLayout.LayoutParams.WRAP_CONTENT
+                if (params is LinearLayout.LayoutParams) {
+                    params.gravity = Gravity.CENTER_HORIZONTAL
+                }
+                imageView.layoutParams = params
+            }
+        } else {
+            imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+            imageView.adjustViewBounds = true
+            imageView.maxWidth = Int.MAX_VALUE
+            imageView.maxHeight = Int.MAX_VALUE
+            if (params != null) {
+                params.width = LinearLayout.LayoutParams.MATCH_PARENT
+                if (params is LinearLayout.LayoutParams) {
+                    params.gravity = Gravity.NO_GRAVITY
+                }
+                imageView.layoutParams = params
+            }
         }
     }
 }

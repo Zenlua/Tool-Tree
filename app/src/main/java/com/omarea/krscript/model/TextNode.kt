@@ -33,5 +33,7 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         // 点击后执行的脚本
         internal var onClickScript: String = ""
         internal var photo: String = ""
+        // Nếu true: hiện ảnh (photo) đúng kích thước thật, căn giữa, không kéo dãn full chiều ngang
+        internal var photoRealSize: Boolean = false
     }
 }

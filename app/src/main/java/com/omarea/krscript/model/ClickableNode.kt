@@ -7,6 +7,8 @@ open class ClickableNode(currentPageConfigPath: String) : NodeInfoBase(currentPa
     // 功能图标路径（桌面快捷）
     var logoPath = ""
     var photoPath = ""
+    // Nếu true: hiện ảnh (photoPath) đúng kích thước thật, căn giữa, không kéo dãn full chiều ngang
+    var photoRealSize: Boolean = false
     var bgPath = ""
 
     // 是否允许添加快捷方式（非false，且具有key则默认允许）
