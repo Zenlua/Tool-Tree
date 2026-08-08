@@ -39,5 +39,9 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var photoGifNum: Int = 0
         // Thời gian hiển thị mỗi khung hình (mili giây)
         internal var photoGifTime: Int = 300
+        // true (mặc định): tự chạy hoạt ảnh; false: chỉ hiện khung đầu, bấm vào ảnh để phát/tạm dừng
+        internal var photoGifAutoplay: Boolean = true
+        // Số vòng lặp tối đa (<=0: lặp vô hạn, mặc định)
+        internal var photoGifLoopCount: Int = 0
     }
 }

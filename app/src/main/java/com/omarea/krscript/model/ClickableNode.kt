@@ -7,6 +7,10 @@ open class ClickableNode(currentPageConfigPath: String) : NodeInfoBase(currentPa
     var iconGifNum: Int = 0
     // Thời gian hiển thị mỗi khung hình (mili giây)
     var iconGifTime: Int = 300
+    // true (mặc định): tự chạy hoạt ảnh; false: chỉ hiện khung đầu, bấm vào icon để phát/tạm dừng
+    var iconGifAutoplay: Boolean = true
+    // Số vòng lặp tối đa (<=0: lặp vô hạn, mặc định)
+    var iconGifLoopCount: Int = 0
 
     // 功能图标路径（桌面快捷）
     var logoPath = ""
@@ -17,6 +21,10 @@ open class ClickableNode(currentPageConfigPath: String) : NodeInfoBase(currentPa
     var photoGifNum: Int = 0
     // Thời gian hiển thị mỗi khung hình (mili giây)
     var photoGifTime: Int = 300
+    // true (mặc định): tự chạy hoạt ảnh; false: chỉ hiện khung đầu, bấm vào ảnh để phát/tạm dừng
+    var photoGifAutoplay: Boolean = true
+    // Số vòng lặp tối đa (<=0: lặp vô hạn, mặc định)
+    var photoGifLoopCount: Int = 0
     var bgPath = ""
 
     // 是否允许添加快捷方式（非false，且具有key则默认允许）

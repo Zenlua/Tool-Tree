@@ -22,7 +22,6 @@ import com.omarea.krscript.config.IconPathAnalysis
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.view.Gravity
-import android.graphics.drawable.AnimationDrawable
 
 class ListItemText(private val context: Context,
                    layoutId: Int,
@@ -52,7 +51,7 @@ class ListItemText(private val context: Context,
                             extraIconView?.setImageDrawable(this)
                             extraIconView?.visibility = View.VISIBLE
                             applyPhotoRealSize(extraIconView, row.photoRealSize)
-                            startIfAnimated(extraIconView)
+                            GifPlaybackHelper.bind(extraIconView, row.photoGifAutoplay, row.photoGifLoopCount)
                         }
                     }
                 }
@@ -173,19 +172,6 @@ class ListItemText(private val context: Context,
                     params.gravity = Gravity.NO_GRAVITY
                 }
                 imageView.layoutParams = params
-            }
-        }
-    }
-
-    // Bắt đầu chạy hoạt ảnh (kiểu GIF) nếu drawable hiện tại của ImageView là AnimationDrawable.
-    // Phải post() để đảm bảo View đã attach vào window trước khi start().
-    private fun startIfAnimated(imageView: ImageView?) {
-        val drawable = imageView?.drawable
-        if (drawable is AnimationDrawable) {
-            imageView.post {
-                if (imageView.drawable === drawable) {
-                    drawable.start()
-                }
             }
         }
     }
