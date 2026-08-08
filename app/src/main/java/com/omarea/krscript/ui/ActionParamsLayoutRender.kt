@@ -1,9 +1,16 @@
 package com.omarea.krscript.ui
 
+import android.animation.TimeInterpolator
+import android.os.Build
+import android.transition.ChangeBounds
+import android.transition.Fade
+import android.transition.TransitionManager
+import android.transition.TransitionSet
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.PathInterpolator
 import android.widget.*
 import androidx.fragment.app.FragmentActivity
 import com.omarea.common.model.SelectItem
@@ -14,6 +21,22 @@ import androidx.core.graphics.toColorInt
 
 class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity: FragmentActivity) {
     companion object {
+        // Thời lượng + easing dùng chung cho MỌI animation ẩn/hiện param (ChangeBounds lẫn
+        // alpha depend-readonly) để cả 2 loại hiệu ứng luôn đồng bộ tốc độ/cảm giác với nhau.
+        private const val ROW_ANIM_DURATION_MS = 300L
+
+        // Đường cong "standard easing" của Material Design (cubic-bezier 0.4, 0, 0.2, 1),
+        // tương đương FastOutSlowInInterpolator - đây chính là easing Android dùng cho hầu hết
+        // animation chuyển layout/view gốc của hệ thống (không phải tuyến tính, không phải
+        // accelerate/decelerate thô). Cần API 21+; máy cũ hơn sẽ dùng AccelerateDecelerateInterpolator.
+        private fun standardMotionInterpolator(): TimeInterpolator {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                PathInterpolator(0.4f, 0f, 0.2f, 1f)
+            } else {
+                android.view.animation.AccelerateDecelerateInterpolator()
+            }
+        }
+
         /**
          * 获取当前选中项索引（单选）
          */
@@ -347,11 +370,39 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         // Áp dụng kết quả cuối cùng lên UI, ghi lại visibilityState chính thức, và gọi
         // depend-onchange đúng 1 lần cho mỗi param có trạng thái thực sự thay đổi so với
         // trước khi vào hàm evaluateDependencies() này.
+        //
+        // ========== TÍNH NĂNG MỚI: HÀNG DƯỚI TRƯỢT LÊN/XUỐNG KHI 1 PARAM ẨN/HIỆN ==========
+        // previousState.isEmpty() nghĩa là đây là lượt đánh giá ĐẦU TIÊN (ngay sau khi dialog
+        // vừa mở) - không animate, set tức thời như cũ. Nếu KHÔNG rỗng, tức người dùng vừa đổi
+        // 1 param cha trong lúc dialog đang mở -> bắt đầu 1 Transition DUY NHẤT cho CẢ danh sách
+        // (gọi 1 lần trước khi set visibility cho từng param, không gọi riêng lẻ từng cái) để
+        // Android tự tính toán và animate luôn cả việc các hàng còn lại trượt lên (khi 1 hàng
+        // phía trên biến mất) hoặc trượt xuống (khi 1 hàng phía trên xuất hiện) - thay vì chỉ
+        // fade tại chỗ rồi các hàng khác nhảy vị trí đột ngột.
+        if (previousState.isNotEmpty()) {
+            TransitionManager.beginDelayedTransition(linearLayout, buildRowVisibilityTransition())
+        }
+
         for (info in currentParamInfos) {
             val name = info.name ?: continue
             val shouldShow = working[name] ?: continue
             applyVisibility(name, shouldShow, previousState[name])
         }
+    }
+
+    // Transition dùng cho depend-on: Fade (mờ dần khi ẩn/hiện) + ChangeBounds (trượt mượt vị
+    // trí/kích thước của MỌI view anh em bị ảnh hưởng bởi khoảng trống vừa mất/xuất hiện).
+    // 300ms + easing "standard" (cubic-bezier 0.4,0,0.2,1 - giống FastOutSlowInInterpolator
+    // Material Design) để cảm giác đúng như animation chuyển layout gốc của Android, không
+    // bị "nhanh/giật" như easing tuyến tính hoặc quá ngắn.
+    private fun buildRowVisibilityTransition(): TransitionSet {
+        return TransitionSet()
+            .addTransition(Fade(Fade.OUT))
+            .addTransition(ChangeBounds())
+            .addTransition(Fade(Fade.IN))
+            .setOrdering(TransitionSet.ORDERING_TOGETHER)
+            .setDuration(ROW_ANIM_DURATION_MS)
+            .setInterpolator(standardMotionInterpolator())
     }
 
     // Tính shouldShow cho 1 param dựa trên trạng thái ẩn/hiện của các param cha TRONG LƯỢT
@@ -496,12 +547,11 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             view?.visibility = View.VISIBLE
             view?.let { setRowInteractive(it, effectiveEnabled, animate = !isInitial) }
         } else if (view != null) {
-            if (isInitial) {
-                view.visibility = if (shouldShow) View.VISIBLE else View.GONE
-            } else {
-                // Hiệu ứng mờ dần + phóng nhẹ khi 1 param ẩn/hiện do depend-on đổi trạng thái
-                ViewAnimUtil.setVisibleAnimated(view, shouldShow)
-            }
+            // Việc animate (fade + trượt vị trí các hàng khác) đã được xử lý bởi
+            // TransitionManager.beginDelayedTransition() gọi 1 lần ở evaluateDependencies()
+            // ngay trước vòng lặp gọi applyVisibility() cho cả danh sách - ở đây chỉ cần đổi
+            // visibility bình thường, Android sẽ tự nội suy animation cho thay đổi này.
+            view.visibility = if (shouldShow) View.VISIBLE else View.GONE
         }
 
         // Chỉ gọi callback khi ĐÃ TỪNG có trạng thái trước đó (oldState != null) VÀ trạng thái
@@ -526,7 +576,11 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         val targetAlpha = if (enabled) 1f else 0.9f
         if (animate) {
             row.animate().cancel()
-            row.animate().alpha(targetAlpha).setDuration(200).start()
+            row.animate()
+                .alpha(targetAlpha)
+                .setDuration(ROW_ANIM_DURATION_MS)
+                .setInterpolator(standardMotionInterpolator())
+                .start()
         } else {
             row.animate().cancel()
             row.alpha = targetAlpha
