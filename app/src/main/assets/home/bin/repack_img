@@ -153,11 +153,12 @@ process_erofss(){
     if [ -f "$1" ]; then
       num1="$(grep "^loaded .*. fs_config entries" "$1" | awk '{print $2}')"
       num2="$(echo "$(grep -c 'Processing' "$1") + 1" | bc)"
-      if [ "${num2:-0}" != 0 ]; then
+      if [ "${num2:-0}" != 0 ] && [ "$num1" ]; then
         [ "${num2:-0}" == "${num4:-1}" ] || progress "$((num2 * 100 / num1))/100"
         num4="$num2"
       fi
     fi
+    sleep 1
   done
   progress -1/0
 }

@@ -79,10 +79,10 @@ case "$1" in
     ;;
 
   7)
-    for vv in $(ls -1d super*.img); do
+    for vv in $(ls -1d *.img); do
       [[ -s "$vv" && -f "$vv" ]] || continue
       type=$(checktype "$vv")
-      echo "$vv|$vv ($type)" | grep -E '\(super\)|\(sparse\)'
+      echo "$vv|$vv ($type)"
     done
     ;;
 

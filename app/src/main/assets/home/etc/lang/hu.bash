@@ -296,3 +296,6 @@ config_text_2="Új projekt létrehozása vagy mappa kiválasztása"
 # boot
 boot_text_1="A Java telepítése folyamatban van, nyissa meg újra 1–2 perc múlva..."
 note_genmini_text="Kattints a jobb felső sarokban lévő 3 pontos menüre az ingyenes API-kulcs létrehozásához."
+
+split_number_desc="Adja meg a szuper fájl felosztásának mennyiségét"
+split_number_label="Kezdőszám: 1"

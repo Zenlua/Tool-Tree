@@ -306,3 +306,7 @@ note_genmini_text="Click the 3-dot menu in the top right corner to create a free
 
 custom_size="Customize size"
 custom_size_desc="Add or modify the default size for each partition during rebuild, applies only to ext and f2fs, size in Bytes."
+
+split_number_desc="Enter the quantity to split the super file"
+split_number_label="Starting from number: 1"
+

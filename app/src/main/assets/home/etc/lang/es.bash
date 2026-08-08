@@ -298,3 +298,6 @@ config_text_2="Crear un nuevo proyecto o elegir una carpeta"
 # boot
 boot_text_1="Java se está instalando, vuelve a abrir en 1-2 minutos..."
 note_genmini_text="Toca el menú de tres puntos en la esquina superior derecha para crear una clave de API gratuita."
+
+split_number_desc="Ingrese la cantidad para dividir el archivo super"
+split_number_label="Comenzando desde el número: 1"

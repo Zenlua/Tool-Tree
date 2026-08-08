@@ -296,3 +296,7 @@ config_text_2="Buat proyek baru atau pilih folder"
 # boot
 boot_text_1="Java sedang diinstal, buka kembali setelah 1~2 menit..."
 note_genmini_text="Klik menu 3 titik di pojok kanan atas untuk membuat kunci API gratis."
+
+split_number_desc="Masukkan jumlah untuk memecah file super"
+split_number_label="Mulai dari nomor: 1"
+

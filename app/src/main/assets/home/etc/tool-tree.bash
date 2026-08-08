@@ -1616,15 +1616,30 @@ Utilities() {
   icon = "'`urlpng super_split`'"
   script = """
     slog cboxkshg "$cboxk"
-    slog sizedhhe "$size"
+    slog slipdhhe "$slipdhhe"
+    slog khoi_dau_dem "$khoi_dau_dem"
     echo "'$super_split_text_4' ${IMAGES}..."
-    mkdir -p "$PTSD/out"
-    cd "$PTSD/out"
-    [ $(checktype "$PTSD/$IMAGES") == "sparse" ] && simg2img "$PTSD/$IMAGES"
-    chunk_split -s .%d -B 4K -C "$size"M "$PTSD/$IMAGES"
-    [ "$cboxk" == 0 ] || rm -fr "$PTSD/$IMAGES"
     echo
-    echo "'$save_text' $PTSD"
+    if [ $(checktype "$PTSD/$IMAGES") == "sparse" ]; then
+    simg2img "$PTSD/$IMAGES"
+    fi
+    size_super_mb=$(($(stat -c %s "$PTSD/$IMAGES") / 1048576))
+    chunk_size_mb=$((size_super_mb / slipdhhe))
+    echo "${size_super_mb}M ÷ $slipdhhe = ${chunk_size_mb}M"
+    echo
+    chunk_split -s .cache.%02d -B 4K -C "$chunk_size_mb"M "$PTSD/$IMAGES"
+    [ "$khoi_dau_dem" == 1 ] && sonum=1 || sonum=0
+    cd "$PTSD"
+    for vcd in ${IMAGES}.cache.*; do
+    if [ -f "$vcd" ]; then
+    echo "$vcd ➠ ${IMAGES}.$sonum"
+    mv "$vcd" "out/${IMAGES}.$sonum"
+    sonum=$((sonum + 1))
+    fi
+    done
+    echo
+    [ "$cboxk" == 0 ] || rm -fr "$PTSD/$IMAGES"
+    echo "'$save_text' $PTSD/out"
     echo
     checktime
   """
@@ -1636,12 +1651,20 @@ Utilities() {
     value-sh = "glog cboxkshg"
 
     [[group.action.params]]
-    name = "size"
-    label = "'$sizes_text'"
-    desc = "'$super_split_text_2'"
+    name = "slipdhhe"
+    label = "'$number_text'"
+    title = "'$split_number_desc'"
     type = "number"
-    value-sh = "glog sizedhhe 1024"
+    min = 2
+    max = 50
+    value-sh = "glog slipdhhe 9"
     required = true
+
+    [[group.action.params]]
+    name = "khoi_dau_dem"
+    label = "'$split_number_label'"
+    type = "switch"
+    value-sh = "glog khoi_dau_dem 0"
 
     [[group.action.params]]
     name = "IMAGES"

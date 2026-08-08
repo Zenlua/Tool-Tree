@@ -307,3 +307,5 @@ note_genmini_text="Nhấn menu 3 chấm ở góc phải để tạo khoá API mi
 
 custom_size="Tùy chỉnh kích thước"
 custom_size_desc="Thêm hoặc thay đổi kích thước mặc định cho mỗi phân vùng khi xây dựng lại, chỉ áp dụng cho ext và f2fs, đơn vị kích thước tính bằng Bytes."
+split_number_desc="Nhập số lượng muốn tách tệp super"
+split_number_label="Khởi đầu từ số: 1"
