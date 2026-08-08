@@ -333,9 +333,13 @@ class PageConfigReader {
             tomlGet(table, "max-sdk", "sdk-max")?.let { maxSdkVersion = it.trim().toIntOrNull() ?: maxSdkVersion }
             tomlGet(table, "target-sdk", "sdk-target")?.let { targetSdkVersion = it.trim().toIntOrNull() ?: targetSdkVersion }
             tomlGet(table, "icon", "icon-path")?.let { iconPath = it.trim() }
+            tomlGet(table, "icon-gif-num", "icon-gif_num")?.let { iconGifNum = it.trim().toIntOrNull() ?: iconGifNum }
+            tomlGet(table, "icon-gif-time", "icon-gif_time")?.let { iconGifTime = it.trim().toIntOrNull() ?: iconGifTime }
             tomlGet(table, "logo", "logo-path")?.let { logoPath = it.trim() }
             tomlGet(table, "photo", "photo-path")?.let { photoPath = it.trim() }
             tomlGet(table, "photo-real-size", "photo-original-size")?.let { photoRealSize = tomlTruthy(it, "real-size", "original-size") }
+            tomlGet(table, "photo-gif-num", "gif-num", "gif_num")?.let { photoGifNum = it.trim().toIntOrNull() ?: photoGifNum }
+            tomlGet(table, "photo-gif-time", "gif-time", "gif_time")?.let { photoGifTime = it.trim().toIntOrNull() ?: photoGifTime }
             tomlGet(table, "bg", "bg-path")?.let { bgPath = it.trim() }
             tomlGet(table, "allow-shortcut")?.let { allowShortcut = tomlTruthy(it, "allow", "allow-shortcut") }
             if (key.isNotEmpty() && key.startsWith("@") && allowShortcut == null) {
@@ -643,6 +647,8 @@ class PageConfigReader {
         tomlGet(table, "activity", "a", "intent")?.let { row.activity = it }
         tomlGet(table, "photo", "photo-path")?.let { row.photo = it.trim() }
         tomlGet(table, "photo-real-size", "photo-original-size")?.let { row.photoRealSize = tomlTruthy(it, "real-size", "original-size") }
+        tomlGet(table, "photo-gif-num", "gif-num", "gif_num")?.let { row.photoGifNum = it.trim().toIntOrNull() ?: row.photoGifNum }
+        tomlGet(table, "photo-gif-time", "gif-time", "gif_time")?.let { row.photoGifTime = it.trim().toIntOrNull() ?: row.photoGifTime }
         tomlGet(table, "script", "run")?.let { row.onClickScript = it }
         tomlGet(table, "sh")?.let { row.dynamicTextSh = it }
         tomlGet(table, "align")?.let {

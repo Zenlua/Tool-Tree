@@ -1,6 +1,7 @@
 package com.omarea.krscript.ui
 
 import android.content.Context
+import android.graphics.drawable.AnimationDrawable
 import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
@@ -57,6 +58,7 @@ open class ListItemClickable(context: Context,
                 IconPathAnalysis().loadIcon(context, config)?.run {
                     iconView?.setImageDrawable(this)
                     iconView?.visibility = View.VISIBLE
+                    startIfAnimated(iconView)
                 }
             }
         }
@@ -67,6 +69,7 @@ open class ListItemClickable(context: Context,
                     extraIconView?.setImageDrawable(this)
                     extraIconView?.visibility = View.VISIBLE
                     applyPhotoRealSize(extraIconView, config.photoRealSize)
+                    startIfAnimated(extraIconView)
                 }
             }
         }
@@ -110,6 +113,19 @@ open class ListItemClickable(context: Context,
                     params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0)
                 }
                 imageView.layoutParams = params
+            }
+        }
+    }
+
+    // Bắt đầu chạy hoạt ảnh (kiểu GIF) nếu drawable hiện tại của ImageView là AnimationDrawable.
+    // Phải post() để đảm bảo View đã attach vào window trước khi start().
+    private fun startIfAnimated(imageView: ImageView?) {
+        val drawable = imageView?.drawable
+        if (drawable is AnimationDrawable) {
+            imageView.post {
+                if (imageView.drawable === drawable) {
+                    drawable.start()
+                }
             }
         }
     }

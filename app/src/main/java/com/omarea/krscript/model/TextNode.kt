@@ -35,5 +35,9 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var photo: String = ""
         // Nếu true: hiện ảnh (photo) đúng kích thước thật, căn giữa, không kéo dãn full chiều ngang
         internal var photoRealSize: Boolean = false
+        // Nếu > 0: photo là hoạt ảnh (gif-style), số khung hình cần nạp (photo_1.png, photo_2.png, ...)
+        internal var photoGifNum: Int = 0
+        // Thời gian hiển thị mỗi khung hình (mili giây)
+        internal var photoGifTime: Int = 300
     }
 }

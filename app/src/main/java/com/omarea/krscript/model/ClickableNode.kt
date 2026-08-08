@@ -3,12 +3,20 @@ package com.omarea.krscript.model
 open class ClickableNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPath) {
     // 功能图标路径（列表中）
     var iconPath = ""
+    // Nếu > 0: icon là hoạt ảnh (gif-style), số khung hình cần nạp (icon_1.png, icon_2.png, ...)
+    var iconGifNum: Int = 0
+    // Thời gian hiển thị mỗi khung hình (mili giây)
+    var iconGifTime: Int = 300
 
     // 功能图标路径（桌面快捷）
     var logoPath = ""
     var photoPath = ""
     // Nếu true: hiện ảnh (photoPath) đúng kích thước thật, căn giữa, không kéo dãn full chiều ngang
     var photoRealSize: Boolean = false
+    // Nếu > 0: photo là hoạt ảnh (gif-style), số khung hình cần nạp (photo_1.png, photo_2.png, ...)
+    var photoGifNum: Int = 0
+    // Thời gian hiển thị mỗi khung hình (mili giây)
+    var photoGifTime: Int = 300
     var bgPath = ""
 
     // 是否允许添加快捷方式（非false，且具有key则默认允许）
