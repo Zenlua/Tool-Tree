@@ -100,6 +100,7 @@ echo '
   set = """
   if [ "$state" == 1 ]; then
   [ -d '$path_modun' ] && touch '$path_modun'/remove
+  [ -f '$path_modun'/update ] && rm -f '$path_modun'/update
   [ -d '$path_modun2' ] && rm -fr '$path_modun2'
   else
   rm -fr '$path_modun'/remove

@@ -170,7 +170,7 @@ convert_text_2="Mức độ nén của file br, zstd giá trị cao hơn sẽ n�
 # split super
 super_split_text_1="Tách Super"
 super_split_text_2="Mặc định: 1024M kích thước mỗi file khi tách"
-super_split_text_3="Chọn tệp tin super.img để tách ra"
+super_split_text_3="Chọn tệp tin *.img để tách ra"
 super_split_text_4="Đang tách"
 
 # super_merge

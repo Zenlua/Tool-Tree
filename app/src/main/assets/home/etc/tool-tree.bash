@@ -1545,23 +1545,56 @@ Utilities() {
     depend-default = "hide"
 
   [[group]]
-  [[group.page]]
-  title = "'$synthetic_text'"
-  icon = "'`urlpng generate`'"
-  config-sh = "'$ETC'/tool-tree.bash Generate"
-  handler = """
-    if [ "$menu_id" == "v1" ]; then
-    [ "$(glog hide_show_generate)" == 1 ] && slog hide_show_generate 0 || slog hide_show_generate 1
-    fi
+  [[group.action]]
+  title = "'$convert_text_1'"
+  icon = "'`urlpng convert_file`'"
+  script = """
+    slog format_img "$format_img"
+    slog nen_br "$nen_br"
+    slog cboxksbhd "$cboxk"
+    for vinput in $IMAGES; do
+    cover_img -i "$PTSD/$vinput" -o "$PTSD/out" -c $format_img -l $nen_br -d $cboxk
+    done
+    echo "'$save_text' $PTSD/out"
+    echo
+    checktime
   """
 
-    [[group.page.options]]
-    key = "v1"
+    [[group.action.params]]
+    name = "cboxk"
+    label = "'$deleted_file_text'"
     type = "checkbox"
-    title = "'$input_folder_text'"
-    box = "glog hide_show_generate"
-    silent = true
-    reload = true
+    value-sh = "glog cboxksbhd"
+
+    [[group.action.params]]
+    name = "format_img"
+    label = "'$option_text'"
+    value-sh = "glog format_img raw"
+    required = true
+    options-sh = """
+    echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\ndat|File.new.dat\nbr|File.new.dat.br\nzstd|File.img.zstd\nzst|File.img.zst\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz"
+    """
+
+    [[group.action.params]]
+    name = "nen_br"
+    label = "'$builds_text_4'"
+    desc = "'$convert_text_2'"
+    type = "seekbar"
+    min = 0
+    max = 22
+    value-sh = "glog nen_br 4"
+    required = true
+    depend-on = "format_img"
+    depend-value = "raw,sparse,File.new.dat"
+    depend-mode = "hide"
+    depend-readonly = true
+
+    [[group.action.params]]
+    name = "IMAGES"
+    desc = "'$input_file_text': br, dat, zstd, img"
+    options-sh = "findfile 1 $PTSD"
+    required = true
+    multiple = true
 
   [[group]]
   [[group.action]]
@@ -1610,7 +1643,7 @@ Utilities() {
     options-sh = "findfile 3 $PTSD"
     required = true
     multiple = true
-
+    
   [[group.action]]
   title = "'$super_split_text_1'"
   icon = "'`urlpng super_split`'"
@@ -1669,10 +1702,10 @@ Utilities() {
     [[group.action.params]]
     name = "IMAGES"
     label = "'$option_text'"
-    desc = "'$super_split_text_3'"
+    title = "'$super_split_text_3'"
     options-sh = "findfile 7 $PTSD"
     required = true
-
+  
   [[group.action]]
   title = "'$super_merge_text_1'"
   icon = "'`urlpng super_merge`'"
@@ -1699,58 +1732,24 @@ Utilities() {
     options-sh = "findfile 5 $PTSD | sort -n -t . -k 3"
     required = true
     multiple = true
-
+  
   [[group]]
-  [[group.action]]
-  title = "'$convert_text_1'"
-  icon = "'`urlpng convert_file`'"
-  script = """
-    slog format_img "$format_img"
-    slog nen_br "$nen_br"
-    slog cboxksbhd "$cboxk"
-    for vinput in $IMAGES; do
-    cover_img -i "$PTSD/$vinput" -o "$PTSD/out" -c $format_img -l $nen_br -d $cboxk
-    done
-    echo "'$save_text' $PTSD/out"
-    echo
-    checktime
+  [[group.page]]
+  title = "'$synthetic_text'"
+  icon = "'`urlpng generate`'"
+  config-sh = "'$ETC'/tool-tree.bash Generate"
+  handler = """
+    if [ "$menu_id" == "v1" ]; then
+    [ "$(glog hide_show_generate)" == 1 ] && slog hide_show_generate 0 || slog hide_show_generate 1
+    fi
   """
-
-    [[group.action.params]]
-    name = "cboxk"
-    label = "'$deleted_file_text'"
+    [[group.page.options]]
+    key = "v1"
     type = "checkbox"
-    value-sh = "glog cboxksbhd"
-
-    [[group.action.params]]
-    name = "format_img"
-    label = "'$option_text'"
-    value-sh = "glog format_img raw"
-    required = true
-    options-sh = """
-    echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\ndat|File.new.dat\nbr|File.new.dat.br\nzstd|File.img.zstd\nzst|File.img.zst\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz"
-    """
-
-    [[group.action.params]]
-    name = "nen_br"
-    label = "'$builds_text_4'"
-    desc = "'$convert_text_2'"
-    type = "seekbar"
-    min = 0
-    max = 22
-    value-sh = "glog nen_br 4"
-    required = true
-    depend-on = "format_img"
-    depend-value = "raw,sparse,File.new.dat"
-    depend-mode = "hide"
-    depend-readonly = true
-
-    [[group.action.params]]
-    name = "IMAGES"
-    desc = "'$input_file_text': br, dat, zstd, img"
-    options-sh = "findfile 1 $PTSD"
-    required = true
-    multiple = true
+    title = "'$input_folder_text'"
+    box = "glog hide_show_generate"
+    silent = true
+    reload = true
   '
 
   if [ "$(glog hide_show_patch_rom 1)" == 1 ] && [ -f "$AON/patch_rom/addon.prop" ]; then

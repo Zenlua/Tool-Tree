@@ -480,6 +480,10 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
 
         val view = rowViews[name]
         val info = currentParamInfos.find { it.name == name }
+        // Lần đầu (lúc mở dialog, oldState == null): set tức thời, KHÔNG animate, để tránh
+        // hiệu ứng lạ/nhấp nháy khi layout vừa dựng xong. Chỉ animate khi đây là thay đổi
+        // thực sự do người dùng tương tác (đổi giá trị param cha) trong lúc dialog đang mở.
+        val isInitial = oldState == null
 
         if (info != null && info.dependReadonly) {
             // ========== TÍNH NĂNG MỚI: depend-readonly ==========
@@ -490,9 +494,14 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             // = true, setRowInteractive sẽ bật lại isEnabled = true, vô tình gỡ khóa readonly cố định.
             val effectiveEnabled = shouldShow && info.readonly != true
             view?.visibility = View.VISIBLE
-            view?.let { setRowInteractive(it, effectiveEnabled) }
-        } else {
-            view?.visibility = if (shouldShow) View.VISIBLE else View.GONE
+            view?.let { setRowInteractive(it, effectiveEnabled, animate = !isInitial) }
+        } else if (view != null) {
+            if (isInitial) {
+                view.visibility = if (shouldShow) View.VISIBLE else View.GONE
+            } else {
+                // Hiệu ứng mờ dần + phóng nhẹ khi 1 param ẩn/hiện do depend-on đổi trạng thái
+                ViewAnimUtil.setVisibleAnimated(view, shouldShow)
+            }
         }
 
         // Chỉ gọi callback khi ĐÃ TỪNG có trạng thái trước đó (oldState != null) VÀ trạng thái
@@ -511,8 +520,17 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
     // enabled = false -> làm mờ cả hàng (alpha) và vô hiệu hóa toàn bộ control con
     //                     (EditText/CheckBox/Switch/SeekBar/Spinner/nút bấm...) để
     //                     người dùng không thể chỉnh sửa giá trị, nhưng vẫn nhìn thấy nó.
-    private fun setRowInteractive(row: View, enabled: Boolean) {
-        row.alpha = if (enabled) 1f else 0.9f
+    // animate = true: chuyển alpha mượt (200ms) - dùng khi đây là thay đổi thực sự lúc dialog
+    // đang mở; animate = false (mặc định): set tức thời - dùng lúc khởi tạo layout.
+    private fun setRowInteractive(row: View, enabled: Boolean, animate: Boolean = false) {
+        val targetAlpha = if (enabled) 1f else 0.9f
+        if (animate) {
+            row.animate().cancel()
+            row.animate().alpha(targetAlpha).setDuration(200).start()
+        } else {
+            row.animate().cancel()
+            row.alpha = targetAlpha
+        }
         setEnabledRecursively(row, enabled)
     }
 

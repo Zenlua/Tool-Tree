@@ -164,7 +164,7 @@ process_erofss(){
 }
 
 thay_mau() {
-    sed -e '/info: ignored token/s/.*/\x1b[33m&\x1b[0m/'
+    sed -e '/info: ignored token/s/.*/\x1b[33m&\x1b[0m/' && echo
 }
 
 if [ "$partition" == "erofs" ]; then
