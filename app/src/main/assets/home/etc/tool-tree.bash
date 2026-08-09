@@ -742,8 +742,8 @@ Project() {
     name = "un_tool_erofs"
     title = "'$tool_unpack_text' erofs"
     label = "'$option_text'"
-    value-sh = "glog un_tool_erofs 0"
-    options-sh = "echo -e \"0|extract.erofs\n1|imgkit_scuti\n2|extract.erofs (new)\""
+    value-sh = "glog un_tool_erofs 2"
+    options-sh = "echo -e \"0|extract.erofs\n1|imgkit_scuti\n2|extract.erofs (old)\""
 
     [[group.action.params]]
     name = "un_tool_f2fs"
@@ -763,8 +763,8 @@ Project() {
     name = "re_tool_erofs"
     title = "'$tool_repack_text' erofs"
     label = "'$option_text'"
-    value-sh = "glog re_tool_erofs 0"
-    options-sh = "echo -e \"0|mkfs.erofs\n1|imgkit_scuti\n2|mkfs.erofs (new)\""
+    value-sh = "glog re_tool_erofs 2"
+    options-sh = "echo -e \"0|mkfs.erofs\n1|imgkit_scuti\n2|mkfs.erofs (old)\""
 
     [[group.action.params]]
     name = "re_tool_f2fs"

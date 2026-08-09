@@ -89,7 +89,7 @@ dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
 lvnenbr="$(glog nen_br 4)"
 info_type="$(cat "$info" 2>/dev/null)"
 tool_ext="$(glog re_tool_ext4 1)"
-tool_erofs="$(glog re_tool_erofs)"
+tool_erofs="$(glog re_tool_erofs 2)"
 tool_f2fs="$(glog re_tool_f2fs)"
 
 # Ép build mặc định đối với định dạng sau

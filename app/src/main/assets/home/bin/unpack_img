@@ -109,7 +109,6 @@ elif [ "$dang_tep" == 'br' ]; then
         fi
         sdat2img "${INPUT%/*}/$tenpjanvung.transfer.list" "$TMP/$tenpjanvung.new.dat" "$file_img" >"$TMP/sdat2img.log" || killtree "File extraction error"
     else
-        # Trường hợp file ảnh nén br đơn thuần (như super.img.br, boot.img.br)
         echo -e "$unpack_text_0 (${INPUT##*/}) ➠ (raw)...\n"
         if [ "$NODECO" == 1 ]; then
             file_img="$PTSD/out/$(echo "${INPUT##*/}" | cut -d. -f1).img"
@@ -186,6 +185,9 @@ fs_config="$OUTPUT/config/${namepv##*/}_fs_config"
 file_contexts="$OUTPUT/config/${namepv##*/}_file_contexts"
 fs_options="$OUTPUT/config/${namepv##*/}_fs_options"
 info_size="$OUTPUT/config/${namepv##*/}_size.txt"
+tool_un_erofs="$(glog un_tool_erofs 2)"
+tool_un_ext4="$(glog un_tool_ext4)"
+tool_un_f2fs="$(glog un_tool_f2fs)"
 
 if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [ "$dang_file" != "super" ]; then
 
@@ -197,7 +199,7 @@ if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [
     mkdir -p "$in_name" "$OUTPUT/config"
 
     if [ "$dang_file" == 'ext' ]; then
-        if [ "$(glog un_tool_ext4)" == 1 ]; then
+        if [ "$tool_un_ext4" == 1 ]; then
             imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" || killtree "imgkit_scuti error"
             echo
         else
@@ -205,7 +207,7 @@ if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [
         fi
         echo "$dang_file" > "$info"
     elif [ "$dang_file" == 'f2fs' ]; then
-        if [ "$(glog un_tool_f2fs)" == 1 ]; then
+        if [ "$tool_un_f2fs" == 1 ]; then
             imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" || killtree "imgkit_scuti error"
             echo
         else
@@ -225,9 +227,9 @@ if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [
         echo "$dang_file" > "$info"
         fsck.f2fs -a "$file_img" &> "$fs_options"
     elif [ "$dang_file" == 'erofs' ]; then
-        if [ "$(glog un_tool_erofs)" == 1 ]; then
+        if [ "$tool_un_erofs" == 1 ]; then
             imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" || killtree "imgkit_scuti extract error"
-        elif [ "$(glog un_tool_erofs)" == 2 ]; then
+        elif [ "$tool_un_erofs" == 2 ]; then
             "$TERMUX/lib/theft/extract.erofs" -x -i "$file_img" -o "$OUTPUT" || killtree "extract.erofs extract error"
         else
             extract.erofs -x -i "$file_img" -o "$OUTPUT" || killtree "extract.erofs extract error"
