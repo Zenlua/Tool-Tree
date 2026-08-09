@@ -169,7 +169,7 @@ home() {
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
-    options-sh = "'$pathsh' search framework.jar services.jar miui-services.jar"
+    options-sh = "'$pathsh' search framework.jar services.jar miui-services.jar | sort"
     value-sh = "glog toolbox_patch_os"
     required = true
     multiple = true
@@ -206,7 +206,7 @@ home() {
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
-    options-sh = "'$pathsh' search miui-framework.jar miui-services.jar PowerKeeper.apk MiuiSystemUI.apk Settings.apk"
+    options-sh = "'$pathsh' search miui-framework.jar miui-services.jar PowerKeeper.apk MiuiSystemUI.apk Settings.apk | sort"
     value-sh = "glog fix_noti_patch_os"
     required = true
     multiple = true
@@ -277,7 +277,7 @@ home() {
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
-    options-sh = "'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk"
+    options-sh = "'$pathsh' search miui-framework.jar miui-services.jar *FrequentPhrase.apk MiuiSystemUI.apk Settings.apk | sort"
     value-sh = "glog fix_key_patch_os"
     required = true
     multiple = true
@@ -332,7 +332,7 @@ home() {
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
-    options-sh = "'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar ExternalStorageProvider.apk"
+    options-sh = "'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar ExternalStorageProvider.apk | sort"
     value-sh = "glog fix_manyo_patch_os"
     required = true
     multiple = true
@@ -400,7 +400,7 @@ home() {
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
-    options-sh = "'$pathsh' search *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk Provision.apk MIUIGallery.apk *SecurityCenter.apk *ThemeManager.apk"
+    options-sh = "'$pathsh' search *PersonalAssistant*.apk MIUIWeather.apk Joyose.apk Provision.apk MIUIGallery.apk *SecurityCenter.apk *ThemeManager.apk | sort"
     value-sh = "glog fix_manyo_patch_os"
     required = true
     multiple = true
