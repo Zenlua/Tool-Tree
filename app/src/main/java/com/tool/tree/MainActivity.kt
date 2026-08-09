@@ -229,7 +229,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            override fun addToFavorites(clickableNode: ClickableNode, handler: KrScriptActionHandler.AddToFavoritesHandler) {
+            override fun addToFavorites(clickableNode: ClickableNode, addToFavoritesHandler: KrScriptActionHandler.AddToFavoritesHandler) {
                 val page = clickableNode as? PageNode ?: pageNode
                 val intent = Intent().apply {
                     component = ComponentName(applicationContext, ActionPage::class.java)
@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
                     putExtra("page", page)
                     if (clickableNode is RunnableNode) putExtra("autoRunItemId", clickableNode.key)
                 }
-                handler.onAddToFavorites(clickableNode, intent)
+                addToFavoritesHandler.onAddToFavorites(clickableNode, intent)
             }
 
             override fun onSubPageClick(pageNode: PageNode) {
@@ -252,6 +252,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         return try {
             val multiple = fileSelectedInterface.multiple()

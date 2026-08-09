@@ -4,12 +4,14 @@ import android.app.Activity
 import android.view.View
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.ui.DialogHelper
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class DialogPower(private val activity: Activity) {
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun showPowerMenu() {
         val layoutInflater = activity.layoutInflater
         val view = layoutInflater.inflate(R.layout.dialog_power_operation, null)

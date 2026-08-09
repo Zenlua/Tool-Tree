@@ -55,7 +55,7 @@ class DownloadService : Service() {
         // STOP
         if (intent.getBooleanExtra("stop", false)) {
             stopWatching()
-            stopForeground(true)
+            stopForegroundCompat(remove = true)
             stopSelf()
             return START_NOT_STICKY
         }
@@ -113,7 +113,7 @@ class DownloadService : Service() {
         
             manager.notify(notificationId, builder.build())
         
-            stopForeground(false)
+            stopForegroundCompat(remove = false)
             stopSelf()
         } else {
             builder.setSmallIcon(android.R.drawable.stat_sys_download)
@@ -133,20 +133,42 @@ class DownloadService : Service() {
         val file = File(filePath)
         val parent = file.parentFile ?: return
 
-        observer = object : FileObserver(
-            parent.absolutePath,
-            MODIFY or CREATE
-        ) {
-            override fun onEvent(event: Int, name: String?) {
-                if (name == null) return
-                if (name == file.name) {
-                    readProgress(file)
-                }
+        observer = createFileObserver(parent, MODIFY or CREATE) { name ->
+            if (name == file.name) {
+                readProgress(file)
             }
         }
 
         observer?.startWatching()
         readProgress(file)
+    }
+
+    private fun createFileObserver(parent: File, mask: Int, onEvent: (String?) -> Unit): FileObserver {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            object : FileObserver(parent, mask) {
+                override fun onEvent(event: Int, path: String?) {
+                    if (path == null) return
+                    onEvent(path)
+                }
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            object : FileObserver(parent.absolutePath, mask) {
+                override fun onEvent(event: Int, path: String?) {
+                    if (path == null) return
+                    onEvent(path)
+                }
+            }
+        }
+    }
+
+    private fun stopForegroundCompat(remove: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(if (remove) STOP_FOREGROUND_REMOVE else STOP_FOREGROUND_DETACH)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(remove)
+        }
     }
 
     private fun stopWatching() {

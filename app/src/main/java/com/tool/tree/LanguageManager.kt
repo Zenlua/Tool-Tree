@@ -11,6 +11,7 @@ object LanguageManager {
     @Volatile private var appResources: Resources? = null
 
     @Synchronized
+    @Suppress("DEPRECATION")
     fun init(context: Context) {
         runCatching {
             val lang = File(context.filesDir, "home/usr/log/language")

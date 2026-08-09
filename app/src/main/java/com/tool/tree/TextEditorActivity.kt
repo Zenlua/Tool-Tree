@@ -161,7 +161,7 @@ class TextEditorActivity : AppCompatActivity() {
         setupKeyboardInsets()
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar) ?: binding.root.findViewById(R.id.toolbar)
-        toolbar?.let {
+        toolbar.let {
             setSupportActionBar(it)
             supportActionBar?.apply {
                 setHomeButtonEnabled(true)
@@ -937,7 +937,7 @@ class TextEditorActivity : AppCompatActivity() {
         val privateCacheDir = FileWrite.getPrivateFilePath(
             this,
             "home/tmp/tmp_${System.currentTimeMillis()}.tmp"
-        ) ?: return false
+        )
 
         return try {
             val cacheFile = File(privateCacheDir).apply {

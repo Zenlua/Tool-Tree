@@ -60,12 +60,12 @@ interface SyntaxHighlighter {
 
 abstract class BaseSyntaxHighlighter(
     editText: EditText,
-    @ColorInt private val keywordColor: Int,
-    @ColorInt private val builtinColor: Int,
-    @ColorInt private val stringColor: Int,
-    @ColorInt private val commentColor: Int,
-    @ColorInt private val numberColor: Int,
-    @ColorInt private val punctuationColor: Int,
+    @param:ColorInt private val keywordColor: Int,
+    @param:ColorInt private val builtinColor: Int,
+    @param:ColorInt private val stringColor: Int,
+    @param:ColorInt private val commentColor: Int,
+    @param:ColorInt private val numberColor: Int,
+    @param:ColorInt private val punctuationColor: Int,
 ) : SyntaxHighlighter {
 
     private val editTextRef = WeakReference(editText)

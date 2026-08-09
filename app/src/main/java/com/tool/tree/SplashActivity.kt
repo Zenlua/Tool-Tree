@@ -171,6 +171,7 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun requestManageAllFilesPermission() {
         try {
             val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {

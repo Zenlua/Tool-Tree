@@ -123,6 +123,7 @@ object ThemeModeState {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun applyWindowFlags(activity: Activity) {
         val window = activity.window
         WindowCompat.setDecorFitsSystemWindows(window, false)

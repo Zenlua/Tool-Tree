@@ -12,8 +12,8 @@ android {
     }
     lint {
         baseline = file("lint-baseline.xml")
-        abortOnError false
-        checkReleaseBuilds false
+        // abortOnError false
+        // checkReleaseBuilds false
     }
     defaultConfig {
         resourceConfigurations += ['zh', 'vi', 'ru', 'hu', 'es', 'id']
