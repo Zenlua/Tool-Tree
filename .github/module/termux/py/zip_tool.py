@@ -41,11 +41,7 @@ def list_zip_contents(zip_path, password=None, quiet=False, patterns=None):
             filtered_info.append(info)
         infolist = filtered_info
 
-      if quiet:
-        for info in infolist:
-          print(info.filename)
-        return True
-
+      # --list là ngoại lệ không bị ẩn nội dung chi tiết ngay cả khi bật -q
       print(f"\nContents of archive: '{zip_path}'")
       print(
           f"{'Filename':<45} {'Compressed':<12} {'Uncompressed':<14}"
@@ -236,20 +232,27 @@ def apply_basic_alignment(zinfo, alignment=4):
 
 
 def inject_file_to_zip(
-    zip_path, file_to_inject, arcname=None, forced_timestamp="2009-01-01 00:00:00"
+    zip_path,
+    file_to_inject,
+    arcname=None,
+    forced_timestamp="2009-01-01 00:00:00",
+    quiet=False,
 ):
   """Injects or updates a single file directly into an existing ZIP archive."""
   if not os.path.exists(zip_path):
-    print(f"Error: Target ZIP '{zip_path}' not found.")
+    if not quiet:
+      print(f"Error: Target ZIP '{zip_path}' not found.")
     return False
   if not os.path.exists(file_to_inject):
-    print(f"Error: File to inject '{file_to_inject}' not found.")
+    if not quiet:
+      print(f"Error: File to inject '{file_to_inject}' not found.")
     return False
 
   if not arcname:
     arcname = os.path.basename(file_to_inject)
 
-  print(f"Injecting '{file_to_inject}' as '{arcname}' into '{zip_path}'...")
+  if not quiet:
+    print(f"Injecting '{file_to_inject}' as '{arcname}' into '{zip_path}'...")
   parsed_ts = parse_timestamp(forced_timestamp)
 
   temp_zip = zip_path + ".tmp"
@@ -269,7 +272,8 @@ def inject_file_to_zip(
       zout.writestr(zinfo, f.read())
 
   os.replace(temp_zip, zip_path)
-  print(f"Injection successful into '{zip_path}'.")
+  if not quiet:
+    print(f"Injection successful into '{zip_path}'.")
   return True
 
 
@@ -549,6 +553,7 @@ def main():
         args.inject[1],
         args.inject[0],
         forced_timestamp=args.timestamp if args.timestamp else "2009-01-01 00:00:00",
+        quiet=args.quiet,
     )
   elif args.extract:
     if args.batch:

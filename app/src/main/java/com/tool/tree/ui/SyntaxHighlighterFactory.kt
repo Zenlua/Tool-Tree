@@ -248,7 +248,6 @@ class ShellSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
                     val word = result.value
                     if (keywords.contains(word)) {
                         color(text, start, end, keywordColor())
-                        bold(text, start, end)
                     } else if (builtins.contains(word)) {
                         color(text, start, end, builtinColor())
                     }
@@ -289,10 +288,7 @@ class XmlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
             when {
                 groups["COMMENT"] != null -> color(text, start, end, commentColor())
                 groups["CDATA"] != null -> color(text, start, end, stringColor())
-                groups["TAG"] != null -> {
-                    color(text, start, end, keywordColor())
-                    bold(text, start, end)
-                }
+                groups["TAG"] != null -> color(text, start, end, keywordColor())
                 groups["ATTR"] != null -> color(text, start, end, builtinColor())
                 groups["VALUE"] != null -> color(text, start, end, stringColor())
                 groups["ENTITY"] != null -> color(text, start, end, numberColor())
@@ -361,10 +357,7 @@ class TomlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
 
             when {
                 groups["COMMENT"] != null -> color(text, start, end, commentColor())
-                groups["TABLE"] != null -> {
-                    color(text, start, end, keywordColor())
-                    bold(text, start, end)
-                }
+                groups["TABLE"] != null -> color(text, start, end, keywordColor())
                 groups["KEYVALUE"] != null -> {
                     val line = result.value
                     val eqIndex = line.lastIndexOf('=')
@@ -374,10 +367,7 @@ class TomlSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
                     }
                 }
                 groups["STRING"] != null -> color(text, start, end, stringColor())
-                groups["BOOLEAN"] != null -> {
-                    color(text, start, end, keywordColor())
-                    bold(text, start, end)
-                }
+                groups["BOOLEAN"] != null -> color(text, start, end, keywordColor())
                 groups["DATETIME"] != null -> color(text, start, end, numberColor())
                 groups["NUMBER"] != null -> color(text, start, end, numberColor())
                 groups["PUNCTUATION"] != null -> color(text, start, end, punctuationColor())
@@ -420,7 +410,6 @@ class PropSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
                     if (keyEnd > 0) {
                         color(text, start, start + keyEnd, keywordColor())
                         color(text, start + keyEnd, start + keyEnd + 1, punctuationColor())
-                        bold(text, start, start + keyEnd)
                     }
                 }
                 groups["STRING"] != null -> color(text, start, end, stringColor())
@@ -487,7 +476,6 @@ class PythonSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
                     val word = result.value
                     if (keywords.contains(word)) {
                         color(text, start, end, keywordColor())
-                        bold(text, start, end)
                     } else if (builtins.contains(word)) {
                         color(text, start, end, builtinColor())
                     }
