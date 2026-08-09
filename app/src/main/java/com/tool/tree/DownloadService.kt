@@ -133,7 +133,7 @@ class DownloadService : Service() {
         val file = File(filePath)
         val parent = file.parentFile ?: return
 
-        observer = createFileObserver(parent, MODIFY or CREATE) { name ->
+        observer = createFileObserver(parent, FileObserver.MODIFY or FileObserver.CREATE) { name ->
             if (name == file.name) {
                 readProgress(file)
             }
