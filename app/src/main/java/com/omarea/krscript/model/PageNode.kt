@@ -24,4 +24,9 @@ class PageNode(currentConfigXml: String) : ClickableNode(currentConfigXml) {
     var loadSuccess = ""
     // 页面加载成功
     var loadFail = ""
+
+    // process = true: trang hiện từng mục 1 ngay khi build xong (kèm thanh tiến trình dưới
+    // toolbar) thay vì đợi build xong toàn bộ mới hiện - dùng cho trang có nhiều mục/nhiều
+    // lệnh shell nên load lâu (xem PageConfigReader.tomlChildren, ActionPage.loadPageConfig).
+    var process: Boolean = false
 }

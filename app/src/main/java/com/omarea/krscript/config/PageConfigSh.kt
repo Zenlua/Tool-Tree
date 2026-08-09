@@ -33,13 +33,13 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
         }
     }
 
-    fun execute(): ArrayList<NodeInfoBase>? {
+    fun execute(onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = null): ArrayList<NodeInfoBase>? {
         var items: ArrayList<NodeInfoBase>? = null
 
         val result = ScriptEnvironmen.executeResultRoot(activity, pageConfigSh, parentConfig)?.trim()
         if (result != null) {
             if (result.endsWith(".toml")) {
-                items = PageConfigReader(activity, result, parentConfig?.pageConfigDir).readConfigXml()
+                items = PageConfigReader(activity, result, parentConfig?.pageConfigDir).readConfigXml(onNodeReady)
                 if (items == null) {
                     noReadPermission()
                 }
@@ -47,7 +47,7 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
                 // Nội dung TOML trả về trực tiếp (không phải đường dẫn file):
                 // nhận diện qua header [[group]]/[[group. ...]] ở dòng 1 hoặc dòng 2.
                 val inputStream = ByteArrayInputStream(result.toByteArray())
-                items = PageConfigReader(activity, inputStream).readConfigXml()
+                items = PageConfigReader(activity, inputStream).readConfigXml(onNodeReady)
             } else if (result.isNotEmpty()) {
                 pageConfigShError(result)
             }

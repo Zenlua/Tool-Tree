@@ -40,6 +40,20 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             fragment.setListData(actionInfos, krScriptActionHandler, autoRunTask, themeMode)
             return fragment
         }
+
+        // Dùng cho trang có process = true: tạo fragment với danh sách RỖNG ban đầu, các
+        // mục sẽ được thêm dần từng cái một qua appendProgressiveItem() ngay khi ActionPage
+        // build xong từng mục (xem ActionPage.loadPageConfig), thay vì đợi build xong toàn
+        // bộ trang mới hiện danh sách như create() ở trên.
+        fun createProgressive(
+                krScriptActionHandler: KrScriptActionHandler? = null,
+                autoRunTask: AutoRunTask? = null,
+                themeMode: ThemeMode? = null): ActionListFragment {
+            val fragment = ActionListFragment()
+            fragment.progressiveMode = true
+            fragment.setListData(ArrayList(), krScriptActionHandler, autoRunTask, themeMode)
+            return fragment
+        }
     }
 
     private var actionInfos: ArrayList<NodeInfoBase>? = null
@@ -50,6 +64,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private var themeMode: ThemeMode? = null
     private var pageLayoutRender: PageLayoutRender? = null
     private lateinit var rootGroup: ListItemGroup
+
+    // process = true: xem createProgressive()/appendProgressiveItem()/finishProgressiveList()
+    private var progressiveMode = false
+    // Mục đến TRƯỚC khi onViewCreated() dựng xong rootGroup thì xếp hàng ở đây, tránh mất
+    // mục do race giữa fragment transaction và các lệnh handler.post() thêm mục từ ActionPage.
+    private val pendingProgressiveItems = ArrayList<NodeInfoBase>()
 
     // Biến lưu mốc thời gian của cú click cuối cùng (mili-giây)
     private var lastClickTime: Long = 0
@@ -86,7 +106,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         this.progressBarDialog = ProgressBarDialog(this.requireActivity())
-        renderInterface()
+        if (progressiveMode) {
+            setupProgressiveRoot()
+        } else {
+            renderInterface()
+        }
     }
 
     private fun renderInterface() {
@@ -100,7 +124,48 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         rootView?.addView(layout)
         triggerAction(autoRunTask)
     }
-    
+
+    // Dựng rootGroup RỖNG (chưa có mục nào) cho chế độ process = true, rồi bơm ngay các
+    // mục đã lỡ đến trước đó (pendingProgressiveItems) nếu có.
+    private fun setupProgressiveRoot() {
+        val context = context ?: return
+        val currentActionInfos = actionInfos ?: ArrayList()
+        rootGroup = ListItemGroup(context, true, GroupNode(""))
+        pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
+        val layout = rootGroup.getView()
+        val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
+        rootView?.removeAllViews()
+        rootView?.addView(layout)
+
+        if (pendingProgressiveItems.isNotEmpty()) {
+            val queued = ArrayList(pendingProgressiveItems)
+            pendingProgressiveItems.clear()
+            queued.forEach { pageLayoutRender?.appendNode(it) }
+        }
+    }
+
+    // Thêm 1 mục mới vào danh sách ngay lập tức (không dựng lại các mục đã có). Gọi được từ
+    // ActionPage bất kể rootGroup đã dựng xong hay chưa (nếu chưa, mục sẽ được xếp hàng).
+    fun appendProgressiveItem(item: NodeInfoBase) {
+        val render = pageLayoutRender
+        if (render != null) {
+            render.appendNode(item)
+        } else {
+            pendingProgressiveItems.add(item)
+        }
+    }
+
+    // Gọi khi ActionPage đã build xong TOÀN BỘ trang (mọi mục đã appendProgressiveItem).
+    // resolvePendingStates() ở PageConfigReader lúc này cũng đã chạy xong nên trạng thái
+    // thật của switch/picker đã có sẵn trên model - làm mới hiển thị (không dựng lại view)
+    // rồi mới chạy autoRunTask như luồng tải trang bình thường.
+    fun finishProgressiveList() {
+        if (::rootGroup.isInitialized) {
+            rootGroup.triggerUpdate()
+        }
+        triggerAction(autoRunTask)
+    }
+
     fun updateData(
         newItems: List<NodeInfoBase>,
         actionHandler: KrScriptActionHandler?,
@@ -109,6 +174,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         this.actionInfos = ArrayList(newItems)
         this.krScriptActionHandler = actionHandler
         this.themeMode = themeMode
+        this.progressiveMode = false
         if (isAdded && view != null) {
             renderInterface()
         }

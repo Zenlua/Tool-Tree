@@ -86,40 +86,50 @@ class PageLayoutRender(private val mContext: Context,
 
     private fun mapConfigList(parent: ListItemGroup, actionInfos: ArrayList<NodeInfoBase>) {
         for (index in 0 until actionInfos.size) {
-            val it = actionInfos[index]
-            try {
-                var uiRender: ListItemView? = null
-                if (it is PageNode) {
-                    uiRender = createPageItem(it)
-                } else if (it is SwitchNode) {
-                    uiRender = createSwitchItem(it)
-                } else if (it is ActionNode) {
-                    uiRender = createActionItem(it)
-                } else if (it is PickerNode) {
-                    uiRender = createListItem(it)
-                } else if (it is TextNode) {
-                    uiRender = if (parent.isRootGroup) createTextItem(it) else createTextItemWhite(it)
-                } else if (it is EditorNode) {
-                    uiRender = createEditorItem(it)
-                } else if (it is GroupNode) {
-                    val subGroup = createItemGroup(it)
-                    if (it.children.isNotEmpty()) {
-                        parent.addView(subGroup)
-                        mapConfigList(subGroup, it.children)
-                    }
-                }
-
-                if (uiRender != null) {
-                    if (uiRender is ListItemClickable) {
-                        uiRender.setOnClickListener(this.onItemClickListener)
-                        uiRender.setOnLongClickListener(this.onItemLongClickListener)
-                    }
-                    parent.addView(uiRender)
-                }
-            } catch (ex: Exception) {
-                Toast.makeText(mContext, it.title + "Interface rendering error" + ex.message, Toast.LENGTH_SHORT).show()
-            }
+            renderNode(parent, actionInfos[index])
         }
+    }
+
+    private fun renderNode(parent: ListItemGroup, it: NodeInfoBase) {
+        try {
+            var uiRender: ListItemView? = null
+            if (it is PageNode) {
+                uiRender = createPageItem(it)
+            } else if (it is SwitchNode) {
+                uiRender = createSwitchItem(it)
+            } else if (it is ActionNode) {
+                uiRender = createActionItem(it)
+            } else if (it is PickerNode) {
+                uiRender = createListItem(it)
+            } else if (it is TextNode) {
+                uiRender = if (parent.isRootGroup) createTextItem(it) else createTextItemWhite(it)
+            } else if (it is EditorNode) {
+                uiRender = createEditorItem(it)
+            } else if (it is GroupNode) {
+                val subGroup = createItemGroup(it)
+                if (it.children.isNotEmpty()) {
+                    parent.addView(subGroup)
+                    mapConfigList(subGroup, it.children)
+                }
+            }
+
+            if (uiRender != null) {
+                if (uiRender is ListItemClickable) {
+                    uiRender.setOnClickListener(this.onItemClickListener)
+                    uiRender.setOnLongClickListener(this.onItemLongClickListener)
+                }
+                parent.addView(uiRender)
+            }
+        } catch (ex: Exception) {
+            Toast.makeText(mContext, it.title + "Interface rendering error" + ex.message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Dùng cho chế độ process = true: thêm NGAY 1 mục mới vào cuối danh sách gốc (rootGroup)
+    // mà không dựng lại các mục đã hiện trước đó - xem ActionListFragment.appendProgressiveItem.
+    fun appendNode(node: NodeInfoBase) {
+        itemConfigList.add(node)
+        renderNode(rootGroup, node)
     }
 
     private fun createTextItem(node: TextNode): ListItemView {

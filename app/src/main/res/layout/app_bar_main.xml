@@ -30,6 +30,18 @@
                 app:subtitleTextColor="?android:textColorPrimary"
                 app:titleTextColor="?android:textColorPrimary" />
 
+            <!-- Thanh tiến trình load trang (process = true) - ẩn theo mặc định, chỉ
+                 ActionPage bật lên khi trang cấu hình process = true đang tải. -->
+            <ProgressBar
+                android:id="@+id/page_load_progress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:max="100"
+                android:progress="0"
+                android:indeterminate="true"
+                android:visibility="gone" />
+
         </com.omarea.common.ui.BlurTopBarLayout>
 
     </com.google.android.material.appbar.AppBarLayout>

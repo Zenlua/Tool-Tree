@@ -9,6 +9,7 @@ import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -36,6 +37,10 @@ import kotlinx.coroutines.withContext
 
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
+    // Thanh tiến trình mảnh dưới toolbar - chỉ dùng khi trang cấu hình process = true
+    // (xem loadPageConfig/beginProgressiveList). Truy cập kiểu findViewById giống như
+    // toolbar ở trên, vì app_bar_main.xml được <include> không có id riêng.
+    private val loadProgressBar by lazy { findViewById<ProgressBar>(R.id.page_load_progress) }
     private var actionsLoaded = false
     private val handler = Handler(Looper.getMainLooper())
 
@@ -384,6 +389,13 @@ class ActionPage : AppCompatActivity() {
             finish()
         }
 
+        // process = true + đang hiện loading (mở trang lần đầu, hoặc reload có showLoading):
+        // hiện từng mục 1 ngay khi build xong (kèm thanh tiến trình dưới toolbar) thay vì
+        // đợi build xong hết trang mới hiện toàn bộ - dành cho trang có rất nhiều mục/nhiều
+        // lệnh shell nên load rất lâu (xem PageConfigReader.tomlChildren). Reload âm thầm
+        // (showLoading = false, ví dụ sau khi quay lại từ trang con) vẫn dùng luồng cũ.
+        val useProgressiveLoad = showLoading && config.process
+
         loadPageJob = lifecycleScope.launch(Dispatchers.IO) {
             if (config.beforeRead.isNotEmpty()) {
                 if (showLoading) {
@@ -394,18 +406,38 @@ class ActionPage : AppCompatActivity() {
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.beforeRead, config)
             }
 
-            if (showLoading) {
+            var progressiveFragment: ActionListFragment? = null
+            if (useProgressiveLoad) {
+                withContext(Dispatchers.Main) {
+                    // Không cần hộp thoại loading toàn màn hình nữa - dùng thanh tiến trình
+                    // dưới toolbar thay thế, danh sách hiện dần ngay bên dưới nó.
+                    progressBarDialog.hideDialog()
+                    progressiveFragment = beginProgressiveList()
+                }
+            } else if (showLoading) {
                 withContext(Dispatchers.Main) {
                     progressBarDialog.showDialog(getString(R.string.kr_page_loading))
                 }
             }
 
+            val onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = if (useProgressiveLoad) {
+                { node, done, total ->
+                    // onNodeReady được PageConfigReader gọi trên luồng IO (nền), marshal
+                    // từng cập nhật UI qua handler chính - không chặn luồng đọc config.
+                    handler.post {
+                        if (isFinishing || isDestroyed) return@post
+                        if (node != null) progressiveFragment?.appendProgressiveItem(node)
+                        updateLoadProgress(done, total)
+                    }
+                }
+            } else null
+
             var items: ArrayList<NodeInfoBase>? = null
             if (config.pageConfigSh.isNotEmpty()) {
-                items = PageConfigSh(this@ActionPage, config.pageConfigSh, config).execute()
+                items = PageConfigSh(this@ActionPage, config.pageConfigSh, config).execute(onNodeReady)
             }
             if (items == null && config.pageConfigPath.isNotEmpty()) {
-                items = PageConfigReader(applicationContext, config.pageConfigPath, config.pageConfigDir).readConfigXml()
+                items = PageConfigReader(applicationContext, config.pageConfigPath, config.pageConfigDir).readConfigXml(onNodeReady)
             }
 
             if (config.afterRead.isNotEmpty()) {
@@ -419,9 +451,19 @@ class ActionPage : AppCompatActivity() {
                     if (config.loadSuccess.isNotEmpty()) {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
-                    updateActionList(items, showLoading)
+                    if (useProgressiveLoad) {
+                        hideLoadProgress()
+                        // resolvePendingStates() (chạy trong PageConfigReader) đã xong lúc
+                        // này - làm mới hiển thị switch/picker về đúng trạng thái thật rồi
+                        // mới chạy autoRunTask, xem ActionListFragment.finishProgressiveList.
+                        progressiveFragment?.finishProgressiveList()
+                        actionsLoaded = true
+                    } else {
+                        updateActionList(items, showLoading)
+                    }
                     refreshCheckboxMenuStates()
                 } else {
+                    hideLoadProgress()
                     handleLoadError(config)
                 }
                 progressBarDialog.hideDialog()
@@ -429,8 +471,8 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    private fun updateActionList(items: ArrayList<NodeInfoBase>, showLoading: Boolean) {
-        val autoRunTask = if (actionsLoaded) null else object : AutoRunTask {
+    private fun buildAutoRunTask(): AutoRunTask? {
+        return if (actionsLoaded) null else object : AutoRunTask {
             override val key = autoRunItemId
             override fun onCompleted(result: Boolean?) {
                 if (result != true && autoRunItemId.isNotEmpty()) {
@@ -438,12 +480,47 @@ class ActionPage : AppCompatActivity() {
                 }
             }
         }
+    }
 
+    // Dựng 1 ActionListFragment RỖNG + hiện thanh tiến trình dưới toolbar - dùng khi trang
+    // cấu hình process = true. Các mục thật sẽ được thêm dần qua appendProgressiveItem()
+    // (gọi từ onNodeReady bên trong loadPageConfig).
+    private fun beginProgressiveList(): ActionListFragment {
+        val fragment = ActionListFragment.createProgressive(actionShortClickHandler, buildAutoRunTask(), ThemeModeState.getThemeMode())
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.main_list, fragment)
+            .commitAllowingStateLoss()
+        loadProgressBar.apply {
+            isIndeterminate = true
+            progress = 0
+            visibility = View.VISIBLE
+        }
+        return fragment
+    }
+
+    private fun updateLoadProgress(done: Int, total: Int) {
+        loadProgressBar.apply {
+            if (visibility != View.VISIBLE) visibility = View.VISIBLE
+            if (total > 0) {
+                // Biết tổng số mục ngay từ đầu (xem PageConfigReader.tomlChildren) nên
+                // chuyển được từ vòng xoay bất định sang thanh chạy theo % thật.
+                if (isIndeterminate) isIndeterminate = false
+                max = total
+                progress = done
+            }
+        }
+    }
+
+    private fun hideLoadProgress() {
+        loadProgressBar.visibility = View.GONE
+    }
+
+    private fun updateActionList(items: ArrayList<NodeInfoBase>, showLoading: Boolean) {
         val existingFragment = supportFragmentManager.findFragmentById(R.id.main_list) as? ActionListFragment
         if (existingFragment != null && !showLoading) {
             existingFragment.updateData(items, actionShortClickHandler, ThemeModeState.getThemeMode())
         } else {
-            val fragment = ActionListFragment.create(items, actionShortClickHandler, autoRunTask, ThemeModeState.getThemeMode())
+            val fragment = ActionListFragment.create(items, actionShortClickHandler, buildAutoRunTask(), ThemeModeState.getThemeMode())
             supportFragmentManager.beginTransaction()
                 .replace(R.id.main_list, fragment)
                 .commitAllowingStateLoss()

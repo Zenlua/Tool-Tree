@@ -42,16 +42,20 @@ class PageConfigReader {
         this.pageConfigStream = pageConfigStream
     }
 
-    fun readConfigXml(): ArrayList<NodeInfoBase>? {
+    // onNodeReady (chỉ dùng khi process = true): được gọi ngay sau khi TỪNG mục ở CẤP CAO
+    // NHẤT build xong (đúng thứ tự trên xuống theo dòng trong file) - node = null nghĩa là
+    // mục đó bị lọc bỏ (support/visible = false...), vẫn báo để bên gọi cập nhật % tiến
+    // trình. Truyền null (mặc định) thì hành vi y hệt như cũ: build hết rồi mới trả về.
+    fun readConfigXml(onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = null): ArrayList<NodeInfoBase>? {
         if (pageConfigStream != null) {
-            return readConfigXml(pageConfigStream!!)
+            return readConfigXml(pageConfigStream!!, onNodeReady)
         } else {
             try {
                 val pathAnalysis = PathAnalysis(context, parentDir)
                 pathAnalysis.parsePath(pageConfig).run {
                     val fileInputStream = this ?: return ArrayList()
                     pageConfigAbsPath = pathAnalysis.getCurrentAbsPath()
-                    return readConfigXml(fileInputStream)
+                    return readConfigXml(fileInputStream, onNodeReady)
                 }
             } catch (ex: Exception) {
                 Handler(Looper.getMainLooper()).post {
@@ -64,10 +68,10 @@ class PageConfigReader {
         return null
     }
 
-    private fun readConfigXml(fileInputStream: InputStream): ArrayList<NodeInfoBase>? {
+    private fun readConfigXml(fileInputStream: InputStream, onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = null): ArrayList<NodeInfoBase>? {
         return try {
             val rawText = fileInputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-            readConfigToml(rawText)
+            readConfigToml(rawText, onNodeReady)
         } catch (ex: Exception) {
             Handler(Looper.getMainLooper()).post {
                 Toast.makeText(context, "Failed to parse configuration file\n" + ex.message, Toast.LENGTH_LONG).show()
@@ -158,6 +162,15 @@ class PageConfigReader {
     //     [[group.page]]
     //     title = "Xem log"
     //     config = "log_page.toml"
+    //
+    // Trang có RẤT NHIỀU mục / nhiều mục cần chạy shell (title-sh, desc-sh, switch...) nên
+    // load lâu: đặt process = true trên [[page]] trỏ tới trang đó (cùng cấp với config /
+    // config-sh) để trang hiện từng mục 1 ngay khi build xong (kèm thanh tiến trình dưới
+    // toolbar) thay vì đợi build hết mới hiện toàn bộ. Ví dụ:
+    //   [[page]]
+    //   title = "Danh sách ứng dụng"
+    //   config = "app_list.toml"
+    //   process = true
     // =====================================================================================
 
     private val tomlNodeTypeOrder = listOf("group", "text", "switch", "picker", "action", "page", "editor", "resource")
@@ -208,7 +221,7 @@ class PageConfigReader {
         }
     }
 
-    private fun readConfigToml(rawText: String): ArrayList<NodeInfoBase>? {
+    private fun readConfigToml(rawText: String, onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = null): ArrayList<NodeInfoBase>? {
         return try {
             val result = Toml.parse(rawText)
             if (result.hasErrors()) {
@@ -219,7 +232,13 @@ class PageConfigReader {
                 Log.e("KrConfig Fail！", message)
                 return null
             }
-            val nodes = tomlChildren(result)
+            // Chú ý: switch/picker được build ở đây chỉ ĐĂNG KÝ script lấy trạng thái (xem
+            // pendingSwitchStates/pendingPickerStates) - trạng thái checked/value THẬT chỉ có
+            // sau resolvePendingStates() bên dưới. Vì vậy khi process = true, các mục
+            // switch/picker mới hiện ra qua onNodeReady có thể tạm hiện trạng thái mặc định;
+            // bên gọi (ActionListFragment.finishProgressiveList) sẽ tự làm mới lại toàn bộ
+            // hiển thị ngay sau khi resolvePendingStates() chạy xong ở dưới.
+            val nodes = tomlChildren(result, onNodeReady)
             resolvePendingStates()
             nodes
         } catch (ex: Exception) {
@@ -254,22 +273,53 @@ class PageConfigReader {
     // Gom toàn bộ node con của 1 bảng (root, hoặc bảng của 1 group). Thứ tự hiển thị luôn
     // theo đúng vị trí xuất hiện trong file (trên trước, dưới sau), không phân biệt loại
     // mục và không cần field `order`.
-    private fun tomlChildren(parent: TomlTable): ArrayList<NodeInfoBase> {
-        data class Entry(val line: Int, val seq: Int, val node: NodeInfoBase)
+    private fun tomlChildren(parent: TomlTable, onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = null): ArrayList<NodeInfoBase> {
+        class Entry(val line: Int, val seq: Int, val type: String, val table: TomlTable) {
+            var node: NodeInfoBase? = null
+        }
 
+        // Bước 1: chỉ THU THẬP vị trí (dòng) của từng mục - KHÔNG build, không chạy shell gì
+        // cả (tomlEntries/tomlEntryLine chỉ đọc cấu trúc TOML), nên bước này rất rẻ dù trang
+        // có bao nhiêu mục đi nữa. Nhờ vậy biết được tổng số mục (total) trước khi build.
+        // `entries` ở đây đang theo thứ tự NHÓM LOẠI (group, text, switch, picker, action,
+        // page, editor, resource - xem tomlNodeTypeOrder), y hệt thứ tự thu thập gốc.
         val entries = ArrayList<Entry>()
         var seq = 0
         for (type in tomlNodeTypeOrder) {
             for ((index, table) in tomlEntries(parent, type).withIndex()) {
                 seq++
-                val node = tomlBuildNode(type, table) ?: continue
                 val line = tomlEntryLine(parent, type, index) ?: Int.MAX_VALUE
-                entries.add(Entry(line, seq, node))
+                entries.add(Entry(line, seq, type, table))
             }
         }
         // Sắp theo dòng thực tế trong file; nếu không lấy được dòng (line == MAX_VALUE)
         // thì rơi về đúng thứ tự đọc được (seq) để vẫn ổn định, không xáo trộn ngẫu nhiên.
-        return ArrayList(entries.sortedWith(compareBy({ it.line }, { it.seq })).map { it.node })
+        val sortedEntries = entries.sortedWith(compareBy({ it.line }, { it.seq }))
+
+        if (onNodeReady == null) {
+            // Đường cũ, KHÔNG đổi hành vi: build tuần tự theo `entries` (thứ tự NHÓM LOẠI,
+            // y hệt code gốc trước khi có tính năng process = true) - chỉ THỨ TỰ HIỂN THỊ
+            // cuối cùng (giá trị trả về) mới sắp theo dòng, như code gốc vẫn luôn làm.
+            for (entry in entries) {
+                entry.node = tomlBuildNode(entry.type, entry.table)
+            }
+            return ArrayList(sortedEntries.mapNotNull { it.node })
+        }
+
+        // process = true: build TUẦN TỰ đúng theo vị trí dòng trong file (trên trước, dưới
+        // sau - kể cả khi các loại mục xen kẽ nhau), báo ngay qua onNodeReady mỗi khi 1 mục
+        // build xong, để ActionPage có thể hiện từng mục lên UI ngay lập tức thay vì đợi cả
+        // trang build xong mới hiện - tránh "đơ"/timeout khi trang có rất nhiều mục cần shell.
+        val total = sortedEntries.size
+        var done = 0
+        val result = ArrayList<NodeInfoBase>(total)
+        for (entry in sortedEntries) {
+            val node = tomlBuildNode(entry.type, entry.table)
+            done++
+            if (node != null) result.add(node)
+            onNodeReady.invoke(node, done, total)
+        }
+        return result
     }
 
     private fun tomlBuildNode(type: String, table: TomlTable): NodeInfoBase? {
@@ -412,6 +462,7 @@ class PageConfigReader {
         tomlGet(table, "load-ok", "load-success")?.let { page.loadSuccess = it }
         tomlGet(table, "load-fail", "load-error")?.let { page.loadFail = it }
         tomlGet(table, "config-sh")?.let { page.pageConfigSh = it }
+        tomlGet(table, "process")?.let { page.process = tomlTruthy(it, "process") }
         tomlGet(table, "link", "href")?.let { page.link = it }
         tomlGet(table, "activity", "a", "intent")?.let { page.activity = it }
         tomlGet(table, "option-sh", "option-su", "options-sh")?.let { page.pageMenuOptionsSh = it }
