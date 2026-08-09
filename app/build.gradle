@@ -11,7 +11,7 @@ android {
         jvmToolchain(17)
     }
     lint {
-        baseline = file("lint-baseline.xml")
+        // baseline = file("lint-baseline.xml")
         disable += ['ExpiredTargetSdkVersion']
         // abortOnError false
         // checkReleaseBuilds false
