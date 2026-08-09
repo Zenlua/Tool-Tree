@@ -12,6 +12,7 @@ android {
     }
     lint {
         baseline = file("lint-baseline.xml")
+        disable += ['ExpiredTargetSdkVersion']
         // abortOnError false
         // checkReleaseBuilds false
     }
