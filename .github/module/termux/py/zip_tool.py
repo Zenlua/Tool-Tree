@@ -4,11 +4,12 @@ import datetime
 import fnmatch
 import glob
 import os
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
 
-CACHE_FILENAME = "cache_zip.xml"
+CACHE_FILENAME = "cache_zip"
 
 
 def parse_timestamp(ts_str):
@@ -114,11 +115,29 @@ def extract_to_stdout(zip_path, member_patterns, password=None):
   return True
 
 
-def extract_zip(zip_path, extract_to, password=None, member_patterns=None):
-  """Extracts a ZIP file or specific multi-pattern members and records metadata."""
+def extract_zip(
+    zip_path,
+    extract_to,
+    password=None,
+    member_patterns=None,
+    quiet=False,
+    clear_source=False,
+    force=False,
+):
+  """Extracts a ZIP file or specific multi-pattern members and records metadata with timestamps."""
   if not os.path.exists(zip_path):
-    print(f"Error: File '{zip_path}' not found.")
+    if not quiet:
+      print(f"Error: File '{zip_path}' not found.")
     return False
+
+  if os.path.exists(extract_to) and os.listdir(extract_to):
+    if not force:
+      if not quiet:
+        print(
+            f"Error: Target directory '{extract_to}' already exists and is not"
+            " empty. Use -f to overwrite."
+        )
+      return False
 
   os.makedirs(extract_to, exist_ok=True)
   pwd_bytes = password.encode("utf-8") if password else None
@@ -135,49 +154,68 @@ def extract_zip(zip_path, extract_to, password=None, member_patterns=None):
             if any(fnmatch.fnmatch(info.filename, p) for p in member_patterns)
         ]
         if not matched_members:
-          print(
-              f"Error: No files matched patterns '{member_patterns}' inside"
-              f" '{zip_path}'."
-          )
+          if not quiet:
+            print(
+                f"Error: No files matched patterns '{member_patterns}' inside"
+                f" '{zip_path}'."
+            )
           return False
 
-        print(
-            f"Extracting {len(matched_members)} matching files from"
-            f" '{zip_path}' to '{extract_to}'..."
-        )
+        if not quiet:
+          print(
+              f"Extracting {len(matched_members)} matching files from"
+              f" '{zip_path}' to '{extract_to}'..."
+          )
         for member in matched_members:
           zip_ref.extract(member, extract_to)
-        print("Selective extraction successful!")
-        return True
+        if not quiet:
+          print("Selective extraction successful!")
+      else:
+        if not quiet:
+          print(
+              f"Extracting '{zip_path}' to '{extract_to}' and generating"
+              f" {CACHE_FILENAME}..."
+          )
+        xml_meta_path = os.path.join(extract_to, CACHE_FILENAME)
+        root = ET.Element("ZipMetadata")
 
-      print(
-          f"Extracting '{zip_path}' to '{extract_to}' and generating"
-          f" {CACHE_FILENAME}..."
-      )
-      xml_meta_path = os.path.join(extract_to, CACHE_FILENAME)
-      root = ET.Element("ZipMetadata")
+        zip_ref.extractall(extract_to)
+        for info in zip_ref.infolist():
+          file_path = os.path.join(extract_to, info.filename)
+          mtime = os.path.getmtime(file_path) if os.path.exists(file_path) else 0
 
-      zip_ref.extractall(extract_to)
-      for info in zip_ref.infolist():
-        file_path = os.path.join(extract_to, info.filename)
-        mtime = os.path.getmtime(file_path) if os.path.exists(file_path) else 0
+          dt = info.date_time
+          try:
+            ts_str = f"{dt[0]:04d}-{dt[1]:02d}-{dt[2]:02d} {dt[3]:02d}:{dt[4]:02d}:{dt[5]:02d}"
+          except Exception:
+            ts_str = "2009-01-01 00:00:00"
 
-        file_elem = ET.SubElement(root, "File")
-        file_elem.set("filename", info.filename)
-        file_elem.set("compress_type", str(info.compress_type))
-        file_elem.set("external_attr", str(info.external_attr))
-        file_elem.set("mtime", str(mtime))
-        extra_hex = info.extra.hex() if info.extra else ""
-        file_elem.set("extra_hex", extra_hex)
+          file_elem = ET.SubElement(root, "File")
+          file_elem.set("filename", info.filename)
+          file_elem.set("compress_type", str(info.compress_type))
+          file_elem.set("external_attr", str(info.external_attr))
+          file_elem.set("mtime", str(mtime))
+          file_elem.set("timestamp", ts_str)
+          extra_hex = info.extra.hex() if info.extra else ""
+          file_elem.set("extra_hex", extra_hex)
 
-      tree = ET.ElementTree(root)
-      tree.write(xml_meta_path, encoding="utf-8", xml_declaration=True)
-      print(f"Extraction successful! Metadata saved to '{xml_meta_path}'.")
+        tree = ET.ElementTree(root)
+        tree.write(xml_meta_path, encoding="utf-8", xml_declaration=True)
+        if not quiet:
+          print(f"Extraction successful! Metadata saved to '{xml_meta_path}'.")
+
+    # Clear original ZIP file if requested
+    if clear_source and os.path.exists(zip_path):
+      os.remove(zip_path)
+      if not quiet:
+        print(f"Deleted original ZIP file: '{zip_path}'")
+
   except Exception as e:
-    print(
-        "Error during extraction (password might be required or incorrect):"
-        f" {e}"
-    )
+    if not quiet:
+      print(
+          "Error during extraction (password might be required or incorrect):"
+          f" {e}"
+      )
     return False
 
   return True
@@ -242,18 +280,32 @@ def repack_zip(
     no_compress_patterns=None,
     compression_level=6,
     update_only=False,
-    forced_timestamp="2009-01-01 00:00:00",
+    forced_timestamp=None,
+    quiet=False,
+    clear_source=False,
+    force=False,
 ):
-  """Packs a directory into a ZIP file, defaulting to 2009-01-01 00:00:00 timestamp."""
+  """Packs a directory into a ZIP file following cache priority or forced timestamp rules."""
   if not os.path.exists(source_dir):
-    print(f"Error: Source directory '{source_dir}' not found.")
+    if not quiet:
+      print(f"Error: Source directory '{source_dir}' not found.")
     return False
+
+  if os.path.exists(output_zip):
+    if not force:
+      if not quiet:
+        print(
+            f"Error: Output file '{output_zip}' already exists. Use -f to"
+            " overwrite."
+        )
+      return False
 
   xml_meta_path = os.path.join(source_dir, CACHE_FILENAME)
   meta_map = {}
 
   if os.path.exists(xml_meta_path):
-    print(f"Loading metadata mapping from '{xml_meta_path}'...")
+    if not quiet:
+      print(f"Loading metadata mapping from '{xml_meta_path}'...")
     tree = ET.parse(xml_meta_path)
     root = tree.getroot()
     for file_elem in root.findall("File"):
@@ -265,14 +317,17 @@ def repack_zip(
           "external_attr": int(file_elem.get("external_attr", 0)),
           "mtime": float(file_elem.get("mtime", 0)),
           "extra": bytes.fromhex(file_elem.get("extra_hex", "")),
+          "timestamp": file_elem.get("timestamp", "2009-01-01 00:00:00"),
       }
   else:
-    print(
-        f"Notice: No '{CACHE_FILENAME}' found. All files will use basic"
-        " automatic alignment."
-    )
+    if not quiet:
+      print(
+          f"Notice: No '{CACHE_FILENAME}' found. All files will use basic"
+          " automatic alignment."
+      )
 
-  print(f"Packing directory '{source_dir}' into archive...")
+  if not quiet:
+    print(f"Packing directory '{source_dir}' into archive...")
   if os.path.exists(output_zip):
     os.remove(output_zip)
 
@@ -281,7 +336,7 @@ def repack_zip(
   if no_compress_patterns is None:
     no_compress_patterns = []
 
-  parsed_ts = parse_timestamp(forced_timestamp)
+  forced_ts_parsed = parse_timestamp(forced_timestamp) if forced_timestamp else None
 
   with zipfile.ZipFile(
       output_zip,
@@ -330,15 +385,27 @@ def repack_zip(
         if zinfo.compress_type == zipfile.ZIP_STORED and arcname not in meta_map:
           apply_basic_alignment(zinfo, alignment=4)
 
-        if parsed_ts:
-          zinfo.date_time = parsed_ts
+        if forced_ts_parsed is not None:
+          zinfo.date_time = forced_ts_parsed
+        elif arcname in meta_map and "timestamp" in meta_map[arcname]:
+          zinfo.date_time = parse_timestamp(meta_map[arcname]["timestamp"])
+        else:
+          zinfo.date_time = parse_timestamp("2009-01-01 00:00:00")
 
         with open(file_path, "rb") as f:
           data = f.read()
 
         zipf.writestr(zinfo, data)
 
-  print(f"ZIP file successfully saved at: '{output_zip}'")
+  if not quiet:
+    print(f"ZIP file successfully saved at: '{output_zip}'")
+
+  # Clear source directory if requested
+  if clear_source and os.path.exists(source_dir):
+    shutil.rmtree(source_dir)
+    if not quiet:
+      print(f"Deleted source directory: '{source_dir}'")
+
   return True
 
 
@@ -359,9 +426,21 @@ def main():
   parser.add_argument(
       "-d",
       "--dir",
-      metavar="DIR",
       default="extracted_folder",
+      metavar="DIR",
       help="Directory to extract files into",
+  )
+  parser.add_argument(
+      "-c",
+      "--clear",
+      action="store_true",
+      help="Clear (delete) original ZIP file after extraction, or delete source directory after repacking",
+  )
+  parser.add_argument(
+      "-f",
+      "--force",
+      action="store_true",
+      help="Force overwrite existing output file or target directory",
   )
   parser.add_argument(
       "-P",
@@ -373,7 +452,7 @@ def main():
       "-q",
       "--quiet",
       action="store_true",
-      help="Quiet mode (when used with --list, prints only clean paths)",
+      help="Quiet mode (suppresses logs during extraction or repacking)",
   )
   parser.add_argument(
       "-p",
@@ -428,17 +507,15 @@ def main():
   )
   parser.add_argument(
       "--timestamp",
-      default="2009-01-01 00:00:00",
+      default=None,
       metavar="YYYY-MM-DD HH:MM:SS",
-      help=(
-          "Override modification timestamp (default: 2009-01-01 00:00:00)"
-      ),
+      help="Override modification timestamp for all files during repack",
   )
   parser.add_argument(
       "--list",
       nargs="+",
       metavar="ARGS",
-      help="List contents: first argument is ZIP file, followed by optional patterns (e.g. input.zip *.so file.arsc)",
+      help="List contents: first argument is ZIP file, followed by optional patterns",
   )
   parser.add_argument(
       "--member",
@@ -469,7 +546,9 @@ def main():
       extract_to_stdout(target_zip, args.pipe, password=args.password)
   elif args.inject:
     inject_file_to_zip(
-        args.inject[1], args.inject[0], forced_timestamp=args.timestamp
+        args.inject[1],
+        args.inject[0],
+        forced_timestamp=args.timestamp if args.timestamp else "2009-01-01 00:00:00",
     )
   elif args.extract:
     if args.batch:
@@ -477,13 +556,23 @@ def main():
       for f in files:
         base_name = os.path.splitext(os.path.basename(f))[0]
         out_dir = os.path.join(args.dir, base_name)
-        extract_zip(f, out_dir, password=args.password)
+        extract_zip(
+            f,
+            out_dir,
+            password=args.password,
+            quiet=args.quiet,
+            clear_source=args.clear,
+            force=args.force,
+        )
     else:
       extract_zip(
           args.extract,
           args.dir,
           password=args.password,
           member_patterns=args.member,
+          quiet=args.quiet,
+          clear_source=args.clear,
+          force=args.force,
       )
   elif args.repack:
     output_file = args.output if args.output else args.repack + ".zip"
@@ -495,6 +584,9 @@ def main():
         compression_level=args.compression_level,
         update_only=args.update,
         forced_timestamp=args.timestamp,
+        quiet=args.quiet,
+        clear_source=args.clear,
+        force=args.force,
     )
   else:
     parser.print_help()
