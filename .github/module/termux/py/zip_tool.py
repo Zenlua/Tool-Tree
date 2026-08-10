@@ -9,7 +9,7 @@ import sys
 import xml.etree.ElementTree as ET
 import zipfile
 
-CACHE_FILENAME = "cache_zip"
+CACHE_FILENAME = ".cache_zip"
 
 
 def parse_timestamp(ts_str):
@@ -41,7 +41,6 @@ def list_zip_contents(zip_path, password=None, quiet=False, patterns=None):
             filtered_info.append(info)
         infolist = filtered_info
 
-      # --list là ngoại lệ không bị ẩn nội dung chi tiết ngay cả khi bật -q
       print(f"\nContents of archive: '{zip_path}'")
       print(
           f"{'Filename':<45} {'Compressed':<12} {'Uncompressed':<14}"
@@ -200,7 +199,6 @@ def extract_zip(
         if not quiet:
           print(f"Extraction successful! Metadata saved to '{xml_meta_path}'.")
 
-    # Clear original ZIP file if requested
     if clear_source and os.path.exists(zip_path):
       os.remove(zip_path)
       if not quiet:
@@ -303,6 +301,15 @@ def repack_zip(
             " overwrite."
         )
       return False
+    elif os.path.isdir(output_zip):
+      if not quiet:
+        print(f"Error: Output path '{output_zip}' is a directory.")
+      return False
+
+  # Tự động tạo thư mục chứa file đầu ra nếu chưa tồn tại
+  output_dir = os.path.dirname(os.path.abspath(output_zip))
+  if output_dir:
+    os.makedirs(output_dir, exist_ok=True)
 
   xml_meta_path = os.path.join(source_dir, CACHE_FILENAME)
   meta_map = {}
@@ -404,7 +411,6 @@ def repack_zip(
   if not quiet:
     print(f"ZIP file successfully saved at: '{output_zip}'")
 
-  # Clear source directory if requested
   if clear_source and os.path.exists(source_dir):
     shutil.rmtree(source_dir)
     if not quiet:

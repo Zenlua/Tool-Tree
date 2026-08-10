@@ -23,33 +23,34 @@ do_decode() {
   fi
 
   echo "$more_text_4 $input"
+  echo
 
   ten_file="$(echo "${input##*/}" | sed -e 's|\.apex$||' -e 's|\.capex$||')"
   tm_save="$output/$ten_file"
   apex_type="$(checkapk "$input")"
   [ -d "$tm_save" ] && rm -fr "$tm_save"
-  mkdir -p "$tm_save/apex" "$tm_save/.cache"
+  mkdir -p "$tm_save/.cache"
   echo "$apex_type" > "$tm_save/.cache/type"
   
   if [ "$apex_type" == "capex" ]; then
     unzip -oq "$input" original_apex -d "$tm_save"
-    apkeditor d -f -t raw -i "$tm_save/original_apex" -o "$tm_save/apex" &>"$tm_save/.cache/apex_decode.log" || killtree "$(cat "$tm_save/.cache/apex_decode.log")"
-    rm -f "$tm_save/original_apex"
+    zip_tool.py -q -c -f -e "$tm_save/original_apex" -d "$tm_save"
     else
-    apkeditor d -f -t raw -i "$input" -o "$tm_save/apex" &>"$tm_save/.cache/apex_decode.log" || killtree "$(cat "$tm_save/.cache/apex_decode.log")"
+    zip_tool.py -q -f -e "$input" -d "$tm_save"
   fi
 
-  if [ -f "$tm_save/apex/root/apex_payload.img" ]; then
-    unpack_img -i "$tm_save/apex/root/apex_payload.img" -o "$tm_save" -d 1 &>>"$tm_save/.cache/apex_decode.log" || killtree "$(cat "$tm_save/.cache/apex_decode.log")"
+  if [ -f "$tm_save/apex_payload.img" ]; then
+    unpack_img -i "$tm_save/apex_payload.img" -o "$tm_save" -d 1 &>>"$tm_save/.cache/apex_decode.log"
     rm -f "$tm_save/config/apex_payload_size.txt"
   else
     echo "Error: Item not found: apex_payload.img" >&2
   fi
 
-  if [ -f "$tm_save/apex/root/apex_build_info.pb" ]; then
-  protoc_pb.py -d "$tm_save/apex/root/apex_build_info.pb" -o "$tm_save/apex_build_info.xml"
+  if [ -f "$tm_save/apex_build_info.pb" ]; then
+  protoc_pb.py -d "$tm_save/apex_build_info.pb" -o "$tm_save/apex_build_info.xml"
   fi
 
+  verify_apex.py "$tm_save"
 }
 
 do_build() {
@@ -79,12 +80,15 @@ do_build() {
   echo "$apkb_text_1 ${input##*/}"
   echo
   
-  [ -f "$input/apex_build_info.xml" ] && protoc_pb.py -e "$input/apex_build_info.xml" -o "$input/apex/root/apex_build_info.pb"
+  [ -f "$input/apex_build_info.xml" ] && protoc_pb.py -e "$input/apex_build_info.xml" -o "$input/apex_build_info.pb"
+  
+  verify_apex.py "$input" || killtree "Lack of permission error: apex_build_info.xml"
+  echo
   
   if [ -d "$input/apex_payload" ]; then
-  repack_img -i "$input/apex_payload" -o "$input/apex/root" -d 0 &>"$input/.cache/apex_build.log" || killtree "$(cat "$input/.cache/apex_build.log")"
+  repack_img -i "$input/apex_payload" -o "$input" -d 0 -p 1 &>"$input/.cache/apex_build.log" || killtree "$(cat "$input/.cache/apex_build.log")"
   
-  seva_payload="$input/apex/root/apex_payload.img"
+  seva_payload="$input/apex_payload.img"
   # Ký avbtool
   avbtool add_hashtree_footer \
   --do_not_generate_fec \
@@ -92,7 +96,7 @@ do_build() {
   --hash_algorithm sha256 \
   --key "$ETC/key/4096/${key}.pem" \
   --prop "apex.key:$key" \
-  --salt "$(checksum "$input/apex/root/apex_manifest.pb")" \
+  --salt "$(checksum "$input/apex_manifest.pb")" \
   --image "$seva_payload"
   
   INFO=$(avbtool info_image --image "$seva_payload")
@@ -101,19 +105,19 @@ do_build() {
   PARTITION_SIZE=$(( ((VBMETA_OFFSET + VBMETA_SIZE + 4095) / 4096 * 4096) + 4096 ))
   avbtool resize_image --image "$seva_payload" --partition_size "$PARTITION_SIZE"
 
-  avbtool extract_public_key --key "$ETC/key/4096/${key}.pem" --output "$input/apex/root/apex_pubkey"
+  avbtool extract_public_key --key "$ETC/key/4096/${key}.pem" --output "$input/apex_pubkey"
   
   else
   echo "Error: Item not found: $output" >&2
   fi
   
-  if [ -d "$input/apex" ]; then
-  apkeditor b -f -i "$input/apex" -o "$input/${input##*/}.apex" &>>"$input/.cache/apex_build.log" || killtree "$(cat "$input/.cache/apex_build.log")"
+  if [ -d "$input" ]; then
+  zip_tool.py -q -f -r "$input" -o "$input/.cache/${input##*/}.apex" -x ".cache/*" "apex_payload/*" "config/*" "apex_build_info.xml" "*.bak"
   fi
   
-  if [ -f "$input/${input##*/}.apex" ]; then
-  signapk -a 4096 "$ETC/key/${key}.x509.pem" "$ETC/key/${key}.pk8" "$input/${input##*/}.apex" "$input/${input##*/}_sign.apex"
-  [ -f "$input/${input##*/}_sign.apex" ] || killtree "Apex sign error, please check again!"
+  if [ -f "$input/.cache/${input##*/}.apex" ]; then
+  signapk -a 4096 "$ETC/key/${key}.x509.pem" "$ETC/key/${key}.pk8" "$input/.cache/${input##*/}.apex" "$input/.cache/${input##*/}_sign.apex"
+  [ -f "$input/.cache/${input##*/}_sign.apex" ] || killtree "Apex sign error, please check again!"
   fi
   
   if [ "$compressed" == "0" ]; then
@@ -125,10 +129,10 @@ do_build() {
   fi
   
   if [ "$nen_apex" == 1 ]; then
-    apex_compression_tool.py compress -k "$key" --input "$input/${input##*/}_sign.apex" --output "$output/${input##*/}.capex"
+    apex_compression_tool.py compress -k "$key" --input "$input/.cache/${input##*/}_sign.apex" --output "$output/${input##*/}.capex"
     echo "$save_text $output/${input##*/}.capex"
   else
-    mv "$input/${input##*/}_sign.apex" "$output/${input##*/}.apex"
+    mv "$input/.cache/${input##*/}_sign.apex" "$output/${input##*/}.apex"
     echo "$save_text $output/${input##*/}.apex"
   fi
 
@@ -138,7 +142,7 @@ do_build() {
   else
   rm -fr "$input"/*.apex
   fi
-  
+
 }
 
 # --- Điểm bắt đầu của Script ---

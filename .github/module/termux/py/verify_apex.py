@@ -1,3 +1,4 @@
+#!/data/data/com.tool.tree/files/home/termux/bin/python
 import sys
 import os
 import apex_build_info_pb2
@@ -49,9 +50,7 @@ def check_all(base_dir):
                 parts = line_str.split(':', 1)
                 if len(parts) == 2:
                     key = parts[0].strip().lower()
-                    if 'min_sdk_version' in key or 'minsdkversion' in key:
-                        key_display = 'Minimum SDK Version'
-                    elif 'target_sdk_version' in key or 'targetsdkversion' in key:
+                    if 'target_sdk_version' in key or 'targetsdkversion' in key:
                         key_display = 'Target SDK Version'
                     elif 'payload_fs_type' in key or 'fs_type' in key:
                         key_display = 'Payload Filesystem Type'
@@ -59,9 +58,9 @@ def check_all(base_dir):
                         key_display = parts[0].strip().replace('_', ' ').title()
                     
                     val = parts[1].strip().replace('"', '')
-                    formatted_line = f"  • {key_display}: {val}"
+                    formatted_line = f" •  {key_display}: {val}"
                 else:
-                    formatted_line = f"  • {line_str.replace('"', '')}"
+                    formatted_line = f" •  {line_str.replace('"', '')}"
                     
                 if formatted_line not in printed_lines:
                     print(formatted_line)
@@ -114,24 +113,21 @@ def check_all(base_dir):
         has_error = False
 
         if missing_items:
-            print(f"\n[-] Detected {len(missing_items)} missing item(s):", file=sys.stderr)
+            print(f"[-] Detected {len(missing_items)} missing item(s):", file=sys.stderr)
             for item in sorted(missing_items):
                 print(f"  - {item}", file=sys.stderr)
             has_error = True
 
         if extra_items:
-            print(f"\n[-] Detected {len(extra_items)} extra item(s):", file=sys.stderr)
+            print(f"[-] Detected {len(extra_items)} extra item(s):", file=sys.stderr)
             for item in sorted(extra_items):
                 print(f"  - {item}", file=sys.stderr)
             has_error = True
 
-        if not has_error:
-            print("\n[+] All items match perfectly.")
-
         return not has_error
 
     except Exception as e:
-        print(f"\n[-] Error: {e}", file=sys.stderr)
+        print(f"[-] Error: {e}", file=sys.stderr)
         return False
 
 if __name__ == '__main__':
