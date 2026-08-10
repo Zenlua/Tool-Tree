@@ -17,12 +17,13 @@ jobs:
 
       - name: Build add-on
         run: |
+          VER=$(grep -m1 'versionName ' app/build.gradle | cut -d'"' -f2)
           cd .github/plugin
-          7z a -t7z -y ../plugins.so
+          7z a -t7z -y ../plugin_$VER.so
 
       - name: Upload module
         uses: softprops/action-gh-release@v2
         with:
           name: "Tmp"
           tag_name: "V1"
-          files: .github/plugins.so
+          files: .github/plugin_*.so
