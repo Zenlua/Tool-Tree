@@ -397,8 +397,9 @@ class ActionPage : AppCompatActivity() {
         //
         // Thứ tự hiển thị: hộp thoại loading hiện trước như bình thường (chưa có mục nào thì
         // vẫn hiện loading); CHỈ khi mục ĐẦU TIÊN build xong mới ẩn hộp thoại và chuyển sang
-        // thanh tiến trình dưới toolbar chạy theo % thật. Trang KHÔNG bật process = true
-        // không có tín hiệu từng mục nên vẫn hiện hộp thoại suốt như cũ, không dùng thanh.
+        // thanh tiến trình dưới toolbar (chạy động, không hiện %). Trang KHÔNG bật
+        // process = true dùng thanh này cho giai đoạn dựng UI/ảnh (xem nhánh else bên dưới),
+        // và hộp thoại vẫn hiện suốt lúc build dữ liệu như cũ vì không có tín hiệu từng mục.
         val useProgressiveLoad = showLoading && config.process
 
         loadPageJob = lifecycleScope.launch(Dispatchers.IO) {
@@ -431,41 +432,28 @@ class ActionPage : AppCompatActivity() {
                 }
             }
 
-            // Không post lên luồng chính ngay từng mục một: nếu nhiều mục build xong dồn
-            // dập (mục "nhanh"), main thread bị dội hàng loạt post() liên tiếp, không còn
-            // khoảng trống xử lý cảm ứng -> cảm giác "đơ", và cú chạm chỉ được xử lý sau khi
-            // hàng đợi post giải phóng (tức đợi tải xong). GOM các mục build xong trong một
-            // khoảng ngắn (~120ms) rồi mới post 1 LẦN duy nhất cho cả lô, để main thread luôn
-            // có khoảng trống giữa các lần cập nhật UI.
-            val pendingBatch = ArrayList<NodeInfoBase>()
-            var lastFlushAt = 0L
-            val flushIntervalMs = 120L
+            // Mỗi mục build xong ở PageConfigReader/PageConfigSh (đang chạy tuần tự trên
+            // luồng IO) được post lên main thread NGAY LẬP TỨC, từng mục một - không gom lô.
+            // Việc build data giữa 2 mục vốn đã tốn thời gian round-trip shell thật (không
+            // dồn dập tức thời), nên post riêng lẻ vẫn để lại khoảng trống cho main thread xử
+            // lý cảm ứng vào các mục đã hiện trước đó, thay vì phải đợi cả lô dựng xong.
             var barShown = false
 
             val onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = if (useProgressiveLoad) {
-                { node, done, total ->
-                    // Chạy tuần tự trên CHÍNH luồng IO đang đọc config (không có luồng nào
-                    // khác ghi vào pendingBatch), nên không cần đồng bộ hoá.
-                    if (node != null) pendingBatch.add(node)
-                    val now = System.currentTimeMillis()
-                    if (done == total || now - lastFlushAt >= flushIntervalMs) {
-                        lastFlushAt = now
-                        val batch = ArrayList(pendingBatch)
-                        pendingBatch.clear()
-                        handler.post {
-                            if (isFinishing || isDestroyed) return@post
-                            if (!barShown && batch.isNotEmpty()) {
-                                // Mục ĐẦU TIÊN đã sẵn sàng - ẩn hộp thoại, chuyển sang thanh %.
-                                barShown = true
-                                progressBarDialog.hideDialog()
-                                loadProgressBar.apply {
-                                    isIndeterminate = false
-                                    visibility = View.VISIBLE
-                                }
+                { node, _, _ ->
+                    handler.post {
+                        if (isFinishing || isDestroyed) return@post
+                        if (!barShown) {
+                            // Mục ĐẦU TIÊN đã sẵn sàng - ẩn hộp thoại, chuyển sang thanh tiến
+                            // trình chạy động (không hiện %, chỉ để báo vẫn đang tải).
+                            barShown = true
+                            progressBarDialog.hideDialog()
+                            loadProgressBar.apply {
+                                isIndeterminate = true
+                                visibility = View.VISIBLE
                             }
-                            batch.forEach { progressiveFragment?.appendProgressiveItem(it) }
-                            if (barShown) updateLoadProgress(done, total)
                         }
+                        if (node != null) progressiveFragment?.appendProgressiveItem(node)
                     }
                 }
             } else null
@@ -489,21 +477,39 @@ class ActionPage : AppCompatActivity() {
                     if (config.loadSuccess.isNotEmpty()) {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
+                    progressBarDialog.hideDialog()
                     if (useProgressiveLoad) {
                         // resolvePendingStates() (chạy trong PageConfigReader) đã xong lúc
                         // này - làm mới hiển thị switch/picker về đúng trạng thái thật rồi
                         // mới chạy autoRunTask, xem ActionListFragment.finishProgressiveList.
                         progressiveFragment?.finishProgressiveList()
                         actionsLoaded = true
+                        hideLoadProgress()
+                    } else if (showLoading) {
+                        // Trang KHÔNG bật process = true, đang ở lượt tải có hiện hộp thoại
+                        // (mở trang lần đầu / reload có showLoading): ActionListFragment dựng
+                        // TOÀN BỘ view (kể cả decode ảnh icon/logo) ĐỒNG BỘ trên main thread
+                        // ngay khi fragment được add (xem PageLayoutRender) - với trang nhiều
+                        // mục ảnh việc này có thể mất khá lâu, khiến app trông như bị đơ ngay
+                        // sau khi hộp thoại loading vừa biến mất. Hiện thanh tiến trình chạy
+                        // động (không có %, vì không biết trước mục ảnh nào chậm) trong lúc
+                        // dựng, chỉ tắt khi ActionListFragment báo đã dựng xong qua onRendered.
+                        loadProgressBar.apply {
+                            isIndeterminate = true
+                            visibility = View.VISIBLE
+                        }
+                        updateActionList(items, showLoading) { hideLoadProgress() }
                     } else {
+                        // Reload âm thầm (showLoading = false, vd quay lại từ trang con) -
+                        // giữ nguyên như cũ, không hiện thanh tiến trình.
                         updateActionList(items, showLoading)
                     }
                     refreshCheckboxMenuStates()
                 } else {
                     handleLoadError(config)
+                    hideLoadProgress()
+                    progressBarDialog.hideDialog()
                 }
-                hideLoadProgress()
-                progressBarDialog.hideDialog()
             }
         }
     }
@@ -530,29 +536,16 @@ class ActionPage : AppCompatActivity() {
         return fragment
     }
 
-    private fun updateLoadProgress(done: Int, total: Int) {
-        loadProgressBar.apply {
-            if (visibility != View.VISIBLE) visibility = View.VISIBLE
-            if (total > 0) {
-                // Biết tổng số mục ngay từ đầu (xem PageConfigReader.tomlChildren) nên
-                // chuyển được từ vòng xoay bất định sang thanh chạy theo % thật.
-                if (isIndeterminate) isIndeterminate = false
-                max = total
-                progress = done
-            }
-        }
-    }
-
     private fun hideLoadProgress() {
         loadProgressBar.visibility = View.GONE
     }
 
-    private fun updateActionList(items: ArrayList<NodeInfoBase>, showLoading: Boolean) {
+    private fun updateActionList(items: ArrayList<NodeInfoBase>, showLoading: Boolean, onRendered: (() -> Unit)? = null) {
         val existingFragment = supportFragmentManager.findFragmentById(R.id.main_list) as? ActionListFragment
         if (existingFragment != null && !showLoading) {
-            existingFragment.updateData(items, actionShortClickHandler, ThemeModeState.getThemeMode())
+            existingFragment.updateData(items, actionShortClickHandler, ThemeModeState.getThemeMode(), onRendered)
         } else {
-            val fragment = ActionListFragment.create(items, actionShortClickHandler, buildAutoRunTask(), ThemeModeState.getThemeMode())
+            val fragment = ActionListFragment.create(items, actionShortClickHandler, buildAutoRunTask(), ThemeModeState.getThemeMode(), onRendered)
             supportFragmentManager.beginTransaction()
                 .replace(R.id.main_list, fragment)
                 .commitAllowingStateLoss()

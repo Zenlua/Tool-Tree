@@ -35,9 +35,14 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 actionInfos: ArrayList<NodeInfoBase>?,
                 krScriptActionHandler: KrScriptActionHandler? = null,
                 autoRunTask: AutoRunTask? = null,
-                themeMode: ThemeMode? = null): ActionListFragment {
+                themeMode: ThemeMode? = null,
+                // Gọi khi renderInterface() dựng xong TOÀN BỘ view (kể cả decode ảnh icon/logo
+                // - việc này chạy đồng bộ trên main thread trong PageLayoutRender, có thể mất
+                // khá lâu với trang nhiều ảnh). Bên gọi (ActionPage) dùng để biết lúc nào tắt
+                // thanh tiến trình hiện tạm trong lúc dựng - xem ActionPage.updateActionList.
+                onRendered: (() -> Unit)? = null): ActionListFragment {
             val fragment = ActionListFragment()
-            fragment.setListData(actionInfos, krScriptActionHandler, autoRunTask, themeMode)
+            fragment.setListData(actionInfos, krScriptActionHandler, autoRunTask, themeMode, onRendered)
             return fragment
         }
 
@@ -64,6 +69,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private var themeMode: ThemeMode? = null
     private var pageLayoutRender: PageLayoutRender? = null
     private lateinit var rootGroup: ListItemGroup
+    // Xem create()/updateData() - báo cho bên gọi biết renderInterface() đã dựng xong.
+    private var onRendered: (() -> Unit)? = null
 
     // process = true: xem createProgressive()/appendProgressiveItem()/finishProgressiveList()
     private var progressiveMode = false
@@ -91,11 +98,13 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         actionInfos: ArrayList<NodeInfoBase>?,
         krScriptActionHandler: KrScriptActionHandler? = null,
         autoRunTask: AutoRunTask? = null,
-        themeMode: ThemeMode? = null) {
+        themeMode: ThemeMode? = null,
+        onRendered: (() -> Unit)? = null) {
         this.actionInfos = actionInfos
         this.krScriptActionHandler = krScriptActionHandler
         this.autoRunTask = autoRunTask
         this.themeMode = themeMode
+        this.onRendered = onRendered
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -114,8 +123,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     private fun renderInterface() {
-        val context = context ?: return
-        val currentActionInfos = actionInfos ?: return
+        val context = context ?: run { onRendered?.invoke(); return }
+        val currentActionInfos = actionInfos ?: run { onRendered?.invoke(); return }
         rootGroup = ListItemGroup(context, true, GroupNode(""))
         pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
         val layout = rootGroup.getView()
@@ -123,6 +132,9 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         rootView?.removeAllViews()
         rootView?.addView(layout)
         triggerAction(autoRunTask)
+        // Tới đây PageLayoutRender (kể cả decode ảnh icon/logo đồng bộ bên trong) đã
+        // chạy xong ở trên rồi, nên gọi callback ngay là chính xác thời điểm dựng xong.
+        onRendered?.invoke()
     }
 
     // Dựng rootGroup RỖNG (chưa có mục nào) cho chế độ process = true, rồi bơm ngay các
@@ -169,14 +181,18 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     fun updateData(
         newItems: List<NodeInfoBase>,
         actionHandler: KrScriptActionHandler?,
-        themeMode: ThemeMode?
+        themeMode: ThemeMode?,
+        onRendered: (() -> Unit)? = null
     ) {
         this.actionInfos = ArrayList(newItems)
         this.krScriptActionHandler = actionHandler
         this.themeMode = themeMode
         this.progressiveMode = false
+        this.onRendered = onRendered
         if (isAdded && view != null) {
             renderInterface()
+        } else {
+            onRendered?.invoke()
         }
     }
 
