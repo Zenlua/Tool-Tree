@@ -21,7 +21,7 @@ def normalize_path(path_str):
     return p
 
 def check_all(base_dir):
-    build_info_path = os.path.join(base_dir, "apex_build_info.pb")
+    build_info_path = os.path.join(base_dir, "apex/apex_build_info.pb")
     payload_dir = os.path.join(base_dir, "apex_payload")
     config_file = os.path.join(base_dir, "config", "apex_payload_fs_config")
 
@@ -46,7 +46,8 @@ def check_all(base_dir):
             if '<manifest' in line_lower or '</manifest>' in line_lower or 'android:hasCode' in line_lower:
                 continue
                 
-            if any(kw in line_lower for kw in ['sdk_version', 'fs_type', 'ext']):
+            # Giữ lại target sdk và filesystem type, lọc bỏ min_sdk_version
+            if any(kw in line_lower for kw in ['target_sdk_version', 'targetsdkversion', 'fs_type']):
                 parts = line_str.split(':', 1)
                 if len(parts) == 2:
                     key = parts[0].strip().lower()
