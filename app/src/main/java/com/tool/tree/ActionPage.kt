@@ -390,13 +390,28 @@ class ActionPage : AppCompatActivity() {
         }
 
         // process = true + đang hiện loading (mở trang lần đầu, hoặc reload có showLoading):
-        // hiện từng mục 1 ngay khi build xong (kèm thanh tiến trình dưới toolbar) thay vì
+        // hiện từng mục 1 ngay khi build xong (thanh tiến trình chạy theo % thật) thay vì
         // đợi build xong hết trang mới hiện toàn bộ - dành cho trang có rất nhiều mục/nhiều
         // lệnh shell nên load rất lâu (xem PageConfigReader.tomlChildren). Reload âm thầm
         // (showLoading = false, ví dụ sau khi quay lại từ trang con) vẫn dùng luồng cũ.
+        //
+        // Trang KHÔNG bật process = true vẫn build 1 lần như cũ (không hiện từng mục), NHƯNG
+        // thanh tiến trình dưới toolbar vẫn được hiện (dạng quay vòng, không có %, vì không
+        // có thông tin tiến độ từng mục) trong suốt lúc chờ - để không có cảm giác "trang
+        // trống" khi có mục load lâu, dù không dùng process = true.
         val useProgressiveLoad = showLoading && config.process
 
         loadPageJob = lifecycleScope.launch(Dispatchers.IO) {
+            if (showLoading) {
+                withContext(Dispatchers.Main) {
+                    loadProgressBar.apply {
+                        isIndeterminate = true
+                        progress = 0
+                        visibility = View.VISIBLE
+                    }
+                }
+            }
+
             if (config.beforeRead.isNotEmpty()) {
                 if (showLoading) {
                     withContext(Dispatchers.Main) {
@@ -420,14 +435,31 @@ class ActionPage : AppCompatActivity() {
                 }
             }
 
+            // Không post lên luồng chính ngay từng mục một: nếu nhiều mục build xong dồn
+            // dập (mục "nhanh"), main thread bị dội hàng loạt post() liên tiếp, không còn
+            // khoảng trống xử lý cảm ứng -> cảm giác "đơ", và cú chạm chỉ được xử lý sau khi
+            // hàng đợi post giải phóng (tức đợi tải xong). GOM các mục build xong trong một
+            // khoảng ngắn (~120ms) rồi mới post 1 LẦN duy nhất cho cả lô, để main thread luôn
+            // có khoảng trống giữa các lần cập nhật UI.
+            val pendingBatch = ArrayList<NodeInfoBase>()
+            var lastFlushAt = 0L
+            val flushIntervalMs = 120L
+
             val onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = if (useProgressiveLoad) {
                 { node, done, total ->
-                    // onNodeReady được PageConfigReader gọi trên luồng IO (nền), marshal
-                    // từng cập nhật UI qua handler chính - không chặn luồng đọc config.
-                    handler.post {
-                        if (isFinishing || isDestroyed) return@post
-                        if (node != null) progressiveFragment?.appendProgressiveItem(node)
-                        updateLoadProgress(done, total)
+                    // Chạy tuần tự trên CHÍNH luồng IO đang đọc config (không có luồng nào
+                    // khác ghi vào pendingBatch), nên không cần đồng bộ hoá.
+                    if (node != null) pendingBatch.add(node)
+                    val now = System.currentTimeMillis()
+                    if (done == total || now - lastFlushAt >= flushIntervalMs) {
+                        lastFlushAt = now
+                        val batch = ArrayList(pendingBatch)
+                        pendingBatch.clear()
+                        handler.post {
+                            if (isFinishing || isDestroyed) return@post
+                            batch.forEach { progressiveFragment?.appendProgressiveItem(it) }
+                            updateLoadProgress(done, total)
+                        }
                     }
                 }
             } else null
@@ -452,7 +484,6 @@ class ActionPage : AppCompatActivity() {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
                     if (useProgressiveLoad) {
-                        hideLoadProgress()
                         // resolvePendingStates() (chạy trong PageConfigReader) đã xong lúc
                         // này - làm mới hiển thị switch/picker về đúng trạng thái thật rồi
                         // mới chạy autoRunTask, xem ActionListFragment.finishProgressiveList.
@@ -463,9 +494,9 @@ class ActionPage : AppCompatActivity() {
                     }
                     refreshCheckboxMenuStates()
                 } else {
-                    hideLoadProgress()
                     handleLoadError(config)
                 }
+                hideLoadProgress()
                 progressBarDialog.hideDialog()
             }
         }
@@ -482,19 +513,14 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Dựng 1 ActionListFragment RỖNG + hiện thanh tiến trình dưới toolbar - dùng khi trang
-    // cấu hình process = true. Các mục thật sẽ được thêm dần qua appendProgressiveItem()
-    // (gọi từ onNodeReady bên trong loadPageConfig).
+    // Dựng 1 ActionListFragment RỖNG - dùng khi trang cấu hình process = true. Thanh tiến
+    // trình dưới toolbar đã được hiện từ đầu loadPageConfig() rồi (chung cho mọi trang có
+    // showLoading), ở đây chỉ cần dựng danh sách rỗng để appendProgressiveItem() đổ mục vào.
     private fun beginProgressiveList(): ActionListFragment {
         val fragment = ActionListFragment.createProgressive(actionShortClickHandler, buildAutoRunTask(), ThemeModeState.getThemeMode())
         supportFragmentManager.beginTransaction()
             .replace(R.id.main_list, fragment)
             .commitAllowingStateLoss()
-        loadProgressBar.apply {
-            isIndeterminate = true
-            progress = 0
-            visibility = View.VISIBLE
-        }
         return fragment
     }
 
