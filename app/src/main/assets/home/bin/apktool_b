@@ -65,8 +65,6 @@ echo
 
 # Lọc vẫn bản
 if [ -d "$INPUT/res/values" ] && [ "$FIRTVB" == 1 ]; then
-echo "$apkb_text_2"
-echo
 for vvv in $(check_changes.py --dry-run "$INPUT/res" "$INPUT/.cache/hash_res.json" | grep -e 'fixed:' -e 'values' | awk '{print $2}'); do
 if [ "$(echo "$vvv" | grep -cm1 "values-.*/")" == 1 ]; then
 ten_file="$(basename "$vvv" .xml)"
@@ -76,12 +74,7 @@ if [ "$(echo "$vvv" | grep -cm1 "values/")" == 1 ]; then
 [ "$vvv" == "values/public.xml" ] || update_id.py --use-file "$INPUT/res/values/public.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/public_log.log
 fi
 done
-echo "$apkb_text_3"
-echo
 fi
-
-echo "$replag_text_2..."
-echo
 
 if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ]; then
 for vkn in "$INPUT"/classes*.dex; do
@@ -101,7 +94,6 @@ for vkn in "$INPUT"/classes*.dex; do
       echo "I: Smali: ${vkn##*/}..."
       dexupdater -i "$vkn" -o "$INPUT/${kout}_s.dex" -e $add_fixsmali  -delete $delete_smali > "$INPUT/.cache/build_$kout.log"
       [ -f "$INPUT/${kout}_s.dex" ] && mv "$INPUT/${kout}_s.dex" "$vkn" || killtree "Dex update error: $kout"
-      [ "$broken_dex" == 1 ] && dex_shield.py "$vkn" >/dev/null
       else
       mv "$INPUT/$kout.dex" "$vkn"
       fi
