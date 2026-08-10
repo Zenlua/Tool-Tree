@@ -13,7 +13,6 @@
         android:background="@android:color/transparent"
         android:theme="?android:actionBarTheme">
 
-        <!-- BlurTopBarLayout chỉ chứa riêng Toolbar -->
         <com.omarea.common.ui.BlurTopBarLayout
             android:id="@+id/blur_top_container"
             android:layout_width="match_parent"
@@ -31,13 +30,12 @@
                 app:titleTextColor="?android:textColorPrimary" />
 
         </com.omarea.common.ui.BlurTopBarLayout>
-
-        <!-- Đưa ProgressBar ra ngoài, nằm dưới Toolbar và tự động xuống dòng -->
         <ProgressBar
             android:id="@+id/page_load_progress"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="6dp"
+            android:layout_height="8dp"
+            android:translationY="-4dp"
             android:max="100"
             android:progress="0"
             android:indeterminate="true"
