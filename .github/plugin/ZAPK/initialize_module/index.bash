@@ -48,6 +48,7 @@ echo '
   description=Modified system files" | tee '$path_modun'/module.prop
   touch '$path_modun'/update
   cp -rf '$MPAT'/service.sh '$path_modun2'/service.sh
+  cp -rf '$MPAT'/system.prop '$path_modun2'/system.prop
   set_permis -R -o 0:0 -c u:object_r:system_file:s0 '$path_modun2'/system
   """
     [[group.action.params]]
@@ -68,11 +69,17 @@ echo '
   [[group]]
   [[group.editor]]
   title = "'$lang_desc_prop'"
-  file = "'$path_modun2'/system.prop"
+  file = "'$MPAT'/system.prop"
   value = "ro.control_privapp_permissions=log"
   placeholder = "ro.control_privapp_permissions=log"
   visible = "'$visisj'"
 
+  [[group]]
+  [[group.editor]]
+  title = "'$lang_desc_service'"
+  file = "'$MPAT'/service.sh"
+  visible = "'$visisj'"
+  
   [[group]]
   [[group.action]]
   title = "'$lang_del_tile'"

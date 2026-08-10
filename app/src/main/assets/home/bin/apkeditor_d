@@ -66,7 +66,7 @@ echo
 typefile="$(checkapk "$INPUT")"
 if [ "$typefile" == "zipapk" ]; then
 typeten="$(unzip -l -q "$INPUT" | grep -v '.*./.*.\.apk' | grep '\.apk'$ | awk '{print $4}')"
-unzip -q -o "$INPUT" -d "${INPUT%/*}" $typeten &>/dev/null
+unzip -qo "$INPUT" -d "${INPUT%/*}" $typeten &>/dev/null
 ptpk="${INPUT%/*}/$typeten"
 apkskk=1
 elif [ "$typefile" == "apks" ]; then
@@ -128,11 +128,11 @@ if [ "$DECODEX" == "smali" ]; then
     for vkn in "$Tout"/dex/classes*.dex; do
     [ -f "$vkn" ] || continue
     repair_dex.py "$vkn" >/dev/null
-    Dex=$(dexupdater -g "$vkn" -printApi | awk '/Dex/ {print $2}')
+    Dex=$(dexupdater -i "$vkn" -printVer)
     echo "I: Baksmali: v$Dex ${vkn##*/} ..."
     kout="$(basename $vkn .dex)"
     mkdir -p "$Tout/smali/$kout"
-    API=$(dexupdater -g "$vkn" -printApi | awk '/API/ {print $2}')
+    API=$(dexupdater -i "$vkn" -printApi)
     eval "baksmali d $hhhhfdr --bootclasspath \"$BOOTCLASSPATH\" --api '$API' \"$vkn\" -o \"$Tout/smali/$kout\" "
     check_changes.py "$Tout/smali/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
     done

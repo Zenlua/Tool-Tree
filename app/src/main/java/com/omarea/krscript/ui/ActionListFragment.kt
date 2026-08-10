@@ -204,35 +204,56 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         }
     }
 
-    private fun nodeUnlocked(clickableNode: ClickableNode): Boolean {
+    // Kiểm tra khoá TRƯỚC khi cho thực hiện 1 mục. Nếu có lockShell (lệnh shell kiểm tra
+    // khoá), chạy BẤT ĐỒNG BỘ trên luồng IO - trước đây (nodeUnlocked cũ) chạy lockShell
+    // ĐỒNG BỘ ngay trên main thread ngay khi bấm, khiến bấm vào bất kỳ mục nào có lockShell
+    // (page/action/switch/picker/editor) đều bị đơ 1 lúc không có gì báo hiệu rồi mới phản
+    // hồi - trông như "chạy shell rồi mới mở trang". Giờ hiện hộp thoại loading NGAY khi bấm
+    // (chỉ khi thật sự cần chạy shell), và chỉ gọi onUnlocked() sau khi có kết quả thật.
+    private fun nodeUnlockedAsync(clickableNode: ClickableNode, onUnlocked: () -> Unit) {
         val currentSDK = Build.VERSION.SDK_INT
         if (clickableNode.targetSdkVersion > 0 && currentSDK != clickableNode.targetSdkVersion) {
             DialogHelper.helpInfo(requireContext(), getString(R.string.kr_sdk_discrepancy), getString(R.string.kr_sdk_discrepancy_message).format(clickableNode.targetSdkVersion))
-            return false
+            return
         } else if (currentSDK > clickableNode.maxSdkVersion) {
             DialogHelper.helpInfo(requireContext(), getString(R.string.kr_sdk_overtop), getString(R.string.kr_sdk_message).format(clickableNode.minSdkVersion, clickableNode.maxSdkVersion))
-            return false
+            return
         } else if (currentSDK < clickableNode.minSdkVersion) {
             DialogHelper.helpInfo(requireContext(), getString(R.string.kr_sdk_too_low), getString(R.string.kr_sdk_message).format(clickableNode.minSdkVersion, clickableNode.maxSdkVersion))
-            return false
+            return
         }
 
-        var message = ""
-        val unlocked = (if (clickableNode.lockShell.isNotEmpty()) {
-            message = ScriptEnvironmen.executeResultRoot(context, clickableNode.lockShell, clickableNode)
-            message == "unlock" || message == "unlocked" || message == "false" || message == "0"
-        } else {
-            !clickableNode.locked
-        })
-        if (!unlocked) {
-            Toast.makeText(context, if (message.isNotEmpty()) message else getString(R.string.kr_lock_message), Toast.LENGTH_LONG).show()
+        if (clickableNode.lockShell.isEmpty()) {
+            // Không cần chạy shell - kiểm tra local tức thời, không có gì phải đợi/hiện dialog.
+            if (clickableNode.locked) {
+                Toast.makeText(context, getString(R.string.kr_lock_message), Toast.LENGTH_LONG).show()
+            } else {
+                onUnlocked()
+            }
+            return
         }
-        return unlocked
+
+        // Có lockShell - hiện hộp thoại loading ngay lập tức (thay vì để main thread đơ lặng
+        // lẽ trong lúc chờ root shell round-trip) rồi mới chạy kiểm tra khoá trên luồng IO.
+        progressBarDialog.showDialog(getString(R.string.onloading))
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val message = ScriptEnvironmen.executeResultRoot(context, clickableNode.lockShell, clickableNode)
+            withContext(Dispatchers.Main) {
+                progressBarDialog.hideDialog()
+                if (!isAdded) return@withContext
+                val unlocked = message == "unlock" || message == "unlocked" || message == "false" || message == "0"
+                if (!unlocked) {
+                    Toast.makeText(context, if (message.isNotEmpty()) message else getString(R.string.kr_lock_message), Toast.LENGTH_LONG).show()
+                } else {
+                    onUnlocked()
+                }
+            }
+        }
     }
 
     override fun onSwitchClick(item: SwitchNode, onCompleted: Runnable) {
         if (!checkAndLockClick()) return
-        if (nodeUnlocked(item)) {
+        nodeUnlockedAsync(item) {
             val toValue = !item.checked
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { switchExecute(item, toValue, onCompleted) })
@@ -253,7 +274,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     override fun onPageClick(item: PageNode, onCompleted: Runnable) {
         if (!checkAndLockClick()) return
-        if (nodeUnlocked(item)) {
+        nodeUnlockedAsync(item) {
             if (context != null && item.link.isNotEmpty()) {
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, item.link.toUri())
@@ -291,11 +312,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     override fun onEditorClick(item: EditorNode, onCompleted: Runnable) {
         if (!checkAndLockClick()) return
-        if (nodeUnlocked(item)) {
-            val context = context ?: return
+        nodeUnlockedAsync(item) {
+            val context = context ?: return@nodeUnlockedAsync
             if (item.file.isEmpty()) {
                 Toast.makeText(context, getString(R.string.editor_file_missing), Toast.LENGTH_SHORT).show()
-                return
+                return@nodeUnlockedAsync
             }
             com.tool.tree.TextEditorActivity.start(
                 context, item.file, item.title, item.desc, item.wrap, item.pageConfigDir, item.placeholder,
@@ -307,7 +328,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     override fun onPickerClick(item: PickerNode, onCompleted: Runnable) {
         if (!checkAndLockClick()) return
-        if (nodeUnlocked(item)) {
+        nodeUnlockedAsync(item) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { pickerExecute(item, onCompleted) })
             } else if (item.warning.isNotEmpty()) {
@@ -388,7 +409,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
         if (!checkAndLockClick()) return
-        if (nodeUnlocked(item)) {
+        nodeUnlockedAsync(item) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted) })
             } else if (item.warning.isNotEmpty() && (item.params == null || item.params?.isEmpty() == true)) {

@@ -67,8 +67,7 @@ echo
 if [ -d "$INPUT/res/values" ] && [ "$FIRTVB" == 1 ]; then
 echo "$apkb_text_2"
 echo
-cp "$INPUT/.cache/hash_res.json" "$INPUT/.cache/2hash_res.json"
-for vvv in $(check_changes.py "$INPUT/res" "$INPUT/.cache/2hash_res.json" | grep -e 'fixed:' -e 'values' | awk '{print $2}'); do
+for vvv in $(check_changes.py --dry-run "$INPUT/res" "$INPUT/.cache/hash_res.json" | grep -e 'fixed:' -e 'values' | awk '{print $2}'); do
 if [ "$(echo "$vvv" | grep -cm1 "values-.*/")" == 1 ]; then
 ten_file="$(basename "$vvv" .xml)"
 text_filter.py "$INPUT/res/values/$ten_file.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/text_filter.log
@@ -77,7 +76,6 @@ if [ "$(echo "$vvv" | grep -cm1 "values/")" == 1 ]; then
 [ "$vvv" == "values/public.xml" ] || update_id.py --use-file "$INPUT/res/values/public.xml" "$INPUT/res/$vvv" >>$INPUT/.cache/public_log.log
 fi
 done
-rm -fr "$INPUT/.cache/2hash_res.json"
 echo "$apkb_text_3"
 echo
 fi
@@ -86,38 +84,27 @@ echo "$replag_text_2..."
 echo
 
 if [ -f "$INPUT/classes.dex" ] && [ -d "$INPUT/smali" ]; then
-# Tạo dex
-for vcxs in $INPUT/smali_*; do
-if [ -d "$vcxs" ]; then
-ksbdhch="$(echo ${vcxs##*/} | sed 's|smali_||')"
-[ -f "$INPUT/$ksbdhch.dex" ] || touch "$INPUT/$ksbdhch.dex"
-fi
-done
-API=$(dexupdater -g "$INPUT/classes.dex" -printApi 2>/dev/null | awk '/API/ {print $2}')
 for vkn in "$INPUT"/classes*.dex; do
     [ -f "$vkn" ] || continue
     [ "${vkn##*/}" == "classes.dex" ] && thyedkm="smali" || thyedkm="smali_classes"
     kout="$(basename $vkn .dex | sed "s|classes|$thyedkm|")"
     [ -d "$INPUT/$kout" ] || continue
     if [ -f "$INPUT/.cache/hash_$kout.json" ]; then
-    cp -rf "$INPUT/.cache/hash_$kout.json" "$INPUT/.cache/2hash_$kout.json"
-    dkfjff="$(check_changes.py "$INPUT/$kout" "$INPUT/.cache/2hash_$kout.json")"
-    rm -fr "$INPUT/.cache/2hash_$kout.json"
+    dkfjff="$(check_changes.py --dry-run "$INPUT/$kout" "$INPUT/.cache/hash_$kout.json")"
     else
-    dkfjff="$(check_changes.py "$INPUT/$kout" "$INPUT/.cache/hash_$kout.json" )"
+    dkfjff="$(check_changes.py --dry-run "$INPUT/$kout" "$INPUT/.cache/hash_$kout.json")"
     fi
     if [ -n "$dkfjff" ]; then
-    add_fixsmali="$(echo "$dkfjff" | grep -e "new:" -e "fixed:" | awk '{print "'$INPUT/$kout'/"$2}')"
-    [ -n "$add_fixsmali" ] && smali a --api $API -o "$INPUT/$kout.dex" $add_fixsmali
-        if [ -s "$vkn" ]; then
-            echo "I: Smali: ${vkn##*/}..."
-            dexupdater -g "$vkn" -e "$INPUT/$kout.dex" -o "$INPUT/${kout}_s.dex" -api $API -delete $(echo "$dkfjff" | grep "deleted:" | awk '{print $2}' | sed "s|\.smali||g") > "$INPUT/.cache/build_$kout.log"
-            [ -f "$INPUT/${kout}_s.dex" ] && mv "$INPUT/${kout}_s.dex" "$vkn" || killtree "Dex update error: $kout"
-            rm -fr "$INPUT/$kout.dex"
-            [ "$broken_dex" == 1 ] && dex_shield.py "$vkn" >/dev/null
-        else
-            mv "$INPUT/$kout.dex" "$vkn"
-        fi
+      add_fixsmali="$(echo "$dkfjff" | grep -e "new:" -e "fixed:" | awk '{print "'$INPUT/$kout'/"$2}')"
+      delete_smali="$(echo "$dkfjff" | grep "deleted:" | awk '{print $2}' | sed "s|\.smali||g")"
+      if [ -s "$vkn" ]; then
+      echo "I: Smali: ${vkn##*/}..."
+      dexupdater -i "$vkn" -o "$INPUT/${kout}_s.dex" -e $add_fixsmali  -delete $delete_smali > "$INPUT/.cache/build_$kout.log"
+      [ -f "$INPUT/${kout}_s.dex" ] && mv "$INPUT/${kout}_s.dex" "$vkn" || killtree "Dex update error: $kout"
+      [ "$broken_dex" == 1 ] && dex_shield.py "$vkn" >/dev/null
+      else
+      mv "$INPUT/$kout.dex" "$vkn"
+      fi
     fi
 done
 fi
@@ -145,20 +132,19 @@ mkdir -p "$OUTPUT"
 
 # ký apk
 if [ "$SIGNAP" != 'default' ]; then
-echo
-echo "$apkb_text_6 $SIGNAP"
-sign -i "$INPUT/dist/$tenapkkk" -o "$OUTPUT/$tenapkkk" -k "$ETC/key/$SIGNAP.pk8" -c "$ETC/key/$SIGNAP.x509.pem"
-else
-# khôi phục chữ ký
-    if [ -d "$INPUT/signatures" ]; then
-    apkeditor b -f -t sig -i "$INPUT/dist/$tenapkkk" -sig "$INPUT/signatures" -o "$OUTPUT/$tenapkkk" &> "$INPUT/.cache/restore_sign.log"
-    fi
+  echo
+  echo "$apkb_text_6 $SIGNAP"
+  sign -i "$INPUT/dist/$tenapkkk" -o "$OUTPUT/$tenapkkk" -k "$ETC/key/$SIGNAP.pk8" -c "$ETC/key/$SIGNAP.x509.pem"
+  else
+  # khôi phục chữ ký
+  if [ -d "$INPUT/signatures" ]; then
+  apkeditor b -f -t sig -i "$INPUT/dist/$tenapkkk" -sig "$INPUT/signatures" -o "$OUTPUT/$tenapkkk" &> "$INPUT/.cache/restore_sign.log"
+  fi
 fi
 
 # in đường dẫn lưu
 if [ -f "$OUTPUT/$tenapkkk" ]; then
-# xoá dự án
-[ "$XDELF" == 1 ] && rm -fr "$INPUT"
-else
-killtree "$apke_text_3: $INPUT"
+  [ "$XDELF" == 1 ] && rm -fr "$INPUT"
+  else
+  killtree "$apke_text_3: $INPUT"
 fi

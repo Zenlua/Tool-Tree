@@ -1,19 +1,8 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 
-MPAT="${0%/*}"
-source trans_add "$MPAT"
-[ "$(glog wifi_tool_customize)" == 1 ] && number_wifi_pin=1
-
-(
-if [ "$(cmd wifi status | grep -cm1 'Wifi is disabled')" == 1 ]; then
-  cmd wifi set-wifi-enabled enabled
-  sleep 1
-fi
-) &
-
-if [ "$1" == "home" ]; then
-  echo '
+home() {
+echo '
 [[group]]
   title = "'$google_text'"
 
@@ -99,4 +88,19 @@ if [ "$1" == "home" ]; then
     fi
   """
 '
+}
+
+MPAT="${0%/*}"
+
+source trans_add "$MPAT"
+[ "$(glog wifi_tool_customize)" == 1 ] && number_wifi_pin=1
+
+{
+if [ "$(cmd wifi status | grep -cm1 'Wifi is disabled')" == 1 ]; then
+  cmd wifi set-wifi-enabled enabled
+  sleep 1
 fi
+} &
+
+# gọi home
+$@

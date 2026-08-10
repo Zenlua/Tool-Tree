@@ -101,10 +101,10 @@ def scan_directory(root_dir, excluded_exts, previous_db, force=False, buffer_siz
 
     return current_db
 
-def check_changes(root_dir, hash_db_path, exclude_list, force=False, buffer_size=1048576, max_workers=None):
+def check_changes(root_dir, hash_db_path, exclude_list, force=False, buffer_size=1048576, max_workers=None, dry_run=False):
     """
     So sánh thay đổi giữa hash cũ và hash mới, in ra kết quả.
-    Cập nhật và lưu database.
+    Cập nhật và lưu database (nếu dry_run là False).
     """
     previous_db = load_hash_db(hash_db_path)
     current_db = scan_directory(root_dir, exclude_list, previous_db, force, buffer_size, max_workers)
@@ -118,7 +118,8 @@ def check_changes(root_dir, hash_db_path, exclude_list, force=False, buffer_size
         if rel not in current_db:
             print(f"deleted: {rel}")
 
-    save_hash_db(hash_db_path, current_db)
+    if not dry_run:
+        save_hash_db(hash_db_path, current_db)
 
 def main():
     parser = argparse.ArgumentParser(description="Scan the directory, calculate the SHA-256 value, and check for changes.")
@@ -130,6 +131,8 @@ def main():
                         help="Recalculate the hash for all files, without using the cache.")
     parser.add_argument("--workers", type=int,
                         help="Maximum number of threads (default = min(32, CPU*2))")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Chỉ in ra log thay đổi mà không lưu lại database hash.")
     args = parser.parse_args()
 
     directory = os.path.abspath(args.directory)
@@ -142,7 +145,7 @@ def main():
         sys.exit(1)
 
     check_changes(directory, args.hash_db, exclude_exts, force=args.force,
-                  buffer_size=1048576, max_workers=args.workers)
+                  buffer_size=1048576, max_workers=args.workers, dry_run=args.dry_run)
 
 if __name__ == "__main__":
     main()

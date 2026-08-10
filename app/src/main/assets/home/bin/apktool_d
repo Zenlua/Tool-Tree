@@ -64,16 +64,16 @@ echo
 # chuyển đổi apk
 typefile="$(checkapk "$INPUT")"
 if [ "$typefile" == "zipapk" ]; then
-typeten="$(unzip -l -q "$INPUT" | grep -v '.*./.*.\.apk' | grep -i '\.apk'$ | awk '{print $4}')"
-unzip -qo "$INPUT" -d "${INPUT%/*}" $typeten &>/dev/null
-ptpk="${INPUT%/*}/$typeten"
-apkskk=1
-elif [ "$typefile" == "apks" ]; then
-apkeditor m -f -i "$INPUT" -o "${INPUT%.*}.apk" &>/dev/null
-ptpk="${INPUT%.*}.apk"
-apkskk=1
-elif [ "$typefile" == "apk" ] || [ "$typefile" == "dex" ]; then
-ptpk="$INPUT"
+  typeten="$(unzip -l -q "$INPUT" | grep -v '.*./.*.\.apk' | grep -i '\.apk'$ | awk '{print $4}')"
+  unzip -qo "$INPUT" -d "${INPUT%/*}" $typeten &>/dev/null
+  ptpk="${INPUT%/*}/$typeten"
+  apkskk=1
+  elif [ "$typefile" == "apks" ]; then
+  apkeditor m -f -i "$INPUT" -o "${INPUT%.*}.apk" &>/dev/null
+  ptpk="${INPUT%.*}.apk"
+  apkskk=1
+  elif [ "$typefile" == "apk" ] || [ "$typefile" == "dex" ]; then
+  ptpk="$INPUT"
 fi
 
 # xác định tệp
@@ -126,12 +126,12 @@ if [ "$DECODEX" == 2 ]; then
     for vkn in "$Tout"/classes*.dex; do
     [ -f "$vkn" ] || continue
     repair_dex.py "$vkn" >/dev/null
-    Dex=$(dexupdater -g "$vkn" -printApi | awk '/Dex/ {print $2}')
+    Dex=$(dexupdater -i "$vkn" -printVer)
     echo "I: Baksmali: V$Dex ${vkn##*/}..."
     [ "${vkn##*/}" == "classes.dex" ] && thyedkm="smali" || thyedkm="smali_classes"
     kout="$(basename $vkn .dex | sed "s|classes|$thyedkm|")"
     mkdir -p "$Tout/$kout"
-    API=$(dexupdater -g "$vkn" -printApi | awk '/API/ {print $2}')
+    API=$(dexupdater -i "$vkn" -printApi)
     eval "baksmali d $hhhhfdr --bootclasspath \"$BOOTCLASSPATH\" --api $API \"$vkn\" -o \"$Tout/$kout\" "
     check_changes.py "$Tout/$kout" "$Tout/.cache/hash_$kout.json" >/dev/null
     done
