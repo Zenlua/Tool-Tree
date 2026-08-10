@@ -17,30 +17,36 @@
             android:id="@+id/blur_top_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/krscript_item_ripple_in" >
+            android:background="@drawable/krscript_item_ripple_in">
             
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
+            <!-- Sử dụng LinearLayout để sắp xếp Toolbar và ProgressBar theo chiều dọc -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="@android:color/transparent"
-                app:elevation="0dp"
-                app:popupTheme="@style/AppTheme.PopupOverlay"
-                app:subtitleTextColor="?android:textColorPrimary"
-                app:titleTextColor="?android:textColorPrimary" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-            <!-- Thanh tiến trình load trang (process = true) - ẩn theo mặc định, chỉ
-                 ActionPage bật lên khi trang cấu hình process = true đang tải. -->
-            <ProgressBar
-                android:id="@+id/page_load_progress"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="6dp"
-                android:max="100"
-                android:progress="0"
-                android:indeterminate="true"
-                android:visibility="gone" />
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="@android:color/transparent"
+                    app:elevation="0dp"
+                    app:popupTheme="@style/AppTheme.PopupOverlay"
+                    app:subtitleTextColor="?android:textColorPrimary"
+                    app:titleTextColor="?android:textColorPrimary" />
+
+                <!-- Thanh tiến trình nằm ngay bên dưới Toolbar -->
+                <ProgressBar
+                    android:id="@+id/page_load_progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:indeterminate="true"
+                    android:visibility="gone" />
+
+            </LinearLayout>
 
         </com.omarea.common.ui.BlurTopBarLayout>
 

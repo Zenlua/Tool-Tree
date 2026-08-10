@@ -433,27 +433,44 @@ class ActionPage : AppCompatActivity() {
             }
 
             // Mỗi mục build xong ở PageConfigReader/PageConfigSh (đang chạy tuần tự trên
-            // luồng IO) được post lên main thread NGAY LẬP TỨC, từng mục một - không gom lô.
-            // Việc build data giữa 2 mục vốn đã tốn thời gian round-trip shell thật (không
-            // dồn dập tức thời), nên post riêng lẻ vẫn để lại khoảng trống cho main thread xử
-            // lý cảm ứng vào các mục đã hiện trước đó, thay vì phải đợi cả lô dựng xong.
+            // luồng IO) được post lên main thread để thêm vào UI. QUAN TRỌNG: luồng IO phải
+            // ĐỢI post() này thực thi xong (qua CountDownLatch) rồi mới được build/report mục
+            // kế tiếp - nếu không, khi dữ liệu build nhanh hơn UI kịp vẽ (appendProgressiveItem
+            // có thể decode ảnh trên main thread), IO thread sẽ dội hàng loạt post() liên tiếp
+            // vào hàng đợi main thread. Main thread khi đó phải xử lý hết các Runnable đã xếp
+            // hàng trước rồi mới tới lượt sự kiện chạm/vuốt -> không vuốt được dù thanh tiến
+            // trình (animation riêng do Choreographer đảm nhiệm) trông như vẫn đang chạy bình
+            // thường. Đồng bộ theo từng mục đảm bảo hàng đợi main thread không bao giờ có quá
+            // 1 việc chờ xử lý cùng lúc, luôn còn khe hở cho vuốt/chạm giữa các mục.
             var barShown = false
 
             val onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = if (useProgressiveLoad) {
                 { node, _, _ ->
-                    handler.post {
-                        if (isFinishing || isDestroyed) return@post
-                        if (!barShown) {
-                            // Mục ĐẦU TIÊN đã sẵn sàng - ẩn hộp thoại, chuyển sang thanh tiến
-                            // trình chạy động (không hiện %, chỉ để báo vẫn đang tải).
-                            barShown = true
-                            progressBarDialog.hideDialog()
-                            loadProgressBar.apply {
-                                isIndeterminate = true
-                                visibility = View.VISIBLE
+                    if (!isFinishing && !isDestroyed) {
+                        val latch = java.util.concurrent.CountDownLatch(1)
+                        handler.post {
+                            try {
+                                if (!isFinishing && !isDestroyed) {
+                                    if (!barShown) {
+                                        // Mục ĐẦU TIÊN đã sẵn sàng - ẩn hộp thoại, chuyển sang
+                                        // thanh tiến trình chạy động (không hiện %).
+                                        barShown = true
+                                        progressBarDialog.hideDialog()
+                                        loadProgressBar.apply {
+                                            isIndeterminate = true
+                                            visibility = View.VISIBLE
+                                        }
+                                    }
+                                    if (node != null) progressiveFragment?.appendProgressiveItem(node)
+                                }
+                            } finally {
+                                latch.countDown()
                             }
                         }
-                        if (node != null) progressiveFragment?.appendProgressiveItem(node)
+                        // Giới hạn thời gian chờ để luồng IO không treo vĩnh viễn trong
+                        // trường hợp hiếm gặp Runnable trên không bao giờ chạy được (vd
+                        // Activity vừa bị huỷ ngay lúc này).
+                        latch.await(1000, java.util.concurrent.TimeUnit.MILLISECONDS)
                     }
                 }
             } else null

@@ -19,7 +19,7 @@ echo '
   [ -f '$path_modun'/remove ] && rm -fr '$path_modun'/remove
   mkdir -p '$path_modun' '$path_modun2'
   
-  if [ "$uri_adb_moduls" ]; then
+  if [ -f "$uri_file_modun" ] && [ -n "$uri_adb_moduls" ]; then
     mkdir -p "'$path_modun2'${uri_adb_moduls%/*}"
     cp -rf "$uri_file_modun" "'$path_modun2'$uri_adb_moduls"
     echo "'$lang_save_at''$path_modun2'$uri_adb_moduls"
@@ -27,15 +27,17 @@ echo '
   else
     echo "'$lang_searching'"
     echo
-    link_find_file="$(find -L /system -name "${uri_file_modun##*/}" -type f -print -quit)"
-    if [ "$link_find_file" ]; then
-      mkdir -p "'$path_modun2'${link_find_file%/*}"
-      cp -rf "$uri_file_modun" "'$path_modun2'$link_find_file"
-      echo "'$lang_save_at''$path_modun2'$link_find_file"
-      echo
-    else
-      echo "'$lang_not_found'${uri_file_modun##*/}'$lang_input_notice'"
-    fi
+    for vc in $uri_file_modun; do
+      link_find_file="$(find -L /system -name "${vc##*/}" -type f -print -quit)"
+      if [ "$link_find_file" ]; then
+        mkdir -p "'$path_modun2'${link_find_file%/*}"
+        cp -rf "$vc" "'$path_modun2'$link_find_file"
+        echo "'$lang_save_at''$path_modun2'$link_find_file"
+        echo
+      else
+        echo "'$lang_not_found'${vc##*/}'$lang_input_notice'"
+      fi
+    done
   fi
   
   echo "id=Tool-Tree
@@ -52,6 +54,7 @@ echo '
     name = "uri_file_modun"
     value-sh = "glog uri_file_modun"
     path-home = "'$PTAD'/out"
+    multiple = true
     required = "required"
     type="file"
 
