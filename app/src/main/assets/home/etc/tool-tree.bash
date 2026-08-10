@@ -2278,6 +2278,7 @@ Homeadd() {
   title = "'$name_vb'"
   desc = "'$desc_vb'"
   icon = "'$icon_vb'"
+  process = true
 
   '"$google_trankk"'
   [[group.page.options]]
