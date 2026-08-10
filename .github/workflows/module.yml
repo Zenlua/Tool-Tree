@@ -24,4 +24,4 @@ jobs:
         with:
           name: "Tmp"
           tag_name: "V1"
-          files: .github/module.so
+          files: .github/module_*.so
