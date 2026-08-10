@@ -1,0 +1,1 @@
+exec java -cp $HOME/etc/apksigner.jar:$HOME/etc/baksmali.jar com.android.tools.smali.dexlib2.DexSearcher "$@"

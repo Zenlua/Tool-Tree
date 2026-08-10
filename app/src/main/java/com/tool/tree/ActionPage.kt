@@ -446,6 +446,20 @@ class ActionPage : AppCompatActivity() {
 
             val onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = if (useProgressiveLoad) {
                 { node, _, _ ->
+                    // Giải mã trước (và tự nạp vào cache dùng chung của IconPathAnalysis)
+                    // NGAY TRÊN LUỒNG IO này - không đụng gì tới UI nên an toàn. Nhờ vậy khi
+                    // main thread thực sự dựng view cho mục này (bên dưới), lệnh decode ảnh
+                    // bên trong chỉ còn là 1 lượt đọc cache (gần như tức thời) thay vì phải tự
+                    // đọc file + giải mã bitmap ngay trên main thread - đây là phần tốn thời
+                    // gian nhất mỗi lần thêm mục, nên gỡ nó ra khỏi main thread giúp cuộn mượt
+                    // hơn hẳn dù vẫn phải đợi đồng bộ theo từng mục (xem latch bên dưới).
+                    if (node != null) {
+                        try {
+                            prewarmNodeImages(node)
+                        } catch (_: Exception) {
+                        }
+                    }
+
                     if (!isFinishing && !isDestroyed) {
                         val latch = java.util.concurrent.CountDownLatch(1)
                         handler.post {
@@ -527,6 +541,34 @@ class ActionPage : AppCompatActivity() {
                     hideLoadProgress()
                     progressBarDialog.hideDialog()
                 }
+            }
+        }
+    }
+
+    // Giải mã trước toàn bộ ảnh (icon/logo/photo/bg) của 1 mục (và các mục con nếu là
+    // GroupNode) NGAY TRÊN LUỒNG GỌI HÀM (không đụng UI, an toàn để gọi từ luồng IO) - kết
+    // quả tự vào cache dùng chung của IconPathAnalysis (khoá theo pageConfigDir + đường dẫn),
+    // nên lần load lại sau đó trên main thread (lúc dựng view) chỉ còn là đọc cache. Dùng cho
+    // luồng tải từng mục 1 (process = true) - xem onNodeReady trong loadPageConfig().
+    private fun prewarmNodeImages(node: NodeInfoBase) {
+        val iconPathAnalysis = IconPathAnalysis()
+        when (node) {
+            is TextNode -> {
+                node.rows.forEach { row ->
+                    try {
+                        iconPathAnalysis.loadtextPhoto(this, row, node.pageConfigDir)
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+            is GroupNode -> {
+                node.children.forEach { child -> prewarmNodeImages(child) }
+            }
+            is ClickableNode -> {
+                try { iconPathAnalysis.loadIcon(this, node) } catch (_: Exception) {}
+                try { iconPathAnalysis.loadLogo(this, node, false) } catch (_: Exception) {}
+                try { iconPathAnalysis.loadPhoto(this, node) } catch (_: Exception) {}
+                try { iconPathAnalysis.loadBg(this, node) } catch (_: Exception) {}
             }
         }
     }
