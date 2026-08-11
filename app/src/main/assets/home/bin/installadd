@@ -19,7 +19,7 @@ loadmd="$(7z x "$1" Add-on.bash -so 2>/dev/null)"
     fi
 else
 file_random="Add-on_$RANDOM.add"
-taive "$1" "$TMP/$file_random" 2>&1
+taive -# "$1" "$TMP/$file_random" 2>&1
 loadmd="$(7z x "$TMP/$file_random" Add-on.bash -so 2>/dev/null)"
     if [ -z "$loadmd" ]; then
     echo "Download add-on error !" >&2
@@ -35,13 +35,14 @@ echo "ID not found in addon.prop" >&2
 exit 1
 fi
 
+echo
 echo "$name_text: $name ($version)"
 echo
 
 echo "ID: $id"
 echo
 
-echo "$author_text: $(gprop author)"
+echo "$author_text: $author"
 echo
 
 [ -d "$2/$id" ] || mkdir -p "$2/$id"

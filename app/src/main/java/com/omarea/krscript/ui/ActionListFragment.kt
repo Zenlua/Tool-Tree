@@ -87,7 +87,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
      */
     private fun checkAndLockClick(): Boolean {
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastClickTime < 800) {
+        if (currentTime - lastClickTime < 600) {
             return false
         }
         lastClickTime = currentTime

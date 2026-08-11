@@ -240,7 +240,12 @@ Home() {
   handler = """
   [ "$menu_id" == "file" ] && installadd "$file" "$AON"
   """
-
+    [[group.page.options]]
+    type = "default"
+    title = "'$download_text'"
+    link = "https://zenlua.github.io/Tool-Tree/website/Addon.html"
+    silent = true
+    
     [[group.page.options]]
     title = "'$customize_text'"
     box = "glog show_setting_add"
@@ -254,12 +259,6 @@ Home() {
     slog show_setting_add 1
     fi
     """
-    
-    [[group.page.options]]
-    type = "default"
-    title = "'$download_text'"
-    link = "https://zenlua.github.io/Tool-Tree/website/Addon.html"
-    silent = true
     
     [[group.page.options]]
     key = "file"
@@ -436,6 +435,12 @@ More() {
   """
     
     [[group.page.options]]
+    type = "default"
+    title = "'$download_text'"
+    link = "https://zenlua.github.io/Tool-Tree/website/Apkon.html"
+    silent = true
+    
+    [[group.page.options]]
     title = "'$customize_text'"
     box = "glog show_setting_add"
     reload = true
@@ -448,12 +453,6 @@ More() {
     slog show_setting_add 1
     fi
     """
-    
-    [[group.page.options]]
-    type = "default"
-    title = "'$download_text'"
-    link = "https://zenlua.github.io/Tool-Tree/website/Apkon.html"
-    silent = true
     
     [[group.page.options]]
     key = "file"
