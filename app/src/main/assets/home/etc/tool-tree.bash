@@ -2270,6 +2270,11 @@ Addon() {
     '$summss'
     '$beforesh'
     '"$google_trans"'
+      [[group.page.rows]]
+      text = "Dòng thứ hai (link)"
+      link = "https://example.com"
+      break = true
+      
       [[group.page.options]]
       title = "'$pin_text_add'"
       auto-finish = true
