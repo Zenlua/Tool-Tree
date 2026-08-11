@@ -71,10 +71,12 @@ object RowsRenderHelper {
             val length = text.length
             val spannableString = SpannableString(text)
 
+            var toggleDrawable: Drawable? = null
             if (isToggle) {
                 // Vị trí ký tự placeholder: ngay trước khoảng trắng cuối cùng vừa thêm
                 val iconIndex = length - 2
-                spannableString.setSpan(VerticalCenterImageSpan(buildToggleDrawable(context, row)), iconIndex, iconIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                toggleDrawable = buildToggleDrawable(context, row)
+                spannableString.setSpan(VerticalCenterImageSpan(toggleDrawable), iconIndex, iconIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             if (extraIconView != null) {
@@ -192,7 +194,21 @@ object RowsRenderHelper {
                 spannableString.setSpan(AbsoluteSizeSpan(row.size, true), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
-            spannableString.setSpan(AlignmentSpan.Standard(row.align), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            // Android có lỗi/giới hạn: khi 1 paragraph vừa có AlignmentSpan (canh giữa/phải) vừa có
+            // ClickableSpan + ImageSpan (icon toggle), toạ độ chạm (Layout.getOffsetForHorizontal)
+            // tính sai lệch so với vị trí vẽ thật -> bấm đúng icon không nhận, bấm lệch trái mới
+            // nhận. Với row toggle bị canh giữa/phải, thay AlignmentSpan bằng LeadingMarginSpan
+            // (đẩy dòng bằng margin đo thực tế, vẫn giữ ALIGN_NORMAL) để vùng chạm tính đúng.
+            val leadingMargin = if (isToggle && row.align != Layout.Alignment.ALIGN_NORMAL) {
+                computeToggleLeadingMargin(rowsView, row, text, toggleDrawable)
+            } else {
+                null
+            }
+            if (leadingMargin != null) {
+                spannableString.setSpan(LeadingMarginSpan.Standard(leadingMargin, leadingMargin), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            } else {
+                spannableString.setSpan(AlignmentSpan.Standard(row.align), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
 
             rowsView.append(spannableString)
         }
@@ -220,6 +236,33 @@ object RowsRenderHelper {
             canvas.translate(x, transY)
             b.draw(canvas)
             canvas.restore()
+        }
+    }
+
+    // Tính margin trái để "canh giữa/phải" thủ công cho row toggle (thay AlignmentSpan - xem lý
+    // do ở nơi gọi). Đo bề rộng thực tế: phần chữ dùng paint.measureText, riêng ký tự placeholder
+    // (đã bị ImageSpan thay bằng icon) dùng đúng bề rộng drawable thay vì bề rộng ký tự.
+    // Trả về null nếu chưa đo được (view chưa layout xong) để nơi gọi fallback về AlignmentSpan cũ.
+    private fun computeToggleLeadingMargin(rowsView: TextView, row: TextNode.TextRow, text: String, drawable: Drawable?): Int? {
+        if (drawable == null) {
+            return null
+        }
+        val available = rowsView.width - rowsView.paddingLeft - rowsView.paddingRight
+        if (available <= 0) {
+            return null
+        }
+        val placeholderIndex = text.length - 2
+        val beforeIcon = text.substring(0, placeholderIndex)
+        val afterIcon = text.substring(placeholderIndex + 1)
+        val contentWidth = rowsView.paint.measureText(beforeIcon) + drawable.bounds.width() + rowsView.paint.measureText(afterIcon)
+        val extra = available - contentWidth
+        if (extra <= 0) {
+            return null
+        }
+        return when (row.align) {
+            Layout.Alignment.ALIGN_OPPOSITE -> extra.toInt()
+            Layout.Alignment.ALIGN_CENTER -> (extra / 2f).toInt()
+            else -> null
         }
     }
 

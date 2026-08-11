@@ -2271,18 +2271,19 @@ Addon() {
     
       [[group.page.rows]]
       toggle = "checkbox"
-      text = "| Ẩn Add-on"
+      text = "Ẩn Add-on"
       checked = "test -f /sdcard/wifi_on && echo 1"
       onchange-sh = ""
-      bold = true
       align = "opposite"
+      bold = true
 
       [[group.page.rows]]
       toggle = "switch"
       text = "- Gỡ bỏ"
       checked = "test -f /sdcard/wifi_on && echo 1"
       onchange-sh = ""
-      align = "opposite"
+      bold = true
+      
       
       
       [[group.page.options]]
