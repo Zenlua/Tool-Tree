@@ -7,10 +7,10 @@
         </shape>
     </item>
     <item
-        android:width="12dp"
-        android:height="12dp"
+        android:width="10dp"
+        android:height="10dp"
         android:gravity="center_vertical|end"
-        android:right="2dp">
+        android:right="3.5dp">
         <shape android:shape="oval">
             <solid android:color="#FFFFFFFF" />
         </shape>
