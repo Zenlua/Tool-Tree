@@ -2288,6 +2288,7 @@ Addon() {
 
     # Xoá giá trị cũ
     code_option=''; farooot=''; google_trans=''; shortcut=''; beforesh='';
+    summary=''; shortcut=''; description='';
     [ "$id" ] || continue
     
     # Phát hiện root
