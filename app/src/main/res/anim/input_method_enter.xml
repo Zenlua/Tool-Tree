@@ -2,22 +2,29 @@
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:shareInterpolator="false"
     android:zAdjustment="top">
+
+    <!-- Trượt nhẹ từ dưới lên (10%p -> 0%p) khớp với hướng mọc của bàn phím -->
     <translate
         android:interpolator="@android:interpolator/fast_out_slow_in"
-        android:duration="220"
-        android:fromYDelta="-10%p"
+        android:duration="200"
+        android:fromYDelta="10%p"
         android:toYDelta="0%p" />
+
+    <!-- Phóng to nhẹ lấy tâm ở đáy màn hình (pivotY=100%) để khung phím nhô lên tự nhiên -->
     <scale
         android:interpolator="@android:interpolator/fast_out_slow_in"
-        android:duration="220"
+        android:duration="200"
         android:pivotX="50%"
-        android:pivotY="50%"
-        android:fromXScale="0.92"
+        android:pivotY="100%"
+        android:fromXScale="0.95"
         android:toXScale="1.0"
-        android:fromYScale="0.92"
+        android:fromYScale="0.95"
         android:toYScale="1.0" />
+
+    <!-- Đồng bộ alpha hiện nhanh trong 200ms -->
     <alpha
-        android:duration="220"
+        android:interpolator="@android:interpolator/decelerate_cubic"
+        android:duration="200"
         android:fromAlpha="0.0"
         android:toAlpha="1.0" />
 </set>

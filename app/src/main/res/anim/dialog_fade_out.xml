@@ -2,9 +2,11 @@
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:shareInterpolator="false"
     android:zAdjustment="top">
+
+    <!-- Rút ngắn xuống 160ms và dùng accelerate để Dialog biến mất nhanh, dứt khoát -->
     <alpha
-        android:interpolator="@android:anim/linear_interpolator"
-        android:duration="301"
+        android:interpolator="@android:interpolator/accelerate_cubic"
+        android:duration="160"
         android:fromAlpha="1.0"
         android:toAlpha="0.0" />
 </set>
