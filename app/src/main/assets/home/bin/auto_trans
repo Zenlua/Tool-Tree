@@ -2,33 +2,33 @@
 # Tạo ngôn ngữ tự động
 if [ "$(glog language_kkts)" == 'auto' ]; then
   [ -f $ETC/lang/$LANGUAGE.bash ] && texgg=default.bash || texgg=vi.bash
-  sum_md5_kk="$(checksum $ETC/lang/$texgg)"
-    if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]] || [[ "$(grep -cm1 '=""' $ETC/lang/auto.sh 2>/dev/null)" == 1 ]] || [[ ! -f $ETC/lang/auto.sh ]]; then
-    showtoast -a "Currently translating by Google translate..."
-    source $ETC/lang/$texgg
-    [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
-    for vc in $(grep "=" $ETC/lang/$texgg | cut -d= -f1); do
-    (
-    xfhtfvgf="$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY)"
-    echo "${vc}=\"${xfhtfvgf^}\" # ${!vc}" | tee -a $ETC/lang/auto.sh
-    xfhtfvgf=""
-    ) &
-    done
-    wait
-    error_txxt_bug="$(echo "Translation error detected:" | trans -b $LANGUAGE-$COUNTRY)"
+  sumss="$(checksum $ETC/lang/$texgg)"
+    if [[ "$sumss" != "$(glog sumss)" ]] || [[ ! -f $ETC/lang/auto.sh ]]; then
+      showtoast -a "Currently translating by Google translate..." | trans -b
+      source $ETC/lang/$texgg
+      [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
+      for vc in $(grep "=" $ETC/lang/$texgg | cut -d= -f1); do
+      (
+      xfhtfvgf="$(echo "${!vc}" | trans)"
+      echo "${vc}=\"${xfhtfvgf^}\"" | tee -a $ETC/lang/auto.sh
+      xfhtfvgf="";
+      ) &
+      done
+      wait
+      error_txxt_bug="$(echo "Translation error detected:" | trans -b)"
       if [ "$(grep -cm1 '=""' $ETC/lang/auto.sh)" == 1 ]; then
       showtoast -a "$error_txxt_bug $(grep -c '=""' $ETC/lang/auto.sh)"
       sed -i '/=""/d' $ETC/lang/auto.sh
+      else
+      slog sumss "$sumss"
       fi
-    slog sum_md5_kk "$sum_md5_kk"
     fi
-  error_txxt_bug=''; texgg=''; sum_md5_kk=''
 elif [ "$(glog language_kkts)" == 'ai' ]; then
   [ -f $ETC/lang/$LANGUAGE.bash ] && texgg=default.bash || texgg=vi.bash
-  sum_md5_kk="$(checksum $ETC/lang/$texgg)"
-  if [[ "$sum_md5_kk" != "$(glog sum_md5_kk)" ]] || [[ ! -f $ETC/lang/auto.sh ]]; then
-    showtoast -a "Currently translating by Genmini..."
+  sumss="$(checksum $ETC/lang/$texgg)"
+  if [[ "$sumss" != "$(glog sumss)" ]] || [[ ! -f $ETC/lang/auto.sh ]]; then
+    showtoast -a "Currently translating by Genmini..." | trans -b
     transai_file "$ETC/lang/$texgg" "$ETC/lang/auto.sh"
-    slog sum_md5_kk "$sum_md5_kk"
+    slog sumss "$sumss"
   fi
 fi
