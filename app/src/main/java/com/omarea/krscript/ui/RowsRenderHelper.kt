@@ -13,7 +13,6 @@ import android.text.Spanned
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.*
-import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -50,17 +49,10 @@ object RowsRenderHelper {
         rowsView.movementMethod = LinkMovementMethod.getInstance() // 不设置 ClickableSpan 点击没反应
         rowsView.visibility = View.VISIBLE
 
-        // Theo dõi align đang áp dụng cho dòng/paragraph hiện tại. Chỉ auto-xuống dòng khi
-        // align của row này THỰC SỰ khác với align đang áp dụng - nhờ đó nhiều row liên tiếp
-        // cùng đặt align giống nhau (vd. đều "opposite" để dồn về bên phải) sẽ được gộp chung
-        // 1 dòng thay vì mỗi row 1 dòng riêng. Trước đây cứ align != normal là auto xuống dòng
-        // bất kể row trước đó cũng đang cùng align, khiến không thể xếp 2 row cạnh nhau bên phải.
-        var currentAlign = Layout.Alignment.ALIGN_NORMAL
         for (row in rows) {
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
-            if (row.breakRow || row.align != currentAlign) {
+            if (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL) {
                 rowsView.append("\n")
-                currentAlign = row.align
             }
             // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
             val label = if (row.dynamicTextSh.isNotEmpty()) {
@@ -111,15 +103,24 @@ object RowsRenderHelper {
             }
 
             if (isToggle) {
-                spannableString.setSpan(ToggleClickableSpan {
-                    row.checked = !row.checked
-                    if (row.onChangeSh.isNotEmpty()) {
-                        ScriptEnvironmen.executeResultRoot(context, row.onChangeSh, config, object : HashMap<String, String>() {
-                            init { put("state", if (row.checked) "1" else "0") }
-                        })
+                spannableString.setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        row.checked = !row.checked
+                        if (row.onChangeSh.isNotEmpty()) {
+                            val result = ScriptEnvironmen.executeResultRoot(context, row.onChangeSh, config, object : HashMap<String, String>() {
+                                init { put("state", if (row.checked) "1" else "0") }
+                            })
+                            if (result.trim().isNotEmpty()) {
+                                DialogHelper.helpInfo(context, context.getString(R.string.kr_slice_script_result), result)
+                            }
+                        }
+                        // Vẽ lại toàn bộ rows để cập nhật icon vừa đổi trạng thái
+                        bind(context, rowsView, extraIconView, rows, config)
                     }
-                    // Vẽ lại toàn bộ rows để cập nhật icon vừa đổi trạng thái
-                    bind(context, rowsView, extraIconView, rows, config)
+
+                    override fun updateDrawState(ds: TextPaint) {
+                        ds.isUnderlineText = false
+                    }
                 }, 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             } else if (row.link.isNotEmpty()) {
                 spannableString.setSpan(object : ClickableSpan() {
@@ -200,48 +201,6 @@ object RowsRenderHelper {
         // (đã bỏ tính năng copy nội dung khi long-press).
         rowsView.setOnLongClickListener {
             true
-        }
-
-        // Mở rộng vùng chạm của row toggle ra CẢ dòng chứa nó (kể cả phần khoảng trống do canh
-        // giữa/canh phải/label ngắn để lại), không chỉ đúng icon/label. LinkMovementMethod mặc
-        // định chỉ bắt click khi chạm trúng ký tự có span; nếu chạm rơi đúng vào 1 ký tự có span
-        // thì để mặc định xử lý (return false), tránh gọi 2 lần. Nếu không trúng ký tự nào có
-        // span nhưng cả dòng chỉ có đúng 1 ToggleClickableSpan thì coi như chạm trúng, tự gọi.
-        rowsView.setOnTouchListener { widget, event ->
-            if (event.action == MotionEvent.ACTION_UP && widget is TextView) {
-                val text = widget.text
-                val layout = widget.layout
-                if (text is Spanned && layout != null) {
-                    var x = event.x.toInt() - widget.totalPaddingLeft + widget.scrollX
-                    val y = event.y.toInt() - widget.totalPaddingTop + widget.scrollY
-                    val line = layout.getLineForVertical(y)
-                    x = x.coerceIn(0, widget.width)
-                    val offset = layout.getOffsetForHorizontal(line, x.toFloat())
-                    val exactHit = text.getSpans(offset, offset, ClickableSpan::class.java)
-                    if (exactHit.isEmpty()) {
-                        val lineStart = layout.getLineStart(line)
-                        val lineEnd = layout.getLineEnd(line)
-                        val toggleSpans = text.getSpans(lineStart, lineEnd, ToggleClickableSpan::class.java)
-                        if (toggleSpans.size == 1) {
-                            toggleSpans[0].onClick(widget)
-                            return@setOnTouchListener true
-                        }
-                    }
-                }
-            }
-            false
-        }
-    }
-
-    // Span riêng cho row toggle (checkbox/switch), tách khỏi ClickableSpan thường (link/activity/
-    // script) để nhận diện được trong touch listener mở rộng vùng chạm ra cả dòng ở trên.
-    private class ToggleClickableSpan(private val onToggle: () -> Unit) : ClickableSpan() {
-        override fun onClick(widget: View) {
-            onToggle()
-        }
-
-        override fun updateDrawState(ds: TextPaint) {
-            ds.isUnderlineText = false
         }
     }
 

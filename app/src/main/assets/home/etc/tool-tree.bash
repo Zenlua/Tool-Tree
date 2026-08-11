@@ -2260,30 +2260,30 @@ Addon() {
     [[group]]
     [[group.page]]
     title = "'$name'"
-    desc = "'$description'"
-    summary = "'$sum_vb'"
+    desc = "'$sum_vb' | '$description'"
     icon = "'$icon_vb'"
     process = true
     '$farooot'
     '$shortcut'
     '$pagesh'
-    '$summss'
     '$beforesh'
     '"$google_trans"'
     
       [[group.page.rows]]
       toggle = "checkbox"
-      text = "WiFi"
+      text = "| Ẩn Add-on"
       checked = "test -f /sdcard/wifi_on && echo 1"
       onchange-sh = ""
       bold = true
-      align = "center"
+      align = "opposite"
 
       [[group.page.rows]]
       toggle = "switch"
-      text = "WiFi"
+      text = "- Gỡ bỏ"
       checked = "test -f /sdcard/wifi_on && echo 1"
       onchange-sh = ""
+      align = "opposite"
+      
       
       [[group.page.options]]
       title = "'$pin_text_add'"
