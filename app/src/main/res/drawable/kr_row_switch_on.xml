@@ -2,15 +2,15 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="10dp" />
+            <corners android:radius="8dp" />
             <solid android:color="?android:attr/colorAccent" />
         </shape>
     </item>
     <item
-        android:width="14dp"
-        android:height="14dp"
+        android:width="12dp"
+        android:height="12dp"
         android:gravity="center_vertical|end"
-        android:right="3dp">
+        android:right="2dp">
         <shape android:shape="oval">
             <solid android:color="#FFFFFFFF" />
         </shape>
