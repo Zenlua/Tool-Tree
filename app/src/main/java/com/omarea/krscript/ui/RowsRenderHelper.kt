@@ -73,6 +73,11 @@ object RowsRenderHelper {
         // có breakRow/align != normal khiến "\n" bị chèn vào lúc rowsView còn rỗng, tạo ra 1 dòng
         // trống thừa ở trên cùng (canh phải/giữa mới bị vì mới có "\n" chèn cho cả row đầu).
         var hasContent = false
+        // Row có align != normal (hoặc breakRow) tự tách dòng cho CHÍNH NÓ, nhưng nếu row KẾ TIẾP
+        // không tự yêu cầu tách dòng, nó sẽ bị nối chung 1 paragraph với row trước đó -> tranh chấp
+        // AlignmentSpan/LeadingMarginSpan cấp-paragraph (2 row canh lề khác nhau dính vào 1 dòng).
+        // Theo dõi cờ này để ép tách dòng cho row kế tiếp trong trường hợp đó.
+        var prevRowIsolated = false
 
         for (row in rows) {
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
