@@ -89,7 +89,7 @@ dts_md5="${INPUT%/*}/config/${INPUT##*/}_dts_md5.txt"
 lvnenbr="$(glog nen_br 4)"
 info_type="$(cat "$info" 2>/dev/null)"
 tool_ext="$(glog re_tool_ext4 1)"
-tool_erofs="$(glog re_tool_erofs 2)"
+tool_erofs="$(glog re_tool_erofs)"
 tool_f2fs="$(glog re_tool_f2fs)"
 
 # Ép build mặc định đối với định dạng sau
@@ -164,24 +164,13 @@ process_erofss(){
 }
 
 thay_mau() {
-    sed -e '/info: ignored token/s/.*/\x1b[33m&\x1b[0m/' && echo
+    sed -e '/info: ignored token/s/.*/\x1b[33m&\x1b[0m/'
 }
 
 if [ "$partition" == "erofs" ]; then
     [ "$DISATFS" == 0 ] || patch "$INPUT" "$fs_config" "$file_contexts" >"$TMP/patch_fs.log"
     if [ "$tool_erofs" == 1 ]; then
         imgkit_scuti pack --type erofs -s "$INPUT" -o "$saved" --compress "$NENEROFS" --compress-level "${zlsize/,/}" --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" | tee "$TMP/imgkit_repack.log" || killtree "Error build process imgkit_scuti" "$saved"
-    elif [ "$tool_erofs" == 2 ]; then
-        "$TERMUX"/lib/theft/mkfs.erofs -E^xattr-name-filter \
-        -T "$time_build" \
-        -z"${NENEROFS}${zlsize}" \
-        --mount-point="/${INPUT##*/}" \
-        --fs-config-file="$fs_config" \
-        --file-contexts="$file_contexts" \
-        "$saved" "$INPUT" \
-        > "$TMP/mkfs_erofs.log" 2> >(thay_mau >&2) \
-        || killtree "Error build process mkfs.erofs" "$saved" &
-        process_erofss "$TMP/mkfs_erofs.log"
     else
         mkfs.erofs -E^xattr-name-filter \
         -T "$time_build" \

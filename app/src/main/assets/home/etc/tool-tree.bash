@@ -742,8 +742,8 @@ Project() {
     name = "un_tool_erofs"
     title = "'$tool_unpack_text' erofs"
     label = "'$option_text'"
-    value-sh = "glog un_tool_erofs 2"
-    options-sh = "echo -e \"0|extract.erofs\n1|imgkit_scuti\n2|extract.erofs (old)\""
+    value-sh = "glog un_tool_erofs"
+    options-sh = "echo -e \"0|extract.erofs\n1|imgkit_scuti\""
 
     [[group.action.params]]
     name = "un_tool_f2fs"
@@ -763,8 +763,8 @@ Project() {
     name = "re_tool_erofs"
     title = "'$tool_repack_text' erofs"
     label = "'$option_text'"
-    value-sh = "glog re_tool_erofs 2"
-    options-sh = "echo -e \"0|mkfs.erofs\n1|imgkit_scuti\n2|mkfs.erofs (old)\""
+    value-sh = "glog re_tool_erofs"
+    options-sh = "echo -e \"0|mkfs.erofs\n1|imgkit_scuti\""
 
     [[group.action.params]]
     name = "re_tool_f2fs"
@@ -2172,219 +2172,174 @@ Utiliapk() {
 
 Addon() {
 
-Download() {
-  if [ "$url_vb" ]; then
-  echo '[[group]]
-  [[group.action]]
-  '$farooot'
-  warn = "'$use_network_text'"
-  icon = "'$icon_vb'"
-  reload = true
-  title = "'$name_vb'"
-  desc = "'$desc_vb'"
-  script = """
-    echo "'$update_text_3'"
-    echo
-    installadd '$url_vb' "'${dirvad%/*}'"
-  """'
-  fi
-}
-
-Features() {
-  [ "$1" == "status" ] && atextx="$addon_text_10" || atextx="$addon_text_2"
-  echo '[[group]]
-  [[group.switch]]
-  warn = "'$atextx'"
-  title = "'$name_vb'"
-  desc = "'$desc_vb'"
-  icon = "'$icon_vb'"
-  shell = "hidden"
-  get = "cat '$dirvad'/'$1'"
-  set = "echo \"$state\" > '$dirvad'/'$1'" '
-}
-
-Homeadd() {
-
-  # Load index
-  if [ -f "$dirvad/index.bash" ]; then
-    pagesh='config-sh = "'$dirvad'/index.bash home"'
-  elif [ -f "$dirvad/index.toml" ]; then
-    pagesh='config = "'$dirvad'/index.toml"'
-  else
-    pagesh='config = "'$ETC'/error.toml"'
-  fi
-
-  if [ -f "$dirvad/before-load.bash" ]; then
-    beforesh='before-load = "'$dirvad'/before-load.bash"'
-  fi
-
-  # Load menu
-  if [ -f "$dirvad/menu.bash" ]; then
-    code_option="$($dirvad/menu.bash 2>/dev/null)"
-  elif [ -f "$dirvad/menu.toml" ]; then
-    code_option="$(cat $dirvad/menu.toml 2>/dev/null)"
-  fi
-
-  # Load trang
-  if [ "$name_vb" ]; then
-
-    # Xác nhận có google dịch
-    google_trankk='
-    [[group.page.options]]
-    title = "'$google_translate_text'"
-    box = "glog auto_trans_text_'$idadd'"
-    reload = true
-    silent = true
-    type = "checkbox"
-    script = """
-      if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
-        slog auto_trans_text_'$idadd' 0
-      else
-        if [ "$(glog transai_text_'$idadd')" == 1 ]; then
-        rm -fr '$dirvad'/auto.sh
-        slog transai_text_'$idadd' 0
-        fi
-        slog auto_trans_text_'$idadd' 1
-      fi
-    """
-    
-    [[group.page.options]]
-    title = "Gemini"
-    box = "glog transai_text_'$idadd'"
-    reload = true
-    silent = true
-    type = "checkbox"
-    script = """
-      if [ "$(glog transai_text_'$idadd')" == 1 ]; then
-        slog transai_text_'$idadd' 0
-      else
-        if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
-        rm -fr '$dirvad'/auto.sh
-        slog auto_trans_text_'$idadd' 0
-        fi
-        transai -c && slog transai_text_'$idadd' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
-      fi
-    """
-    '
-
-  echo '
-  [[group]]
-  [[group.page]]
-  '$farooot'
-  '$shortcut'
-  '$pagesh'
-  '$summss'
-  '$beforesh'
-  title = "'$name_vb'"
-  desc = "'$desc_vb'"
-  icon = "'$icon_vb'"
-  process = true
-
-  '"$google_trankk"'
-  [[group.page.options]]
-  title = "'$pin_text_add'"
-  auto-finish = true
-  silent = true
-  script = """
-    if [ -f "'$dirvad'/pin" ]; then
-    rm -f "'$dirvad'/pin"
-    else
-    echo > "'$dirvad'/pin"
+  Download() {
+    if [ "$url" ]; then
+      echo '[[group]]
+      [[group.action]]
+      '$farooot'
+      warn = "'$use_network_text'"
+      icon = "'$icon_vb'"
+      reload = true
+      title = "'$name'"
+      desc = "'$desc_vb'"
+      script = """
+      echo "'$update_text_3'"
+      echo
+      installadd "'$url'" "'${dirvad%/*}'"
+      """'
     fi
-  """
-
-  '"$code_option"'
-  '
-  fi
-}
-
-Vips() {
-  # Xoá giá trị cũ
-  code_option=''; farooot=''; index_adds=''; atextx='';
-  google_trankk=''; shortcut=''; beforesh='';
-  
-  # Chọn bên
-  if [ "$PATHADD" == "$AON" ]; then
-    index_adds="$(glog settadd)"
-  else
-    index_adds="$(glog settadd2)"
-  fi
-
-  # getprop
-  gprop() {
-    cat "$vadd" 2>/dev/null | awk -F= -v k="$1" '$1==k{print $2; exit}'
   }
 
-  # Phát hiện root
-  if [ "$(gprop root)" == "true" ]; then
-    farooot='lock = "[ $ROT == 0 ] && echo \"'$root_warning_text'\" || echo 0"'
-  fi
-
-  # phát hiện tính năng
-  summss="$(gprop summary)"
-  [ "$summss" ] && summss='summary = "'$summss'" '
-  [ "$(gprop shortcut)" == "true" ] && shortcut='key = "'$idadd'" '
-
-  # Desc ngôn ngữ
-  description_text="$(gprop 'description_'$LANGUAGE'_'$COUNTRY'')"
-  if [ "$description_text" ]; then
-    description_text=" | $description_text"
-  else
-    description_text="$(gprop 'description_'$LANGUAGE'')"
-    if [ "$description_text" ]; then
-      description_text=" | $description_text"
+  Homeadd() {
+  
+    # Load index
+    if [ -f "$dirvad/index.bash" ]; then
+    pagesh='config-sh = "'$dirvad'/index.bash home"'
+    elif [ -f "$dirvad/index.toml" ]; then
+    pagesh='config = "'$dirvad'/index.toml"'
     else
-      description_text="$(gprop description)"
-      [ "$description_text" ] && description_text=" | $description_text"
+    pagesh='config = "'$ETC'/error.toml"'
     fi
-  fi
-
-  # tên và desc
-  name_vb="$(gprop name)"
-  desc_vb="$(gprop version) $(gprop author)$description_text"
-  url_vb="$(gprop url)"
-  icon_vb="$(urladd icon)"
-
-  # Load trang tính năng
-  if [ "$(cat $dirvad/delete 2>/dev/null)" == 1 ]; then
-    [ -f "$dirvad/uninstall.bash" ] && $dirvad/uninstall.bash
-    find "$dirvad" -maxdepth 1 ! -path "$dirvad" ! -name 'download.prop' ! -name 'pin' ! -name 'status' -exec rm -rf {} +
-  elif [ "$index_adds" == 1 ]; then
-    Features status
-  elif [ "$index_adds" == 2 ]; then
-    [ -f $dirvad/nodelete ] || Features delete
-  else
-    if [ "$(cat $dirvad/status 2>/dev/null)" != 1 ]; then
-      if [[ -f "$dirvad/index.sh" || -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
-        Homeadd
-      elif [ -f "$dirvad/download.prop" ]; then
-        Download
+  
+    if [ -f "$dirvad/before-load.bash" ]; then
+    beforesh='before-load = "'$dirvad'/before-load.bash"'
+    fi
+  
+    # Load menu
+    if [ -f "$dirvad/menu.bash" ]; then
+    code_option="$($dirvad/menu.bash 2>/dev/null)"
+    elif [ -f "$dirvad/menu.toml" ]; then
+    code_option="$(cat $dirvad/menu.toml 2>/dev/null)"
+    fi
+  
+    # Load trang
+    if [ "$id" ]; then
+  
+      # Xác nhận có google dịch
+      google_trankk='
+      [[group.page.options]]
+      title = "'$google_translate_text'"
+      box = "glog auto_trans_text_'$idadd'"
+      reload = true
+      silent = true
+      type = "checkbox"
+      script = """
+      if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
+      slog auto_trans_text_'$idadd' 0
+      else
+      if [ "$(glog transai_text_'$idadd')" == 1 ]; then
+      rm -fr '$dirvad'/auto.sh
+      slog transai_text_'$idadd' 0
       fi
+      slog auto_trans_text_'$idadd' 1
+      fi
+      """
+      
+      [[group.page.options]]
+      title = "Gemini"
+      box = "glog transai_text_'$idadd'"
+      reload = true
+      silent = true
+      type = "checkbox"
+      script = """
+      if [ "$(glog transai_text_'$idadd')" == 1 ]; then
+      slog transai_text_'$idadd' 0
+      else
+      if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
+      rm -fr '$dirvad'/auto.sh
+      slog auto_trans_text_'$idadd' 0
+      fi
+      transai -c && slog transai_text_'$idadd' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
+      fi
+      """
+      '
+  
+    # Kênh để ấn vào
+    echo '
+    [[group]]
+    [[group.page]]
+    '$farooot'
+    '$shortcut'
+    '$pagesh'
+    '$summss'
+    '$beforesh'
+    title = "'$name'"
+    desc = "'$desc_vb'"
+    icon = "'$icon_vb'"
+    process = true
+    '"$google_trankk"'
+      [[group.page.options]]
+      title = "'$pin_text_add'"
+      auto-finish = true
+      silent = true
+      script = """
+      if [ -f "'$dirvad'/pin" ]; then
+      rm -f "'$dirvad'/pin"
+      else
+      echo > "'$dirvad'/pin"
+      fi
+      """
+      '"$code_option"'
+    '
     fi
-  fi
-}
+  }
+
+  Vips() {
+
+    # Xoá giá trị cũ
+    code_option=''; farooot=''; google_trankk=''; shortcut=''; beforesh='';
+  
+    # Phát hiện root
+    if [ "$root" == "true" ]; then
+      farooot='lock = "[ $ROT == 0 ] && echo \"'$root_warning_text'\" || echo 0"'
+    fi
+  
+    # Phát hiện tính năng
+    [ "$summary" ] && summary='summary = "'$summary'" '
+    [ "$shortcut" == "true" ] && shortcut='key = "'$idadd'" '
+    [ "$description" ] && description=" | $description"
+  
+    # Tên và desc
+    desc_vb="$version ${author}$description_text"
+    icon_vb="$(urladd icon)"
+  
+    # Load trang danh sách
+    if [ -f "$dirvad/delete" ]; then
+      # Xoá Add-on
+      [ -f "$dirvad/uninstall.bash" ] && $dirvad/uninstall.bash
+      find "$dirvad" -maxdepth 1 ! -path "$dirvad" \
+      ! -name 'download.prop' ! -exec rm -rf {} +
+    else
+      if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
+      Homeadd
+      elif [ -f "$dirvad/download.prop" ]; then
+      Download
+      fi
+    
+    fi
+  }
 
   # Load trang add-on có pin trước
-  for vadd in $PATHADD/*/addon.prop; do
+  for vadd in $PATHADD/*/Add-on.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
-    idadd="${dirvad##*/}"
-    pin_text_add="$unpin_text"
     [ -f "$dirvad/pin" ] || continue
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
-      Vips
+    pin_text_add="$unpin_text"
+    source "$vadd" 2>/dev/null
+    Vips
     fi
   done
 
   # Load trang không có pin
-  for vadd in $PATHADD/*/addon.prop; do
+  for vadd in $PATHADD/*/Add-on.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
-    idadd="${dirvad##*/}"
-    pin_text_add="$pin_text"
     [ -f "$dirvad/pin" ] && continue
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
-      Vips
+    pin_text_add="$pin_text"
+    source "$vadd" 2>/dev/null
+    Vips
     fi
   done
 
@@ -2392,11 +2347,10 @@ Vips() {
   for vadd in $PATHADD/*/download.prop; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
-    idadd="${dirvad##*/}"
-    pin_text_add="$pin_text"
-    if [[ -f "$dirvad/pin" || -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
-      continue
+    if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
+    continue
     fi
+    source "$vadd" 2>/dev/null
     Vips
   done
 

@@ -185,7 +185,7 @@ fs_config="$OUTPUT/config/${namepv##*/}_fs_config"
 file_contexts="$OUTPUT/config/${namepv##*/}_file_contexts"
 fs_options="$OUTPUT/config/${namepv##*/}_fs_options"
 info_size="$OUTPUT/config/${namepv##*/}_size.txt"
-tool_un_erofs="$(glog un_tool_erofs 2)"
+tool_un_erofs="$(glog un_tool_erofs)"
 tool_un_ext4="$(glog un_tool_ext4)"
 tool_un_f2fs="$(glog un_tool_f2fs)"
 
@@ -229,8 +229,6 @@ if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [
     elif [ "$dang_file" == 'erofs' ]; then
         if [ "$tool_un_erofs" == 1 ]; then
             imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" || killtree "imgkit_scuti extract error"
-        elif [ "$tool_un_erofs" == 2 ]; then
-            "$TERMUX/lib/theft/extract.erofs" -x -i "$file_img" -o "$OUTPUT" || killtree "extract.erofs extract error"
         else
             extract.erofs -x -i "$file_img" -o "$OUTPUT" || killtree "extract.erofs extract error"
         fi
