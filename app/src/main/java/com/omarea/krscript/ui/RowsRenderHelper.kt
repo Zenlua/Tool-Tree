@@ -68,7 +68,7 @@ object RowsRenderHelper {
             // Thêm 2 khoảng trắng trước placeholder icon của row toggle, để nếu đặt nhiều
             // checkbox/switch liên tiếp trên cùng 1 dòng (không đặt break) thì chúng không bị
             // dính sát vào nhau / dính vào icon của row kế tiếp.
-            val text = if (isToggle) " $label \u2002" else label
+            val text = if (isToggle) "$label \u2002 " else label
             val length = text.length
             val spannableString = SpannableString(text)
 
