@@ -674,11 +674,10 @@ update_addon() {
   fi
 }
 
-# Thư mục hiện tại
-MPAT="${0%/*}"
+# Lưu biến
 sdcard_text="${PTAD/$SDCARD_PATH/\/sdcard}"
 pathsh="$MPAT/patch-rom"
-source trans_add "$MPAT"
 
-# Index
+# Ngôn ngữ và Google dịch
+source langadd "$MPAT"
 "$@"

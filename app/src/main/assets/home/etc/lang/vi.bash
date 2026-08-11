@@ -30,7 +30,7 @@ deleted_text="Gỡ addon"
 input_add_text="Nhập add-on"
 hide_add_text="Ẩn addon"
 build_text="Xây dựng"
-decompile_text="Giải mã"
+decompile_text="Trích xuất"
 projects_text="Dự án hiện tại"
 sizes_text="Kích thước"
 sign_text="Chữ ký"
@@ -65,9 +65,9 @@ editor_apk="Chỉnh sửa APK"
 
 # Home
 home_text_1="Thông tin và tính năng ứng dụng"
-home_text_2="Chỉnh sửa ROM theo tính năng"
+home_text_2="Gồm nhiều tiện ích tùy chỉnh rom"
 home_text_3="Các tính năng cần root để sử dụng"
-home_text_4="Tải xuống và cài đặt các add-on"
+home_text_4="Bổ sung thêm các tính năng khác"
 home_text_5="Chạy lệnh"
 home_text_6="Thử nghiệm các lệnh cơ bản"
 home_text_7="Thực thi các lệnh để thử nghiệm"
@@ -79,7 +79,7 @@ more_text_4="Xác định tệp:"
 more_text_5="Thiếu tệp:"
 more_text_6="Các tiện ích chỉnh sửa ứng dụng"
 more_text_7="Các tính năng cần root để sử dụng"
-more_text_8="Tải xuống và cài đặt các add-on"
+more_text_8="Các tiện ích bổ sung của plugin"
 more_text_9="Thực thi các lệnh để thử nghiệm"
 more_text_10="Nhập"
 
@@ -167,7 +167,6 @@ payload_text_3="Phân vùng động"
 payload_text_4="Chỉ có tác dụng khi bật phân vùng động"
 
 # cover img
-convert_text_1="Chuyển đổi tệp"
 convert_text_2="Mức độ nén của file br, zstd giá trị cao hơn sẽ nén lâu hơn"
 
 # split super

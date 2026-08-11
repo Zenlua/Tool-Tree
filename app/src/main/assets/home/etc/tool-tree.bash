@@ -420,7 +420,7 @@ More() {
 
   [[group]]
   [[group.page]]
-  title = "'$tools_text'"
+  title = "'$utilities_text'"
   desc = "'$more_text_7'"
   icon = "'`urlpng tool_apk`'"
   config-sh = "'$ETC'/tool-tree.bash Troot"
@@ -428,7 +428,7 @@ More() {
   [[group]]
   [[group.page]]
   title = "'$plugin_text'"
-  desc = "'$more_text_8'"
+  desc = "'$home_text_4'"
   icon = "'`urlpng apk_addon`'"
   config-sh = "PATHADD=\"$AOK\" '$ETC'/tool-tree.bash Addon"
   handler = """
@@ -561,7 +561,7 @@ Info() {
   desc = "'$permis_text_5'"
   icon = "'`urlpng language`'"
   option-sh = """
-  echo -e "|'$default_text'\nauto|'$google_translate_text'\nai|Gemini\nen|English\nvi|Việt nam\nru|Русский\nzh|简体中文\nhu|Hungarian\nid|Indonesia\nes|Spanish"
+  echo -e "|'$default_text'\nauto|'$google_translate_text'\nai|Gemini\nen|English\nvi|Việt nam\nru|Русский\nhu|Hungarian\nid|Indonesia\nes|Spanish"
   """
   get = "glog language_kkts"
   set = """
@@ -1517,7 +1517,7 @@ Utilities() {
 
   [[group]]
   [[group.action]]
-  title = "'$convert_text_1'"
+  title = "'$convert_text'"
   icon = "'`urlpng convert_file`'"
   script = """
     slog format_img "$format_img"
@@ -1569,7 +1569,7 @@ Utilities() {
 
   [[group]]
   [[group.action]]
-  title = "'$generate_text' Super"
+  title = "'$build_text' Super"
   icon = "'`urlpng build_super`'"
   script = """
     slog typeheh "$type"

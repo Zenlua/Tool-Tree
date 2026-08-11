@@ -28,6 +28,7 @@ lang_desc_service="Edit service.sh"
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
+    name="Khởi tạo mô-đun"
     description="Tùy chỉnh mô-đun"
     lang_action_warn="Add-on này có tác dụng sao chép các tệp tin đã chọn vào module magisk, ksu, apatch v.v, để tạo ra module, sau khi khởi động lại nó sẽ được áp dụng vào hệ thống giống như các module khác."
     lang_title="Nhập tệp tin"

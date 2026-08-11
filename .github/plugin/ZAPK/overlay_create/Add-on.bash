@@ -32,6 +32,7 @@ overlay_text_11="Importing framework..."
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
+    name="Tạo Overlay"
     description="Tạo ngôn ngữ lớp phủ"
     home_text_1="Tạo overlay"
     home_text_2="Tạo một overlay từ thư mục ngôn ngữ"

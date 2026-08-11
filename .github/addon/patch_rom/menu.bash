@@ -1,6 +1,5 @@
 # Kakathic
 
-MPAT="${0%/*}"
   echo '
   [[group.page.options]]
   type = "default"
@@ -9,4 +8,3 @@ MPAT="${0%/*}"
   '$MPAT'/index.bash update_addon
   """
   '
-  

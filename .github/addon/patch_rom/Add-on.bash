@@ -107,6 +107,7 @@ label_xeu_toolbox="Add resetprop"
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
+    name="Vá ROM"
     description="Công cụ vá nhanh ROM"
     project_text="Dự án"
     save_text="Lưu ở:"

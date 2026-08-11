@@ -90,11 +90,6 @@ echo '
 '
 }
 
-MPAT="${0%/*}"
-
-source trans_add "$MPAT"
-[ "$(glog wifi_tool_customize)" == 1 ] && number_wifi_pin=1
-
 {
 if [ "$(cmd wifi status | grep -cm1 'Wifi is disabled')" == 1 ]; then
   cmd wifi set-wifi-enabled enabled
@@ -102,5 +97,7 @@ if [ "$(cmd wifi status | grep -cm1 'Wifi is disabled')" == 1 ]; then
 fi
 } &
 
-# gọi home
-$@
+[ "$(glog wifi_tool_customize)" == 1 ] && number_wifi_pin=1
+# Ngôn ngữ và Google dịch
+source langadd "$MPAT"
+"$@"

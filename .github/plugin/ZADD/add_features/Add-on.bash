@@ -48,6 +48,7 @@ merge_partition_text="Merge other partitions into the system."
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
+    name="Tiện ích rom"
     description="Nhiều tiện ích nhỏ"
     config_text_1="Danh sách các dự án hiện có"
     setting_text_3="Dự án"

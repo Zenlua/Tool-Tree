@@ -1,7 +1,5 @@
 # Kakathic
 
-MPAT="${0%/*}"
-
   echo '
   [[group.page.options]]
   type = "default"

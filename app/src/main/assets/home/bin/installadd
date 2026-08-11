@@ -1,7 +1,7 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 
-source language
+source language 2>/dev/null
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
 echo "installadd [file.add|http://file.add] folder_ouput"
@@ -12,60 +12,57 @@ echo "${more_text_4} $1"
 echo
 
 if [ -f "$1" ]; then
-loadmd="$(7z x "$1" addon.prop -so 2>/dev/null)"
+loadmd="$(7z x "$1" Add-on.bash -so 2>/dev/null)"
     if [ -z "$loadmd" ]; then
     echo "Add-on incompatibility error !" >&2
     exit 1
     fi
 else
-file_random="addon_$RANDOM.add"
+file_random="Add-on_$RANDOM.add"
 taive "$1" "$TMP/$file_random" 2>&1
-loadmd="$(7z x "$TMP/$file_random" addon.prop -so 2>/dev/null)"
+loadmd="$(7z x "$TMP/$file_random" Add-on.bash -so 2>/dev/null)"
     if [ -z "$loadmd" ]; then
     echo "Download add-on error !" >&2
     exit 1
     fi
 fi
 
-gprop(){ echo "$loadmd" | awk -F= -v k="$1" '$1==k{print $2; exit}'; }
-loadid="$(gprop id)"
+# Load string
+eval "$loadmd"
 
-if [ -z "$loadid" ]; then
+if [ -z "$id" ]; then
 echo "ID not found in addon.prop" >&2
 exit 1
 fi
 
-echo "$name_text: $(gprop name) $(gprop version)"
+echo "$name_text: $name ($version)"
 echo
 
-echo "ID: $loadid"
+echo "ID: $id"
 echo
 
 echo "$author_text: $(gprop author)"
 echo
 
-mkdir -p "$2/$loadid"
+[ -d "$2/$id" ] || mkdir -p "$2/$id"
+
 echo "$addon_text_3"
 echo
 
 if [ -f "$1" ]; then
-    7z x "$1" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
-    slog "check_sum_addon_$loadid" "$(checksum $1)"
+    7z x "$1" -o"$2/$id" -y &>$TMP/unpack_add-on.log
+    slog "sumcek_$id" "$(checksum "$1")"
 else
-    7z x "$TMP/$file_random" -o"$2/$loadid" -y &>$TMP/unpack_add-on.log
-    slog "check_sum_addon_$loadid" "$(checksum $TMP/$file_random)"
-    rm -f $TMP/$file_random
+    7z x "$TMP/$file_random" -o"$2/$id" -y &>$TMP/unpack_add-on.log
+    slog "sumcek_$id" "$(checksum "$TMP/$file_random")"
+    rm -f "$TMP/$file_random"
 fi
 
-echo 0 > "$2/$loadid/status"
-set_permis -R "$2/$loadid"
+set_permis -R "$2/$id"
 
-if [ -f "$2/$loadid/install.sh" ]; then
-    bash "$2/$loadid/install.sh"
-    rm -fr "$2/$loadid/install.sh"
-elif [ -f "$2/$loadid/install.bash" ]; then
-    bash "$2/$loadid/install.bash"
-    rm -fr "$2/$loadid/install.bash"
+if [ -f "$2/$id/install.bash" ]; then
+    MPAT="$2/$id" "$2/$id/install.bash"
+    rm -fr "$2/$id/install.bash"
 fi
 
 echo "$flash_text_12"

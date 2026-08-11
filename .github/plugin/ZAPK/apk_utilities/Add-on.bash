@@ -18,6 +18,7 @@ clean_text_5="Deleted:"
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
+    name="Bản vá apk"
     description="Nhiều bản vá APK"
     clean_text_1="Dự án"
     clean_text_2="Hiện tại:"
