@@ -727,6 +727,13 @@ class PageConfigReader {
         tomlGet(table, "photo-gif-loop", "photo-gif-loop-count", "gif-loop", "gif-loop-count", "gif_loop_count")?.let { row.photoGifLoopCount = it.trim().toIntOrNull() ?: row.photoGifLoopCount }
         tomlGet(table, "script", "run")?.let { row.onClickScript = it }
         tomlGet(table, "sh")?.let { row.dynamicTextSh = it }
+        // Toggle nhỏ (checkbox / switch) lồng trong dòng text
+        tomlGet(table, "toggle", "toggle-type")?.let {
+            val t = it.trim().lowercase(getDefault())
+            if (t == "checkbox" || t == "switch") row.toggle = t
+        }
+        tomlGet(table, "checked", "checked-sh", "check")?.let { row.checked = resolveBoolOrShell(it, "checked", "check") }
+        tomlGet(table, "onchange-sh", "on-change-sh", "toggle-sh", "set-sh")?.let { row.onChangeSh = it }
         tomlGet(table, "align")?.let {
             when (it) {
                 "opposite" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) row.align = Layout.Alignment.ALIGN_OPPOSITE

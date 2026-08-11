@@ -47,5 +47,13 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var photoGifAutoplay: Boolean = true
         // Số vòng lặp tối đa (<=0: lặp vô hạn, mặc định)
         internal var photoGifLoopCount: Int = 0
+
+        // ===== Toggle nhỏ (checkbox / switch) lồng trong dòng text =====
+        // "" (mặc định) = không phải toggle; "checkbox" hoặc "switch"
+        internal var toggle: String = ""
+        // Trạng thái bật/tắt hiện tại (được resolveBoolOrShell tại lúc parse trang - xem "checked")
+        internal var checked: Boolean = false
+        // Script chạy khi người dùng bấm đổi trạng thái - nhận biến môi trường "state" = "1"/"0"
+        internal var onChangeSh: String = ""
     }
 }

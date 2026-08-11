@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.text.Layout
 import android.text.SpannableString
@@ -53,13 +54,25 @@ object RowsRenderHelper {
                 rowsView.append("\n")
             }
             // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
-            val text = if (row.dynamicTextSh.isNotEmpty()) {
+            val label = if (row.dynamicTextSh.isNotEmpty()) {
                 ScriptEnvironmen.executeResultRoot(context, row.dynamicTextSh, config)
             } else {
                 row.text
             }
+
+            // Row dạng toggle (checkbox/switch nhỏ): chèn thêm 1 ký tự placeholder ở đầu để
+            // vẽ icon lên bằng ImageSpan, rồi mới tới label. Toàn bộ (icon + label) dùng chung
+            // 1 ClickableSpan để bấm đâu cũng đổi trạng thái được, không dùng link/activity/script click thường.
+            val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
+            // Thêm 2 khoảng trắng phía sau label của row toggle, để nếu đặt nhiều checkbox/switch
+            // liên tiếp trên cùng 1 dòng (không đặt break) thì chúng không bị dính sát vào nhau.
+            val text = if (isToggle) "\u2002 $label  " else label
             val length = text.length
             val spannableString = SpannableString(text)
+
+            if (isToggle) {
+                spannableString.setSpan(ImageSpan(buildToggleDrawable(context, row), ImageSpan.ALIGN_CENTER), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
 
             if (extraIconView != null) {
                 extraIconView.visibility = View.GONE
@@ -86,7 +99,24 @@ object RowsRenderHelper {
                 spannableString.setSpan(TypefaceSpan("monospace"), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
-            if (row.link.isNotEmpty()) {
+            if (isToggle) {
+                spannableString.setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        row.checked = !row.checked
+                        if (row.onChangeSh.isNotEmpty()) {
+                            ScriptEnvironmen.executeResultRoot(context, row.onChangeSh, config, object : HashMap<String, String>() {
+                                init { put("state", if (row.checked) "1" else "0") }
+                            })
+                        }
+                        // Vẽ lại toàn bộ rows để cập nhật icon vừa đổi trạng thái
+                        bind(context, rowsView, extraIconView, rows, config)
+                    }
+
+                    override fun updateDrawState(ds: TextPaint) {
+                        ds.isUnderlineText = false
+                    }
+                }, 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            } else if (row.link.isNotEmpty()) {
                 spannableString.setSpan(object : ClickableSpan() {
                     override fun onClick(widget: View) {
                         if (row.link.isNotEmpty()) {
@@ -107,7 +137,7 @@ object RowsRenderHelper {
                 }, 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
-            if (row.activity.isNotEmpty()) {
+            if (!isToggle && row.activity.isNotEmpty()) {
                 spannableString.setSpan(object : ClickableSpan() {
                     override fun onClick(widget: View) {
                         TryOpenActivity(context, row.activity).tryOpen()
@@ -120,7 +150,7 @@ object RowsRenderHelper {
                 }, 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
-            if (row.onClickScript.isNotEmpty()) {
+            if (!isToggle && row.onClickScript.isNotEmpty()) {
                 spannableString.setSpan(object : ClickableSpan() {
                     override fun onClick(widget: View) {
                         val result = ScriptEnvironmen.executeResultRoot(context, row.onClickScript, config)
@@ -173,6 +203,29 @@ object RowsRenderHelper {
             }
             true
         }
+    }
+
+    // Tạo drawable icon cho row dạng toggle (checkbox/switch), kích thước nhỏ vừa 1 dòng text,
+    // chọn ảnh theo loại (checkbox/switch) và trạng thái hiện tại (checked/unchecked).
+    private fun buildToggleDrawable(context: Context, row: TextNode.TextRow): Drawable {
+        val density = context.resources.displayMetrics.density
+        val drawableRes = if (row.toggle == "switch") {
+            if (row.checked) R.drawable.kr_row_switch_on else R.drawable.kr_row_switch_off
+        } else {
+            if (row.checked) R.drawable.checkbox_true else R.drawable.checkbox_false
+        }
+        val drawable = context.getDrawable(drawableRes)!!.mutate()
+        val width: Int
+        val height: Int
+        if (row.toggle == "switch") {
+            width = (34 * density).toInt()
+            height = (20 * density).toInt()
+        } else {
+            width = (20 * density).toInt()
+            height = (20 * density).toInt()
+        }
+        drawable.setBounds(0, 0, width, height)
+        return drawable
     }
 
     // Nếu photoRealSize = true: hiển thị ảnh trong khung vuông (chiều rộng = chiều cao = chiều ngang màn hình),
