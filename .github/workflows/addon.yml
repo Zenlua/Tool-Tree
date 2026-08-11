@@ -23,11 +23,7 @@ jobs:
             (
             cd "$vv"
             find . -exec touch -d "2026-01-01 00:00:00" {} +
-            if [ "${vv##*/}" == "patch_rom" ]; then
             7z a -t7z -mmt=off -mtc=off -mta=off -y /home/runner/${vv##*/}_$VER.add
-            else
-            7z a -t7z -mmt=off -mtc=off -mta=off -y /home/runner/${vv##*/}_$VER.add
-            fi
             )
           done
 
