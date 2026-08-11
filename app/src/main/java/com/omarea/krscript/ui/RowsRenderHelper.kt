@@ -65,15 +65,17 @@ object RowsRenderHelper {
             // (label + icon) dùng chung 1 ClickableSpan để bấm đâu cũng đổi trạng thái được,
             // không dùng link/activity/script click thường.
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
-            // Thêm 2 khoảng trắng trước placeholder icon của row toggle, để nếu đặt nhiều
-            // checkbox/switch liên tiếp trên cùng 1 dòng (không đặt break) thì chúng không bị
-            // dính sát vào nhau / dính vào icon của row kế tiếp.
-            val text = if (isToggle) "$label \u2002 " else label
+            // 2 khoảng trắng trước placeholder icon: cách label với icon. 1 khoảng trắng sau
+            // placeholder icon: để nếu đặt nhiều checkbox/switch liên tiếp trên cùng 1 dòng
+            // (không đặt break) thì icon không bị dính sát vào label của row kế tiếp.
+            val text = if (isToggle) "$label  \u2002 " else label
             val length = text.length
             val spannableString = SpannableString(text)
 
             if (isToggle) {
-                spannableString.setSpan(VerticalCenterImageSpan(buildToggleDrawable(context, row)), length - 1, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                // Vị trí ký tự placeholder: ngay trước khoảng trắng cuối cùng vừa thêm
+                val iconIndex = length - 2
+                spannableString.setSpan(VerticalCenterImageSpan(buildToggleDrawable(context, row)), iconIndex, iconIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             if (extraIconView != null) {
