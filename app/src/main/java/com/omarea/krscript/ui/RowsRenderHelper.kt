@@ -2,6 +2,8 @@ package com.omarea.krscript.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -58,18 +60,20 @@ object RowsRenderHelper {
                 row.text
             }
 
-            // Row dạng toggle (checkbox/switch nhỏ): chèn thêm 1 ký tự placeholder ở đầu để
-            // vẽ icon lên bằng ImageSpan, rồi mới tới label. Toàn bộ (icon + label) dùng chung
-            // 1 ClickableSpan để bấm đâu cũng đổi trạng thái được, không dùng link/activity/script click thường.
+            // Row dạng toggle (checkbox/switch nhỏ): chèn thêm 1 ký tự placeholder ở cuối (sau
+            // label) để vẽ icon lên bằng ImageSpan - tức icon nằm bên phải chữ. Toàn bộ
+            // (label + icon) dùng chung 1 ClickableSpan để bấm đâu cũng đổi trạng thái được,
+            // không dùng link/activity/script click thường.
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
-            // Thêm 2 khoảng trắng phía sau label của row toggle, để nếu đặt nhiều checkbox/switch
-            // liên tiếp trên cùng 1 dòng (không đặt break) thì chúng không bị dính sát vào nhau.
-            val text = if (isToggle) "\u2002 $label  " else label
+            // Thêm 2 khoảng trắng trước placeholder icon của row toggle, để nếu đặt nhiều
+            // checkbox/switch liên tiếp trên cùng 1 dòng (không đặt break) thì chúng không bị
+            // dính sát vào nhau / dính vào icon của row kế tiếp.
+            val text = if (isToggle) "$label  \u2002" else label
             val length = text.length
             val spannableString = SpannableString(text)
 
             if (isToggle) {
-                spannableString.setSpan(ImageSpan(buildToggleDrawable(context, row), ImageSpan.ALIGN_CENTER), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                spannableString.setSpan(VerticalCenterImageSpan(buildToggleDrawable(context, row)), length - 1, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             if (extraIconView != null) {
@@ -196,6 +200,25 @@ object RowsRenderHelper {
         }
     }
 
+    // ImageSpan.ALIGN_CENTER canh icon theo giữa cả dòng (line box), nhưng dòng có thể cao hơn
+    // vùng chữ thật (do line spacing, dấu, ...) khiến icon bị lệch trên/dưới so với text xung
+    // quanh. Class này canh icon theo giữa vùng chữ thật (ascent/descent của Paint tại vị trí
+    // vẽ) để icon luôn thẳng hàng với text.
+    private class VerticalCenterImageSpan(drawable: Drawable) : ImageSpan(drawable) {
+        override fun draw(canvas: Canvas, text: CharSequence?, start: Int, end: Int, x: Float, top: Int, y: Int, bottom: Int, paint: Paint) {
+            val b = drawable
+            canvas.save()
+
+            val fontMetrics = paint.fontMetricsInt
+            val textCenter = y + (fontMetrics.descent + fontMetrics.ascent) / 2f
+            val transY = textCenter - b.bounds.height() / 2f
+
+            canvas.translate(x, transY)
+            b.draw(canvas)
+            canvas.restore()
+        }
+    }
+
     // Tạo drawable icon cho row dạng toggle (checkbox/switch), kích thước nhỏ vừa 1 dòng text,
     // chọn ảnh theo loại (checkbox/switch) và trạng thái hiện tại (checked/unchecked).
     private fun buildToggleDrawable(context: Context, row: TextNode.TextRow): Drawable {
@@ -209,8 +232,8 @@ object RowsRenderHelper {
         val width: Int
         val height: Int
         if (row.toggle == "switch") {
-            width = (34 * density).toInt()
-            height = (20 * density).toInt()
+            width = (28 * density).toInt()
+            height = (16 * density).toInt()
         } else {
             width = (20 * density).toInt()
             height = (20 * density).toInt()

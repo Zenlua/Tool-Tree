@@ -2271,9 +2271,16 @@ Addon() {
     '$beforesh'
     '"$google_trans"'
       [[group.page.rows]]
-      text = "Dòng thứ hai (link)"
-      link = "https://example.com"
-      break = true
+      toggle = "checkbox"
+      text = "WiFi"
+      checked = "test -f /sdcard/wifi_on && echo 1"
+      onchange-sh = ""
+
+      [[group.page.rows]]
+      toggle = "switch"
+      text = "WiFi"
+      checked = "test -f /sdcard/wifi_on && echo 1"
+      onchange-sh = ""
       
       [[group.page.options]]
       title = "'$pin_text_add'"
