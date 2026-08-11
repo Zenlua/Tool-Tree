@@ -15,15 +15,8 @@ import kotlin.math.max
 /**
  * SwipePager - thay thế androidx.viewpager2.widget.ViewPager2.
  *
- * Lý do viết riêng thay vì dùng ViewPager2:
- * Tool-Tree chỉ có đúng 4 tab CỐ ĐỊNH, và trước đây offscreenPageLimit đã được set = 4,
- * nghĩa là ViewPager2 vốn đã giữ TẤT CẢ trang trong bộ nhớ, không hề recycle. Vậy toàn bộ
- * bộ máy RecyclerView bên trong ViewPager2 (đo đạc/layout qua LayoutManager riêng, tạo-huỷ
- * ViewHolder, nested-scrolling, nhiều tầng listener/Adapter) chỉ tạo thêm chi phí xử lý mỗi
- * khung hình mà không mang lại lợi ích recycle nào cả - đây là nguyên nhân chính gây giật.
- *
- * SwipePager tự layout các trang cạnh nhau (giống ViewPager thế hệ 1) và tự xử lý
- * chạm/fling bằng OverScroller - ít tầng trung gian hơn nên phản hồi nhanh và mượt hơn.
+ * Tối ưu hóa hiệu năng cho số lượng tab cố định, loại bỏ hoàn toàn chi phí RecyclerView.
+ * Đã tích hợp chống khựng (drop frame) và hiệu ứng cuộn quá mép (rubber-band overscroll).
  */
 class SwipePager @JvmOverloads constructor(
     context: Context,
@@ -35,12 +28,6 @@ class SwipePager @JvmOverloads constructor(
         fun onPageScrolled(position: Int, offset: Float) {}
     }
 
-    /**
-     * Cho phép áp hiệu ứng chuyển trang tuỳ ý (fade, scale, depth...), tương tự
-     * ViewPager.PageTransformer thế hệ 1. [position] là vị trí tương đối của trang so với
-     * trang đang được chọn: 0 = đang hiển thị đầy đủ, -1 = lùi hẳn 1 trang bên trái,
-     * 1 = lùi hẳn 1 trang bên phải.
-     */
     interface PageTransformer {
         fun transformPage(page: View, position: Float)
     }
@@ -57,9 +44,6 @@ class SwipePager @JvmOverloads constructor(
     private val minFlingVelocity: Int
     private val maxFlingVelocity: Int
 
-    // Giảm touch slop so với mặc định hệ thống để cử chỉ vuốt được nhận diện sớm hơn,
-    // dứt khoát hơn ngay từ những pixel di chuyển đầu tiên (thay cho hack reflection cũ
-    // từng áp dụng lên RecyclerView nội bộ của ViewPager2).
     private val touchSlop: Int
 
     private var initialX = 0f
@@ -67,8 +51,6 @@ class SwipePager @JvmOverloads constructor(
     private var lastX = 0f
     private var isDragging = false
 
-    // Vị trí đang chọn được yêu cầu trước khi View có kích thước (vd gọi lúc khởi tạo,
-    // trước lần layout đầu tiên) - sẽ được áp dụng ngay khi layout xong.
     private var pendingItem: Int? = null
 
     init {
@@ -87,12 +69,8 @@ class SwipePager @JvmOverloads constructor(
         applyPageTransform()
     }
 
-    /**
-     * Áp hiệu ứng transform lên từng trang dựa theo vị trí hiện tại của scrollX.
-     * Gọi lại mỗi khi scrollX đổi (kéo tay, fling, settle) hoặc khi layout/thêm trang.
-     */
     private fun applyPageTransform() {
-        val transformer = pageTransformer ?: return // Bỏ qua nếu không dùng transformer
+        val transformer = pageTransformer ?: return
         if (width == 0) return
         for (i in 0 until childCount) {
             val child = getChildAt(i)
@@ -100,7 +78,6 @@ class SwipePager @JvmOverloads constructor(
             transformer.transformPage(child, position)
         }
     }
-
 
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
         super.onScrollChanged(l, t, oldl, oldt)
@@ -121,7 +98,6 @@ class SwipePager @JvmOverloads constructor(
         val target = position.coerceIn(0, pages.size - 1)
 
         if (width == 0) {
-            // Chưa layout xong -> ghi nhận, đợi onLayout căn lại
             pendingItem = target
             if (currentItem != target) {
                 currentItem = target
@@ -180,10 +156,10 @@ class SwipePager @JvmOverloads constructor(
             return false
         }
         if (action != MotionEvent.ACTION_DOWN && isDragging) return true
-    
+
         if (velocityTracker == null) velocityTracker = VelocityTracker.obtain()
         velocityTracker?.addMovement(ev)
-    
+
         if (action == MotionEvent.ACTION_DOWN) {
             initialX = ev.x
             initialY = ev.y
@@ -223,10 +199,19 @@ class SwipePager @JvmOverloads constructor(
                     if (abs(dx) > touchSlop && abs(dx) > abs(dy)) isDragging = true
                 }
                 if (isDragging) {
-                    val dx = lastX - ev.x
+                    var dx = lastX - ev.x
                     lastX = ev.x
-                    val maxScroll = max(0, (pages.size - 1) * width)
-                    val newScrollX = (scrollX + dx).coerceIn(0f, maxScroll.toFloat())
+                    
+                    val maxScroll = max(0, (pages.size - 1) * width).toFloat()
+
+                    // Tạo lực cản khi vuốt vượt biên (Rubber-band damping)
+                    if (scrollX < 0 && dx < 0) {
+                        dx *= 0.35f
+                    } else if (scrollX > maxScroll && dx > 0) {
+                        dx *= 0.35f
+                    }
+
+                    val newScrollX = scrollX + dx
                     scrollTo(newScrollX.toInt(), 0)
                     notifyScrolled()
                 }
@@ -246,12 +231,21 @@ class SwipePager @JvmOverloads constructor(
 
     private fun settle(velocityX: Float) {
         if (width == 0 || pages.isEmpty()) return
+        val maxScroll = max(0, (pages.size - 1) * width)
+
+        // Nảy về vị trí chuẩn nếu đang vượt mép trái/phải
+        if (scrollX < 0) {
+            setCurrentItem(0, true)
+            return
+        } else if (scrollX > maxScroll) {
+            setCurrentItem(pages.size - 1, true)
+            return
+        }
+
         val page = width
         val current = scrollX / page
         val fraction = (scrollX % page).toFloat() / page
 
-        // VelocityTracker: velocityX < 0 nghĩa là ngón tay đang di chuyển sang trái
-        // (vuốt để xem trang KẾ TIẾP); velocityX > 0 nghĩa là vuốt sang phải (trang trước).
         val target = when {
             abs(velocityX) > minFlingVelocity -> if (velocityX < 0) current + 1 else current
             fraction > 0.5f -> current + 1
@@ -273,6 +267,7 @@ class SwipePager @JvmOverloads constructor(
             notifyScrolled()
             postInvalidateOnAnimation()
         } else if (!isDragging && width > 0 && pages.isNotEmpty()) {
+            // Chỉ phát sự kiện đổi page khi đã dừng di chuyển hoàn toàn
             val settled = (scrollX / width).coerceIn(0, pages.size - 1)
             if (settled != currentItem) {
                 currentItem = settled
@@ -281,8 +276,3 @@ class SwipePager @JvmOverloads constructor(
         }
     }
 }
-
-
-
-
-
