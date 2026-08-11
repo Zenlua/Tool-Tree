@@ -25,6 +25,9 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var monospace: Boolean = false
         // 是否换行后显示
         internal var breakRow: Boolean = false
+        // Nếu true: vẽ 1 đường kẻ mảnh ngang qua hết chiều rộng NGAY TRƯỚC row này, dùng để
+        // tách riêng phần rows (hoặc tách nhóm row) khỏi nội dung phía trên
+        internal var line: Boolean = false
         // 对齐方式
         internal var align: Layout.Alignment = Layout.Alignment.ALIGN_NORMAL
         // 点击后要跳转的网页链接

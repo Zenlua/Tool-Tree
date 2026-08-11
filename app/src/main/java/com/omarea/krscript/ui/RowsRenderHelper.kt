@@ -19,6 +19,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import com.omarea.common.ui.BlurEngine
 import com.omarea.common.ui.DialogHelper
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
@@ -54,6 +55,15 @@ object RowsRenderHelper {
         rowsView.movementMethod = BoundedLinkMovementMethod.instance // 不设置 ClickableSpan 点击没反应
         rowsView.visibility = View.VISIBLE
 
+        // BoundedLinkMovementMethod chỉ "nuốt" (consume) sự kiện chạm khi trúng đúng ClickableSpan
+        // (link/toggle/activity/script). Chạm vào phần còn lại của rowsView (chữ thường không có
+        // action, hoặc khoảng trống) sẽ KHÔNG được tiêu thụ -> Android coi như rowsView "không xử
+        // lý" và để sự kiện rơi xuống cho View cha (thường là toàn bộ item list) xử lý click, gây
+        // bấm nhầm vào action/kênh của item. Đặt rowsView clickable + listener rỗng để nó tự nuốt
+        // hết các lượt chạm còn lại, không rơi xuống item cha.
+        rowsView.isClickable = true
+        rowsView.setOnClickListener { }
+
         // bind() thường được gọi lúc RecyclerView/ListView bind item - tức TRƯỚC khi view được
         // đo/layout lần đầu (rowsView.width == 0 với view mới inflate). computeToggleLeadingMargin
         // cần width thật để tính margin nên sẽ không tính được ở lần bind đầu này -> đánh dấu để
@@ -66,7 +76,23 @@ object RowsRenderHelper {
 
         for (row in rows) {
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
-            if (hasContent && (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL)) {
+
+            // row.line = true: chèn 1 dòng chỉ chứa đường kẻ mảnh (full chiều rộng) NGAY TRƯỚC
+            // nội dung row này, dùng để tách riêng phần rows (hoặc tách nhóm row) trực quan.
+            var skipLeadingBreak = false
+            if (row.line) {
+                if (hasContent) {
+                    rowsView.append("\n")
+                }
+                val dividerLine = SpannableString(" ")
+                dividerLine.setSpan(DividerSpan(context), 0, dividerLine.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                rowsView.append(dividerLine)
+                rowsView.append("\n")
+                hasContent = true
+                skipLeadingBreak = true
+            }
+
+            if (!skipLeadingBreak && hasContent && (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL)) {
                 rowsView.append("\n")
             }
             // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
@@ -248,6 +274,20 @@ object RowsRenderHelper {
                     bind(context, rowsView, extraIconView, rows, config)
                 }
             }
+        }
+    }
+
+    // Vẽ 1 đường kẻ mảnh ngang qua hết chiều rộng dòng - dùng cho row có "line = true". Cài qua
+    // LeadingMarginSpan (không chiếm margin - getLeadingMargin trả 0) để không ảnh hưởng layout
+    // ký tự, chỉ tận dụng callback drawLeadingMargin để vẽ tự do trên toàn bộ chiều rộng layout.
+    private class DividerSpan(private val context: Context) : LeadingMarginSpan {
+        override fun getLeadingMargin(first: Boolean): Int = 0
+
+        override fun drawLeadingMargin(canvas: Canvas, paint: Paint, x: Int, dir: Int, top: Int, baseline: Int, bottom: Int, text: CharSequence?, start: Int, end: Int, first: Boolean, layout: Layout?) {
+            val strokePaint = BlurEngine.getStrokePaint(context)
+            val y = (top + bottom) / 2f
+            val right = (layout?.width ?: 0).toFloat()
+            canvas.drawLine(0f, y, right, y, strokePaint)
         }
     }
 
