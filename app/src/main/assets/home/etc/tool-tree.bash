@@ -2270,11 +2270,14 @@ Addon() {
     '$summss'
     '$beforesh'
     '"$google_trans"'
+    
       [[group.page.rows]]
       toggle = "checkbox"
       text = "WiFi"
       checked = "test -f /sdcard/wifi_on && echo 1"
       onchange-sh = ""
+      bold = true
+      align = "center"
 
       [[group.page.rows]]
       toggle = "switch"
