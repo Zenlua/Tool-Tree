@@ -592,6 +592,12 @@ class PageConfigReader {
             }
             action.params = params
         }
+
+        // Giống text.rows: cho phép action.rows hiển thị thêm các dòng rich-text bên dưới
+        for (rowTable in tomlEntries(table, "rows")) {
+            textRowToml(action.rows, rowTable)
+        }
+
         resourceNodeToml(table)
         return action
     }
@@ -683,13 +689,13 @@ class PageConfigReader {
     private fun textNodeToml(table: TomlTable): TextNode? {
         val text = mainNodeToml(TextNode(pageConfigAbsPath), table) as TextNode? ?: return null
         for (rowTable in tomlEntries(table, "rows")) {
-            textRowToml(text, rowTable)
+            textRowToml(text.rows, rowTable)
         }
         resourceNodeToml(table)
         return text
     }
 
-    private fun textRowToml(textNode: TextNode, table: TomlTable) {
+    private fun textRowToml(rows: ArrayList<TextNode.TextRow>, table: TomlTable) {
         val row = TextNode.TextRow()
         tomlGet(table, "bold", "b")?.let { row.bold = tomlTruthy(it, "bold") }
         tomlGet(table, "italic", "i")?.let { row.italic = tomlTruthy(it, "italic") }
@@ -716,7 +722,7 @@ class PageConfigReader {
             }
         }
         tomlGet(table, "text")?.let { row.text = StringResRef.resolve(context, it) }
-        textNode.rows.add(row)
+        rows.add(row)
     }
 
     private fun editorNodeToml(table: TomlTable): EditorNode? {

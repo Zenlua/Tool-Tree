@@ -2181,7 +2181,8 @@ Addon() {
       icon = "'$icon_vb'"
       reload = true
       title = "'$name'"
-      desc = "'$desc_vb'"
+      desc = "'$description'"
+      summary = "'$sum_vb'"
       script = """
       echo "'$update_text_3'"
       echo
@@ -2259,7 +2260,8 @@ Addon() {
     [[group]]
     [[group.page]]
     title = "'$name'"
-    desc = "'$desc_vb'"
+    desc = "'$description'"
+    summary = "'$sum_vb'"
     icon = "'$icon_vb'"
     process = true
     '$farooot'
@@ -2287,8 +2289,8 @@ Addon() {
   Vips() {
 
     # Xoá giá trị cũ
-    code_option=''; farooot=''; google_trans=''; shortcut=''; beforesh='';
-    summary=''; shortcut=''; description='';
+    code_option=''; farooot=''; google_trans=''; 
+    shortcut=''; beforesh=''; shortcut='';
     [ "$id" ] || continue
     
     # Phát hiện root
@@ -2297,12 +2299,8 @@ Addon() {
     fi
   
     # Phát hiện tính năng
-    [ "$summary" ] && summary='summary = "'$summary'" '
     [ "$shortcut" == "true" ] && shortcut='key = "'$idadd'" '
-    [ "$description" ] && description=" | $description"
-  
-    # Tên và desc
-    desc_vb="$version ${author}$description"
+    sum_vb="$version ${author}"
     icon_vb="$(urladd icon)"
   
     # Load trang danh sách
