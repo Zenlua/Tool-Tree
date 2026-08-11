@@ -2276,6 +2276,7 @@ Addon() {
       onchange-sh = ""
       align = "opposite"
       bold = true
+      line = true
 
       [[group.page.rows]]
       toggle = "switch"
