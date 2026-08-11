@@ -659,8 +659,8 @@ update_addon() {
   if checkonline; then
     echo "$check_update_text_1"
     echo
-    check_sum_onl="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/V1 | jq -r '.assets[] | select(.name == "patch_rom.add") | .digest' | cut -d: -f2)"
-    if [[ "$check_sum_onl" != "$(glog check_sum_addon_patch_rom)" ]]; then
+    sumcek="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/V1 | jq -r '.assets[] | select(.name == "patch_rom.add") | .digest' | cut -d: -f2)"
+    if [[ "$sumcek" != "$(glog sumcek_patch_rom)" ]]; then
       installadd "$(gprop url $MPAT/download.prop)" "${MPAT%/*}" 2>&1 || { echo "$check_update_text_2" >&2; exit 1; }
       echo
       [ -f $MPAT/changelog.txt ] && cat $MPAT/changelog.txt
@@ -674,6 +674,7 @@ update_addon() {
   fi
 }
 
+MPAT="${0%/*}"
 # Lưu biến
 sdcard_text="${PTAD/$SDCARD_PATH/\/sdcard}"
 pathsh="$MPAT/patch-rom"
