@@ -28,7 +28,7 @@ class ThemeConfig(private val context: Context) {
     }
 
     fun getAllowNotificationUI(): Boolean {
-        return config.getBoolean(KEY_NOTIFICATION_UI, true)
+        return config.getBoolean(KEY_NOTIFICATION_UI, false)
     }
 
     fun setAllowNotificationUI(allow: Boolean) {
