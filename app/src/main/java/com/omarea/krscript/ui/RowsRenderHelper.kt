@@ -97,7 +97,7 @@ object RowsRenderHelper {
                 skipLeadingBreak = true
             }
 
-            if (!skipLeadingBreak && hasContent && (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL)) {
+            if (!skipLeadingBreak && hasContent) {
                 rowsView.append("\n")
             }
             // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
