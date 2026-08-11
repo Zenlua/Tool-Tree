@@ -20,6 +20,9 @@ class PageNode(currentConfigXml: String) : ClickableNode(currentConfigXml) {
     // 处理菜单和悬浮按钮点击事件的脚本
     var pageHandlerSh:  String = ""
 
+    // Giống text.rows / action.rows: cho phép page hiển thị thêm các dòng rich-text bên dưới
+    val rows = ArrayList<TextNode.TextRow>()
+
     // 页面加载失败
     var loadSuccess = ""
     // 页面加载成功

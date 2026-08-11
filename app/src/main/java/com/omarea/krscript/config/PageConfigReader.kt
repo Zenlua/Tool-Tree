@@ -476,6 +476,12 @@ class PageConfigReader {
                 pageMenuOptionToml(optTable)?.let { page.pageMenuOptions!!.add(it) }
             }
         }
+
+        // Giống text.rows / action.rows: cho phép page.rows hiển thị thêm các dòng rich-text bên dưới
+        for (rowTable in tomlEntries(table, "rows")) {
+            textRowToml(page.rows, rowTable)
+        }
+
         resourceNodeToml(table)
         return page
     }
