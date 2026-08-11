@@ -92,22 +92,15 @@ class SwipePager @JvmOverloads constructor(
      * Gọi lại mỗi khi scrollX đổi (kéo tay, fling, settle) hoặc khi layout/thêm trang.
      */
     private fun applyPageTransform() {
+        val transformer = pageTransformer ?: return // Bỏ qua nếu không dùng transformer
         if (width == 0) return
-        val transformer = pageTransformer
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             val position = (child.left - scrollX).toFloat() / width
-            if (transformer != null) {
-                transformer.transformPage(child, position)
-            } else {
-                // Không có transformer -> đảm bảo trang luôn ở trạng thái gốc
-                child.alpha = 1f
-                child.scaleX = 1f
-                child.scaleY = 1f
-                child.translationX = 0f
-            }
+            transformer.transformPage(child, position)
         }
     }
+
 
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
         super.onScrollChanged(l, t, oldl, oldt)
@@ -182,10 +175,15 @@ class SwipePager @JvmOverloads constructor(
         val action = ev.actionMasked
         if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
             isDragging = false
+            velocityTracker?.recycle()
+            velocityTracker = null
             return false
         }
         if (action != MotionEvent.ACTION_DOWN && isDragging) return true
-
+    
+        if (velocityTracker == null) velocityTracker = VelocityTracker.obtain()
+        velocityTracker?.addMovement(ev)
+    
         if (action == MotionEvent.ACTION_DOWN) {
             initialX = ev.x
             initialY = ev.y
@@ -274,7 +272,7 @@ class SwipePager @JvmOverloads constructor(
             scrollTo(scroller.currX, scroller.currY)
             notifyScrolled()
             postInvalidateOnAnimation()
-        } else if (width > 0 && pages.isNotEmpty()) {
+        } else if (!isDragging && width > 0 && pages.isNotEmpty()) {
             val settled = (scrollX / width).coerceIn(0, pages.size - 1)
             if (settled != currentItem) {
                 currentItem = settled
@@ -283,3 +281,8 @@ class SwipePager @JvmOverloads constructor(
         }
     }
 }
+
+
+
+
+

@@ -11,7 +11,7 @@ import kotlin.math.abs
  * [minAlpha] - độ mờ nhỏ nhất của trang khi nó lùi hẳn sang một bên (0..1).
  */
 class FadeScalePageTransformer(
-    private val minScale: Float = 0.90f,
+    private val minScale: Float = 0.80f,
     private val minAlpha: Float = 0.55f
 ) : SwipePager.PageTransformer {
 
