@@ -8,11 +8,13 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.text.Layout
+import android.text.Spannable
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.*
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -46,12 +48,25 @@ object RowsRenderHelper {
         }
 
         rowsView.text = ""
-        rowsView.movementMethod = LinkMovementMethod.getInstance() // 不设置 ClickableSpan 点击没反应
+        // LinkMovementMethod mặc định: bấm bất kỳ đâu trên dòng (kể cả vùng trống do canh lề)
+        // cũng tính là bấm trúng ClickableSpan của dòng đó. Dùng bản tuỳ chỉnh bên dưới để chỉ
+        // nhận chạm trong vùng chữ/icon thực sự được vẽ.
+        rowsView.movementMethod = BoundedLinkMovementMethod.instance // 不设置 ClickableSpan 点击没反应
         rowsView.visibility = View.VISIBLE
+
+        // bind() thường được gọi lúc RecyclerView/ListView bind item - tức TRƯỚC khi view được
+        // đo/layout lần đầu (rowsView.width == 0 với view mới inflate). computeToggleLeadingMargin
+        // cần width thật để tính margin nên sẽ không tính được ở lần bind đầu này -> đánh dấu để
+        // sau khi layout xong thì bind lại 1 lần, tránh rơi về AlignmentSpan cũ (dính lại bug cũ).
+        var needsRebindAfterLayout = false
+        // Chỉ chèn "\n" trước 1 row nếu đã có nội dung trước đó - tránh trường hợp row ĐẦU TIÊN
+        // có breakRow/align != normal khiến "\n" bị chèn vào lúc rowsView còn rỗng, tạo ra 1 dòng
+        // trống thừa ở trên cùng (canh phải/giữa mới bị vì mới có "\n" chèn cho cả row đầu).
+        var hasContent = false
 
         for (row in rows) {
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
-            if (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL) {
+            if (hasContent && (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL)) {
                 rowsView.append("\n")
             }
             // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
@@ -200,7 +215,12 @@ object RowsRenderHelper {
             // nhận. Với row toggle bị canh giữa/phải, thay AlignmentSpan bằng LeadingMarginSpan
             // (đẩy dòng bằng margin đo thực tế, vẫn giữ ALIGN_NORMAL) để vùng chạm tính đúng.
             val leadingMargin = if (isToggle && row.align != Layout.Alignment.ALIGN_NORMAL) {
-                computeToggleLeadingMargin(rowsView, row, text, toggleDrawable)
+                if (rowsView.width == 0) {
+                    needsRebindAfterLayout = true
+                    null
+                } else {
+                    computeToggleLeadingMargin(rowsView, row, text, toggleDrawable)
+                }
             } else {
                 null
             }
@@ -211,12 +231,49 @@ object RowsRenderHelper {
             }
 
             rowsView.append(spannableString)
+            hasContent = true
         }
 
         // Chặn crash Editor.touchPositionIsInSelection khi long-press vào vùng text
-        // (đã bỏ tính năng copy nội dung khi long-press).
+        // (đã bỏ tính năng copy nội dung khi long-press). Tắt luôn haptic feedback vì Android tự
+        // rung khi performLongClick() được gọi, bất kể listener trả về true hay false.
+        rowsView.isHapticFeedbackEnabled = false
         rowsView.setOnLongClickListener {
             true
+        }
+
+        if (needsRebindAfterLayout) {
+            rowsView.post {
+                if (rowsView.width > 0) {
+                    bind(context, rowsView, extraIconView, rows, config)
+                }
+            }
+        }
+    }
+
+    // LinkMovementMethod gốc quy đổi toạ độ chạm sang offset ký tự gần nhất trong dòng
+    // (Layout.getOffsetForHorizontal) mà không kiểm tra toạ độ đó có thực sự nằm trong vùng chữ
+    // được vẽ hay không - nên bấm vào khoảng trống do canh lề/margin cũng bị tính là bấm trúng
+    // ClickableSpan của dòng đó. Lớp này chặn trước: nếu x nằm ngoài [getLineLeft, getLineRight]
+    // của dòng (tức ngoài vùng chữ/icon thực tế), bỏ qua sự kiện thay vì chuyển cho lớp cha xử lý.
+    private class BoundedLinkMovementMethod : LinkMovementMethod() {
+        companion object {
+            val instance = BoundedLinkMovementMethod()
+        }
+
+        override fun onTouchEvent(widget: TextView, buffer: Spannable, event: MotionEvent): Boolean {
+            if (event.action == MotionEvent.ACTION_DOWN || event.action == MotionEvent.ACTION_UP) {
+                val layout = widget.layout
+                if (layout != null) {
+                    val x = event.x.toInt() - widget.totalPaddingLeft + widget.scrollX
+                    val y = event.y.toInt() - widget.totalPaddingTop + widget.scrollY
+                    val line = layout.getLineForVertical(y)
+                    if (x < layout.getLineLeft(line) || x > layout.getLineRight(line)) {
+                        return false
+                    }
+                }
+            }
+            return super.onTouchEvent(widget, buffer, event)
         }
     }
 
