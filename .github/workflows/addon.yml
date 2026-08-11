@@ -26,7 +26,7 @@ jobs:
             if [ "${vv##*/}" == "patch_rom" ]; then
             7z a -t7z -mmt=off -mtc=off -mta=off -y /home/runner/${vv##*/}_$VER.add
             else
-            7z a -t7z -mmt=off -mtc=off -mta=off -y /home/runner/${vv##*/}.add
+            7z a -t7z -mmt=off -mtc=off -mta=off -y /home/runner/${vv##*/}_$VER.add
             fi
             )
           done

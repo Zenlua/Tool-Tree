@@ -15,11 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build add-on
+      - name: Build plugin
         run: |
           VER=$(grep -m1 'versionName ' app/build.gradle | cut -d'"' -f2)
           cd .github/plugin
-          7z a -t7z -y ../plugin_$VER.so
+          find . -exec touch -d "2026-01-01 00:00:00" {} +
+          7z a -t7z -mmt=off -mtc=off -mta=off -y ../plugin_$VER.so
 
       - name: Upload module
         uses: softprops/action-gh-release@v2
