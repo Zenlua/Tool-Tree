@@ -702,10 +702,17 @@ class PageConfigReader {
     }
 
     private fun textRowToml(rows: ArrayList<TextNode.TextRow>, table: TomlTable) {
+        // Ẩn/hiện row theo điều kiện (tĩnh true/false hoặc lệnh shell, giống support/visible của param)
+        tomlGet(table, "support", "visible")?.let {
+            if (!resolveBoolOrShell(it, "support", "visible")) return
+        }
+
         val row = TextNode.TextRow()
         tomlGet(table, "bold", "b")?.let { row.bold = tomlTruthy(it, "bold") }
         tomlGet(table, "italic", "i")?.let { row.italic = tomlTruthy(it, "italic") }
         tomlGet(table, "underline", "u")?.let { row.underline = tomlTruthy(it, "underline") }
+        tomlGet(table, "strikethrough", "line-through", "delete-line", "del")?.let { row.strikethrough = tomlTruthy(it, "strikethrough", "line-through", "del") }
+        tomlGet(table, "monospace", "mono", "code")?.let { row.monospace = tomlTruthy(it, "monospace", "mono", "code") }
         tomlGet(table, "foreground", "color")?.let { try { row.color = it.toColorInt() } catch (_: Exception) {} }
         tomlGet(table, "bg", "background", "bgcolor")?.let { try { row.bgColor = it.toColorInt() } catch (_: Exception) {} }
         tomlGet(table, "size")?.let { row.size = it.trim().toIntOrNull() ?: row.size }

@@ -1,5 +1,7 @@
 package com.omarea.krscript.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
@@ -50,7 +52,12 @@ object RowsRenderHelper {
             if (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL) {
                 rowsView.append("\n")
             }
-            val text = row.text
+            // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
+            val text = if (row.dynamicTextSh.isNotEmpty()) {
+                ScriptEnvironmen.executeResultRoot(context, row.dynamicTextSh, config)
+            } else {
+                row.text
+            }
             val length = text.length
             val spannableString = SpannableString(text)
 
@@ -68,6 +75,15 @@ object RowsRenderHelper {
 
             if (row.underline) {
                 spannableString.setSpan(UnderlineSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
+            if (row.strikethrough) {
+                spannableString.setSpan(StrikethroughSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
+            if (row.monospace) {
+                @Suppress("DEPRECATION")
+                spannableString.setSpan(TypefaceSpan("monospace"), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             if (row.link.isNotEmpty()) {
@@ -145,8 +161,16 @@ object RowsRenderHelper {
             rowsView.append(spannableString)
         }
 
-        // NOTE: 修补 android.widget.Editor.touchPositionIsInSelection(Editor.java:1363) 导致的奔溃
+        // Long-press để copy toàn bộ nội dung rows hiện đang hiển thị vào clipboard.
+        // (Trước đây listener này chỉ để chặn crash Editor.touchPositionIsInSelection, giờ tận
+        // dụng luôn để copy - true vẫn được trả về ở cuối để giữ nguyên hiệu ứng vá lỗi đó.)
         rowsView.setOnLongClickListener {
+            val plainText = rowsView.text?.toString().orEmpty()
+            if (plainText.isNotEmpty()) {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                clipboard?.setPrimaryClip(ClipData.newPlainText(null, plainText))
+                Toast.makeText(context, context.getString(R.string.copy_success), Toast.LENGTH_SHORT).show()
+            }
             true
         }
     }

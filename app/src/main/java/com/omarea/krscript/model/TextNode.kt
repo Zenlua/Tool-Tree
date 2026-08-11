@@ -18,6 +18,10 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var italic: Boolean = false
         // 是否显示下划线
         internal var underline: Boolean = false
+        // Gạch ngang (strikethrough)
+        internal var strikethrough: Boolean = false
+        // Font đơn cách (monospace) - hữu ích khi hiện log/lệnh shell
+        internal var monospace: Boolean = false
         // 是否换行后显示
         internal var breakRow: Boolean = false
         // 对齐方式
