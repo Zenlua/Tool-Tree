@@ -14,7 +14,6 @@ import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.*
 import android.view.View
-import android.view.ViewTreeObserver
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -50,25 +49,9 @@ object RowsRenderHelper {
         rowsView.movementMethod = LinkMovementMethod.getInstance() // 不设置 ClickableSpan 点击没反应
         rowsView.visibility = View.VISIBLE
 
-        // Bề rộng khả dụng (trừ padding) để tính vị trí tab-stop canh icon toggle sát lề phải.
-        // Nếu view chưa được layout (width = 0, ví dụ lần bind đầu tiên khi RecyclerView chưa
-        // đo xong), rows vẫn hiển thị bình thường (icon nằm ngay sau label, không bị lệch/mất)
-        // và tự bind lại đúng 1 lần ngay khi layout xong để canh lại icon.
-        val availableWidth = rowsView.width - rowsView.paddingLeft - rowsView.paddingRight
-        if (availableWidth <= 0) {
-            rowsView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    rowsView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    bind(context, rowsView, extraIconView, rows, config)
-                }
-            })
-        }
-
         for (row in rows) {
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
-            // Toggle luôn tự xuống dòng riêng để canh icon sát lề phải cho đúng (label bên
-            // trái, icon bên phải - giống 1 hàng cài đặt thông thường).
-            if (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL || isToggle) {
+            if (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL) {
                 rowsView.append("\n")
             }
             // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
@@ -78,23 +61,20 @@ object RowsRenderHelper {
                 row.text
             }
 
-            // Row dạng toggle (checkbox/switch nhỏ): chèn 1 ký tự tab rồi tới 1 ký tự placeholder
-            // để vẽ icon lên bằng ImageSpan. Kèm 1 TabStopSpan để ký tự tab nhảy tới sát lề phải
-            // của view (nếu đã biết bề rộng view) - nhờ đó icon luôn canh sát lề phải bất kể
-            // label dài ngắn thế nào. Toàn bộ (label + icon) dùng chung 1 ClickableSpan để bấm
-            // đâu trên hàng cũng đổi trạng thái được, không dùng link/activity/script click thường.
-            val toggleDrawable = if (isToggle) buildToggleDrawable(context, row) else null
-            val text = if (isToggle) "$label\t\u2002" else label
+            // Row dạng toggle (checkbox/switch nhỏ): chèn thêm 1 ký tự placeholder ở cuối (sau
+            // label) để vẽ icon lên bằng ImageSpan - icon nằm ngay sau chữ. Muốn canh trái/giữa/
+            // phải cho cả label+icon thì dùng field "align" ("normal"/"center"/"opposite") và
+            // "break" giống hệt row text thường - không có cơ chế canh riêng cho icon. Toàn bộ
+            // (label + icon) dùng chung 1 ClickableSpan để bấm đâu cũng đổi trạng thái được,
+            // không dùng link/activity/script click thường.
+            val text = if (isToggle) "$label \u2002 " else label
             val length = text.length
             val spannableString = SpannableString(text)
 
-            if (isToggle && toggleDrawable != null) {
-                val iconIndex = length - 1
-                spannableString.setSpan(VerticalCenterImageSpan(toggleDrawable), iconIndex, iconIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                if (availableWidth > 0) {
-                    val tabStop = (availableWidth - toggleDrawable.bounds.width()).coerceAtLeast(0)
-                    spannableString.setSpan(TabStopSpan.Standard(tabStop), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
+            if (isToggle) {
+                // Vị trí ký tự placeholder: ngay trước khoảng trắng cuối cùng vừa thêm
+                val iconIndex = length - 2
+                spannableString.setSpan(VerticalCenterImageSpan(buildToggleDrawable(context, row)), iconIndex, iconIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             if (extraIconView != null) {
