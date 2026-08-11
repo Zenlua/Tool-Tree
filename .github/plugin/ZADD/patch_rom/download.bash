@@ -1,0 +1,11 @@
+# Add-on
+
+id=patch_rom
+name="Patch ROM"
+author=Kakathic
+description="ROM quick patch tool"
+description_vi="Công cụ vá nhanh ROM"
+version=1.0
+versionCode=100
+root=false
+url=https://github.com/Zenlua/Tool-Tree/releases/download/V1/patch_rom_$PACKAGE_VERSION_NAME.add

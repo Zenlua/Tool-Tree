@@ -2258,15 +2258,15 @@ Addon() {
     echo '
     [[group]]
     [[group.page]]
+    title = "'$name'"
+    desc = "'$desc_vb'"
+    icon = "'$icon_vb'"
+    process = true
     '$farooot'
     '$shortcut'
     '$pagesh'
     '$summss'
     '$beforesh'
-    title = "'$name'"
-    desc = "'$desc_vb'"
-    icon = "'$icon_vb'"
-    process = true
     '"$google_trankk"'
       [[group.page.options]]
       title = "'$pin_text_add'"
@@ -2308,11 +2308,11 @@ Addon() {
       # Xoá Add-on
       [ -f "$dirvad/uninstall.bash" ] && $dirvad/uninstall.bash
       find "$dirvad" -maxdepth 1 ! -path "$dirvad" \
-      ! -name 'download.prop' ! -exec rm -rf {} +
+      ! -name 'download.bash' ! -exec rm -rf {} +
     else
       if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
       Homeadd
-      elif [ -f "$dirvad/download.prop" ]; then
+      elif [ -f "$dirvad/download.bash" ]; then
       Download
       fi
     
@@ -2320,7 +2320,7 @@ Addon() {
   }
 
   # Load trang add-on có pin trước
-  for vadd in $PATHADD/*/Add-on.prop; do
+  for vadd in $PATHADD/*/Add-on.bash; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     [ -f "$dirvad/pin" ] || continue
@@ -2332,7 +2332,7 @@ Addon() {
   done
 
   # Load trang không có pin
-  for vadd in $PATHADD/*/Add-on.prop; do
+  for vadd in $PATHADD/*/Add-on.bash; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     [ -f "$dirvad/pin" ] && continue
@@ -2344,7 +2344,7 @@ Addon() {
   done
 
   # Load trang tải xuống ở dưới cùng
-  for vadd in $PATHADD/*/download.prop; do
+  for vadd in $PATHADD/*/download.bash; do
     [ -f "$vadd" ] || continue
     dirvad="${vadd%/*}"
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then

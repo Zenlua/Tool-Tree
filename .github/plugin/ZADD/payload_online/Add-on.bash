@@ -1,10 +1,10 @@
 # Add-on
 
 id=payload_online
-name=Payload dumper online
+name="Payload dumper online"
 author=Kakathic
-description=Extract payload online
-description_vi=Trích xuất payload online
+description="Extract payload online"
+description_vi="Trích xuất payload online"
 version=1.0
 versionCode=100
 root=false

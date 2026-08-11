@@ -1,9 +1,9 @@
 # Add-on
 id=upload_file
-name=Upload file online
+name="Upload file online"
 author=Kakathic
-description=Upload files to web
-description_vi=Tải tập tin lên web
+description="Upload files to web"
+description_vi="Tải tập tin lên web"
 version=1.0
 versionCode=100
 root=false

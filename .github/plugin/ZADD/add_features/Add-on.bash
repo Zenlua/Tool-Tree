@@ -1,12 +1,12 @@
 # Add-on
 id=add_features
-name=ROM utility
+name="ROM utility"
 author=Kakathic
 version=1.2
 versionCode=102
 root=false
-description=Many small amenities
-description_vi=Nhiều tiện ích nhỏ
+description="Many small amenities"
+description_vi="Nhiều tiện ích nhỏ"
 
 # language
 config_text_1="List of existing projects"
