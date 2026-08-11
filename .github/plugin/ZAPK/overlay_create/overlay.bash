@@ -1,10 +1,8 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
 
-MPAT="${0%/*}"
-
-# Ngôn ngữ mặc định
-source trans_add "$MPAT"
+# Ngôn ngữ & Google dịch
+source langadd "$MPAT"
 
 [ -d "$overlay_folder" ] || killtree "$overlay_text_1"
 
@@ -112,4 +110,5 @@ done
 echo
 echo "$overlay_text_9 $overlay_folder/1out"
 echo
+
 checktime

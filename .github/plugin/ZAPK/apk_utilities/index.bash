@@ -89,12 +89,9 @@ echo '[[group]]
 }
 
 # Thư mục hiện tại
-MPAT="${0%/*}"
 path_clean="$(glog project_apk_clean)"
 [ "$(glog project_apk_clean)" ] && show_clean=1
 
 # Ngôn ngữ & Google dịch
-source trans_add "$MPAT"
-
-# index
+source langadd "$MPAT"
 "$@"

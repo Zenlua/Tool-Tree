@@ -2194,7 +2194,7 @@ Addon() {
   
     # Load index
     if [ -f "$dirvad/index.bash" ]; then
-    pagesh='config-sh = "'$dirvad'/index.bash home"'
+    pagesh='config-sh = "MPAT=\"'$dirvad'\" '$dirvad'/index.bash home"'
     elif [ -f "$dirvad/index.toml" ]; then
     pagesh='config = "'$dirvad'/index.toml"'
     else
@@ -2202,12 +2202,12 @@ Addon() {
     fi
   
     if [ -f "$dirvad/before-load.bash" ]; then
-    beforesh='before-load = "'$dirvad'/before-load.bash"'
+    beforesh='before-load = "MPAT=\"'$dirvad'\" '$dirvad'/before-load.bash"'
     fi
   
     # Load menu
     if [ -f "$dirvad/menu.bash" ]; then
-    code_option="$($dirvad/menu.bash 2>/dev/null)"
+    code_option="$(MPAT="$dirvad" $dirvad/menu.bash 2>/dev/null)"
     elif [ -f "$dirvad/menu.toml" ]; then
     code_option="$(cat $dirvad/menu.toml 2>/dev/null)"
     fi
@@ -2216,7 +2216,7 @@ Addon() {
     if [ "$id" ]; then
   
       # Xác nhận có google dịch
-      google_trankk='
+      google_trans='
       [[group.page.options]]
       title = "'$google_translate_text'"
       box = "glog auto_trans_text_'$idadd'"
@@ -2267,7 +2267,7 @@ Addon() {
     '$pagesh'
     '$summss'
     '$beforesh'
-    '"$google_trankk"'
+    '"$google_trans"'
       [[group.page.options]]
       title = "'$pin_text_add'"
       auto-finish = true
@@ -2287,8 +2287,9 @@ Addon() {
   Vips() {
 
     # Xoá giá trị cũ
-    code_option=''; farooot=''; google_trankk=''; shortcut=''; beforesh='';
-  
+    code_option=''; farooot=''; google_trans=''; shortcut=''; beforesh='';
+    [ "$id" ] || continue
+    
     # Phát hiện root
     if [ "$root" == "true" ]; then
       farooot='lock = "[ $ROT == 0 ] && echo \"'$root_warning_text'\" || echo 0"'
@@ -2300,7 +2301,7 @@ Addon() {
     [ "$description" ] && description=" | $description"
   
     # Tên và desc
-    desc_vb="$version ${author}$description_text"
+    desc_vb="$version ${author}$description"
     icon_vb="$(urladd icon)"
   
     # Load trang danh sách
@@ -2309,14 +2310,14 @@ Addon() {
       [ -f "$dirvad/uninstall.bash" ] && $dirvad/uninstall.bash
       find "$dirvad" -maxdepth 1 ! -path "$dirvad" \
       ! -name 'download.bash' ! -exec rm -rf {} +
-    else
+      else
       if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
       Homeadd
       elif [ -f "$dirvad/download.bash" ]; then
       Download
       fi
-    
     fi
+  
   }
 
   # Load trang add-on có pin trước

@@ -215,11 +215,6 @@ title = "'$google_text'"
 '
 }
 
-# Thư mục hiện tại
-MPAT="${0%/*}"
-
 # Ngôn ngữ & Google dịch
-source trans_add "$MPAT"
-
-# home
+source langadd "$MPAT"
 "$@"

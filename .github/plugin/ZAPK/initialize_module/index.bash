@@ -129,15 +129,11 @@ echo '
   '
 }
 
-# Thư mục hiện tại
-MPAT="${0%/*}"
-
-# Ngôn ngữ & Google dịch
-source trans_add "$MPAT"
-
+# Đường dẫn mô-đun
 path_modun="/data/adb/modules/Tool-Tree"
 path_modun2="/data/adb/modules_update/Tool-Tree"
 [ -d $path_modun ] && visisj=1 || visisj=0
 
-# index
+# Ngôn ngữ & Google dịch
+source langadd "$MPAT"
 "$@"

@@ -28,7 +28,7 @@ title = "'$google_text'"
   title = "'$payload_text_3'"
   summary = "'$payload_text_4' '$PTSD'"
   script = """
-  echo "Downloading..." | trans -b $LANGUAGE-$COUNTRY
+  echo "Downloading..." | trans -b
   echo
   for vv in $partition; do
       '$MPAT'/payload.bash $vv
@@ -48,21 +48,17 @@ title = "'$google_text'"
 '
 }
 
-# Thư mục hiện tại
-MPAT="${0%/*}"
-
+# Xử lý payload
 if [ -n "$(glog url_text_payload)" ]; then
     checkdjhrh=1
     if [ "$(glog url_text_payload | checksum)" != "$(glog url_text_payload_md5)" ]; then
-        listpayload "$(glog url_text_payload)" | awk '{print $1"|"$1" "$2}' > $MPAT/list_payload
-        slog url_text_payload_md5 "$(glog url_text_payload | checksum)"
+    listpayload "$(glog url_text_payload)" | awk '{print $1"|"$1" "$2}' > $MPAT/list_payload
+    slog url_text_payload_md5 "$(glog url_text_payload | checksum)"
     fi
 else
     checkdjhrh=0
 fi
 
 # Ngôn ngữ & Google dịch
-source trans_add "$MPAT"
-
-# index
+source langadd "$MPAT"
 "$@"

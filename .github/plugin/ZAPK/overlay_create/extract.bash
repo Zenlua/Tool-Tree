@@ -1,10 +1,8 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # kakathic
 
-MPAT="${0%/*}"
-
-# Ngôn ngữ mặc định
-source trans_add "$MPAT"
+# Ngôn ngữ & Google dịch
+source langadd "$MPAT"
 
 [ -d "$extract_folder_lang" ] || killtree "$overlay_text_1"
 [ "$extract_folder_lang_text" ] && text_filters="$(echo "$extract_folder_lang_text" | tr ',' ' ')"
@@ -122,4 +120,5 @@ done
 echo
 echo "$overlay_text_9 $extract_folder_lang/1out"
 echo
+
 checktime

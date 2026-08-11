@@ -32,8 +32,7 @@ title = "'$google_text'"
   [ "$ROT" == 0 ] && echo "'$fs_text_3'" || echo 0
   """
   script = """
-  export MPAT='$MPAT'
-  '$MPAT'/scrip/ufs.bash
+  MPAT="'$MPAT'" '$MPAT'/scrip/ufs.bash
   """
 
 [[group]]
@@ -75,11 +74,6 @@ title = "'$google_text'"
 '
 }
 
-# Thư mục hiện tại
-MPAT="${0%/*}"
-
 # Ngôn ngữ & Google dịch
-source trans_add "$MPAT"
-
-# index
+source langadd "$MPAT"
 "$@"
