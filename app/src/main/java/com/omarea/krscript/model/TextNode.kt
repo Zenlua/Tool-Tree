@@ -1,11 +1,12 @@
 package com.omarea.krscript.model
 
 import android.text.Layout
+import java.io.Serializable
 
 class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPath) {
     val rows = ArrayList<TextRow>()
 
-    class TextRow {
+    class TextRow : Serializable {
         // 文字大小
         internal var size: Int = -1
         // 文字颜色

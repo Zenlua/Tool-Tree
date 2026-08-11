@@ -1,7 +1,5 @@
 package com.omarea.krscript.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
@@ -191,16 +189,9 @@ object RowsRenderHelper {
             rowsView.append(spannableString)
         }
 
-        // Long-press để copy toàn bộ nội dung rows hiện đang hiển thị vào clipboard.
-        // (Trước đây listener này chỉ để chặn crash Editor.touchPositionIsInSelection, giờ tận
-        // dụng luôn để copy - true vẫn được trả về ở cuối để giữ nguyên hiệu ứng vá lỗi đó.)
+        // Chặn crash Editor.touchPositionIsInSelection khi long-press vào vùng text
+        // (đã bỏ tính năng copy nội dung khi long-press).
         rowsView.setOnLongClickListener {
-            val plainText = rowsView.text?.toString().orEmpty()
-            if (plainText.isNotEmpty()) {
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                clipboard?.setPrimaryClip(ClipData.newPlainText(null, plainText))
-                Toast.makeText(context, context.getString(R.string.copy_success), Toast.LENGTH_SHORT).show()
-            }
             true
         }
     }
