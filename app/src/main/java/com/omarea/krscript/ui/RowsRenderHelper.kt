@@ -97,9 +97,14 @@ object RowsRenderHelper {
                 skipLeadingBreak = true
             }
 
-            if (!skipLeadingBreak && hasContent) {
+
+            // Chỉ xuống dòng nếu row không yêu cầu gộp chung dòng (inline) với row trước
+            val shouldBreak = !row.inline && (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL)
+            
+            if (!skipLeadingBreak && hasContent && shouldBreak) {
                 rowsView.append("\n")
             }
+
             // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
             val label = if (row.dynamicTextSh.isNotEmpty()) {
                 ScriptEnvironmen.executeResultRoot(context, row.dynamicTextSh, config)
