@@ -2287,6 +2287,7 @@ Addon() {
       
       
       
+      
       [[group.page.options]]
       title = "'$pin_text_add'"
       auto-finish = true

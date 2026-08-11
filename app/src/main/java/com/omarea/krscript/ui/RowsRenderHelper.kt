@@ -65,19 +65,26 @@ object RowsRenderHelper {
         rowsView.setOnClickListener { }
 
         // bind() thường được gọi lúc RecyclerView/ListView bind item - tức TRƯỚC khi view được
-        // đo/layout lần đầu (rowsView.width == 0 với view mới inflate). computeToggleLeadingMargin
-        // cần width thật để tính margin nên sẽ không tính được ở lần bind đầu này -> đánh dấu để
-        // sau khi layout xong thì bind lại 1 lần, tránh rơi về AlignmentSpan cũ (dính lại bug cũ).
+        // đo/layout lần đầu (rowsView.width == 0 với view mới inflate). Tính spacer canh giữa/phải
+        // cho row toggle cần width thật nên sẽ không tính được ở lần bind đầu này -> đánh dấu để
+        // sau khi layout xong thì bind lại 1 lần.
         var needsRebindAfterLayout = false
         // Chỉ chèn "\n" trước 1 row nếu đã có nội dung trước đó - tránh trường hợp row ĐẦU TIÊN
         // có breakRow/align != normal khiến "\n" bị chèn vào lúc rowsView còn rỗng, tạo ra 1 dòng
         // trống thừa ở trên cùng (canh phải/giữa mới bị vì mới có "\n" chèn cho cả row đầu).
         var hasContent = false
-        // Row có align != normal (hoặc breakRow) tự tách dòng cho CHÍNH NÓ, nhưng nếu row KẾ TIẾP
-        // không tự yêu cầu tách dòng, nó sẽ bị nối chung 1 paragraph với row trước đó -> tranh chấp
-        // AlignmentSpan/LeadingMarginSpan cấp-paragraph (2 row canh lề khác nhau dính vào 1 dòng).
-        // Theo dõi cờ này để ép tách dòng cho row kế tiếp trong trường hợp đó.
-        var prevRowIsolated = false
+        // BUG CŨ: AlignmentSpan/LeadingMarginSpan chỉ áp dụng được cho CẢ PARAGRAPH (dòng), không
+        // áp dụng riêng cho 1 đoạn ký tự. Vì vậy khi 2 row toggle (checkbox/switch) canh lề khác
+        // nhau (VD: 1 trái, 1 phải) cùng nằm chung 1 dòng (không breakRow), 2 span cấp-paragraph
+        // này tranh chấp nhau -> canh lề phải/giữa bị sai (đây là lỗi user báo).
+        // FIX: với row toggle có align != normal, không dùng AlignmentSpan/LeadingMarginSpan nữa,
+        // mà chèn 1 "spacer" vô hình (ImageSpan với Drawable rỗng, đo đúng bề rộng cần đệm) NGAY
+        // TRƯỚC nội dung row đó để đẩy nó sang phải/giữa. Spacer là span cấp-KÝ TỰ nên nhiều row
+        // canh lề khác nhau có thể cùng tồn tại trên 1 dòng mà không xung đột - cho phép 2 nút
+        // toggle (VD: 1 trái, 1 phải) hiển thị chung 1 dòng.
+        // lineContentWidth: tổng bề rộng (px) nội dung đã có trên dòng HIỆN TẠI (reset về 0 mỗi
+        // khi xuống dòng thật sự - "\n"), dùng để tính phần trống còn lại cần đệm cho row tiếp theo.
+        var lineContentWidth = 0f
 
         for (row in rows) {
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
@@ -95,11 +102,13 @@ object RowsRenderHelper {
                 rowsView.append("\n")
                 hasContent = true
                 skipLeadingBreak = true
+                lineContentWidth = 0f
             }
 
             // CODE MỚI: Chỉ xuống dòng khi row chủ động bật breakRow = true
             if (!skipLeadingBreak && hasContent && row.breakRow) {
                 rowsView.append("\n")
+                lineContentWidth = 0f
             }
 
             // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
@@ -120,11 +129,18 @@ object RowsRenderHelper {
             val spannableString = SpannableString(text)
 
             var toggleDrawable: Drawable? = null
+            // Bề rộng (px) thực tế của label + icon toggle - dùng để tính khoảng đệm còn trống
+            // trên dòng khi cần canh phải/giữa. Chỉ có giá trị khi isToggle.
+            var toggleContentWidth = 0f
             if (isToggle) {
                 // Vị trí ký tự placeholder: ngay trước khoảng trắng cuối cùng vừa thêm
                 val iconIndex = length - 2
                 toggleDrawable = buildToggleDrawable(context, row)
                 spannableString.setSpan(VerticalCenterImageSpan(toggleDrawable), iconIndex, iconIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+                val beforeIcon = text.substring(0, iconIndex)
+                val afterIcon = text.substring(iconIndex + 1)
+                toggleContentWidth = rowsView.paint.measureText(beforeIcon) + toggleDrawable.bounds.width() + rowsView.paint.measureText(afterIcon)
             }
 
             if (extraIconView != null) {
@@ -242,28 +258,37 @@ object RowsRenderHelper {
                 spannableString.setSpan(AbsoluteSizeSpan(row.size, true), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
-            // Android có lỗi/giới hạn: khi 1 paragraph vừa có AlignmentSpan (canh giữa/phải) vừa có
-            // ClickableSpan + ImageSpan (icon toggle), toạ độ chạm (Layout.getOffsetForHorizontal)
-            // tính sai lệch so với vị trí vẽ thật -> bấm đúng icon không nhận, bấm lệch trái mới
-            // nhận. Với row toggle bị canh giữa/phải, thay AlignmentSpan bằng LeadingMarginSpan
-            // (đẩy dòng bằng margin đo thực tế, vẫn giữ ALIGN_NORMAL) để vùng chạm tính đúng.
-            val leadingMargin = if (isToggle && row.align != Layout.Alignment.ALIGN_NORMAL) {
-                if (rowsView.width == 0) {
-                    needsRebindAfterLayout = true
-                    null
-                } else {
-                    computeToggleLeadingMargin(rowsView, row, text, toggleDrawable)
+            if (isToggle) {
+                // Row toggle canh giữa/phải: KHÔNG dùng AlignmentSpan/LeadingMarginSpan (span cấp-
+                // paragraph, xem giải thích ở đầu hàm) - thay vào đó chèn 1 spacer vô hình ngay
+                // trước nội dung row để đẩy nó sang phải/giữa PHẦN CÒN TRỐNG của dòng hiện tại.
+                // Cách này tính đến cả nội dung đã có sẵn trên dòng (lineContentWidth), nên nhiều
+                // row toggle canh lề khác nhau có thể cùng nằm 1 dòng mà không tranh chấp nhau.
+                if (row.align != Layout.Alignment.ALIGN_NORMAL) {
+                    if (rowsView.width == 0) {
+                        // Chưa layout xong nên chưa đo được bề rộng thật -> bind lại sau khi layout.
+                        needsRebindAfterLayout = true
+                    } else {
+                        val available = rowsView.width - rowsView.paddingLeft - rowsView.paddingRight
+                        val remaining = available - lineContentWidth - toggleContentWidth
+                        val leadingGap = when (row.align) {
+                            Layout.Alignment.ALIGN_OPPOSITE -> remaining
+                            Layout.Alignment.ALIGN_CENTER -> remaining / 2f
+                            else -> 0f
+                        }
+                        if (leadingGap > 0f) {
+                            appendSpacer(rowsView, leadingGap.toInt())
+                            lineContentWidth += leadingGap
+                        }
+                    }
                 }
-            } else {
-                null
-            }
-            if (leadingMargin != null) {
-                spannableString.setSpan(LeadingMarginSpan.Standard(leadingMargin, leadingMargin), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                rowsView.append(spannableString)
+                lineContentWidth += toggleContentWidth
             } else {
                 spannableString.setSpan(AlignmentSpan.Standard(row.align), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                rowsView.append(spannableString)
+                lineContentWidth += rowsView.paint.measureText(text)
             }
-
-            rowsView.append(spannableString)
             hasContent = true
         }
 
@@ -343,31 +368,30 @@ object RowsRenderHelper {
         }
     }
 
-    // Tính margin trái để "canh giữa/phải" thủ công cho row toggle (thay AlignmentSpan - xem lý
-    // do ở nơi gọi). Đo bề rộng thực tế: phần chữ dùng paint.measureText, riêng ký tự placeholder
-    // (đã bị ImageSpan thay bằng icon) dùng đúng bề rộng drawable thay vì bề rộng ký tự.
-    // Trả về null nếu chưa đo được (view chưa layout xong) để nơi gọi fallback về AlignmentSpan cũ.
-    private fun computeToggleLeadingMargin(rowsView: TextView, row: TextNode.TextRow, text: String, drawable: Drawable?): Int? {
-        if (drawable == null) {
-            return null
+    // Drawable "vô hình" - không vẽ gì cả, chỉ chiếm đúng 1 khoảng bề rộng cho trước. Dùng làm
+    // spacer linh hoạt để đẩy nội dung row toggle sang phải/giữa dòng (xem appendSpacer bên dưới).
+    private class SpaceDrawable(width: Int, height: Int) : Drawable() {
+        init {
+            setBounds(0, 0, width.coerceAtLeast(0), height.coerceAtLeast(1))
         }
-        val available = rowsView.width - rowsView.paddingLeft - rowsView.paddingRight
-        if (available <= 0) {
-            return null
+
+        override fun draw(canvas: Canvas) {}
+        override fun setAlpha(alpha: Int) {}
+        override fun setColorFilter(colorFilter: android.graphics.ColorFilter?) {}
+        @Suppress("DEPRECATION")
+        override fun getOpacity(): Int = android.graphics.PixelFormat.TRANSPARENT
+    }
+
+    // Chèn 1 khoảng đệm vô hình rộng "widthPx" vào cuối rowsView, dùng để đẩy row TIẾP THEO
+    // (thường là row toggle canh giữa/phải) sang đúng vị trí, mà không cần AlignmentSpan/
+    // LeadingMarginSpan cấp-paragraph - nhờ vậy nhiều row canh lề khác nhau có thể chung 1 dòng.
+    private fun appendSpacer(rowsView: TextView, widthPx: Int) {
+        if (widthPx <= 0) {
+            return
         }
-        val placeholderIndex = text.length - 2
-        val beforeIcon = text.substring(0, placeholderIndex)
-        val afterIcon = text.substring(placeholderIndex + 1)
-        val contentWidth = rowsView.paint.measureText(beforeIcon) + drawable.bounds.width() + rowsView.paint.measureText(afterIcon)
-        val extra = available - contentWidth
-        if (extra <= 0) {
-            return null
-        }
-        return when (row.align) {
-            Layout.Alignment.ALIGN_OPPOSITE -> extra.toInt()
-            Layout.Alignment.ALIGN_CENTER -> (extra / 2f).toInt()
-            else -> null
-        }
+        val spacer = SpannableString("\u2002")
+        spacer.setSpan(ImageSpan(SpaceDrawable(widthPx, 1)), 0, spacer.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        rowsView.append(spacer)
     }
 
     // Tạo drawable icon cho row dạng toggle (checkbox/switch), kích thước nhỏ vừa 1 dòng text,
