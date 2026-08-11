@@ -111,7 +111,10 @@ shell_bash() {
   [ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null
   [ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null
   # Dịch ngôn ngữ
-  [[ "$1" == "Home" || "$1" == "More" ]] && auto_trans &>/dev/null
+  if [[ "$1" == "Home" || "$1" == "More" ]]; then
+  slog -d show_setting_add
+  auto_trans &>/dev/null
+  fi
 ) &
 
 # Ngôn ngữ
@@ -180,7 +183,7 @@ Home() {
 
   [[group]]
   [[group.page]]
-  title = "'$utilities_text'"
+  title = "'$editor_rom'"
   desc = "'$home_text_2'"
   icon = "'`urlpng utilities`'"
   config-sh = "'$ETC'/tool-tree.bash Utilities"
@@ -235,51 +238,35 @@ Home() {
   icon = "'`urlpng addon`'"
   config-sh = "PATHADD=\"$AON\" '$ETC'/tool-tree.bash Addon"
   handler = """
-    case "$menu_id" in
-    hide) slog settadd 1 ;;
-    xoa) slog settadd 2 ;;
-    home) slog settadd 0 ;;
-    file) installadd "$file" "$AON"; slog settadd 0 ;;
-    esac
+  [ "$menu_id" == "file" ] && installadd "$file" "$AON"
   """
 
     [[group.page.options]]
-    type = "refresh"
-    title = "'$refresh_text'"
-
-    [[group.page.options]]
-    key = "hide"
-    type = "default"
-    title = "'$hide_add_text'"
-    silent = true
+    title = "'$customize_text'"
+    box = "glog show_setting_add"
     reload = true
-
+    silent = true
+    type = "checkbox"
+    script = """
+    if [ "$(glog show_setting_add)" == 1 ]; then
+    slog show_setting_add 0
+    else
+    slog show_setting_add 1
+    fi
+    """
+    
     [[group.page.options]]
     type = "default"
     title = "'$download_text'"
     link = "https://zenlua.github.io/Tool-Tree/website/Addon.html"
     silent = true
-
-    [[group.page.options]]
-    key = "xoa"
-    type = "default"
-    title = "'$deleted_text'"
-    silent = true
-    reload = true
-
+    
     [[group.page.options]]
     key = "file"
     type = "file"
     title = "'$input_add_text'"
     suffix = "add,zip,7z"
     style = "fab"
-    reload = true
-
-    [[group.page.options]]
-    key = "home"
-    type = "default"
-    title = "'$home_text'"
-    silent = true
     reload = true
   '
 
@@ -330,7 +317,7 @@ More() {
 
   [[group]]
   [[group.page]]
-  title = "'$utilities_text'"
+  title = "'$editor_apk'"
   desc = "'$more_text_6'"
   icon = "'`urlpng apk_utility`'"
   config-sh = "'$ETC'/tool-tree.bash Utiliapk"
@@ -440,56 +427,40 @@ More() {
 
   [[group]]
   [[group.page]]
-  title = "'$addon_text'"
+  title = "'$plugin_text'"
   desc = "'$more_text_8'"
   icon = "'`urlpng apk_addon`'"
   config-sh = "PATHADD=\"$AOK\" '$ETC'/tool-tree.bash Addon"
   handler = """
-    case "$menu_id" in
-    hide) slog settadd2 1 ;;
-    xoa) slog settadd2 2 ;;
-    home) slog settadd2 0 ;;
-    file) installadd "$file" "$AOK"; slog settadd2 0 ;;
-    esac
+  [ "$menu_id" == "file" ] && installadd "$file" "$AOK";
   """
-
+    
     [[group.page.options]]
-    type = "refresh"
-    title = "'$refresh_text'"
-
-    [[group.page.options]]
-    key = "hide"
-    type = "default"
-    title = "'$hide_add_text'"
-    silent = true
+    title = "'$customize_text'"
+    box = "glog show_setting_add"
     reload = true
-
+    silent = true
+    type = "checkbox"
+    script = """
+    if [ "$(glog show_setting_add)" == 1 ]; then
+    slog show_setting_add 0
+    else
+    slog show_setting_add 1
+    fi
+    """
+    
     [[group.page.options]]
     type = "default"
     title = "'$download_text'"
     link = "https://zenlua.github.io/Tool-Tree/website/Apkon.html"
     silent = true
-
-    [[group.page.options]]
-    key = "xoa"
-    type = "default"
-    title = "'$deleted_text'"
-    silent = true
-    reload = true
-
+    
     [[group.page.options]]
     key = "file"
     type = "file"
     title = "'$input_add_text'"
     suffix = "add,zip,7z"
     style = "fab"
-    reload = true
-
-    [[group.page.options]]
-    key = "home"
-    type = "default"
-    title = "'$home_text'"
-    silent = true
     reload = true
   '
 
@@ -2174,20 +2145,19 @@ Addon() {
 
   Download() {
     if [ "$url" ]; then
-      echo '[[group]]
-      [[group.action]]
-      '$farooot'
-      warn = "'$use_network_text'"
-      icon = "'$icon_vb'"
-      reload = true
-      title = "'$name'"
-      desc = "'$description'"
-      summary = "'$sum_vb'"
-      script = """
-      echo "'$update_text_3'"
-      echo
-      installadd "'$url'" "'${dirvad%/*}'"
-      """'
+    echo '[[group]]
+    [[group.action]]
+    '$croot_add'
+    warn = "'$use_network_text'"
+    icon = "'$icon_vb'"
+    title = "'$name'"
+    desc = "'$sum_vb'"
+    reload = true
+    script = """
+    echo "'$update_text_3'"
+    echo
+    installadd "'$url'" "'${dirvad%/*}'"
+    """'
     fi
   }
 
@@ -2212,83 +2182,94 @@ Addon() {
     elif [ -f "$dirvad/menu.toml" ]; then
     code_option="$(cat $dirvad/menu.toml 2>/dev/null)"
     fi
-  
-    # Load trang
-    if [ "$id" ]; then
-  
-      # Xác nhận có google dịch
+    
+    # Xác nhận có google dịch
+    if [ "$google_text" ]; then
       google_trans='
-      [[group.page.options]]
-      title = "'$google_translate_text'"
-      box = "glog auto_trans_text_'$idadd'"
-      reload = true
-      silent = true
-      type = "checkbox"
-      script = """
-      if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
-      slog auto_trans_text_'$idadd' 0
+        [[group.page.options]]
+        title = "'$google_translate_text'"
+        box = "glog auto_trans_text_'$idadd'"
+        reload = true
+        silent = true
+        type = "checkbox"
+        script = """
+          if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
+          slog auto_trans_text_'$idadd' 0
+          else
+          if [ "$(glog transai_text_'$idadd')" == 1 ]; then
+          rm -fr '$dirvad'/auto.sh
+          slog transai_text_'$idadd' 0
+          fi
+          slog auto_trans_text_'$idadd' 1
+          fi
+        """
+        [[group.page.options]]
+        title = "Gemini"
+        box = "glog transai_text_'$idadd'"
+        reload = true
+        silent = true
+        type = "checkbox"
+        script = """
+          if [ "$(glog transai_text_'$idadd')" == 1 ]; then
+          slog transai_text_'$idadd' 0
+          else
+          if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
+          rm -fr '$dirvad'/auto.sh
+          slog auto_trans_text_'$idadd' 0
+          fi
+          transai -c && slog transai_text_'$idadd' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
+          fi
+        """
+      '
+    fi
+    
+    if [ "$(glog show_setting_add)" == 1 ]; then
+      hinde_add='
+      [[group.page.rows]]
+      toggle = "checkbox"
+      text = "'$hide_add_text'"
+      checked = "[ -f '$dirvad'/hide ] && echo 1"
+      line = true
+      onchange-sh = """
+      if [ -f '$dirvad'/hide ]; then
+      rm '$dirvad'/hide
       else
-      if [ "$(glog transai_text_'$idadd')" == 1 ]; then
-      rm -fr '$dirvad'/auto.sh
-      slog transai_text_'$idadd' 0
-      fi
-      slog auto_trans_text_'$idadd' 1
-      fi
-      """
-      
-      [[group.page.options]]
-      title = "Gemini"
-      box = "glog transai_text_'$idadd'"
-      reload = true
-      silent = true
-      type = "checkbox"
-      script = """
-      if [ "$(glog transai_text_'$idadd')" == 1 ]; then
-      slog transai_text_'$idadd' 0
-      else
-      if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
-      rm -fr '$dirvad'/auto.sh
-      slog auto_trans_text_'$idadd' 0
-      fi
-      transai -c && slog transai_text_'$idadd' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
+      touch '$dirvad'/hide
       fi
       """
       '
-  
-    # Kênh để ấn vào
-    echo '
-    [[group]]
-    [[group.page]]
-    title = "'$name'"
-    desc = "'$sum_vb' | '$description'"
-    icon = "'$icon_vb'"
-    process = true
-    '$farooot'
-    '$shortcut'
-    '$pagesh'
-    '$beforesh'
-    '"$google_trans"'
-    
-      [[group.page.rows]]
-      toggle = "checkbox"
-      text = "Ẩn Add-on"
-      checked = "test -f /sdcard/wifi_on && echo 1"
-      onchange-sh = ""
       
-      bold = true
-      line = true
-
+      [ -f "$dirvad/nodelete" ] || delete_add='
       [[group.page.rows]]
       toggle = "switch"
-      text = "Gỡ bỏ"
-      checked = "test -f /sdcard/wifi_on && echo 1"
-      onchange-sh = ""
-      bold = true
-      
-      
-      
-      
-      
+      text = "'$deleted_text'"
+      checked = "[ -f '$dirvad'/delete ] && echo 1"
+      onchange-sh = """
+      if [ -f '$dirvad'/delete ]; then
+      rm '$dirvad'/delete
+      else
+      touch '$dirvad'/delete
+      echo "'$addon_text_2'"
+      fi
+      """
+      '
+    fi
+    
+      # Danh sách Add-on
+      echo '
+      [[group]]
+      [[group.page]]
+      title = "'$name'"
+      desc = "'$sum_vb'"
+      icon = "'$icon_vb'"
+      process = true
+      '$croot_add'
+      '$shortcut_text'
+      '$pagesh'
+      '$beforesh'
+      '"$google_trans"'
+      '"$hinde_add"'
+      '"$delete_add"'
       [[group.page.options]]
       title = "'$pin_text_add'"
       auto-finish = true
@@ -2300,26 +2281,37 @@ Addon() {
       echo > "'$dirvad'/pin"
       fi
       """
+      
       '"$code_option"'
-    '
-    fi
+      '
   }
 
   Vips() {
-
+    
     # Xoá giá trị cũ
-    code_option=''; farooot=''; google_trans=''; 
-    shortcut=''; beforesh=''; shortcut='';
+    id= root= shortcut= description= google_text= url= name=
+    google_trans= code_option= beforesh= croot_add=
+    description_text= sum_vb= hinde_add= shortcut_text= delete_add=
+    
+    # Nạp string
+    source "$vadd" 2>/dev/null
     [ "$id" ] || continue
     
     # Phát hiện root
     if [ "$root" == "true" ]; then
-      farooot='lock = "[ $ROT == 0 ] && echo \"'$root_warning_text'\" || echo 0"'
+    croot_add='lock = "[ $ROT == 0 ] && echo \"'$root_warning_text'\" || echo 0"'
     fi
   
     # Phát hiện tính năng
-    [ "$shortcut" == "true" ] && shortcut='key = "'$idadd'" '
-    sum_vb="$version ${author}"
+    if [ "$shortcut" == "true" ]; then
+    shortcut_text='key = "'$idadd'" '
+    fi
+    
+    if [ "$description" ]; then
+    description_text=" | $description"
+    fi
+    
+    sum_vb="$version $author$description_text"
     icon_vb="$(urladd icon)"
   
     # Load trang danh sách
@@ -2330,9 +2322,11 @@ Addon() {
       ! -name 'download.bash' ! -exec rm -rf {} +
       else
       if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
-      Homeadd
+        if [[ ! -f "$dirvad/hide" || "$(glog show_setting_add)" == 1 ]]; then
+        Homeadd
+        fi
       elif [ -f "$dirvad/download.bash" ]; then
-      Download
+        Download
       fi
     fi
   
@@ -2345,7 +2339,6 @@ Addon() {
     [ -f "$dirvad/pin" ] || continue
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
     pin_text_add="$unpin_text"
-    source "$vadd" 2>/dev/null
     Vips
     fi
   done
@@ -2357,7 +2350,6 @@ Addon() {
     [ -f "$dirvad/pin" ] && continue
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
     pin_text_add="$pin_text"
-    source "$vadd" 2>/dev/null
     Vips
     fi
   done
@@ -2369,7 +2361,6 @@ Addon() {
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
     continue
     fi
-    source "$vadd" 2>/dev/null
     Vips
   done
 
