@@ -282,8 +282,8 @@ def extract_zip(
         xml_meta_path = os.path.join(extract_to, CACHE_FILENAME)
         root = ET.Element("ZipMetadata")
 
-        zip_ref.extractall(extract_to)
         for info in zip_ref.infolist():
+          zip_ref.extract(info, extract_to)
           file_path = os.path.join(extract_to, info.filename)
           mtime = os.path.getmtime(file_path) if os.path.exists(file_path) else 0
 
@@ -353,7 +353,6 @@ def inject_file_to_zip(
   target_extra = b""
   exists_in_zip = False
 
-  # 1. Kiểm tra xem tệp đã có sẵn trong ZIP hay chưa
   with zipfile.ZipFile(zip_path, "r") as zin:
     for item in zin.infolist():
       if item.filename == arcname:
@@ -362,7 +361,6 @@ def inject_file_to_zip(
         target_extra = item.extra
         break
 
-  # 2. Nếu tệp CHƯA CÓ trong ZIP, mới xét đến copy_from hoặc dùng mặc định
   if not exists_in_zip:
     if copy_from:
       try:
@@ -371,8 +369,10 @@ def inject_file_to_zip(
           target_compress_type = info_ref.compress_type
           target_extra = info_ref.extra
       except KeyError:
-        log_e(f"Template file '{copy_from}' does not exist in the ZIP to copy.", quiet)
-
+        log_e(
+            f"Template file '{copy_from}' does not exist in the ZIP to copy.",
+            quiet,
+        )
         return False
     else:
       target_compress_type = zipfile.ZIP_DEFLATED
