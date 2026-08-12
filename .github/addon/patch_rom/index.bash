@@ -128,7 +128,7 @@ echo '
 }
 
 home() {
-  [ -z "$google_text" ] && google_text="$version_text: $(gprop version $MPAT/addon.prop)"
+  [ -z "$google_text" ] && google_text="$version_text: $version"
 
   # Điền dữ liệu mặc định
   (
@@ -659,10 +659,10 @@ update_addon() {
   if checkonline; then
     echo "$check_update_text_1"
     echo
-    sumcek="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/V1 | jq -r '.assets[] | select(.name == "patch_rom.add") | .digest' | cut -d: -f2)"
+    source "$MPAT/download.bash"
+    sumcek="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/V1 | jq -r --arg name "${url##*/}" '.assets[] | select(.name == $name) | .digest' | cut -d: -f2)"
     if [[ "$sumcek" != "$(glog sumcek_patch_rom)" ]]; then
-      installadd "$(gprop url $MPAT/download.prop)" "${MPAT%/*}" 2>&1 || { echo "$check_update_text_2" >&2; exit 1; }
-      echo
+      installadd "$url" "${MPAT%/*}" 2>&1 || { echo "$check_update_text_2" >&2; exit 1; }
       [ -f $MPAT/changelog.txt ] && cat $MPAT/changelog.txt
     else
       echo "$check_update_text_3"
