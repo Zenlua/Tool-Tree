@@ -235,7 +235,6 @@ def extract_zip(
       )
       return False
     else:
-      # log_i(f"Removing existing directory '{bname(extract_to)}'", quiet)
       shutil.rmtree(extract_to)
 
   os.makedirs(extract_to, exist_ok=True)
@@ -271,7 +270,6 @@ def extract_zip(
 
         for member in matched_members:
           zip_ref.extract(member, extract_to)
-        # log_i(f"Extracted {len(matched_members)} files", quiet)
       else:
         log_i(f"Extracting {bname(zip_path)} -> {bname(extract_to)}", quiet)
 
@@ -335,6 +333,7 @@ def inject_file_to_zip(
     file_to_inject,
     arcname=None,
     forced_timestamp="2009-01-01 00:00:00",
+    copy_from=None,
     quiet=False,
 ):
   if not os.path.exists(zip_path):
@@ -347,15 +346,43 @@ def inject_file_to_zip(
   if not arcname:
     arcname = os.path.basename(file_to_inject)
 
-  log_i(
-      f"Injecting {bname(file_to_inject)} as {arcname} -> {bname(zip_path)}",
-      quiet,
-  )
-
   sig_block = extract_apk_sig_block(zip_path)
   parsed_ts = parse_timestamp(forced_timestamp)
+
   target_compress_type = zipfile.ZIP_DEFLATED
   target_extra = b""
+  exists_in_zip = False
+
+  # 1. Kiểm tra xem tệp đã có sẵn trong ZIP hay chưa
+  with zipfile.ZipFile(zip_path, "r") as zin:
+    for item in zin.infolist():
+      if item.filename == arcname:
+        exists_in_zip = True
+        target_compress_type = item.compress_type
+        target_extra = item.extra
+        break
+
+  # 2. Nếu tệp CHƯA CÓ trong ZIP, mới xét đến copy_from hoặc dùng mặc định
+  if not exists_in_zip:
+    if copy_from:
+      try:
+        with zipfile.ZipFile(zip_path, "r") as zin:
+          info_ref = zin.getinfo(copy_from)
+          target_compress_type = info_ref.compress_type
+          target_extra = info_ref.extra
+      except KeyError:
+        log_e(f"Template file '{copy_from}' does not exist in the ZIP to copy.", quiet)
+
+        return False
+    else:
+      target_compress_type = zipfile.ZIP_DEFLATED
+      target_extra = b""
+
+  log_i(
+      f"Injecting {bname(file_to_inject)} as {arcname} -> {bname(zip_path)}"
+      f" [{'Existing file (kept config)' if exists_in_zip else f'New file' + (f' (copied from {copy_from})' if copy_from else '')}]",
+      quiet,
+  )
 
   temp_zip = zip_path + ".tmp"
   with zipfile.ZipFile(zip_path, "r") as zin, zipfile.ZipFile(
@@ -363,8 +390,6 @@ def inject_file_to_zip(
   ) as zout:
     for item in zin.infolist():
       if item.filename == arcname:
-        target_compress_type = item.compress_type
-        target_extra = item.extra
         continue
       zout.writestr(item, zin.read(item.filename))
 
@@ -457,7 +482,9 @@ def repack_zip(
   if no_compress_patterns is None:
     no_compress_patterns = []
 
-  forced_ts_parsed = parse_timestamp(forced_timestamp) if forced_timestamp else None
+  forced_ts_parsed = (
+      parse_timestamp(forced_timestamp) if forced_timestamp else None
+  )
 
   with zipfile.ZipFile(
       output_zip,
@@ -470,9 +497,9 @@ def repack_zip(
         file_path = os.path.join(root_dir, file)
         arcname = os.path.relpath(file_path, source_dir).replace(os.sep, "/")
 
-        if (
-            arcname in (CACHE_FILENAME, SIG_BLOCK_FILENAME)
-            or file in (CACHE_FILENAME, SIG_BLOCK_FILENAME)
+        if arcname in (CACHE_FILENAME, SIG_BLOCK_FILENAME) or file in (
+            CACHE_FILENAME,
+            SIG_BLOCK_FILENAME,
         ):
           continue
 
@@ -501,7 +528,10 @@ def repack_zip(
             zinfo.compress_type = zipfile.ZIP_STORED
             break
 
-        if zinfo.compress_type == zipfile.ZIP_STORED and arcname not in meta_map:
+        if (
+            zinfo.compress_type == zipfile.ZIP_STORED
+            and arcname not in meta_map
+        ):
           apply_basic_alignment(zinfo, alignment=4)
 
         if forced_ts_parsed is not None:
@@ -555,7 +585,10 @@ def main():
       "-c",
       "--clear",
       action="store_true",
-      help="Clear (delete) original ZIP file after extraction, or delete source directory after repacking",
+      help=(
+          "Clear (delete) original ZIP file after extraction, or delete source"
+          " directory after repacking"
+      ),
   )
   parser.add_argument(
       "-f",
@@ -624,7 +657,19 @@ def main():
       "--inject",
       nargs="+",
       metavar=("FILE", "TARGET_ZIP"),
-      help="Inject/replace a file in ZIP. Usage: --inject FILE TARGET_ZIP [ARCNAME]",
+      help=(
+          "Inject/replace a file in ZIP. Usage: --inject FILE TARGET_ZIP"
+          " [ARCNAME]"
+      ),
+  )
+  parser.add_argument(
+      "--copy-from",
+      default=None,
+      metavar="TEMPLATE_FILE",
+      help=(
+          "Copy compression type from an existing file in the ZIP when injecting"
+          " a new file"
+      ),
   )
   parser.add_argument(
       "--timestamp",
@@ -636,7 +681,10 @@ def main():
       "--list",
       nargs="+",
       metavar="ARGS",
-      help="List contents: first argument is ZIP file, followed by optional patterns",
+      help=(
+          "List contents: first argument is ZIP file, followed by optional"
+          " patterns"
+      ),
   )
   parser.add_argument(
       "--member",
@@ -673,7 +721,10 @@ def main():
           target_zip,
           file_to_inject,
           arcname=arcname,
-          forced_timestamp=args.timestamp if args.timestamp else "2009-01-01 00:00:00",
+          forced_timestamp=(
+              args.timestamp if args.timestamp else "2009-01-01 00:00:00"
+          ),
+          copy_from=args.copy_from,
           quiet=args.quiet,
       )
   elif args.extract:
