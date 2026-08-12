@@ -5,26 +5,135 @@ import fnmatch
 import glob
 import os
 import shutil
+import struct
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
 
 CACHE_FILENAME = ".cache_zip"
+SIG_BLOCK_FILENAME = ".apk_sig_block"
+
+
+def bname(path):
+  """Lấy tên file hoặc thư mục ngắn gọn, loại bỏ đường dẫn."""
+  if not path:
+    return ""
+  return os.path.basename(os.path.normpath(path))
+
+
+def log_i(msg, quiet=False):
+  if not quiet:
+    print(f"I: {msg}")
+
+
+def log_w(msg, quiet=False):
+  if not quiet:
+    print(f"W: {msg}")
+
+
+def log_e(msg, quiet=False, file=sys.stderr):
+  if not quiet:
+    print(f"E: {msg}", file=file)
 
 
 def parse_timestamp(ts_str):
-  """Parses a timestamp string 'YYYY-MM-DD HH:MM:SS' into a zipfile date_time tuple."""
   try:
     dt = datetime.datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
     return (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
   except Exception:
-    return (2009, 1, 1, 0, 0, 0)  # Default Android Epoch fallback
+    return (2009, 1, 1, 0, 0, 0)
+
+
+# ==============================================================================
+# HÀM XỬ LÝ NHỊ PHÂN CHO CHỮ KÝ APK V2/V3
+# ==============================================================================
+
+
+def find_eocd(f):
+  f.seek(0, os.SEEK_END)
+  filesize = f.tell()
+  max_search = min(filesize, 65557)
+  f.seek(filesize - max_search, os.SEEK_SET)
+  buf = f.read(max_search)
+
+  pos = buf.rfind(b"\x50\x4b\x05\x06")
+  if pos == -1:
+    return None, None, None
+
+  eocd_pos = filesize - max_search + pos
+  f.seek(eocd_pos + 12)
+  cd_size, cd_offset = struct.unpack("<II", f.read(8))
+  return eocd_pos, cd_size, cd_offset
+
+
+def extract_apk_sig_block(zip_path):
+  if not os.path.exists(zip_path):
+    return None
+  try:
+    with open(zip_path, "rb") as f:
+      eocd_pos, cd_size, cd_offset = find_eocd(f)
+      if cd_offset is None or cd_offset < 24:
+        return None
+
+      f.seek(cd_offset - 16)
+      if f.read(16) != b"APK Sig Block 42":
+        return None
+
+      f.seek(cd_offset - 24)
+      sig_size_footer = struct.unpack("<Q", f.read(8))[0]
+
+      block_start = cd_offset - (sig_size_footer + 8)
+      if block_start < 0:
+        return None
+
+      f.seek(block_start)
+      if struct.unpack("<Q", f.read(8))[0] != sig_size_footer:
+        return None
+
+      f.seek(block_start)
+      return f.read(sig_size_footer + 8)
+  except Exception:
+    return None
+
+
+def insert_apk_sig_block(zip_path, sig_block):
+  if not sig_block or not os.path.exists(zip_path):
+    return False
+  try:
+    with open(zip_path, "rb") as f:
+      data = f.read()
+
+    pos = data.rfind(b"\x50\x4b\x05\x06")
+    if pos == -1:
+      return False
+
+    cd_size, cd_offset = struct.unpack("<II", data[pos + 12 : pos + 20])
+    sig_len = len(sig_block)
+
+    new_data = (
+        data[:cd_offset]
+        + sig_block
+        + data[cd_offset:pos]
+        + data[pos : pos + 16]
+        + struct.pack("<I", cd_offset + sig_len)
+        + data[pos + 20 :]
+    )
+
+    with open(zip_path, "wb") as f:
+      f.write(new_data)
+    return True
+  except Exception:
+    return False
+
+
+# ==============================================================================
+# CÁC HÀM XỬ LÝ ZIP CHÍNH
+# ==============================================================================
 
 
 def list_zip_contents(zip_path, password=None, quiet=False, patterns=None):
-  """Prints contents of ZIP archive filtered by optional multi-patterns."""
   if not os.path.exists(zip_path):
-    print(f"Error: File '{zip_path}' not found.")
+    log_e(f"File '{bname(zip_path)}' not found", quiet)
     return False
 
   pwd_bytes = password.encode("utf-8") if password else None
@@ -35,23 +144,20 @@ def list_zip_contents(zip_path, password=None, quiet=False, patterns=None):
 
       infolist = zip_ref.infolist()
       if patterns:
-        filtered_info = []
-        for info in infolist:
-          if any(fnmatch.fnmatch(info.filename, p) for p in patterns):
-            filtered_info.append(info)
-        infolist = filtered_info
+        infolist = [
+            info
+            for info in infolist
+            if any(fnmatch.fnmatch(info.filename, p) for p in patterns)
+        ]
 
-      print(f"\nContents of archive: '{zip_path}'")
+      log_i(f"Archive: {bname(zip_path)}", quiet)
       print(
           f"{'Filename':<45} {'Compressed':<12} {'Uncompressed':<14}"
           f" {'Method':<10}"
       )
       print("-" * 83)
 
-      total_comp = 0
-      total_uncomp = 0
-      count = 0
-
+      total_comp, total_uncomp, count = 0, 0, 0
       for info in infolist:
         comp_type = (
             "Stored"
@@ -67,20 +173,20 @@ def list_zip_contents(zip_path, password=None, quiet=False, patterns=None):
         count += 1
 
       print("-" * 83)
-      print(
-          f"Total files: {count} | Compressed: {total_comp} bytes | Original:"
-          f" {total_uncomp} bytes\n"
+      log_i(
+          f"Total: {count} files | Compressed: {total_comp}B | Original:"
+          f" {total_uncomp}B",
+          quiet,
       )
   except Exception as e:
-    print(f"Error reading ZIP contents (password might be required): {e}")
+    log_e(f"Read error: {e}", quiet)
     return False
   return True
 
 
 def extract_to_stdout(zip_path, member_patterns, password=None):
-  """Extracts specified multi-pattern file(s) directly to stdout (pipe)."""
   if not os.path.exists(zip_path):
-    print(f"Error: File '{zip_path}' not found.", file=sys.stderr)
+    log_e(f"File '{bname(zip_path)}' not found")
     return False
 
   pwd_bytes = password.encode("utf-8") if password else None
@@ -89,23 +195,20 @@ def extract_to_stdout(zip_path, member_patterns, password=None):
       if pwd_bytes:
         zip_ref.setpassword(pwd_bytes)
 
-      matched = []
-      for info in zip_ref.infolist():
-        if any(fnmatch.fnmatch(info.filename, p) for p in member_patterns):
-          matched.append(info.filename)
-
+      matched = [
+          info.filename
+          for info in zip_ref.infolist()
+          if any(fnmatch.fnmatch(info.filename, p) for p in member_patterns)
+      ]
       if not matched:
-        print(
-            f"Error: No members matched patterns {member_patterns} in ZIP.",
-            file=sys.stderr,
-        )
+        log_e(f"No members matched patterns: {member_patterns}")
         return False
 
       for name in matched:
         with zip_ref.open(name) as f:
           sys.stdout.buffer.write(f.read())
   except Exception as e:
-    print(f"Error extracting to stdout: {e}", file=sys.stderr)
+    log_e(f"Extract to stdout failed: {e}")
     return False
   return True
 
@@ -119,22 +222,25 @@ def extract_zip(
     clear_source=False,
     force=False,
 ):
-  """Extracts a ZIP file or specific multi-pattern members and records metadata with timestamps."""
   if not os.path.exists(zip_path):
-    if not quiet:
-      print(f"Error: File '{zip_path}' not found.")
+    log_e(f"File '{bname(zip_path)}' not found", quiet)
     return False
 
   if os.path.exists(extract_to) and os.listdir(extract_to):
     if not force:
-      if not quiet:
-        print(
-            f"Error: Target directory '{extract_to}' already exists and is not"
-            " empty. Use -f to overwrite."
-        )
+      log_e(
+          f"Directory '{bname(extract_to)}' exists. Use -f to force"
+          " overwrite",
+          quiet,
+      )
       return False
+    else:
+      log_i(f"Removing existing directory '{bname(extract_to)}'", quiet)
+      shutil.rmtree(extract_to)
 
   os.makedirs(extract_to, exist_ok=True)
+
+  sig_block = extract_apk_sig_block(zip_path)
   pwd_bytes = password.encode("utf-8") if password else None
 
   try:
@@ -149,28 +255,32 @@ def extract_zip(
             if any(fnmatch.fnmatch(info.filename, p) for p in member_patterns)
         ]
         if not matched_members:
-          if not quiet:
-            print(
-                f"Error: No files matched patterns '{member_patterns}' inside"
-                f" '{zip_path}'."
-            )
+          log_e(f"No files matched patterns '{member_patterns}'", quiet)
           return False
 
-        if not quiet:
-          print(
-              f"Extracting {len(matched_members)} matching files from"
-              f" '{zip_path}' to '{extract_to}'..."
-          )
+        log_i(
+            f"Extracting {len(matched_members)} files -> {bname(extract_to)}",
+            quiet,
+        )
+
+        if sig_block:
+          sig_file_path = os.path.join(extract_to, SIG_BLOCK_FILENAME)
+          with open(sig_file_path, "wb") as sf:
+            sf.write(sig_block)
+          log_w("SigBlock v2/v3+ backed up", quiet)
+
         for member in matched_members:
           zip_ref.extract(member, extract_to)
-        if not quiet:
-          print("Selective extraction successful!")
+        log_i(f"Extracted {len(matched_members)} files", quiet)
       else:
-        if not quiet:
-          print(
-              f"Extracting '{zip_path}' to '{extract_to}' and generating"
-              f" {CACHE_FILENAME}..."
-          )
+        log_i(f"Extracting {bname(zip_path)} -> {bname(extract_to)}", quiet)
+
+        if sig_block:
+          sig_file_path = os.path.join(extract_to, SIG_BLOCK_FILENAME)
+          with open(sig_file_path, "wb") as sf:
+            sf.write(sig_block)
+          log_w("SigBlock v2/v3+ backed up", quiet)
+
         xml_meta_path = os.path.join(extract_to, CACHE_FILENAME)
         root = ET.Element("ZipMetadata")
 
@@ -191,32 +301,24 @@ def extract_zip(
           file_elem.set("external_attr", str(info.external_attr))
           file_elem.set("mtime", str(mtime))
           file_elem.set("timestamp", ts_str)
-          extra_hex = info.extra.hex() if info.extra else ""
-          file_elem.set("extra_hex", extra_hex)
+          file_elem.set("extra_hex", info.extra.hex() if info.extra else "")
 
         tree = ET.ElementTree(root)
         tree.write(xml_meta_path, encoding="utf-8", xml_declaration=True)
-        if not quiet:
-          print(f"Extraction successful! Metadata saved to '{xml_meta_path}'.")
+        log_i(f"Extracted to {bname(extract_to)}", quiet)
 
     if clear_source and os.path.exists(zip_path):
       os.remove(zip_path)
-      if not quiet:
-        print(f"Deleted original ZIP file: '{zip_path}'")
+      log_i(f"Deleted original ZIP: {bname(zip_path)}", quiet)
 
   except Exception as e:
-    if not quiet:
-      print(
-          "Error during extraction (password might be required or incorrect):"
-          f" {e}"
-      )
+    log_e(f"Extraction failed: {e}", quiet)
     return False
 
   return True
 
 
 def apply_basic_alignment(zinfo, alignment=4):
-  """Automatically calculates and applies basic padding to zinfo.extra."""
   header_base_size = 30
   filename_len = len(zinfo.filename.encode("utf-8"))
   current_extra_len = len(zinfo.extra)
@@ -225,8 +327,7 @@ def apply_basic_alignment(zinfo, alignment=4):
   remainder = current_offset % alignment
 
   if remainder != 0:
-    padding_needed = alignment - remainder
-    zinfo.extra += b"\x00" * padding_needed
+    zinfo.extra += b"\x00" * (alignment - remainder)
 
 
 def inject_file_to_zip(
@@ -236,22 +337,25 @@ def inject_file_to_zip(
     forced_timestamp="2009-01-01 00:00:00",
     quiet=False,
 ):
-  """Injects or updates a single file directly into an existing ZIP archive."""
   if not os.path.exists(zip_path):
-    if not quiet:
-      print(f"Error: Target ZIP '{zip_path}' not found.")
+    log_e(f"Target ZIP '{bname(zip_path)}' not found", quiet)
     return False
   if not os.path.exists(file_to_inject):
-    if not quiet:
-      print(f"Error: File to inject '{file_to_inject}' not found.")
+    log_e(f"File to inject '{bname(file_to_inject)}' not found", quiet)
     return False
 
   if not arcname:
     arcname = os.path.basename(file_to_inject)
 
-  if not quiet:
-    print(f"Injecting '{file_to_inject}' as '{arcname}' into '{zip_path}'...")
+  log_i(
+      f"Injecting {bname(file_to_inject)} as {arcname} -> {bname(zip_path)}",
+      quiet,
+  )
+
+  sig_block = extract_apk_sig_block(zip_path)
   parsed_ts = parse_timestamp(forced_timestamp)
+  target_compress_type = zipfile.ZIP_DEFLATED
+  target_extra = b""
 
   temp_zip = zip_path + ".tmp"
   with zipfile.ZipFile(zip_path, "r") as zin, zipfile.ZipFile(
@@ -259,19 +363,37 @@ def inject_file_to_zip(
   ) as zout:
     for item in zin.infolist():
       if item.filename == arcname:
+        target_compress_type = item.compress_type
+        target_extra = item.extra
         continue
       zout.writestr(item, zin.read(item.filename))
 
     zinfo = zipfile.ZipInfo.from_file(file_to_inject, arcname)
-    zinfo.compress_type = zipfile.ZIP_DEFLATED
+    zinfo.compress_type = target_compress_type
     zinfo.date_time = parsed_ts
-    apply_basic_alignment(zinfo, alignment=4)
+
+    if target_extra:
+      zinfo.extra = target_extra
+    elif zinfo.compress_type == zipfile.ZIP_STORED:
+      apply_basic_alignment(zinfo, alignment=4)
+
     with open(file_to_inject, "rb") as f:
       zout.writestr(zinfo, f.read())
 
+  if sig_block:
+    insert_apk_sig_block(temp_zip, sig_block)
+
   os.replace(temp_zip, zip_path)
-  if not quiet:
-    print(f"Injection successful into '{zip_path}'.")
+
+  compress_str = (
+      "STORED" if target_compress_type == zipfile.ZIP_STORED else "DEFLATED"
+  )
+  sig_str = " | v2/v3 preserved" if sig_block else ""
+  log_i(
+      f"Injected {bname(file_to_inject)} -> {bname(zip_path)}"
+      f" [{compress_str}{sig_str}]",
+      quiet,
+  )
   return True
 
 
@@ -287,26 +409,24 @@ def repack_zip(
     clear_source=False,
     force=False,
 ):
-  """Packs a directory into a ZIP file following cache priority or forced timestamp rules."""
   if not os.path.exists(source_dir):
-    if not quiet:
-      print(f"Error: Source directory '{source_dir}' not found.")
+    log_e(f"Source directory '{bname(source_dir)}' not found", quiet)
     return False
 
   if os.path.exists(output_zip):
     if not force:
-      if not quiet:
-        print(
-            f"Error: Output file '{output_zip}' already exists. Use -f to"
-            " overwrite."
-        )
+      log_e(
+          f"Output '{bname(output_zip)}' exists. Use -f to force overwrite",
+          quiet,
+      )
       return False
-    elif os.path.isdir(output_zip):
-      if not quiet:
-        print(f"Error: Output path '{output_zip}' is a directory.")
-      return False
+    else:
+      log_i(f"Removing existing output '{bname(output_zip)}'", quiet)
+      if os.path.isdir(output_zip):
+        shutil.rmtree(output_zip)
+      else:
+        os.remove(output_zip)
 
-  # Tự động tạo thư mục chứa file đầu ra nếu chưa tồn tại
   output_dir = os.path.dirname(os.path.abspath(output_zip))
   if output_dir:
     os.makedirs(output_dir, exist_ok=True)
@@ -315,8 +435,7 @@ def repack_zip(
   meta_map = {}
 
   if os.path.exists(xml_meta_path):
-    if not quiet:
-      print(f"Loading metadata mapping from '{xml_meta_path}'...")
+    log_i("Loaded metadata", quiet)
     tree = ET.parse(xml_meta_path)
     root = tree.getroot()
     for file_elem in root.findall("File"):
@@ -330,17 +449,8 @@ def repack_zip(
           "extra": bytes.fromhex(file_elem.get("extra_hex", "")),
           "timestamp": file_elem.get("timestamp", "2009-01-01 00:00:00"),
       }
-  else:
-    if not quiet:
-      print(
-          f"Notice: No '{CACHE_FILENAME}' found. All files will use basic"
-          " automatic alignment."
-      )
 
-  if not quiet:
-    print(f"Packing directory '{source_dir}' into archive...")
-  if os.path.exists(output_zip):
-    os.remove(output_zip)
+  log_i(f"Repacking {bname(source_dir)} -> {bname(output_zip)}", quiet)
 
   if exclude_patterns is None:
     exclude_patterns = []
@@ -358,24 +468,22 @@ def repack_zip(
     for root_dir, dirs, files in os.walk(source_dir):
       for file in files:
         file_path = os.path.join(root_dir, file)
-        arcname = os.path.relpath(file_path, source_dir)
-        arcname = arcname.replace(os.sep, "/")
+        arcname = os.path.relpath(file_path, source_dir).replace(os.sep, "/")
 
-        if arcname == CACHE_FILENAME or file == CACHE_FILENAME:
+        if (
+            arcname in (CACHE_FILENAME, SIG_BLOCK_FILENAME)
+            or file in (CACHE_FILENAME, SIG_BLOCK_FILENAME)
+        ):
           continue
 
-        excluded = False
-        for pattern in exclude_patterns:
-          if fnmatch.fnmatch(file, pattern) or fnmatch.fnmatch(arcname, pattern):
-            excluded = True
-            break
-        if excluded:
+        if any(
+            fnmatch.fnmatch(file, p) or fnmatch.fnmatch(arcname, p)
+            for p in exclude_patterns
+        ):
           continue
 
         if update_only and arcname in meta_map:
-          current_mtime = os.path.getmtime(file_path)
-          stored_mtime = meta_map[arcname]["mtime"]
-          if current_mtime <= stored_mtime:
+          if os.path.getmtime(file_path) <= meta_map[arcname]["mtime"]:
             continue
 
         zinfo = zipfile.ZipInfo.from_file(file_path, arcname)
@@ -404,17 +512,20 @@ def repack_zip(
           zinfo.date_time = parse_timestamp("2009-01-01 00:00:00")
 
         with open(file_path, "rb") as f:
-          data = f.read()
+          zipf.writestr(zinfo, f.read())
 
-        zipf.writestr(zinfo, data)
+  sig_file_path = os.path.join(source_dir, SIG_BLOCK_FILENAME)
+  if os.path.exists(sig_file_path):
+    with open(sig_file_path, "rb") as sf:
+      sig_block = sf.read()
+    if insert_apk_sig_block(output_zip, sig_block):
+      log_w("SigBlock v2/v3 restored", quiet)
 
-  if not quiet:
-    print(f"ZIP file successfully saved at: '{output_zip}'")
+  log_i(f"Repacked -> {bname(output_zip)}", quiet)
 
   if clear_source and os.path.exists(source_dir):
     shutil.rmtree(source_dir)
-    if not quiet:
-      print(f"Deleted source directory: '{source_dir}'")
+    log_i(f"Deleted source directory: {bname(source_dir)}", quiet)
 
   return True
 
@@ -422,8 +533,8 @@ def repack_zip(
 def main():
   parser = argparse.ArgumentParser(
       description=(
-          "Advanced Python ZIP tool supporting multi-pattern filters for list,"
-          " pipe, and extraction."
+          "Advanced Python ZIP tool supporting multi-pattern filters and APK"
+          " v2/v3 signature preservation."
       )
   )
 
@@ -450,7 +561,7 @@ def main():
       "-f",
       "--force",
       action="store_true",
-      help="Force overwrite existing output file or target directory",
+      help="Force remove existing destination directory/file before operation",
   )
   parser.add_argument(
       "-P",
@@ -511,9 +622,9 @@ def main():
   )
   parser.add_argument(
       "--inject",
-      nargs=2,
+      nargs="+",
       metavar=("FILE", "TARGET_ZIP"),
-      help="Directly inject/replace a single file into an existing ZIP archive",
+      help="Inject/replace a file in ZIP. Usage: --inject FILE TARGET_ZIP [ARCNAME]",
   )
   parser.add_argument(
       "--timestamp",
@@ -547,20 +658,24 @@ def main():
         args.extract if args.extract else (args.list[0] if args.list else "")
     )
     if not target_zip:
-      print(
-          "Error: Please specify target ZIP file using -e or --list alongside"
-          " -p.",
-          file=sys.stderr,
-      )
+      log_e("Please specify target ZIP file using -e or --list alongside -p.")
     else:
       extract_to_stdout(target_zip, args.pipe, password=args.password)
   elif args.inject:
-    inject_file_to_zip(
-        args.inject[1],
-        args.inject[0],
-        forced_timestamp=args.timestamp if args.timestamp else "2009-01-01 00:00:00",
-        quiet=args.quiet,
-    )
+    if len(args.inject) < 2:
+      log_e("--inject requires at least 2 arguments: FILE TARGET_ZIP [ARCNAME]")
+    else:
+      file_to_inject = args.inject[0]
+      target_zip = args.inject[1]
+      arcname = args.inject[2] if len(args.inject) >= 3 else None
+
+      inject_file_to_zip(
+          target_zip,
+          file_to_inject,
+          arcname=arcname,
+          forced_timestamp=args.timestamp if args.timestamp else "2009-01-01 00:00:00",
+          quiet=args.quiet,
+      )
   elif args.extract:
     if args.batch:
       files = glob.glob(args.extract)
