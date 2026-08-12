@@ -479,6 +479,8 @@ Info() {
       echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
     elif [ "$menu_id" == "data" ]; then
       slog boot_ver_code 1
+      slog sum_onl_plugin 1
+      slog sum_moduls 1
     elif [ "$menu_id" == "beta" ]; then
       echo "'$update_text_3'"
       echo
