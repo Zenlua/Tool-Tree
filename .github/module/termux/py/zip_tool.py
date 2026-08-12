@@ -267,7 +267,7 @@ def extract_zip(
           sig_file_path = os.path.join(extract_to, SIG_BLOCK_FILENAME)
           with open(sig_file_path, "wb") as sf:
             sf.write(sig_block)
-          log_w("SigBlock v2/v3+ backed up", quiet)
+          log_i("SigBlock v2/v3+ backed up", quiet)
 
         for member in matched_members:
           zip_ref.extract(member, extract_to)
@@ -279,7 +279,7 @@ def extract_zip(
           sig_file_path = os.path.join(extract_to, SIG_BLOCK_FILENAME)
           with open(sig_file_path, "wb") as sf:
             sf.write(sig_block)
-          log_w("SigBlock v2/v3+ backed up", quiet)
+          log_i("SigBlock v2/v3+ backed up", quiet)
 
         xml_meta_path = os.path.join(extract_to, CACHE_FILENAME)
         root = ET.Element("ZipMetadata")
@@ -388,7 +388,7 @@ def inject_file_to_zip(
   compress_str = (
       "STORED" if target_compress_type == zipfile.ZIP_STORED else "DEFLATED"
   )
-  sig_str = " | v2/v3 preserved" if sig_block else ""
+  sig_str = " | v2/v3+ preserved" if sig_block else ""
   log_i(
       f"Injected {bname(file_to_inject)} -> {bname(zip_path)}"
       f" [{compress_str}{sig_str}]",
@@ -519,7 +519,7 @@ def repack_zip(
     with open(sig_file_path, "rb") as sf:
       sig_block = sf.read()
     if insert_apk_sig_block(output_zip, sig_block):
-      log_w("SigBlock v2/v3 restored", quiet)
+      log_i("SigBlock v2/v3+ restored", quiet)
 
   log_i(f"Repacked -> {bname(output_zip)}", quiet)
 
@@ -534,7 +534,7 @@ def main():
   parser = argparse.ArgumentParser(
       description=(
           "Advanced Python ZIP tool supporting multi-pattern filters and APK"
-          " v2/v3 signature preservation."
+          " v2/v3+ signature preservation."
       )
   )
 
