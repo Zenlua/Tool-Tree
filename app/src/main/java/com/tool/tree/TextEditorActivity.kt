@@ -60,8 +60,9 @@ class TextEditorActivity : AppCompatActivity() {
         private const val EXTRA_VALUE = "value"
         private const val EXTRA_VALUE_SH = "value_sh"
 
-        // Tối ưu RAM: Giảm Undo Stack từ 200 xuống 50 để tránh OutOfMemory
-        private const val UNDO_HISTORY_LIMIT = 50
+        // Giới hạn tối đa 10 lượt Undo/Redo, vượt quá sẽ tự động xoá lượt cũ nhất
+        private const val UNDO_HISTORY_LIMIT = 10
+        private const val REDO_HISTORY_LIMIT = 10
         private const val UNDO_DEBOUNCE_MS = 600L
         private const val UNDO_CACHE_DEBOUNCE_MS = 1000L
         private const val UNDO_CACHE_DIR = "cache"
@@ -614,6 +615,7 @@ class TextEditorActivity : AppCompatActivity() {
         val target = pendingUndoSnapshot?.also { pendingUndoSnapshot = null }
             ?: if (undoStack.isEmpty()) return else undoStack.removeLast()
 
+        if (redoStack.size >= REDO_HISTORY_LIMIT) redoStack.removeFirst()
         redoStack.addLast(EditorSnapshot(currentText, currentCursor))
         applyHistorySnapshot(target)
         refreshToolbarButtons()

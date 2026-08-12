@@ -221,8 +221,15 @@ class ShellSyntaxHighlighter(editText: EditText) : BaseSyntaxHighlighter(
     private val shellRegex = Regex(
         "(?<COMMENT>(?m)(?:^|(?<=\\s))#.*\$)" +
             "|(?<STRING>\"(?:\\\\.|[^\"\\\\])*\"|'(?:[^']*)'|`(?:\\\\.|[^`\\\\])*`)" +
-            "|(?<COMMAND>\\$\\((?:[^()]*|\\([^()]*\\))*\\))" +
-            "|(?<VARIABLE>\\$\\{[A-Za-z_][A-Za-z0-9_]*[^}]*\\}|\\$[A-Za-z_][A-Za-z0-9_]*)" +
+            // Dùng possessive quantifier (*+) thay vì (?:[^()]*|\([^()]*\))* để tránh
+            // catastrophic backtracking (ReDoS) khiến app bị đơ/ANR khi gõ dở "$(..."
+            // mà chưa đóng ngoặc ")". Với quantifier thường, mỗi ký tự thêm vào làm số
+            // cách backtrack tăng theo cấp số mũ (2^n); possessive quantifier không
+            // backtrack nên thời gian khớp luôn tuyến tính.
+            "|(?<COMMAND>\\$\\((?:[^()]*+|\\([^()]*+\\))*+\\))" +
+            // Possessive quantifier để tránh backtracking bậc hai (quadratic) khi gõ
+            // dở "${..." dài mà chưa đóng dấu "}"
+            "|(?<VARIABLE>\\$\\{[A-Za-z_][A-Za-z0-9_]*+[^}]*+\\}|\\$[A-Za-z_][A-Za-z0-9_]*)" +
             "|(?<NUMBER>(?<![A-Za-z0-9_])(?:0x[0-9A-Fa-f]+|[0-9]+)(?![A-Za-z0-9_]))" +
             "|(?<WORD>(?<![A-Za-z0-9_])[A-Za-z_][A-Za-z0-9_]*(?![A-Za-z0-9_]))" +
             "|(?<PUNCTUATION>&&|\\|\\||\\||;|\\(|\\)|\\{|\\}|\\[\\[|\\]\\]|<|>)"

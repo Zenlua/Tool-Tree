@@ -152,7 +152,11 @@ class WakeLockService : Service() {
             .build()
 
         // Định nghĩa nội dung tin nhắn dạng MessagingStyle
-        val messageText = getString(R.string.service_active_with_wakelock)
+        // Chỉ hiện "wakelock_service_running" khi WakeLock đang thực sự được bật,
+        // ngược lại hiện "service_active_with_wakelock" (service đang chạy nền, chưa giữ wakelock)
+        val messageText =
+            if (isWakeLockActive) getString(R.string.wakelock_service_running)
+            else getString(R.string.service_active_with_wakelock)
         val messagingStyle = NotificationCompat.MessagingStyle(sender)
             .addMessage(messageText, System.currentTimeMillis(), sender)
     
