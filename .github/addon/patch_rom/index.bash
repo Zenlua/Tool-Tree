@@ -150,7 +150,7 @@ home() {
   [[group.page]]
   title = "'$title_quick'"
   summary = "'$project_text': '$PTSH'"
-  config-sh = "MPAT='$MPAT' '$MPAT'/index.bash infor"
+  config-sh = "'$MPAT'/index.bash infor"
 
 [[group]]
   title = "'$reminder_notes'"
