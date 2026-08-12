@@ -235,7 +235,7 @@ def extract_zip(
       )
       return False
     else:
-      log_i(f"Removing existing directory '{bname(extract_to)}'", quiet)
+      # log_i(f"Removing existing directory '{bname(extract_to)}'", quiet)
       shutil.rmtree(extract_to)
 
   os.makedirs(extract_to, exist_ok=True)
@@ -259,7 +259,7 @@ def extract_zip(
           return False
 
         log_i(
-            f"Extracting {len(matched_members)} files -> {bname(extract_to)}",
+            f"Extracting {len(matched_members)} files: {bname(extract_to)}",
             quiet,
         )
 
@@ -271,7 +271,7 @@ def extract_zip(
 
         for member in matched_members:
           zip_ref.extract(member, extract_to)
-        log_i(f"Extracted {len(matched_members)} files", quiet)
+        # log_i(f"Extracted {len(matched_members)} files", quiet)
       else:
         log_i(f"Extracting {bname(zip_path)} -> {bname(extract_to)}", quiet)
 
