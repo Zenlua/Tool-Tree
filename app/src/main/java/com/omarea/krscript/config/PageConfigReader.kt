@@ -97,13 +97,22 @@ class PageConfigReader {
     // chạy ĐÚNG 1 LẦN ở cuối readConfigToml() qua resolvePendingStates().
     private val pendingSwitchStates = ArrayList<Pair<SwitchNode, String>>()
     private val pendingPickerStates = ArrayList<Pair<PickerNode, String>>()
+    // Tương tự pendingSwitchStates/pendingPickerStates nhưng cho row trong "rows" (text/action).
+    // checked: (row, script) - row.checked sẽ được cập nhật sau khi gộp.
+    // visible: (danh sách rows chứa nó, row, script) - nếu kết quả gộp = false thì row bị xoá
+    // khỏi danh sách sau (row vẫn được thêm tạm vào danh sách lúc parse để giữ đúng thứ tự).
+    private val pendingRowCheckedStates = ArrayList<Pair<TextNode.TextRow, String>>()
+    private val pendingRowVisibleStates = ArrayList<Triple<ArrayList<TextNode.TextRow>, TextNode.TextRow, String>>()
 
     private fun resolvePendingStates() {
-        if (pendingSwitchStates.isEmpty() && pendingPickerStates.isEmpty()) return
+        if (pendingSwitchStates.isEmpty() && pendingPickerStates.isEmpty() &&
+            pendingRowCheckedStates.isEmpty() && pendingRowVisibleStates.isEmpty()) return
 
         val scripts = LinkedHashMap<String, String>()
         pendingSwitchStates.forEachIndexed { index, pair -> scripts["switch:$index"] = pair.second }
         pendingPickerStates.forEachIndexed { index, pair -> scripts["picker:$index"] = pair.second }
+        pendingRowCheckedStates.forEachIndexed { index, pair -> scripts["row-checked:$index"] = pair.second }
+        pendingRowVisibleStates.forEachIndexed { index, triple -> scripts["row-visible:$index"] = triple.third }
 
         if (vitualRootNode == null) {
             vitualRootNode = NodeInfoBase(pageConfigAbsPath)
@@ -117,9 +126,21 @@ class PageConfigReader {
         pendingPickerStates.forEachIndexed { index, pair ->
             results["picker:$index"]?.let { pair.first.value = it }
         }
+        pendingRowCheckedStates.forEachIndexed { index, pair ->
+            val shellResult = results["row-checked:$index"] ?: ""
+            pair.first.checked = shellResult.trim() == "1"
+        }
+        pendingRowVisibleStates.forEachIndexed { index, triple ->
+            val shellResult = results["row-visible:$index"] ?: ""
+            if (shellResult.trim() != "1") {
+                triple.first.remove(triple.second)
+            }
+        }
 
         pendingSwitchStates.clear()
         pendingPickerStates.clear()
+        pendingRowCheckedStates.clear()
+        pendingRowVisibleStates.clear()
     }
 
     // =====================================================================================
@@ -702,12 +723,25 @@ class PageConfigReader {
     }
 
     private fun textRowToml(rows: ArrayList<TextNode.TextRow>, table: TomlTable) {
-        // Ẩn/hiện row theo điều kiện (tĩnh true/false hoặc lệnh shell, giống support/visible của param)
+        val row = TextNode.TextRow()
+
+        // Ẩn/hiện row theo điều kiện (tĩnh true/false hoặc lệnh shell, giống support/visible của
+        // param). Giá trị hằng số xử lý ngay như cũ; nếu là lệnh shell thì KHÔNG chạy ngay tại
+        // đây nữa - đăng ký vào pendingRowVisibleStates để gộp 1 lần cùng switch/picker/row khác
+        // trong resolvePendingStates() (tránh N round-trip tuần tự, xem comment ở pendingSwitchStates).
+        // Row vẫn được thêm tạm vào "rows" để giữ đúng thứ tự; nếu shell trả về false sẽ bị xoá
+        // khỏi danh sách sau khi resolve xong.
+        var visibleShellScript: String? = null
         tomlGet(table, "support", "visible")?.let {
-            if (!resolveBoolOrShell(it, "support", "visible")) return
+            val v = it.trim()
+            val lower = v.lowercase(getDefault())
+            when {
+                lower.isEmpty() || lower == "1" || lower == "true" || lower == "support" || lower == "visible" -> {}
+                lower == "0" || lower == "false" -> return
+                else -> visibleShellScript = v
+            }
         }
 
-        val row = TextNode.TextRow()
         tomlGet(table, "bold", "b")?.let { row.bold = tomlTruthy(it, "bold") }
         tomlGet(table, "italic", "i")?.let { row.italic = tomlTruthy(it, "italic") }
         tomlGet(table, "underline", "u")?.let { row.underline = tomlTruthy(it, "underline") }
@@ -733,7 +767,21 @@ class PageConfigReader {
             val t = it.trim().lowercase(getDefault())
             if (t == "checkbox" || t == "switch") row.toggle = t
         }
-        tomlGet(table, "checked", "checked-sh", "check")?.let { row.checked = resolveBoolOrShell(it, "checked", "check") }
+        // checked: hằng số xử lý ngay; lệnh shell thì đăng ký vào pendingRowCheckedStates - gộp
+        // chung với các row/switch/picker khác trong resolvePendingStates() thay vì chạy riêng lẻ.
+        tomlGet(table, "checked", "checked-sh", "check")?.let {
+            val v = it.trim()
+            val lower = v.lowercase(getDefault())
+            row.checked = when {
+                lower.isEmpty() -> false
+                lower == "1" || lower == "true" || lower == "checked" || lower == "check" -> true
+                lower == "0" || lower == "false" -> false
+                else -> {
+                    pendingRowCheckedStates.add(row to v)
+                    false // giá trị mặc định tạm thời, tới khi có kết quả gộp
+                }
+            }
+        }
         tomlGet(table, "onchange-sh", "on-change-sh", "toggle-sh", "set-sh")?.let { row.onChangeSh = it }
         tomlGet(table, "align")?.let {
             when (it) {
@@ -744,6 +792,7 @@ class PageConfigReader {
         }
         tomlGet(table, "text")?.let { row.text = StringResRef.resolve(context, it) }
         rows.add(row)
+        visibleShellScript?.let { pendingRowVisibleStates.add(Triple(rows, row, it)) }
     }
 
     private fun editorNodeToml(table: TomlTable): EditorNode? {

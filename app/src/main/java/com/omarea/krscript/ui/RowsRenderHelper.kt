@@ -102,7 +102,26 @@ object RowsRenderHelper {
             }
         }
 
-        for (row in rows) {
+        // Gộp toàn bộ shell "sh" (dynamic text) của mọi row trong LẦN bind() NÀY thành 1 lệnh
+        // executeMultipleResultRoot() duy nhất, thay vì N lệnh executeResultRoot() riêng lẻ tuần
+        // tự. bind() có thể chạy lại nhiều lần (RecyclerView cuộn/rebind, sau khi bấm 1 toggle
+        // khiến toàn bộ rows được vẽ lại) nên việc gộp này áp dụng lại mỗi lần bind(), không chỉ 1
+        // lần lúc load trang.
+        val dynamicTextResults: Map<Int, String> = run {
+            val scripts = LinkedHashMap<String, String>()
+            rows.forEachIndexed { index, row ->
+                if (row.dynamicTextSh.isNotEmpty()) {
+                    scripts["$index"] = row.dynamicTextSh
+                }
+            }
+            if (scripts.isEmpty()) {
+                emptyMap()
+            } else {
+                ScriptEnvironmen.executeMultipleResultRoot(context, scripts, config).mapKeys { it.key.toInt() }
+            }
+        }
+
+        for ((rowIndex, row) in rows.withIndex()) {
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
 
             // row.line = true: chèn 1 dòng chỉ chứa đường kẻ mảnh (full chiều rộng) NGAY TRƯỚC
@@ -143,14 +162,14 @@ object RowsRenderHelper {
                 }
                 if (groupContentWidth > 0f) {
                     // Khoảng cách nhỏ giữa 2 row chung dòng cho dễ nhìn, không dính sát nhau
-                    val gap = " "
+                    val gap = "   "
                     rowsView.append(gap)
                     groupContentWidth += rowsView.paint.measureText(gap)
                 }
             }
-            // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
+            // Nếu có khai báo "sh": lấy nội dung dòng từ kết quả shell đã gộp sẵn ở trên
             val label = if (row.dynamicTextSh.isNotEmpty()) {
-                ScriptEnvironmen.executeResultRoot(context, row.dynamicTextSh, config)
+                dynamicTextResults[rowIndex] ?: ""
             } else {
                 row.text
             }
