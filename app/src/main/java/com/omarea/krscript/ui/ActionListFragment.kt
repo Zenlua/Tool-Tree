@@ -233,9 +233,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             return
         }
 
-        // Có lockShell - hiện hộp thoại loading ngay lập tức (thay vì để main thread đơ lặng
-        // lẽ trong lúc chờ root shell round-trip) rồi mới chạy kiểm tra khoá trên luồng IO.
-        progressBarDialog.showDialog(getString(R.string.onloading))
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val message = ScriptEnvironmen.executeResultRoot(context, clickableNode.lockShell, clickableNode)
             withContext(Dispatchers.Main) {
