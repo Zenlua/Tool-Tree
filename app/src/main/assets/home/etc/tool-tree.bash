@@ -2229,6 +2229,7 @@ Addon() {
       text = "'$hide_add_text'"
       checked = "[ -f '$dirvad'/hide ] && echo 1"
       line = true
+      align="opposite"
       onchange-sh = """
       if [ -f '$dirvad'/hide ]; then
       rm '$dirvad'/hide

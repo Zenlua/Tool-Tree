@@ -143,7 +143,7 @@ object RowsRenderHelper {
                 }
                 if (groupContentWidth > 0f) {
                     // Khoảng cách nhỏ giữa 2 row chung dòng cho dễ nhìn, không dính sát nhau
-                    val gap = "   "
+                    val gap = " "
                     rowsView.append(gap)
                     groupContentWidth += rowsView.paint.measureText(gap)
                 }
@@ -333,7 +333,8 @@ object RowsRenderHelper {
 
         override fun drawLeadingMargin(canvas: Canvas, paint: Paint, x: Int, dir: Int, top: Int, baseline: Int, bottom: Int, text: CharSequence?, start: Int, end: Int, first: Boolean, layout: Layout?) {
             val strokePaint = BlurEngine.getStrokePaint(context)
-            val y = (top + bottom) / 2f
+            // Đẩy đường kẻ xuống thấp hơn giữa dòng 1 chút (30% chiều cao dòng thay vì 50%/giữa)
+            val y = top + (bottom - top) * 0.65f
             val right = (layout?.width ?: 0).toFloat()
             canvas.drawLine(0f, y, right, y, strokePaint)
         }
