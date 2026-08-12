@@ -162,7 +162,7 @@ object RowsRenderHelper {
                 }
                 if (groupContentWidth > 0f) {
                     // Khoảng cách nhỏ giữa 2 row chung dòng cho dễ nhìn, không dính sát nhau
-                    val gap = "   "
+                    val gap = " "
                     rowsView.append(gap)
                     groupContentWidth += rowsView.paint.measureText(gap)
                 }

@@ -1,6 +1,4 @@
-# Language
-
-# all
+# Kakathic
 on_text="Activado"
 off_text="Desactivado"
 save_text="Guardar en:"
@@ -18,6 +16,7 @@ author_text="Autor"
 search_text="Buscar"
 doc_text="Texto"
 addon_text="Complemento"
+plugin_text="Plugin"
 home_text="Inicio"
 begin_start="Instalando datos..."
 trademark_text="Marca"
@@ -29,7 +28,7 @@ deleted_text="Desinstalar complemento"
 input_add_text="Agregar complemento"
 hide_add_text="Ocultar complemento"
 build_text="Compilar"
-decompile_text="Descompilar"
+decompile_text="Extraer"
 projects_text="Proyecto actual"
 sizes_text="Tamaño"
 sign_text="Firma"
@@ -47,15 +46,18 @@ tool_unpack_text="Herramienta de descompilación"
 tool_repack_text="Herramienta de compilación"
 customize_tools_text="Personalizar herramientas"
 updating_text="Actualizando"
-scroll_ngang_text="Desactivar ajuste de línea del registro"
 input_file_text="Archivo de entrada"
 input_folder_text="Carpeta de entrada"
 path_text="Ruta"
 build_time_text_2="Actual:"
-noti_update="Aviso de actualización"
 api_key_text="Clave de API"
-
-# Home
+reset_data_text="Reinstalar datos"
+disable_text="Desactivar"
+patch_text="Parche"
+customize_text="Personalizar"
+number_text="Cantidad"
+editor_rom="Modificar ROM"
+editor_apk="Editar APK"
 home_text_1="Información y funciones de la aplicación"
 home_text_2="Editar ROM por funciones"
 home_text_3="Funciones que requieren Root"
@@ -63,8 +65,6 @@ home_text_4="Descargar e instalar complementos"
 home_text_5="Ejecutar comandos"
 home_text_6="Probar comandos básicos"
 home_text_7="Ejecutar comandos de prueba"
-
-# More
 more_text_1="Apkeditor"
 more_text_3="Importar firma"
 more_text_4="Especificar archivo:"
@@ -74,8 +74,6 @@ more_text_7="Funciones que requieren Root"
 more_text_8="Descargar e instalar complementos"
 more_text_9="Ejecutar comandos de prueba"
 more_text_10="Importar"
-
-# Settings
 setting_text_1="Información"
 setting_text_2="Ver notificaciones y actualizaciones"
 setting_text_3="Proyecto"
@@ -83,15 +81,11 @@ setting_text_4="Cambiar de proyecto y limpiar"
 setting_text_5="Otros permisos"
 setting_text_7="Funciones"
 setting_text_8="Cambiar y activar/desactivar funciones"
-
-# Permissions
 permis_text_1="Desactivar optimización de batería"
 permis_text_2="Idioma"
 permis_text_3="Nota: hay que reiniciar la aplicación para aplicar los cambios"
 permis_text_4="Permiso de acceso a archivos"
 permis_text_5="Cambiar idioma"
-
-# Project
 project_text_3="Limpiar proyecto"
 project_text_4="Elimina directamente los proyectos descomprimidos; se mostrarán tanto las carpetas de la ROM como las del APK descompilados"
 project_text_5="Cambiar página de inicio"
@@ -104,23 +98,15 @@ project_text_12="Límite de CPU"
 project_text_13="Una vez configurado, los procesos podrán usar como máximo el número de CPU seleccionado"
 project_text_14="Cambiar imagen de fondo"
 project_text_15="Para restaurar la imagen del sistema, borra toda la ruta y pulsa confirmar. Esta acción reiniciará automáticamente la aplicación."
-
-# mount img
 mount_text_1="Montar IMG"
 mount_text_2="Editable para archivos IMG ext; los archivos EROFS son solo de lectura"
-
-# umount img
 umount_text_1="Desmontar IMG"
 umount_text_2="El archivo IMG se guardó al montarlo"
 umount_text_3="Tras desmontar, si se modificó, se guardará en el archivo montado original"
-
-# backup img
 backup_text_1="Hacer copia de seguridad de IMG"
 backup_text_2="Tras la copia de seguridad, el archivo se guardará en:"
 backup_text_3="¡No existe:"
 backup_text_4="Haciendo copia de seguridad:"
-
-# flash img
 flash_text_1="Flashear IMG"
 flash_text_2="Reiniciar al finalizar"
 flash_text_3="Arrancar en Recovery al finalizar"
@@ -133,11 +119,7 @@ flash_text_9="Cuenta atrás para el modo recovery"
 flash_text_10="Cuenta atrás para reiniciar el dispositivo"
 flash_text_11="No existe, no se puede flashear"
 flash_text_12="Hecho"
-
-# Decode
 decode_text_1="No decodificar archivos IMG"
-
-# Build
 builds_text_1="Compilar proyectos descompilados previamente"
 builds_text_2="Formato de partición y método de empaquetado"
 builds_text_3="Método de compresión EROFS"
@@ -145,40 +127,25 @@ builds_text_4="Nivel de compresión"
 builds_text_6="Nivel"
 builds_text_7="Nota: un valor de 0 significa 0 MB libres. Añadir espacio libre solo se aplica a particiones ext4 y f2fs."
 builds_text_8="Desactivar AVB, fstab, recovery stock"
-
-# build super
 super_text_2="Tipo de paquete"
 super_text_3="Formato"
 super_text_5="Nombre del clúster"
 super_text_6="Cada dispositivo tiene un nombre de clúster diferente"
 super_text_7="Elegir archivo IMG para compilar super.img"
-
-# build payload
 payload_text_2="Elegir archivo IMG para compilar payload.bin"
 payload_text_3="Partición dinámica"
 payload_text_4="Solo tiene efecto cuando la partición dinámica está activada"
-
-# cover img
-convert_text_1="Convertir archivo"
 convert_text_2="Nivel de compresión para archivos br y zstd; valores más altos tardan más en comprimir"
-
-# split super
 super_split_text_1="Dividir Super"
-super_split_text_2="Predeterminado: 1024 M por archivo al dividir"
 super_split_text_3="Elegir archivo super.img para dividir"
 super_split_text_4="Dividiendo"
-
-# super_merge
 super_merge_text_1="Fusionar Super"
 super_merge_text_2="Fusionando super.img"
 super_merge_text_3="Elegir archivo super.img.* para fusionar en super.img"
-
-# APK
 decom_apk_text_1="Descompilar como XML"
 decom_apk_text_3="No descompilar"
 decom_apk_text_5="Descompilar solo AndroidManifest.xml"
 decom_apk_text_7="Eliminar información de depuración en smali"
-
 decom_apk_text_9="Lista de tipos de archivo"
 decom_apk_text_10="Descompilar solo resources.arsc"
 decom_apk_text_11="Descompilar recursos"
@@ -186,35 +153,19 @@ decom_apk_text_12="Descompilar dex a smali"
 decom_apk_text_13="Copiar Manifest.xml original"
 decom_apk_text_14="Dividir DEX de nuevo"
 decom_apk_text_15="Cada herramienta de descompilación tiene sus propias características, y la tasa de éxito al recompilar también varía"
-
-# build apk
 build_apk_text_1="Ordenar y filtrar texto"
 build_apk_text_2="Pueden producirse errores al recompilar APK. Puedes pedirle ayuda a la IA para resolver el problema."
-
-# restaurar firma
 restore_apk_text_1="Importar el archivo con la firma original"
 restore_apk_text_2="Importar el archivo para restaurar"
 restore_apk_text_3="Restaurar firma"
-
-# ofuscar apk
 distur_apk_text_1="Cifra los recursos para dificultar el análisis del APK"
 distur_apk_text_2="Ofuscar"
-
-# restaurar ofuscación
 apk_restore_text_1="Restaura los recursos cifrados del APK a un formato legible"
 apk_restore_text_2="Restaurar"
-
-# fusionar apks
 apk_mager_text_1="Convertir archivo APKS a APK"
 apk_mager_text_2="Fusionar APKS"
-
-# Add-ons
-addon_text_1="Error del complemento"
 addon_text_2="Tras la activación, salir de la página del complemento lo eliminará"
 addon_text_3="Iniciando instalación del complemento..."
-addon_text_10="Solo oculta los complementos mostrados en la página de inicio; seguirán ejecutando código si tienen un archivo de inicio early_start.sh"
-
-# Unpack
 unpack_text_0="Convirtiendo:"
 unpack_text_1="Extrayendo:"
 unpack_text_2="Registro guardado en:"
@@ -224,67 +175,38 @@ unpack_text_5="Error al descomprimir:"
 unpack_text_6="No descompilado:"
 unpack_text_7="Nota: al descompilar super sparse, solo se convertirá a raw; deberás volver a descompilarlo"
 unpack_text_8="Formato de descompresión no compatible:"
-
-# Super
 supers_text_1="¡Error al compilar Super!"
 supers_text_2="Super compilado correctamente"
-
-# Repack
 replag_text_1="Iniciando descompilación"
 replag_text_2="Compilando"
-
-# Load
-load_text_1="Conectando datos..."
 load_text_2="Error de red, vuelve a comprobarlo"
-
-# APK errors
 apke_text_1="Error al descompilar el APK"
 apke_text_3="Error en el archivo APK"
-
-# APK build
 apkb_text_1="Elemento especificado:"
-apkb_text_2="Comprobando texto..."
-apkb_text_3="Comprobación completada"
 apkb_text_6="Usar firma:"
-
-# add lang
 addlang_text_2="Comprimir biblioteca"
 addlang_text_3="Si el APK está instalado en el sistema, deberías elegir «Desactivado» si hay una carpeta lib en el APK; en caso contrario, mantén el valor predeterminado."
-
-# backup apk
 backups_text_1="Solo se hará copia de seguridad de los archivos APK; los datos de APKS no se respaldarán"
 backups_text_2="Copia de seguridad"
 backups_text_3="Aplicación"
-
-# actualización
 update_text_2="Buscando actualizaciones..."
 update_text_3="Iniciando descarga..."
 update_text_4="Estás usando la última versión."
 update_text_5="GitHub"
 update_text_6="Hay una nueva versión disponible. Actualiza la aplicación: Ajustes > Información > Actualizar"
-
-# dexopt
 dexopt_app_text="Dexopt"
 dexopt_app_text_1="Acelerar el inicio de la aplicación"
 dexopt_app_text_2="Todos los paquetes del sistema"
 dexopt_app_text_3="Si esta opción está activada, el elemento de la lista de aplicaciones anterior no tendrá efecto"
-
-# framework auto
 framework_auto_text="Importar framework automáticamente"
-
-# Funciones
 use_network_text="Se requiere acceso a la red para continuar con la descarga"
 root_warning_text="Por favor, aplica Root al dispositivo para usar esta función"
 deleted_file_text="Eliminar el archivo original al finalizar"
 deleted_project_text="Eliminar el proyecto tras la compilación"
 google_translate_text="Traductor de Google"
-
-# apex editor
 apex_text="Editor de apex"
 apex_text_1="Comprimir apex a capex"
 apex_text_2="Lista de archivos compatibles: apex, capex"
-
-# other
 build_time_text_1="Tiempo de compilación de la ROM"
 convert_img_text="Continuar convirtiendo tras finalizar la compilación"
 list_partition_text="Lista de particiones descompiladas"
@@ -294,10 +216,9 @@ patch_text_fscontex="Parchear fs_config y fs_contexts"
 patch_text_fsdesc="Añadir automáticamente los permisos necesarios para los elementos recién añadidos"
 config_text_1="Convertir proyecto existente"
 config_text_2="Crear un nuevo proyecto o elegir una carpeta"
-
-# boot
 boot_text_1="Java se está instalando, vuelve a abrir en 1-2 minutos..."
 note_genmini_text="Toca el menú de tres puntos en la esquina superior derecha para crear una clave de API gratuita."
-
+custom_size="Personalizar tamaño"
+custom_size_desc="Añade o modifica el tamaño predeterminado de cada partición al reconstruir; solo aplica a ext y f2fs, la unidad de tamaño es en Bytes."
 split_number_desc="Ingrese la cantidad para dividir el archivo super"
 split_number_label="Comenzando desde el número: 1"

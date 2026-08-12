@@ -1,6 +1,4 @@
-# Язык
-
-# all
+# Kakathic
 on_text="Вкл"
 off_text="Выкл"
 save_text="Сохранить в:"
@@ -18,6 +16,7 @@ author_text="Автор"
 search_text="Поиск"
 doc_text="Текст"
 addon_text="Дополнение"
+plugin_text="Плагин"
 home_text="Главная"
 begin_start="Установка данных..."
 trademark_text="Бренд"
@@ -29,7 +28,7 @@ deleted_text="Удалить дополнение"
 input_add_text="Введите дополнение"
 hide_add_text="Скрыть дополнение"
 build_text="Сборка"
-decompile_text="Декомпиляция"
+decompile_text="Извлечение"
 projects_text="Текущий проект"
 sizes_text="Размер"
 sign_text="Подпись"
@@ -47,15 +46,18 @@ tool_unpack_text="Инструмент декомпиляции"
 tool_repack_text="Инструмент сборки"
 customize_tools_text="Настроить инструменты"
 updating_text="Обновление"
-scroll_ngang_text="Отключить перенос строк в логе"
 input_file_text="Входной файл"
 input_folder_text="Входная папка"
 path_text="Путь"
 build_time_text_2="Текущий:"
 api_key_text="API-ключ"
-reset_data_text="Сбросить данные"
-
-# Home
+reset_data_text="Переустановить данные"
+disable_text="Отключить"
+patch_text="Патч"
+customize_text="Настроить"
+number_text="Количество"
+editor_rom="Изменить ROM"
+editor_apk="Редактировать APK"
 home_text_1="Информация и функции приложения"
 home_text_2="Редактирование ROM по функциям"
 home_text_3="Функции, требующие root"
@@ -63,8 +65,6 @@ home_text_4="Загрузка и установка дополнений"
 home_text_5="Выполнить команды"
 home_text_6="Тест основных команд"
 home_text_7="Выполнение команд для тестирования"
-
-# More
 more_text_1="Apkeditor"
 more_text_3="Импорт подписи"
 more_text_4="Указать файл:"
@@ -74,8 +74,6 @@ more_text_7="Функции, требующие root"
 more_text_8="Загрузка и установка дополнений"
 more_text_9="Выполнение команд для тестирования"
 more_text_10="Импорт"
-
-# Settings
 setting_text_1="Информация"
 setting_text_2="Просмотр уведомлений и обновлений"
 setting_text_3="Проект"
@@ -83,15 +81,11 @@ setting_text_4="Изменение проекта и очистка"
 setting_text_5="Другие разрешения"
 setting_text_7="Функции"
 setting_text_8="Изменение и включение/выключение функций"
-
-# Permissions
 permis_text_1="Отключить оптимизацию батареи"
 permis_text_2="Язык"
 permis_text_3="Примечание: для применения изменений требуется перезапуск приложения"
 permis_text_4="Разрешение на доступ к файлам"
 permis_text_5="Изменить язык"
-
-# Project
 project_text_3="Очистить проект"
 project_text_4="Немедленно удалить распакованные проекты; будут показаны обе папки декомпиляции ROM и APK"
 project_text_5="Поменять главную страницу"
@@ -104,23 +98,15 @@ project_text_12="Ограничение CPU"
 project_text_13="После настройки процессы смогут использовать не более выбранного числа CPU"
 project_text_14="Изменить фоновое изображение"
 project_text_15="Чтобы восстановить системное изображение, удалите весь путь и нажмите подтверждение; это действие автоматически перезапустит приложение."
-
-# mount img
 mount_text_1="Смонтировать IMG"
 mount_text_2="Для редактируемых ext IMG-файлов; EROFS-файлы можно только просматривать"
-
-# umount img
 umount_text_1="Размонтировать IMG"
 umount_text_2="IMG-файл был сохранён при монтировании"
 umount_text_3="После размонтирования, если он был изменён, он будет сохранён в исходный смонтированный файл"
-
-# backup img
 backup_text_1="Резервное копирование IMG"
 backup_text_2="После резервного копирования файл будет сохранён в:"
 backup_text_3="! Не существует:"
 backup_text_4="Выполняется резервное копирование:"
-
-# flash img
 flash_text_1="Прошить IMG"
 flash_text_2="Перезагрузить после завершения"
 flash_text_3="Загрузиться в Recovery после завершения"
@@ -133,11 +119,7 @@ flash_text_9="Обратный отсчёт до режима recovery"
 flash_text_10="Обратный отсчёт до перезагрузки устройства"
 flash_text_11="Не существует, прошить невозможно"
 flash_text_12="Готово"
-
-# Decode
 decode_text_1="Не декодировать IMG-файлы"
-
-# Build
 builds_text_1="Сборка ранее декомпилированных проектов"
 builds_text_2="Формат раздела и способ упаковки"
 builds_text_3="Метод сжатия EROFS"
@@ -145,40 +127,25 @@ builds_text_4="Уровень сжатия"
 builds_text_6="Уровень"
 builds_text_7="Примечание: значение 0 соответствует 0 МБ свободного места; добавление свободного места применяется только к разделам ext4 и f2fs"
 builds_text_8="Отключить AVB, fstab, стоковый recovery"
-
-# build super
 super_text_2="Тип пакета"
 super_text_3="Формат"
 super_text_5="Имя кластера"
 super_text_6="У каждого устройства своё имя кластера"
 super_text_7="Выберите IMG-файл для сборки super.img"
-
-# build payload
 payload_text_2="Выберите IMG-файл для сборки payload.bin"
 payload_text_3="Динамический раздел"
 payload_text_4="Работает только при включённом динамическом разделе"
-
-# cover img
-convert_text_1="Конвертировать файл"
 convert_text_2="Уровень сжатия для файлов br и zstd; более высокие значения требуют больше времени"
-
-# split super
 super_split_text_1="Разделить Super"
-super_split_text_2="По умолчанию: 1024M на файл при разделении"
 super_split_text_3="Выберите super.img для разделения"
 super_split_text_4="Разделение"
-
-# super_merge
 super_merge_text_1="Объединить Super"
 super_merge_text_2="Объединение super.img"
 super_merge_text_3="Выберите super.img.* для объединения в super.img"
-
-# APK
 decom_apk_text_1="Декомпилировать как XML"
 decom_apk_text_3="Не декомпилировать"
 decom_apk_text_5="Декомпилировать только AndroidManifest.xml"
 decom_apk_text_7="Удалить debug-info в smali"
-
 decom_apk_text_9="Список типов файлов"
 decom_apk_text_10="Декомпилировать только resources.arsc"
 decom_apk_text_11="Декомпилировать ресурсы"
@@ -186,35 +153,19 @@ decom_apk_text_12="Декомпилировать dex в smali"
 decom_apk_text_13="Скопировать оригинальный Manifest.xml"
 decom_apk_text_14="Повторно разделить DEX"
 decom_apk_text_15="У каждого инструмента декомпиляции свои особенности, и процент успешной пересборки тоже различается"
-
-# build apk
 build_apk_text_1="Сортировка и фильтрация текста"
 build_apk_text_2="При пересборке APK могут возникать ошибки; можно обратиться за помощью к искусственному интеллекту для решения проблемы"
-
-# khôi phục sign
 restore_apk_text_1="Импорт файла с оригинальной подписью"
 restore_apk_text_2="Импорт файла для восстановления"
 restore_apk_text_3="Восстановить подпись"
-
-# xáo trộn apk
 distur_apk_text_1="Шифровать ресурсы, чтобы APK было сложнее анализировать"
 distur_apk_text_2="Обфускация"
-
-# khôi phục xáo trộn
 apk_restore_text_1="Восстановить зашифрованные ресурсы APK в читаемый вид"
 apk_restore_text_2="Восстановить"
-
-# hợp nhất apks
 apk_mager_text_1="Преобразовать файл APKS в APK"
 apk_mager_text_2="Объединить APKS"
-
-# Add-ons
-addon_text_1="Ошибка дополнения"
 addon_text_2="После активации выход со страницы дополнений удалит его"
 addon_text_3="Начинается установка дополнения..."
-addon_text_10="Скрывает только дополнения, отображаемые на главной странице; они всё равно будут выполнять код, если есть файл раннего запуска early_start.sh"
-
-# Unpack
 unpack_text_0="Преобразование:"
 unpack_text_1="Извлечение:"
 unpack_text_2="Журнал сохранён в:"
@@ -224,67 +175,38 @@ unpack_text_5="Ошибка декодирования:"
 unpack_text_6="Не декодировано:"
 unpack_text_7="Примечание: при декодировании sparse super он будет только преобразован в raw, после этого его нужно декодировать ещё раз"
 unpack_text_8="Неподдерживаемый формат декодирования:"
-
-# Super
 supers_text_1="Сборка super не удалась!"
 supers_text_2="Super успешно собран"
-
-# Repack
 replag_text_1="Начать декомпиляцию"
 replag_text_2="Выполняется сборка"
-
-# Load
-load_text_1="Подключение данных..."
 load_text_2="Ошибка сети, пожалуйста, проверьте ещё раз"
-
-# APK errors
 apke_text_1="Ошибка декомпиляции APK"
 apke_text_3="Ошибка файла APK"
-
-# APK build
 apkb_text_1="Указать цель:"
-apkb_text_2="Проверка текста..."
-apkb_text_3="Проверка завершена"
 apkb_text_6="Использовать подпись:"
-
-# add lang
 addlang_text_2="Сжать библиотеку"
 addlang_text_3="Если APK установлен в системе, рекомендуется выбрать «Выкл», если в APK есть папка lib; в остальных случаях оставьте значение по умолчанию"
-
-# backup apk
 backups_text_1="Резервное копирование только APK-файлов, данные APKS не сохраняются"
 backups_text_2="Резервное копирование"
 backups_text_3="Приложение"
-
-# cập nhật
 update_text_2="Проверка обновлений..."
 update_text_3="Начало загрузки..."
 update_text_4="Вы используете последнюю версию."
 update_text_5="GitHub"
 update_text_6="Доступна новая версия, пожалуйста, обновите приложение: Настройки > Информация > Обновить"
-
-# dexopt
 dexopt_app_text="Dexopt"
 dexopt_app_text_1="Ускорить запуск приложения"
 dexopt_app_text_2="Все системные пакеты"
 dexopt_app_text_3="Если включить эту опцию, пункт списка приложений выше не будет работать"
-
-# framework auto
 framework_auto_text="Автоматический импорт framework"
-
-# Функции
 use_network_text="Требуется подключение к сети для продолжения загрузки"
 root_warning_text="Для использования функции требуется root"
 deleted_file_text="Удалить исходный файл после завершения"
 deleted_project_text="Удалить проект после завершения сборки"
 google_translate_text="Google Переводчик"
-
-# apex editor
 apex_text="Редактор Apex"
 apex_text_1="Сжать apex в capex"
 apex_text_2="Поддерживаемые файлы: apex, capex"
-
-# other
 build_time_text_1="Время сборки ROM"
 convert_img_text="После завершения сборки продолжить конвертацию"
 list_partition_text="Список декомпилированных разделов"
@@ -292,13 +214,11 @@ xoaoat_text_1="Очистить ART кэш и Odex системы"
 open_activity_text="Открыть папку:"
 patch_text_fscontex="Исправить fs_config и fs_contexts"
 patch_text_fsdesc="Автоматически добавить необходимые разрешения для нового элемента."
-
 config_text_1="Конвертировать существующий проект"
 config_text_2="Создать новый проект или выбрать папку"
-
-# boot
 boot_text_1="Java устанавливается, откройте снова через 1–2 минуты..."
 note_genmini_text="Нажмите на меню с тремя точками в верхнем правом углу, чтобы создать бесплатный API-ключ."
-
+custom_size="Настроить размер"
+custom_size_desc="Добавление или изменение размера по умолчанию для каждого раздела при пересборке; применяется только к ext и f2fs, единица измерения — байты."
 split_number_desc="Введите количество для разделения суперфайла"
 split_number_label="Начиная с номера: 1"
