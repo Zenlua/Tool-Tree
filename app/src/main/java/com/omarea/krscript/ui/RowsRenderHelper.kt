@@ -65,27 +65,51 @@ object RowsRenderHelper {
         rowsView.setOnClickListener { }
 
         // bind() thường được gọi lúc RecyclerView/ListView bind item - tức TRƯỚC khi view được
-        // đo/layout lần đầu (rowsView.width == 0 với view mới inflate). computeToggleLeadingMargin
+        // đo/layout lần đầu (rowsView.width == 0 với view mới inflate). computeGroupLeadingMargin
         // cần width thật để tính margin nên sẽ không tính được ở lần bind đầu này -> đánh dấu để
         // sau khi layout xong thì bind lại 1 lần, tránh rơi về AlignmentSpan cũ (dính lại bug cũ).
         var needsRebindAfterLayout = false
-        // Chỉ chèn "\n" trước 1 row nếu đã có nội dung trước đó - tránh trường hợp row ĐẦU TIÊN
-        // có breakRow/align != normal khiến "\n" bị chèn vào lúc rowsView còn rỗng, tạo ra 1 dòng
-        // trống thừa ở trên cùng (canh phải/giữa mới bị vì mới có "\n" chèn cho cả row đầu).
         var hasContent = false
-        // Row có align != normal (hoặc breakRow) tự tách dòng cho CHÍNH NÓ, nhưng nếu row KẾ TIẾP
-        // không tự yêu cầu tách dòng, nó sẽ bị nối chung 1 paragraph với row trước đó -> tranh chấp
-        // AlignmentSpan/LeadingMarginSpan cấp-paragraph (2 row canh lề khác nhau dính vào 1 dòng).
-        // Theo dõi cờ này để ép tách dòng cho row kế tiếp trong trường hợp đó.
-        var prevRowIsolated = false
+
+        // ----- Gom nhóm nhiều row liền kề vào chung 1 paragraph (1 dòng) - mặc định các row nối
+        // chung dòng với nhau (giống hành vi gốc của "break": không breakRow thì không xuống
+        // dòng), chỉ tách nhóm mới khi row.breakRow/row.line = true. Cả nhóm dùng chung 1 canh lề
+        // (lấy từ row đầu tiên trong nhóm có khai báo align) và margin tính theo TỔNG bề rộng của
+        // cả nhóm - để nhiều row (ví dụ 2 toggle) canh lề chung như 1 khối, thay vì canh lề riêng
+        // từng row (dễ đè/lệch nhau, xem lịch sử: "Vấn đề 2" trong cuộc trò chuyện).
+        // groupStart: vị trí bắt đầu (trong rowsView) của nhóm hiện tại.
+        var groupStart = 0
+        var groupAlign = Layout.Alignment.ALIGN_NORMAL
+        var groupContentWidth = 0f
+
+        // Áp canh lề (margin) cho toàn bộ nhóm [groupStart, groupEnd) - gọi khi 1 nhóm đã đầy đủ
+        // (trước khi bắt đầu nhóm mới, và sau khi vòng lặp kết thúc cho nhóm cuối cùng).
+        fun finalizeGroup(groupEnd: Int) {
+            if (groupEnd <= groupStart || groupAlign == Layout.Alignment.ALIGN_NORMAL) {
+                return
+            }
+            val spannable = rowsView.text as? Spannable ?: return
+            if (rowsView.width == 0) {
+                needsRebindAfterLayout = true
+                spannable.setSpan(AlignmentSpan.Standard(groupAlign), groupStart, groupEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                return
+            }
+            val margin = computeGroupLeadingMargin(rowsView, groupAlign, groupContentWidth)
+            if (margin != null) {
+                spannable.setSpan(LeadingMarginSpan.Standard(margin, margin), groupStart, groupEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            } else {
+                spannable.setSpan(AlignmentSpan.Standard(groupAlign), groupStart, groupEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
 
         for (row in rows) {
             val isToggle = row.toggle == "checkbox" || row.toggle == "switch"
 
             // row.line = true: chèn 1 dòng chỉ chứa đường kẻ mảnh (full chiều rộng) NGAY TRƯỚC
             // nội dung row này, dùng để tách riêng phần rows (hoặc tách nhóm row) trực quan.
-            var skipLeadingBreak = false
+            // Luôn kết thúc nhóm hiện tại (không cho join qua đường kẻ).
             if (row.line) {
+                finalizeGroup(rowsView.length())
                 if (hasContent) {
                     rowsView.append("\n")
                 }
@@ -94,11 +118,35 @@ object RowsRenderHelper {
                 rowsView.append(dividerLine)
                 rowsView.append("\n")
                 hasContent = true
-                skipLeadingBreak = true
+                groupStart = rowsView.length()
+                groupAlign = Layout.Alignment.ALIGN_NORMAL
+                groupContentWidth = 0f
             }
 
-            if (!skipLeadingBreak && hasContent && (row.breakRow || row.align != Layout.Alignment.ALIGN_NORMAL)) {
-                rowsView.append("\n")
+            // Chỉ bắt đầu nhóm/dòng mới khi row.breakRow (hoặc row.line, hoặc chưa có nội dung nào
+            // trước đó) - mặc định (breakRow=false) luôn nối chung dòng với row liền trước, đúng
+            // ngữ nghĩa gốc của "break". Row có align != normal mà không muốn bị row kế tiếp nối
+            // chung dòng thì tự khai báo break = true cho row kế tiếp đó.
+            val startsNewGroup = row.line || row.breakRow || !hasContent
+            if (startsNewGroup) {
+                finalizeGroup(rowsView.length())
+                if (hasContent && !row.line && row.breakRow) {
+                    rowsView.append("\n")
+                }
+                groupStart = rowsView.length()
+                groupAlign = row.align
+                groupContentWidth = 0f
+            } else {
+                // Nối vào nhóm (dòng) hiện tại - lấy canh lề từ row đầu tiên trong nhóm có khai báo align.
+                if (groupAlign == Layout.Alignment.ALIGN_NORMAL && row.align != Layout.Alignment.ALIGN_NORMAL) {
+                    groupAlign = row.align
+                }
+                if (groupContentWidth > 0f) {
+                    // Khoảng cách nhỏ giữa 2 row chung dòng cho dễ nhìn, không dính sát nhau
+                    val gap = "   "
+                    rowsView.append(gap)
+                    groupContentWidth += rowsView.paint.measureText(gap)
+                }
             }
             // Nếu có khai báo "sh": lấy nội dung dòng bằng cách chạy lệnh shell, thay vì dùng "text" tĩnh
             val label = if (row.dynamicTextSh.isNotEmpty()) {
@@ -240,30 +288,25 @@ object RowsRenderHelper {
                 spannableString.setSpan(AbsoluteSizeSpan(row.size, true), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
-            // Android có lỗi/giới hạn: khi 1 paragraph vừa có AlignmentSpan (canh giữa/phải) vừa có
-            // ClickableSpan + ImageSpan (icon toggle), toạ độ chạm (Layout.getOffsetForHorizontal)
-            // tính sai lệch so với vị trí vẽ thật -> bấm đúng icon không nhận, bấm lệch trái mới
-            // nhận. Với row toggle bị canh giữa/phải, thay AlignmentSpan bằng LeadingMarginSpan
-            // (đẩy dòng bằng margin đo thực tế, vẫn giữ ALIGN_NORMAL) để vùng chạm tính đúng.
-            val leadingMargin = if (isToggle && row.align != Layout.Alignment.ALIGN_NORMAL) {
-                if (rowsView.width == 0) {
-                    needsRebindAfterLayout = true
-                    null
-                } else {
-                    computeToggleLeadingMargin(rowsView, row, text, toggleDrawable)
-                }
-            } else {
-                null
-            }
-            if (leadingMargin != null) {
-                spannableString.setSpan(LeadingMarginSpan.Standard(leadingMargin, leadingMargin), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            } else {
-                spannableString.setSpan(AlignmentSpan.Standard(row.align), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-
+            // Canh lề (trái/giữa/phải) giờ được áp dụng 1 LẦN cho cả NHÓM (finalizeGroup), không
+            // set riêng cho từng row nữa - để hỗ trợ nhiều row chung 1 dòng (row.join) và tránh
+            // lỗi AlignmentSpan+ClickableSpan+ImageSpan (xem finalizeGroup/computeGroupLeadingMargin).
             rowsView.append(spannableString)
             hasContent = true
+
+            // Cộng dồn bề rộng đã render của row này vào nhóm, dùng để tính margin canh lề chung.
+            groupContentWidth += if (isToggle && toggleDrawable != null) {
+                val placeholderIndex = text.length - 2
+                val beforeIcon = text.substring(0, placeholderIndex)
+                val afterIcon = text.substring(placeholderIndex + 1)
+                rowsView.paint.measureText(beforeIcon) + toggleDrawable.bounds.width() + rowsView.paint.measureText(afterIcon)
+            } else {
+                rowsView.paint.measureText(text)
+            }
         }
+
+        // Áp canh lề cho nhóm CUỐI CÙNG (vòng lặp không có row nào phía sau để kích hoạt finalizeGroup).
+        finalizeGroup(rowsView.length())
 
         // Chặn crash Editor.touchPositionIsInSelection khi long-press vào vùng text
         // (đã bỏ tính năng copy nội dung khi long-press). Tắt luôn haptic feedback vì Android tự
@@ -341,27 +384,20 @@ object RowsRenderHelper {
         }
     }
 
-    // Tính margin trái để "canh giữa/phải" thủ công cho row toggle (thay AlignmentSpan - xem lý
-    // do ở nơi gọi). Đo bề rộng thực tế: phần chữ dùng paint.measureText, riêng ký tự placeholder
-    // (đã bị ImageSpan thay bằng icon) dùng đúng bề rộng drawable thay vì bề rộng ký tự.
+    // Tính margin trái để "canh giữa/phải" thủ công cho cả 1 NHÓM row (thay AlignmentSpan - xem lý
+    // do ở finalizeGroup). contentWidth là tổng bề rộng đã đo (label + icon nếu có + khoảng cách
+    // giữa các row cùng dòng) của TOÀN BỘ row trong nhóm, do nơi gọi cộng dồn sẵn.
     // Trả về null nếu chưa đo được (view chưa layout xong) để nơi gọi fallback về AlignmentSpan cũ.
-    private fun computeToggleLeadingMargin(rowsView: TextView, row: TextNode.TextRow, text: String, drawable: Drawable?): Int? {
-        if (drawable == null) {
-            return null
-        }
+    private fun computeGroupLeadingMargin(rowsView: TextView, align: Layout.Alignment, contentWidth: Float): Int? {
         val available = rowsView.width - rowsView.paddingLeft - rowsView.paddingRight
         if (available <= 0) {
             return null
         }
-        val placeholderIndex = text.length - 2
-        val beforeIcon = text.substring(0, placeholderIndex)
-        val afterIcon = text.substring(placeholderIndex + 1)
-        val contentWidth = rowsView.paint.measureText(beforeIcon) + drawable.bounds.width() + rowsView.paint.measureText(afterIcon)
         val extra = available - contentWidth
         if (extra <= 0) {
             return null
         }
-        return when (row.align) {
+        return when (align) {
             Layout.Alignment.ALIGN_OPPOSITE -> extra.toInt()
             Layout.Alignment.ALIGN_CENTER -> (extra / 2f).toInt()
             else -> null
