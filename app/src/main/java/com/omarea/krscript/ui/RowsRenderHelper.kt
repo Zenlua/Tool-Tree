@@ -308,19 +308,23 @@ object RowsRenderHelper {
             }
 
             // Canh lề (trái/giữa/phải) giờ được áp dụng 1 LẦN cho cả NHÓM (finalizeGroup), không
-            // set riêng cho từng row nữa - để hỗ trợ nhiều row chung 1 dòng (row.join) và tránh
-            // lỗi AlignmentSpan+ClickableSpan+ImageSpan (xem finalizeGroup/computeGroupLeadingMargin).
+            // set riêng cho từng row nữa - để hỗ trợ nhiều row chung 1 dòng và tránh lỗi
+            // AlignmentSpan+ClickableSpan+ImageSpan (xem finalizeGroup/computeGroupLeadingMargin).
             rowsView.append(spannableString)
             hasContent = true
 
             // Cộng dồn bề rộng đã render của row này vào nhóm, dùng để tính margin canh lề chung.
+            // Phải đo bằng paint mô phỏng ĐÚNG style thật của row (bold/italic/monospace/size) -
+            // không phải paint gốc của rowsView - vì chữ đậm/monospace thường RỘNG HƠN chữ thường,
+            // đo thiếu sẽ khiến margin tính thừa, đẩy cả nhóm lệch quá đà (có thể tràn ra ngoài lề).
+            val measurePaint = measurePaintForRow(rowsView.paint, row)
             groupContentWidth += if (isToggle && toggleDrawable != null) {
                 val placeholderIndex = text.length - 2
                 val beforeIcon = text.substring(0, placeholderIndex)
                 val afterIcon = text.substring(placeholderIndex + 1)
-                rowsView.paint.measureText(beforeIcon) + toggleDrawable.bounds.width() + rowsView.paint.measureText(afterIcon)
+                measurePaint.measureText(beforeIcon) + toggleDrawable.bounds.width() + measurePaint.measureText(afterIcon)
             } else {
-                rowsView.paint.measureText(text)
+                measurePaint.measureText(text)
             }
         }
 
@@ -402,6 +406,33 @@ object RowsRenderHelper {
             b.draw(canvas)
             canvas.restore()
         }
+    }
+
+    // Tạo 1 TextPaint mô phỏng đúng style thật mà row sẽ được vẽ (bold/italic/monospace/size) -
+    // dùng để ĐO bề rộng cho chính xác (xem nơi gọi). Giống hệt cách các Span tương ứng
+    // (StyleSpan/TypefaceSpan/AbsoluteSizeSpan) áp dụng lúc vẽ, chỉ khác là áp trực tiếp lên paint
+    // thay vì gắn Span, để đo mà không cần vẽ thật.
+    private fun measurePaintForRow(basePaint: TextPaint, row: TextNode.TextRow): TextPaint {
+        if (!row.bold && !row.italic && !row.monospace && row.size == -1) {
+            return basePaint
+        }
+        val paint = TextPaint(basePaint)
+        if (row.monospace) {
+            @Suppress("DEPRECATION")
+            paint.typeface = Typeface.MONOSPACE
+        }
+        if (row.bold && row.italic) {
+            paint.typeface = Typeface.create(paint.typeface, Typeface.BOLD_ITALIC)
+        } else if (row.bold) {
+            paint.typeface = Typeface.create(paint.typeface, Typeface.BOLD)
+        } else if (row.italic) {
+            paint.typeface = Typeface.create(paint.typeface, Typeface.ITALIC)
+        }
+        if (row.size != -1) {
+            // AbsoluteSizeSpan(row.size, true) - true nghĩa là đơn vị dp, cần nhân density giống hệt
+            paint.textSize = row.size * paint.density
+        }
+        return paint
     }
 
     // Tính margin trái để "canh giữa/phải" thủ công cho cả 1 NHÓM row (thay AlignmentSpan - xem lý
