@@ -1,6 +1,5 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 
-# Kiểm tra trợ giúp hoặc thiếu tham số
 if [[ "$1" =~ ^(-h|--help)$ ]] || [ -z "$1" ]; then
     echo "Syntax: taive [-#|-w|-s|-a] http://file.zip [path/save.zip]"
     exit 0
@@ -22,9 +21,9 @@ fi
 
 # Thực thi công cụ tải
 case "$FLAG" in
-    -#) curl -# -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
-    -s) curl -s -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
+    -#) curl -# -4 --retry 2 --retry-delay 2 -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
+    -s) curl -s -4 --retry 2 --retry-delay 2 -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
     -a) axel -q -o "$SAVE_PATH" "$1" ;;
     -w) wget --header "$WEBS" --no-check-certificate -O "$SAVE_PATH" "$1" ;;
-     *) curl -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
+     *) curl -4 --retry 2 --retry-delay 2 -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
 esac
