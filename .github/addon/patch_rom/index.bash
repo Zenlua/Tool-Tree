@@ -663,6 +663,7 @@ update_addon() {
     sumcek="$(xem https://api.github.com/repos/Zenlua/Tool-Tree/releases/tags/V1 | jq -r --arg name "${url##*/}" '.assets[] | select(.name == $name) | .digest' | cut -d: -f2)"
     if [[ "$sumcek" != "$(glog sumcek_patch_rom)" ]]; then
       installadd "$url" "${MPAT%/*}" 2>&1 || { echo "$check_update_text_2" >&2; exit 1; }
+      echo
       [ -f $MPAT/changelog.txt ] && cat $MPAT/changelog.txt
     else
       echo "$check_update_text_3"

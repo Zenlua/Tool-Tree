@@ -72,7 +72,7 @@ fi
 
 {
 # Dọn bộ đếm
-rm -fr $AON/*/check $AOK/*/check
+rm -fr $AON/*/zcheck $AOK/*/zcheck
 # Khởi động các file shell ở add-on
 set_permis $AON/*/* $AOK/*/* &>/dev/null
 for vadd in $AON/* $AOK/*; do
