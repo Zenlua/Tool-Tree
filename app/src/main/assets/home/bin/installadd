@@ -59,7 +59,7 @@ else
     rm -f "$TMP/$file_random"
 fi
 
-set_permis -R "$2/$id"
+chmod -R 755 "$2/$id"
 
 if [ -f "$2/$id/install.bash" ]; then
     MPAT="$2/$id" "$2/$id/install.bash"
