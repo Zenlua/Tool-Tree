@@ -103,12 +103,14 @@ install_text="Install app"
 global_mod_text_6="Press and hold the power button to open the reboot menu"
 label_fix_data="Unlock access to Android/data/obb"
 label_xeu_toolbox="Add resetprop"
+string_box_apk="Dial: *#*#46789#*#* to open the app settings."
 
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Bản vá ROM"
     description="Công cụ vá nhanh ROM"
+    string_box_apk="Gõ: *#*#46789#*#* để mở cài đặt ứng dụng"
     project_text="Dự án"
     save_text="Lưu ở:"
     default_text="Mặc định"

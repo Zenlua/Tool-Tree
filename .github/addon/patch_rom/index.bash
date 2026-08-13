@@ -508,6 +508,7 @@ home() {
     [[group.action.params]]
     name = "add_app"
     label = "InstallerX Revived"
+    desc-on = "'$string_box_apk'"
     desc = "'$string_text_2': (CN: product), (global: system)"
     type = "bool"
 
