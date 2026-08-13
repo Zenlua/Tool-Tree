@@ -1604,13 +1604,14 @@ Utilities() {
     name = "from"
     label = "'$super_text_3'"
     value-sh = "glog fromdjfh raw"
-    options-sh = "echo -e \"raw|raw\nsparse|sparse\""
+    options-sh = "echo -e \"raw\nsparse\""
 
     [[group.action.params]]
     name = "super_size"
     label = "'$sizes_text'"
     desc = "'$default_text': 8.5GB"
     type = "number"
+    placeholder = "8.5"
     value-sh = "glog super_sizedj 8.5"
     required = true
 
@@ -1619,6 +1620,7 @@ Utilities() {
     label = "'$super_text_5'"
     desc = "'$super_text_6'"
     value-sh = "glog super_group qti_dynamic_partitions"
+    placeholder = "qti_dynamic_partitions"
     required = true
 
     [[group.action.params]]
