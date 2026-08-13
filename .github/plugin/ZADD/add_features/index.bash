@@ -58,7 +58,7 @@ title = "'$google_text'"
     name = "PTSH"
     title = "'$config_text_1'"
     label = "'$setting_text_3'"
-    options-sh = "findfile for $SDH"
+    options-sh = "findfile for $SDH | grep -v raw"
     value-sh = "glog PTSH"
   [[group.action.params]]
     name = "framework_switch"
