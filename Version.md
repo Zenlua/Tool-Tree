@@ -4,6 +4,7 @@
 
 **Version: 1.5.8 (13-8-2026)**
 
++ Delete all data after the update to avoid conflicts.
 + System optimization, code
 + re-compress super
 + Add an option to enable f2fss compression
