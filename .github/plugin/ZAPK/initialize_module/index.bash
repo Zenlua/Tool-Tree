@@ -40,15 +40,10 @@ echo '
     done
   fi
   
-  echo "id=Tool-Tree
-  name=Tool-Tree Module
-  version=1.0
-  versionCode=100
-  author=Kakathic
-  description=Modified system files" | tee '$path_modun'/module.prop
+  echo -e "id=Tool-Tree\nname=Tool-Tree Module\nversion=1.0\nversionCode=100\nauthor=Kakathic\ndescription=Modified system files" | tee '$path_modun'/module.prop
   touch '$path_modun'/update
   cp -rf '$MPAT'/service.sh '$path_modun2'/service.sh
-  cp -rf '$MPAT'/system.prop '$path_modun2'/system.prop
+  [ -f '$MPAT'/system.prop ] && cp -rf '$MPAT'/system.prop '$path_modun2'/system.prop
   set_permis -R -o 0:0 -c u:object_r:system_file:s0 '$path_modun2'/system
   """
     [[group.action.params]]
