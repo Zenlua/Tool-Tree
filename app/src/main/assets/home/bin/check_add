@@ -14,7 +14,7 @@ if [ ! -f "$1/zcheck" ]; then
       installadd "$url" "${1%/*}" &>/dev/null
       if [ $? == 0 ]; then
         source "$1/Add-on.bash" 2>/dev/null
-        echo > "$1/zcheck"
+        touch "$1/zcheck"
         show_all success \
         "$update_text $flash_text_12: $name $version ($versionCode)"
       else
