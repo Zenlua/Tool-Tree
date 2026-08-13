@@ -1388,6 +1388,7 @@ Utilities() {
   icon = "'`urlpng build`'"
   script = """
     slog dang_nen "$dang_nen"
+    slog on_f2fs_nen "$on_f2fs_nen"
     slog format_imgs "$format_imgs"
     slog boolboxdjh "$boolbox"
     slog dinh_dang "$dinh_dang"
@@ -1426,6 +1427,17 @@ Utilities() {
     options-sh = "echo -e \"0|'$default_text'\n1|RO (EROFS)\n2|RW (EXT4)\n3|RO (F2FS)\n4|RW (F2FS)\""
     depend-on = "IMAGES"
     depend-value = "(erofs),(ext),(f2fs)"
+    depend-mode = "show"
+    depend-default = "hide"
+
+    [[group.action.params]]
+    name = "on_f2fs_nen"
+    label = "'$lall_nen_f2fs_text'"
+    desc = "'$nen_f2fs_text'"
+    type = "switch"
+    value-sh = "glog on_f2fs_nen 0"
+    depend-on = "dinh_dang"
+    depend-value = "(F2FS)"
     depend-mode = "show"
     depend-default = "hide"
 

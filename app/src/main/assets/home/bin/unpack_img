@@ -226,6 +226,9 @@ if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [
         echo "$(stat -c%s "$file_img")" > "$info_size"
         echo "$dang_file" > "$info"
         fsck.f2fs -a "$file_img" &> "$fs_options"
+        if [ -f "$fs_options" ]; then
+        grep -qE 'superblock features.*compression' "$fs_options" 2>/dev/null && slog on_f2fs_nen 1 || slog on_f2fs_nen 0
+        fi
     elif [ "$dang_file" == 'erofs' ]; then
         if [ "$tool_un_erofs" == 1 ]; then
             imgkit_scuti unpack -i "$file_img" -o "$OUTPUT" || killtree "imgkit_scuti extract error"

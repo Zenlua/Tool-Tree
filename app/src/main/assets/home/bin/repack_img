@@ -260,14 +260,20 @@ elif [ "$partition" == "f2fs" ]; then
         mount_dir="/${INPUT##*/}"
     fi
     if [ "$TTBUILDI" == 0 ]; then
-        [ "$(cat "$fs_options" 2>/dev/null | grep 'superblock features' | grep -cm1 ro)" == 1 ] && TTBUILDI=3 || TTBUILDI=4
+    grep -qE 'superblock features.*ro' "$fs_options" 2>/dev/null && TTBUILDI=3 || TTBUILDI=4
+    fi
+    if [ "$(glog on_f2fs_nen)" == 1 ]; then
+    dang_f2fs_nen=",compression"
+    co_f2fs="-c"
     fi
     if [ "$TTBUILDI" == 4 ]; then
-        make_f2fs -g android -O compression,extra_attr -r -w 4096 -l "${INPUT##*/}" -f "$saved" "$size_real" | tee "$TMP/make_f2fs.log" || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
-        sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T "$time_build" -f "$INPUT" -c "$saved" 2>&1 | tee "$TMP/sload_f2fs.log"
+        make_f2fs -g android -O extra_attr$dang_f2fs_nen -r -w 4096 -l "${INPUT##*/}" -f "$saved" "$size_real" | tee "$TMP/make_f2fs.log" || killtree "Error build make_f2fs, log: $TMP/make_f2fs.log" "$saved"
+        echo
+        sload_f2fs $co_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T "$time_build" -f "$INPUT" "$saved" 2>&1 | tee "$TMP/sload_f2fs.log"
     else
-        make_f2fs -t 0 -g android -O ro -r -w 4096 -l "${INPUT##*/}" -f "$saved" "$size_real" | tee "$TMP/make_f2fs.log" || killtree "Error build make_f2fs" "$saved"
-        sload_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T "$time_build" -f "$INPUT" "$saved" 2>&1 | tee "$TMP/sload_f2fs.log"
+        make_f2fs -t 0 -g android -O ro$dang_f2fs_nen -r -w 4096 -l "${INPUT##*/}" -f "$saved" "$size_real" | tee "$TMP/make_f2fs.log" || killtree "Error build make_f2fs" "$saved"
+        echo
+        sload_f2fs $co_f2fs -t "$mount_dir" -C "$fs_config" -s "$file_contexts" -T "$time_build" -f "$INPUT" "$saved" 2>&1 | tee "$TMP/sload_f2fs.log"
     fi
     [ "$(grep -cm1 'Done:' "$TMP/sload_f2fs.log" 2>/dev/null)" == 0 ] && killtree "Error build sload_f2fs, Suggestion: Increase free MB" "$saved"
     [ -f "$INPUT/system/build.prop" ] && rm -f "$file_contexts" "$fs_config"
@@ -281,8 +287,7 @@ elif [ "$partition" == "ext" ]; then
     else
         size_orig="$(echo "$size_orig * 1.1" | bc | cut -d. -f1)"
     fi
-    inodes=$(find "$INPUT" | wc -l)
-    inodes=$(( inodes + 64 ))
+    inodes=$(( $(find "$INPUT" | wc -l) + 64 ))
     if [ "$SAINEN" == 0 ] && [ "$info_type" == "ext" ] && [ -f "$info_size" ]; then
         if [ "$tool_ext" == 1 ]; then
             size="$(echo "$size_real / 4096" | bc)"
