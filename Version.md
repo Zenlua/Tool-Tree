@@ -2,6 +2,16 @@
 
 + **[Download](https://github.com/Zenlua/Tool-Tree/releases/latest)**
 
+**Version: 1.5.8 (13-8-2026)**
+
++ System optimization, code
++ re-compress super
++ Add an option to enable f2fss compression
++ Upgrade app support process loading
++ Modify the Add-on menu options
++ Change some effects
++ Fix some code
+
 **Version: 1.5.7 (7-8-2026)**
 
 + Fix some reported bugs.
