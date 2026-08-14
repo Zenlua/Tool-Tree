@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadTabs() {
         progressBarDialog.showDialog(getString(R.string.please_wait))
-        
+
         lifecycleScope.launch(Dispatchers.IO) {
             val favorites = getItems(krScriptConfig.favoriteConfig)
             val pages = getItems(krScriptConfig.pageListConfig)
@@ -96,6 +96,10 @@ class MainActivity : AppCompatActivity() {
             if (!isActive) return@launch
 
             withContext(Dispatchers.Main) {
+                // Activity/View có thể đã bị huỷ trong lúc đọc file config ở IO thread
+                // (xoay màn hình, bấm back...). Không đụng vào UI nữa nếu điều đó xảy ra.
+                if (isFinishing || isDestroyed || !::adapter.isInitialized) return@withContext
+
                 progressBarDialog.hideDialog()
                 val theme = ThemeModeState.getThemeMode()
 
@@ -110,12 +114,16 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                updateTab(0, favorites, R.string.tab_favorites, krScriptConfig.favoriteConfig, true)
-                updateTab(1, pages, R.string.tab_pages, krScriptConfig.pageListConfig, false)
-                updateTab(2, tab3Items, R.string.tab_custom3, krScriptConfig.customTab3Config, false)
-                updateTab(3, tab4Items, R.string.tab_custom4, krScriptConfig.customTab4Config, false)
+                try {
+                    updateTab(0, favorites, R.string.tab_favorites, krScriptConfig.favoriteConfig, true)
+                    updateTab(1, pages, R.string.tab_pages, krScriptConfig.pageListConfig, false)
+                    updateTab(2, tab3Items, R.string.tab_custom3, krScriptConfig.customTab3Config, false)
+                    updateTab(3, tab4Items, R.string.tab_custom4, krScriptConfig.customTab4Config, false)
 
-                setupTabs()
+                    setupTabs()
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "loadTabs UI update failed", e)
+                }
             }
         }
     }
@@ -130,12 +138,18 @@ class MainActivity : AppCompatActivity() {
             if (!isActive) return@launch
 
             withContext(Dispatchers.Main) {
+                if (isFinishing || isDestroyed || !::adapter.isInitialized) return@withContext
+
                 val theme = ThemeModeState.getThemeMode()
-                
-                favorites?.let { adapter.getFragment(0)?.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), theme) }
-                pages?.let { adapter.getFragment(1)?.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), theme) }
-                tab3Items?.let { adapter.getFragment(2)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), theme) }
-                tab4Items?.let { adapter.getFragment(3)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), theme) }
+
+                try {
+                    favorites?.let { adapter.getFragment(0)?.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), theme) }
+                    pages?.let { adapter.getFragment(1)?.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), theme) }
+                    tab3Items?.let { adapter.getFragment(2)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), theme) }
+                    tab4Items?.let { adapter.getFragment(3)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), theme) }
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "reloadTabs UI update failed", e)
+                }
             }
         }
     }
@@ -155,8 +169,9 @@ class MainActivity : AppCompatActivity() {
                 3 -> R.drawable.tab_custom4
                 else -> R.drawable.tab_home
             }
+            val icon = getDrawable(iconRes) ?: continue
             val tab = binding.tabLayout.newTab()
-            tab.customView = tabHelper.createTabView(title, getDrawable(iconRes)!!, position == binding.viewPager.currentItem)
+            tab.customView = tabHelper.createTabView(title, icon, position == binding.viewPager.currentItem)
             binding.tabLayout.addTab(tab)
         }
 
