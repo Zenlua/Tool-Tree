@@ -19,7 +19,12 @@ echo "  set_permis -R dir"
 echo "  set_permis -v -o system:system bin/tool"
 }
 
+context="$(glog context_macdinh)"
+if [ -z "$context" ]; then
 context="$(ls -Zd $HOME 2>/dev/null | awk '{print $1}')"
+slog context_macdinh "$context"
+fi
+
 while [ $# -gt 0 ]; do
     case "$1" in
         -o|--owner)
