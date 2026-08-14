@@ -498,7 +498,7 @@ home() {
   [[group.action]]
   title = "'$add_another_app_text'"
   summary = "Xiaomi"
-  warn = "'$add_another_app_text_2', '$add_another_app_text_3'"
+  warn = "'$add_another_app_text_3'"
   script = """
     '$pathsh' online_app
     echo
@@ -508,7 +508,7 @@ home() {
     [[group.action.params]]
     name = "add_app"
     label = "InstallerX Revived"
-    desc-on = "'$string_box_apk'"
+    desc-on = "'$add_another_app_text_2'"
     desc = "'$string_text_2': (CN: product), (global: system)"
     type = "bool"
 
