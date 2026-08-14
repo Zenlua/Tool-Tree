@@ -605,7 +605,8 @@ test_app() {
 
   if [ "$(echo "$1" | grep -cm1 "$SDC")" == 1 ]; then
     [ -d $TMP/app ] && rm -fr $TMP/app
-    mkdir -p $TMP/app
+    mkdir -p $TMP/app/lib/arm64
+    unzip -oqj "$1" lib/arm64*/*.so -d $TMP/app/lib/arm64 &>/dev/null
     cp -rf "$1" "$TMP/app/${urlapk##*/}"
     tep_apk="$TMP/app/${urlapk##*/}"
   else
@@ -628,6 +629,9 @@ test_app() {
     primmsg='u:object_r:system_file:s0'
     path_apk="${urlapk%/*}"
     goc_apk="${tep_apk%/*}"
+    if [ -d "$path_apk/lib" ] && [ -f "$TMP/app/${urlapk##*/}" ]; then
+      cp -af "$path_apk/lib" "$TMP/app"
+    fi
   fi
 
   su -mm -c umount -l "$path_apk" 2>/dev/null
@@ -653,6 +657,7 @@ test_app() {
   su -mm -c umount -l "$path_apk" 2>/dev/null
   killall $package_apk >/dev/null 2>&1
   [ "$kill_customize" ] && killall $kill_customize >/dev/null 2>&1
+  [ -d $TMP/app ] && rm -fr $TMP/app
 }
 
 # check update add-on
