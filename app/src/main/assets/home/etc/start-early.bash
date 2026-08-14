@@ -26,9 +26,16 @@ check_update boot &
 # Cấp quyền tự động nếu đã root
 if [ "$ROT" == 1 ]; then
     chown -R 0:0 $HOME/.cache
+
     # Tạo link home
-    [ -e /data/local/TOOL ] || ln -sf $APK /data/local/TOOL
-    [ -e /data/local/TREE ] || ln -sf $SDH /data/local/TREE
+    if [ ! -e /data/local/TOOL ]; then
+      set_permis -R /data/local/TOOL
+      ln -sf $APK /data/local/TOOL
+    fi
+    if [ ! -e /data/local/TREE ]; then
+      set_permis -R /data/local/TREE
+      ln -sf $SDH /data/local/TREE
+    fi
 
     # Thêm không giới hạn tiết kiệm pin
     dumpsys deviceidle whitelist +$PACKAGE_NAME &>/dev/null
@@ -52,8 +59,15 @@ if [ "$ROT" == 1 ]; then
     search_image &>/dev/null
 else
 rish -c "
-    [ -e /data/local/TOOL ] || ln -sf '$APK' /data/local/TOOL
-    [ -e /data/local/TREE ] || ln -sf '$SDH' /data/local/TREE
+    # Tạo link home
+    if [ ! -e /data/local/TOOL ]; then
+      set_permis -R /data/local/TOOL
+      ln -sf $APK /data/local/TOOL
+    fi
+    if [ ! -e /data/local/TREE ]; then
+      set_permis -R /data/local/TREE
+      ln -sf $SDH /data/local/TREE
+    fi
     dumpsys deviceidle whitelist +$PACKAGE_NAME &>/dev/null
     am set-inactive --user 0 $PACKAGE_NAME false &>/dev/null
     am set-standby-bucket $PACKAGE_NAME active &>/dev/null
