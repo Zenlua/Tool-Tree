@@ -16,7 +16,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build add-on
         run: |
-          VER=$(grep -m1 'versionName ' app/build.gradle | cut -d'"' -f2)
           for vv in .github/addon/*; do
             [ -d "$vv" ] || continue
             echo "Processing: $vv"
@@ -24,7 +23,7 @@ jobs:
             cd "$vv"
             . ./Add-on.bash
             find . -exec touch -d "2026-01-01 00:00:00" {} +
-            7z a -t7z -mmt=off -mtc=off -mta=off -y /home/runner/${vv##*/}_$VER.add
+            7z a -t7z -mmt=off -mtc=off -mta=off -y /home/runner/${vv##*/}_$versionCode.add
             )
           done
 
