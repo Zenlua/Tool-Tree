@@ -114,7 +114,7 @@ case "$LANGUAGE-$COUNTRY" in
     default_text="Mặc định"
     string_text_1="Mục đầu vào ở"
     version_text="Phiên bản hiện tại"
-    string_text_2="Phân vùng đã giải mã"
+    string_text_2="Yêu cầu phân vùng"
     select_text="Lựa chọn"
     network_text="Vui lòng kết nối mạng !"
     desc_ime_app="Ứng dụng bàn phím"
