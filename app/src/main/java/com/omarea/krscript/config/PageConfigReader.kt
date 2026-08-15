@@ -652,7 +652,8 @@ class PageConfigReader {
         }
         tomlGet(table, "mime")?.let { p.mime = it.lowercase(getDefault()) }
         tomlGet(table, "path-home", "home-path", "pathhome")?.let { p.pathHome = it.trim() }
-        tomlGet(table, "readonly")?.let { raw ->
+        val readonlyRaw = tomlGet(table, "readonly")
+        readonlyRaw?.let { raw ->
             // ========== FIX: readonly dạng shell không còn chạy NGAY lúc parse trang ==========
             // Trước đây gọi thẳng resolveBoolOrShell() -> executeResultRoot() ngay tại đây,
             // nghĩa là readonly="...lệnh shell..." bị thực thi ngay khi mở trang/menu (lúc
@@ -674,12 +675,18 @@ class PageConfigReader {
             }
         }
         // ========== TÍNH NĂNG MỚI: sort (chỉ dùng được cùng readonly) ==========
-        // Ép về false nếu param không khai báo readonly dưới bất kỳ hình thức nào (không phải
-        // readonly="true" tĩnh, cũng không phải readonly="lệnh shell" qua readonlySh) - dù file
-        // cấu hình có khai báo sort="true" đi nữa, vì sort chỉ có ý nghĩa với param có thể trở
-        // thành readonly (xám). Lưu ý: đặt SAU khối "readonly" ở trên để p.readonly/p.readonlySh
-        // đã được gán xong.
-        tomlGet(table, "sort")?.let { p.sort = (p.readonly || !p.readonlySh.isNullOrEmpty()) && tomlTruthy(it) }
+        // ========== SỬA LỖI: điều kiện cũ sai - bắt buộc GIÁ TRỊ hiện tại phải là true ==========
+        // Trước đây dùng "(p.readonly || !p.readonlySh.isNullOrEmpty())" - nghĩa là chỉ mục
+        // ĐANG readonly=true mới được chấp nhận sort=true. Điều đó SAI vì các mục "sáng"
+        // (readonly="false" hoặc căn bản không có readonly=true) - chính là các mục cần được
+        // dồn LÊN TRÊN - sẽ không bao giờ đủ điều kiện tham gia nhóm sort, khiến nhóm chỉ toàn
+        // mục xám, không có gì để đối chiếu, tính năng gần như vô dụng.
+        // Đúng như depend-sort (chỉ cần đã khai báo depend-readonly=true - một MODE FLAG, không
+        // quan tâm điều kiện hiện tại đúng/sai), ở đây điều kiện đúng phải là: param có khai báo
+        // thuộc tính "readonly" trong config hay KHÔNG (bất kể giá trị true/false/shell) - tức
+        // là param đó đang "tham gia hệ thống readonly" của dòng cấu hình, không phải đang thực
+        // sự bị khóa hay không tại thời điểm parse.
+        tomlGet(table, "sort")?.let { p.sort = (readonlyRaw != null) && tomlTruthy(it) }
         tomlGet(table, "maxlength")?.let { p.maxLength = it.trim().toIntOrNull() ?: p.maxLength }
         tomlGet(table, "min")?.let { p.min = it.trim().toIntOrNull() ?: p.min }
         tomlGet(table, "max")?.let { p.max = it.trim().toIntOrNull() ?: p.max }
