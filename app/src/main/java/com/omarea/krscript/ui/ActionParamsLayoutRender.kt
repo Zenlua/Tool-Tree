@@ -190,6 +190,12 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             }
         }
 
+        // ========== TÍNH NĂNG MỚI: sort = true (readonly TĨNH) - CHỈ CHẠY 1 LẦN ==========
+        // Chạy TRƯỚC initializeDependencyStates()/evaluateDependencies() vì readonly tĩnh đã
+        // được xác định xong (xem ActionListFragment) và không đổi lại trong suốt phiên dialog,
+        // nên không cần (và không nên) tính lại mỗi lần depend-* đánh giá lại như depend-sort.
+        applyStaticReadonlySort()
+
         // ========== TÍNH NĂNG MỚI: ĐẶT TRẠNG THÁI KHỞI ĐỘNG ==========
         initializeDependencyStates()
         evaluateDependencies()
@@ -450,16 +456,56 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             .filter { it.dependSort && it.dependReadonly && it.name != null }
             .map { it.name!! }
 
-        if (sortableNames.isEmpty()) return
-
         // Trạng thái "sáng" (đủ điều kiện) hiện tại của từng hàng tham gia sort. Dùng
         // visibilityState (đã ghi ở applyVisibility phía trên trong CÙNG lượt đánh giá này)
         // kết hợp readonly tĩnh - đúng công thức effectiveEnabled trong applyVisibility().
-        fun isBright(name: String): Boolean {
-            val info = currentParamInfos.find { it.name == name } ?: return true
+        reorderRowGroup(sortableNames) { name ->
+            val info = currentParamInfos.find { it.name == name } ?: return@reorderRowGroup true
             val shouldShow = visibilityState[name] ?: true
-            return shouldShow && info.readonly != true
+            shouldShow && info.readonly != true
         }
+    }
+
+    // ========== TÍNH NĂNG MỚI: sort = true (dùng với readonly TĨNH, không phải depend-readonly) ==========
+    // Khác với depend-sort (đánh giá lại MỖI LẦN người dùng đổi 1 param khác vì trạng thái
+    // readonly phụ thuộc điều kiện động), "readonly" tĩnh (kể cả kết quả từ readonlySh) chỉ
+    // được xác định ĐÚNG 1 LẦN trước khi renderList() chạy (xem ActionListFragment - readonly
+    // đã được gán xong từ shellResults trước khi gọi renderList) và không đổi lại trong suốt
+    // phiên dialog đang mở. Vì vậy chỉ cần sắp xếp 1 LẦN DUY NHẤT ngay sau khi toàn bộ hàng đã
+    // được thêm vào layout (gọi trong renderList(), TRƯỚC initializeDependencyStates() /
+    // evaluateDependencies() - để depend-sort nếu có chạy sau đó xử lý tiếp trên thứ tự đã ổn
+    // định này, và không animate vì đây là lúc dialog vừa mở, chưa có gì để animate).
+    //
+    // Cách dùng trong config (row.toml):
+    //   readonly = "true"      (hoặc readonly = "shell...")
+    //   sort = "true"
+    // -> Mục nào readonly = true (xám, chỉ đọc) bị dồn xuống dưới cùng nhóm các mục có
+    //    sort = true; mục readonly = false (sáng, tương tác được) dồn lên trên cùng nhóm.
+    private fun applyStaticReadonlySort() {
+        val sortableNames = currentParamInfos
+            .filter { it.sort && it.name != null }
+            .map { it.name!! }
+
+        reorderRowGroup(sortableNames) { name ->
+            val info = currentParamInfos.find { it.name == name } ?: return@reorderRowGroup true
+            info.readonly != true
+        }
+    }
+
+    // ========== TÍNH NĂNG MỚI: SẮP XẾP LẠI 1 NHÓM HÀNG (dùng chung cho depend-sort & sort) ==========
+    // Trong số các hàng có tên nằm trong `sortableNames`, dồn hàng mà `isBright(name)` trả về
+    // true lên phía TRÊN nhóm, dồn hàng trả về false xuống phía DƯỚI nhóm - giữ nguyên thứ tự
+    // tương đối giữa các hàng cùng trạng thái (stable).
+    //
+    // QUAN TRỌNG: chỉ hoán đổi vị trí NỘI BỘ trong đúng những "slot" (chỉ số con trong
+    // linearLayout) mà chính nhóm sortableNames đang chiếm giữ - các hàng KHÔNG nằm trong nhóm
+    // đứng yên tuyệt đối, không bị nhóm sort "nhảy qua mặt". Cách làm: duyệt toàn bộ danh sách
+    // con hiện có của linearLayout đúng 1 lần, hàng nào KHÔNG thuộc nhóm thì giữ nguyên, hàng
+    // nào CÓ thuộc nhóm thì được thay bằng phần tử tiếp theo lấy từ danh sách đã sắp xếp - đảm
+    // bảo không bỏ sót hàng cuối cùng (bug thường gặp khi chỉ so sánh/hoán đổi từng cặp liền kề,
+    // dừng sớm ở gần cuối danh sách thay vì xét toàn bộ nhóm).
+    private fun reorderRowGroup(sortableNames: List<String>, isBright: (String) -> Boolean) {
+        if (sortableNames.isEmpty()) return
 
         // Thứ tự MONG MUỐN của riêng nhóm sortable: sáng trước, xám sau, ổn định theo thứ tự
         // khai báo gốc trong nhóm (sortedBy của Kotlin là stable sort).

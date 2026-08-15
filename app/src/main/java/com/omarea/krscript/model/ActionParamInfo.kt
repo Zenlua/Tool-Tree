@@ -47,6 +47,21 @@ class ActionParamInfo {
     // Kịch bản shell kiểm tra readonly (nếu có, sẽ được gộp chạy cùng value-sh/options-sh
     // khi mở dialog action, giống valueShell - KHÔNG chạy ngay lúc parse trang nữa)
     var readonlySh: String? = null
+
+    // ========== TÍNH NĂNG MỚI: DỒN MỤC readonly (TĨNH) XUỐNG DƯỚI (sort) ==========
+    // Giống depend-sort nhưng dùng cho readonly TĨNH (khai báo readonly="true"/"false" hoặc
+    // readonly="lệnh shell" qua readonlySh) thay vì depend-readonly (readonly phụ thuộc điều
+    // kiện của param khác, thay đổi động trong lúc dialog đang mở).
+    //
+    // Mặc định: false (tắt) - giữ đúng thứ tự khai báo trong file cấu hình như trước đây.
+    //
+    // Khi bật (true): trong số các param có sort="true", param nào readonly=false (sáng, có
+    // thể bấm/nhập) được dồn lên phía TRÊN CÙNG của nhóm; param nào readonly=true (xám, chỉ
+    // đọc) bị dồn xuống phía DƯỚI CÙNG của nhóm. Thứ tự tương đối GIỮA các param cùng trạng
+    // thái được giữ nguyên như thứ tự khai báo gốc (sắp xếp ổn định - stable sort). Vì readonly
+    // tĩnh chỉ được xác định 1 lần trước khi dialog hiện ra (không đổi lại trong lúc dialog mở),
+    // việc sắp xếp này cũng chỉ thực hiện ĐÚNG 1 LẦN lúc dựng layout - không animate.
+    var sort: Boolean = false
     var options: ArrayList<SelectItem>? = null
     var optionsFromShell: ArrayList<SelectItem>? = null
     var optionsSh = ""

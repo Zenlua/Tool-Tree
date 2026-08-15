@@ -673,6 +673,13 @@ class PageConfigReader {
                 }
             }
         }
+        // ========== TÍNH NĂNG MỚI: sort (chỉ dùng được cùng readonly) ==========
+        // Ép về false nếu param không khai báo readonly dưới bất kỳ hình thức nào (không phải
+        // readonly="true" tĩnh, cũng không phải readonly="lệnh shell" qua readonlySh) - dù file
+        // cấu hình có khai báo sort="true" đi nữa, vì sort chỉ có ý nghĩa với param có thể trở
+        // thành readonly (xám). Lưu ý: đặt SAU khối "readonly" ở trên để p.readonly/p.readonlySh
+        // đã được gán xong.
+        tomlGet(table, "sort")?.let { p.sort = (p.readonly || !p.readonlySh.isNullOrEmpty()) && tomlTruthy(it) }
         tomlGet(table, "maxlength")?.let { p.maxLength = it.trim().toIntOrNull() ?: p.maxLength }
         tomlGet(table, "min")?.let { p.min = it.trim().toIntOrNull() ?: p.min }
         tomlGet(table, "max")?.let { p.max = it.trim().toIntOrNull() ?: p.max }
