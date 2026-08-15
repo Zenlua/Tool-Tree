@@ -337,6 +337,39 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         return identifiers
     }
 
+    // ========== TÍNH NĂNG MỚI: KHỚP depend-value KIỂU WILDCARD (*, ?) ==========
+    // Trước đây depend-value bắt buộc phải trùng KHỚP TUYỆT ĐỐI với giá trị đọc được (vd:
+    // "sdcard: MIUISecurityCenter.apk") - chỉ cần khác 1 ký tự (khác đường dẫn, khác phiên
+    // bản...) là coi như không khớp. Giờ cho phép dùng "*" (khớp 0-nhiều ký tự bất kỳ) và "?"
+    // (khớp đúng 1 ký tự bất kỳ) trong depend-value, ví dụ:
+    //   depend-value = "*SecurityCenter*"     -> chỉ cần chứa "SecurityCenter" ở bất kỳ đâu
+    //   depend-value = "*Security*.apk"       -> chứa "Security", kết thúc bằng ".apk"
+    // Value KHÔNG chứa "*" hoặc "?" thì vẫn so khớp CHÍNH XÁC như cũ (giữ nguyên hành vi cũ,
+    // tránh vô tình đổi hành vi của toàn bộ config đã viết từ trước).
+    private fun matchesWanted(pattern: String, identifiers: Set<String>): Boolean {
+        if (!pattern.contains('*') && !pattern.contains('?')) {
+            return identifiers.contains(pattern)
+        }
+        val regex = globToRegex(pattern)
+        return identifiers.any { regex.matches(it) }
+    }
+
+    // Chuyển pattern kiểu wildcard shell (*, ?) sang Regex, escape mọi ký tự "đặc biệt" của
+    // regex khác (đặc biệt là dấu "." rất hay gặp trong tên file như ".apk") để chúng được
+    // hiểu là ký tự thường, không phải cú pháp regex.
+    private fun globToRegex(pattern: String): Regex {
+        val sb = StringBuilder("^")
+        for (c in pattern) {
+            when (c) {
+                '*' -> sb.append(".*")
+                '?' -> sb.append('.')
+                else -> sb.append(Regex.escape(c.toString()))
+            }
+        }
+        sb.append('$')
+        return Regex(sb.toString())
+    }
+
     // ========== TÍNH NĂNG MỚI: ĐÁNH GIÁ PHỤ THUỘC NÂNG CẤP (có depend-cascade) ==========
     private fun evaluateDependencies() {
         // Trạng thái TRƯỚC lượt đánh giá này - dùng để phát hiện thay đổi thật sự và quyết
@@ -521,7 +554,7 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
 
             val wantedRaw = dependValueList.getOrNull(i) ?: dependValueList.lastOrNull() ?: ""
             val wanted = wantedRaw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-            val matched = wanted.isEmpty() || wanted.any { currentIdentifiers.contains(it) }
+            val matched = wanted.isEmpty() || wanted.any { matchesWanted(it, currentIdentifiers) }
 
             val mode = (dependModeList.getOrNull(i) ?: dependModeList.lastOrNull() ?: "show").trim()
             val wantShow = if (mode == "hide") !matched else matched

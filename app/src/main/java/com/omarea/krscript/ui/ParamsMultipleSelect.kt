@@ -95,14 +95,20 @@ class ParamsMultipleSelect(
         val resultValueStr = "" + resultValues.joinToString(actionParamInfo.separator)
         val resultLabelStr = if (resultLables.isNotEmpty()) "" + resultLables.joinToString("，") else ""
 
-        // Giữ nguyên tính năng cũ: Nếu có lựa chọn thì gán text, nếu không có và danh sách trống thì hiện hint
+        // Giữ nguyên tính năng cũ: Nếu có lựa chọn thì gán text, nếu không có thì hiện hint phù hợp
         if (resultLabelStr.isNotEmpty()) {
             textView.text = resultLabelStr
             textView.hint = null
         } else {
             textView.text = ""
-            if (options.isNullOrEmpty()) {
-                textView.hint = context.getString(R.string.picker_not_item)
+            // ========== SỬA LỖI: bỏ chọn hết không hiện "Vui lòng chọn" ==========
+            // Trước đây chỉ set hint khi options rỗng hoàn toàn (không có tùy chọn nào để
+            // chọn) -> trường hợp CÓ tùy chọn nhưng người dùng bỏ chọn hết bị bỏ sót, khiến
+            // ô hiển thị trống trắng, không rõ là "chưa chọn gì" hay đang lỗi.
+            textView.hint = if (options.isNullOrEmpty()) {
+                context.getString(R.string.picker_not_item)
+            } else {
+                context.getString(R.string.kr_please_select)
             }
         }
         

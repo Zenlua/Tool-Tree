@@ -179,19 +179,37 @@ home() {
     label = "'$label_fix_apksign'"
     desc = "'$required_files_text': framework.jar, services.jar, miui-services.jar"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "miui-services.jar,services.jar,framework.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "tool_box"
     label = "'$label_fix_toolbox'"
     desc = "'$required_files_text': framework.jar, services.jar"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "framework.jar,services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "fix_enforce"
     label = "'$label_fix_enforce'"
     desc = "'$required_files_text': miui-services.jar"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "miui-services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
   [[group.action]]
   title = "'$title_cn_global'"
   warn = "'$warning_notes_text'"
@@ -216,48 +234,96 @@ home() {
     label = "'$label_fix_noti'"
     desc = "'$required_files_text': miui-framework.jar, miui-services.jar, PowerKeeper.apk, MiuiSystemUI.apk"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "MiuiSystemUI.apk,PowerKeeper.apk,miui-framework.jar,miui-services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "settings_infor"
     label = "'$global_mod_text_1'"
     desc = "'$required_files_text': Settings.apk"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "Settings.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "settings_show"
     label = "'$global_mod_text_2'"
     desc = "'$required_files_text': Settings.apk"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "Settings.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "settings_icons"
     label = "'$global_mod_text_3'"
     desc = "'$required_files_text': Settings.apk"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "Settings.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "sceen_lock"
     label = "'$global_mod_text_6'"
     desc = "'$required_files_text': MiuiSystemUI.apk"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "MiuiSystemUI.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "dark_show"
     label = "'$global_mod_text_4'"
     desc = "'$required_files_text': miui-services.jar"
     type = "bool"
+    depend = "FILE"
+    depend-value = "miui-services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
     
     [[group.action.params]]
     name = "open_app"
     label = "'$open_app_text'"
     desc = "'$required_files_text': miui-services.jar"
     type = "bool"
+    depend = "FILE"
+    depend-value = "miui-services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
     
     [[group.action.params]]
     name = "font_fix"
     label = "'$global_mod_text_5'"
     desc = "'$required_files_text': miui-framework.jar"
     type = "bool"
+    depend = "FILE"
+    depend-value = "miui-framework.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
 
   [[group.action]]
   title = "'$title_ime'"
@@ -342,49 +408,96 @@ home() {
     label = "'$label_fix_screen'"
     desc = "'$required_files_text': miui-services.jar, services.jar"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "*services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "fix_fps"
     label = "'$label_fix_fps'"
     desc = "'$required_files_text': PowerKeeper.apk"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "PowerKeeper.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "fix_reset_theme"
     label = "'$label_fix_reset_theme'"
     desc = "'$required_files_text': miui-framework.jar"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "miui-framework.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "fix_show_error"
     label = "'$label_fix_show_error'"
     desc = "'$required_files_text': services.jar"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "fix_fpscam"
     label = "'$label_fix_fps_cam'"
     desc = "'$required_files_text': miui-services.jar"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "miui-services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "fix_window"
     label = "'$label_fix_window'"
     desc = "'$required_files_text': miui-services.jar, miui-framework.jar"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "miui-framework.jar,miui-services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "app_setup"
     label = "'$install_text' SetupWizard"
     desc = "'$required_files_text': miui-services.jar"
     type = "bool"
+    depend = "FILE"
+    depend-value = "miui-services.jar"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
     
     [[group.action.params]]
     name = "fix_data"
     label = "'$label_fix_data'"
     desc = "'$required_files_text': ExternalStorageProvider.apk"
     type = "bool"
-    
+    depend = "FILE"
+    depend-value = "ExternalStorageProvider.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
     
   [[group.action]]
   title = "'$title_app_patch'"
@@ -395,7 +508,7 @@ home() {
     '$pathsh' fixapps "$FILE"
     checktime
   """
-
+    
     [[group.action.params]]
     name = "FILE"
     title = "'$list_file_text'"
@@ -410,43 +523,85 @@ home() {
     label = "'$label_fix_themes'"
     desc = "'$required_files_text': ThemeManager.apk"
     type = "bool"
+    depend = "FILE"
+    depend-value = "*ThemeManager.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
 
     [[group.action.params]]
     name = "fix_appvault"
     label = "'$label_fix_appvault'"
     desc = "'$required_files_text': PersonalAssistant.apk"
     type = "bool"
+    depend = "FILE"
+    depend-value = "*PersonalAssistant*"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
 
     [[group.action.params]]
     name = "fix_thoit"
     label = "'$label_fix_thoit'"
     desc = "'$required_files_text': MIUIWeather.apk"
     type = "bool"
+    depend = "FILE"
+    depend-value = "*Weather.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
 
     [[group.action.params]]
     name = "fix_joyose"
     label = "'$label_fix_joyose'"
     desc = "'$required_files_text': Joyose.apk"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "Joyose.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "fix_mapcn"
     label = "'$label_fix_mapcn'"
     desc = "'$required_files_text': MIUIGallery.apk"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "*Gallery.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "fix_gmscn"
     label = "'$label_fix_gmscn'"
     desc = "'$required_files_text': Provision.apk"
     type = "bool"
-
+    depend = "FILE"
+    depend-value = "Provision.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
     [[group.action.params]]
     name = "fix_off_10s"
     label = "'$label_fix_off_10s'"
     desc = "'$required_files_text': SecurityCenter.apk"
     type = "bool"
-
+    depend-on = "FILE"
+    depend-value = "*SecurityCenter.apk"
+    depend-mode = "show"
+    depend-readonly = "true"
+    depend-sort = "true"
+    depend-default = "hide"
+    
 [[group]]
   [[group.action]]
   title = "'"$action_title"'"
