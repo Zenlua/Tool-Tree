@@ -166,6 +166,28 @@ class ActionParamInfo {
     //           thay vì biến mất như mặc định.
     var dependReadonly: Boolean = false
 
+    // ========== TÍNH NĂNG MỚI: DỒN MỤC ĐANG KHÓA XUỐNG DƯỚI (depend-sort) ==========
+    // CHỈ có tác dụng khi dependReadonly = true (bắt buộc phải đi kèm depend-readonly="true").
+    // Nếu param khai báo depend-readonly="false" (hoặc không khai báo) mà vẫn đặt
+    // depend-sort="true" thì depend-sort sẽ bị BỎ QUA (ép về false) - vì sort chỉ có ý nghĩa
+    // với các mục "khóa tại chỗ" (vẫn hiện, chỉ mờ đi), không áp dụng được cho mục bị ẩn hẳn
+    // (View.GONE không có khái niệm "dồn xuống dưới", vì nó không chiếm chỗ trên layout).
+    //
+    // Mặc định: false (tắt) - giữ đúng thứ tự khai báo trong file cấu hình như trước đây.
+    //
+    // Khi bật (true): trong số các param có depend-sort="true", param nào đang THỎA điều
+    // kiện (sáng, có thể bấm/nhập) sẽ được dồn lên phía TRÊN CÙNG của nhóm; param nào đang
+    // bị khóa (xám, depend-readonly kích hoạt vì điều kiện không thỏa) sẽ bị dồn xuống phía
+    // DƯỚI CÙNG của nhóm. Thứ tự tương đối GIỮA các param cùng trạng thái (cùng sáng hoặc
+    // cùng xám) được giữ nguyên như thứ tự khai báo gốc (sắp xếp ổn định - stable sort).
+    // Các param KHÔNG khai báo depend-sort="true" (kể cả khi có depend-readonly) đứng yên,
+    // không bị xáo trộn vị trí và cũng không "chiếm chỗ" của nhóm đang sort - nhóm sort chỉ
+    // hoán đổi vị trí NỘI BỘ giữa các vị trí (slot) mà chính nhóm đó đang chiếm giữ.
+    //
+    // Ví dụ: 3 param cùng depend-readonly="true" depend-sort="true": A (đang sáng), B (đang
+    // xám), C (đang sáng) -> sau khi sort: A, C, B (2 mục sáng dồn lên trên, B xám xuống cuối).
+    var dependSort: Boolean = false
+
     // ========== TÍNH NĂNG MỚI: CHO PHÉP SPINNER ĐỂ TRỐNG (allow-no-selection) ==========
     // Chỉ áp dụng cho ParamsSingleSelect khi hiển thị dạng Spinner (options.size <= 6).
     // - false (MẶC ĐỊNH): giữ hành vi gốc của Android Spinner - luôn tự chọn sẵn mục đầu

@@ -388,6 +388,81 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             val shouldShow = working[name] ?: continue
             applyVisibility(name, shouldShow, previousState[name])
         }
+
+        // ========== TÍNH NĂNG MỚI: depend-sort - dồn mục xám xuống dưới, mục sáng lên trên ==========
+        // Gọi SAU KHI đã áp dụng xong shouldShow/readonly cho toàn bộ danh sách (visibilityState
+        // lúc này đã là dữ liệu mới nhất). Đặt trong cùng khối transition ở trên (nếu có) để
+        // việc đổi chỗ view cũng được animate mượt cùng lúc với hiệu ứng mờ/khóa, thay vì giật
+        // cục riêng biệt. Vẫn chạy cả ở lần đánh giá ĐẦU TIÊN (mở dialog) để danh sách hiện ra
+        // đã đúng thứ tự luôn, chỉ là không animate (do chưa có beginDelayedTransition ở trên).
+        applyDependSort()
+    }
+
+    // ========== TÍNH NĂNG MỚI: SẮP XẾP LẠI CÁC HÀNG depend-sort ==========
+    // Trong số các param có dependSort = true (đã được đảm bảo luôn đi kèm dependReadonly =
+    // true ngay từ lúc parse config), dồn các hàng đang "sáng" (đủ điều kiện, có thể tương
+    // tác) lên phía trên nhóm, dồn các hàng đang "xám" (bị depend-readonly khóa) xuống phía
+    // dưới nhóm - giữ nguyên thứ tự tương đối giữa các hàng cùng trạng thái (stable).
+    //
+    // QUAN TRỌNG: chỉ hoán đổi vị trí NỘI BỘ trong đúng những "slot" (chỉ số con trong
+    // linearLayout) mà chính nhóm depend-sort đang chiếm giữ - các hàng KHÔNG tham gia sort
+    // (kể cả các hàng depend-readonly khác không bật depend-sort) đứng yên tuyệt đối, không bị
+    // group sort "nhảy qua mặt". Cách làm: duyệt toàn bộ danh sách con hiện có của linearLayout
+    // đúng 1 lần, hàng nào KHÔNG tham gia sort thì giữ nguyên, hàng nào CÓ tham gia thì được
+    // thay bằng phần tử tiếp theo lấy từ danh sách đã sắp xếp - đảm bảo không bỏ sót hàng cuối
+    // cùng (bug thường gặp khi chỉ so sánh/hoán đổi từng cặp liền kề, dừng sớm ở gần cuối danh
+    // sách thay vì xét toàn bộ nhóm).
+    private fun applyDependSort() {
+        val sortableNames = currentParamInfos
+            .filter { it.dependSort && it.dependReadonly && it.name != null }
+            .map { it.name!! }
+
+        if (sortableNames.isEmpty()) return
+
+        // Trạng thái "sáng" (đủ điều kiện) hiện tại của từng hàng tham gia sort. Dùng
+        // visibilityState (đã ghi ở applyVisibility phía trên trong CÙNG lượt đánh giá này)
+        // kết hợp readonly tĩnh - đúng công thức effectiveEnabled trong applyVisibility().
+        fun isBright(name: String): Boolean {
+            val info = currentParamInfos.find { it.name == name } ?: return true
+            val shouldShow = visibilityState[name] ?: true
+            return shouldShow && info.readonly != true
+        }
+
+        // Thứ tự MONG MUỐN của riêng nhóm sortable: sáng trước, xám sau, ổn định theo thứ tự
+        // khai báo gốc trong nhóm (sortedBy của Kotlin là stable sort).
+        val desiredGroupOrder = sortableNames.sortedBy { name -> if (isBright(name)) 0 else 1 }
+            .mapNotNull { rowViews[it] }
+        if (desiredGroupOrder.isEmpty()) return
+
+        val sortableViews = sortableNames.mapNotNull { rowViews[it] }.toHashSet()
+
+        // Danh sách TOÀN BỘ children hiện tại của linearLayout, đúng thứ tự đang hiển thị.
+        val currentChildren = ArrayList<View>(linearLayout.childCount)
+        for (i in 0 until linearLayout.childCount) {
+            currentChildren.add(linearLayout.getChildAt(i))
+        }
+
+        // Xây danh sách MỚI: các slot không thuộc nhóm sort giữ nguyên vị trí/view, các slot
+        // thuộc nhóm sort được lấp lần lượt bằng desiredGroupOrder (đã sắp xếp) - duyệt đúng
+        // 1 lần qua TOÀN BỘ currentChildren nên không bỏ sót hàng nào, kể cả hàng cuối cùng.
+        var groupCursor = 0
+        val newOrder = ArrayList<View>(currentChildren.size)
+        for (child in currentChildren) {
+            if (sortableViews.contains(child)) {
+                newOrder.add(desiredGroupOrder[groupCursor])
+                groupCursor++
+            } else {
+                newOrder.add(child)
+            }
+        }
+
+        // Không có gì thay đổi thứ tự thực sự -> khỏi động vào layout (tránh xin layout thừa).
+        if (newOrder == currentChildren) return
+
+        linearLayout.removeAllViews()
+        for (view in newOrder) {
+            linearLayout.addView(view)
+        }
     }
 
     // Transition dùng cho depend-on: Fade (mờ dần khi ẩn/hiện) + ChangeBounds (trượt mượt vị

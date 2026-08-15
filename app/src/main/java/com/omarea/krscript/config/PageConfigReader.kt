@@ -700,6 +700,11 @@ class PageConfigReader {
         tomlGet(table, "depend-cascade")?.let { p.dependCascade = !(it == "false" || it == "0") }
         tomlGet(table, "depend-onchange", "depend-on-change", "depend-callback")?.let { p.dependOnChangeCallback = it }
         tomlGet(table, "depend-readonly")?.let { p.dependReadonly = tomlTruthy(it) }
+        // ========== TÍNH NĂNG MỚI: depend-sort (chỉ dùng được cùng depend-readonly) ==========
+        // Ép về false nếu depend-readonly không phải true, dù file cấu hình có khai báo
+        // depend-sort="true" đi nữa - tránh hành vi khó hiểu (sort mục đang bị ẨN hẳn thì
+        // không có ý nghĩa gì, vì View.GONE không chiếm chỗ để "dồn xuống dưới").
+        tomlGet(table, "depend-sort")?.let { p.dependSort = p.dependReadonly && tomlTruthy(it) }
         tomlGet(table, "allow-no-selection", "no-select")?.let { p.allowNoSelection = tomlTruthy(it) }
 
         val paramOptions = tomlEntries(table, "options")
