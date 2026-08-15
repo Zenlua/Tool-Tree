@@ -7,6 +7,7 @@ import os
 import shutil
 import struct
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -384,31 +385,49 @@ def inject_file_to_zip(
       quiet,
   )
 
-  temp_zip = zip_path + ".tmp"
-  with zipfile.ZipFile(zip_path, "r") as zin, zipfile.ZipFile(
-      temp_zip, "w"
-  ) as zout:
-    for item in zin.infolist():
-      if item.filename == arcname:
-        continue
-      zout.writestr(item, zin.read(item.filename))
+  # Luôn ghi file tạm vào biến $TMP (hoặc fallback về tempfile nếu không tồn tại)
+  tmp_dir = os.environ.get("TMP")
+  if not tmp_dir:
+    tmp_dir = tempfile.gettempdir()
+  os.makedirs(tmp_dir, exist_ok=True)
 
-    zinfo = zipfile.ZipInfo.from_file(file_to_inject, arcname)
-    zinfo.compress_type = target_compress_type
-    zinfo.date_time = parsed_ts
+  temp_zip = os.path.join(
+      tmp_dir, f"zip_temp_{os.path.basename(zip_path)}_{os.getpid()}.tmp"
+  )
 
-    if target_extra:
-      zinfo.extra = target_extra
-    elif zinfo.compress_type == zipfile.ZIP_STORED:
-      apply_basic_alignment(zinfo, alignment=4)
+  try:
+    with zipfile.ZipFile(zip_path, "r") as zin, zipfile.ZipFile(
+        temp_zip, "w"
+    ) as zout:
+      for item in zin.infolist():
+        if item.filename == arcname:
+          continue
+        zout.writestr(item, zin.read(item.filename))
 
-    with open(file_to_inject, "rb") as f:
-      zout.writestr(zinfo, f.read())
+      zinfo = zipfile.ZipInfo.from_file(file_to_inject, arcname)
+      zinfo.compress_type = target_compress_type
+      zinfo.date_time = parsed_ts
 
-  if sig_block:
-    insert_apk_sig_block(temp_zip, sig_block)
+      if target_extra:
+        zinfo.extra = target_extra
+      elif zinfo.compress_type == zipfile.ZIP_STORED:
+        apply_basic_alignment(zinfo, alignment=4)
 
-  os.replace(temp_zip, zip_path)
+      with open(file_to_inject, "rb") as f:
+        zout.writestr(zinfo, f.read())
+
+    if sig_block:
+      insert_apk_sig_block(temp_zip, sig_block)
+
+    os.replace(temp_zip, zip_path)
+  except Exception as e:
+    if os.path.exists(temp_zip):
+      try:
+        os.remove(temp_zip)
+      except:
+        pass
+    log_e(f"Injection failed: {e}", quiet)
+    return False
 
   compress_str = (
       "STORED" if target_compress_type == zipfile.ZIP_STORED else "DEFLATED"
