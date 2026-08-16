@@ -15,9 +15,8 @@ title = "'$google_text'"
       [ -z "$urls" ] && urls="upload.gofile.io" || urls="$urls.gofile.io"
       echo "'$gofile_text_1' $urls"
       echo
-      curl -L -H "$WEBS" -F "file=@$FILE" "https://$urls/contents/uploadfile" | jq || killtree "'$gofile_text_2'"
-      echo
-      echo "'$gofile_text_3' $(jq -r .data.downloadPage "$TMP/Upload.log")"
+      curl -L -H "$WEBS" -F "file=@$FILE" "https://$urls/contents/uploadfile" > $TMP/Uploadgo.log || killtree "'$gofile_text_2'"
+      jq -r . $TMP/Uploadgo.log
       echo
       checktime
   else
