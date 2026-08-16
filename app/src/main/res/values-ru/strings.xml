@@ -88,6 +88,7 @@
     <string name="kr_download_downloading">Идет загрузка файла</string>
     <string name="kr_color_picker">Выбор цвета</string>
     <string name="kr_invalid_color">Недопустимое значение цвета. Поддерживается только формат вида #ff88aa00</string>
+    <string name="kr_duplicate_param_name">Ошибка конфигурации: повторяющееся имя параметра \"%1$s\" - будет показан только первый</string>
     <string name="kr_shortcut_create_fail">Не удалось создать ярлык</string>
     <string name="kr_shortcut_create_success">Запрос на создание ярлыка отправлен</string>
     <string name="kr_shortcut_create">Добавить ярлык</string>

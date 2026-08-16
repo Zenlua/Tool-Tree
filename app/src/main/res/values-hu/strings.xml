@@ -37,6 +37,7 @@
     <string name="kr_download_downloading">A fájl letöltése folyamatban</string>
     <string name="kr_hidden_task_running">Túl gyors! Az előző művelet még nem fejeződött be</string>
     <string name="kr_invalid_color">Érvénytelen színérték. Csak az olyan formátum támogatott, mint a #ff88aa00</string>
+    <string name="kr_duplicate_param_name">Konfigurációs hiba: duplikált paraméternév \"%1$s\" - csak az első jelenik meg</string>
     <string name="kr_lock_message">Ez a funkció zárolva van</string>
     <string name="kr_page_after_load">A konfiguráció elemzése befejeződött</string>
     <string name="kr_page_before_load">A konfiguráció elemzésének előkészítése</string>

@@ -112,12 +112,43 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
     private val visibilityState = HashMap<String, Boolean>()
 
     fun renderList(actionParamInfos: ArrayList<ActionParamInfo>, fileChooser: ParamsFileChooserRender.FileChooserInterface?) {
-        currentParamInfos = actionParamInfos
+        // ========== FIX: name trùng nhau gây crash addView (already has a parent) ==========
+        // rowViews là HashMap<String, View> khoá theo name, nên nếu 2 (hay nhiều) param dùng
+        // chung 1 name, view của param sau sẽ ghi đè entry của param trước trong rowViews -
+        // nhưng CẢ HAI view vẫn được add vào linearLayout. Khi reorderRowGroup() (dùng cho
+        // sort/depend-sort) tra rowViews theo name, nó có thể lấy TRÙNG 1 view instance nhiều
+        // lần rồi addView() nó thêm lần nữa trong khi view đó đã có parent -> IllegalStateException.
+        // Cách xử lý: phát hiện name trùng NGAY TỪ ĐẦU, báo lỗi cho người dùng bằng Toast (thay
+        // vì để app crash), và chỉ render mục ĐẦU TIÊN của mỗi name trùng - bỏ qua các mục sau.
+        val seenNames = HashSet<String>()
+        val duplicateNames = LinkedHashSet<String>()
+        val dedupedParamInfos = ArrayList<ActionParamInfo>(actionParamInfos.size)
+        for (info in actionParamInfos) {
+            val name = info.name
+            if (name == null) {
+                dedupedParamInfos.add(info)
+                continue
+            }
+            if (seenNames.add(name)) {
+                dedupedParamInfos.add(info)
+            } else {
+                duplicateNames.add(name)
+            }
+        }
+        if (duplicateNames.isNotEmpty()) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.kr_duplicate_param_name, duplicateNames.joinToString(", ")),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        currentParamInfos = dedupedParamInfos
         rowViews.clear()
         valueReaders.clear()
         visibilityState.clear()
 
-        for (actionParamInfo in actionParamInfos) {
+        for (actionParamInfo in dedupedParamInfos) {
             val options = actionParamInfo.optionsFromShell
             // 下拉框渲染
             if (options != null && !(actionParamInfo.type == "app" || actionParamInfo.type == "packages")) {
@@ -527,7 +558,11 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         var groupCursor = 0
         val newOrder = ArrayList<View>(currentChildren.size)
         for (child in currentChildren) {
-            if (sortableViews.contains(child)) {
+            // FIX: nếu groupCursor vượt quá desiredGroupOrder (VD: rowViews bị đè do 2 param
+            // trùng name khiến sortableViews/desiredGroupOrder lệch số lượng thực tế so với
+            // currentChildren) thì giữ nguyên child gốc thay vì đọc lố index -> tránh
+            // IndexOutOfBounds và tránh add trùng 1 view nhiều lần vào newOrder.
+            if (sortableViews.contains(child) && groupCursor < desiredGroupOrder.size) {
                 newOrder.add(desiredGroupOrder[groupCursor])
                 groupCursor++
             } else {
@@ -538,9 +573,34 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         // Không có gì thay đổi thứ tự thực sự -> khỏi động vào layout (tránh xin layout thừa).
         if (newOrder == currentChildren) return
 
-        linearLayout.removeAllViews()
-        for (view in newOrder) {
-            linearLayout.addView(view)
+        // FIX: mọi view trong newOrder phải là DUY NHẤT (không có view nào lặp lại) trước khi
+        // add lại vào linearLayout, nếu không View.addView() sẽ ném IllegalStateException
+        // ("already has a parent") và làm crash app - thường xảy ra khi có 2+ param dùng
+        // trùng name (xem cảnh báo Toast ở renderList()). Kiểm tra bằng distinct().size để
+        // phát hiện sớm, tránh gọi removeAllViews() rồi mới phát hiện lỗi (lúc đó layout đã
+        // rỗng, không còn cách phục hồi).
+        if (newOrder.distinct().size != newOrder.size) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.kr_duplicate_param_name, "?"),
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        try {
+            linearLayout.removeAllViews()
+            for (view in newOrder) {
+                linearLayout.addView(view)
+            }
+        } catch (ex: Exception) {
+            // FIX: an toàn tối đa - dù lý do gì cũng KHÔNG để app crash vì sắp xếp lại thứ tự
+            // hàng, chỉ báo lỗi bằng Toast và bỏ qua việc sắp xếp lần này.
+            Toast.makeText(
+                context,
+                context.getString(R.string.kr_duplicate_param_name, ex.message ?: ""),
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

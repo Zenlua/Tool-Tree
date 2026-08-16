@@ -100,6 +100,7 @@ Si estás de acuerdo, pulsa el botón de confirmar para continuar."</string>
     <string name="kr_download_downloading">Descargando archivo</string>
     <string name="kr_color_picker">Selecciona un color</string>
     <string name="kr_invalid_color">Valor de color no válido. Solo se admiten formatos como #ff88aa00</string>
+    <string name="kr_duplicate_param_name">Error de configuración: nombre de parámetro duplicado \"%1$s\" - solo se mostrará el primero</string>
     <string name="kr_shortcut_create_fail">Error al crear el acceso directo</string>
     <string name="kr_shortcut_create_success">Se ha enviado la solicitud de creación del acceso directo</string>
     <string name="kr_shortcut_create">Añadir acceso directo</string>

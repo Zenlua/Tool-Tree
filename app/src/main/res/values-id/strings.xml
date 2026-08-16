@@ -96,6 +96,7 @@ Jika setuju, tekan tombol konfirmasi untuk melanjutkan."</string>
     <string name="kr_download_downloading">Mengunduh berkas</string>
     <string name="kr_color_picker">Pilih warna</string>
     <string name="kr_invalid_color">Nilai warna tidak valid. Hanya mendukung format seperti #ff88aa00</string>
+    <string name="kr_duplicate_param_name">Kesalahan konfigurasi: nama parameter duplikat \"%1$s\" - hanya yang pertama yang akan ditampilkan</string>
     <string name="kr_shortcut_create_fail">Gagal membuat pintasan</string>
     <string name="kr_shortcut_create_success">Permintaan pembuatan pintasan telah dikirim</string>
     <string name="kr_shortcut_create">Tambah pintasan</string>
