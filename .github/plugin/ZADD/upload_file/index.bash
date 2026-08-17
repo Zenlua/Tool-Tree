@@ -39,7 +39,7 @@ title = "'$google_text'"
   if [ -f "$FILE" ]; then
       echo "'$gofile_text_1' pixeldrain.com"
       echo
-      curl -T "$FILE" -u ":$TEXT" https://pixeldrain.com/api/file | jq -r .id | awk '"'{print \"https://pixeldrain.com/u/\"\$1}'"' || killtree "'$gofile_text_2'"
+      curl -T "$FILE" -u ":$TEXT" https://pixeldrain.com/api/file | jq -r .id | awk '"'{print \"https://pixeldrain.com/u/\"\$1}'"' | tee $TMP/Upload.log || killtree "'$gofile_text_2'"
       echo
       echo "'$gofile_text_3' $(cat "$TMP/Upload.log")"
       echo

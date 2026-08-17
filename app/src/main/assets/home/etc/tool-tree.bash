@@ -1940,7 +1940,6 @@ Utiliapk() {
     depend-mode = "hide|hide"
     depend-cascade = false
     depend-readonly = true
-    depend-logic = "priority"
 
     [[group.action.params]]
     name = "redivdd"
@@ -1952,7 +1951,6 @@ Utiliapk() {
     depend-mode = "hide|hide"
     depend-cascade = false
     depend-readonly = true
-    depend-logic = "xor"
 
     [[group.action.params]]
     name = "dex_methods"

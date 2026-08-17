@@ -419,7 +419,7 @@ def inject_file_to_zip(
     if sig_block:
       insert_apk_sig_block(temp_zip, sig_block)
 
-    os.replace(temp_zip, zip_path)
+    shutil.move(temp_zip, zip_path)
   except Exception as e:
     if os.path.exists(temp_zip):
       try:
