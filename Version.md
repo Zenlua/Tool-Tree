@@ -4,7 +4,9 @@
 
 **Version: 1.5.9 (17-8-2026)**
 
-+ Minor update, added widget translation plugin.
++ Added support for armv8l
++ Minor update, added widget translation plugin
++ Update some commands
 + Fix code errors
 
 **Version: 1.5.8 (13-8-2026)**
