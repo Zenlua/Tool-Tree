@@ -28,34 +28,30 @@ public class SimpleShellWatcher {
             while (!doneOut || !doneErr) {
                 boolean progressed = false;
 
-                if (!doneOut) {
+                // Đọc công bằng 1 chunk cho stdout (tránh đọc cạn làm stderr bị trễ/in sau)
+                if (!doneOut && isrOut.ready()) {
                     try {
-                        while (isrOut.ready()) {
-                            int n = isrOut.read(chunk, 0, chunk.length);
-                            if (n == -1) {
-                                doneOut = true;
-                                break;
-                            } else {
-                                processChunk(chunk, n, bufOut, ShellHandlerBase.EVENT_REDE, shellHandlerBase, shellTranslation);
-                                progressed = true;
-                            }
+                        int n = isrOut.read(chunk, 0, chunk.length);
+                        if (n == -1) {
+                            doneOut = true;
+                        } else {
+                            processChunk(chunk, n, bufOut, ShellHandlerBase.EVENT_REDE, shellHandlerBase, shellTranslation);
+                            progressed = true;
                         }
                     } catch (IOException streamClosed) {
                         doneOut = true;
                     }
                 }
 
-                if (!doneErr) {
+                // Đọc công bằng 1 chunk cho stderr
+                if (!doneErr && isrErr.ready()) {
                     try {
-                        while (isrErr.ready()) {
-                            int n = isrErr.read(chunk, 0, chunk.length);
-                            if (n == -1) {
-                                doneErr = true;
-                                break;
-                            } else {
-                                processChunk(chunk, n, bufErr, ShellHandlerBase.EVENT_READ_ERROR, shellHandlerBase, shellTranslation);
-                                progressed = true;
-                            }
+                        int n = isrErr.read(chunk, 0, chunk.length);
+                        if (n == -1) {
+                            doneErr = true;
+                        } else {
+                            processChunk(chunk, n, bufErr, ShellHandlerBase.EVENT_READ_ERROR, shellHandlerBase, shellTranslation);
+                            progressed = true;
                         }
                     } catch (IOException streamClosed) {
                         doneErr = true;
