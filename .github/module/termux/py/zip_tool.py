@@ -317,16 +317,29 @@ def extract_zip(
   return True
 
 
-def apply_basic_alignment(zinfo, alignment=4):
+def apply_correct_alignment(zout, zinfo, alignment=None):
+  """Căn chỉnh (zipalign) chính xác dựa vào vị trí con trỏ ghi thực tế trong file ZIP."""
+  if zinfo.compress_type != zipfile.ZIP_STORED:
+    zinfo.extra = b""
+    return
+
+  if alignment is None:
+    align_bytes = 4096 if zinfo.filename.endswith(".so") else 4
+  else:
+    align_bytes = alignment
+
+  current_fp_pos = zout.fp.tell()
   header_base_size = 30
   filename_len = len(zinfo.filename.encode("utf-8"))
-  current_extra_len = len(zinfo.extra)
 
-  current_offset = header_base_size + filename_len + current_extra_len
-  remainder = current_offset % alignment
+  offset_without_extra = current_fp_pos + header_base_size + filename_len
+  remainder = offset_without_extra % align_bytes
 
   if remainder != 0:
-    zinfo.extra += b"\x00" * (alignment - remainder)
+    padding_len = align_bytes - remainder
+    zinfo.extra = b"\x00" * padding_len
+  else:
+    zinfo.extra = b""
 
 
 def inject_file_to_zip(
@@ -351,7 +364,6 @@ def inject_file_to_zip(
   parsed_ts = parse_timestamp(forced_timestamp)
 
   target_compress_type = zipfile.ZIP_DEFLATED
-  target_extra = b""
   exists_in_zip = False
 
   with zipfile.ZipFile(zip_path, "r") as zin:
@@ -359,7 +371,6 @@ def inject_file_to_zip(
       if item.filename == arcname:
         exists_in_zip = True
         target_compress_type = item.compress_type
-        target_extra = item.extra
         break
 
   if not exists_in_zip:
@@ -368,7 +379,6 @@ def inject_file_to_zip(
         with zipfile.ZipFile(zip_path, "r") as zin:
           info_ref = zin.getinfo(copy_from)
           target_compress_type = info_ref.compress_type
-          target_extra = info_ref.extra
       except KeyError:
         log_e(
             f"Template file '{copy_from}' does not exist in the ZIP to copy.",
@@ -377,7 +387,6 @@ def inject_file_to_zip(
         return False
     else:
       target_compress_type = zipfile.ZIP_DEFLATED
-      target_extra = b""
 
   log_i(
       f"Injecting {bname(file_to_inject)} as {arcname} -> {bname(zip_path)}"
@@ -385,7 +394,6 @@ def inject_file_to_zip(
       quiet,
   )
 
-  # Luôn ghi file tạm vào biến $TMP (hoặc fallback về tempfile nếu không tồn tại)
   tmp_dir = os.environ.get("TMP")
   if not tmp_dir:
     tmp_dir = tempfile.gettempdir()
@@ -402,16 +410,18 @@ def inject_file_to_zip(
       for item in zin.infolist():
         if item.filename == arcname:
           continue
-        zout.writestr(item, zin.read(item.filename))
+        data = zin.read(item.filename)
+        # Tính toán lại alignment cho các file STORED khác khi offset bị thay đổi
+        if item.compress_type == zipfile.ZIP_STORED:
+          apply_correct_alignment(zout, item)
+        zout.writestr(item, data)
 
       zinfo = zipfile.ZipInfo.from_file(file_to_inject, arcname)
       zinfo.compress_type = target_compress_type
       zinfo.date_time = parsed_ts
 
-      if target_extra:
-        zinfo.extra = target_extra
-      elif zinfo.compress_type == zipfile.ZIP_STORED:
-        apply_basic_alignment(zinfo, alignment=4)
+      if zinfo.compress_type == zipfile.ZIP_STORED:
+        apply_correct_alignment(zout, zinfo)
 
       with open(file_to_inject, "rb") as f:
         zout.writestr(zinfo, f.read())
@@ -537,21 +547,16 @@ def repack_zip(
         if arcname in meta_map:
           zinfo.compress_type = meta_map[arcname]["compress_type"]
           zinfo.external_attr = meta_map[arcname]["external_attr"]
-          zinfo.extra = meta_map[arcname]["extra"]
         else:
           zinfo.compress_type = zipfile.ZIP_DEFLATED
-          apply_basic_alignment(zinfo, alignment=4)
 
         for pattern in no_compress_patterns:
           if fnmatch.fnmatch(file, pattern) or fnmatch.fnmatch(arcname, pattern):
             zinfo.compress_type = zipfile.ZIP_STORED
             break
 
-        if (
-            zinfo.compress_type == zipfile.ZIP_STORED
-            and arcname not in meta_map
-        ):
-          apply_basic_alignment(zinfo, alignment=4)
+        if zinfo.compress_type == zipfile.ZIP_STORED:
+          apply_correct_alignment(zipf, zinfo)
 
         if forced_ts_parsed is not None:
           zinfo.date_time = forced_ts_parsed
