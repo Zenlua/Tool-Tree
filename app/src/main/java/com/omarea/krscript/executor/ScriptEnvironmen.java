@@ -430,7 +430,7 @@ public class ScriptEnvironmen {
         params.put("ANDROID_MODEL", Build.MODEL);
         params.put("ANDROID_ID", Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID));
         params.put("CPU_ABI", Build.CPU_ABI);
-        params.put("ARCH", Build.SUPPORTED_ABIS[0]);
+        params.put("ARCH", System.getProperty("os.arch"));
         params.put("ANDROID_SDK", String.valueOf(Build.VERSION.SDK_INT));
         params.put("KERNEL_VERSION", System.getProperty("os.version"));
 
