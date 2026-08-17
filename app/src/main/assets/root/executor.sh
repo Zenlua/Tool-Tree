@@ -74,6 +74,7 @@ if [ "$ARCH" != 'aarch64' ] && [ "$ARCH" != 'armv8l' ]; then
     showtoast --am "$text_error"
     echo "$text_error" >&2
     sleep 10
+    echo "exit:[kill]"
     exit 1
 fi
 

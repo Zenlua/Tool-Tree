@@ -34,7 +34,7 @@ Official website: **https://zenlua.github.io/Tool-Tree**
 
 | Item | Support |
 |------|---------|
-| Architecture | ARM64 |
+| Architecture | aarch64, armv8l |
 | Root | ✅ Root |
 | No Root | ✅ Supported |
 
