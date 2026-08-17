@@ -69,18 +69,14 @@ if [ "$ROOT" == 'true' ]; then
     export show_root_text="ROOT"
 fi
 
-if [ "$CPU_ABI" != 'arm64-v8a' ]; then
-    if [ "$(getprop ro.product.cpu.abi.fake)" != 'arm64-v8a' ]; then
-        text_error="Only arm64-v8a devices supported"
-        showtoast --am "$text_error"
-        echo "$text_error" >&2
-        sleep 10
-        exit 1
-    else
-       export ARCH=arm64
-    fi
-else
+if [ "$CPU_ABI" == 'arm64-v8a' ] || [ "$(uname -m)" == 'armv8l' ]; then
     export ARCH=arm64
+else
+    text_error="Only arm64-v8a devices supported"
+    showtoast --am "$text_error"
+    echo "$text_error" >&2
+    sleep 10
+    exit 1
 fi
 
 # Giới hạn cpu
