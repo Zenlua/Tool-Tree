@@ -2,6 +2,11 @@
 
 + **[Download](https://github.com/Zenlua/Tool-Tree/releases/latest)**
 
+**Version: 1.5.9 (17-8-2026)**
+
++ Minor update, added widget translation plugin.
++ Fix code errors
+
 **Version: 1.5.8 (13-8-2026)**
 
 + Delete all data after the update to avoid conflicts.
