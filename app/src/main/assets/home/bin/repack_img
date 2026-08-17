@@ -164,7 +164,7 @@ process_erofss(){
 }
 
 thay_mau() {
-    sed -e '/info: ignored token/s/.*/\x1b[33m&\x1b[0m/'
+    sed '/info: ignored token/d'
 }
 
 if [ "$partition" == "erofs" ]; then
@@ -172,7 +172,7 @@ if [ "$partition" == "erofs" ]; then
     if [ "$tool_erofs" == 1 ]; then
         imgkit_scuti pack --type erofs -s "$INPUT" -o "$saved" --compress "$NENEROFS" --compress-level "${zlsize/,/}" --file-contexts "$file_contexts" --fs-config "$fs_config" -m "/${INPUT##*/}" | tee "$TMP/imgkit_repack.log" || killtree "Error build process imgkit_scuti" "$saved"
     else
-        mkfs.erofs -E^xattr-name-filter \
+        mkfs.erofs \
         -T "$time_build" \
         -z"${NENEROFS}${zlsize}" \
         --mount-point="/${INPUT##*/}" \
@@ -188,7 +188,7 @@ elif [ "$partition" = "boot" ] || [ "$partition" = "vendor_boot" ]; then
         cd "$INPUT/${vch%.*}"
         find | sed 1d | cpio -H newc -R 0:0 -o -F "$INPUT/$vch"
     done
-    cd "$INPUT" || exit
+    cd "$INPUT"
     if [ "$(cat dts_* 2>/dev/null | checksum)" != "$(cat cache/md5_dts 2>/dev/null)" ]; then
         for redts in $(ls -1d dts_*.+([0-9]) 2>/dev/null | grep -v "\.bak$" | sort -n -t . -k 2); do
             nrep="${redts/dts_/}"
