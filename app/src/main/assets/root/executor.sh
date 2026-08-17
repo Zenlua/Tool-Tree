@@ -27,6 +27,7 @@ export ANDROID_RELEASE="$({ANDROID_RELEASE})"
 export ANDROID_MODEL="$({ANDROID_MODEL})"
 export ANDROID_ID="$({ANDROID_ID})"
 export ROOT=$({ROOT_PERMISSION})
+export ARCH=$({ARCH})
 export START_TIME="$(date +%s)"
 export HOME="$({TOOLKIT})"
 export TERMUX="$HOME/termux"
@@ -48,7 +49,6 @@ export COLORTERM=truecolor
 export PATH="$BIN:$TERMUX/bin:$TERMUX/py:$PATH"
 export TERM=xterm-256color
 export SHLVL=1
-
 # export LD_LIBRARY_PATH="$LIB"
 export PTSD="$(glog PTSD $SDC/ROM 2>/dev/null)"; # $PTSD
 export PTSH="$(glog PTSH ROM 2>/dev/null)"; # $SDH/$PTSH
@@ -69,10 +69,8 @@ if [ "$ROOT" == 'true' ]; then
     export show_root_text="ROOT"
 fi
 
-if [ "$CPU_ABI" == 'arm64-v8a' ] || [ "$(uname -m)" == 'armv8l' ]; then
-    export ARCH=arm64
-else
-    text_error="Only arm64-v8a devices supported"
+if [ "$ARCH" != 'aarch64' ] && [ "$ARCH" != 'armv8l' ]; then
+    text_error="Only arm64-v8a, armv8l devices supported"
     showtoast --am "$text_error"
     echo "$text_error" >&2
     sleep 10
