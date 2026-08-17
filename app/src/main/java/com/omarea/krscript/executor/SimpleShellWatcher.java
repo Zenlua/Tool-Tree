@@ -11,19 +11,19 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 public class SimpleShellWatcher {
-    private static final int READ_CHUNK_SIZE = 1024; // Tăng kích thước chunk lên một chút để đọc nhanh hơn với log lớn
-    private static final long POLL_INTERVAL_MS = 15;   // Giảm thời gian poll xuống 15ms để log hiển thị tức thời hơn
+    private static final int READ_CHUNK_SIZE = 1024;
+    private static final long POLL_INTERVAL_MS = 15;
 
     private void readStreams(InputStream inputStream, InputStream errorStream, final ShellHandlerBase shellHandlerBase, ShellTranslation shellTranslation) {
+        StringBuilder bufOut = new StringBuilder();
+        StringBuilder bufErr = new StringBuilder();
+        char[] chunk = new char[READ_CHUNK_SIZE];
+
+        boolean doneOut = false;
+        boolean doneErr = false;
+
         try (InputStreamReader isrOut = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
              InputStreamReader isrErr = new InputStreamReader(errorStream, StandardCharsets.UTF_8)) {
-
-            StringBuilder bufOut = new StringBuilder();
-            StringBuilder bufErr = new StringBuilder();
-            char[] chunk = new char[READ_CHUNK_SIZE];
-
-            boolean doneOut = false;
-            boolean doneErr = false;
 
             while (!doneOut || !doneErr) {
                 boolean progressed = false;
@@ -84,10 +84,6 @@ public class SimpleShellWatcher {
         }
     }
 
-    /**
-     * Tối ưu hóa xử lý chunk bằng cách quét chỉ mục thay vì append từng ký tự,
-     * giúp giảm đáng kể chi phí cấp phát bộ nhớ (Garbage Collection).
-     */
     private void processChunk(char[] chunk, int len, StringBuilder buffer, int what, ShellHandlerBase shellHandlerBase, ShellTranslation shellTranslation) {
         int lastIdx = 0;
         for (int i = 0; i < len; i++) {

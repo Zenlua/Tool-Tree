@@ -1,0 +1,41 @@
+name: Widget
+
+on:
+  workflow_dispatch:
+    inputs:
+      KEYAC:
+        description: 'Import tocken'
+        required: true
+        default: ''
+
+permissions: write-all
+
+env:
+    Keytem: 1
+    KEYAC: ${{ inputs.KEYAC }}
+
+jobs:
+  build-release:
+    if: ${{ github.repository_owner == 'Zenlua' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Import Key
+        run: |
+          curl -s -L https://github.com/Zenlua/Tool-Tree/releases/download/V1/widget.txt -o widget.txt || rm widget.txt
+          if [ -f widget.txt ]; then
+          if ! grep -q "$KEYAC" widget.txt; then
+          echo "$KEYAC" >> widget.txt
+          fi
+          cat widget.txt
+          else
+          exit 1
+          fi
+
+      - name: Upload key
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Tmp"
+          tag_name: "V1"
+          files: widget.txt
