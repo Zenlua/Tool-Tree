@@ -1948,11 +1948,11 @@ Utiliapk() {
     type = "switch"
     value-sh = "glog redivdd 0"
     depend-on = "dexlib|dexlibk"
-    depend-value = "smali|2"
-    depend-mode = "show|show"
-    depend-default = "hide"
+    depend-value = "internal,jf|1"
+    depend-mode = "hide|hide"
     depend-cascade = false
     depend-readonly = true
+    depend-logic = "xor"
 
     [[group.action.params]]
     name = "dex_methods"
