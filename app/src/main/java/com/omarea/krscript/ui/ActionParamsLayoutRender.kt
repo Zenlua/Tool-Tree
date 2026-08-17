@@ -645,6 +645,16 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
 
         fun evalCondition(i: Int): Pair<Boolean, Boolean>? {
             val parentName = dependOnList[i]
+
+            // ========== depend-cascade="false": loại cha đang ẨN khỏi phép kết hợp ==========
+            // Khi dependCascade=false, KHÔNG dùng giá trị cũ còn sót lại của 1 cha đang ẩn để
+            // tính điều kiện - coi như cha đó "không áp dụng" ở lượt đánh giá hiện tại, chỉ
+            // (các) cha đang HIỆN mới được tính. working[parentName] == false nghĩa là cha
+            // này đang ẩn ở lượt đánh giá hiện tại.
+            if (!info.dependCascade && working[parentName] == false) {
+                return null
+            }
+
             val controllerInfo = currentParamInfos.find { it.name == parentName }
             val reader = valueReaders[parentName]
             if (controllerInfo == null || reader == null) return null

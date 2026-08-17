@@ -158,9 +158,14 @@ class ActionParamInfo {
     // Nếu true (mặc định), khi (bất kỳ) param cha trong depend-on đang bị ẨN (do chính
     // depend-on của nó, chuỗi phụ thuộc nhiều cấp...), param này CŨNG BỊ ẨN LUÔN, bất kể
     // giá trị hiện tại của cha có khớp depend-value hay không.
-    // Đặt "false" nếu bạn muốn param con vẫn tự đánh giá theo giá trị của cha ngay cả khi
-    // hàng chứa param cha đang ẩn khỏi màn hình (hiếm khi cần).
-    // Ví dụ: depend-on="mode" depend-cascade="false"
+    // Nếu false: param KHÔNG bị ép ẩn toàn bộ chỉ vì 1 cha đang ẩn - thay vào đó, điều kiện
+    // ứng với (các) cha ĐANG ẨN sẽ bị LOẠI HẲN khỏi phép kết hợp (and/or/priority/xor/...),
+    // coi như cha đó "không áp dụng" ở thời điểm hiện tại; chỉ (các) cha ĐANG HIỆN mới được
+    // dùng để tính. KHÔNG dùng lại giá trị cũ còn sót lại của cha đang ẩn (tránh trường hợp
+    // giá trị cũ từ 1 nhánh loại trừ nhau vô tình khớp depend-value và làm sai kết quả).
+    // Ví dụ: depend-on="dexlib|dexlibk" depend-cascade="false" - dexlib/dexlibk là 2 nhánh
+    //        loại trừ nhau (chỉ 1 cha hiện tại 1 thời điểm) -> khi 1 trong 2 đang ẩn, chỉ cha
+    //        còn lại (đang hiện) quyết định kết quả.
     var dependCascade: Boolean = true
 
     // ========== TÍNH NĂNG MỚI: LÀMĐIỀU GỌILẠI KHI THAY ĐỔI DEPENDENCY ==========
