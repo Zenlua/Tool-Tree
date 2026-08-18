@@ -73,10 +73,11 @@ done
 [ $# -eq 0 ] && { show_help; exit 0; }
 [ -z "$owner" ] && owner="$APP_UID:$APP_UID"
 [ -z "$perm" ] && perm="0755"
+[ "$ROT" == 1 ] || context=
 
 for path in "$@"; do
     [ -e "$path" ] || continue
-    [ "${verbose:-0}" == 1 ] && echo "$path $perm $owner ${context:-none}"
+    [ "${verbose:-0}" == 1 ] && echo "$path $perm $owner ${context}"
     if [ "${recursive-0}" == 1 ] && [ -d "$path" ]; then
         chmod -R "$perm" "$path"
         [ -n "$owner" ] && chown -R "$owner" "$path"
