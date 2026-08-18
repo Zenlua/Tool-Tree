@@ -22,15 +22,15 @@ class SparseHeader(object):
     def __init__(self, buffer):
         fmt = '<I4H4I'
         (
-            self.magic,  # 0xed26ff3a
+            self.magic,          # 0xed26ff3a
             self.major_version,  # (0x1) - reject images with higher major versions
-            self.minor_version,  # (0x0) - allow images with higer minor versions
-            self.file_hdr_sz,  # 28 bytes for first revision of the file format
-            self.chunk_hdr_sz,  # 12 bytes for first revision of the file format
-            self.blk_sz,  # block size in bytes, must be a multiple of 4 (4096)
-            self.total_blks,  # total blocks in the non-sparse output image
-            self.total_chunks,  # total chunks in the sparse input image
-            self.image_checksum  # CRC32 checksum of the original data, counting "don't care"
+            self.minor_version,  # (0x0) - allow images with higher minor versions
+            self.file_hdr_sz,    # 28 bytes for first revision of the file format
+            self.chunk_hdr_sz,   # 12 bytes for first revision of the file format
+            self.blk_sz,          # block size in bytes, must be a multiple of 4 (4096)
+            self.total_blks,     # total blocks in the non-sparse output image
+            self.total_chunks,   # total chunks in the sparse input image
+            self.image_checksum # CRC32 checksum of the original data, counting "don't care"
         ) = struct.unpack(fmt, buffer[0:struct.calcsize(fmt)])
 
 
@@ -40,15 +40,15 @@ class SparseChunkHeader(object):
         For a Raw chunk, it's the data in chunk_sz * blk_sz.
         For a Fill chunk, it's 4 bytes of the fill data.
         For a CRC32 chunk, it's 4 bytes of CRC32
-     """
+    """
 
     def __init__(self, buffer):
         fmt = '<2H2I'
         (
-            self.chunk_type,  # 0xCAC1 -> raw; 0xCAC2 -> fill; 0xCAC3 -> don't care */
+            self.chunk_type,  # 0xCAC1 -> raw; 0xCAC2 -> fill; 0xCAC3 -> don't care
             self.reserved,
-            self.chunk_sz,  # in blocks in output image * /
-            self.total_sz,  # in bytes of chunk input file including chunk header and data * /
+            self.chunk_sz,    # in blocks in output image
+            self.total_sz,    # in bytes of chunk input file including chunk header and data
         ) = struct.unpack(fmt, buffer[0:struct.calcsize(fmt)])
 
 
@@ -59,8 +59,14 @@ class SparseImage:
 
     def check(self):
         self._fd.seek(0)
-        self.header = SparseHeader(self._fd.read(SPARSE_HEADER_SIZE))
-        return False if self.header.magic != SPARSE_HEADER_MAGIC else True
+        data = self._fd.read(SPARSE_HEADER_SIZE)
+        if len(data) < SPARSE_HEADER_SIZE:
+            return False
+        try:
+            self.header = SparseHeader(data)
+            return self.header.magic == SPARSE_HEADER_MAGIC
+        except Exception:
+            return False
 
     def _read_data(self, chunk_data_size: int):
         if self.header.chunk_hdr_sz > SPARSE_CHUNK_HEADER_SIZE:
@@ -114,20 +120,26 @@ class SparseImage:
 
 
 def simg2img(path):
-    with open(path, 'rb') as fd:
-        if SparseImage(fd).check():
-            print('Sparse image detected.')
-            print('Process conversion to non sparse image...')
-            unsparse_file = SparseImage(fd).unsparse()
-            print('Result:[ok]')
-        else:
-            print(f"{path} not Sparse.Skip!")
+    unsparse_file = None
     try:
-        if os.path.exists(unsparse_file):
+        with open(path, 'rb') as fd:
+            simg = SparseImage(fd)
+            if simg.check():
+                print('Sparse image detected.')
+                print('Process conversion to non sparse image...')
+                unsparse_file = simg.unsparse()
+                print('Result:[ok]')
+            else:
+                print(f"{path} not Sparse.Skip!")
+    except Exception as e:
+        print(f"[E] Check sparse error: {e}")
+
+    if unsparse_file and os.path.exists(unsparse_file):
+        try:
             os.remove(path)
             os.rename(unsparse_file, path)
-    except Exception as e:
-        print(e)
+        except Exception as e:
+            print(f"[E] Replace unsparse file error: {e}")
 
 
 class Extractor:
@@ -154,17 +166,17 @@ class Extractor:
 
     @staticmethod
     def __append(msg, log):
-        if not os.path.isfile(log) and not os.path.exists(log):
-            with open(log, 'tw', encoding='utf-8'):
-                ...
-        with open(log, 'a', newline='\n') as file:
+        log_dir = os.path.dirname(log)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
+        with open(log, 'a', encoding='utf-8', newline='\n') as file:
             print(msg, file=file)
 
     @staticmethod
     def __get_perm(arg):
-        if len(arg) < 9 or len(arg) > 10:
-            return
-        if len(arg) > 8:
+        if not arg or len(arg) < 9 or len(arg) > 10:
+            return "0755"
+        if len(arg) == 10:
             arg = arg[1:]
         oor, ow, ox, gr, gw, gx, wr, ww, wx = list(arg)
         o, g, w, s = 0, 0, 0, 0
@@ -237,10 +249,13 @@ class Extractor:
                 if entry_inode.is_symlink:
                     try:
                         link_target = entry_inode.open_read().read().decode("utf8")
-                    except Exception and BaseException:
-                        link_target_block = int.from_bytes(entry_inode.open_read().read(), "little")
-                        link_target = root_inode.volume.read(link_target_block * root_inode.volume.block_size,
-                                                             entry_inode.inode.i_size).decode("utf8")
+                    except Exception:
+                        try:
+                            link_target_block = int.from_bytes(entry_inode.open_read().read(), "little")
+                            link_target = root_inode.volume.read(link_target_block * root_inode.volume.block_size,
+                                                                 entry_inode.inode.i_size).decode("utf8")
+                        except Exception:
+                            pass
                 if tmp_path.find(' ', 1, len(tmp_path)) > 0:
                     self.__append(tmp_path, spaces_file)
                     self.fs_config.append(
@@ -253,7 +268,7 @@ class Extractor:
                     if dir_target.endswith('.') and os.name == 'nt':
                         dir_target = dir_target[:-1]
                     if not os.path.isdir(dir_target):
-                        os.makedirs(dir_target)
+                        os.makedirs(dir_target, exist_ok=True)
                     if os.name == 'posix' and os.geteuid() == 0:
                         os.chmod(dir_target, int(mode, 8))
                         os.chown(dir_target, uid, gid)
@@ -263,9 +278,10 @@ class Extractor:
                     if os.name == 'nt':
                         file_target = file_target.replace('\\', '/')
                     try:
+                        os.makedirs(os.path.dirname(file_target), exist_ok=True)
                         with open(file_target, 'wb') as out:
                             out.write(entry_inode.open_read().read())
-                    except Exception and BaseException as e:
+                    except Exception as e:
                         print(f'[E] Cannot Write {file_target}, Because of {e}')
                     if os.name == 'posix' and os.geteuid() == 0:
                         os.chmod(file_target, int(mode, 8))
@@ -276,8 +292,8 @@ class Extractor:
                         if os.path.islink(target) or os.path.isfile(target):
                             try:
                                 os.remove(target)
-                            finally:
-                                ...
+                            except Exception:
+                                pass
                         if os.name == 'posix':
                             os.symlink(link_target, target)
                         if os.name == 'nt':
@@ -288,7 +304,7 @@ class Extractor:
                                                                        DWORD(FILE_ATTRIBUTE_SYSTEM))
                                 except Exception as e:
                                     print(e.__str__())
-                    except BaseException and Exception:
+                    except Exception:
                         try:
                             if link_target and all(c_ in printable for c_ in link_target):
                                 if os.name == 'posix':
@@ -301,13 +317,13 @@ class Extractor:
                                                                            DWORD(FILE_ATTRIBUTE_SYSTEM))
                                     except Exception as e:
                                         print(e.__str__())
-                        finally:
-                            ...
+                        except Exception:
+                            pass
 
         dir_my = self.CONFING_DIR + os.sep
         if not os.path.isdir(dir_my):
-            os.makedirs(dir_my)
-        self.__append(os.path.getsize(self.OUTPUT_IMAGE_FILE), dir_my + self.FileName + '_size.txt')
+            os.makedirs(dir_my, exist_ok=True)
+        self.__append(str(os.path.getsize(self.OUTPUT_IMAGE_FILE)), dir_my + self.FileName + '_size.txt')
         with open(self.OUTPUT_IMAGE_FILE, 'rb') as file:
             dir_r = self.__out_name(os.path.basename(self.OUTPUT_IMAGE_FILE).rsplit('.', 1)[0])
             self.DIR = dir_r
@@ -341,27 +357,33 @@ class Extractor:
         if os.path.exists(output_file):
             try:
                 os.remove(output_file)
-            finally:
-                ...
+            except Exception:
+                pass
+
         with open(input_file, 'rb') as f:
             data = f.read(500000)
+
         if not re.search(b'\x4d\x4f\x54\x4f', data):
             return
+
         offset = 0
         for i in re.finditer(b'\x53\xEF', data):
-            if data[i.start() - 1080] == 0:
+            if i.start() >= 1080 and data[i.start() - 1080] == 0:
                 offset = i.start() - 1080
                 break
+
         if offset > 0:
             with open(output_file, 'wb') as o, open(input_file, 'rb') as f:
-                data = f.read(15360)
-                if data:
-                    o.write(data)
-        try:
-            os.remove(input_file)
-            os.rename(output_file, input_file)
-        finally:
-            ...
+                f.seek(offset)
+                while True:
+                    chunk = f.read(65536)
+                    if not chunk:
+                        break
+                    o.write(chunk)
+
+            if os.path.exists(output_file):
+                os.remove(input_file)
+                os.rename(output_file, input_file)
 
     def main(self, target: str, output_dir: str, target_type: str = 'img'):
         self.BASE_DIR_ = output_dir + os.sep
@@ -369,7 +391,7 @@ class Extractor:
             os.path.basename(output_dir))
         self.OUTPUT_IMAGE_FILE = (os.path.realpath(os.path.dirname(target)) + os.sep) + os.path.basename(target)
         self.FileName = self.__out_name(os.path.basename(target), out=0)
-        if sys.argv.__len__() == 3:
+        if len(sys.argv) >= 3:
             self.CONFING_DIR = sys.argv[2] + os.sep + 'config'
         else:
             self.CONFING_DIR = os.path.dirname(output_dir) + os.sep + 'config'
@@ -389,10 +411,11 @@ class Extractor:
 
 
 if __name__ == '__main__':
-    if sys.argv.__len__() == 3:
+    if len(sys.argv) >= 3:
         Extractor().main(sys.argv[1], (sys.argv[2] + os.sep + os.path.basename(sys.argv[1]).split('.')[0]))
+    elif len(sys.argv) == 2:
+        if not os.path.isdir("out"):
+            os.makedirs("out", exist_ok=True)
+        Extractor().main(sys.argv[1], "out" + os.sep + os.path.basename(sys.argv[1]).split('.')[0])
     else:
-        if sys.argv.__len__() == 2:
-            if not os.path.isdir("out"):
-                os.makedirs("out")
-            Extractor().main(sys.argv[1], "out" + os.sep + os.path.basename(sys.argv[1]).split('.')[0])
+        print("Sử dụng: python imgextractor.py <file_img> [thư_mục_đầu_ra]")
