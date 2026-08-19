@@ -2,8 +2,8 @@
 id=patch_rom
 name="Patch ROM"
 author=Kakathic
-version=3.5
-versionCode=350
+version=3.6
+versionCode=360
 shortcut=true
 root=false
 description="ROM quick patch tool"
