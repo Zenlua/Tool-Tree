@@ -3,13 +3,13 @@ VER=$(grep -m1 'versionName ' app/build.gradle | cut -d'"' -f2)
 cd .github/module
 find . -exec touch -d "2026-01-01 00:00:00" {} +
 
-for vmk in $(find etc/*.jar .local/share/apktool/framework/*.apk -type f); do
+for vmk in $(find lib/*.jar .local/share/apktool/framework/*.apk -type f); do
 mkdir -p "${vmk%.*}®${vmk##*.}_7zv2"
 7z x "$vmk" -o"${vmk%.*}®${vmk##*.}_7zv2" -y >/dev/null
 rm -fr "$vmk"
 done
 
-for vnk in $(find etc/apkeditor®jar_7zv2/frameworks/android/*apk etc/apktool®jar_7zv2/prebuilt/*.jar -type f); do
+for vnk in $(find lib/*®jar_7zv2/frameworks/android/*apk lib/apktool®jar_7zv2/prebuilt/*.jar -type f); do
 mkdir -p "${vnk%.*}®${vnk##*.}_7zv1"
 7z x "$vnk" -o"${vnk%.*}®${vnk##*.}_7zv1" -y >/dev/null
 rm -fr "$vnk"

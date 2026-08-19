@@ -1,2 +1,2 @@
 # source: https://github.com/iBotPeaches/Apktool
-exec java -jar $HOME/etc/apktool.jar "$@"
+exec java -jar $HOME/lib/apktool.jar "$@"

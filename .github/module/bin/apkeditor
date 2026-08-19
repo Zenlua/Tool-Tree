@@ -1,2 +1,2 @@
 # source https://github.com/REAndroid/APKEditor
-exec java -jar $HOME/etc/apkeditor.jar "$@"
+exec java -jar $HOME/lib/apkeditor.jar "$@"

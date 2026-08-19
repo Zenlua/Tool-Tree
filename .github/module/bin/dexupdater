@@ -1,1 +1,1 @@
-exec java -cp $HOME/etc/apksigner.jar:$HOME/etc/smali.jar com.android.tools.smali.dexlib2.DexUpdater "$@"
+exec java -cp $HOME/lib/apksigner.jar:$HOME/lib/smali.jar com.android.tools.smali.dexlib2.DexUpdater "$@"

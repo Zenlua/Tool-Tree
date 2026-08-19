@@ -1,1 +1,1 @@
-exec java -jar $HOME/etc/apksigner.jar "$@"
+exec java -jar $HOME/lib/apksigner.jar "$@"

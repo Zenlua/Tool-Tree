@@ -1,1 +1,1 @@
-exec java -jar $HOME/etc/smali.jar "$@"
+exec java -jar $HOME/lib/smali.jar "$@"

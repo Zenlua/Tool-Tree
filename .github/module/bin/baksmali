@@ -1,1 +1,1 @@
-exec java -jar $HOME/etc/baksmali.jar "$@"
+exec java -jar $HOME/lib/baksmali.jar "$@"
