@@ -110,7 +110,7 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_download_completed">File downloaded successfully</string>
     <string name="kr_download_downloading">Downloading file</string>
     <string name="kr_color_picker">Select a color</string>
-    <string name="kr_invalid_color">Invalid color value. Only formats like #ff88aa00 are supported</string>
+    <string name="kr_invalid_color">Invalid color value. Formats like #ff88aa00 or @color/name are supported</string>
     <string name="kr_duplicate_param_name">Configuration error: duplicate parameter name(s) \"%1$s\" - only the first one will be shown</string>
     <string name="kr_shortcut_create_fail">Failed to create shortcut</string>
     <string name="kr_shortcut_create_success">Shortcut creation request has been sent</string>

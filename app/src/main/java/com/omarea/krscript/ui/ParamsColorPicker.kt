@@ -13,6 +13,7 @@ import com.tool.tree.R
 import com.omarea.krscript.model.ActionParamInfo
 import androidx.core.graphics.toColorInt
 import androidx.core.graphics.drawable.toDrawable
+import com.omarea.krscript.config.ColorResRef
 
 class ParamsColorPicker(private val actionParamInfo: ActionParamInfo, private val context: Context) {
 
@@ -50,50 +51,40 @@ class ParamsColorPicker(private val actionParamInfo: ActionParamInfo, private va
         return layout
     }
 
-    // Hỗ trợ nhập cả "#RRGGBB" / "#AARRGGBB" lẫn resource reference dạng "@color/xxx" hoặc "@android:color/xxx"
-    private fun resolveColorString(colorStr: String): Int {
-        val trimmed = colorStr.trim()
-        if (trimmed.startsWith("@")) {
-            val isAndroidRes = trimmed.startsWith("@android:")
-            val name = trimmed.substringAfterLast("/")
-            if (name.isEmpty()) {
-                throw IllegalArgumentException("Invalid color resource: $trimmed")
-            }
-            val resId = if (isAndroidRes) {
-                context.resources.getIdentifier(name, "color", "android")
-            } else {
-                context.resources.getIdentifier(name, "color", context.packageName)
-            }
-            if (resId == 0) {
-                throw IllegalArgumentException("Unknown color resource: $trimmed")
-            }
-            return androidx.core.content.ContextCompat.getColor(context, resId)
+    // Hỗ trợ nhập màu dạng tham chiếu resource "@color/xxx" / "@android:color/xxx",
+    // ngoài cách nhập mã hex trực tiếp (#AARRGGBB / #RRGGBB) như trước.
+    private fun parseColorOrRef(colorStr: String): Int? {
+        val text = colorStr.trim()
+        if (text.isEmpty()) return null
+        if (ColorResRef.isColorRef(text)) {
+            return ColorResRef.resolve(context, text)
         }
-        return trimmed.toColorInt()
+        return try {
+            text.toColorInt()
+        } catch (ex: Exception) {
+            null
+        }
     }
 
     private fun updateColorPreview(textView: TextView, invalidView: ImageView, preview: View, colorStr: String): Boolean {
-        try {
-            val color = resolveColorString(colorStr)
+        val color = parseColorOrRef(colorStr)
+        return if (color != null) {
             // textView.setBackgroundColor(Color.TRANSPARENT)
             invalidView.visibility = View.GONE
             preview.visibility = View.VISIBLE
             preview.background = color.toDrawable()
-            return true
-        } catch (ex: Exception) {
+            true
+        } else {
             // textView.setBackgroundColor(Color.RED)
             invalidView.visibility = View.VISIBLE
             preview.visibility = View.GONE
-            return false
+            false
         }
     }
 
     private fun currentColor(colorStr: CharSequence?): Int {
         if (colorStr != null && colorStr.isNotEmpty()) {
-            try {
-                return resolveColorString(colorStr.toString())
-            } catch (ex: Exception) {
-            }
+            parseColorOrRef(colorStr.toString())?.let { return it }
         }
         return (0xff000000).toInt()
     }

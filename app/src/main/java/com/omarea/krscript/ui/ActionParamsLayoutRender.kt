@@ -918,9 +918,19 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                             } catch (ex: java.lang.NumberFormatException) {
                             }
                         } else if (actionParamInfo.type == "color") {
-                            try {
-                                text.toColorInt()
-                            } catch (ex: java.lang.Exception) {
+                            // Chấp nhận mã hex (#AARRGGBB/#RRGGBB) hoặc tham chiếu resource
+                            // dạng "@color/xxx" / "@android:color/xxx"
+                            val isValidColor = if (com.omarea.krscript.config.ColorResRef.isColorRef(text)) {
+                                com.omarea.krscript.config.ColorResRef.resolve(context, text) != null
+                            } else {
+                                try {
+                                    text.toColorInt()
+                                    true
+                                } catch (ex: java.lang.Exception) {
+                                    false
+                                }
+                            }
+                            if (!isValidColor) {
                                 throw Exception(
                                     "" + getFieldTips(actionParamInfo) + "  \n" + context.getString(
                                         R.string.kr_invalid_color
