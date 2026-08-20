@@ -50,9 +50,31 @@ class ParamsColorPicker(private val actionParamInfo: ActionParamInfo, private va
         return layout
     }
 
+    // Hỗ trợ nhập cả "#RRGGBB" / "#AARRGGBB" lẫn resource reference dạng "@color/xxx" hoặc "@android:color/xxx"
+    private fun resolveColorString(colorStr: String): Int {
+        val trimmed = colorStr.trim()
+        if (trimmed.startsWith("@")) {
+            val isAndroidRes = trimmed.startsWith("@android:")
+            val name = trimmed.substringAfterLast("/")
+            if (name.isEmpty()) {
+                throw IllegalArgumentException("Invalid color resource: $trimmed")
+            }
+            val resId = if (isAndroidRes) {
+                context.resources.getIdentifier(name, "color", "android")
+            } else {
+                context.resources.getIdentifier(name, "color", context.packageName)
+            }
+            if (resId == 0) {
+                throw IllegalArgumentException("Unknown color resource: $trimmed")
+            }
+            return androidx.core.content.ContextCompat.getColor(context, resId)
+        }
+        return trimmed.toColorInt()
+    }
+
     private fun updateColorPreview(textView: TextView, invalidView: ImageView, preview: View, colorStr: String): Boolean {
         try {
-            val color = colorStr.toColorInt()
+            val color = resolveColorString(colorStr)
             // textView.setBackgroundColor(Color.TRANSPARENT)
             invalidView.visibility = View.GONE
             preview.visibility = View.VISIBLE
@@ -69,7 +91,7 @@ class ParamsColorPicker(private val actionParamInfo: ActionParamInfo, private va
     private fun currentColor(colorStr: CharSequence?): Int {
         if (colorStr != null && colorStr.isNotEmpty()) {
             try {
-                return colorStr.toString().toColorInt()
+                return resolveColorString(colorStr.toString())
             } catch (ex: Exception) {
             }
         }
