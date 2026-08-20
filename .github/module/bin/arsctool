@@ -1,1 +1,1 @@
-exec java -jar $HOME/lib/ArscTool.jar "$@"
+exec java -cp $HOME/lib/apkeditor.jar com.reandroid.ArscTool "$@"

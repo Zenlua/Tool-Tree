@@ -14,7 +14,7 @@ echo '
   script = """
   [ "$no_res" == 1 ] && no_res_v="-r"
   [ "$no_dex" == 1 ] && no_dex_v="-s"
-  jadx $no_res_v $no_dex_v -d "${FILE%.*}_jadx" "$FILE" || killtree "'$view_source_text_13'"
+  jadx $no_res_v $no_dex_v -j 4 -d "${FILE%.*}_jadx" "$FILE" || killtree "'$view_source_text_13'"
   echo
   echo "'$view_source_text_12': ${FILE%.*}_jadx"
   echo
