@@ -366,7 +366,7 @@ home() {
     name = "ime_color"
     desc = "'$desc_color_light'"
     placeholder = "#f0f3f8"
-    type = "text"
+    type = "color"
     value-sh = "glog ime_color"
     required = true
 
@@ -374,7 +374,7 @@ home() {
     name = "ime_color_dark"
     desc = "'$desc_color_dark'"
     placeholder = "#1e1f21"
-    type = "text"
+    type = "color"
     value-sh = "glog ime_color_dark"
     required = true
 
