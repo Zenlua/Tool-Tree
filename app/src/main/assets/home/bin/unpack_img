@@ -2,6 +2,7 @@
 # kakathic
 
 set -o pipefail
+umask 0022
 
 print_help() {
   echo "Usage: unpack_img -i <input> -o <output> -p <partition> -n [0/1] -d [0/1]"
@@ -197,7 +198,6 @@ if [ "$NODECO" != 1 ] && [ -f "$file_img" ] && [ "$dang_file" != "unknow" ] && [
 
     # Tạo thư mục
     mkdir -p "$in_name" "$OUTPUT/config"
-    set_permis -R "$in_name"
 
     if [ "$dang_file" == 'ext' ]; then
         if [ "$tool_un_ext4" == 1 ]; then
