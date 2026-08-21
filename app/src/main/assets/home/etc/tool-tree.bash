@@ -106,8 +106,8 @@ shell_bash() {
   icon = "'`urlpng shell`'" '
 }
 
-if [[ "$1" == "Home" || "$1" == "More" ]]; then
-inforkk='
+inforkk() {
+echo '
   [[group]]
   [[group.text.rows]]
   text = "'$system_text' | '$infor_text'"
@@ -187,7 +187,7 @@ inforkk='
   color = "#0dbda2"
   text = "'$PACKAGE_VERSION_NAME'"
   '
-fi
+}
 
 (
   # Tạo thư mục
@@ -205,7 +205,8 @@ source language 2>/dev/null
 
 # Văn bản
 Home() {
-  "$inforkk"
+  inforkk
+  
   if [ -f "$AON/patch_rom/addon.prop" ]; then
   vdbfbfsn='
   [[group.page.options]]
@@ -344,7 +345,8 @@ Home() {
 }
 
 More() {
-  "$inforkk"
+  inforkk
+  
   echo '
   [[group]]
   [[group.page]]
