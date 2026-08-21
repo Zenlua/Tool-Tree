@@ -3,6 +3,8 @@ package com.tool.tree
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.Activity
+import android.graphics.Rect
+import android.os.Build
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.View
@@ -40,6 +42,16 @@ import kotlin.math.abs
  *
  * Hiệu ứng dịch chuyển giống hệt res/anim/activity_close_exit.xml (translateX 0%p -> 100%p,
  * alpha giữ nguyên) nhưng bám theo % vuốt thực tế thay vì chạy cố định 350ms.
+ *
+ * CÒN 1 TẦNG CHẶN NỮA Ở TRÊN CẢ Activity.dispatchTouchEvent(): trên Android 10+ dùng điều
+ * hướng cử chỉ (gesture navigation - chế độ phổ biến nhất hiện nay), HỆ THỐNG sẽ tự nuốt luôn
+ * sự kiện chạm bắt đầu ở dải mép trái/phải màn hình để làm cử chỉ back CỦA HỆ THỐNG, TRƯỚC KHI
+ * touch đó được gửi tới app - dù app có override dispatchTouchEvent đúng cách đến đâu cũng
+ * không nhận được sự kiện, vì nó bị chặn ở tầng WindowManager/SystemUI, không phải ở tầng
+ * view của app. Đây là lý do dù đã chuyển sang xử lý ở dispatchTouchEvent vẫn không thấy hiệu
+ * ứng. Phải gọi [installGestureExclusion] để khai báo với hệ thống "vùng mép này app tự xử lý,
+ * đừng cướp" bằng View.setSystemGestureExclusionRects() (API 29+) - đúng kỹ thuật các app có
+ * vuốt cạnh riêng (trình duyệt vuốt tiến/lùi trong WebView...) vẫn dùng.
  */
 class SwipeBackGestureHelper(
     private val activity: Activity,
@@ -61,6 +73,39 @@ class SwipeBackGestureHelper(
     private var startX = 0f
     private var startY = 0f
     private var velocityTracker: VelocityTracker? = null
+
+    private val layoutChangeListener =
+        View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateGestureExclusionRects() }
+
+    /**
+     * Khai báo vùng mép trái là "gesture exclusion" để hệ thống không cướp mất sự kiện chạm ở
+     * đó cho cử chỉ back của hệ thống (chỉ có tác dụng từ Android 10 trở lên - các bản cũ hơn
+     * dùng điều hướng nút bấm, không có kiểu "cướp cử chỉ" này nên không cần xử lý gì thêm).
+     * Gọi 1 lần sau khi setContentView() và tự động cập nhật lại mỗi khi layout đổi (xoay màn
+     * hình, đổi kích thước cửa sổ...).
+     */
+    fun installGestureExclusion() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        target.addOnLayoutChangeListener(layoutChangeListener)
+        if (target.isLaidOut) {
+            updateGestureExclusionRects()
+        }
+    }
+
+    fun uninstallGestureExclusion() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        target.removeOnLayoutChangeListener(layoutChangeListener)
+        target.systemGestureExclusionRects = emptyList()
+    }
+
+    private fun updateGestureExclusionRects() {
+        val height = target.height
+        if (height <= 0) return
+        // Dải theo SÁT MÉP TRÁI, cao bằng toàn bộ view - đúng vùng mà dispatchTouchEvent() bên
+        // dưới dùng để nhận diện điểm bắt đầu vuốt (edgeSizePx).
+        val rect = Rect(0, 0, edgeSizePx.toInt().coerceAtLeast(1), height)
+        target.systemGestureExclusionRects = listOf(rect)
+    }
 
     /**
      * Gọi ở ĐẦU Activity.dispatchTouchEvent(ev), trước super.dispatchTouchEvent(ev).

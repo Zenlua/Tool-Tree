@@ -109,6 +109,7 @@ class ActionPage : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        swipeBackHelper.installGestureExclusion()
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -839,6 +840,7 @@ class ActionPage : AppCompatActivity() {
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
+        swipeBackHelper.uninstallGestureExclusion()
         setExcludeFromRecents()
         super.onDestroy()
     }
