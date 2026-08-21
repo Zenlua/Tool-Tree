@@ -307,6 +307,17 @@ object RowsRenderHelper {
                 spannableString.setSpan(AbsoluteSizeSpan(row.size, true), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
+            if (row.letterSpacing != 0f) {
+                spannableString.setSpan(LetterSpacingSpan(row.letterSpacing), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
+            // Đặt TextAlphaSpan SAU CÙNG (trong số các span ảnh hưởng màu/vẽ) để nó luôn được áp
+            // dụng cuối, chỉ ghi đè kênh alpha của màu đã được set bởi ForegroundColorSpan/màu mặc
+            // định - không đụng tới RGB, tránh mất màu chữ khi kết hợp cả color lẫn alpha.
+            if (row.alpha in 0f..1f) {
+                spannableString.setSpan(TextAlphaSpan(row.alpha), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
             // Canh lề (trái/giữa/phải) giờ được áp dụng 1 LẦN cho cả NHÓM (finalizeGroup), không
             // set riêng cho từng row nữa - để hỗ trợ nhiều row chung 1 dòng và tránh lỗi
             // AlignmentSpan+ClickableSpan+ImageSpan (xem finalizeGroup/computeGroupLeadingMargin).
@@ -363,6 +374,31 @@ object RowsRenderHelper {
         }
     }
 
+    // Span điều chỉnh khoảng cách giữa các chữ (đơn vị em, giống thuộc tính letterSpacing của
+    // TextView/Paint). Kế thừa MetricAffectingSpan (thay vì CharacterStyle) vì letter-spacing làm
+    // thay đổi bề rộng chữ - cần override cả updateMeasureState để layout đo đúng, không chỉ
+    // updateDrawState (chỉ ảnh hưởng lúc vẽ).
+    private class LetterSpacingSpan(private val spacing: Float) : MetricAffectingSpan() {
+        override fun updateDrawState(tp: TextPaint) {
+            tp.letterSpacing = spacing
+        }
+
+        override fun updateMeasureState(tp: TextPaint) {
+            tp.letterSpacing = spacing
+        }
+    }
+
+    // Span điều chỉnh độ trong suốt (alpha) của chữ mà KHÔNG đổi màu (RGB) - chỉ ghi đè kênh alpha
+    // của paint tại thời điểm vẽ. Nhờ được add SAU CÙNG (xem nơi gọi setSpan), span này chạy sau
+    // ForegroundColorSpan nên alpha luôn được áp cuối cùng, không bị màu chữ override lại thành 255.
+    private class TextAlphaSpan(alpha: Float) : CharacterStyle() {
+        private val alphaValue = (alpha.coerceIn(0f, 1f) * 255).toInt()
+
+        override fun updateDrawState(tp: TextPaint) {
+            tp.alpha = alphaValue
+        }
+    }
+
     // LinkMovementMethod gốc quy đổi toạ độ chạm sang offset ký tự gần nhất trong dòng
     // (Layout.getOffsetForHorizontal) mà không kiểm tra toạ độ đó có thực sự nằm trong vùng chữ
     // được vẽ hay không - nên bấm vào khoảng trống do canh lề/margin cũng bị tính là bấm trúng
@@ -408,12 +444,12 @@ object RowsRenderHelper {
         }
     }
 
-    // Tạo 1 TextPaint mô phỏng đúng style thật mà row sẽ được vẽ (bold/italic/monospace/size) -
-    // dùng để ĐO bề rộng cho chính xác (xem nơi gọi). Giống hệt cách các Span tương ứng
-    // (StyleSpan/TypefaceSpan/AbsoluteSizeSpan) áp dụng lúc vẽ, chỉ khác là áp trực tiếp lên paint
-    // thay vì gắn Span, để đo mà không cần vẽ thật.
+    // Tạo 1 TextPaint mô phỏng đúng style thật mà row sẽ được vẽ (bold/italic/monospace/size/
+    // letter-spacing) - dùng để ĐO bề rộng cho chính xác (xem nơi gọi). Giống hệt cách các Span
+    // tương ứng (StyleSpan/TypefaceSpan/AbsoluteSizeSpan/LetterSpacingSpan) áp dụng lúc vẽ, chỉ
+    // khác là áp trực tiếp lên paint thay vì gắn Span, để đo mà không cần vẽ thật.
     private fun measurePaintForRow(basePaint: TextPaint, row: TextNode.TextRow): TextPaint {
-        if (!row.bold && !row.italic && !row.monospace && row.size == -1) {
+        if (!row.bold && !row.italic && !row.monospace && row.size == -1 && row.letterSpacing == 0f) {
             return basePaint
         }
         val paint = TextPaint(basePaint)
@@ -431,6 +467,9 @@ object RowsRenderHelper {
         if (row.size != -1) {
             // AbsoluteSizeSpan(row.size, true) - true nghĩa là đơn vị dp, cần nhân density giống hệt
             paint.textSize = row.size * paint.density
+        }
+        if (row.letterSpacing != 0f) {
+            paint.letterSpacing = row.letterSpacing
         }
         return paint
     }

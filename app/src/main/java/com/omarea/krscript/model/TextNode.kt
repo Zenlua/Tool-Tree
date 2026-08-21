@@ -23,6 +23,12 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var strikethrough: Boolean = false
         // Font đơn cách (monospace) - hữu ích khi hiện log/lệnh shell
         internal var monospace: Boolean = false
+        // Khoảng cách giữa các chữ (đơn vị em, giống TextView.letterSpacing) - 0 = mặc định,
+        // giá trị dương giãn chữ ra, âm thì thu hẹp lại
+        internal var letterSpacing: Float = 0f
+        // Độ trong suốt (alpha) của chữ, từ 0.0 (trong suốt hoàn toàn) đến 1.0 (đục hoàn toàn).
+        // -1 = không thiết lập (giữ nguyên alpha mặc định của màu chữ/màu nền)
+        internal var alpha: Float = -1f
         // 是否换行后显示
         internal var breakRow: Boolean = false
         // Nếu true: vẽ 1 đường kẻ mảnh ngang qua hết chiều rộng NGAY TRƯỚC row này, dùng để

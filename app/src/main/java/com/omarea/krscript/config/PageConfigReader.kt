@@ -766,6 +766,15 @@ class PageConfigReader {
         tomlGet(table, "underline", "u")?.let { row.underline = tomlTruthy(it, "underline") }
         tomlGet(table, "strikethrough", "line-through", "delete-line", "del")?.let { row.strikethrough = tomlTruthy(it, "strikethrough", "line-through", "del") }
         tomlGet(table, "monospace", "mono", "code")?.let { row.monospace = tomlTruthy(it, "monospace", "mono", "code") }
+        // letter-spacing: đơn vị em (giống TextView.letterSpacing), ví dụ 0.1 = giãn nhẹ, -0.05 = thu hẹp
+        tomlGet(table, "letter-spacing", "letterspacing", "spacing")?.let { row.letterSpacing = it.trim().toFloatOrNull() ?: row.letterSpacing }
+        // alpha/opacity: nhận 0.0-1.0 (tỉ lệ) hoặc 0-255 (giá trị alpha kênh màu, tự quy đổi nếu > 1)
+        tomlGet(table, "alpha", "opacity")?.let {
+            val v = it.trim().toFloatOrNull()
+            if (v != null) {
+                row.alpha = (if (v > 1f) v / 255f else v).coerceIn(0f, 1f)
+            }
+        }
         tomlGet(table, "foreground", "color")?.let { try { row.color = it.toColorInt() } catch (_: Exception) {} }
         tomlGet(table, "bg", "background", "bgcolor")?.let { try { row.bgColor = it.toColorInt() } catch (_: Exception) {} }
         tomlGet(table, "size")?.let { row.size = it.trim().toIntOrNull() ?: row.size }
