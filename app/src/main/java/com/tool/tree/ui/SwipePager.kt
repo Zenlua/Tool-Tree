@@ -64,6 +64,12 @@ class SwipePager @JvmOverloads constructor(
         listener = l
     }
 
+    // Trì hoãn trạng thái "pressed" của view con cho tới khi xác định chắc chắn đây
+    // không phải một cử chỉ vuốt trang - tránh nút/row bên trong trang bị nháy hiệu ứng
+    // nhấn (ripple/highlight) rồi bị huỷ ngay khi người dùng thực ra đang vuốt đổi tab.
+    // Đây cũng là cách ViewPager/ViewPager2 gốc của Android xử lý.
+    override fun shouldDelayChildPressedState(): Boolean = true
+
     fun setPageTransformer(transformer: PageTransformer?) {
         pageTransformer = transformer
         applyPageTransform()
@@ -148,6 +154,12 @@ class SwipePager @JvmOverloads constructor(
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        // Chỉ 1 trang thì không có gì để vuốt đổi tab - không được can thiệp (intercept),
+        // nếu không sẽ "cướp" sự kiện chạm từ view con (vd SeekBar/kéo ngang bên trong
+        // nội dung trang) rồi lại không xử lý gì trong onTouchEvent (cũng return false khi
+        // pages.size <= 1), khiến cử chỉ bị nuốt mất giữa chừng.
+        if (pages.size <= 1) return false
+
         val action = ev.actionMasked
         if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
             isDragging = false
@@ -256,8 +268,13 @@ class SwipePager @JvmOverloads constructor(
 
     private fun notifyScrolled() {
         if (width == 0 || pages.isEmpty()) return
-        val position = (scrollX / width).coerceIn(0, pages.size - 1)
-        val offset = (scrollX % width).toFloat() / width
+        // Khi đang rubber-band overscroll qua mép trái, scrollX có thể tạm thời âm.
+        // Với số âm, phép % của Kotlin/Java trả về kết quả âm, khiến offset lọt ra ngoài
+        // khoảng [0, 1) mà onPageScrolled() phải đảm bảo. Clamp trước khi tính để tránh.
+        val maxScroll = max(0, (pages.size - 1) * width)
+        val clampedScrollX = scrollX.coerceIn(0, maxScroll)
+        val position = (clampedScrollX / width).coerceIn(0, pages.size - 1)
+        val offset = (clampedScrollX % width).toFloat() / width
         listener?.onPageScrolled(position, offset)
     }
 
