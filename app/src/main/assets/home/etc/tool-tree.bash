@@ -106,6 +106,89 @@ shell_bash() {
   icon = "'`urlpng shell`'" '
 }
 
+if [[ "$1" == "Home" || "$1" == "More" ]]; then
+inforkk='
+  [[group]]
+  [[group.text.rows]]
+  text = "'$system_text' | '$infor_text'"
+  size = 16
+  bold = true
+  alpha = 1
+  line-height = 1.2
+  
+  [[group.text.rows]]
+  size = 13
+  text = "'$root_text':"
+  bold = true
+  icon = "'$ETC'/icon/1sec.png"
+  line-height = 1.2
+  margin-top = 2
+  
+  [[group.text.rows]]
+  bold = true
+  size = 13
+  color = "#0dbda2"
+  text = "'${ROOT^}'"
+  
+  [[group.text.rows]]
+  text = "'$device_text':"
+  break = true
+  size = 13
+  bold = true
+  line-height = 1.2
+  icon = "'$ETC'/icon/1smart.png"
+  
+  [[group.text.rows]]
+  bold = true
+  size = 13
+  color = "#0dbda2"
+  text = "'$ANDROID_BRAND' - '$ANDROID_DEVICE'"
+  
+  [[group.text.rows]]
+  text = "'$operating_system':"
+  break = true
+  size = 13
+  bold = true
+  line-height = 1.2
+  icon = "'$ETC'/icon/1android.png"
+  
+  [[group.text.rows]]
+  bold = true
+  size = 13
+  color = "#0dbda2"
+  text = "Android '$ANDROID_RELEASE' - SDK '$API'"
+  
+  [[group.text.rows]]
+  text = "'$microprocessors':"
+  break = true
+  size = 13
+  bold = true
+  line-height = 1.2
+  icon = "'$ETC'/icon/1cpu.png"
+  
+  [[group.text.rows]]
+  bold = true
+  size = 13
+  color = "#0dbda2"
+  text = "'$CPU_ABI'"
+  
+  
+  [[group.text.rows]]
+  size = 13
+  text = "'$version_text':"
+  break = true
+  bold = true
+  line-height = 1.2
+  icon = "'$ETC'/icon/1list.png"
+  
+  [[group.text.rows]]
+  size = 13
+  bold = true
+  color = "#0dbda2"
+  text = "'$PACKAGE_VERSION_NAME'"
+  '
+fi
+
 (
   # Tạo thư mục
   [ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null
@@ -119,22 +202,10 @@ shell_bash() {
 
 # Ngôn ngữ
 source language 2>/dev/null
-if [[ "$1" == "Home" || "$1" == "More" ]]; then
-    # Thông tin
-    text_id_1="$(glog show_infor_text_1 "ROOT: \$ROOT  |  Android: \$ANDROID_RELEASE  -  SDK: \$API  |  CPU: \$CPU_ABI")"
-    text_id_2="$(glog show_infor_text_2 "\$trademark_text: \$ANDROID_BRAND  |  \$device_text: \$ANDROID_DEVICE  |  \$version_text: \$PACKAGE_VERSION_NAME")"
-    [ -z "$text_id_2" ] || text_id_3="\n\n"
-    Vip_text_infor="$(eval echo "\"${text_id_1}${text_id_3}${text_id_2}\"")"
-fi
 
 # Văn bản
 Home() {
-  if [ -n "$Vip_text_infor" ]; then
-  echo -e '[[group]]
-  [[group.text]]
-  summary = """'"$Vip_text_infor"'""" '
-  fi
-
+  "$inforkk"
   if [ -f "$AON/patch_rom/addon.prop" ]; then
   vdbfbfsn='
   [[group.page.options]]
@@ -273,12 +344,7 @@ Home() {
 }
 
 More() {
-  if [ -n "$Vip_text_infor" ]; then
-  echo -e '[[group]]
-  [[group.text]]
-  summary = """'"$Vip_text_infor"'""" '
-  fi
-
+  "$inforkk"
   echo '
   [[group]]
   [[group.page]]
