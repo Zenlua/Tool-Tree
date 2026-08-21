@@ -770,6 +770,9 @@ class PageConfigReader {
         tomlGet(table, "letter-spacing", "letterspacing", "spacing")?.let { row.letterSpacing = it.trim().toFloatOrNull() ?: row.letterSpacing }
         // line-height: hệ số nhân chiều cao dòng, ví dụ 1.5 = cao hơn 50%, 0.8 = thấp hơn 20%
         tomlGet(table, "line-height", "lineheight", "row-height")?.let { row.lineHeight = it.trim().toFloatOrNull() ?: row.lineHeight }
+        // margin-top/margin-bottom: khoảng trống (dp) thêm phía trên/dưới row này
+        tomlGet(table, "margin-top", "spacing-top", "top-margin")?.let { row.marginTop = it.trim().toIntOrNull() ?: row.marginTop }
+        tomlGet(table, "margin-bottom", "spacing-bottom", "bottom-margin")?.let { row.marginBottom = it.trim().toIntOrNull() ?: row.marginBottom }
         // alpha/opacity: nhận 0.0-1.0 (tỉ lệ) hoặc 0-255 (giá trị alpha kênh màu, tự quy đổi nếu > 1)
         tomlGet(table, "alpha", "opacity")?.let {
             val v = it.trim().toFloatOrNull()

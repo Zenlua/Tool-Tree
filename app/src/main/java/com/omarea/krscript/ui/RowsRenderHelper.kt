@@ -142,14 +142,32 @@ object RowsRenderHelper {
                 groupContentWidth = 0f
             }
 
-            // Chỉ bắt đầu nhóm/dòng mới khi row.breakRow (hoặc row.line, hoặc chưa có nội dung nào
-            // trước đó) - mặc định (breakRow=false) luôn nối chung dòng với row liền trước, đúng
-            // ngữ nghĩa gốc của "break". Row có align != normal mà không muốn bị row kế tiếp nối
-            // chung dòng thì tự khai báo break = true cho row kế tiếp đó.
-            val startsNewGroup = row.line || row.breakRow || !hasContent
+            // row.marginTop > 0: chèn 1 dòng TRỐNG (không vẽ gì) có chiều cao = marginTop NGAY
+            // TRƯỚC nội dung row này, dùng để tạo khoảng cách phía trên - tương tự cơ chế row.line
+            // nhưng không vẽ đường kẻ, chỉ chiếm không gian theo chiều dọc.
+            if (row.marginTop > 0) {
+                finalizeGroup(rowsView.length())
+                if (hasContent) {
+                    rowsView.append("\n")
+                }
+                val topSpace = SpannableString(" ")
+                topSpace.setSpan(VerticalSpaceSpan(dpToPx(context, row.marginTop)), 0, topSpace.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                rowsView.append(topSpace)
+                rowsView.append("\n")
+                hasContent = true
+                groupStart = rowsView.length()
+                groupAlign = Layout.Alignment.ALIGN_NORMAL
+                groupContentWidth = 0f
+            }
+
+            // Chỉ bắt đầu nhóm/dòng mới khi row.breakRow (hoặc row.line/marginTop, hoặc chưa có
+            // nội dung nào trước đó) - mặc định (breakRow=false) luôn nối chung dòng với row liền
+            // trước, đúng ngữ nghĩa gốc của "break". Row có align != normal mà không muốn bị row
+            // kế tiếp nối chung dòng thì tự khai báo break = true cho row kế tiếp đó.
+            val startsNewGroup = row.line || row.marginTop > 0 || row.breakRow || !hasContent
             if (startsNewGroup) {
                 finalizeGroup(rowsView.length())
-                if (hasContent && !row.line && row.breakRow) {
+                if (hasContent && !row.line && row.marginTop == 0 && row.breakRow) {
                     rowsView.append("\n")
                 }
                 groupStart = rowsView.length()
@@ -341,6 +359,22 @@ object RowsRenderHelper {
             } else {
                 measurePaint.measureText(text)
             }
+
+            // row.marginBottom > 0: chèn 1 dòng TRỐNG có chiều cao = marginBottom NGAY SAU nội
+            // dung row này, dùng để tạo khoảng cách phía dưới. Luôn kết thúc nhóm hiện tại (không
+            // cho row kế tiếp join chung dòng qua khoảng trống này).
+            if (row.marginBottom > 0) {
+                finalizeGroup(rowsView.length())
+                rowsView.append("\n")
+                val bottomSpace = SpannableString(" ")
+                bottomSpace.setSpan(VerticalSpaceSpan(dpToPx(context, row.marginBottom)), 0, bottomSpace.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                rowsView.append(bottomSpace)
+                rowsView.append("\n")
+                hasContent = true
+                groupStart = rowsView.length()
+                groupAlign = Layout.Alignment.ALIGN_NORMAL
+                groupContentWidth = 0f
+            }
         }
 
         // Áp canh lề cho nhóm CUỐI CÙNG (vòng lặp không có row nào phía sau để kích hoạt finalizeGroup).
@@ -389,6 +423,19 @@ object RowsRenderHelper {
 
         override fun updateMeasureState(tp: TextPaint) {
             tp.letterSpacing = spacing
+        }
+    }
+
+    // Span tạo 1 dòng TRỐNG có chiều cao cố định (px) - không vẽ nội dung gì, chỉ ép chiều cao
+    // dòng chứa ký tự placeholder (" ") đúng bằng heightPx, dùng để tạo khoảng trống dọc (margin
+    // trên/dưới của row) mà không cần vẽ gì cả - khác LineHeightMultiplierSpan (nhân hệ số dựa
+    // trên font hiện có), span này ép cứng 1 chiều cao tuyệt đối cho dòng trống độc lập.
+    private class VerticalSpaceSpan(private val heightPx: Int) : LineHeightSpan {
+        override fun chooseHeight(text: CharSequence, start: Int, end: Int, spanstartv: Int, lineHeight: Int, fm: Paint.FontMetricsInt) {
+            fm.ascent = -heightPx
+            fm.top = fm.ascent
+            fm.descent = 0
+            fm.bottom = fm.descent
         }
     }
 
@@ -514,6 +561,11 @@ object RowsRenderHelper {
             Layout.Alignment.ALIGN_CENTER -> (extra / 2f).toInt()
             else -> null
         }
+    }
+
+    // Chuyển đổi dp sang px theo density hiện tại của thiết bị, dùng cho marginTop/marginBottom.
+    private fun dpToPx(context: Context, dp: Int): Int {
+        return (dp * context.resources.displayMetrics.density).toInt()
     }
 
     // Tạo drawable icon cho row dạng toggle (checkbox/switch), kích thước nhỏ vừa 1 dòng text,

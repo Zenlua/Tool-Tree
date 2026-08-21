@@ -29,6 +29,10 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         // Độ cao dòng (chiều dọc), dạng hệ số nhân so với chiều cao dòng mặc định - 0 = không
         // thiết lập (giữ nguyên); ví dụ 1.5 = cao hơn 50%, 0.8 = thấp hơn 20%
         internal var lineHeight: Float = 0f
+        // Khoảng trống thêm vào phía TRÊN row này (đơn vị dp), 0 = không thêm
+        internal var marginTop: Int = 0
+        // Khoảng trống thêm vào phía DƯỚI row này (đơn vị dp), 0 = không thêm
+        internal var marginBottom: Int = 0
         // Độ trong suốt (alpha) của chữ, từ 0.0 (trong suốt hoàn toàn) đến 1.0 (đục hoàn toàn).
         // -1 = không thiết lập (giữ nguyên alpha mặc định của màu chữ/màu nền)
         internal var alpha: Float = -1f
