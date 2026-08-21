@@ -110,7 +110,7 @@ inforkk() {
 echo '
   [[group]]
   [[group.text.rows]]
-  text = "'$system_text' • '$infor_text'"
+  text = "'$infor_text' × '$system_text'"
   size = 16
   bold = true
   alpha = 1
@@ -935,7 +935,7 @@ Feature() {
     title = "Gemini API"
     placeholder = "*******************"
     type = "text"
-    desc-sh = "transai -c 2>&1"
+    desc-sh = "transai -c 2>&1 | trans -b"
     
     [[group.action.params]]
     name = "models_genmini"
