@@ -24,6 +24,10 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
     fun render(): View {
         val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_text, null)
         val expandBtn = layout.findViewById<ImageButton>(R.id.kr_param_text_expand)
+        // Chụp lại vào biến local: bên trong `run{}` trên EditText, tên "context" sẽ bị
+        // shadow bởi View.getContext() (kiểu Context thường, không có supportFragmentManager),
+        // nên phải dùng activity riêng để mở DialogFragment.
+        val activity = context
 
         layout.findViewById<EditText>(R.id.kr_param_text).run {
             tag = actionParamInfo.name
@@ -75,7 +79,7 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
                                 editText.setSelection(editText.text?.length ?: 0)
                             }
                         }
-                ).show(context.supportFragmentManager, "params-text-editor")
+                ).show(activity.supportFragmentManager, "params-text-editor")
             }
         }
 
