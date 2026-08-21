@@ -110,7 +110,7 @@ inforkk() {
 echo '
   [[group]]
   [[group.text.rows]]
-  text = "'$system_text' | '$infor_text'"
+  text = "'$system_text' • '$infor_text'"
   size = 16
   bold = true
   alpha = 1
@@ -172,20 +172,6 @@ echo '
   size = 13
   color = "#0dbda2"
   text = "'$CPU_ABI'"
-  
-  [[group.text.rows]]
-  size = 13
-  text = "'$version_text':"
-  break = true
-  bold = true
-  line-height = 1.3
-  icon = "'$ETC'/icon/1list.png"
-  
-  [[group.text.rows]]
-  size = 13
-  bold = true
-  color = "#0dbda2"
-  text = "'$PACKAGE_VERSION_NAME'"
   margin-bottom = 6
   '
 }
@@ -889,28 +875,6 @@ Feature() {
     label = "'$option_text'"
     value-sh = "glog ramoccupied 4096"
     options-sh = "echo -e \"512\n1024\n2048\n3072\n4096\n5120\n6144\n7168\n8192\""
-
-  [[group]]
-  [[group.action]]
-  title = "'$infor_text'"
-  icon = "'`urlpng icon_info`'"
-  shell = "hidden"
-  script = """
-    slog show_infor_text_1 "$show_infor_text_1"
-    slog show_infor_text_2 "$show_infor_text_2"
-  """
-
-    [[group.action.params]]
-    name = "show_infor_text_1"
-    title = "Text 1"
-    type = "text"
-    value-sh = "glog show_infor_text_1"
-
-    [[group.action.params]]
-    name = "show_infor_text_2"
-    title = "Text 2"
-    type = "text"
-    value-sh = "glog show_infor_text_2"
 
   [[group]]
   [[group.action]]
