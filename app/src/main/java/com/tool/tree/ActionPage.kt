@@ -8,7 +8,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -62,36 +61,6 @@ class ActionPage : AppCompatActivity() {
     private var checkboxRefreshJob: Job? = null
     private var loadPageJob: Job? = null
 
-    // Tự dựng cử chỉ vuốt mép trái để trở lại bằng touch event thô, KHÔNG dùng predictive back
-    // API của hệ thống - vì app buộc giữ targetSdkVersion 28 (cần quyền root/shell) nên Android
-    // sẽ không bao giờ gửi tiến độ vuốt thật (BackEventCompat.progress) cho app này; back luôn
-    // bị coi là "tức thời". QUAN TRỌNG: helper này được gọi từ dispatchTouchEvent() bên dưới
-    // (không phải setOnTouchListener) - vì các trang có danh sách mục (RecyclerView phủ full
-    // width sát mép trái, xem activity_action_page.xml) sẽ tự nuốt mất sự kiện chạm ngay từ
-    // ACTION_DOWN nếu chỉ gắn listener lên view gốc, khiến hiệu ứng không bao giờ chạy. Xem chi
-    // tiết trong SwipeBackGestureHelper.kt.
-    private val swipeBackHelper by lazy {
-        SwipeBackGestureHelper(
-            activity = this,
-            target = binding.root,
-            onCancelled = {},
-            onCommit = {
-                // View đã tự dịch chuyển hết theo cử chỉ vuốt rồi nên không cần phát lại
-                // animation đóng activity mặc định (activity_close_enter/exit trong
-                // styles.xml) để tránh hiệu ứng bị "giật" (nhảy về vị trí cũ rồi chạy lại).
-                finish()
-                overridePendingTransition(0, 0)
-            }
-        )
-    }
-
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (::binding.isInitialized && swipeBackHelper.dispatchTouchEvent(ev)) {
-            return true
-        }
-        return super.dispatchTouchEvent(ev)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -109,7 +78,6 @@ class ActionPage : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        swipeBackHelper.installGestureExclusion()
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -840,7 +808,6 @@ class ActionPage : AppCompatActivity() {
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
-        swipeBackHelper.uninstallGestureExclusion()
         setExcludeFromRecents()
         super.onDestroy()
     }
