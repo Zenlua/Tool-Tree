@@ -1,8 +1,6 @@
 package com.tool.tree.ui
 
 import android.content.Context
-import android.os.Bundle
-import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.VelocityTracker
@@ -14,12 +12,6 @@ import android.widget.OverScroller
 import kotlin.math.abs
 import kotlin.math.max
 
-/**
- * SwipePager - thay thế androidx.viewpager2.widget.ViewPager2.
- *
- * Tối ưu hóa hiệu năng cho số lượng tab cố định, loại bỏ hoàn toàn chi phí RecyclerView.
- * Đã tích hợp chống khựng (Hardware Layer acceleration) và hiệu ứng cuộn quá mép (rubber-band overscroll).
- */
 class SwipePager @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
@@ -55,7 +47,6 @@ class SwipePager @JvmOverloads constructor(
 
     private var pendingItem: Int? = null
     private var interruptedAnimation = false
-    private var isHardwareLayerAttached = false
 
     init {
         val vc = ViewConfiguration.get(context)
@@ -97,46 +88,7 @@ class SwipePager @JvmOverloads constructor(
         applyPageTransform()
     }
 
-    fun removePage(index: Int) {
-        if (index in pages.indices) {
-            val view = pages.removeAt(index)
-            removeView(view)
-            val target = currentItem.coerceAtMost(max(0, pages.size - 1))
-            setCurrentItem(target, false)
-        }
-    }
-
-    fun clearPages() {
-        pages.clear()
-        removeAllViews()
-        currentItem = 0
-    }
-
     fun getPageCount(): Int = pages.size
-
-    private fun enableHardwareLayers() {
-        if (!isHardwareLayerAttached) {
-            for (i in 0 until childCount) {
-                val child = getChildAt(i)
-                if (child.visibility == VISIBLE && child.layerType != LAYER_TYPE_HARDWARE) {
-                    child.setLayerType(LAYER_TYPE_HARDWARE, null)
-                }
-            }
-            isHardwareLayerAttached = true
-        }
-    }
-
-    private fun disableHardwareLayers() {
-        if (isHardwareLayerAttached) {
-            for (i in 0 until childCount) {
-                val child = getChildAt(i)
-                if (child.layerType != LAYER_TYPE_NONE) {
-                    child.setLayerType(LAYER_TYPE_NONE, null)
-                }
-            }
-            isHardwareLayerAttached = false
-        }
-    }
 
     fun setCurrentItem(position: Int, smoothScroll: Boolean = true) {
         if (pages.isEmpty()) return
@@ -154,16 +106,16 @@ class SwipePager @JvmOverloads constructor(
         val targetX = target * width
         scroller.abortAnimation()
         if (smoothScroll) {
-            enableHardwareLayers()
             scroller.startScroll(scrollX, 0, targetX - scrollX, 0, 300)
             postInvalidateOnAnimation()
+            // Chú ý: Không gọi onPageSelected ở đây nữa.
+            // Hàm computeScroll() sẽ tự động phát sự kiện khi trang thực sự dừng lại.
         } else {
             scrollTo(targetX, 0)
-        }
-
-        if (currentItem != target) {
-            currentItem = target
-            listener?.onPageSelected(target)
+            if (currentItem != target) {
+                currentItem = target
+                listener?.onPageSelected(target)
+            }
         }
     }
 
@@ -201,7 +153,10 @@ class SwipePager @JvmOverloads constructor(
             if (interruptedAnimation && !isDragging) {
                 settle(0f)
             }
-            resetTouchState()
+            interruptedAnimation = false
+            isDragging = false
+            velocityTracker?.recycle()
+            velocityTracker = null
             return false
         }
         if (action != MotionEvent.ACTION_DOWN && isDragging) return true
@@ -250,7 +205,6 @@ class SwipePager @JvmOverloads constructor(
                     if (abs(dx) > touchSlop && abs(dx) > abs(dy)) isDragging = true
                 }
                 if (isDragging) {
-                    enableHardwareLayers()
                     var dx = lastX - ev.x
                     lastX = ev.x
                     
@@ -267,30 +221,20 @@ class SwipePager @JvmOverloads constructor(
                     notifyScrolled()
                 }
             }
-            MotionEvent.ACTION_UP -> {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 if (isDragging) {
                     velocityTracker?.computeCurrentVelocity(1000, maxFlingVelocity.toFloat())
                     settle(velocityTracker?.xVelocity ?: 0f)
                 } else if (interruptedAnimation) {
                     settle(0f)
                 }
-                resetTouchState()
-            }
-            MotionEvent.ACTION_CANCEL -> {
-                if (isDragging || interruptedAnimation) {
-                    setCurrentItem(currentItem, true)
-                }
-                resetTouchState()
+                interruptedAnimation = false
+                isDragging = false
+                velocityTracker?.recycle()
+                velocityTracker = null
             }
         }
         return true
-    }
-
-    private fun resetTouchState() {
-        interruptedAnimation = false
-        isDragging = false
-        velocityTracker?.recycle()
-        velocityTracker = null
     }
 
     private fun settle(velocityX: Float) {
@@ -309,11 +253,20 @@ class SwipePager @JvmOverloads constructor(
         val current = scrollX / page
         val fraction = (scrollX % page).toFloat() / page
 
+        // Tính số trang lướt qua dựa trên vận tốc (hỗ trợ vuốt lướt 2 trang)
+        val pagesToJump = if (abs(velocityX) > minFlingVelocity) {
+            // Vuốt càng mạnh, số trang nhảy càng nhiều (tối đa 2 trang)
+            (abs(velocityX) / (maxFlingVelocity / 2f)).toInt().coerceAtLeast(1)
+        } else 0
+
         val target = when {
-            abs(velocityX) > minFlingVelocity -> if (velocityX < 0) current + 1 else current
+            abs(velocityX) > minFlingVelocity -> {
+                if (velocityX < 0) (current + pagesToJump) else (current - pagesToJump)
+            }
             fraction > 0.5f -> current + 1
             else -> current
         }
+        
         setCurrentItem(target.coerceIn(0, pages.size - 1), true)
     }
 
@@ -328,46 +281,25 @@ class SwipePager @JvmOverloads constructor(
 
     override fun computeScroll() {
         if (scroller.computeScrollOffset()) {
-            enableHardwareLayers()
             scrollTo(scroller.currX, scroller.currY)
             notifyScrolled()
             postInvalidateOnAnimation()
-        } else {
-            disableHardwareLayers()
-            if (!isDragging && width > 0 && pages.isNotEmpty()) {
-                val settled = (scrollX / width).coerceIn(0, pages.size - 1)
-                if (settled != currentItem) {
-                    currentItem = settled
-                    listener?.onPageSelected(settled)
-                }
+        } else if (!isDragging && width > 0 && pages.isNotEmpty()) {
+            val settled = (scrollX / width).coerceIn(0, pages.size - 1)
+            if (settled != currentItem) {
+                currentItem = settled
+                listener?.onPageSelected(settled)
             }
         }
     }
 
+    // Bổ sung hàm này để chống leak VelocityTracker
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        scroller.abortAnimation()
-        disableHardwareLayers()
-        velocityTracker?.recycle()
-        velocityTracker = null
-    }
-
-    override fun onSaveInstanceState(): Parcelable {
-        val superState = super.onSaveInstanceState()
-        val bundle = Bundle()
-        bundle.putParcelable("superState", superState)
-        bundle.putInt("currentItem", currentItem)
-        return bundle
-    }
-
-    override fun onRestoreInstanceState(state: Parcelable?) {
-        if (state is Bundle) {
-            val superState = state.getParcelable<Parcelable>("superState")
-            val savedItem = state.getInt("currentItem", 0)
-            super.onRestoreInstanceState(superState)
-            setCurrentItem(savedItem, false)
-        } else {
-            super.onRestoreInstanceState(state)
+        if (velocityTracker != null) {
+            velocityTracker?.recycle()
+            velocityTracker = null
         }
+        scroller.abortAnimation()
     }
 }

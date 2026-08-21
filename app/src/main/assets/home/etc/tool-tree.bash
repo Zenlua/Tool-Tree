@@ -171,7 +171,7 @@ echo '
   bold = true
   size = 13
   color = "#0dbda2"
-  text = "'$CPU_ABI'"
+  text = "'${CPU_ABI^}'"
   margin-bottom = 6
   '
 }
