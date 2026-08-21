@@ -16,7 +16,7 @@ import com.tool.tree.ThemeModeState
 class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var context: FragmentActivity) {
     companion object {
         // Ngưỡng số dòng: vượt quá thì hiện nút mở rộng toàn màn hình
-        private const val EXPAND_LINE_THRESHOLD = 2
+        private const val EXPAND_LINE_THRESHOLD = 4
     }
 
     private val darkMode: Boolean = ThemeModeState.isDarkMode()
