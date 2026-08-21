@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -64,8 +65,11 @@ class ActionPage : AppCompatActivity() {
     // Tự dựng cử chỉ vuốt mép trái để trở lại bằng touch event thô, KHÔNG dùng predictive back
     // API của hệ thống - vì app buộc giữ targetSdkVersion 28 (cần quyền root/shell) nên Android
     // sẽ không bao giờ gửi tiến độ vuốt thật (BackEventCompat.progress) cho app này; back luôn
-    // bị coi là "tức thời". Xem chi tiết cách hoạt động trong SwipeBackGestureHelper.kt - vuốt
-    // được bao nhiêu % thì view dịch chuyển bấy nhiêu %, giống hệt activity_close_exit.xml.
+    // bị coi là "tức thời". QUAN TRỌNG: helper này được gọi từ dispatchTouchEvent() bên dưới
+    // (không phải setOnTouchListener) - vì các trang có danh sách mục (RecyclerView phủ full
+    // width sát mép trái, xem activity_action_page.xml) sẽ tự nuốt mất sự kiện chạm ngay từ
+    // ACTION_DOWN nếu chỉ gắn listener lên view gốc, khiến hiệu ứng không bao giờ chạy. Xem chi
+    // tiết trong SwipeBackGestureHelper.kt.
     private val swipeBackHelper by lazy {
         SwipeBackGestureHelper(
             activity = this,
@@ -79,6 +83,13 @@ class ActionPage : AppCompatActivity() {
                 overridePendingTransition(0, 0)
             }
         )
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (::binding.isInitialized && swipeBackHelper.dispatchTouchEvent(ev)) {
+            return true
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,7 +109,6 @@ class ActionPage : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        swipeBackHelper.attach()
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -829,7 +839,6 @@ class ActionPage : AppCompatActivity() {
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
-        swipeBackHelper.detach()
         setExcludeFromRecents()
         super.onDestroy()
     }
