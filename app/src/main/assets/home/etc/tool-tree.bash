@@ -114,15 +114,15 @@ echo '
   size = 16
   bold = true
   alpha = 1
-  line-height = 1.2
-  margin-top = 8
+  line-height = 1.3
+  margin-top = 6
   
   [[group.text.rows]]
   size = 13
   text = "'$root_text':"
   bold = true
   icon = "'$ETC'/icon/1shield.png"
-  line-height = 1.2
+  line-height = 1.3
   break = true
   
   [[group.text.rows]]
@@ -136,7 +136,7 @@ echo '
   break = true
   size = 13
   bold = true
-  line-height = 1.2
+  line-height = 1.3
   icon = "'$ETC'/icon/1smart.png"
   
   [[group.text.rows]]
@@ -150,7 +150,7 @@ echo '
   break = true
   size = 13
   bold = true
-  line-height = 1.2
+  line-height = 1.3
   icon = "'$ETC'/icon/1android.png"
   
   [[group.text.rows]]
@@ -164,7 +164,7 @@ echo '
   break = true
   size = 13
   bold = true
-  line-height = 1.2
+  line-height = 1.3
   icon = "'$ETC'/icon/1cpu.png"
   
   [[group.text.rows]]
@@ -173,13 +173,12 @@ echo '
   color = "#0dbda2"
   text = "'$CPU_ABI'"
   
-  
   [[group.text.rows]]
   size = 13
   text = "'$version_text':"
   break = true
   bold = true
-  line-height = 1.2
+  line-height = 1.3
   icon = "'$ETC'/icon/1list.png"
   
   [[group.text.rows]]
@@ -187,7 +186,7 @@ echo '
   bold = true
   color = "#0dbda2"
   text = "'$PACKAGE_VERSION_NAME'"
-  margin-bottom = 8
+  margin-bottom = 6
   '
 }
 
