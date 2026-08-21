@@ -120,7 +120,7 @@ inforkk='
   size = 13
   text = "'$root_text':"
   bold = true
-  icon = "'$ETC'/icon/1sec.png"
+  icon = "'$ETC'/icon/1shield.png"
   line-height = 1.2
   margin-top = 2
   
