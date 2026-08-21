@@ -311,6 +311,10 @@ object RowsRenderHelper {
                 spannableString.setSpan(LetterSpacingSpan(row.letterSpacing), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
+            if (row.lineHeight != 0f) {
+                spannableString.setSpan(LineHeightMultiplierSpan(row.lineHeight), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
             // Đặt TextAlphaSpan SAU CÙNG (trong số các span ảnh hưởng màu/vẽ) để nó luôn được áp
             // dụng cuối, chỉ ghi đè kênh alpha của màu đã được set bởi ForegroundColorSpan/màu mặc
             // định - không đụng tới RGB, tránh mất màu chữ khi kết hợp cả color lẫn alpha.
@@ -385,6 +389,24 @@ object RowsRenderHelper {
 
         override fun updateMeasureState(tp: TextPaint) {
             tp.letterSpacing = spacing
+        }
+    }
+
+    // Span điều chỉnh chiều cao dòng (line height) theo hệ số nhân so với chiều cao dòng mặc định
+    // của font hiện tại. Cộng thêm/bớt đều 2 bên (trên ascent/top và dưới descent/bottom) để chữ
+    // vẫn nằm giữa dòng theo chiều dọc, không bị dồn lệch lên/xuống khi tăng/giảm độ cao.
+    private class LineHeightMultiplierSpan(private val multiplier: Float) : LineHeightSpan {
+        override fun chooseHeight(text: CharSequence, start: Int, end: Int, spanstartv: Int, lineHeight: Int, fm: Paint.FontMetricsInt) {
+            val original = fm.descent - fm.ascent
+            if (original <= 0) return
+            val extra = ((multiplier - 1f) * original).toInt()
+            if (extra == 0) return
+            val topExtra = extra / 2
+            val bottomExtra = extra - topExtra
+            fm.ascent -= topExtra
+            fm.top -= topExtra
+            fm.descent += bottomExtra
+            fm.bottom += bottomExtra
         }
     }
 

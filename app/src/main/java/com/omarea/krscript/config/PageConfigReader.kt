@@ -768,6 +768,8 @@ class PageConfigReader {
         tomlGet(table, "monospace", "mono", "code")?.let { row.monospace = tomlTruthy(it, "monospace", "mono", "code") }
         // letter-spacing: đơn vị em (giống TextView.letterSpacing), ví dụ 0.1 = giãn nhẹ, -0.05 = thu hẹp
         tomlGet(table, "letter-spacing", "letterspacing", "spacing")?.let { row.letterSpacing = it.trim().toFloatOrNull() ?: row.letterSpacing }
+        // line-height: hệ số nhân chiều cao dòng, ví dụ 1.5 = cao hơn 50%, 0.8 = thấp hơn 20%
+        tomlGet(table, "line-height", "lineheight", "row-height")?.let { row.lineHeight = it.trim().toFloatOrNull() ?: row.lineHeight }
         // alpha/opacity: nhận 0.0-1.0 (tỉ lệ) hoặc 0-255 (giá trị alpha kênh màu, tự quy đổi nếu > 1)
         tomlGet(table, "alpha", "opacity")?.let {
             val v = it.trim().toFloatOrNull()

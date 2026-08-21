@@ -26,6 +26,9 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         // Khoảng cách giữa các chữ (đơn vị em, giống TextView.letterSpacing) - 0 = mặc định,
         // giá trị dương giãn chữ ra, âm thì thu hẹp lại
         internal var letterSpacing: Float = 0f
+        // Độ cao dòng (chiều dọc), dạng hệ số nhân so với chiều cao dòng mặc định - 0 = không
+        // thiết lập (giữ nguyên); ví dụ 1.5 = cao hơn 50%, 0.8 = thấp hơn 20%
+        internal var lineHeight: Float = 0f
         // Độ trong suốt (alpha) của chữ, từ 0.0 (trong suốt hoàn toàn) đến 1.0 (đục hoàn toàn).
         // -1 = không thiết lập (giữ nguyên alpha mặc định của màu chữ/màu nền)
         internal var alpha: Float = -1f
