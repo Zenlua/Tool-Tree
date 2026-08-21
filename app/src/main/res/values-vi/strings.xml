@@ -96,6 +96,7 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_download_downloading">Đang tải tệp</string>
     <string name="kr_color_picker">Chọn màu</string>
     <string name="kr_invalid_color">Giá trị màu không hợp lệ. Hỗ trợ định dạng như #ff88aa00 hoặc @color/tên_màu</string>
+    <string name="kr_expand_fullscreen">Mở rộng toàn màn hình</string>
     <string name="kr_duplicate_param_name">Lỗi cấu hình: trùng tên tham số (name) \"%1$s\" - chỉ hiển thị mục đầu tiên</string>
     <string name="kr_shortcut_create_fail">Tạo phím tắt thất bại</string>
     <string name="kr_shortcut_create_success">Yêu cầu tạo phím tắt đã được gửi</string>

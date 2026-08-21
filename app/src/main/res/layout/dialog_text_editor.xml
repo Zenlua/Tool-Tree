@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/dialogRoot"
+    android:orientation="vertical"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        style="@style/dialogTitle"
+        android:breakStrategy="simple"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:id="@+id/dialog_title"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <ScrollView
+        android:layout_marginTop="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <EditText
+            android:id="@+id/kr_text_editor_content"
+            android:background="@android:color/transparent"
+            android:textSize="15sp"
+            android:padding="8dp"
+            android:gravity="top|start"
+            android:text=""
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:breakStrategy="simple" />
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/bottom_buttons"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/btn_cancel"
+            style="@style/dialogCancelBtn"
+            android:layout_marginEnd="8dp"
+            android:text="@string/btn_cancel">
+        </Button>
+        <Button
+            android:id="@+id/btn_confirm"
+            style="@style/dialogConfirmBtn"
+            android:text="@string/btn_confirm">
+        </Button>
+    </LinearLayout>
+</LinearLayout>
