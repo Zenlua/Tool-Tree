@@ -57,7 +57,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
-        setTitle(R.string.app_name)
+        val versionName = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (e: Exception) {
+            "1.0.0"
+        }
+        setTitle("${getString(R.string.app_name)} ($versionName)")
 
         if (ThemeConfig(this).getAllowNotificationUI()) {
             WakeLockService.startService(applicationContext)
