@@ -71,6 +71,11 @@ object RowsRenderHelper {
         var needsRebindAfterLayout = false
         var hasContent = false
 
+        // Row liền TRƯỚC có marginBottom > 0 hay không - dùng để ép row hiện tại phải bắt đầu
+        // nhóm/dòng mới (xuống dòng), vì marginBottom luôn có nghĩa là "kết thúc dòng ở đây, các
+        // row sau phải xuống dòng mới" dù bản thân row đó không khai báo breakRow.
+        var previousHadMarginBottom = false
+
         // ----- Gom nhóm nhiều row liền kề vào chung 1 paragraph (1 dòng) - mặc định các row nối
         // chung dòng với nhau (giống hành vi gốc của "break": không breakRow thì không xuống
         // dòng), chỉ tách nhóm mới khi row.breakRow/row.line = true. Cả nhóm dùng chung 1 canh lề
@@ -142,32 +147,20 @@ object RowsRenderHelper {
                 groupContentWidth = 0f
             }
 
-            // row.marginTop > 0: chèn 1 dòng TRỐNG (không vẽ gì) có chiều cao = marginTop NGAY
-            // TRƯỚC nội dung row này, dùng để tạo khoảng cách phía trên - tương tự cơ chế row.line
-            // nhưng không vẽ đường kẻ, chỉ chiếm không gian theo chiều dọc.
-            if (row.marginTop > 0) {
-                finalizeGroup(rowsView.length())
-                if (hasContent) {
-                    rowsView.append("\n")
-                }
-                val topSpace = SpannableString(" ")
-                topSpace.setSpan(VerticalSpaceSpan(dpToPx(context, row.marginTop)), 0, topSpace.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                rowsView.append(topSpace)
-                rowsView.append("\n")
-                hasContent = true
-                groupStart = rowsView.length()
-                groupAlign = Layout.Alignment.ALIGN_NORMAL
-                groupContentWidth = 0f
-            }
-
-            // Chỉ bắt đầu nhóm/dòng mới khi row.breakRow (hoặc row.line/marginTop, hoặc chưa có
-            // nội dung nào trước đó) - mặc định (breakRow=false) luôn nối chung dòng với row liền
-            // trước, đúng ngữ nghĩa gốc của "break". Row có align != normal mà không muốn bị row
-            // kế tiếp nối chung dòng thì tự khai báo break = true cho row kế tiếp đó.
-            val startsNewGroup = row.line || row.marginTop > 0 || row.breakRow || !hasContent
+            // Chỉ bắt đầu nhóm/dòng mới khi row.breakRow (hoặc row.line, hoặc row.marginTop, hoặc
+            // row liền trước có marginBottom, hoặc chưa có nội dung nào trước đó) - mặc định
+            // (breakRow=false) luôn nối chung dòng với row liền trước, đúng ngữ nghĩa gốc của
+            // "break". Row có align != normal mà không muốn bị row kế tiếp nối chung dòng thì tự
+            // khai báo break = true cho row kế tiếp đó.
+            //
+            // Lưu ý: marginTop/marginBottom KHÔNG còn tạo dòng trống riêng (xem TopExtraSpaceSpan/
+            // BottomExtraSpaceSpan bên dưới) - chúng chỉ ép row phải nằm trên 1 paragraph riêng để
+            // phần không gian nới thêm (ascent/descent) chỉ ảnh hưởng đúng dòng của row đó, không
+            // lem sang các row khác đang chung dòng.
+            val startsNewGroup = row.line || row.marginTop > 0 || row.breakRow || previousHadMarginBottom || !hasContent
             if (startsNewGroup) {
                 finalizeGroup(rowsView.length())
-                if (hasContent && !row.line && row.marginTop == 0 && row.breakRow) {
+                if (hasContent && !row.line) {
                     rowsView.append("\n")
                 }
                 groupStart = rowsView.length()
@@ -185,6 +178,7 @@ object RowsRenderHelper {
                     groupContentWidth += rowsView.paint.measureText(gap)
                 }
             }
+            previousHadMarginBottom = false
             // Nếu có khai báo "sh": lấy nội dung dòng từ kết quả shell đã gộp sẵn ở trên
             val label = if (row.dynamicTextSh.isNotEmpty()) {
                 dynamicTextResults[rowIndex] ?: ""
@@ -353,6 +347,20 @@ object RowsRenderHelper {
                 spannableString.setSpan(LineHeightMultiplierSpan(row.lineHeight), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
+            // marginTop/marginBottom: KHÔNG tạo dòng trống riêng nữa (cách cũ gây thừa 1 dòng khi
+            // row là row cuối cùng, vì "\n" ở cuối cùng của toàn bộ rowsView.text khiến TextView tự
+            // vẽ thêm 1 dòng trống với chiều cao mặc định, không phải chiều cao marginBottom mong
+            // muốn). Thay vào đó, nới trực tiếp ascent (phía trên) / descent (phía dưới) của ĐÚNG
+            // dòng chứa row này bằng LineHeightSpan - không cần thêm ký tự "\n" hay " " nào.
+            // Với marginTop: row đã được ép startsNewGroup = true ở trên nên chắc chắn nằm ở đầu 1
+            // paragraph riêng, nới ascent chỉ ảnh hưởng đúng dòng đó.
+            if (row.marginTop > 0) {
+                spannableString.setSpan(TopExtraSpaceSpan(dpToPx(context, row.marginTop)), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            if (row.marginBottom > 0) {
+                spannableString.setSpan(BottomExtraSpaceSpan(dpToPx(context, row.marginBottom)), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
             // Đặt TextAlphaSpan SAU CÙNG (trong số các span ảnh hưởng màu/vẽ) để nó luôn được áp
             // dụng cuối, chỉ ghi đè kênh alpha của màu đã được set bởi ForegroundColorSpan/màu mặc
             // định - không đụng tới RGB, tránh mất màu chữ khi kết hợp cả color lẫn alpha.
@@ -387,20 +395,11 @@ object RowsRenderHelper {
                 else -> measurePaint.measureText(text)
             }
 
-            // row.marginBottom > 0: chèn 1 dòng TRỐNG có chiều cao = marginBottom NGAY SAU nội
-            // dung row này, dùng để tạo khoảng cách phía dưới. Luôn kết thúc nhóm hiện tại (không
-            // cho row kế tiếp join chung dòng qua khoảng trống này).
+            // Row này có marginBottom - ghi nhớ để ép row KẾ TIẾP phải bắt đầu nhóm/dòng mới (xem
+            // "previousHadMarginBottom" ở đầu vòng lặp), vì phần descent vừa nới thêm chỉ có ý
+            // nghĩa "khoảng trống bên dưới dòng này" khi dòng này thực sự kết thúc tại đây.
             if (row.marginBottom > 0) {
-                finalizeGroup(rowsView.length())
-                rowsView.append("\n")
-                val bottomSpace = SpannableString(" ")
-                bottomSpace.setSpan(VerticalSpaceSpan(dpToPx(context, row.marginBottom)), 0, bottomSpace.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                rowsView.append(bottomSpace)
-                rowsView.append("\n")
-                hasContent = true
-                groupStart = rowsView.length()
-                groupAlign = Layout.Alignment.ALIGN_NORMAL
-                groupContentWidth = 0f
+                previousHadMarginBottom = true
             }
         }
 
@@ -454,15 +453,36 @@ object RowsRenderHelper {
     }
 
     // Span tạo 1 dòng TRỐNG có chiều cao cố định (px) - không vẽ nội dung gì, chỉ ép chiều cao
-    // dòng chứa ký tự placeholder (" ") đúng bằng heightPx, dùng để tạo khoảng trống dọc (margin
-    // trên/dưới của row) mà không cần vẽ gì cả - khác LineHeightMultiplierSpan (nhân hệ số dựa
-    // trên font hiện có), span này ép cứng 1 chiều cao tuyệt đối cho dòng trống độc lập.
+    // dòng chứa ký tự placeholder (" ") đúng bằng heightPx. Không còn dùng cho marginTop/
+    // marginBottom (xem TopExtraSpaceSpan/BottomExtraSpaceSpan) nhưng vẫn giữ lại vì có thể còn
+    // được dùng ở nơi khác cần 1 dòng trống độc lập thực sự.
     private class VerticalSpaceSpan(private val heightPx: Int) : LineHeightSpan {
         override fun chooseHeight(text: CharSequence, start: Int, end: Int, spanstartv: Int, lineHeight: Int, fm: Paint.FontMetricsInt) {
             fm.ascent = -heightPx
             fm.top = fm.ascent
             fm.descent = 0
             fm.bottom = fm.descent
+        }
+    }
+
+    // Nới thêm khoảng trống PHÍA TRÊN (ascent) của đúng dòng/paragraph mà span này được gắn vào -
+    // dùng cho row.marginTop. KHÔNG tạo dòng trống riêng: chỉ "kéo" ascent của dòng chứa nội dung
+    // thật lên cao hơn, nên không có ký tự nào bị thêm vào text, tránh hẳn lỗi thừa dòng khi row
+    // này là row cuối cùng của rowsView.
+    private class TopExtraSpaceSpan(private val extraPx: Int) : LineHeightSpan {
+        override fun chooseHeight(text: CharSequence, start: Int, end: Int, spanstartv: Int, lineHeight: Int, fm: Paint.FontMetricsInt) {
+            fm.ascent -= extraPx
+            fm.top -= extraPx
+        }
+    }
+
+    // Nới thêm khoảng trống PHÍA DƯỚI (descent) của đúng dòng/paragraph mà span này được gắn vào -
+    // dùng cho row.marginBottom. Cùng nguyên lý với TopExtraSpaceSpan: không thêm ký tự/dòng nào,
+    // chỉ "đẩy" descent của dòng hiện tại xuống thấp hơn.
+    private class BottomExtraSpaceSpan(private val extraPx: Int) : LineHeightSpan {
+        override fun chooseHeight(text: CharSequence, start: Int, end: Int, spanstartv: Int, lineHeight: Int, fm: Paint.FontMetricsInt) {
+            fm.descent += extraPx
+            fm.bottom += extraPx
         }
     }
 

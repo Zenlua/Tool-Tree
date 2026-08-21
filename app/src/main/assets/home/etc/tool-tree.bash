@@ -115,6 +115,7 @@ echo '
   bold = true
   alpha = 1
   line-height = 1.2
+  margin-top = 8
   
   [[group.text.rows]]
   size = 13
@@ -122,7 +123,7 @@ echo '
   bold = true
   icon = "'$ETC'/icon/1shield.png"
   line-height = 1.2
-  margin-top = 2
+  break = true
   
   [[group.text.rows]]
   bold = true
@@ -186,6 +187,7 @@ echo '
   bold = true
   color = "#0dbda2"
   text = "'$PACKAGE_VERSION_NAME'"
+  margin-bottom = 8
   '
 }
 
