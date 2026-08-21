@@ -3,7 +3,7 @@
 id=theme_trans
 name="Theme Trans"
 author=Kakathic
-description="Translate theme, widget, aod"
+description="Translate theme, widget"
 version=1.0
 versionCode=100
 root=true

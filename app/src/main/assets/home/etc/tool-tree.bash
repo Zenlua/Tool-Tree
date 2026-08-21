@@ -2204,6 +2204,23 @@ Addon() {
     echo
     installadd "'$url'" "'${dirvad%/*}'"
     """'
+      if [ "$(glog show_setting_add)" == 1 ]; then
+        echo '
+        [[group.action.rows]]
+        toggle = "checkbox"
+        text = "'$hide_add_text'"
+        checked = "[ -f '$dirvad'/hide ] && echo 1"
+        line = true
+        align="opposite"
+        onchange-sh = """
+        if [ -f '$dirvad'/hide ]; then
+        rm '$dirvad'/hide
+        else
+        touch '$dirvad'/hide
+        fi
+        """
+        '
+      fi
     fi
   }
 
@@ -2373,7 +2390,9 @@ Addon() {
         Homeadd
         fi
       elif [ -f "$dirvad/download.bash" ]; then
+        if [[ ! -f "$dirvad/hide" || "$(glog show_setting_add)" == 1 ]]; then
         Download
+        fi
       fi
     fi
   
