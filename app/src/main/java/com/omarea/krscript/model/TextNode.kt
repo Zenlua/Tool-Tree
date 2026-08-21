@@ -65,7 +65,13 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         // Số vòng lặp tối đa (<=0: lặp vô hạn, mặc định)
         internal var photoGifLoopCount: Int = 0
 
-        // ===== Toggle nhỏ (checkbox / switch) lồng trong dòng text =====
+        // Ảnh nhỏ hiển thị NGAY CẠNH chữ (inline, cùng dòng) - khác với "photo" (khối ảnh riêng,
+        // full chiều rộng, nằm dưới toàn bộ rows). "" = không có icon.
+        internal var icon: String = ""
+        // Vị trí icon so với chữ: "before" (trước chữ) hoặc "after" (sau chữ)
+        internal var iconPosition: String = "before"
+        // Kích thước icon (đơn vị dp) - 0 = tự động lấy kích thước gần bằng cỡ chữ hiện tại
+        internal var iconSize: Int = 0
         // "" (mặc định) = không phải toggle; "checkbox" hoặc "switch"
         internal var toggle: String = ""
         // Trạng thái bật/tắt hiện tại (được resolveBoolOrShell tại lúc parse trang - xem "checked")

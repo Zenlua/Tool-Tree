@@ -793,6 +793,16 @@ class PageConfigReader {
         tomlGet(table, "photo-gif-time", "gif-time", "gif_time")?.let { row.photoGifTime = it.trim().toIntOrNull() ?: row.photoGifTime }
         tomlGet(table, "photo-gif-autoplay", "gif-autoplay", "gif_autoplay")?.let { row.photoGifAutoplay = tomlTruthy(it) }
         tomlGet(table, "photo-gif-loop", "photo-gif-loop-count", "gif-loop", "gif-loop-count", "gif_loop_count")?.let { row.photoGifLoopCount = it.trim().toIntOrNull() ?: row.photoGifLoopCount }
+        // icon: ảnh nhỏ hiển thị NGAY CẠNH chữ (inline), khác "photo" (khối ảnh riêng full chiều rộng)
+        tomlGet(table, "icon", "icon-path")?.let { row.icon = it.trim() }
+        tomlGet(table, "icon-position", "icon-pos")?.let {
+            val p = it.trim().lowercase(getDefault())
+            row.iconPosition = when (p) {
+                "after", "end", "right" -> "after"
+                else -> "before"
+            }
+        }
+        tomlGet(table, "icon-size")?.let { row.iconSize = it.trim().toIntOrNull() ?: row.iconSize }
         tomlGet(table, "script", "run")?.let { row.onClickScript = it }
         tomlGet(table, "sh")?.let { row.dynamicTextSh = it }
         // Toggle nhỏ (checkbox / switch) lồng trong dòng text

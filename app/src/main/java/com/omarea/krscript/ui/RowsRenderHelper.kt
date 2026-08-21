@@ -192,13 +192,26 @@ object RowsRenderHelper {
                 row.text
             }
 
+            // Row có "icon" (ảnh nhỏ inline, khác "photo" khối riêng): nạp ảnh trước để biết có
+            // ghép được hay không, quyết định cách dựng "text" bên dưới.
+            val hasIcon = !isToggle && row.icon.isNotEmpty()
+            val rowIconDrawableRaw = if (hasIcon) buildRowIconDrawable(context, row, config) else null
+            val showIcon = rowIconDrawableRaw != null
+
             // Row dạng toggle (checkbox/switch nhỏ): chèn thêm 1 ký tự placeholder ở cuối (sau
             // label) để vẽ icon lên bằng ImageSpan - icon nằm ngay sau chữ. Muốn canh trái/giữa/
             // phải cho cả label+icon thì dùng field "align" ("normal"/"center"/"opposite") và
             // "break" giống hệt row text thường - không có cơ chế canh riêng cho icon. Toàn bộ
             // (label + icon) dùng chung 1 ClickableSpan để bấm đâu cũng đổi trạng thái được,
             // không dùng link/activity/script click thường.
-            val text = if (isToggle) "$label \u2002 " else label
+            // Row có "icon": chèn 1 ký tự placeholder TRƯỚC hoặc SAU label (tuỳ "icon-position")
+            // để vẽ ảnh nhỏ ghép ngay cạnh chữ, cùng cơ chế ImageSpan như toggle ở trên.
+            val text = when {
+                isToggle -> "$label \u2002 "
+                showIcon && row.iconPosition == "before" -> "\u2002 $label"
+                showIcon -> "$label \u2002"
+                else -> label
+            }
             val length = text.length
             val spannableString = SpannableString(text)
 
@@ -208,6 +221,13 @@ object RowsRenderHelper {
                 val iconIndex = length - 2
                 toggleDrawable = buildToggleDrawable(context, row)
                 spannableString.setSpan(VerticalCenterImageSpan(toggleDrawable), iconIndex, iconIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
+            var rowIconDrawable: Drawable? = null
+            if (showIcon && rowIconDrawableRaw != null) {
+                rowIconDrawable = rowIconDrawableRaw
+                val iconIndex = if (row.iconPosition == "before") 0 else length - 1
+                spannableString.setSpan(VerticalCenterImageSpan(rowIconDrawable), iconIndex, iconIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             if (extraIconView != null) {
@@ -351,13 +371,20 @@ object RowsRenderHelper {
             // không phải paint gốc của rowsView - vì chữ đậm/monospace thường RỘNG HƠN chữ thường,
             // đo thiếu sẽ khiến margin tính thừa, đẩy cả nhóm lệch quá đà (có thể tràn ra ngoài lề).
             val measurePaint = measurePaintForRow(rowsView.paint, row)
-            groupContentWidth += if (isToggle && toggleDrawable != null) {
-                val placeholderIndex = text.length - 2
-                val beforeIcon = text.substring(0, placeholderIndex)
-                val afterIcon = text.substring(placeholderIndex + 1)
-                measurePaint.measureText(beforeIcon) + toggleDrawable.bounds.width() + measurePaint.measureText(afterIcon)
-            } else {
-                measurePaint.measureText(text)
+            groupContentWidth += when {
+                isToggle && toggleDrawable != null -> {
+                    val placeholderIndex = text.length - 2
+                    val beforeIcon = text.substring(0, placeholderIndex)
+                    val afterIcon = text.substring(placeholderIndex + 1)
+                    measurePaint.measureText(beforeIcon) + toggleDrawable.bounds.width() + measurePaint.measureText(afterIcon)
+                }
+                showIcon && rowIconDrawable != null -> {
+                    val iconIdx = if (row.iconPosition == "before") 0 else text.length - 1
+                    val beforeIcon = text.substring(0, iconIdx)
+                    val afterIcon = text.substring(iconIdx + 1)
+                    measurePaint.measureText(beforeIcon) + rowIconDrawable.bounds.width() + measurePaint.measureText(afterIcon)
+                }
+                else -> measurePaint.measureText(text)
             }
 
             // row.marginBottom > 0: chèn 1 dòng TRỐNG có chiều cao = marginBottom NGAY SAU nội
@@ -566,6 +593,19 @@ object RowsRenderHelper {
     // Chuyển đổi dp sang px theo density hiện tại của thiết bị, dùng cho marginTop/marginBottom.
     private fun dpToPx(context: Context, dp: Int): Int {
         return (dp * context.resources.displayMetrics.density).toInt()
+    }
+
+    // Nạp + dựng drawable cho field "icon" của row (ảnh nhỏ inline cạnh chữ) - kích thước lấy
+    // theo "icon-size" (dp) nếu có khai báo, ngược lại mặc định 18dp (xấp xỉ 1 dòng chữ cỡ vừa).
+    // Trả về null nếu không có icon hoặc không nạp được ảnh (ảnh lỗi/không tồn tại).
+    private fun buildRowIconDrawable(context: Context, row: TextNode.TextRow, config: NodeInfoBase): Drawable? {
+        val loaded = IconPathAnalysis().loadRowIcon(context, row.icon, config.pageConfigDir) ?: return null
+        val density = context.resources.displayMetrics.density
+        val defaultDp = 18
+        val size = ((if (row.iconSize > 0) row.iconSize else defaultDp) * density).toInt()
+        val drawable = loaded.mutate()
+        drawable.setBounds(0, 0, size, size)
+        return drawable
     }
 
     // Tạo drawable icon cho row dạng toggle (checkbox/switch), kích thước nhỏ vừa 1 dòng text,

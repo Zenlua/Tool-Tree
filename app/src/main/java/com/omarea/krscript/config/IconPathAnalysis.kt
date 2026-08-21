@@ -96,6 +96,18 @@ class IconPathAnalysis {
         return null
     }
 
+    // Nạp ảnh nhỏ inline (field "icon" của row) - chỉ lấy 1 khung hình tĩnh (không hỗ trợ hoạt
+    // ảnh/nhiều đường dẫn như photo, vì icon dùng để ghép cố định cạnh chữ qua ImageSpan).
+    fun loadRowIcon(context: Context, iconPath: String, pageDir: String): Drawable? {
+        if (iconPath.isEmpty()) return null
+        val paths = splitMultiPaths(iconPath)
+        if (paths.isEmpty()) return null
+        decodeBitmap(context, pageDir, paths[0])?.let {
+            return bitmap2Drawable(it)
+        }
+        return null
+    }
+
     // Tách chuỗi cấu hình đường dẫn thành danh sách các đường dẫn riêng lẻ.
     // Hỗ trợ phân tách bằng dấu "|" trên 1 dòng, hoặc xuống dòng (chuỗi TOML nhiều dòng), hoặc cả hai.
     // Ví dụ: "path.png|test.png"  hoặc  "path.png\ntest.png"
