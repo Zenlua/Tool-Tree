@@ -61,6 +61,26 @@ class ActionPage : AppCompatActivity() {
     private var checkboxRefreshJob: Job? = null
     private var loadPageJob: Job? = null
 
+    // Tự dựng cử chỉ vuốt mép trái để trở lại bằng touch event thô, KHÔNG dùng predictive back
+    // API của hệ thống - vì app buộc giữ targetSdkVersion 28 (cần quyền root/shell) nên Android
+    // sẽ không bao giờ gửi tiến độ vuốt thật (BackEventCompat.progress) cho app này; back luôn
+    // bị coi là "tức thời". Xem chi tiết cách hoạt động trong SwipeBackGestureHelper.kt - vuốt
+    // được bao nhiêu % thì view dịch chuyển bấy nhiêu %, giống hệt activity_close_exit.xml.
+    private val swipeBackHelper by lazy {
+        SwipeBackGestureHelper(
+            activity = this,
+            target = binding.root,
+            onCancelled = {},
+            onCommit = {
+                // View đã tự dịch chuyển hết theo cử chỉ vuốt rồi nên không cần phát lại
+                // animation đóng activity mặc định (activity_close_enter/exit trong
+                // styles.xml) để tránh hiệu ứng bị "giật" (nhảy về vị trí cũ rồi chạy lại).
+                finish()
+                overridePendingTransition(0, 0)
+            }
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -78,6 +98,7 @@ class ActionPage : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        swipeBackHelper.attach()
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -808,6 +829,7 @@ class ActionPage : AppCompatActivity() {
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
+        swipeBackHelper.detach()
         setExcludeFromRecents()
         super.onDestroy()
     }
