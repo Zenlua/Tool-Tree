@@ -51,8 +51,24 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
             // ===== Hỗ trợ mở toàn màn hình khi nội dung vượt quá 4 dòng =====
             // Dùng post{} để đọc lineCount SAU khi layout đã tính toán xong (bao gồm cả
             // trường hợp xuống dòng tự động do wrap text, không chỉ do ký tự \n).
+            //
+            // LƯU Ý (fix bug icon mở rộng hiện sai khi mới hiện qua depend-on):
+            // Nếu EditText đang có width = 0 (chưa được đo thật sự - ví dụ đang nằm trong 1
+            // row vừa GONE, hoặc dialog chưa layout xong), lineCount tính ra HOÀN TOÀN không
+            // đáng tin (Android có thể wrap sai, trả về lineCount > 4 dù nội dung chỉ 1 dòng
+            // ngắn). post{} lúc đó sẽ set nhầm expandBtn = VISIBLE và giá trị sai này bị "kẹt"
+            // lại vì trước đây CHỈ afterTextChanged mới gọi lại hàm này - khi row được depend-on
+            // hiện lên sau đó (không đổi text), không có gì kích hoạt tính lại, nên icon vẫn
+            // hiện sai dù nội dung chỉ có 1 dòng.
             fun updateExpandButtonVisibility() {
                 post {
+                    if (width <= 0) {
+                        // Chưa có width thật (view chưa được đo/đang ẩn) - lineCount không
+                        // đáng tin, bỏ qua lần này. Sẽ được tính lại khi width thay đổi thật
+                        // (xem addOnLayoutChangeListener bên dưới), ví dụ lúc depend-on hiện
+                        // row lên và EditText được đo với kích thước thật.
+                        return@post
+                    }
                     expandBtn.visibility = if (lineCount > EXPAND_LINE_THRESHOLD) View.VISIBLE else View.GONE
                 }
             }
@@ -64,6 +80,20 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
                     updateExpandButtonVisibility()
                 }
             })
+
+            // Tính lại mỗi khi width THỰC SỰ đổi (ví dụ: view chuyển từ width=0 -> width thật
+            // khi depend-on hiện row lên, hoặc xoay màn hình/đổi kích thước dialog). Đây là
+            // phần quan trọng để sửa bug: trước đây chỉ có afterTextChanged trigger tính lại,
+            // nên khi depend-on hiện 1 field đã tồn tại sẵn (không đổi text) thì lineCount sai
+            // từ lần đo lúc width=0 không bao giờ được sửa lại.
+            addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
+                val newWidth = right - left
+                val oldWidth = oldRight - oldLeft
+                if (newWidth > 0 && newWidth != oldWidth) {
+                    updateExpandButtonVisibility()
+                }
+            }
+
             // Kiểm tra ngay khi render (trường hợp có sẵn giá trị dài từ trước)
             updateExpandButtonVisibility()
 
