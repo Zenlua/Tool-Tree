@@ -53,6 +53,12 @@ class SwipePager @JvmOverloads constructor(
 
     private var pendingItem: Int? = null
 
+    // Đánh dấu khi 1 animation (fling/settle) đang chạy dở bị ngắt bởi cú chạm mới.
+    // Nếu sau đó cử chỉ kết thúc mà không phải là một thao tác kéo trang (chỉ là tap
+    // vào nút/item), ta phải tự canh (settle) lại trang gần nhất - nếu không trang sẽ
+    // bị đứng yên ở đúng vị trí lửng lơ giữa 2 tab lúc animation bị ngắt.
+    private var interruptedAnimation = false
+
     init {
         val vc = ViewConfiguration.get(context)
         minFlingVelocity = vc.scaledMinimumFlingVelocity
@@ -162,6 +168,12 @@ class SwipePager @JvmOverloads constructor(
 
         val action = ev.actionMasked
         if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
+            // Nếu vừa ngắt 1 animation đang chạy dở mà cử chỉ này hoá ra chỉ là tap
+            // (không kéo trang), tự canh lại trang gần nhất thay vì để đứng yên lửng lơ.
+            if (interruptedAnimation && !isDragging) {
+                settle(0f)
+            }
+            interruptedAnimation = false
             isDragging = false
             velocityTracker?.recycle()
             velocityTracker = null
@@ -177,7 +189,8 @@ class SwipePager @JvmOverloads constructor(
             initialY = ev.y
             lastX = ev.x
             isDragging = false
-            if (!scroller.isFinished) scroller.abortAnimation()
+            interruptedAnimation = !scroller.isFinished
+            if (interruptedAnimation) scroller.abortAnimation()
         } else if (action == MotionEvent.ACTION_MOVE) {
             val dx = ev.x - initialX
             val dy = ev.y - initialY
@@ -198,7 +211,8 @@ class SwipePager @JvmOverloads constructor(
 
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                if (!scroller.isFinished) scroller.abortAnimation()
+                interruptedAnimation = !scroller.isFinished
+                if (interruptedAnimation) scroller.abortAnimation()
                 initialX = ev.x
                 initialY = ev.y
                 lastX = ev.x
@@ -232,7 +246,12 @@ class SwipePager @JvmOverloads constructor(
                 if (isDragging) {
                     velocityTracker?.computeCurrentVelocity(1000, maxFlingVelocity.toFloat())
                     settle(velocityTracker?.xVelocity ?: 0f)
+                } else if (interruptedAnimation) {
+                    // Chạm để dừng animation nhưng không kéo tiếp (chỉ là tap vào item) ->
+                    // tự canh lại trang gần nhất thay vì để đứng yên lửng lơ giữa 2 tab.
+                    settle(0f)
                 }
+                interruptedAnimation = false
                 isDragging = false
                 velocityTracker?.recycle()
                 velocityTracker = null
