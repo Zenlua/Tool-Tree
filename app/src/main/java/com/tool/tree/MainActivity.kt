@@ -354,7 +354,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menu.findItem(R.id.option_menu_reboot)?.isEnabled = hasRoot
+        val rebootItem = menu.findItem(R.id.option_menu_reboot)
+        rebootItem?.isEnabled = hasRoot
+        // FIX: icon "power" là PNG tĩnh (không phải vector), nên isEnabled=false không tự làm mờ
+        // icon một cách đáng tin cậy - phụ thuộc vào theme tô màu disabled-state, và ở theme SÁNG
+        // (AppTheme.AppBarOverlay.Light) độ mờ đó gần như không thấy khác biệt, khiến icon trông
+        // như vẫn bật dù không có quyền root. Tự set alpha trực tiếp để đảm bảo luôn mờ đúng như
+        // nhau ở cả 2 theme, không phụ thuộc cách theme xử lý trạng thái disabled.
+        rebootItem?.icon?.mutate()?.alpha = if (hasRoot) 255 else 100 // ~38%, đúng chuẩn "disabled" của Material
         return super.onPrepareOptionsMenu(menu)
     }
 
