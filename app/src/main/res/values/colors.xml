@@ -32,8 +32,8 @@
     <color name="kr_shortcut_color">#A7A7A7</color>
     <color name="kr_shell_log_error">#cf4e4c</color>
     <color name="kr_shell_log_script">#808080</color>
-    <color name="kr_shell_log_basic">#5F6367</color>
-    <color name="kr_shell_log_end">#0e75c7</color>
+    <color name="kr_shell_log_basic">#788BA0</color>
+    <color name="kr_shell_log_end">#1986DC</color>
 
     <color name="banner_info">#0dbda2</color>
     <color name="banner_success">#43A047</color>
