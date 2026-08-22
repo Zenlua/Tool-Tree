@@ -1,11 +1,11 @@
 package com.omarea.common.ui;
 
+import android.content.Context;
 import android.graphics.*;
 import android.view.View;
-import com.tool.tree.ThemeModeState;
 import androidx.core.content.ContextCompat;
 import com.tool.tree.R;
-import android.content.Context;
+import com.tool.tree.ThemeModeState;
 
 public final class BlurEngine {
     public static BlurController controller = new BlurController();
@@ -57,7 +57,9 @@ public final class BlurEngine {
 
         // Lấy RootView để tính toán tỷ lệ chính xác giữa màn hình và BlurBitmap
         View rootView = targetView.getRootView();
-        if (rootView == null) return null;
+        if (rootView == null || rootView.getWidth() <= 0 || rootView.getHeight() <= 0) {
+            return null;
+        }
 
         targetView.getLocationOnScreen(location);
         
@@ -68,14 +70,18 @@ public final class BlurEngine {
         int w = (int) (targetView.getWidth() * scaleX);
         int h = (int) (targetView.getHeight() * scaleY);
 
-        // Tọa độ thực tế (cho phép giá trị âm khi vuốt ra ngoài biên)
+        if (w <= 0 || h <= 0) return null;
+
+        // Tọa độ thực tế của View trên màn hình (cho phép nhận giá trị âm/vượt biên khi vuốt hoặc cuộn)
         int x = (int) (location[0] * scaleX);
         int y = (int) (location[1] * scaleY);
 
         try {
             // Khởi tạo hoặc tái sử dụng cachedBitmap theo kích thước View
             if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
-                if (cachedBitmap != null) cachedBitmap.recycle();
+                if (cachedBitmap != null && !cachedBitmap.isRecycled()) {
+                    cachedBitmap.recycle();
+                }
                 cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                 cachedCanvas = new Canvas(cachedBitmap);
             }
@@ -84,10 +90,9 @@ public final class BlurEngine {
             cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
             
             /**
-             * GIẢI PHÁP CHO VẤN ĐỀ 4:
-             * Thay vì dùng srcRect cắt giới hạn trong Bitmap, ta dịch chuyển Canvas.
-             * Chúng ta dịch chuyển ngược một khoảng đúng bằng tọa độ của View trên màn hình.
-             * Điều này đảm bảo ảnh nền luôn khớp với vị trí của View bất kể View ở đâu.
+             * Dịch chuyển Canvas ngược một khoảng đúng bằng tọa độ của View trên màn hình.
+             * Giữ nguyên tọa độ thực tế (-x, -y) giúp hình ảnh blur luôn khớp vị trí
+             * bất kể View cuộn dọc hay trượt ngang ra khỏi viền màn hình.
              */
             cachedCanvas.save();
             cachedCanvas.translate(-x, -y);
