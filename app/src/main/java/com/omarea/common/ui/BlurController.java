@@ -70,62 +70,6 @@ public class BlurController {
         return outBitmap;
     }
 
-    /**
-     * Chụp màu background solid (dùng khi directbg=1).
-     * Thay vì đọc wallpaper, tạo một bitmap solid color từ BlurEngine.directBgColor,
-     * rồi đưa qua pipeline blur bình thường (scale + RenderScript blur + contrast).
-     */
-    public void captureBackground(Activity activity) {
-        final WeakReference<Activity> activityRef = new WeakReference<>(activity);
-
-        new Thread(() -> {
-            Activity act = activityRef.get();
-            if (act == null || act.isFinishing() || act.isDestroyed()) return;
-
-            Context context = act.getApplicationContext();
-            int bgColor = BlurEngine.directBgColor;
-
-            // Tạo bitmap solid color nhỏ (15% kích thước màn hình, giống logic wallpaper)
-            int screenWidth = act.getResources().getDisplayMetrics().widthPixels;
-            int screenHeight = act.getResources().getDisplayMetrics().heightPixels;
-            int width = Math.max(Math.round(screenWidth * 0.15f), 1);
-            int height = Math.max(Math.round(screenHeight * 0.15f), 1);
-
-            Bitmap solidBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(solidBitmap);
-            canvas.drawColor(bgColor);
-
-            // Áp dụng contrast (giống wallpaper pipeline)
-            float contrastValue;
-            if (ThemeModeState.isDarkMode()) {
-                contrastValue = 0.9f;
-            } else {
-                contrastValue = 1.2f;
-            }
-            Bitmap processedSource = adjustContrast(solidBitmap, contrastValue);
-
-            // Áp dụng blur (giống wallpaper pipeline)
-            Bitmap blurredResult = blurBitmap(context, processedSource, 16f);
-
-            if (blurredResult != null) {
-                BlurEngine.blurBitmap = blurredResult;
-                BlurEngine.isPaused = false;
-
-                act.runOnUiThread(() -> {
-                    if (act != null && !act.isFinishing() && act.getWindow() != null) {
-                        act.getWindow().getDecorView().invalidate();
-                    }
-                });
-            }
-
-            // Dọn dẹp
-            if (processedSource != solidBitmap) {
-                processedSource.recycle();
-            }
-            solidBitmap.recycle();
-        }).start();
-    }
-
     public void captureAndBlur(Activity activity) {
         final WeakReference<Activity> activityRef = new WeakReference<>(activity);
         

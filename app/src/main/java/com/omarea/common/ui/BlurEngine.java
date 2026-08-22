@@ -12,12 +12,6 @@ public final class BlurEngine {
     public static volatile Bitmap blurBitmap; 
     public static boolean isPaused = false;
     
-    /**
-     * Khi directbg=1: không chụp wallpaper, chụp màu background solid thay thế.
-     * Blur vẫn hoạt động bình thường (scale + RenderScript blur + tint)
-     * nhưng nguồn ảnh là màu nền thay vì ảnh wallpaper.
-     */
-    public static boolean isDirectBgMode = false;
     
     public static float DEFAULT_CORNER_RADIUS = 30.0f;
     public float cornerRadius = DEFAULT_CORNER_RADIUS;
@@ -27,12 +21,6 @@ public final class BlurEngine {
     private Bitmap cachedBitmap;
     private Canvas cachedCanvas;
     private static Paint strokePaint;
-
-    /**
-     * Màu background hiện tại được dùng để tạo blur bitmap khi isDirectBgMode.
-     * Cập nhật bởi ThemeModeState trước khi gọi capture.
-     */
-    public static int directBgColor = 0xFF0f0f0f;
 
     public BlurEngine(View view) {
         this.targetView = view;
