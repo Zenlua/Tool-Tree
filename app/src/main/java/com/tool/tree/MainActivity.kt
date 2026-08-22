@@ -2,8 +2,6 @@ package com.tool.tree
 
 import android.content.ComponentName
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
 import android.text.SpannableString
@@ -13,8 +11,6 @@ import android.text.style.SuperscriptSpan
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.view.ViewTreeObserver
 import android.widget.ArrayAdapter
 import android.widget.CheckBox
 import android.widget.TextView
@@ -28,7 +24,6 @@ import com.google.android.material.tabs.TabLayout
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.ui.DialogHelper
-import com.omarea.common.ui.FastBlurUtility
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.config.PageConfigReader
 import com.omarea.krscript.config.PageConfigSh
@@ -64,9 +59,6 @@ class MainActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        // Ẩn tạm nội dung: tránh việc màn hình hiện 1 khung hình chưa mờ
-        // rồi mới "nháy" sang dialog + nền mờ ở khung hình kế tiếp.
-        binding.root.visibility = View.INVISIBLE
 
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
         val versionName = try {
@@ -81,16 +73,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         initAdapter()
-
-        // Đợi layout xong (view có kích thước thật) rồi mới: chụp + làm mờ nội dung,
-        // hiện dialog loading và hiện nội dung — tất cả trong cùng một lần vẽ,
-        // nên người dùng không thấy khung hình trung gian chưa mờ.
-        binding.root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                binding.root.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                showContentWithBlurredLoading()
-            }
-        })
+        loadTabs()
 
         onBackPressedDispatcher.addCallback(this) {
             startService(Intent(this@MainActivity, WakeLockService::class.java).apply {
@@ -119,29 +102,6 @@ class MainActivity : AppCompatActivity() {
         title = spannable
     }
 
-    /**
-     * Chụp nội dung hiện tại (đang ẩn, đã layout xong) làm nền mờ cho dialog loading,
-     * rồi hiện dialog + hiện nội dung cùng lúc để tránh nháy khung hình.
-     */
-    private fun showContentWithBlurredLoading() {
-        val root = binding.root
-        if (root.width > 0 && root.height > 0) {
-            try {
-                val bitmap = Bitmap.createBitmap(root.width, root.height, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bitmap)
-                root.draw(canvas)
-                DialogHelper.pendingBlurBitmap = FastBlurUtility.startBlurBackground(bitmap)
-            } catch (_: Exception) {
-                DialogHelper.pendingBlurBitmap = null
-            }
-        }
-
-        progressBarDialog.showDialog(getString(R.string.please_wait))
-        root.visibility = View.VISIBLE
-
-        loadTabs()
-    }
-
     private fun initAdapter() {
         if (!::adapter.isInitialized) {
             adapter = MainPagerAdapter(this)
@@ -151,6 +111,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadTabs() {
+        binding.root.post {
+            progressBarDialog.showDialog(getString(R.string.please_wait))
+        }
+        
         lifecycleScope.launch(Dispatchers.IO) {
             val favorites = getItems(krScriptConfig.favoriteConfig)
             val pages = getItems(krScriptConfig.pageListConfig)

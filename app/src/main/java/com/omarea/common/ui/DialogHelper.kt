@@ -75,10 +75,6 @@ class DialogHelper {
         // 是否禁用模糊背景
         var disableBlurBg = false
 
-        // Bitmap nền mờ được tính sẵn từ bên ngoài (VD: chụp trước khi hiện lên màn hình
-        // để tránh nháy khung hình chưa mờ). Dùng 1 lần cho dialog kế tiếp rồi tự xoá.
-        var pendingBlurBitmap: Bitmap? = null
-
         fun animDialog(dialog: AlertDialog?): DialogWrap? {
             if (dialog != null && !dialog.isShowing) {
                 dialog.window?.run {
@@ -415,13 +411,7 @@ class DialogHelper {
                 val blurBitmap = if (disableBlurBg) {
                     null
                 } else {
-                    val prepared = pendingBlurBitmap
-                    if (prepared != null && !prepared.isRecycled) {
-                        pendingBlurBitmap = null
-                        prepared
-                    } else {
-                        FastBlurUtility.getBlurBackgroundDrawer(activity)
-                    }
+                    FastBlurUtility.getBlurBackgroundDrawer(activity)
                 }
                 if (blurBitmap != null) {
                     setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
