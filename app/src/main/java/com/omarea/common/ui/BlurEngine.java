@@ -11,11 +11,6 @@ public final class BlurEngine {
     public static BlurController controller = new BlurController();
     public static volatile Bitmap blurBitmap; 
     public static boolean isPaused = false;
-    /**
-     * Khi true: các BlurViewLinearLayout KHÔNG chụp/xử lý ảnh nền,
-     * chỉ vẽ lớp tint trực tiếp. Ảnh nền wallpaper hiển thị qua panel trong suốt.
-     */
-    public static boolean isDirectBgMode = false;
     
     public static float DEFAULT_CORNER_RADIUS = 30.0f;
     public float cornerRadius = DEFAULT_CORNER_RADIUS;
@@ -87,7 +82,7 @@ public final class BlurEngine {
             cachedCanvas.restore();
 
             // Phủ lớp màu (Tint) lên trên lớp blur
-            cachedCanvas.drawColor(getBlurTintColor());
+            cachedCanvas.drawColor(getBlurTintColor()); 
             
             return cachedBitmap;
         } catch (Exception e) {

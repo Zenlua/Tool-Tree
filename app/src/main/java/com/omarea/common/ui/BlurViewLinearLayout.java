@@ -3,13 +3,10 @@ package com.omarea.common.ui;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
-import androidx.core.content.ContextCompat;
-import com.tool.tree.R;
 
 public class BlurViewLinearLayout extends LinearLayout {
     protected BlurEngine engine;
@@ -46,30 +43,16 @@ public class BlurViewLinearLayout extends LinearLayout {
         this.engine.setup();
     }
 
-    // Paint tĩnh dùng cho chế độ Direct Background (vẽ tint trực tiếp)
-    private Paint directBgPaint;
-    private int lastDirectBgColor = 0;
-
     @Override
     protected void onDraw(Canvas canvas) {
-        // 1. Vẽ lớp nền
-        if (BlurEngine.isDirectBgMode) {
-            // Chế độ Direct Background: KHÔNG chụp ảnh nền,
-            // chỉ vẽ lớp tint trực tiếp → ảnh nền wallpaper hiển thị qua panel trong suốt
-            int tintColor = getDirectBgTintColor();
-            if (directBgPaint == null) {
-                directBgPaint = new Paint();
-            }
-            directBgPaint.setColor(tintColor);
-            canvas.drawRect(0, 0, getWidth(), getHeight(), directBgPaint);
-        } else if (!BlurEngine.isPaused) {
-            // Chế độ Blur bình thường: vẽ bitmap blur + tint
-            Bitmap bgFragment = engine.getUpdatedBlurBitmap();
+        // 1. Vẽ lớp kính mờ (Blur)
+        if (!BlurEngine.isPaused) {
+            Bitmap blurFragment = engine.getUpdatedBlurBitmap();
             
-            if (bgFragment != null && !bgFragment.isRecycled()) {
-                srcRect.set(0, 0, bgFragment.getWidth(), bgFragment.getHeight());
+            if (blurFragment != null && !blurFragment.isRecycled()) {
+                srcRect.set(0, 0, blurFragment.getWidth(), blurFragment.getHeight());
                 dstRect.set(0, 0, getWidth(), getHeight());
-                canvas.drawBitmap(bgFragment, srcRect, dstRect, null);
+                canvas.drawBitmap(blurFragment, srcRect, dstRect, null);
             }
         }
 
@@ -80,11 +63,6 @@ public class BlurViewLinearLayout extends LinearLayout {
         if (drawStrokeEnabled) {
             drawStroke(canvas);
         }
-    }
-
-    private int getDirectBgTintColor() {
-        int colorRes = com.tool.tree.ThemeModeState.isDarkMode() ? R.color.colorBlurDark : R.color.colorBlurLight;
-        return ContextCompat.getColor(getContext(), colorRes);
     }
 
     protected void drawStroke(Canvas canvas) {

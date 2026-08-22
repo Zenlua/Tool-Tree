@@ -22,25 +22,7 @@ public class BlurPreDrawListener implements ViewTreeObserver.OnPreDrawListener {
 
     @Override
     public boolean onPreDraw() {
-        if (!targetView.isShown()) return true;
-
-        // Chế độ Direct Background: không có bitmap, chỉ cần invalidate lần đầu
-        // để vẽ tint + theo dõi vị trí khi cuộn (locationChanged)
-        if (BlurEngine.isDirectBgMode) {
-            targetView.getLocationOnScreen(location);
-            boolean locationChanged = location[0] != lastX || location[1] != lastY;
-            // Chỉ invalidate khi vị trí đổi HOẶC lần đầu tiên (lastX == MIN_VALUE)
-            if (!locationChanged && lastX != Integer.MIN_VALUE) {
-                return true;
-            }
-            lastX = location[0];
-            lastY = location[1];
-            targetView.invalidate();
-            return true;
-        }
-
-        // Chế độ Blur bình thường
-        if (BlurEngine.isPaused || BlurEngine.blurBitmap == null) {
+        if (!targetView.isShown() || BlurEngine.isPaused || BlurEngine.blurBitmap == null) {
             return true;
         }
 
