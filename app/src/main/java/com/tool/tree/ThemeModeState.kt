@@ -19,6 +19,15 @@ import java.io.File
 object ThemeModeState {
 
     private var themeMode: ThemeMode = ThemeMode()
+    private var currentLevel: Int = 0
+
+    /**
+     * true nếu đang ở nhóm giao diện "ảnh nền" (level 3-5, dùng wallpaper làm nguồn mờ).
+     * false nếu đang ở giao diện thường (level 0-2) - khi đó nguồn mờ của app bar/bottom bar
+     * sẽ lấy từ chính nội dung (item) đang hiển thị thay vì ảnh nền tĩnh.
+     */
+    @JvmStatic
+    fun isWallpaperTheme(): Boolean = currentLevel >= 3
 
     @JvmStatic
     fun isDarkMode(): Boolean = themeMode.isDarkMode
@@ -42,6 +51,7 @@ object ThemeModeState {
 
     fun switchTheme(activity: Activity, themeLevel: Int? = null): ThemeMode {
         val level = themeLevel ?: ThemeConfig(activity).getThemeMode()
+        currentLevel = level.coerceIn(0, 5)
         
         // Xác định chế độ tối của hệ thống
         val isSystemNight = (activity.resources.configuration.uiMode and 
@@ -86,11 +96,19 @@ object ThemeModeState {
         // dark mode giữa chừng không được cập nhật cho tới khi khởi động lại app).
         ScriptEnvironmen.updateDarkMode(activity, themeMode.isDarkMode)
 
-        // Logic xử lý Blur: Chỉ bật khi level >= 3 VÀ file dissblur không phải là 1
-        if (level >= 3 && !isBlurDisabled(activity)) {
+        // Logic xử lý Blur: bật cho MỌI giao diện (kể cả giao diện thường), miễn là
+        // file dissblur không phải là 1. Trước đây chỉ bật khi level >= 3 (ảnh nền).
+        //
+        // - Giao diện ảnh nền (level >= 3): nguồn mờ vẫn là ảnh wallpaper tĩnh như cũ.
+        // - Giao diện thường (level < 3): không có wallpaper để dùng làm nguồn mờ hợp lý,
+        //   nên nguồn mờ sẽ được cập nhật từ chính nội dung (item) đang hiển thị mỗi khi
+        //   người dùng vuốt qua lại giữa các tab (xem MainActivity - SwipePager listener).
+        if (!isBlurDisabled(activity)) {
             BlurEngine.isPaused = false
-            activity.window.decorView.post {
-                BlurEngine.controller.captureAndBlur(activity)
+            if (currentLevel >= 3) {
+                activity.window.decorView.post {
+                    BlurEngine.controller.captureAndBlur(activity)
+                }
             }
         } else {
             BlurEngine.isPaused = true
