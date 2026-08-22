@@ -114,6 +114,15 @@ public class FastBlurUtility {
     }
 
     /**
+     * Wrapper public cho fastBlur() - dùng khi cần blur trực tiếp 1 bitmap nhỏ đã chụp sẵn
+     * (ví dụ snapshot nội dung đang cuộn) mà KHÔNG cần qua pipeline scale/dim đầy đủ của
+     * startBlurBackground() (vốn dành riêng cho wallpaper toàn màn hình).
+     */
+    public static Bitmap blurSmallBitmap(Bitmap src, int radius) {
+        return fastBlur(src, radius);
+    }
+
+    /**
      * Thuật toán StackBlur (Multi-pass box blur) - Tối ưu cho hiệu năng CPU
      * Hỗ trợ hoàn hảo cho các thiết bị từ cũ đến mới.
      */

@@ -21,6 +21,23 @@ public final class BlurEngine {
     private Canvas cachedCanvas;
     private static Paint strokePaint;
 
+    // ========== TÍNH NĂNG MỚI: NGUỒN BLUR ĐỘNG (blur nội dung đang cuộn, không phải wallpaper) ==========
+    // Mặc định (dynamicSource == null), BlurEngine hoạt động như cũ: hiện ảnh wallpaper đã
+    // blur sẵn (BlurEngine.blurBitmap, static, dùng chung toàn app). Khi gán dynamicSource
+    // (ví dụ ScrollContentBlurSource), engine sẽ ưu tiên lấy bitmap từ đó thay vì wallpaper -
+    // dùng cho hiệu ứng "kính mờ" phản ánh ĐÚNG nội dung list đang trôi qua sau toolbar.
+    public interface DynamicBlurSource {
+        // Trả về bitmap đã blur sẵn (bất kỳ kích thước nào, sẽ được scale khớp targetView),
+        // hoặc null nếu chưa có/chưa sẵn sàng - engine sẽ giữ nguyên frame trước đó.
+        Bitmap getBlurSnapshot();
+    }
+
+    private DynamicBlurSource dynamicSource;
+
+    public void setDynamicSource(DynamicBlurSource source) {
+        this.dynamicSource = source;
+    }
+
     public BlurEngine(View view) {
         this.targetView = view;
     }
@@ -37,8 +54,21 @@ public final class BlurEngine {
     }
 
     public Bitmap getUpdatedBlurBitmap() {
-        if (isPaused || blurBitmap == null || blurBitmap.isRecycled() || 
-            targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
+        if (isPaused || targetView.getWidth() <= 0 || targetView.getHeight() <= 0) {
+            return null;
+        }
+
+        // ========== NHÁNH MỚI: NGUỒN BLUR ĐỘNG ==========
+        // Khi có dynamicSource, BỎ QUA hoàn toàn logic wallpaper bên dưới (vốn cần cắt/dịch
+        // theo tọa độ màn hình vì blurBitmap là 1 ảnh wallpaper dùng chung cho CẢ MÀN HÌNH).
+        // Bitmap từ dynamicSource đã là đúng vùng nội dung cần hiện (được chụp trực tiếp từ
+        // view đang cuộn, cùng hệ tọa độ với targetView), nên chỉ cần scale khớp kích thước
+        // rồi tint, không cần tính toán vị trí trên màn hình.
+        if (dynamicSource != null) {
+            return getUpdatedFromDynamicSource();
+        }
+
+        if (blurBitmap == null || blurBitmap.isRecycled()) {
             return null;
         }
 
@@ -84,6 +114,37 @@ public final class BlurEngine {
             // Phủ lớp màu (Tint) lên trên lớp blur
             cachedCanvas.drawColor(getBlurTintColor()); 
             
+            return cachedBitmap;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // Vẽ bitmap đã blur sẵn từ dynamicSource ra cachedBitmap (tái dùng chung cachedBitmap/
+    // cachedCanvas với nhánh wallpaper để đỡ cấp phát thêm bộ nhớ), scale khớp kích thước
+    // targetView, rồi phủ tint như bình thường.
+    private Bitmap getUpdatedFromDynamicSource() {
+        Bitmap snapshot = dynamicSource.getBlurSnapshot();
+        if (snapshot == null || snapshot.isRecycled()) {
+            return null;
+        }
+
+        int w = targetView.getWidth();
+        int h = targetView.getHeight();
+
+        try {
+            if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
+                if (cachedBitmap != null) cachedBitmap.recycle();
+                cachedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                cachedCanvas = new Canvas(cachedBitmap);
+            }
+
+            cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR);
+            Rect src = new Rect(0, 0, snapshot.getWidth(), snapshot.getHeight());
+            Rect dst = new Rect(0, 0, w, h);
+            cachedCanvas.drawBitmap(snapshot, src, dst, null);
+            cachedCanvas.drawColor(getBlurTintColor());
+
             return cachedBitmap;
         } catch (Exception e) {
             return null;
