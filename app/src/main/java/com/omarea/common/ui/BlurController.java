@@ -12,7 +12,6 @@ import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.renderscript.Allocation;
-import android.view.View;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
@@ -72,80 +71,13 @@ public class BlurController {
     }
 
     /**
-     * Chụp ảnh màn hình hiện tại rồi blur (dùng khi directbg=1).
-     * Thay vì chụp wallpaper hay solid color, chụp toàn bộ nội dung màn hình
-     * (tắt tạm blur panel để tránh vòng lặp), sau đó đưa qua pipeline
-     * blur bình thường (scale + RenderScript blur).
+     * Chụp màu background solid (dùng khi directbg=1).
+     * Thay vì đọc wallpaper, tạo một bitmap solid color từ BlurEngine.directBgColor,
+     * rồi đưa qua pipeline blur bình thường (scale + RenderScript blur + contrast).
      */
     public void captureBackground(Activity activity) {
         final WeakReference<Activity> activityRef = new WeakReference<>(activity);
 
-        // Bước 1: Chụp màn hình trên UI thread (View.draw() yêu cầu UI thread)
-        activity.runOnUiThread(() -> {
-            Activity act = activityRef.get();
-            if (act == null || act.isFinishing() || act.isDestroyed()) return;
-
-            View decorView = act.getWindow().getDecorView();
-            int w = decorView.getWidth();
-            int h = decorView.getHeight();
-            if (w <= 0 || h <= 0) return;
-
-            try {
-                // Tạm tắt blur để chụp màn hình không bị lặp (feedback loop)
-                boolean wasPaused = BlurEngine.isPaused;
-                BlurEngine.isPaused = true;
-
-                Bitmap screenshot = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(screenshot);
-                decorView.draw(canvas);
-
-                // Khôi phục trạng thái blur
-                BlurEngine.isPaused = wasPaused;
-
-                // Bước 2: Xử lý blur trên background thread
-                final Bitmap captured = screenshot;
-                new Thread(() -> {
-                    Activity act2 = activityRef.get();
-                    if (act2 == null || act2.isFinishing() || act2.isDestroyed()) {
-                        captured.recycle();
-                        return;
-                    }
-
-                    Context context = act2.getApplicationContext();
-
-                    // Scale xuống 15% (giống logic wallpaper)
-                    int scaledW = Math.max(Math.round(w * 0.15f), 1);
-                    int scaledH = Math.max(Math.round(h * 0.15f), 1);
-                    Bitmap scaled = Bitmap.createScaledBitmap(captured, scaledW, scaledH, false);
-                    captured.recycle();
-
-                    // Áp dụng blur RenderScript
-                    Bitmap blurredResult = blurBitmap(context, scaled, 16f);
-                    scaled.recycle();
-
-                    if (blurredResult != null) {
-                        BlurEngine.blurBitmap = blurredResult;
-                        BlurEngine.isPaused = false;
-
-                        act2.runOnUiThread(() -> {
-                            if (act2 != null && !act2.isFinishing() && act2.getWindow() != null) {
-                                act2.getWindow().getDecorView().invalidate();
-                            }
-                        });
-                    }
-                }).start();
-            } catch (Exception e) {
-                // Fallback: nếu chụp màn hình lỗi, tạo solid color bitmap
-                BlurEngine.isPaused = false;
-                captureBackgroundSolid(activityRef);
-            }
-        });
-    }
-
-    /**
-     * Fallback: tạo bitmap solid color khi chụp màn hình thất bại.
-     */
-    private void captureBackgroundSolid(WeakReference<Activity> activityRef) {
         new Thread(() -> {
             Activity act = activityRef.get();
             if (act == null || act.isFinishing() || act.isDestroyed()) return;
@@ -153,6 +85,7 @@ public class BlurController {
             Context context = act.getApplicationContext();
             int bgColor = BlurEngine.directBgColor;
 
+            // Tạo bitmap solid color nhỏ (15% kích thước màn hình, giống logic wallpaper)
             int screenWidth = act.getResources().getDisplayMetrics().widthPixels;
             int screenHeight = act.getResources().getDisplayMetrics().heightPixels;
             int width = Math.max(Math.round(screenWidth * 0.15f), 1);
@@ -162,7 +95,17 @@ public class BlurController {
             Canvas canvas = new Canvas(solidBitmap);
             canvas.drawColor(bgColor);
 
-            Bitmap blurredResult = blurBitmap(context, solidBitmap, 16f);
+            // Áp dụng contrast (giống wallpaper pipeline)
+            float contrastValue;
+            if (ThemeModeState.isDarkMode()) {
+                contrastValue = 0.9f;
+            } else {
+                contrastValue = 1.2f;
+            }
+            Bitmap processedSource = adjustContrast(solidBitmap, contrastValue);
+
+            // Áp dụng blur (giống wallpaper pipeline)
+            Bitmap blurredResult = blurBitmap(context, processedSource, 16f);
 
             if (blurredResult != null) {
                 BlurEngine.blurBitmap = blurredResult;
@@ -173,6 +116,11 @@ public class BlurController {
                         act.getWindow().getDecorView().invalidate();
                     }
                 });
+            }
+
+            // Dọn dẹp
+            if (processedSource != solidBitmap) {
+                processedSource.recycle();
             }
             solidBitmap.recycle();
         }).start();
