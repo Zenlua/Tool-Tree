@@ -114,12 +114,29 @@ object ThemeModeState {
 
         // Logic xử lý Blur:
         // - dissblur=1: tắt hoàn toàn blur (về theme solid)
-        // - directbg=1: vẫn blur bình thường (chụp wallpaper, blur lên panel)
-        // - mặc định: bật blur như bình thường
+        // - directbg=1: vẫn blur nhưng chụp màu background thay vì wallpaper
+        // - mặc định: bật blur chụp wallpaper bình thường
+        BlurEngine.isDirectBgMode = (level >= 3 && directBg && !isBlurDisabled(activity))
+        
         if (level >= 3 && !isBlurDisabled(activity)) {
             BlurEngine.isPaused = false
+            // Xóa blur bitmap cũ khi chuyển chế độ để force recapture
+            if (BlurEngine.blurBitmap != null && !BlurEngine.blurBitmap.isRecycled()) {
+                BlurEngine.blurBitmap.recycle()
+                BlurEngine.blurBitmap = null
+            }
             activity.window.decorView.post {
-                BlurEngine.controller.captureAndBlur(activity)
+                if (BlurEngine.isDirectBgMode) {
+                    // Chụp màu background solid để blur
+                    BlurEngine.directBgColor = ContextCompat.getColor(
+                        activity,
+                        if (themeMode.isDarkMode) R.color.window_bg_dark else R.color.window_bg_light
+                    )
+                    BlurEngine.controller.captureBackground(activity)
+                } else {
+                    // Bình thường: chụp wallpaper để blur
+                    BlurEngine.controller.captureAndBlur(activity)
+                }
             }
         } else {
             BlurEngine.isPaused = true
