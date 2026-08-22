@@ -72,6 +72,17 @@ public final class BlurEngine {
         int x = (int) (location[0] * scaleX);
         int y = (int) (location[1] * scaleY);
 
+        // FIX: x/y và w/h được làm tròn (int) ĐỘC LẬP với nhau, nên (x + w) hoặc (y + h) có
+        // thể vượt quá kích thước thật của blurBitmap do sai số cộng dồn - đặc biệt dễ thấy ở
+        // các View trải hết chiều rộng màn hình (ví dụ thanh tab dưới), lộ rõ nhất ở MÉP PHẢI.
+        // Khi vượt quá, vùng đó không có pixel nào được vẽ (còn trong suốt), nhưng lớp tint vẫn
+        // phủ lên toàn bộ canvas -> tạo ra 1 vệt màu đặc, không có texture blur ở đúng mép đó.
+        // Kẹp lại x/y để toàn bộ vùng (w,h) luôn nằm gọn trong blurBitmap, không bao giờ tràn biên.
+        int maxX = Math.max(0, blurBitmap.getWidth() - w);
+        int maxY = Math.max(0, blurBitmap.getHeight() - h);
+        x = Math.min(Math.max(x, 0), maxX);
+        y = Math.min(Math.max(y, 0), maxY);
+
         try {
             // Khởi tạo hoặc tái sử dụng cachedBitmap theo kích thước View
             if (cachedBitmap == null || cachedBitmap.getWidth() != w || cachedBitmap.getHeight() != h) {
