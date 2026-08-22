@@ -90,7 +90,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadTabs() {
-        progressBarDialog.showDialog(getString(R.string.please_wait))
+        binding.root.post {
+            progressBarDialog.showDialog(getString(R.string.please_wait))
+        }
 
         lifecycleScope.launch(Dispatchers.IO) {
             val favorites = getItems(krScriptConfig.favoriteConfig)
