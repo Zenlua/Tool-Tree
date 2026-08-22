@@ -95,23 +95,26 @@ object ThemeModeState {
 
         ScriptEnvironmen.updateDarkMode(activity, themeMode.isDarkMode)
 
-        // Cập nhật trạng thái directBgMode cho BlurEngine
         BlurEngine.isDirectBgMode = (level >= 3 && directBg && !isBlurDisabled(activity))
         
         if (level >= 3 && !isBlurDisabled(activity)) {
             BlurEngine.isPaused = false
-            
-            // Không gọi recycle() trực tiếp. Chỉ cần gán null để GC tự dọn dẹp an toàn khi có bitmap mới
             BlurEngine.blurBitmap = null
 
             activity.window.decorView.post {
-                if (BlurEngine.isDirectBgMode) {
+                val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
+                val wallpaperManager = WallpaperManager.getInstance(activity)
+                val isLiveWallpaper = (wallpaperManager.wallpaperInfo != null) && !customWallpaperFile.exists()
+
+                // Nếu bật directBg HOẶC là Live Wallpaper (decorView bị trong suốt không chụp được)
+                if (BlurEngine.isDirectBgMode || isLiveWallpaper) {
                     BlurEngine.directBgColor = ContextCompat.getColor(
                         activity,
                         if (themeMode.isDarkMode) R.color.window_bg_dark else R.color.window_bg_light
                     )
                     BlurEngine.controller.captureBackground(activity)
                 } else {
+                    // Hình nền tĩnh / Custom Wallpaper: decorView đã có Drawable nên chụp bình thường
                     BlurEngine.controller.captureAndBlur(activity)
                 }
             }
@@ -127,7 +130,6 @@ object ThemeModeState {
         activity.setTheme(if (isNight) R.style.AppThemeWallpaper else R.style.AppThemeWallpaperLight)
         val window = activity.window
 
-        // Đảm bảo xoá flag FLAG_SHOW_WALLPAPER dư thừa trước khi gán background
         window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
 
         if (directBg) {
@@ -142,9 +144,11 @@ object ThemeModeState {
                     val drawable = Drawable.createFromPath(customWallpaperFile.absolutePath)
                     window.setBackgroundDrawable(drawable)
                 } else if (wallpaper.wallpaperInfo != null) {
+                    // Live wallpaper: Bật cờ hiện wallpaper hệ thống
                     window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
                     window.setBackgroundDrawable(null)
                 } else {
+                    // Tĩnh: Set thẳng drawable vào window để decorView có màu/ảnh chụp
                     val sysDrawable = wallpaper.drawable
                     if (sysDrawable != null) {
                         window.setBackgroundDrawable(sysDrawable)
