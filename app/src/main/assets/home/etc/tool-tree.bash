@@ -900,6 +900,7 @@ Feature() {
   auto-restart = true
   script = """
     slog dissblur "$dissblur"
+    slog directbg "$directbg"
     slog uri_change_background "$uri_change_background"
     [ -f "$uri_change_background" ] && cp -f "$uri_change_background" "$ETC/wallpaper.jpg"
     [ -z "$uri_change_background" ] && rm -f "$ETC/wallpaper.jpg"
@@ -909,8 +910,14 @@ Feature() {
     [[group.action.params]]
     name = "dissblur"
     label = "'$dissblur_text'"
-    type = "bool"
+    type = "switch"
     value-sh = "glog dissblur"
+
+    [[group.action.params]]
+    name = "directbg"
+    label = "'$directbg_text'"
+    type = "switch"
+    value-sh = "glog directbg"
 
     [[group.action.params]]
     name = "uri_change_background"
