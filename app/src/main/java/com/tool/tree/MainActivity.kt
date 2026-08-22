@@ -361,7 +361,7 @@ class MainActivity : AppCompatActivity() {
         // (AppTheme.AppBarOverlay.Light) độ mờ đó gần như không thấy khác biệt, khiến icon trông
         // như vẫn bật dù không có quyền root. Tự set alpha trực tiếp để đảm bảo luôn mờ đúng như
         // nhau ở cả 2 theme, không phụ thuộc cách theme xử lý trạng thái disabled.
-        rebootItem?.icon?.mutate()?.alpha = if (hasRoot) 255 else 100 // ~38%, đúng chuẩn "disabled" của Material
+        rebootItem?.icon?.mutate()?.alpha = if (hasRoot) 255 else 190 // ~38%, đúng chuẩn "disabled" của Material
         return super.onPrepareOptionsMenu(menu)
     }
 
