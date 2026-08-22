@@ -46,20 +46,14 @@
         <item name="android:radioButtonStyle">@style/SceneRadioBox</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.ActionBar">
+    <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.Light">
         <item name="titleTextColor">?android:textColorPrimary</item>
         <item name="subtitleTextColor">?android:textColorSecondary</item>
-        <item name="colorControlNormal">?android:textColorPrimary</item>
-        <item name="android:foregroundTint">?android:textColorSecondary</item>
-        <item name="android:foregroundTintMode">screen</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="titleTextColor">?android:textColorPrimary</item>
         <item name="subtitleTextColor">?android:textColorSecondary</item>
-        <item name="colorControlNormal">?android:textColorPrimary</item>
-        <item name="android:foregroundTint">?android:textColorSecondary</item>
-        <item name="android:foregroundTintMode">screen</item>
     </style>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat"/>
