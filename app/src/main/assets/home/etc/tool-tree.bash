@@ -2258,36 +2258,36 @@ Addon() {
       google_trans='
         [[group.page.options]]
         title = "'$google_translate_text'"
-        box = "glog auto_trans_text_'$idadd'"
+        box = "glog auto_trans_text_'$id'"
         reload = true
         silent = true
         type = "checkbox"
         script = """
-          if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
-          slog auto_trans_text_'$idadd' 0
+          if [ "$(glog auto_trans_text_'$id')" == 1 ]; then
+          slog auto_trans_text_'$id' 0
           else
-          if [ "$(glog transai_text_'$idadd')" == 1 ]; then
+          if [ "$(glog transai_text_'$id')" == 1 ]; then
           rm -fr '$dirvad'/auto.sh
-          slog transai_text_'$idadd' 0
+          slog transai_text_'$id' 0
           fi
-          slog auto_trans_text_'$idadd' 1
+          slog auto_trans_text_'$id' 1
           fi
         """
         [[group.page.options]]
         title = "Gemini"
-        box = "glog transai_text_'$idadd'"
+        box = "glog transai_text_'$id'"
         reload = true
         silent = true
         type = "checkbox"
         script = """
-          if [ "$(glog transai_text_'$idadd')" == 1 ]; then
-          slog transai_text_'$idadd' 0
+          if [ "$(glog transai_text_'$id')" == 1 ]; then
+          slog transai_text_'$id' 0
           else
-          if [ "$(glog auto_trans_text_'$idadd')" == 1 ]; then
+          if [ "$(glog auto_trans_text_'$id')" == 1 ]; then
           rm -fr '$dirvad'/auto.sh
-          slog auto_trans_text_'$idadd' 0
+          slog auto_trans_text_'$id' 0
           fi
-          transai -c && slog transai_text_'$idadd' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
+          transai -c && slog transai_text_'$id' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
           fi
         """
       '
@@ -2375,7 +2375,7 @@ Addon() {
   
     # Phát hiện tính năng
     if [ "$shortcut" == "true" ]; then
-    shortcut_text='key = "'$idadd'" '
+    shortcut_text='key = "'$id'" '
     fi
     
     if [ "$description" ]; then
