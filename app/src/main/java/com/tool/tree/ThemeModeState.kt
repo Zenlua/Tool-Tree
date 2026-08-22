@@ -25,10 +25,6 @@ object ThemeModeState {
     @JvmStatic
     fun isDarkMode(): Boolean = themeMode.isDarkMode
 
-    /**
-     * Kiểm tra file cấu hình tắt blur dựa trên đường dẫn tương đối
-     * Đường dẫn đầy đủ sẽ là: /data/user/0/com.tool.tree/files/home/usr/log/dissblur
-     */
     private fun isBlurDisabled(activity: Activity): Boolean {
         val file = File(activity.filesDir, "home/usr/log/dissblur")
         return try {
@@ -42,15 +38,6 @@ object ThemeModeState {
         }
     }
 
-    /**
-     * Kiểm tra file cấu hình tắt ảnh nền, dùng background trực tiếp
-     * Đường dẫn đầy đủ sẽ là: /data/user/0/com.tool.tree/files/home/usr/log/directbg
-     * Khi bật:
-     * - Ảnh nền wallpaper KHÔNG hiển thị làm window background
-     * - Dùng solid theme background thay thế
-     * - Vẫn dùng Wallpaper theme (giữ cardBgTransparent)
-     * - Blur vẫn chụp và blur wallpaper bình thường
-     */
     private fun isDirectBgEnabled(activity: Activity): Boolean {
         val file = File(activity.filesDir, "home/usr/log/directbg")
         return try {
@@ -67,7 +54,6 @@ object ThemeModeState {
     fun switchTheme(activity: Activity, themeLevel: Int? = null): ThemeMode {
         val level = themeLevel ?: ThemeConfig(activity).getThemeMode()
         
-        // Xác định chế độ tối của hệ thống
         val isSystemNight = (activity.resources.configuration.uiMode and 
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK) == 
                 android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -107,34 +93,25 @@ object ThemeModeState {
             }
         }
 
-        // Cập nhật lại biến DARK_MODE trong file executor của krscript mỗi khi dark mode
-        // thay đổi thực sự (trước đây DARK_MODE chỉ được set 1 lần lúc init() nên đổi
-        // dark mode giữa chừng không được cập nhật cho tới khi khởi động lại app).
         ScriptEnvironmen.updateDarkMode(activity, themeMode.isDarkMode)
 
-        // Logic xử lý Blur:
-        // - dissblur=1: tắt hoàn toàn blur (về theme solid)
-        // - directbg=1: vẫn blur nhưng chụp màu background thay vì wallpaper
-        // - mặc định: bật blur chụp wallpaper bình thường
+        // Cập nhật trạng thái directBgMode cho BlurEngine
         BlurEngine.isDirectBgMode = (level >= 3 && directBg && !isBlurDisabled(activity))
         
         if (level >= 3 && !isBlurDisabled(activity)) {
             BlurEngine.isPaused = false
-            // Xóa blur bitmap cũ khi chuyển chế độ để force recapture
-            if (BlurEngine.blurBitmap != null && !BlurEngine.blurBitmap.isRecycled()) {
-                BlurEngine.blurBitmap.recycle()
-                BlurEngine.blurBitmap = null
-            }
+            
+            // Không gọi recycle() trực tiếp. Chỉ cần gán null để GC tự dọn dẹp an toàn khi có bitmap mới
+            BlurEngine.blurBitmap = null
+
             activity.window.decorView.post {
                 if (BlurEngine.isDirectBgMode) {
-                    // Chụp màu background solid để blur
                     BlurEngine.directBgColor = ContextCompat.getColor(
                         activity,
                         if (themeMode.isDarkMode) R.color.window_bg_dark else R.color.window_bg_light
                     )
                     BlurEngine.controller.captureBackground(activity)
                 } else {
-                    // Bình thường: chụp wallpaper để blur
                     BlurEngine.controller.captureAndBlur(activity)
                 }
             }
@@ -146,41 +123,37 @@ object ThemeModeState {
         return themeMode
     }
 
-    /**
-     * Áp dụng chế độ Wallpaper.
-     * @param directBg khi true: dùng wallpaper theme (giữ cardBgTransparent) nhưng
-     *   không set wallpaper làm window background → set solid color thủ công.
-     *   Blur vẫn chụp wallpaper bình thường.
-     */
     private fun applyWallpaperMode(activity: Activity, isNight: Boolean, directBg: Boolean = false) {
-        // Luôn dùng Wallpaper theme để giữ cardBgTransparent
         activity.setTheme(if (isNight) R.style.AppThemeWallpaper else R.style.AppThemeWallpaperLight)
+        val window = activity.window
+
+        // Đảm bảo xoá flag FLAG_SHOW_WALLPAPER dư thừa trước khi gán background
+        window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
 
         if (directBg) {
-            // Tắt ảnh nền: không set wallpaper, dùng solid background
             val bgRes = if (isNight) R.color.window_bg_dark else R.color.window_bg_light
-            activity.window.setBackgroundDrawable(
-                ColorDrawable(ContextCompat.getColor(activity, bgRes))
-            )
+            window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(activity, bgRes)))
         } else {
-            // Bình thường: set wallpaper làm window background
             val wallpaper = WallpaperManager.getInstance(activity)
             val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
 
             try {
                 if (customWallpaperFile.exists()) {
                     val drawable = Drawable.createFromPath(customWallpaperFile.absolutePath)
-                    activity.window.setBackgroundDrawable(drawable)
+                    window.setBackgroundDrawable(drawable)
                 } else if (wallpaper.wallpaperInfo != null) {
-                    // Live Wallpaper
-                    activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-                    activity.window.setBackgroundDrawable(null)
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                    window.setBackgroundDrawable(null)
                 } else {
-                    // Hệ thống Wallpaper tĩnh
-                    activity.window.setBackgroundDrawable(wallpaper.drawable)
+                    val sysDrawable = wallpaper.drawable
+                    if (sysDrawable != null) {
+                        window.setBackgroundDrawable(sysDrawable)
+                    } else {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                    }
                 }
             } catch (e: Exception) {
-                activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
             }
         }
     }
