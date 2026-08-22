@@ -28,6 +28,10 @@ public final class BlurEngine {
     private Canvas cachedCanvas;
     private static Paint strokePaint;
 
+    // Tái sử dụng đối tượng để tránh tạo rác bộ nhớ (GC lag) khi vuốt/cuộn
+    private final Paint shaderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Matrix shaderMatrix = new Matrix();
+
     /**
      * Màu background hiện tại được dùng để tạo blur bitmap khi isDirectBgMode.
      * Cập nhật bởi ThemeModeState trước khi gọi capture.
@@ -72,7 +76,7 @@ public final class BlurEngine {
 
         if (w <= 0 || h <= 0) return null;
 
-        // Tọa độ thực tế của View trên màn hình (cho phép nhận giá trị âm/vượt biên khi vuốt hoặc cuộn)
+        // Tọa độ thực tế của View trên màn hình (có thể nhận giá trị âm khi vuốt ra ngoài biên)
         int x = (int) (location[0] * scaleX);
         int y = (int) (location[1] * scaleY);
 
@@ -90,14 +94,18 @@ public final class BlurEngine {
             cachedCanvas.drawColor(0, PorterDuff.Mode.CLEAR); 
             
             /**
-             * Dịch chuyển Canvas ngược một khoảng đúng bằng tọa độ của View trên màn hình.
-             * Giữ nguyên tọa độ thực tế (-x, -y) giúp hình ảnh blur luôn khớp vị trí
-             * bất kể View cuộn dọc hay trượt ngang ra khỏi viền màn hình.
+             * GIẢI PHÁP TRÀN VIỀN (Trái, Phải, Trên, Dưới):
+             * Sử dụng BitmapShader với TileMode.CLAMP.
+             * Khi View trượt ra khỏi màn hình (x < 0 hoặc x + w > width), 
+             * TileMode.CLAMP tự động kéo giãn điểm ảnh ở rìa blurBitmap để lấp đầy cachedBitmap.
              */
-            cachedCanvas.save();
-            cachedCanvas.translate(-x, -y);
-            cachedCanvas.drawBitmap(blurBitmap, 0, 0, null);
-            cachedCanvas.restore();
+            BitmapShader shader = new BitmapShader(blurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+            shaderMatrix.reset();
+            shaderMatrix.postTranslate(-x, -y);
+            shader.setLocalMatrix(shaderMatrix);
+
+            shaderPaint.setShader(shader);
+            cachedCanvas.drawRect(0, 0, w, h, shaderPaint);
 
             // Phủ lớp màu (Tint) lên trên lớp blur
             cachedCanvas.drawColor(getBlurTintColor()); 
