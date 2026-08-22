@@ -25,10 +25,29 @@ object ThemeModeState {
 
     /**
      * Kiểm tra file cấu hình tắt blur dựa trên đường dẫn tương đối
-     * Đường dẫn đầy đủ sẽ là: /data/user/0/com.tool.tree/files/home/log/dissblur
+     * Đường dẫn đầy đủ sẽ là: /data/user/0/com.tool.tree/files/home/usr/log/dissblur
      */
     private fun isBlurDisabled(activity: Activity): Boolean {
         val file = File(activity.filesDir, "home/usr/log/dissblur")
+        return try {
+            if (file.exists()) {
+                file.readText().trim() == "1"
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Kiểm tra file cấu hình tắt ảnh nền, dùng background trực tiếp
+     * Đường dẫn đầy đủ sẽ là: /data/user/0/com.tool.tree/files/home/usr/log/directbg
+     * Khi bật: Ảnh nền wallpaper bị tắt, dùng solid theme background.
+     * Chế độ blur vẫn chạy (chụp background → blur solid = tint).
+     */
+    private fun isDirectBgEnabled(activity: Activity): Boolean {
+        val file = File(activity.filesDir, "home/usr/log/directbg")
         return try {
             if (file.exists()) {
                 file.readText().trim() == "1"
@@ -47,6 +66,8 @@ object ThemeModeState {
         val isSystemNight = (activity.resources.configuration.uiMode and 
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK) == 
                 android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+        val directBg = isDirectBgEnabled(activity)
 
         when (level.coerceIn(0, 5)) {
             0 -> {
@@ -67,17 +88,30 @@ object ThemeModeState {
             3 -> {
                 themeMode.isDarkMode = isSystemNight
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                applyWallpaperMode(activity, isSystemNight)
+                if (directBg) {
+                    // directbg: tắt ảnh nền, dùng solid theme background
+                    activity.setTheme(if (isSystemNight) R.style.AppThemeDark else R.style.AppTheme)
+                } else {
+                    applyWallpaperMode(activity, isSystemNight)
+                }
             }
             4 -> {
                 themeMode.isDarkMode = true
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                applyWallpaperMode(activity, true)
+                if (directBg) {
+                    activity.setTheme(R.style.AppThemeDark)
+                } else {
+                    applyWallpaperMode(activity, true)
+                }
             }
             5 -> {
                 themeMode.isDarkMode = false
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                applyWallpaperMode(activity, false)
+                if (directBg) {
+                    activity.setTheme(R.style.AppTheme)
+                } else {
+                    applyWallpaperMode(activity, false)
+                }
             }
         }
 
@@ -86,14 +120,29 @@ object ThemeModeState {
         // dark mode giữa chừng không được cập nhật cho tới khi khởi động lại app).
         ScriptEnvironmen.updateDarkMode(activity, themeMode.isDarkMode)
 
-        // Logic xử lý Blur: Chỉ bật khi level >= 3 VÀ file dissblur không phải là 1
-        if (level >= 3 && !isBlurDisabled(activity)) {
-            BlurEngine.isPaused = false
-            activity.window.decorView.post {
-                BlurEngine.controller.captureAndBlur(activity)
+        // Logic xử lý Blur:
+        // - dissblur=1: tắt hoàn toàn blur (về theme solid)
+        // - directbg=1: tắt ảnh nền (dùng solid bg), blur vẫn chạy nhưng chỉ chụp solid background (= tint)
+        // - mặc định: bật blur như bình thường
+        when {
+            level >= 3 && directBg -> {
+                BlurEngine.isPaused = false
+                BlurEngine.isDirectBgMode = true
+                // Không gọi captureAndBlur() — ảnh nền đã tắt, không có gì để chụp
+                // Panel vẽ tint trực tiếp (tương đương blur solid background)
+                BlurEngine.blurBitmap = null
             }
-        } else {
-            BlurEngine.isPaused = true
+            level >= 3 && !isBlurDisabled(activity) -> {
+                BlurEngine.isPaused = false
+                BlurEngine.isDirectBgMode = false
+                activity.window.decorView.post {
+                    BlurEngine.controller.captureAndBlur(activity)
+                }
+            }
+            else -> {
+                BlurEngine.isPaused = true
+                BlurEngine.isDirectBgMode = false
+            }
         }
 
         applyWindowFlags(activity)
