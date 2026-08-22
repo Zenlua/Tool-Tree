@@ -12,6 +12,12 @@ public final class BlurEngine {
     public static volatile Bitmap blurBitmap; 
     public static boolean isPaused = false;
     
+    /**
+     * Khi directbg=1: không chụp wallpaper, chụp màu background solid thay thế.
+     * Blur vẫn hoạt động bình thường (scale + RenderScript blur + tint)
+     * nhưng nguồn ảnh là màu nền thay vì ảnh wallpaper.
+     */
+    public static boolean isDirectBgMode = false;
     
     public static float DEFAULT_CORNER_RADIUS = 30.0f;
     public float cornerRadius = DEFAULT_CORNER_RADIUS;
@@ -21,6 +27,12 @@ public final class BlurEngine {
     private Bitmap cachedBitmap;
     private Canvas cachedCanvas;
     private static Paint strokePaint;
+
+    /**
+     * Màu background hiện tại được dùng để tạo blur bitmap khi isDirectBgMode.
+     * Cập nhật bởi ThemeModeState trước khi gọi capture.
+     */
+    public static int directBgColor = 0xFF0f0f0f;
 
     public BlurEngine(View view) {
         this.targetView = view;
@@ -59,17 +71,6 @@ public final class BlurEngine {
         // Tọa độ thực tế (cho phép giá trị âm khi vuốt ra ngoài biên)
         int x = (int) (location[0] * scaleX);
         int y = (int) (location[1] * scaleY);
-
-        // FIX: x/y và w/h được làm tròn (int) ĐỘC LẬP với nhau, nên (x + w) hoặc (y + h) có
-        // thể vượt quá kích thước thật của blurBitmap do sai số cộng dồn - đặc biệt dễ thấy ở
-        // các View trải hết chiều rộng màn hình (ví dụ thanh tab dưới), lộ rõ nhất ở MÉP PHẢI.
-        // Khi vượt quá, vùng đó không có pixel nào được vẽ (còn trong suốt), nhưng lớp tint vẫn
-        // phủ lên toàn bộ canvas -> tạo ra 1 vệt màu đặc, không có texture blur ở đúng mép đó.
-        // Kẹp lại x/y để toàn bộ vùng (w,h) luôn nằm gọn trong blurBitmap, không bao giờ tràn biên.
-        int maxX = Math.max(0, blurBitmap.getWidth() - w);
-        int maxY = Math.max(0, blurBitmap.getHeight() - h);
-        x = Math.min(Math.max(x, 0), maxX);
-        y = Math.min(Math.max(y, 0), maxY);
 
         try {
             // Khởi tạo hoặc tái sử dụng cachedBitmap theo kích thước View

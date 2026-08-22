@@ -3,10 +3,12 @@ package com.tool.tree
 import android.app.Activity
 import android.app.WallpaperManager
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -23,12 +25,21 @@ object ThemeModeState {
     @JvmStatic
     fun isDarkMode(): Boolean = themeMode.isDarkMode
 
-    /**
-     * Kiểm tra file cấu hình tắt blur dựa trên đường dẫn tương đối
-     * Đường dẫn đầy đủ sẽ là: /data/user/0/com.tool.tree/files/home/log/dissblur
-     */
     private fun isBlurDisabled(activity: Activity): Boolean {
         val file = File(activity.filesDir, "home/usr/log/dissblur")
+        return try {
+            if (file.exists()) {
+                file.readText().trim() == "1"
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun isDirectBgEnabled(activity: Activity): Boolean {
+        val file = File(activity.filesDir, "home/usr/log/directbg")
         return try {
             if (file.exists()) {
                 file.readText().trim() == "1"
@@ -43,10 +54,11 @@ object ThemeModeState {
     fun switchTheme(activity: Activity, themeLevel: Int? = null): ThemeMode {
         val level = themeLevel ?: ThemeConfig(activity).getThemeMode()
         
-        // Xác định chế độ tối của hệ thống
         val isSystemNight = (activity.resources.configuration.uiMode and 
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK) == 
                 android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+        val directBg = isDirectBgEnabled(activity)
 
         when (level.coerceIn(0, 5)) {
             0 -> {
@@ -67,30 +79,44 @@ object ThemeModeState {
             3 -> {
                 themeMode.isDarkMode = isSystemNight
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                applyWallpaperMode(activity, isSystemNight)
+                applyWallpaperMode(activity, isSystemNight, directBg)
             }
             4 -> {
                 themeMode.isDarkMode = true
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                applyWallpaperMode(activity, true)
+                applyWallpaperMode(activity, true, directBg)
             }
             5 -> {
                 themeMode.isDarkMode = false
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                applyWallpaperMode(activity, false)
+                applyWallpaperMode(activity, false, directBg)
             }
         }
 
-        // Cập nhật lại biến DARK_MODE trong file executor của krscript mỗi khi dark mode
-        // thay đổi thực sự (trước đây DARK_MODE chỉ được set 1 lần lúc init() nên đổi
-        // dark mode giữa chừng không được cập nhật cho tới khi khởi động lại app).
         ScriptEnvironmen.updateDarkMode(activity, themeMode.isDarkMode)
 
-        // Logic xử lý Blur: Chỉ bật khi level >= 3 VÀ file dissblur không phải là 1
+        BlurEngine.isDirectBgMode = (level >= 3 && directBg && !isBlurDisabled(activity))
+        
         if (level >= 3 && !isBlurDisabled(activity)) {
             BlurEngine.isPaused = false
+            BlurEngine.blurBitmap = null
+
             activity.window.decorView.post {
-                BlurEngine.controller.captureAndBlur(activity)
+                val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
+                val wallpaperManager = WallpaperManager.getInstance(activity)
+                val isLiveWallpaper = (wallpaperManager.wallpaperInfo != null) && !customWallpaperFile.exists()
+
+                // Nếu bật directBg HOẶC là Live Wallpaper (decorView bị trong suốt không chụp được)
+                if (BlurEngine.isDirectBgMode || isLiveWallpaper) {
+                    BlurEngine.directBgColor = ContextCompat.getColor(
+                        activity,
+                        if (themeMode.isDarkMode) R.color.window_bg_dark else R.color.window_bg_light
+                    )
+                    BlurEngine.controller.captureBackground(activity)
+                } else {
+                    // Hình nền tĩnh / Custom Wallpaper: decorView đã có Drawable nên chụp bình thường
+                    BlurEngine.controller.captureAndBlur(activity)
+                }
             }
         } else {
             BlurEngine.isPaused = true
@@ -100,26 +126,39 @@ object ThemeModeState {
         return themeMode
     }
 
-    private fun applyWallpaperMode(activity: Activity, isNight: Boolean) {
+    private fun applyWallpaperMode(activity: Activity, isNight: Boolean, directBg: Boolean = false) {
         activity.setTheme(if (isNight) R.style.AppThemeWallpaper else R.style.AppThemeWallpaperLight)
-        
-        val wallpaper = WallpaperManager.getInstance(activity)
-        val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
+        val window = activity.window
 
-        try {
-            if (customWallpaperFile.exists()) {
-                val drawable = Drawable.createFromPath(customWallpaperFile.absolutePath)
-                activity.window.setBackgroundDrawable(drawable)
-            } else if (wallpaper.wallpaperInfo != null) {
-                // Live Wallpaper
-                activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-                activity.window.setBackgroundDrawable(null)
-            } else {
-                // Hệ thống Wallpaper tĩnh
-                activity.window.setBackgroundDrawable(wallpaper.drawable)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+
+        if (directBg) {
+            val bgRes = if (isNight) R.color.window_bg_dark else R.color.window_bg_light
+            window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(activity, bgRes)))
+        } else {
+            val wallpaper = WallpaperManager.getInstance(activity)
+            val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
+
+            try {
+                if (customWallpaperFile.exists()) {
+                    val drawable = Drawable.createFromPath(customWallpaperFile.absolutePath)
+                    window.setBackgroundDrawable(drawable)
+                } else if (wallpaper.wallpaperInfo != null) {
+                    // Live wallpaper: Bật cờ hiện wallpaper hệ thống
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                    window.setBackgroundDrawable(null)
+                } else {
+                    // Tĩnh: Set thẳng drawable vào window để decorView có màu/ảnh chụp
+                    val sysDrawable = wallpaper.drawable
+                    if (sysDrawable != null) {
+                        window.setBackgroundDrawable(sysDrawable)
+                    } else {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                    }
+                }
+            } catch (e: Exception) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
             }
-        } catch (e: Exception) {
-            activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
         }
     }
 
