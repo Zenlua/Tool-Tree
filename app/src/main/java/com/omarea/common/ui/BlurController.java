@@ -15,7 +15,6 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import android.view.View;
 import com.tool.tree.ThemeModeState;
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -24,10 +23,6 @@ public class BlurController {
 
     private static long lastFileLength = -1;
     private static long lastFileModified = -1;
-
-    // Chống việc xếp chồng nhiều luồng capture-and-blur nội dung cùng lúc khi
-    // người dùng vuốt liên tục (mỗi lần vuốt có thể bắn ra nhiều sự kiện scroll).
-    private volatile boolean capturingContent = false;
 
     /**
      * Điều chỉnh độ tương phản (Contrast) của Bitmap
@@ -139,81 +134,6 @@ public class BlurController {
                 if (processedSource != source) {
                     processedSource.recycle();
                 }
-            }
-        }).start();
-    }
-
-    /**
-     * Chụp lại chính nội dung đang hiển thị (ví dụ: các item của trang đang được vuốt
-     * trong SwipePager) rồi làm mờ, thay vì luôn dùng ảnh nền (wallpaper) tĩnh.
-     *
-     * Dùng cho giao diện thường (không bật chế độ ảnh nền): thanh app bar/bottom bar
-     * sẽ hiển thị hiệu ứng kính mờ dựa trên chính nội dung đang trôi qua bên dưới nó,
-     * thay vì một ảnh tĩnh cố định.
-     *
-     * @param activity   Activity chứa view cần chụp (dùng để kiểm tra vòng đời + tạo RenderScript).
-     * @param sourceView View cần chụp làm nguồn cho hiệu ứng mờ (thường là ViewPager/nội dung
-     *                   đang nằm ngay bên dưới thanh bar cần làm mờ).
-     */
-    public void captureAndBlurView(Activity activity, View sourceView) {
-        if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
-        if (sourceView == null || sourceView.getWidth() <= 0 || sourceView.getHeight() <= 0) return;
-        // Bỏ qua nếu đang có một lượt capture khác chạy dở, tránh dồn việc khi vuốt nhanh.
-        if (capturingContent) return;
-
-        final Bitmap captured;
-        try {
-            // view.draw() bắt buộc phải chạy trên UI thread, nên phải chụp bitmap ở đây,
-            // chỉ phần xử lý làm mờ (tốn thời gian) mới được đẩy sang thread nền.
-            captured = Bitmap.createBitmap(sourceView.getWidth(), sourceView.getHeight(), Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(captured);
-            sourceView.draw(canvas);
-        } catch (Exception e) {
-            return;
-        }
-
-        capturingContent = true;
-        final WeakReference<Activity> activityRef = new WeakReference<>(activity);
-
-        new Thread(() -> {
-            try {
-                Activity act = activityRef.get();
-                if (act == null || act.isFinishing() || act.isDestroyed()) {
-                    captured.recycle();
-                    return;
-                }
-                Context context = act.getApplicationContext();
-
-                // Dùng contrast nhẹ hơn so với ảnh wallpaper, vì nội dung item (chữ, icon)
-                // vốn đã có độ tương phản riêng, không cần đẩy quá tay.
-                float contrastValue = ThemeModeState.isDarkMode() ? 0.9f : 1.05f;
-
-                Bitmap processedSource = adjustContrast(captured, contrastValue);
-                int width = Math.max(Math.round(processedSource.getWidth() * 0.15f), 1);
-                int height = Math.max(Math.round(processedSource.getHeight() * 0.15f), 1);
-                Bitmap scaledSource = Bitmap.createScaledBitmap(processedSource, width, height, false);
-                Bitmap blurredResult = blurBitmap(context, scaledSource, 16f);
-
-                if (blurredResult != null) {
-                    BlurEngine.blurBitmap = blurredResult;
-                    BlurEngine.isPaused = false;
-
-                    act.runOnUiThread(() -> {
-                        if (!act.isFinishing() && act.getWindow() != null) {
-                            act.getWindow().getDecorView().invalidate();
-                        }
-                    });
-                }
-
-                if (processedSource != captured) {
-                    processedSource.recycle();
-                }
-                if (scaledSource != processedSource) {
-                    scaledSource.recycle();
-                }
-                captured.recycle();
-            } finally {
-                capturingContent = false;
             }
         }).start();
     }

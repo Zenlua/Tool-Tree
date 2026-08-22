@@ -9,7 +9,6 @@ import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewTreeObserver
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,7 +16,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shared.FilePathResolver
-import com.omarea.common.ui.BlurEngine
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
@@ -63,15 +61,6 @@ class ActionPage : AppCompatActivity() {
     private var checkboxRefreshJob: Job? = null
     private var loadPageJob: Job? = null
 
-    // Làm mờ (blur) app bar dựa trên chính nội dung (item) đang vuốt/cuộn qua bên dưới nó -
-    // áp dụng cho giao diện thường (không có ảnh nền để làm nguồn mờ). Giao diện ảnh nền vẫn
-    // giữ nguyên blur từ wallpaper tĩnh như cũ (xem ThemeModeState.isWallpaperTheme()).
-    private val contentBlurHandler = Handler(Looper.getMainLooper())
-    private val contentBlurRunnable = Runnable { captureContentBlur() }
-    private val contentBlurDebounceMs = 120L
-    private var contentScrollListener: ViewTreeObserver.OnScrollChangedListener? = null
-    private var contentLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -99,8 +88,6 @@ class ActionPage : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
         }
         toolbar.setNavigationOnClickListener { finish() }
-
-        setupContentBlur()
 
         val extras = intent.extras
         if (extras != null) {
@@ -144,35 +131,6 @@ class ActionPage : AppCompatActivity() {
             setResult(2)
             finish()
         }
-    }
-
-    /**
-     * Theo dõi việc cuộn/vuốt và thay đổi bố cục của danh sách (main_list) để cập nhật
-     * lại hiệu ứng mờ (blur) của app bar dựa trên chính nội dung đang trôi qua bên dưới
-     * nó, thay vì một ảnh tĩnh cố định. Chỉ áp dụng cho giao diện thường - giao diện ảnh
-     * nền (level >= 3) vẫn dùng blur từ wallpaper tĩnh như cũ.
-     */
-    private fun setupContentBlur() {
-        if (ThemeModeState.isWallpaperTheme()) return
-        val container = findViewById<View>(R.id.main_list) ?: return
-
-        val scrollListener = ViewTreeObserver.OnScrollChangedListener { scheduleContentBlurUpdate() }
-        val layoutListener = ViewTreeObserver.OnGlobalLayoutListener { scheduleContentBlurUpdate() }
-        contentScrollListener = scrollListener
-        contentLayoutListener = layoutListener
-        container.viewTreeObserver.addOnScrollChangedListener(scrollListener)
-        container.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
-    }
-
-    private fun scheduleContentBlurUpdate() {
-        contentBlurHandler.removeCallbacks(contentBlurRunnable)
-        contentBlurHandler.postDelayed(contentBlurRunnable, contentBlurDebounceMs)
-    }
-
-    private fun captureContentBlur() {
-        if (isFinishing || isDestroyed) return
-        val container = findViewById<View>(R.id.main_list) ?: return
-        BlurEngine.controller.captureAndBlurView(this, container)
     }
 
     private val actionShortClickHandler = object : KrScriptActionHandler {
@@ -850,11 +808,6 @@ class ActionPage : AppCompatActivity() {
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
-        contentBlurHandler.removeCallbacks(contentBlurRunnable)
-        findViewById<View>(R.id.main_list)?.let { container ->
-            contentScrollListener?.let { container.viewTreeObserver.removeOnScrollChangedListener(it) }
-            contentLayoutListener?.let { container.viewTreeObserver.removeOnGlobalLayoutListener(it) }
-        }
         setExcludeFromRecents()
         super.onDestroy()
     }

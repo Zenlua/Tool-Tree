@@ -3,18 +3,14 @@ package com.tool.tree
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewTreeObserver
 import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.material.snackbar.Snackbar
-import com.omarea.common.ui.BlurEngine
 import com.omarea.common.ui.ProgressBarDialog
 import com.tool.tree.databinding.ActivityFileSelectorBinding
 import com.tool.tree.ui.AdapterFileSelector
@@ -33,15 +29,6 @@ class ActivityFileSelector : AppCompatActivity() {
     var pathHome = ""
     private lateinit var binding: ActivityFileSelectorBinding
     private var toolbar: Toolbar? = null
-
-    // Làm mờ (blur) app bar dựa trên chính danh sách file/folder đang vuốt/cuộn qua bên
-    // dưới nó, thay vì một ảnh tĩnh cố định - áp dụng cho giao diện thường (không có ảnh
-    // nền để làm nguồn mờ). Giao diện ảnh nền vẫn giữ nguyên blur từ wallpaper tĩnh như cũ.
-    private val contentBlurHandler = Handler(Looper.getMainLooper())
-    private val contentBlurRunnable = Runnable { captureContentBlur() }
-    private val contentBlurDebounceMs = 120L
-    private var contentScrollListener: ViewTreeObserver.OnScrollChangedListener? = null
-    private var contentLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,46 +94,6 @@ class ActivityFileSelector : AppCompatActivity() {
                 }
             }
         }
-
-        setupContentBlur()
-    }
-
-    /**
-     * Theo dõi việc cuộn/vuốt và thay đổi bố cục của danh sách file (file_selector_list) để
-     * cập nhật lại hiệu ứng mờ (blur) của app bar dựa trên chính các item đang trôi qua bên
-     * dưới nó, thay vì một ảnh tĩnh cố định. Chỉ áp dụng cho giao diện thường - giao diện
-     * ảnh nền (level >= 3) vẫn dùng blur từ wallpaper tĩnh như cũ.
-     */
-    private fun setupContentBlur() {
-        if (ThemeModeState.isWallpaperTheme()) return
-        val list = binding.fileSelectorList
-
-        val scrollListener = ViewTreeObserver.OnScrollChangedListener { scheduleContentBlurUpdate() }
-        val layoutListener = ViewTreeObserver.OnGlobalLayoutListener { scheduleContentBlurUpdate() }
-        contentScrollListener = scrollListener
-        contentLayoutListener = layoutListener
-        list.viewTreeObserver.addOnScrollChangedListener(scrollListener)
-        list.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
-    }
-
-    private fun scheduleContentBlurUpdate() {
-        contentBlurHandler.removeCallbacks(contentBlurRunnable)
-        contentBlurHandler.postDelayed(contentBlurRunnable, contentBlurDebounceMs)
-    }
-
-    private fun captureContentBlur() {
-        if (isFinishing || isDestroyed || !::binding.isInitialized) return
-        BlurEngine.controller.captureAndBlurView(this, binding.fileSelectorList)
-    }
-
-    override fun onDestroy() {
-        contentBlurHandler.removeCallbacks(contentBlurRunnable)
-        if (::binding.isInitialized) {
-            val list = binding.fileSelectorList
-            contentScrollListener?.let { list.viewTreeObserver.removeOnScrollChangedListener(it) }
-            contentLayoutListener?.let { list.viewTreeObserver.removeOnGlobalLayoutListener(it) }
-        }
-        super.onDestroy()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
