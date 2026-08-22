@@ -1,3 +1,5 @@
 Update log:
 
-- Fix delayed notifications
+- Change storage location
+- Add a backup of the original .bak file
+- Speed up APK patching

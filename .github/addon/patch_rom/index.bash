@@ -621,7 +621,7 @@ home() {
     name = "kill_apk_list"
     title = "'"$param1_title"'"
     label = "'"$param1_label"'"
-    desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'/out"
+    desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
     options-sh = "'$pathsh' list_apk_file"
     value-sh = "glog kill_apk_list"
     required = true
