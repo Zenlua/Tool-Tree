@@ -4,6 +4,10 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.RelativeSizeSpan
+import android.text.style.SuperscriptSpan
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -62,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             "1.0.0"
         }
-        setTitle("${getString(R.string.app_name)} ($versionName)")
+        setAppTitleWithVersion(versionName ?: "1.0.0")
 
         if (ThemeConfig(this).getAllowNotificationUI()) {
             WakeLockService.startService(applicationContext)
@@ -81,6 +85,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Hiển thị tên app kèm số phiên bản nhỏ, nằm trên dạng số mũ (superscript) ngay cạnh tên.
+     */
+    private fun setAppTitleWithVersion(versionName: String) {
+        val appName = getString(R.string.app_name)
+        val fullTitle = "$appName $versionName"
+        val spannable = SpannableString(fullTitle)
+
+        val versionStart = appName.length + 1
+        val versionEnd = fullTitle.length
+
+        spannable.setSpan(SuperscriptSpan(), versionStart, versionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(RelativeSizeSpan(0.55f), versionStart, versionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        title = spannable
+    }
+
     private fun initAdapter() {
         if (!::adapter.isInitialized) {
             adapter = MainPagerAdapter(this)
@@ -93,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         binding.root.post {
             progressBarDialog.showDialog(getString(R.string.please_wait))
         }
-
+        
         lifecycleScope.launch(Dispatchers.IO) {
             val favorites = getItems(krScriptConfig.favoriteConfig)
             val pages = getItems(krScriptConfig.pageListConfig)
