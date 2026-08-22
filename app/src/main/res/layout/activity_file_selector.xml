@@ -55,7 +55,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fastScrollEnabled="true"
-            android:fadingEdge="vertical"
             android:requiresFadingEdge="vertical"
             android:scrollbarStyle="insideOverlay"
             android:smoothScrollbar="true" />

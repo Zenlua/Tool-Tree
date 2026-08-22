@@ -10,18 +10,13 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ProgressBar
-import android.widget.ScrollView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shared.FilePathResolver
-import com.omarea.common.ui.BlurTopBarLayout
 import com.omarea.common.ui.ProgressBarDialog
-import com.omarea.common.ui.ScrollContentBlurSource
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.config.PageConfigReader
@@ -66,10 +61,6 @@ class ActionPage : AppCompatActivity() {
     private var checkboxRefreshJob: Job? = null
     private var loadPageJob: Job? = null
 
-    // ========== TÍNH NĂNG MỚI: TOOLBAR KÍNH MỜ PHẢN ÁNH NỘI DUNG LIST ĐANG CUỘN ==========
-    private var scrollBlurSource: ScrollContentBlurSource? = null
-    private var scrollBlurLifecycleCallback: FragmentManager.FragmentLifecycleCallbacks? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -97,8 +88,6 @@ class ActionPage : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
         }
         toolbar.setNavigationOnClickListener { finish() }
-
-        setupContentBlurToolbar()
 
         val extras = intent.extras
         if (extras != null) {
@@ -265,32 +254,6 @@ class ActionPage : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    // ========== TÍNH NĂNG MỚI: TOOLBAR KÍNH MỜ PHẢN ÁNH NỘI DUNG LIST ĐANG CUỘN ==========
-    // ActionListFragment có thể bị replace() nhiều lần trong vòng đời Activity này (mỗi lần
-    // loadPageConfig/updateActionList/beginProgressiveList tạo fragment MỚI - xem các hàm đó).
-    // Dùng registerFragmentLifecycleCallbacks thay vì gắn trực tiếp 1 lần, để TỰ ĐỘNG gắn lại
-    // ScrollContentBlurSource vào ScrollView mới mỗi khi 1 ActionListFragment mới được tạo view,
-    // không cần sửa API của ActionListFragment hay từng nơi gọi replace().
-    private fun setupContentBlurToolbar() {
-        val blurTopContainer = findViewById<BlurTopBarLayout>(R.id.blur_top_container) ?: return
-
-        val callback = object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentViewCreated(fm: FragmentManager, f: Fragment, v: View, savedInstanceState: Bundle?) {
-                if (f !is ActionListFragment) return
-                val scrollView = v.findViewById<ScrollView>(R.id.kr_content) ?: return
-
-                // Fragment cũ (nếu có) đã bị thay thế - giải phóng bitmap cache của nó trước
-                // khi tạo nguồn mới cho ScrollView của fragment vừa được tạo.
-                scrollBlurSource?.destroy()
-                val source = ScrollContentBlurSource(scrollView, blurTopContainer) { blurTopContainer.height }
-                scrollBlurSource = source
-                blurTopContainer.engine.setDynamicSource(source)
-            }
-        }
-        scrollBlurLifecycleCallback = callback
-        supportFragmentManager.registerFragmentLifecycleCallbacks(callback, false)
     }
 
     private fun addFab(menuOption: PageMenuOption) {
@@ -846,8 +809,6 @@ class ActionPage : AppCompatActivity() {
         checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
         setExcludeFromRecents()
-        scrollBlurLifecycleCallback?.let { supportFragmentManager.unregisterFragmentLifecycleCallbacks(it) }
-        scrollBlurSource?.destroy()
         super.onDestroy()
     }
 

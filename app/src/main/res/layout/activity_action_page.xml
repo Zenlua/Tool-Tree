@@ -4,20 +4,16 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="false">
 
-    <!-- QUAN TRỌNG: main_list phải khai báo TRƯỚC app_bar_main để vẽ dưới toolbar (z-order theo
-         thứ tự khai báo trong RelativeLayout). Trước đây main_list có layout_marginTop nên
-         không bao giờ chồng lên toolbar, giờ bỏ margin để nội dung cuộn được TRÔI QUA vùng
-         toolbar (phục vụ hiệu ứng kính mờ - xem ActionPage.setupContentBlurToolbar()), nên thứ
-         tự vẽ bắt đầu quan trọng: nếu để app_bar_main trước, list sẽ đè lên toolbar. -->
-    <FrameLayout
-        android:id="@+id/main_list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
     <include
         layout="@layout/app_bar_main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
+    <FrameLayout
+        android:id="@+id/main_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?android:actionBarSize" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:visibility="gone"

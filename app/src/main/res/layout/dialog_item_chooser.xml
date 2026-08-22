@@ -92,7 +92,6 @@
         android:fastScrollEnabled="true"
         android:scrollbarStyle="insideOverlay"
         android:requiresFadingEdge="vertical"
-        android:fadingEdge="vertical"
         android:smoothScrollbar="true"
         android:layout_width="match_parent"
         android:layout_height="0dp" />
