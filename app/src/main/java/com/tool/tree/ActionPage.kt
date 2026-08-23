@@ -23,6 +23,7 @@ import com.tool.tree.ui.SwipeBackHelper
 import com.tool.tree.ui.SwipeBackPreviewCache
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.ProgressBarDialog
+import com.omarea.common.ui.ThemeConfig
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.config.PageConfigReader
@@ -40,7 +41,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
@@ -84,6 +84,27 @@ class ActionPage : AppCompatActivity() {
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Kiểm tra chế độ Wallpaper Mode (theme >= 3 và directbg != 1)
+        val themeLevel = ThemeConfig(this).getThemeMode()
+        val isDirectBg = ThemeModeState.isDirectBgEnabled(this)
+        val isWallpaperMode = themeLevel >= 3 && !isDirectBg
+
+        if (isWallpaperMode) {
+            // Gán ảnh nền vào root layout để lộ ảnh nền thật khi vuốt
+            val wallpaperDrawable = ThemeModeState.getWallpaperDrawable(this)
+            if (wallpaperDrawable != null) {
+                binding.root.background = wallpaperDrawable
+            }
+        } else {
+            // Chế độ màu đục: Tô màu nền chuẩn
+            binding.root.setBackgroundColor(
+                ContextCompat.getColor(
+                    this,
+                    if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
+                )
+            )
+        }
+
         val swipePreview = SwipeBackPreviewCache.consume()
         swipePreview?.let {
             binding.swipeBackPreviewSharp.setImageBitmap(it.sharp)
@@ -97,7 +118,10 @@ class ActionPage : AppCompatActivity() {
         swipeBackHelper = SwipeBackHelper(
             activity = this,
             contentView = binding.swipeForeground,
-            dragBackgroundColor = resolveThemeWindowBackgroundColor(),
+            dragBackgroundColor = if (isWallpaperMode) Color.TRANSPARENT else ContextCompat.getColor(
+                this,
+                if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
+            ),
             onDragStateChanged = { dragging ->
                 if (swipePreview != null) {
                     val visibility = if (dragging) View.VISIBLE else View.GONE
@@ -793,25 +817,6 @@ class ActionPage : AppCompatActivity() {
         openedSubPage = true
         OpenPageHelper(this).openPage(pageNode)
     }
-
-    private fun resolveThemeWindowBackgroundColor(): Int? {
-        return try {
-            val themeLevel = ThemeConfig(this).getThemeMode()
-            val isDirectBg = ThemeModeState.isDirectBgEnabled(this)
-
-            if (themeLevel >= 3 && !isDirectBg) {
-                Color.TRANSPARENT
-            } else {
-                ContextCompat.getColor(
-                    this,
-                    if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
-                )
-            }
-        } catch (_: Exception) {
-            null
-        }
-    }
-
 
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()

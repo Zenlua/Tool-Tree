@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.view.View
@@ -54,6 +55,32 @@ object ThemeModeState {
         } catch (e: Exception) {
             false
         }
+    }
+
+    /**
+     * Lấy Drawable ảnh nền (Custom wallpaper -> System wallpaper -> Blur bitmap)
+     */
+    @JvmStatic
+    fun getWallpaperDrawable(context: Context): Drawable? {
+        val customWallpaperFile = File(context.filesDir, "home/etc/wallpaper.jpg")
+        if (customWallpaperFile.exists()) {
+            try {
+                val drawable = Drawable.createFromPath(customWallpaperFile.absolutePath)
+                if (drawable != null) return drawable
+            } catch (_: Exception) {}
+        }
+
+        try {
+            val wallpaperManager = WallpaperManager.getInstance(context)
+            val sysDrawable = wallpaperManager.drawable ?: wallpaperManager.fastDrawable
+            if (sysDrawable != null) return sysDrawable
+        } catch (_: Exception) {}
+
+        if (BlurEngine.blurBitmap != null && !BlurEngine.blurBitmap!!.isRecycled) {
+            return BitmapDrawable(context.resources, BlurEngine.blurBitmap)
+        }
+
+        return null
     }
 
     fun switchTheme(activity: Activity, themeLevel: Int? = null): ThemeMode {
@@ -111,7 +138,6 @@ object ThemeModeState {
                 val wallpaperManager = WallpaperManager.getInstance(activity)
                 val isLiveWallpaper = (wallpaperManager.wallpaperInfo != null) && !customWallpaperFile.exists()
 
-                // Nếu bật directBg HOẶC là Live Wallpaper (decorView bị trong suốt không chụp được)
                 if (BlurEngine.isDirectBgMode || isLiveWallpaper) {
                     BlurEngine.directBgColor = ContextCompat.getColor(
                         activity,
@@ -119,7 +145,6 @@ object ThemeModeState {
                     )
                     BlurEngine.controller.captureBackground(activity)
                 } else {
-                    // Hình nền tĩnh / Custom Wallpaper: decorView đã có Drawable nên chụp bình thường
                     BlurEngine.controller.captureAndBlur(activity)
                 }
             }
@@ -149,11 +174,9 @@ object ThemeModeState {
                     val drawable = Drawable.createFromPath(customWallpaperFile.absolutePath)
                     window.setBackgroundDrawable(drawable)
                 } else if (wallpaper.wallpaperInfo != null) {
-                    // Live wallpaper: Bật cờ hiện wallpaper hệ thống
                     window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
                     window.setBackgroundDrawable(null)
                 } else {
-                    // Tĩnh: Set thẳng drawable vào window để decorView có màu/ảnh chụp
                     val sysDrawable = wallpaper.drawable
                     if (sysDrawable != null) {
                         window.setBackgroundDrawable(sysDrawable)
