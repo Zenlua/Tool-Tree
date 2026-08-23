@@ -85,7 +85,7 @@ class SwipeBackHelper(
                 if (candidate) {
                     velocityTracker?.recycle()
                     velocityTracker = VelocityTracker.obtain()
-                    velocityTracker.addMovement(ev)
+                    velocityTracker?.addMovement(ev)
                 }
                 // Luôn để children nhận ACTION_DOWN như bình thường - tap vẫn hoạt động bình
                 // thường nếu cuối cùng đây không phải là 1 cử chỉ kéo lùi
