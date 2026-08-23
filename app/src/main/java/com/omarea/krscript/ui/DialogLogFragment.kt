@@ -843,6 +843,10 @@ class DialogLogFragment : DialogFragment() {
                     uiAppliedLength = 0
                     uiInvalidFrom = Int.MAX_VALUE
                 }
+                // Đảm bảo cờ này không bị "kẹt" ở true (ví dụ nếu có 1 lần flush đang chờ xử lý
+                // đúng lúc dialog bị ẩn) — nếu không, các log mới phát sinh sau khi mở lại có
+                // thể không bao giờ được đẩy lên UI vì compareAndSet(false, true) luôn thất bại.
+                pendingUiUpdate.set(false)
                 logView.post {
                     logView.setText("", TextView.BufferType.EDITABLE)
                     flushToUi(logView)
@@ -1206,8 +1210,11 @@ class DialogLogFragment : DialogFragment() {
         }
 
         private fun dispatchLogUpdate(formattedText: CharSequence) {
-            val logView = logViewRef.get() ?: return
-
+            // QUAN TRỌNG: không được return sớm khi chưa có logView (ví dụ lúc dialog đang ẩn,
+            // hiển thị dưới dạng thông báo) — logBuffer vẫn phải được ghi nhận đầy đủ để khi
+            // mở lại dialog (reattach) có thể phát lại toàn bộ log, kể cả những dòng phát sinh
+            // trong lúc ẩn. Trước đây return sớm ở đây khiến log mới trong lúc ẩn bị mất hẳn,
+            // dẫn đến khi mở lại chỉ thấy log cũ (tính đến thời điểm bấm "Ẩn").
             synchronized(logBuffer) {
                 var i = 0
                 val len = formattedText.length
@@ -1276,6 +1283,9 @@ class DialogLogFragment : DialogFragment() {
                 }
             }
 
+            // Chỉ cần cập nhật UI nếu đang có view gắn vào (dialog đang hiển thị). Khi ẩn,
+            // logBuffer vẫn được cập nhật ở trên để dùng cho việc phát lại log lúc mở lại sau.
+            val logView = logViewRef.get() ?: return
             if (pendingUiUpdate.compareAndSet(false, true)) {
                 logView.post {
                     pendingUiUpdate.set(false)
