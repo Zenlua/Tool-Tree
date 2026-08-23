@@ -29,6 +29,7 @@ import com.omarea.krscript.config.PageConfigReader
 import com.omarea.krscript.config.PageConfigSh
 import com.omarea.krscript.model.*
 import com.omarea.krscript.ui.ActionListFragment
+import com.omarea.krscript.ui.DialogLogFragment
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.FadeScalePageTransformer
@@ -83,6 +84,25 @@ class MainActivity : AppCompatActivity() {
             // onBackPressedDispatcher.onBackPressed()
             finish()
         }
+
+        handleResumeNotificationIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleResumeNotificationIntent(intent)
+    }
+
+    /**
+     * Nếu Activity được mở từ việc bấm vào thông báo tiến trình đã ẩn (nút "Ẩn" trong
+     * DialogLogFragment), mở lại dialog log tương ứng thay vì chỉ đưa app lên foreground.
+     */
+    private fun handleResumeNotificationIntent(intent: Intent?) {
+        val notificationId = intent?.getIntExtra(DialogLogFragment.EXTRA_RESUME_NOTIFICATION_ID, -1) ?: -1
+        if (notificationId == -1) return
+
+        DialogLogFragment.resume(notificationId)?.show(supportFragmentManager, "")
     }
 
     /**

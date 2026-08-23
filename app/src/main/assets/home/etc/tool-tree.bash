@@ -278,6 +278,7 @@ Home() {
   title = "'$addon_text'"
   desc = "'$home_text_4'"
   icon = "'$urlicon'/addon.png"
+  process = true
   config-sh = "PATHADD=\"$AON\" '$ETC'/tool-tree.bash Addon"
   handler = """
   [ "$menu_id" == "file" ] && installadd "$file" "$AON"
@@ -357,6 +358,7 @@ More() {
   title = "'$editor_apk'"
   desc = "'$more_text_6'"
   icon = "'$urlicon'/apk_utility.png"
+  process = true
   config-sh = "'$ETC'/tool-tree.bash Utiliapk"
   lock = "[ -f $LOG/javaww ] && echo \"'$boot_text_1'\" || echo 0"
   handler = """
@@ -438,6 +440,7 @@ More() {
   title = "'$plugin_text'"
   desc = "'$more_text_8'"
   icon = "'$urlicon'/apk_addon.png"
+  process = true
   config-sh = "PATHADD=\"$AOK\" '$ETC'/tool-tree.bash Addon"
   handler = """
   [ "$menu_id" == "file" ] && installadd "$file" "$AOK";
@@ -2287,7 +2290,6 @@ Addon() {
       title = "'$name'"
       desc = "'$sum_vb'"
       icon = "'$icon_vb'"
-      process = true
       '$croot_add'
       '$shortcut_text'
       '$pagesh'
