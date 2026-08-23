@@ -86,6 +86,9 @@ class ActionPage : AppCompatActivity() {
         swipePreview?.let {
             binding.swipeBackPreviewSharp.setImageBitmap(it.sharp)
             if (it.blurred != null) {
+                val blurDrawable = android.graphics.drawable.BitmapDrawable(resources, it.blurred).apply {
+                    isFilterBitmap = true
+                }
                 binding.swipeBackPreviewBlur.setImageBitmap(it.blurred)
             } else {
                 binding.swipeBackPreviewBlur.setImageBitmap(it.sharp)
