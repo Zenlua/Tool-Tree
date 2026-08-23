@@ -115,15 +115,12 @@ class ActionPage : AppCompatActivity() {
         
                     if (!dragging) {
                         binding.swipeBackPreviewSharp.alpha = 0f
-                        binding.swipeBackPreviewBlur.alpha = 1f
                     }
                 }
             },
             onDragProgress = { progress ->
                 // Cross-Fade mượt mà giữa lớp mờ và lớp nét
-                val sharpAlpha = progress * progress
-                binding.swipeBackPreviewSharp.alpha = sharpAlpha
-                binding.swipeBackPreviewBlur.alpha = 1f - sharpAlpha
+                binding.swipeBackPreviewSharp.alpha = progress * progress
             }
         )
 
