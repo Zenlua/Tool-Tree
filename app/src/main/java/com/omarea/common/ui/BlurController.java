@@ -15,7 +15,6 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import android.util.LruCache;
 import com.tool.tree.ThemeModeState;
 import com.tool.tree.R;
 import java.io.File;
@@ -25,16 +24,6 @@ public class BlurController {
 
     private static long lastFileLength = -1;
     private static long lastFileModified = -1;
-
-    // RenderScript dùng chung riêng cho quầng mờ icon (createIconGlow) - tránh chi phí
-    // RenderScript.create()/destroy() lặp lại cho từng icon khi 1 trang có nhiều item.
-    // Khởi tạo bằng applicationContext (không phải Activity context) để không giữ tham chiếu
-    // Activity và không cần destroy theo vòng đời Activity.
-    private static volatile RenderScript sharedIconRenderScript;
-
-    // Cache kết quả quầng mờ theo từng icon - cùng 1 icon (cùng ConstantState, cùng size/tỉ lệ/độ
-    // mờ) sẽ dùng lại bitmap đã tính thay vì blur lại mỗi lần bind view.
-    private static final LruCache<String, Bitmap> iconGlowCache = new LruCache<>(80);
 
     /**
      * Điều chỉnh độ tương phản (Contrast) của Bitmap
@@ -79,63 +68,6 @@ public class BlurController {
             rs.destroy();
         }
         return outBitmap;
-    }
-
-    /**
-     * RenderScript dùng chung cho createIconGlow() (không destroy - sống theo vòng đời app).
-     * Chỉ dùng applicationContext để không leak Activity.
-     */
-    private RenderScript getSharedIconRenderScript(Context context) {
-        RenderScript rs = sharedIconRenderScript;
-        if (rs == null) {
-            synchronized (BlurController.class) {
-                rs = sharedIconRenderScript;
-                if (rs == null) {
-                    rs = RenderScript.create(context.getApplicationContext());
-                    sharedIconRenderScript = rs;
-                }
-            }
-        }
-        return rs;
-    }
-
-    /**
-     * Giống blurBitmap() nhưng dùng RenderScript dùng chung (getSharedIconRenderScript) thay vì
-     * tạo/huỷ RenderScript riêng mỗi lần gọi - chỉ Allocation/Script tạm được huỷ sau mỗi lần.
-     */
-    private Bitmap blurBitmapShared(Context context, Bitmap bitmap, float radius) {
-        if (bitmap == null) return null;
-        Bitmap outBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
-        RenderScript rs = getSharedIconRenderScript(context);
-        Allocation input = null;
-        Allocation output = null;
-        ScriptIntrinsicBlur intrinsicBlur = null;
-        try {
-            input = Allocation.createFromBitmap(rs, bitmap);
-            output = Allocation.createFromBitmap(rs, outBitmap);
-            intrinsicBlur = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
-            intrinsicBlur.setRadius(radius);
-            intrinsicBlur.setInput(input);
-            intrinsicBlur.forEach(output);
-            output.copyTo(outBitmap);
-        } finally {
-            if (input != null) input.destroy();
-            if (output != null) output.destroy();
-            if (intrinsicBlur != null) intrinsicBlur.destroy();
-        }
-        return outBitmap;
-    }
-
-    /**
-     * Khoá cache cho createIconGlow(): dựa trên identity của ConstantState (icon cùng resource/
-     * cùng Drawable thường dùng chung 1 ConstantState) + các tham số kích thước/độ mờ.
-     * Icon load từ file tuỳ chỉnh (mỗi lần decode ra Drawable mới) sẽ có ConstantState khác nhau
-     * mỗi lần -> không cache được, chỉ mất tối ưu chứ không sai kết quả.
-     */
-    private String buildIconGlowCacheKey(Drawable drawable, int iconSizePx, float overflowRatio, float blurRadius) {
-        Drawable.ConstantState state = drawable.getConstantState();
-        Object identity = state != null ? state : drawable;
-        return System.identityHashCode(identity) + "_" + iconSizePx + "_" + overflowRatio + "_" + blurRadius;
     }
 
     /**
@@ -192,78 +124,6 @@ public class BlurController {
             }
             solidBitmap.recycle();
         }).start();
-    }
-
-    /**
-     * Tạo "quầng mờ" (glow) phía sau 1 icon: vẽ icon gốc lên bitmap phóng to nhẹ (tràn ra ngoài
-     * khung icon gốc), rồi làm mờ - GIỮ NGUYÊN màu thật của icon (không chỉnh contrast/tint).
-     * Dùng để thay thế nền đen phẳng phía sau icon khi bật directbg=1
-     * (xem com.omarea.krscript.ui.ListItemClickable).
-     *
-     * @param context       Context để tạo RenderScript.
-     * @param iconDrawable  Drawable gốc của icon (không bị thay đổi/mutate ngoài ý muốn).
-     * @param iconSizePx    Kích thước (px) của khung icon gốc (hình vuông).
-     * @param overflowRatio Tỉ lệ phóng to so với icon gốc, ví dụ 1.25f = tràn ra ngoài 25%.
-     * @param blurRadius    Bán kính blur, tự động giới hạn trong khoảng 0f..25f (giới hạn của RenderScript).
-     * @return Bitmap quầng mờ đã blur (kích thước = round(iconSizePx * overflowRatio)), hoặc null nếu lỗi.
-     */
-    /**
-     * Tạo "quầng mờ" (glow) phía sau 1 icon: vẽ icon gốc (kích thước thật) vào GIỮA 1 bitmap nhỏ
-     * có nhiều khoảng đệm trong suốt xung quanh, rồi blur mạnh - GIỮ NGUYÊN màu thật của icon
-     * (không chỉnh contrast/tint). Khoảng đệm trong suốt đủ lớn giúp vệt blur tan dần mềm mại
-     * trong chính bitmap, không bị cắt cụt ở viền.
-     *
-     * Bitmap trả về CỐ Ý nhỏ (không phải kích thước hiển thị cuối) - nơi gọi (ListItemClickable)
-     * sẽ kéo giãn (scaleType fitXY) bitmap này lên 1 View to hơn nhiều (vd rộng ~nửa thẻ) để tạo
-     * hiệu ứng loang rộng, mềm, giống cách app đã blur nền toàn màn hình (blur ảnh nhỏ rồi phóng to).
-     *
-     * @param context       Context để tạo RenderScript.
-     * @param iconDrawable  Drawable gốc của icon (không bị thay đổi/mutate ngoài ý muốn).
-     * @param iconSizePx    Kích thước (px) hiển thị thật của icon trong bitmap (hình vuông).
-     * @param paddingRatio  Tỉ lệ kích thước bitmap tổng so với icon, vd 4f = bitmap rộng gấp 4 lần
-     *                      icon (icon nằm giữa, phần còn lại là khoảng đệm trong suốt để blur loang).
-     * @param blurRadius    Bán kính blur, tự động giới hạn trong khoảng 0f..25f (giới hạn của RenderScript).
-     * @return Bitmap glow đã blur (kích thước = round(iconSizePx * paddingRatio)), hoặc null nếu lỗi.
-     */
-    public Bitmap createIconGlow(Context context, Drawable iconDrawable, int iconSizePx, float paddingRatio, float blurRadius) {
-        if (iconDrawable == null || iconSizePx <= 0) return null;
-
-        String cacheKey = buildIconGlowCacheKey(iconDrawable, iconSizePx, paddingRatio, blurRadius);
-        Bitmap cached = iconGlowCache.get(cacheKey);
-        if (cached != null && !cached.isRecycled()) {
-            return cached;
-        }
-
-        try {
-            int canvasSize = Math.max(Math.round(iconSizePx * paddingRatio), 1);
-            int iconOffset = Math.round((canvasSize - iconSizePx) / 2f);
-
-            Bitmap source = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(source);
-
-            // Vẽ trên 1 bản sao độc lập của drawable để không đụng tới bounds của icon đang
-            // hiển thị thật trên ImageView (iconDrawable có thể đang được dùng ở nơi khác).
-            Drawable drawableToDraw = iconDrawable.getConstantState() != null
-                    ? iconDrawable.getConstantState().newDrawable().mutate()
-                    : iconDrawable;
-            // Icon vẽ ĐÚNG kích thước thật (iconSizePx), nằm giữa canvas rộng hơn - phần đệm xung
-            // quanh để trống (trong suốt) làm chỗ cho vệt blur loang ra mềm mại.
-            drawableToDraw.setBounds(iconOffset, iconOffset, iconOffset + iconSizePx, iconOffset + iconSizePx);
-            drawableToDraw.draw(canvas);
-
-            float radius = Math.max(0f, Math.min(blurRadius, 25f));
-            Bitmap blurred = blurBitmapShared(context, source, radius);
-
-            if (blurred != source) {
-                source.recycle();
-            }
-            if (blurred != null) {
-                iconGlowCache.put(cacheKey, blurred);
-            }
-            return blurred;
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     public void captureAndBlur(Activity activity) {
