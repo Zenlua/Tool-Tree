@@ -31,9 +31,13 @@ class OpenPageHelper(private val activity: Activity) {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 putExtra("page", pageNode)
                 // Chụp lại màn hình hiện tại NGAY TRƯỚC khi mở trang mới, để trang mới có thể
-                // hiện lại nó làm nền phía sau lúc vuốt để trở lại (xem SwipeBackHelper)
-                SwipeBackPreviewCache.capture(activity)
-                activity.startActivity(this)
+                // hiện lại nó làm nền phía sau lúc vuốt để trở lại (xem SwipeBackHelper).
+                // capture() dùng PixelCopy nên là bất đồng bộ (để giữ đúng bo góc từng item -
+                // xem SwipeBackPreviewCache) - PHẢI startActivity() bên trong callback, không
+                // gọi ngay sau capture() như trước nữa.
+                SwipeBackPreviewCache.capture(activity) {
+                    activity.startActivity(this)
+                }
             }
 
         } catch (ex: Exception) {
@@ -41,4 +45,3 @@ class OpenPageHelper(private val activity: Activity) {
         }
     }
 }
-
