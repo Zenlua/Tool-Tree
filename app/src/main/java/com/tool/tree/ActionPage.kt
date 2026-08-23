@@ -113,11 +113,6 @@ class ActionPage : AppCompatActivity() {
                     binding.swipeBackPreviewBlur.visibility = visibility
                     binding.swipeBackPreviewSharp.visibility = visibility
         
-                    // [Áp dụng Ý 2]: Ép về LAYER_TYPE_NONE cho các View đang thay đổi Alpha liên tục.
-                    // Bật LAYER_TYPE_HARDWARE ở đây chính là nguyên nhân làm GPU phải tạo lại Texture mỗi frame -> nhấp nháy đen/xám.
-                    binding.swipeBackPreviewSharp.setLayerType(View.LAYER_TYPE_NONE, null)
-                    binding.swipeBackPreviewBlur.setLayerType(View.LAYER_TYPE_NONE, null)
-        
                     if (!dragging) {
                         binding.swipeBackPreviewSharp.alpha = 0f
                         binding.swipeBackPreviewBlur.alpha = 1f
@@ -125,13 +120,12 @@ class ActionPage : AppCompatActivity() {
                 }
             },
             onDragProgress = { progress ->
-                // [Áp dụng Ý 1]: Cross-Fade mượt mà giữa lớp mờ và lớp nét
+                // Cross-Fade mượt mà giữa lớp mờ và lớp nét
                 val sharpAlpha = progress * progress
                 binding.swipeBackPreviewSharp.alpha = sharpAlpha
                 binding.swipeBackPreviewBlur.alpha = 1f - sharpAlpha
             }
         )
-
 
         // Hỗ trợ predictive-back (Android 13+, gesture-nav vuốt từ mép do hệ thống nhận diện)
         // dùng đúng 1 bộ hiệu ứng với vuốt bằng tay ở trên (xem SwipeBackHelper.onSystemBack*).
@@ -443,8 +437,6 @@ class ActionPage : AppCompatActivity() {
     private fun menuItemExecuteSilent(menuOption: PageMenuOption) {
         val config = currentPageConfig ?: return
         val extraParams = hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key)
-        // Nếu option có script riêng (script/set) thì chạy trực tiếp, không cần pageHandlerSh
-        // + không cần dựa vào $menu_id/$state để tự phân biệt option nào được bấm nữa.
         val script = if (menuOption.script.isNotEmpty()) menuOption.script else config.pageHandlerSh
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -479,23 +471,11 @@ class ActionPage : AppCompatActivity() {
             finish()
         }
 
-        // process = true + đang hiện loading (mở trang lần đầu, hoặc reload có showLoading):
-        // hiện từng mục 1 ngay khi build xong thay vì đợi build xong hết trang mới hiện toàn
-        // bộ - dành cho trang có rất nhiều mục/nhiều lệnh shell nên load rất lâu (xem
-        // PageConfigReader.tomlChildren). Reload âm thầm (showLoading = false) vẫn dùng
-        // luồng cũ.
-        //
-        // Thứ tự hiển thị: hộp thoại loading hiện trước như bình thường (chưa có mục nào thì
-        // vẫn hiện loading); CHỈ khi mục ĐẦU TIÊN build xong mới ẩn hộp thoại và chuyển sang
-        // thanh tiến trình dưới toolbar (chạy động, không hiện %). Trang KHÔNG bật
-        // process = true dùng thanh này cho giai đoạn dựng UI/ảnh (xem nhánh else bên dưới),
-        // và hộp thoại vẫn hiện suốt lúc build dữ liệu như cũ vì không có tín hiệu từng mục.
         val useProgressiveLoad = showLoading && config.process
 
         loadPageJob = lifecycleScope.launch(Dispatchers.IO) {
             if (showLoading) {
                 withContext(Dispatchers.Main) {
-                    // Reset lại từ lần load trước (nếu có) - chưa có mục nào nên chưa hiện.
                     hideLoadProgress()
                     val initialText = if (config.beforeRead.isNotEmpty())
                         getString(R.string.kr_page_before_load) else getString(R.string.kr_page_loading)
@@ -515,34 +495,14 @@ class ActionPage : AppCompatActivity() {
             var progressiveFragment: ActionListFragment? = null
             if (useProgressiveLoad) {
                 withContext(Dispatchers.Main) {
-                    // Fragment dựng rỗng ngay từ giờ để sẵn sàng nhận mục qua
-                    // appendProgressiveItem() - hộp thoại loading vẫn đang che nên người dùng
-                    // chưa thấy gì cho tới khi mục đầu tiên xong (xem onNodeReady bên dưới).
                     progressiveFragment = beginProgressiveList()
                 }
             }
 
-            // Mỗi mục build xong ở PageConfigReader/PageConfigSh (đang chạy tuần tự trên
-            // luồng IO) được post lên main thread để thêm vào UI. QUAN TRỌNG: luồng IO phải
-            // ĐỢI post() này thực thi xong (qua CountDownLatch) rồi mới được build/report mục
-            // kế tiếp - nếu không, khi dữ liệu build nhanh hơn UI kịp vẽ (appendProgressiveItem
-            // có thể decode ảnh trên main thread), IO thread sẽ dội hàng loạt post() liên tiếp
-            // vào hàng đợi main thread. Main thread khi đó phải xử lý hết các Runnable đã xếp
-            // hàng trước rồi mới tới lượt sự kiện chạm/vuốt -> không vuốt được dù thanh tiến
-            // trình (animation riêng do Choreographer đảm nhiệm) trông như vẫn đang chạy bình
-            // thường. Đồng bộ theo từng mục đảm bảo hàng đợi main thread không bao giờ có quá
-            // 1 việc chờ xử lý cùng lúc, luôn còn khe hở cho vuốt/chạm giữa các mục.
             var barShown = false
 
             val onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = if (useProgressiveLoad) {
                 { node, _, _ ->
-                    // Giải mã trước (và tự nạp vào cache dùng chung của IconPathAnalysis)
-                    // NGAY TRÊN LUỒNG IO này - không đụng gì tới UI nên an toàn. Nhờ vậy khi
-                    // main thread thực sự dựng view cho mục này (bên dưới), lệnh decode ảnh
-                    // bên trong chỉ còn là 1 lượt đọc cache (gần như tức thời) thay vì phải tự
-                    // đọc file + giải mã bitmap ngay trên main thread - đây là phần tốn thời
-                    // gian nhất mỗi lần thêm mục, nên gỡ nó ra khỏi main thread giúp cuộn mượt
-                    // hơn hẳn dù vẫn phải đợi đồng bộ theo từng mục (xem latch bên dưới).
                     if (node != null) {
                         try {
                             prewarmNodeImages(node)
@@ -556,8 +516,6 @@ class ActionPage : AppCompatActivity() {
                             try {
                                 if (!isFinishing && !isDestroyed) {
                                     if (!barShown) {
-                                        // Mục ĐẦU TIÊN đã sẵn sàng - ẩn hộp thoại, chuyển sang
-                                        // thanh tiến trình chạy động (không hiện %).
                                         barShown = true
                                         progressBarDialog.hideDialog()
                                         loadProgressBar.apply {
@@ -571,9 +529,6 @@ class ActionPage : AppCompatActivity() {
                                 latch.countDown()
                             }
                         }
-                        // Giới hạn thời gian chờ để luồng IO không treo vĩnh viễn trong
-                        // trường hợp hiếm gặp Runnable trên không bao giờ chạy được (vd
-                        // Activity vừa bị huỷ ngay lúc này).
                         latch.await(1000, java.util.concurrent.TimeUnit.MILLISECONDS)
                     }
                 }
@@ -600,29 +555,16 @@ class ActionPage : AppCompatActivity() {
                     }
                     progressBarDialog.hideDialog()
                     if (useProgressiveLoad) {
-                        // resolvePendingStates() (chạy trong PageConfigReader) đã xong lúc
-                        // này - làm mới hiển thị switch/picker về đúng trạng thái thật rồi
-                        // mới chạy autoRunTask, xem ActionListFragment.finishProgressiveList.
                         progressiveFragment?.finishProgressiveList()
                         actionsLoaded = true
                         hideLoadProgress()
                     } else if (showLoading) {
-                        // Trang KHÔNG bật process = true, đang ở lượt tải có hiện hộp thoại
-                        // (mở trang lần đầu / reload có showLoading): ActionListFragment dựng
-                        // TOÀN BỘ view (kể cả decode ảnh icon/logo) ĐỒNG BỘ trên main thread
-                        // ngay khi fragment được add (xem PageLayoutRender) - với trang nhiều
-                        // mục ảnh việc này có thể mất khá lâu, khiến app trông như bị đơ ngay
-                        // sau khi hộp thoại loading vừa biến mất. Hiện thanh tiến trình chạy
-                        // động (không có %, vì không biết trước mục ảnh nào chậm) trong lúc
-                        // dựng, chỉ tắt khi ActionListFragment báo đã dựng xong qua onRendered.
                         loadProgressBar.apply {
                             isIndeterminate = true
                             visibility = View.VISIBLE
                         }
                         updateActionList(items, showLoading) { hideLoadProgress() }
                     } else {
-                        // Reload âm thầm (showLoading = false, vd quay lại từ trang con) -
-                        // giữ nguyên như cũ, không hiện thanh tiến trình.
                         updateActionList(items, showLoading)
                     }
                     refreshCheckboxMenuStates()
@@ -635,11 +577,6 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Giải mã trước toàn bộ ảnh (icon/logo/photo/bg) của 1 mục (và các mục con nếu là
-    // GroupNode) NGAY TRÊN LUỒNG GỌI HÀM (không đụng UI, an toàn để gọi từ luồng IO) - kết
-    // quả tự vào cache dùng chung của IconPathAnalysis (khoá theo pageConfigDir + đường dẫn),
-    // nên lần load lại sau đó trên main thread (lúc dựng view) chỉ còn là đọc cache. Dùng cho
-    // luồng tải từng mục 1 (process = true) - xem onNodeReady trong loadPageConfig().
     private fun prewarmNodeImages(node: NodeInfoBase) {
         val iconPathAnalysis = IconPathAnalysis()
         when (node) {
@@ -674,9 +611,6 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Dựng 1 ActionListFragment RỖNG - dùng khi trang cấu hình process = true. Thanh tiến
-    // trình dưới toolbar đã được hiện từ đầu loadPageConfig() rồi (chung cho mọi trang có
-    // showLoading), ở đây chỉ cần dựng danh sách rỗng để appendProgressiveItem() đổ mục vào.
     private fun beginProgressiveList(): ActionListFragment {
         val fragment = ActionListFragment.createProgressive(actionShortClickHandler, buildAutoRunTask(), ThemeModeState.getThemeMode())
         supportFragmentManager.beginTransaction()
@@ -742,7 +676,6 @@ class ActionPage : AppCompatActivity() {
         }
 
         val config = currentPageConfig ?: return
-        // Nếu option có script riêng (script/set) thì chạy trực tiếp, không cần pageHandlerSh
         val script = if (menuOption.script.isNotEmpty()) menuOption.script else config.pageHandlerSh
         val dialog = DialogLogFragment.create(
             menuOption,
@@ -812,8 +745,6 @@ class ActionPage : AppCompatActivity() {
                         ACTION_FILE_PATH_CHOOSER_INNER
                     )
                 } else {
-                    // Hỗ trợ nhiều mime type cùng lúc, ví dụ:
-                    // mime="application/vnd.android.package-archive,application/java-archive,application/zip"
                     val mimeTypes = fileSelectedInterface.mimeType()
                         ?.split(",")
                         ?.map { it.trim() }
@@ -823,8 +754,6 @@ class ActionPage : AppCompatActivity() {
 
                     val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                         if (mimeTypes.size > 1) {
-                            // Với nhiều mime type, "type" phải để "*/*" và liệt kê
-                            // các mime cụ thể qua EXTRA_MIME_TYPES
                             type = "*/*"
                             putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
                         } else {
@@ -895,18 +824,6 @@ class ActionPage : AppCompatActivity() {
         OpenPageHelper(this).openPage(pageNode)
     }
 
-    /**
-     * Lấy màu nền cơ bản (theo theme sáng/tối hiện tại) để dùng làm nền "đục" tạm thời cho
-     * swipe_foreground trong lúc kéo - xem giải thích ở SwipeBackHelper.dragBackgroundColor.
-     *
-     * CHÚ Ý: không lấy qua ?android:windowBackground như trước - vì ở theme chế độ hình nền
-     * (level 3 trở lên, AppThemeWallpaper/AppThemeWallpaperLight) thuộc tính này được khai báo
-     * CỐ Ý trong suốt (@android:color/transparent), do nền thật được vẽ qua
-     * window.setBackgroundDrawable() (ảnh nền/blur) chứ không qua theme attribute - resolve
-     * theo cách cũ sẽ trả về màu trong suốt, khiến lúc vuốt bị hở/trong suốt đúng như báo lỗi.
-     * Dùng thẳng màu nền cơ bản của app (window_bg_light/dark) - luôn là màu đặc, áp dụng nhất
-     * quán cho mọi theme level.
-     */
     private fun resolveThemeWindowBackgroundColor(): Int? {
         return try {
             ContextCompat.getColor(
