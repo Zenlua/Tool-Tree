@@ -18,6 +18,7 @@ open class ListItemClickable(context: Context,
     protected var mOnLongClickListener: OnLongClickListener? = null
     protected var shortcutIconView = layout.findViewById<View?>(R.id.kr_shortcut_icon)
     protected var iconView = layout.findViewById<ImageView?>(R.id.kr_icon)
+    protected var iconGlowView = layout.findViewById<ImageView?>(R.id.kr_icon_glow)
     protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon)
     protected var extraBgView = layout.findViewById<ImageView?>(R.id.kr_extra_bg)
 
@@ -42,47 +43,50 @@ open class ListItemClickable(context: Context,
         desc = config.desc
         summary = config.summary
 
-        // Kích thước khung icon gốc (px), khớp với 35dp khai báo cứng trong kr_action_list_item.xml
-        // / kr_switch_list_item.xml. Tính cố định từ hằng số dp (không đọc layoutParams hiện tại)
-        // để không bị lệch nếu view này từng được phóng to bởi quầng mờ ở lần bind trước.
+        // Kích thước hiển thị thật của icon (px), khớp với 35dp khai báo trong kr_action_list_item.xml
+        // / kr_switch_list_item.xml.
         val baseIconSizePx = (35f * context.resources.displayMetrics.density + 0.5f).toInt()
 
-        // Quầng mờ phía sau icon (chỉ bật khi directbg=1 - xem BlurEngine.isDirectBgMode,
-        // được ThemeModeState cập nhật): thay vì nền đen phẳng, dùng chính bản mờ + phóng to nhẹ
-        // của icon đó làm nền, giữ nguyên màu thật của icon.
+        // Quầng mờ phía sau icon (chỉ bật khi directbg=1 - xem BlurEngine.isDirectBgMode, được
+        // ThemeModeState cập nhật): dùng 1 View RIÊNG (kr_icon_glow) đặt phía sau icon+chữ, KHÔNG
+        // đụng tới kích thước/layout của iconView - icon luôn giữ nguyên 35dp sắc nét, chữ không
+        // bị đẩy lệch. Quầng lấy chính icon đó, blur mạnh (tối đa) ở độ phân giải nhỏ rồi kéo giãn
+        // (scaleType fitXY) lên 1 View rộng ~nửa bề ngang thẻ để tạo cảm giác loang mềm, không viền cứng.
         val applyIconGlow = fun(iconDrawable: Drawable) {
-            val icon = iconView ?: return
+            val glowView = iconGlowView
+            if (glowView == null) return
             if (!BlurEngine.isDirectBgMode) {
-                icon.background = null
-                val params = icon.layoutParams
-                if (params != null && (params.width != baseIconSizePx || params.height != baseIconSizePx)) {
-                    params.width = baseIconSizePx
-                    params.height = baseIconSizePx
-                    icon.layoutParams = params
-                }
-                icon.setPadding(0, 0, 0, 0)
+                glowView.visibility = View.GONE
+                glowView.setImageDrawable(null)
                 return
             }
 
-            val glow = BlurEngine.controller.createIconGlow(context, iconDrawable, baseIconSizePx, 1.25f, 10f)
+            // paddingRatio=4f: bitmap nguồn rộng gấp 4 icon, icon nằm giữa - phần viền trong suốt
+            // rộng rãi để vệt blur có chỗ tan dần mềm mại trước khi bị kéo giãn lên to.
+            // blurRadius=25f: mức tối đa RenderScript hỗ trợ (đã tự giới hạn trong createIconGlow).
+            val glow = BlurEngine.controller.createIconGlow(context, iconDrawable, baseIconSizePx, 4f, 25f)
             if (glow == null) {
-                icon.background = null
+                glowView.visibility = View.GONE
+                glowView.setImageDrawable(null)
                 return
             }
 
-            val glowSizePx = glow.width
-            val extra = (glowSizePx - baseIconSizePx).coerceAtLeast(0)
-            val pad = extra / 2
+            glowView.setImageDrawable(BitmapDrawable(context.resources, glow))
+            glowView.visibility = View.VISIBLE
 
-            val params = icon.layoutParams
-            if (params != null) {
-                params.width = glowSizePx
-                params.height = glowSizePx
-                icon.layoutParams = params
+            // Card (layout) chưa có kích thước thật lúc init() này chạy (mới inflate, chưa attach
+            // vào window) -> đợi layout xong rồi mới tính bề rộng quầng theo bề rộng thẻ thật.
+            glowView.post {
+                val cardWidth = layout.width
+                if (cardWidth > 0) {
+                    val params = glowView.layoutParams
+                    if (params != null) {
+                        // ~ nửa bề ngang thẻ, theo đúng yêu cầu "loang rộng ra cả nửa thẻ".
+                        params.width = (cardWidth * 0.5f).toInt()
+                        glowView.layoutParams = params
+                    }
+                }
             }
-            icon.setPadding(pad, pad, pad, pad)
-            icon.scaleType = ImageView.ScaleType.FIT_CENTER
-            icon.background = BitmapDrawable(context.resources, glow)
         }
 
         this.layout.setOnClickListener {

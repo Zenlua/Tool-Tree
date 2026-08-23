@@ -207,19 +207,38 @@ public class BlurController {
      * @param blurRadius    Bán kính blur, tự động giới hạn trong khoảng 0f..25f (giới hạn của RenderScript).
      * @return Bitmap quầng mờ đã blur (kích thước = round(iconSizePx * overflowRatio)), hoặc null nếu lỗi.
      */
-    public Bitmap createIconGlow(Context context, Drawable iconDrawable, int iconSizePx, float overflowRatio, float blurRadius) {
+    /**
+     * Tạo "quầng mờ" (glow) phía sau 1 icon: vẽ icon gốc (kích thước thật) vào GIỮA 1 bitmap nhỏ
+     * có nhiều khoảng đệm trong suốt xung quanh, rồi blur mạnh - GIỮ NGUYÊN màu thật của icon
+     * (không chỉnh contrast/tint). Khoảng đệm trong suốt đủ lớn giúp vệt blur tan dần mềm mại
+     * trong chính bitmap, không bị cắt cụt ở viền.
+     *
+     * Bitmap trả về CỐ Ý nhỏ (không phải kích thước hiển thị cuối) - nơi gọi (ListItemClickable)
+     * sẽ kéo giãn (scaleType fitXY) bitmap này lên 1 View to hơn nhiều (vd rộng ~nửa thẻ) để tạo
+     * hiệu ứng loang rộng, mềm, giống cách app đã blur nền toàn màn hình (blur ảnh nhỏ rồi phóng to).
+     *
+     * @param context       Context để tạo RenderScript.
+     * @param iconDrawable  Drawable gốc của icon (không bị thay đổi/mutate ngoài ý muốn).
+     * @param iconSizePx    Kích thước (px) hiển thị thật của icon trong bitmap (hình vuông).
+     * @param paddingRatio  Tỉ lệ kích thước bitmap tổng so với icon, vd 4f = bitmap rộng gấp 4 lần
+     *                      icon (icon nằm giữa, phần còn lại là khoảng đệm trong suốt để blur loang).
+     * @param blurRadius    Bán kính blur, tự động giới hạn trong khoảng 0f..25f (giới hạn của RenderScript).
+     * @return Bitmap glow đã blur (kích thước = round(iconSizePx * paddingRatio)), hoặc null nếu lỗi.
+     */
+    public Bitmap createIconGlow(Context context, Drawable iconDrawable, int iconSizePx, float paddingRatio, float blurRadius) {
         if (iconDrawable == null || iconSizePx <= 0) return null;
 
-        String cacheKey = buildIconGlowCacheKey(iconDrawable, iconSizePx, overflowRatio, blurRadius);
+        String cacheKey = buildIconGlowCacheKey(iconDrawable, iconSizePx, paddingRatio, blurRadius);
         Bitmap cached = iconGlowCache.get(cacheKey);
         if (cached != null && !cached.isRecycled()) {
             return cached;
         }
 
         try {
-            int glowSize = Math.max(Math.round(iconSizePx * overflowRatio), 1);
+            int canvasSize = Math.max(Math.round(iconSizePx * paddingRatio), 1);
+            int iconOffset = Math.round((canvasSize - iconSizePx) / 2f);
 
-            Bitmap source = Bitmap.createBitmap(glowSize, glowSize, Bitmap.Config.ARGB_8888);
+            Bitmap source = Bitmap.createBitmap(canvasSize, canvasSize, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(source);
 
             // Vẽ trên 1 bản sao độc lập của drawable để không đụng tới bounds của icon đang
@@ -227,7 +246,9 @@ public class BlurController {
             Drawable drawableToDraw = iconDrawable.getConstantState() != null
                     ? iconDrawable.getConstantState().newDrawable().mutate()
                     : iconDrawable;
-            drawableToDraw.setBounds(0, 0, glowSize, glowSize);
+            // Icon vẽ ĐÚNG kích thước thật (iconSizePx), nằm giữa canvas rộng hơn - phần đệm xung
+            // quanh để trống (trong suốt) làm chỗ cho vệt blur loang ra mềm mại.
+            drawableToDraw.setBounds(iconOffset, iconOffset, iconOffset + iconSizePx, iconOffset + iconSizePx);
             drawableToDraw.draw(canvas);
 
             float radius = Math.max(0f, Math.min(blurRadius, 25f));
