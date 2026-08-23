@@ -125,7 +125,7 @@ class ActionPage : AppCompatActivity() {
             },
             onDragProgress = { progress ->
                 // Vuốt càng nhiều -> bản nét càng hiện rõ đè lên bản mờ phía dưới
-                binding.swipeBackPreviewSharp.alpha = progress
+                binding.swipeBackPreviewSharp.alpha = progress * progress
             }
         )
 
