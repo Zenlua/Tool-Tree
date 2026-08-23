@@ -14,6 +14,8 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.activity.BackEventCompat
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.tool.tree.ui.SwipeBackHelper
@@ -126,6 +128,32 @@ class ActionPage : AppCompatActivity() {
                 binding.swipeBackPreviewSharp.alpha = progress
             }
         )
+
+        // Hỗ trợ predictive-back (Android 13+, gesture-nav vuốt từ mép do hệ thống nhận diện)
+        // dùng đúng 1 bộ hiệu ứng với vuốt bằng tay ở trên (xem SwipeBackHelper.onSystemBack*).
+        // Trên các thiết bị/API không hỗ trợ progress (nav 3 nút, API cũ), handleOnBackPressed()
+        // vẫn được gọi bình thường như back mặc định, không có gì khác biệt.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackStarted(backEvent: BackEventCompat) {
+                swipeBackHelper.onSystemBackStarted()
+            }
+
+            override fun handleOnBackProgressed(backEvent: BackEventCompat) {
+                swipeBackHelper.onSystemBackProgress(backEvent.progress)
+            }
+
+            override fun handleOnBackCancelled() {
+                swipeBackHelper.onSystemBackCancelled()
+            }
+
+            override fun handleOnBackPressed() {
+                if (!swipeBackHelper.consumeSystemBackInvoked()) {
+                    // Back thông thường (phím back cứng/nav 3 nút, hoặc thiết bị/API không hỗ
+                    // trợ progress) - finish() bình thường, dùng animation mặc định theo theme
+                    finish()
+                }
+            }
+        })
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)

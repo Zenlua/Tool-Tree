@@ -95,6 +95,13 @@ class SwipeBackHelper(
     private var settleAnimator: ValueAnimator? = null
     var enabled = true
 
+    // true khi đang có 1 cử chỉ predictive-back của hệ thống (Android 13+, vuốt từ mép được
+    // OS/gesture-nav nhận trước) điều khiển tiến độ, thay vì do dispatchTouchEvent() ở trên
+    // theo dõi trực tiếp ngón tay. Dùng chung applyProgress()/animateTo() với đường vuốt tay
+    // thường để có đúng 1 bộ hiệu ứng (dịch chuyển, đổ bóng, preview mờ/nét...) cho cả 2
+    // trường hợp.
+    private var externalDragActive = false
+
     /**
      * Gọi từ Activity.dispatchTouchEvent(). Trả về true nghĩa là sự kiện đã được xử lý bởi
      * cử chỉ vuốt lùi (không cần forward xuống view con nữa). Trả về false thì Activity vẫn
@@ -106,8 +113,11 @@ class SwipeBackHelper(
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 // Chỉ bắt đầu 1 cử chỉ mới khi trang đang ở vị trí gốc (không phải đang
-                // dở dang settle từ lần kéo trước)
-                val isIdle = settleAnimator?.isRunning != true && contentView.translationX == 0f
+                // dở dang settle từ lần kéo trước, và không phải đang có 1 cử chỉ
+                // predictive-back của hệ thống điều khiển)
+                val isIdle = settleAnimator?.isRunning != true &&
+                    contentView.translationX == 0f &&
+                    !externalDragActive
                 candidate = isIdle
                 dragging = false
                 downX = ev.rawX
@@ -259,5 +269,59 @@ class SwipeBackHelper(
         settleAnimator?.cancel()
         settleAnimator = null
         recycleTracker()
+    }
+
+    // ================== Predictive-back (Android 13+, OnBackPressedCallback) ==================
+    // Các hàm dưới đây được gọi từ OnBackPressedCallback.handleOnBack*() khi hệ điều hành nhận
+    // diện cử chỉ vuốt từ mép màn hình cho gesture-nav (predictive back). Cố ý dùng lại đúng
+    // applyProgress()/animateTo() với cùng field "dragging" như khi kéo bằng tay thông thường,
+    // để chỉ có 1 bộ hiệu ứng nhất quán (dịch chuyển, đổ bóng, màu nền tạm, preview mờ/nét,
+    // hardware layer...) cho mọi cách vuốt lùi, không phân biệt nguồn.
+
+    /** Gọi từ handleOnBackStarted() - hệ thống vừa xác nhận người dùng bắt đầu vuốt từ mép. */
+    fun onSystemBackStarted() {
+        if (dragging) return // đang có 1 cử chỉ khác dở dang (hiếm khi xảy ra) -> bỏ qua
+        dragging = true
+        externalDragActive = true
+        onDragStateChanged(true)
+        contentView.elevation = dragElevationPx
+        if (dragBackgroundColor != null) {
+            contentView.setBackgroundColor(dragBackgroundColor)
+        }
+        contentView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+    }
+
+    /** Gọi từ handleOnBackProgressed() với progress 0f..1f do hệ thống tính sẵn theo khoảng
+     *  cách đã vuốt (đã được OS áp interpolator riêng, không cần xử lý thêm). */
+    fun onSystemBackProgress(progress: Float) {
+        if (!externalDragActive) return
+        val width = contentView.width.takeIf { it > 0 } ?: return
+        applyProgress(progress.coerceIn(0f, 1f) * width)
+    }
+
+    /** Gọi từ handleOnBackCancelled() - người dùng vuốt chưa đủ/thả tay giữa chừng, hệ thống
+     *  tự quyết định hủy cử chỉ (không cần tự tính threshold như lúc kéo bằng tay). */
+    fun onSystemBackCancelled() {
+        if (!externalDragActive) return
+        externalDragActive = false
+        dragging = false
+        animateTo(0f, 0f, null)
+    }
+
+    /**
+     * Gọi từ handleOnBackPressed() - đây là điểm "chốt" cuối cùng cho cả 2 trường hợp: (a) 1
+     * cử chỉ predictive-back đã có progress từ trước (Android 13+, gesture-nav), lúc này hàm
+     * tự lo animation trượt nốt ra rồi finish(), trả về true; (b) back thông thường không có
+     * progress (bấm phím back cứng/nav 3 nút, hoặc thiết bị/API cũ không hỗ trợ progress) thì
+     * không có gì để "trượt nốt" cả, trả về false để Activity tự finish() bình thường (dùng
+     * animation activity_close_enter/exit mặc định theo theme thay vì bị tắt animation).
+     */
+    fun consumeSystemBackInvoked(): Boolean {
+        if (!externalDragActive) return false
+        externalDragActive = false
+        dragging = false
+        val width = contentView.width.takeIf { it > 0 }?.toFloat() ?: return false
+        animateTo(width, 0f) { onBack() }
+        return true
     }
 }
