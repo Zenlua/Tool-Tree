@@ -894,16 +894,21 @@ class ActionPage : AppCompatActivity() {
     /**
      * Lấy màu nền cơ bản (theo theme sáng/tối hiện tại) để dùng làm nền "đục" tạm thời cho
      * swipe_foreground trong lúc kéo - xem giải thích ở SwipeBackHelper.dragBackgroundColor.
+     *
+     * CHÚ Ý: không lấy qua ?android:windowBackground như trước - vì ở theme chế độ hình nền
+     * (level 3 trở lên, AppThemeWallpaper/AppThemeWallpaperLight) thuộc tính này được khai báo
+     * CỐ Ý trong suốt (@android:color/transparent), do nền thật được vẽ qua
+     * window.setBackgroundDrawable() (ảnh nền/blur) chứ không qua theme attribute - resolve
+     * theo cách cũ sẽ trả về màu trong suốt, khiến lúc vuốt bị hở/trong suốt đúng như báo lỗi.
+     * Dùng thẳng màu nền cơ bản của app (window_bg_light/dark) - luôn là màu đặc, áp dụng nhất
+     * quán cho mọi theme level.
      */
     private fun resolveThemeWindowBackgroundColor(): Int? {
         return try {
-            val typedValue = android.util.TypedValue()
-            theme.resolveAttribute(android.R.attr.windowBackground, typedValue, true)
-            if (typedValue.type in android.util.TypedValue.TYPE_FIRST_COLOR_INT..android.util.TypedValue.TYPE_LAST_COLOR_INT) {
-                typedValue.data
-            } else {
-                null
-            }
+            ContextCompat.getColor(
+                this,
+                if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
+            )
         } catch (_: Exception) {
             null
         }
