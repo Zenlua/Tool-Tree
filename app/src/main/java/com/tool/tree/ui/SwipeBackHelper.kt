@@ -5,9 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.graphics.Outline
-import android.os.Build
 import android.view.MotionEvent
-import android.view.RoundedCorner
 import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewConfiguration
@@ -83,29 +81,9 @@ class SwipeBackHelper(
 
         contentView.outlineProvider = object : ViewOutlineProvider() {
             override fun getOutline(view: View, outline: Outline) {
-                var applied = false
-
-                // Chỉ lấy bán kính bo góc thật phần cứng nếu thiết bị chạy Android 12 (API 31)+
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    val insets = view.rootWindowInsets
-                    val radius = insets?.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)?.radius
-                    if (radius != null && radius > 0) {
-                        outline.setRoundRect(0, 0, view.width, view.height, radius.toFloat())
-                        applied = true
-                    }
-                }
-
-                // Android thấp hơn (API < 31) hoặc không lấy được radius -> giữ khung vuông
-                if (!applied) {
-                    outline.setRect(0, 0, view.width, view.height)
-                }
+                outline.setRect(0, 0, view.width, view.height)
                 outline.alpha = 1f
             }
-        }
-
-        // Chỉ bật cắt viền nội dung (clipToOutline) đối với Android 12 trở lên
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            contentView.clipToOutline = true
         }
     }
 

@@ -441,7 +441,11 @@ class ActionPage : AppCompatActivity() {
         val useProgressiveLoad = showLoading && config.process
 
         loadPageJob = lifecycleScope.launch(Dispatchers.IO) {
-            if (showLoading) {
+            // Chế độ load tiến trình (progressive - hiện từng item dần) đã có sẵn thanh
+            // loadProgressBar ngay trong danh sách để báo đang tải, không cần thêm dialog che
+            // kín màn hình nữa -> chỉ hiện dialog cho chế độ load thường (mặc định, không bật
+            // process trong config trang)
+            if (showLoading && !useProgressiveLoad) {
                 withContext(Dispatchers.Main) {
                     hideLoadProgress()
                     val initialText = if (config.beforeRead.isNotEmpty())
@@ -452,7 +456,7 @@ class ActionPage : AppCompatActivity() {
 
             if (config.beforeRead.isNotEmpty()) {
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.beforeRead, config)
-                if (showLoading) {
+                if (showLoading && !useProgressiveLoad) {
                     withContext(Dispatchers.Main) {
                         progressBarDialog.showDialog(getString(R.string.kr_page_loading))
                     }
@@ -463,10 +467,14 @@ class ActionPage : AppCompatActivity() {
             if (useProgressiveLoad) {
                 withContext(Dispatchers.Main) {
                     progressiveFragment = beginProgressiveList()
+                    // Không có dialog ở chế độ này -> hiện luôn thanh progress inline ngay từ
+                    // đầu, thay vì đợi tới khi có item đầu tiên mới hiện như trước
+                    loadProgressBar.apply {
+                        isIndeterminate = true
+                        visibility = View.VISIBLE
+                    }
                 }
             }
-
-            var barShown = false
 
             val onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = if (useProgressiveLoad) {
                 { node, _, _ ->
@@ -482,14 +490,6 @@ class ActionPage : AppCompatActivity() {
                         handler.post {
                             try {
                                 if (!isFinishing && !isDestroyed) {
-                                    if (!barShown) {
-                                        barShown = true
-                                        progressBarDialog.hideDialog()
-                                        loadProgressBar.apply {
-                                            isIndeterminate = true
-                                            visibility = View.VISIBLE
-                                        }
-                                    }
                                     if (node != null) progressiveFragment?.appendProgressiveItem(node)
                                 }
                             } finally {
