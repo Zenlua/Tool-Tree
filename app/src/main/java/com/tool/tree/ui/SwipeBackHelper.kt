@@ -58,6 +58,12 @@ class SwipeBackHelper(
 
         private const val SETTLE_DURATION_MIN_MS = 150L
         private const val SETTLE_DURATION_MAX_MS = 300L
+
+        // Cử chỉ predictive-back của hệ thống (gesture-nav vuốt từ mép, Android 13+) chạy
+        // animation "settle"/"trượt nốt ra" chậm gấp đôi so với lúc tự vuốt bằng tay trên toàn
+        // màn hình - vì bản thân cử chỉ đó thường ngắn/nhanh hơn (chỉ vuốt 1 đoạn ngắn từ mép
+        // là hệ thống đã coi là đủ), nên cố ý kéo dài animation ra để không bị giật/hụt.
+        private const val SYSTEM_BACK_DURATION_MULTIPLIER = 2f
     }
 
     private val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
@@ -225,10 +231,10 @@ class SwipeBackHelper(
         }
     }
 
-    private fun animateTo(target: Float, velocityX: Float, onEnd: (() -> Unit)?) {
+    private fun animateTo(target: Float, velocityX: Float, onEnd: (() -> Unit)?, durationMultiplier: Float = 1f) {
         val start = contentView.translationX
         val distance = abs(target - start)
-        val duration = computeSettleDuration(distance, velocityX)
+        val duration = (computeSettleDuration(distance, velocityX) * durationMultiplier).toLong()
 
         settleAnimator?.cancel()
         settleAnimator = ValueAnimator.ofFloat(start, target).apply {
@@ -305,7 +311,7 @@ class SwipeBackHelper(
         if (!externalDragActive) return
         externalDragActive = false
         dragging = false
-        animateTo(0f, 0f, null)
+        animateTo(0f, 0f, null, SYSTEM_BACK_DURATION_MULTIPLIER)
     }
 
     /**
@@ -321,7 +327,7 @@ class SwipeBackHelper(
         externalDragActive = false
         dragging = false
         val width = contentView.width.takeIf { it > 0 }?.toFloat() ?: return false
-        animateTo(width, 0f) { onBack() }
+        animateTo(width, 0f, { onBack() }, SYSTEM_BACK_DURATION_MULTIPLIER)
         return true
     }
 }
