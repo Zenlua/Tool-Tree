@@ -110,6 +110,12 @@ class ActionPage : AppCompatActivity() {
                     val visibility = if (dragging) View.VISIBLE else View.GONE
                     binding.swipeBackPreviewBlur.visibility = visibility
                     binding.swipeBackPreviewSharp.visibility = visibility
+                    // Bật hardware layer cho ảnh nét vì nó bị đổi alpha liên tục mỗi khung
+                    // hình theo tiến độ vuốt - không dùng layer sẽ dễ bị nhấp nháy khi
+                    // animation alpha chạy trên view lớn full-screen
+                    binding.swipeBackPreviewSharp.setLayerType(
+                        if (dragging) View.LAYER_TYPE_HARDWARE else View.LAYER_TYPE_NONE, null
+                    )
                     if (!dragging) {
                         binding.swipeBackPreviewSharp.alpha = 0f
                     }

@@ -140,6 +140,13 @@ class SwipeBackHelper(
                             if (dragBackgroundColor != null) {
                                 contentView.setBackgroundColor(dragBackgroundColor)
                             }
+                            // Bật hardware layer trong lúc kéo: cả subtree (toolbar blur +
+                            // list + fab) được "chụp" lại thành 1 texture GPU rồi chỉ dịch
+                            // chuyển texture đó mỗi khung hình, thay vì phải vẽ lại toàn bộ
+                            // cây view (kèm shadow do elevation) ở mỗi frame - đây là nguyên
+                            // nhân chính gây nhấp nháy ở các khoảng trống khi kéo nhanh trên
+                            // một số thiết bị/driver GPU.
+                            contentView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
                             val cancelEvent = MotionEvent.obtain(ev)
                             cancelEvent.action = MotionEvent.ACTION_CANCEL
                             contentView.dispatchTouchEvent(cancelEvent)
@@ -230,6 +237,9 @@ class SwipeBackHelper(
                         }
                         onDragStateChanged(false)
                     }
+                    // Tắt hardware layer khi đã kết thúc kéo (dù bật lại hay trượt hẳn ra) -
+                    // giữ layer lâu dài không cần thiết sẽ tốn thêm bộ nhớ GPU
+                    contentView.setLayerType(View.LAYER_TYPE_NONE, null)
                     onEnd?.invoke()
                 }
             })
