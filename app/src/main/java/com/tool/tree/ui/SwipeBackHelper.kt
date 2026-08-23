@@ -223,7 +223,7 @@ class SwipeBackHelper(
         val shouldGoBack = distance > width * COMMIT_DISTANCE_RATIO || velocityX > minFlingVelocity
 
         if (shouldGoBack) {
-            animateTo(width.toFloat(), velocityX) { onBack() }
+            animateTo(width.toFloat(), velocityX, { onBack() })
         } else {
             // Kéo chưa đủ hoặc vuốt ngược lại -> bật lại về vị trí ban đầu, tốc độ "settle"
             // co giãn theo khoảng cách còn lại + vận tốc thả tay, giống cách SwipePager làm
