@@ -388,15 +388,6 @@ More() {
     rm -fr $HOME/.local/share/apktool/framework/1.apk
     echo
     checktime
-    elif [ "$menu_id" == "b3" ]; then
-    echo "'$more_text_4' $file"
-    echo
-    unzip -oq $ETC/apktool.jar prebuilt/linux/aapt2 -d $TMP
-    cp -rf "$file" $TMP/apktool.jar || killtree "File copy error"
-    cd $TMP
-    zip -qr apktool.jar prebuilt/*
-    mv apktool.jar $ETC/apktool.jar
-    rm -fr prebuilt
     elif [ "$menu_id" == "b4" ]; then
     echo "'$more_text_4' $file"
     echo
@@ -407,17 +398,13 @@ More() {
     [ "$(unzip -ql "$file" | grep -cm1 ".x509.pem")" == 1 ] || killtree "'$more_text_5' .x509.pem"
     [ "$(unzip -ql "$file" | grep -cm1 ".pk8")" == 1 ] || killtree "'$more_text_5' .pk8"
     unzip -oj "$file" *.x509.pem *.pk8 -d "$ETC/key"
-    elif [ "$menu_id" == "v3" ]; then
-    echo "'$more_text_4' $file"
-    echo
-    cp -rf "$file" $ETC/apkeditor.jar || killtree "File copy error"
     elif [ "$menu_id" == "v4" ]; then
     echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTAD#$SDCARD_PATH}]"
     elif [ "$menu_id" == "v5" ]; then
     echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$APK/$PTAH]"
     fi
   """
-
+  
     [[group.page.options]]
     key = "v1"
     type = "checkbox"
@@ -436,22 +423,6 @@ More() {
     type = "file"
     title = "'$more_text_3'"
     suffix = "zip"
-    auto-off = true
-
-    [[group.page.options]]
-    key = "v3"
-    type = "file"
-    title = "'$more_text_10' apkeditor.jar"
-    suffix = "jar"
-    reload = true
-    auto-off = true
-
-    [[group.page.options]]
-    key = "b3"
-    type = "file"
-    title = "'$more_text_10' apktool.jar"
-    suffix = "jar"
-    reload = true
     auto-off = true
 
     [[group.page.options]]
@@ -482,7 +453,7 @@ More() {
   [[group]]
   [[group.page]]
   title = "'$plugin_text'"
-  desc = "'$home_text_4'"
+  desc = "'$more_text_8'"
   icon = "'`urlpng apk_addon`'"
   config-sh = "PATHADD=\"$AOK\" '$ETC'/tool-tree.bash Addon"
   handler = """

@@ -49,7 +49,7 @@ echo '
     [[group.action.params]]
     name = "uri_file_modun"
     value-sh = "glog uri_file_modun"
-    path-home = "'$PTAD'/out"
+    path-home = "'$PTAD'"
     multiple = true
     required = "required"
     type="file"
@@ -113,7 +113,8 @@ echo '
   """
   confirm = true
   visible = "'$visisj'"
-
+  '
+  [ "$visisj" == 1 ] && echo '
   [[text]]
   desc = "'$list_modul'"
   summary-sh = """
