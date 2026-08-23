@@ -17,6 +17,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.tool.tree.ui.SwipeBackHelper
+import com.tool.tree.ui.SwipeBackPreviewCache
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.TryOpenActivity
@@ -51,7 +52,8 @@ class ActionPage : AppCompatActivity() {
     private lateinit var binding: ActivityActionPageBinding
     private var openedSubPage = false
 
-    // Vuốt từ mép trái để trở lại (giống nút back trên toolbar), có hiệu ứng kéo theo tay
+    // Vuốt bất kỳ đâu trên màn hình để trở lại (giống nút back trên toolbar), có hiệu ứng
+    // kéo theo tay + hiện preview màn hình trước đó phía sau
     private lateinit var swipeBackHelper: SwipeBackHelper
 
     // Khóa theo ID thật của item để không lệ thuộc vào vị trí trong mảng
@@ -83,7 +85,20 @@ class ActionPage : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        swipeBackHelper = SwipeBackHelper(this, binding.root)
+
+        // Nếu trang trước đó có chụp lại màn hình (xem OpenPageHelper/SwipeBackPreviewCache),
+        // hiện nó làm "cửa sổ cũ" phía sau trong lúc vuốt để trở lại
+        SwipeBackPreviewCache.consume()?.let { binding.swipeBackPreview.setImageBitmap(it) }
+
+        swipeBackHelper = SwipeBackHelper(
+            activity = this,
+            contentView = binding.swipeForeground,
+            onDragStateChanged = { dragging ->
+                if (binding.swipeBackPreview.drawable != null) {
+                    binding.swipeBackPreview.visibility = if (dragging) View.VISIBLE else View.GONE
+                }
+            }
+        )
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -825,6 +840,13 @@ class ActionPage : AppCompatActivity() {
         checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
         if (::swipeBackHelper.isInitialized) swipeBackHelper.release()
+        if (::binding.isInitialized) {
+            val preview = binding.swipeBackPreview.drawable
+            if (preview is android.graphics.drawable.BitmapDrawable) {
+                binding.swipeBackPreview.setImageDrawable(null)
+                preview.bitmap?.takeIf { !it.isRecycled }?.recycle()
+            }
+        }
         setExcludeFromRecents()
         super.onDestroy()
     }

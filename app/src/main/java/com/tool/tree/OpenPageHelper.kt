@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import com.omarea.krscript.model.PageNode
+import com.tool.tree.ui.SwipeBackPreviewCache
 
 class OpenPageHelper(private val activity: Activity) {
 
@@ -29,6 +30,9 @@ class OpenPageHelper(private val activity: Activity) {
             intent?.apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 putExtra("page", pageNode)
+                // Chụp lại màn hình hiện tại NGAY TRƯỚC khi mở trang mới, để trang mới có thể
+                // hiện lại nó làm nền phía sau lúc vuốt để trở lại (xem SwipeBackHelper)
+                SwipeBackPreviewCache.capture(activity)
                 activity.startActivity(this)
             }
 
@@ -37,3 +41,4 @@ class OpenPageHelper(private val activity: Activity) {
         }
     }
 }
+

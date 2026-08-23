@@ -12,29 +12,32 @@ import android.view.animation.DecelerateInterpolator
 import kotlin.math.abs
 
 /**
- * Vuốt từ mép trái màn hình để trở lại trang trước - giống hệt hành vi bấm nút back
- * trên toolbar (finish()), nhưng có hiệu ứng kéo theo ngón tay theo thời gian thực thay
- * vì chỉ chạy animation cố định sau khi buông tay.
+ * Vuốt ở bất kỳ đâu trên màn hình (kéo sang phải) để trở lại trang trước - giống hệt hành
+ * vi bấm nút back trên toolbar (finish()), nhưng có hiệu ứng kéo theo ngón tay theo thời
+ * gian thực thay vì chỉ chạy animation cố định sau khi buông tay.
  *
  * Cách dùng: gọi dispatchTouchEvent() từ Activity.dispatchTouchEvent() TRƯỚC khi gọi
  * super, để có thể "chặn" sự kiện chạm ngay khi phát hiện đang kéo lùi, đồng thời vẫn
  * để các thao tác chạm bình thường (tap, cuộn dọc list...) đi xuống cho các view con xử
  * lý như cũ khi không phải là cử chỉ vuốt lùi.
  *
- * contentView nên là root layout của activity (chứa cả toolbar + nội dung) để toàn bộ
- * trang trượt cùng nhau, giống với animation activity_open_enter/activity_close_exit
- * đang dùng khi mở/đóng ActionPage bằng cách thông thường.
+ * contentView nên là view bọc toàn bộ nội dung (toolbar + list + fab) để cả trang trượt
+ * cùng nhau, giống với animation activity_open_enter/activity_close_exit đang dùng khi
+ * mở/đóng ActionPage bằng cách thông thường - NHƯNG không nên là root ngoài cùng, vì cần
+ * còn 1 lớp phía dưới (ví dụ ảnh preview màn hình cũ) đứng yên để lộ ra trong lúc kéo.
+ *
+ * onDragStateChanged(true) được gọi ngay khi xác nhận là đang kéo lùi (để phía Activity
+ * hiện ảnh preview lên); onDragStateChanged(false) được gọi khi kéo bị hủy và đã bật lại
+ * về vị trí gốc (không gọi khi kéo thành công vì activity sắp finish() rồi, không cần ẩn
+ * preview làm gì nữa).
  */
 class SwipeBackHelper(
     private val activity: Activity,
     private val contentView: View,
+    private val onDragStateChanged: (dragging: Boolean) -> Unit = {},
     private val onBack: () -> Unit = { activity.finish(); activity.overridePendingTransition(0, 0) }
 ) {
     companion object {
-        // Vùng nhận diện cử chỉ vuốt lùi - chỉ tính khi ACTION_DOWN bắt đầu trong khoảng
-        // này tính từ mép trái, giống edge-swipe-back quen thuộc trên iOS/Android
-        private const val EDGE_WIDTH_DP = 24f
-
         // Kéo quá tỉ lệ này của chiều rộng màn hình (dù thả tay chậm) -> coi như xác nhận trở lại
         private const val COMMIT_DISTANCE_RATIO = 0.28f
 
@@ -46,8 +49,6 @@ class SwipeBackHelper(
         private const val SETTLE_DURATION_MAX_MS = 300L
     }
 
-    private val density = activity.resources.displayMetrics.density
-    private val edgeWidthPx = EDGE_WIDTH_DP * density
     private val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
     private val minFlingVelocity = ViewConfiguration.get(activity).scaledMinimumFlingVelocity
     private val maxFlingVelocity = ViewConfiguration.get(activity).scaledMaximumFlingVelocity
@@ -56,7 +57,8 @@ class SwipeBackHelper(
     private var downX = 0f
     private var downY = 0f
 
-    // Chạm bắt đầu trong vùng mép trái, đang chờ xem có phải là kéo ngang hay không
+    // Chạm bắt đầu khi trang đang ở trạng thái yên (translationX = 0), đang chờ xem có
+    // phải là kéo ngang sang phải hay không
     private var candidate = false
 
     // Đã xác nhận là đang kéo lùi (đã vượt touchSlop theo chiều ngang)
@@ -78,7 +80,7 @@ class SwipeBackHelper(
                 // Chỉ bắt đầu 1 cử chỉ mới khi trang đang ở vị trí gốc (không phải đang
                 // dở dang settle từ lần kéo trước)
                 val isIdle = settleAnimator?.isRunning != true && contentView.translationX == 0f
-                candidate = isIdle && ev.rawX <= edgeWidthPx
+                candidate = isIdle
                 dragging = false
                 downX = ev.rawX
                 downY = ev.rawY
@@ -101,10 +103,11 @@ class SwipeBackHelper(
 
                 if (!dragging) {
                     when {
-                        dx > touchSlop && dx > abs(dy) -> {
+                        dx > touchSlop && dx > abs(dy) * 1.2f -> {
                             // Xác nhận là kéo lùi -> hủy sự kiện đang dở dang (nếu có) trên
                             // view con, ví dụ đang scroll dọc hoặc đang nhấn giữ 1 item
                             dragging = true
+                            onDragStateChanged(true)
                             val cancelEvent = MotionEvent.obtain(ev)
                             cancelEvent.action = MotionEvent.ACTION_CANCEL
                             contentView.dispatchTouchEvent(cancelEvent)
@@ -187,6 +190,7 @@ class SwipeBackHelper(
                         // Đảm bảo về đúng trạng thái gốc, tránh sai số cộng dồn của animator
                         contentView.translationX = 0f
                         contentView.alpha = 1f
+                        onDragStateChanged(false)
                     }
                     onEnd?.invoke()
                 }

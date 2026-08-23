@@ -1,27 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="false">
+    android:layout_height="match_parent">
 
-    <include
-        layout="@layout/app_bar_main"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <FrameLayout
-        android:id="@+id/main_list"
+    <!-- Ảnh chụp nhanh màn hình trước đó (do OpenPageHelper/ActionShortcutManager... chụp lại
+         ngay trước khi mở trang này) - đứng yên, chỉ lộ ra khi swipe_foreground bên dưới được
+         kéo dịch sang phải trong lúc vuốt để trở lại. Không có ảnh (ví dụ mở từ launcher/
+         shortcut) thì cứ để trống, sẽ lộ ra màu nền cửa sổ như trước đây. -->
+    <ImageView
+        android:id="@+id/swipe_back_preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?android:actionBarSize" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:visibility="gone"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="32dp"
-        android:layout_marginEnd="32dp"
-        android:id="@+id/action_page_fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-</RelativeLayout>
+        android:scaleType="centerCrop"
+        android:contentDescription="@null" />
+
+    <RelativeLayout
+        android:id="@+id/swipe_foreground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="false">
+
+        <include
+            layout="@layout/app_bar_main"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <FrameLayout
+            android:id="@+id/main_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="?android:actionBarSize" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:visibility="gone"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginBottom="32dp"
+            android:layout_marginEnd="32dp"
+            android:id="@+id/action_page_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+</FrameLayout>
