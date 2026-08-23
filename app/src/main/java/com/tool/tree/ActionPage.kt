@@ -23,7 +23,6 @@ import com.tool.tree.ui.SwipeBackHelper
 import com.tool.tree.ui.SwipeBackPreviewCache
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.ProgressBarDialog
-import com.omarea.common.ui.ThemeConfig
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.config.PageConfigReader
