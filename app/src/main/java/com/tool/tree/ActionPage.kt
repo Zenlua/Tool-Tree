@@ -88,20 +88,22 @@ class ActionPage : AppCompatActivity() {
         val isDirectBg = ThemeModeState.isDirectBgEnabled(this)
         val isWallpaperMode = themeLevel >= 3 && !isDirectBg
 
+        val defaultBgColor = ContextCompat.getColor(
+            this,
+            if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
+        )
+
         if (isWallpaperMode) {
             // Gán ảnh nền vào root layout để lộ ảnh nền thật khi vuốt
             val wallpaperDrawable = ThemeModeState.getWallpaperDrawable(this)
             if (wallpaperDrawable != null) {
                 binding.root.background = wallpaperDrawable
+            } else {
+                binding.root.setBackgroundColor(defaultBgColor)
             }
         } else {
             // Chế độ màu đục: Tô màu nền chuẩn
-            binding.root.setBackgroundColor(
-                ContextCompat.getColor(
-                    this,
-                    if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
-                )
-            )
+            binding.root.setBackgroundColor(defaultBgColor)
         }
 
         val swipePreview = SwipeBackPreviewCache.consume()
@@ -117,10 +119,7 @@ class ActionPage : AppCompatActivity() {
         swipeBackHelper = SwipeBackHelper(
             activity = this,
             contentView = binding.swipeForeground,
-            dragBackgroundColor = if (isWallpaperMode) Color.TRANSPARENT else ContextCompat.getColor(
-                this,
-                if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
-            ),
+            dragBackgroundColor = if (isWallpaperMode) Color.TRANSPARENT else defaultBgColor,
             onDragStateChanged = { dragging ->
                 if (swipePreview != null) {
                     val visibility = if (dragging) View.VISIBLE else View.GONE

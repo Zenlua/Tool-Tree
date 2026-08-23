@@ -160,32 +160,20 @@ object ThemeModeState {
         activity.setTheme(if (isNight) R.style.AppThemeWallpaper else R.style.AppThemeWallpaperLight)
         val window = activity.window
 
+        // Không dùng cờ trong suốt hệ thống nữa để tránh mất ảnh nền khi trượt
         window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
 
         if (directBg) {
             val bgRes = if (isNight) R.color.window_bg_dark else R.color.window_bg_light
             window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(activity, bgRes)))
         } else {
-            val wallpaper = WallpaperManager.getInstance(activity)
-            val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
-
-            try {
-                if (customWallpaperFile.exists()) {
-                    val drawable = Drawable.createFromPath(customWallpaperFile.absolutePath)
-                    window.setBackgroundDrawable(drawable)
-                } else if (wallpaper.wallpaperInfo != null) {
-                    window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-                    window.setBackgroundDrawable(null)
-                } else {
-                    val sysDrawable = wallpaper.drawable
-                    if (sysDrawable != null) {
-                        window.setBackgroundDrawable(sysDrawable)
-                    } else {
-                        window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-                    }
-                }
-            } catch (e: Exception) {
-                window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+            // Lấy trực tiếp ảnh nền app hoặc hệ thống gán vào background cửa sổ
+            val drawable = getWallpaperDrawable(activity)
+            if (drawable != null) {
+                window.setBackgroundDrawable(drawable)
+            } else {
+                val bgRes = if (isNight) R.color.window_bg_dark else R.color.window_bg_light
+                window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(activity, bgRes)))
             }
         }
     }
