@@ -70,6 +70,17 @@ class SwipeBackHelper(
     private val dragElevationPx = 8f * activity.resources.displayMetrics.density
 
     init {
+        // contentView (khối bọc toolbar + list) thường KHÔNG tự vẽ background riêng, nó
+        // "ăn theo" windowBackground của Activity phía dưới. Bình thường không sao vì
+        // contentView phủ kín toàn màn hình - nhưng trong lúc kéo lùi, phía dưới window lại
+        // để lộ 1 lớp preview (ảnh màn hình trước) nên nếu contentView không có nền thật thì
+        // các khoảng trống giữa toolbar/list sẽ bị "xuyên thấu" ra layer preview đó thay vì
+        // giữ đúng màu nền theme hiện tại. Chủ động gán nền thật (chỉ khi contentView chưa có
+        // background riêng, để không đè lên nơi khác đã cố ý set) - ưu tiên colorBackground
+        // (đúng theo Material theme, cả light/dark), fallback về android:windowBackground nếu
+        // theme không khai báo colorBackground.
+        applyThemeBackgroundIfMissing()
+
         contentView.outlineProvider = object : ViewOutlineProvider() {
             override fun getOutline(view: View, outline: Outline) {
                 var applied = false
@@ -96,6 +107,37 @@ class SwipeBackHelper(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             contentView.clipToOutline = true
         }
+    }
+
+    /**
+     * Gán cho contentView ĐÚNG background thật đang hiển thị của Window, nếu nó chưa có
+     * background riêng - đọc thẳng activity.window.decorView.background thay vì tự resolve
+     * theme attribute (android:windowBackground/colorBackground).
+     *
+     * Lý do không resolve theme attribute: ThemeModeState có các chế độ "dùng ảnh nền" (level
+     * 3-5, xem applyWallpaperMode()) mà ở đó android:windowBackground trong style
+     * (AppThemeWallpaper/AppThemeWallpaperLight) bị khai báo = @android:color/transparent một
+     * cách CỐ Ý, còn ảnh nền/màu thật thì được gán thẳng vào window sau đó bằng
+     * window.setBackgroundDrawable() (ảnh wallpaper tĩnh/custom, hoặc màu window_bg_light/dark
+     * khi bật directBg) - nếu chỉ resolve theme attribute sẽ đọc nhầm ra colorBackground mặc
+     * định kế thừa từ AppCompat (trắng/đen), làm mất hẳn ảnh nền ngay cả lúc không kéo.
+     * decorView.background luôn phản ánh đúng cái đang thật sự hiển thị dù đến từ nguồn nào.
+     *
+     * Riêng trường hợp Live Wallpaper: ThemeModeState chủ động set window background = null +
+     * bật FLAG_SHOW_WALLPAPER để hệ thống tự vẽ hình nền động phía sau - decorBackground sẽ là
+     * null, lúc đó CỐ Ý không gán gì (giữ contentView trong suốt), vì bản thân window cũng
+     * đang trong suốt để lộ live wallpaper, không có ảnh tĩnh nào để sao chép lại cả.
+     *
+     * Dùng bản sao Drawable (constantState.newDrawable().mutate()) thay vì gán thẳng chung 1
+     * instance với decorView, tránh 2 View cùng chỉnh bounds lên 1 Drawable gây xung đột vẽ.
+     */
+    private fun applyThemeBackgroundIfMissing() {
+        if (contentView.background != null) return
+        val decorBackground = activity.window.decorView.background ?: return
+        contentView.background = decorBackground.constantState
+            ?.newDrawable(activity.resources)
+            ?.mutate()
+            ?: decorBackground
     }
 
     private var velocityTracker: VelocityTracker? = null
