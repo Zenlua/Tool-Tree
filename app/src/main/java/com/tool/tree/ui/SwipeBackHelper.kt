@@ -36,12 +36,20 @@ import kotlin.math.abs
  * onDragProgress(0f..1f) được gọi liên tục theo khoảng cách đã kéo (0 = chưa kéo, 1 = kéo
  * hết chiều rộng màn hình) - dùng để hiện hiệu ứng "lấy nét dần" cho ảnh preview phía sau:
  * vuốt càng nhiều thì ảnh preview càng nét/rõ hơn.
+ *
+ * dragBackgroundColor: màu nền sẽ tạm thời gán cho contentView TRONG LÚC kéo (và gỡ ra ngay
+ * khi kéo bị hủy/bật lại) - contentView vốn không có background riêng để không che nền/blur
+ * hình nền lúc đứng yên, nhưng vì vậy các khoảng trống bên trong nó (viền list, khoảng cách
+ * item...) sẽ hở ra ảnh preview phía sau ngay cả ở phần "chưa kéo tới", trông như bị trong
+ * suốt. Gán tạm 1 màu nền đặc trong lúc kéo sẽ khắc phục việc này mà không ảnh hưởng gì lúc
+ * đứng yên.
  */
 class SwipeBackHelper(
     private val activity: Activity,
     private val contentView: View,
     private val onDragStateChanged: (dragging: Boolean) -> Unit = {},
     private val onDragProgress: (progress: Float) -> Unit = {},
+    private val dragBackgroundColor: Int? = null,
     private val onBack: () -> Unit = { activity.finish(); activity.overridePendingTransition(0, 0) }
 ) {
     companion object {
@@ -129,6 +137,9 @@ class SwipeBackHelper(
                             dragging = true
                             onDragStateChanged(true)
                             contentView.elevation = dragElevationPx
+                            if (dragBackgroundColor != null) {
+                                contentView.setBackgroundColor(dragBackgroundColor)
+                            }
                             val cancelEvent = MotionEvent.obtain(ev)
                             cancelEvent.action = MotionEvent.ACTION_CANCEL
                             contentView.dispatchTouchEvent(cancelEvent)
@@ -213,6 +224,10 @@ class SwipeBackHelper(
                         // Đảm bảo về đúng trạng thái gốc, tránh sai số cộng dồn của animator
                         contentView.translationX = 0f
                         contentView.elevation = 0f
+                        if (dragBackgroundColor != null) {
+                            // Gỡ màu nền tạm ra để không che nền/blur hình nền lúc đứng yên
+                            contentView.background = null
+                        }
                         onDragStateChanged(false)
                     }
                     onEnd?.invoke()

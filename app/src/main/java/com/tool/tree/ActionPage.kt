@@ -104,6 +104,7 @@ class ActionPage : AppCompatActivity() {
         swipeBackHelper = SwipeBackHelper(
             activity = this,
             contentView = binding.swipeForeground,
+            dragBackgroundColor = resolveThemeWindowBackgroundColor(),
             onDragStateChanged = { dragging ->
                 if (swipePreview != null) {
                     val visibility = if (dragging) View.VISIBLE else View.GONE
@@ -854,6 +855,24 @@ class ActionPage : AppCompatActivity() {
         if (openedSubPage) return
         openedSubPage = true
         OpenPageHelper(this).openPage(pageNode)
+    }
+
+    /**
+     * Lấy màu nền cơ bản (theo theme sáng/tối hiện tại) để dùng làm nền "đục" tạm thời cho
+     * swipe_foreground trong lúc kéo - xem giải thích ở SwipeBackHelper.dragBackgroundColor.
+     */
+    private fun resolveThemeWindowBackgroundColor(): Int? {
+        return try {
+            val typedValue = android.util.TypedValue()
+            theme.resolveAttribute(android.R.attr.windowBackground, typedValue, true)
+            if (typedValue.type in android.util.TypedValue.TYPE_FIRST_COLOR_INT..android.util.TypedValue.TYPE_LAST_COLOR_INT) {
+                typedValue.data
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
     }
 
     override fun onDestroy() {
