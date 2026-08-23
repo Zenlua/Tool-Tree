@@ -2,6 +2,7 @@ package com.tool.tree
 
 import android.app.Activity
 import android.app.WallpaperManager
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -25,8 +26,8 @@ object ThemeModeState {
     @JvmStatic
     fun isDarkMode(): Boolean = themeMode.isDarkMode
 
-    private fun isBlurDisabled(activity: Activity): Boolean {
-        val file = File(activity.filesDir, "home/usr/log/dissblur")
+    private fun isBlurDisabled(context: Context): Boolean {
+        val file = File(context.filesDir, "home/usr/log/dissblur")
         return try {
             if (file.exists()) {
                 file.readText().trim() == "1"
@@ -38,8 +39,12 @@ object ThemeModeState {
         }
     }
 
-    private fun isDirectBgEnabled(activity: Activity): Boolean {
-        val file = File(activity.filesDir, "home/usr/log/directbg")
+    /**
+     * Nơi duy nhất kiểm tra tệp directbg
+     */
+    @JvmStatic
+    fun isDirectBgEnabled(context: Context): Boolean {
+        val file = File(context.filesDir, "home/usr/log/directbg")
         return try {
             if (file.exists()) {
                 file.readText().trim() == "1"

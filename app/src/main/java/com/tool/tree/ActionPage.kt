@@ -2,6 +2,7 @@ package com.tool.tree
 
 import android.app.ActivityManager
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -39,12 +40,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
-    // Thanh tiến trình mảnh dưới toolbar - chỉ dùng khi trang cấu hình process = true
-    // (xem loadPageConfig/beginProgressiveList). Truy cập kiểu findViewById giống như
-    // toolbar ở trên, vì app_bar_main.xml được <include> không có id riêng.
     private val loadProgressBar by lazy { findViewById<ProgressBar>(R.id.page_load_progress) }
     private var actionsLoaded = false
     private val handler = Handler(Looper.getMainLooper())
@@ -54,11 +53,8 @@ class ActionPage : AppCompatActivity() {
     private lateinit var binding: ActivityActionPageBinding
     private var openedSubPage = false
 
-    // Vuốt bất kỳ đâu trên màn hình để trở lại (giống nút back trên toolbar), có hiệu ứng
-    // kéo theo tay + hiện preview màn hình trước đó phía sau
     private lateinit var swipeBackHelper: SwipeBackHelper
 
-    // Khóa theo ID thật của item để không lệ thuộc vào vị trí trong mảng
     private val justClickedItemIds = HashSet<Int>()
 
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
@@ -88,17 +84,12 @@ class ActionPage : AppCompatActivity() {
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Nếu trang trước đó có chụp lại màn hình (xem OpenPageHelper/SwipeBackPreviewCache),
-        // hiện nó làm "cửa sổ cũ" phía sau trong lúc vuốt để trở lại - bản mờ luôn hiện, bản
-        // nét chồng lên với alpha tăng dần theo tiến độ vuốt (vuốt càng nhiều càng nét)
         val swipePreview = SwipeBackPreviewCache.consume()
         swipePreview?.let {
             binding.swipeBackPreviewSharp.setImageBitmap(it.sharp)
             if (it.blurred != null) {
                 binding.swipeBackPreviewBlur.setImageBitmap(it.blurred)
             } else {
-                // Không tạo được bản mờ (thiết bị yếu/OOM) -> dùng luôn bản nét làm lớp nền,
-                // vẫn có hiệu ứng kéo lộ ảnh, chỉ là không có phần "lấy nét dần"
                 binding.swipeBackPreviewBlur.setImageBitmap(it.sharp)
             }
         }
@@ -119,15 +110,10 @@ class ActionPage : AppCompatActivity() {
                 }
             },
             onDragProgress = { progress ->
-                // Cross-Fade mượt mà giữa lớp mờ và lớp nét
                 binding.swipeBackPreviewSharp.alpha = progress * progress
             }
         )
 
-        // Hỗ trợ predictive-back (Android 13+, gesture-nav vuốt từ mép do hệ thống nhận diện)
-        // dùng đúng 1 bộ hiệu ứng với vuốt bằng tay ở trên (xem SwipeBackHelper.onSystemBack*).
-        // Trên các thiết bị/API không hỗ trợ progress (nav 3 nút, API cũ), handleOnBackPressed()
-        // vẫn được gọi bình thường như back mặc định, không có gì khác biệt.
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackStarted(backEvent: BackEventCompat) {
                 swipeBackHelper.onSystemBackStarted()
@@ -143,8 +129,6 @@ class ActionPage : AppCompatActivity() {
 
             override fun handleOnBackPressed() {
                 if (!swipeBackHelper.consumeSystemBackInvoked()) {
-                    // Back thông thường (phím back cứng/nav 3 nút, hoặc thiết bị/API không hỗ
-                    // trợ progress) - finish() bình thường, dùng animation mặc định theo theme
                     finish()
                 }
             }
@@ -205,9 +189,6 @@ class ActionPage : AppCompatActivity() {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        // Có vài đường early-return trong onCreate() (chưa init xong ScriptEnvironmen,...)
-        // thoát trước khi setContentView/khởi tạo swipeBackHelper -> phải kiểm tra tránh
-        // UninitializedPropertyAccessException
         if (::swipeBackHelper.isInitialized && swipeBackHelper.dispatchTouchEvent(ev)) {
             return true
         }
@@ -263,7 +244,6 @@ class ActionPage : AppCompatActivity() {
             }
         }
     
-        // Chỉ refresh 1 lần sau khi menu được dựng xong
         handler.post {
             refreshCheckboxMenuStates()
         }
@@ -272,7 +252,6 @@ class ActionPage : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        // Chỉ cập nhật giao diện từ dữ liệu đã có sẵn, tuyệt đối không chạy shell ở đây
         menuOptions?.forEach { option ->
             if (!option.isFab && option.type == "checkbox") {
                 val uniqueItemId = option.key.hashCode()
@@ -298,12 +277,6 @@ class ActionPage : AppCompatActivity() {
     
         checkboxRefreshJob = lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Root shell dùng chung 1 tiến trình duy nhất (có ReentrantLock bên trong),
-                // nên dù gọi executeResultRoot() song song bằng N coroutine, các lệnh vẫn
-                // phải xếp hàng chạy TUẦN TỰ, mỗi lệnh tốn round-trip riêng (ghi lệnh, chờ
-                // đọc kết quả). Với 3 checkbox trở lên, tổng thời gian chờ tăng tuyến tính
-                // dù mỗi lệnh chỉ là getprop đơn giản -> đó là lý do menu hiện dấu tích chậm.
-                // Gộp toàn bộ checkedSh thành 1 lần gọi shell duy nhất để chỉ tốn 1 round-trip.
                 val scripts = LinkedHashMap<String, String>()
                 checkboxOptions.forEachIndexed { index, option ->
                     scripts[index.toString()] = option.checkedSh
@@ -823,14 +796,22 @@ class ActionPage : AppCompatActivity() {
 
     private fun resolveThemeWindowBackgroundColor(): Int? {
         return try {
-            ContextCompat.getColor(
-                this,
-                if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
-            )
+            val themeLevel = ThemeConfig(this).getThemeMode()
+            val isDirectBg = ThemeModeState.isDirectBgEnabled(this)
+
+            if (themeLevel >= 3 && !isDirectBg) {
+                Color.TRANSPARENT
+            } else {
+                ContextCompat.getColor(
+                    this,
+                    if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
+                )
+            }
         } catch (_: Exception) {
             null
         }
     }
+
 
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()
