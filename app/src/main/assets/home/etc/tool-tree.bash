@@ -1,32 +1,10 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
 # Kakathic
 
-urlpng() {
-  if [ "$(glog Ticon)" != 1 ]; then
-  if [ -f "$ETC/icon/$1_$DARK_MODE.png" ]; then
-  echo "$ETC/icon/$1_$DARK_MODE.png"
-  else
-  echo "$ETC/icon/$1.png"
-  fi
-  fi
-}
-
-urladd() {
-  if [ "$(glog Ticon)" != 1 ]; then
-  if [ -f "$dirvad/$1_$DARK_MODE.png" ]; then
-  echo "$dirvad/$1_$DARK_MODE.png"
-  elif [ -f "$dirvad/$1.png" ]; then
-  echo "$dirvad/$1.png"
-  else
-  echo "$ETC/icon/icon.png"
-  fi
-  fi
-}
-
 show_sett() {
   echo '
   [[group.action]]
-  icon = "'`urlpng folder_rom`'"
+  icon = "'$urlicon'/folder_rom.png"
   shell = "hidden"
   reload = "true"
   title = "'$input_folder_text'"
@@ -62,7 +40,7 @@ show_sett() {
 show_apkset() {
   echo '
   [[group.action]]
-  icon = "'`urlpng folder_apk`'"
+  icon = "'$urlicon'/folder_apk.png"
   shell = "hidden"
   reload = "true"
   title = "'$input_folder_text'"
@@ -103,7 +81,7 @@ shell_bash() {
   file = "home/usr/run_'$1'.bash"
   need-input = "true"
   placeholder = "#!/data/data/com.tool.tree/files/home/bin/bash"
-  icon = "'`urlpng shell`'" '
+  icon = "'$urlicon'/shell.png" '
 }
 
 inforkk() {
@@ -121,7 +99,7 @@ echo '
   size = 13
   text = "'$root_text':"
   bold = true
-  icon = "'$ETC'/icon/1shield.png"
+  icon = "'$urlicon'/1shield.png"
   line-height = 1.3
   break = true
   
@@ -137,7 +115,7 @@ echo '
   size = 13
   bold = true
   line-height = 1.3
-  icon = "'$ETC'/icon/1smart.png"
+  icon = "'$urlicon'/1smart.png"
   
   [[group.text.rows]]
   bold = true
@@ -151,7 +129,7 @@ echo '
   size = 13
   bold = true
   line-height = 1.3
-  icon = "'$ETC'/icon/1android.png"
+  icon = "'$urlicon'/1android.png"
   
   [[group.text.rows]]
   bold = true
@@ -165,7 +143,7 @@ echo '
   size = 13
   bold = true
   line-height = 1.3
-  icon = "'$ETC'/icon/1cpu.png"
+  icon = "'$urlicon'/1cpu.png"
   
   [[group.text.rows]]
   bold = true
@@ -190,6 +168,11 @@ echo '
 # Ngôn ngữ
 source language 2>/dev/null
 
+# icon load
+if [ "$(glog Ticon)" != 1 ]; then
+urlicon="$ETC/icon"
+fi
+
 # Văn bản
 Home() {
   inforkk
@@ -210,7 +193,7 @@ Home() {
   [[group.page]]
   title = "'$setting_text'"
   desc = "'$home_text_1'"
-  icon = "'`urlpng settings`'"
+  icon = "'$urlicon'/settings.png"
   config-sh = "'$ETC'/tool-tree.bash Info"
   handler = """
     if [ "$menu_id" == "v1" ]; then
@@ -244,7 +227,7 @@ Home() {
   [[group.page]]
   title = "'$editor_rom'"
   desc = "'$home_text_2'"
-  icon = "'`urlpng utilities`'"
+  icon = "'$urlicon'/utilities.png"
   config-sh = "'$ETC'/tool-tree.bash Utilities"
   handler = """
     if [ "$menu_id" == "v1" ]; then
@@ -287,14 +270,14 @@ Home() {
   [[group.page]]
   title = "'$tools_text'"
   desc = "'$home_text_3'"
-  icon = "'`urlpng tools`'"
+  icon = "'$urlicon'/tools.png"
   config-sh = "'$ETC'/tool-tree.bash Root"
 
   [[group]]
   [[group.page]]
   title = "'$addon_text'"
   desc = "'$home_text_4'"
-  icon = "'`urlpng addon`'"
+  icon = "'$urlicon'/addon.png"
   config-sh = "PATHADD=\"$AON\" '$ETC'/tool-tree.bash Addon"
   handler = """
   [ "$menu_id" == "file" ] && installadd "$file" "$AON"
@@ -339,7 +322,7 @@ More() {
   [[group.page]]
   title = "'$setting_text'"
   desc = "'$home_text_1'"
-  icon = "'`urlpng settings`'"
+  icon = "'$urlicon'/settings.png"
   config-sh = "'$ETC'/tool-tree.bash Info"
   handler = """
     if [ "$menu_id" == "v1" ]; then
@@ -373,7 +356,7 @@ More() {
   [[group.page]]
   title = "'$editor_apk'"
   desc = "'$more_text_6'"
-  icon = "'`urlpng apk_utility`'"
+  icon = "'$urlicon'/apk_utility.png"
   config-sh = "'$ETC'/tool-tree.bash Utiliapk"
   lock = "[ -f $LOG/javaww ] && echo \"'$boot_text_1'\" || echo 0"
   handler = """
@@ -447,14 +430,14 @@ More() {
   [[group.page]]
   title = "'$utilities_text'"
   desc = "'$more_text_7'"
-  icon = "'`urlpng tool_apk`'"
+  icon = "'$urlicon'/tool_apk.png"
   config-sh = "'$ETC'/tool-tree.bash Troot"
 
   [[group]]
   [[group.page]]
   title = "'$plugin_text'"
   desc = "'$more_text_8'"
-  icon = "'`urlpng apk_addon`'"
+  icon = "'$urlicon'/apk_addon.png"
   config-sh = "PATHADD=\"$AOK\" '$ETC'/tool-tree.bash Addon"
   handler = """
   [ "$menu_id" == "file" ] && installadd "$file" "$AOK";
@@ -498,7 +481,7 @@ Info() {
   [[group.page]]
   title = "'$setting_text_1'"
   desc = "'$setting_text_2'"
-  icon = "'`urlpng info`'"
+  icon = "'$urlicon'/info.png"
   config-sh = "'$ETC'/tool-tree.bash Update"
   handler = """
     if [ "$menu_id" == "share" ]; then
@@ -563,7 +546,7 @@ Info() {
   [[group.page]]
   title = "'$setting_text_3'"
   desc = "'$setting_text_4'"
-  icon = "'`urlpng project`'"
+  icon = "'$urlicon'/project.png"
   config-sh = "'$ETC'/tool-tree.bash Project"
 
     [[group.page.options]]
@@ -574,7 +557,7 @@ Info() {
   [[group.page]]
   title = "'$setting_text_7'"
   desc = "'$setting_text_8'"
-  icon = "'`urlpng feature`'"
+  icon = "'$urlicon'/feature.png"
   config-sh = "'$ETC'/tool-tree.bash Feature"
 
     [[group.page.options]]
@@ -586,7 +569,7 @@ Info() {
   [[group.picker]]
   title = "'$permis_text_2'"
   desc = "'$permis_text_5'"
-  icon = "'`urlpng language`'"
+  icon = "'$urlicon'/language.png"
   option-sh = """
   echo -e "|'$default_text'\nauto|'$google_translate_text'\nai|Gemini\nen|English\nvi|Việt nam\nru|Русский\nhu|Hungarian\nid|Indonesia\nes|Spanish"
   """
@@ -618,7 +601,7 @@ Info() {
   id = "shella"
   title = "'$home_text_5'"
   desc = "'$home_text_6'"
-  icon = "'`urlpng shella`'"
+  icon = "'$urlicon'/shella.png"
   file = "home/usr/run_shella.bash"
   need-input = true
   placeholder = "#!/data/data/com.tool.tree/files/home/bin/bash"
@@ -642,20 +625,20 @@ Update() {
   [[group]]
   [[group.page]]
   title = "'$author_text'"
-  icon = "'`urlpng like`'"
+  icon = "'$urlicon'/like.png"
   html = "https://zenlua.github.io/Tool-Tree/website/Information.html"
 
   [[group]]
   [[group.page]]
   title = "'$update_text_5'"
-  icon = "'`urlpng website`'"
+  icon = "'$urlicon'/website.png"
   link = "https://zenlua.github.io/Tool-Tree"
 
   [[group]]
   [[group.action]]
   title = "'$update_text'"
   desc = "'$sizes_text': '$(cat $TEMP/size 2>/dev/null)'"
-  icon = "'`urlpng update`'"
+  icon = "'$urlicon'/update.png"
   warn = "'$use_network_text'"
   support = "echo '$show_update'"
   script = """
@@ -698,7 +681,7 @@ Project() {
   [[group]]
   [[group.action]]
   title = "'$project_text_3'"
-  icon = "'`urlpng cleanup`'"
+  icon = "'$urlicon'/cleanup.png"
   warn = "'$project_text_4'"
   auto-off = true
   script = """
@@ -717,7 +700,7 @@ Project() {
   [[group]]
   [[group.action]]
   title = "'$customize_tools_text'"
-  icon = "'`urlpng list_tool`'"
+  icon = "'$urlicon'/list_tool.png"
   shell = "hidden"
   reload = true
   script = """
@@ -796,7 +779,7 @@ Project() {
   [[group.action]]
   title = "'$custom_size'"
   warn = "'$custom_size_desc'"
-  icon = "'`urlpng size_icon`'"
+  icon = "'$urlicon'/size_icon.png"
   shell = "hidden"
   reload = true
   script = """
@@ -813,14 +796,14 @@ Feature() {
   [[group]]
   [[group.switch]]
   title = "'$project_text_5'"
-  icon = "'`urlpng set_home`'"
+  icon = "'$urlicon'/set_home.png"
   shell = "hidden"
   get = "glog Tset"
   set = "slog Tset $state"
 
   [[group.switch]]
   title = "'$project_text_7'"
-  icon = "'`urlpng icon_off`'"
+  icon = "'$urlicon'/icon_off.png"
   shell = "hidden"
   reload = true
   get = "glog Ticon"
@@ -828,7 +811,7 @@ Feature() {
 
   [[group.switch]]
   title = "'$project_text_6'"
-  icon = "'`urlpng shell_off`'"
+  icon = "'$urlicon'/shell_off.png"
   shell = "hidden"
   get = "glog shellc"
   set = "slog shellc $state"
@@ -836,7 +819,7 @@ Feature() {
   [[group]]
   [[group.action]]
   title = "'$project_text_10'"
-  icon = "'`urlpng java`'"
+  icon = "'$urlicon'/java.png"
   warn = "'$project_text_9'"
   shell = "hidden"
   script = "slog ramoccupied \"$ramoccupied\""
@@ -850,7 +833,7 @@ Feature() {
   [[group]]
   [[group.action]]
   title = "'$project_text_12'"
-  icon = "'`urlpng cpu`'"
+  icon = "'$urlicon'/cpu.png"
   warn = "'$project_text_13'"
   shell = "hidden"
   support = "command -v taskset &>/dev/null && echo 1"
@@ -865,7 +848,7 @@ Feature() {
   [[group]]
   [[group.action]]
   title = "'$project_text_14'"
-  icon = "'`urlpng background`'"
+  icon = "'$urlicon'/background.png"
   warn = "'$project_text_15'"
   shell = "hidden"
   auto-restart = true
@@ -901,7 +884,7 @@ Feature() {
   [[group.action]]
   title = "'$api_key_text'"
   warn = "'$note_genmini_text'"
-  icon = "'`urlpng apikey`'"
+  icon = "'$urlicon'/apikey.png"
   reload = true
   shell = "hidden"
   script = """
@@ -930,7 +913,7 @@ Root() {
   [[group.action]]
   title = "'$mount_text_1'"
   summary = "'$show_root_text'"
-  icon = "'`urlpng mount`'"
+  icon = "'$urlicon'/mount.png"
   lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
   interruptible = false
   script = """
@@ -958,7 +941,7 @@ Root() {
   [[group.action]]
   title = "'$umount_text_1'"
   summary = "'$show_root_text'"
-  icon = "'`urlpng umount`'"
+  icon = "'$urlicon'/umount.png"
   lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
   interruptible = false
   script = """
@@ -985,7 +968,7 @@ Root() {
   [[group.action]]
   title = "'$backup_text_1'"
   summary = "'$show_root_text'"
-  icon = "'`urlpng backup`'"
+  icon = "'$urlicon'/backup.png"
   lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
   interruptible = false
   script = """
@@ -1017,7 +1000,7 @@ Root() {
   [[group.action]]
   title = "'$flash_text_1'"
   summary = "'$show_root_text'"
-  icon = "'`urlpng flash`'"
+  icon = "'$urlicon'/flash.png"
   lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
   script = """
     e=${IMG##*/}
@@ -1103,7 +1086,7 @@ Troot() {
   [[group.action]]
   title = "'$dexopt_app_text'"
   summary = "'$show_root_text'"
-  icon = "'`urlpng dexopt_app`'"
+  icon = "'$urlicon'/dexopt_app.png"
   lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
   script = """
     if [ "$bools" == 1 ]; then
@@ -1141,7 +1124,7 @@ Troot() {
   [[group]]
   [[group.action]]
   title = "'$backups_text_2'"
-  icon = "'`urlpng backup_apk`'"
+  icon = "'$urlicon'/backup_apk.png"
   warn = "'$backups_text_1'"
   interruptible = false
   script = """
@@ -1186,7 +1169,7 @@ Generate() {
   [[group]]
   [[group.action]]
   title = "'$generate_text' Payload"
-  icon = "'`urlpng build_payload`'"
+  icon = "'$urlicon'/build_payload.png"
   script = """
     slog sign_payload "$sign_payload"
     slog payload_switch "$payload_switch"
@@ -1242,7 +1225,7 @@ Generate() {
   [[group]]
   [[group.action]]
   title = "'$generate_text' Amlogic"
-  icon = "'`urlpng build_amlogic`'"
+  icon = "'$urlicon'/build_amlogic.png"
   script = """
     slog amlogic_boolbox "$amlogic_boolbox"
     slog amlogic_ver "$amlogic_ver"
@@ -1309,7 +1292,7 @@ Utilities() {
         echo "[[group]]"
         show_sett
     else
-        desc_rom="$path_text: $(glog PTSD | sed "s|$SDCARD_PATH|\/sdcard|")"
+        desc_rom="$path_text: ${PTSD/$SDCARD_PATH/\/sdcard}"
         desc_rom1="$projects_text: $PTSH"
     fi
 
@@ -1318,7 +1301,7 @@ Utilities() {
   [[group.action]]
   title = "'$decompile_text'"
   desc = "'$desc_rom'"
-  icon = "'`urlpng decom`'"
+  icon = "'$urlicon'/decom.png"
   script = """
     slog vavbbgdf "$vavb"
     slog xoa_oat_boot "$xoa_oat_boot"
@@ -1396,7 +1379,7 @@ Utilities() {
   [[group.action]]
   title = "'$build_text'"
   desc = "'$desc_rom1'"
-  icon = "'`urlpng build`'"
+  icon = "'$urlicon'/build.png"
   script = """
     slog dang_nen "$dang_nen"
     slog on_f2fs_nen "$on_f2fs_nen"
@@ -1542,7 +1525,7 @@ Utilities() {
   [[group]]
   [[group.action]]
   title = "'$convert_text'"
-  icon = "'`urlpng convert_file`'"
+  icon = "'$urlicon'/convert_file.png"
   script = """
     slog format_img "$format_img"
     slog nen_br "$nen_br"
@@ -1594,7 +1577,7 @@ Utilities() {
   [[group]]
   [[group.action]]
   title = "'$build_text' Super"
-  icon = "'`urlpng build_super`'"
+  icon = "'$urlicon'/build_super.png"
   script = """
     slog typeheh "$type"
     slog fromdjfh "$from"
@@ -1643,7 +1626,7 @@ Utilities() {
     
   [[group.action]]
   title = "'$super_split_text_1'"
-  icon = "'`urlpng super_split`'"
+  icon = "'$urlicon'/super_split.png"
   script = """
     slog cboxkshg "$cboxk"
     slog slipdhhe "$slipdhhe"
@@ -1705,7 +1688,7 @@ Utilities() {
   
   [[group.action]]
   title = "'$super_merge_text_1'"
-  icon = "'`urlpng super_merge`'"
+  icon = "'$urlicon'/super_merge.png"
   script = """
     slog silence $silence
     echo "'$super_merge_text_2'..."
@@ -1733,7 +1716,7 @@ Utilities() {
   [[group]]
   [[group.page]]
   title = "'$synthetic_text'"
-  icon = "'`urlpng generate`'"
+  icon = "'$urlicon'/generate.png"
   config-sh = "'$ETC'/tool-tree.bash Generate"
   handler = """
     if [ "$menu_id" == "v1" ]; then
@@ -1755,7 +1738,7 @@ Utilities() {
   [[group]]
   [[group.page]]
   title = "Patch ROM"
-  icon = "'`urladd icon`'"
+  icon = "'$dirvad'/icon.png"
   config-sh = "'$dirvad'/index.bash home"
   handler = """
     if [ "$menu_id" == "123" ]; then
@@ -1781,7 +1764,7 @@ Apex() {
     echo "[[group]]"
     show_apkset
     else
-    desc_apkd="$path_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_apkd="$path_text: ${PTAD/$SDCARD_PATH/\/sdcard}"
     desc_apkd1="$projects_text: $PTAH"
     fi
 
@@ -1790,7 +1773,7 @@ Apex() {
   [[group.action]]
   title = "'$decompile_text'"
   desc = "'$desc_apkd'"
-  icon = "'`urlpng decom`'"
+  icon = "'$urlicon'/decom.png"
   script = """
     IFS=$'"'\n'"'
     for vv in $FILE; do
@@ -1812,7 +1795,7 @@ Apex() {
   [[group.action]]
   title = "'$build_text'"
   desc = "'$desc_apkd1'"
-  icon = "'`urlpng build`'"
+  icon = "'$urlicon'/build.png"
   script = """
     slog gobo_apex "$gobo_apex"
     slog nen_apex "$nen_apex"
@@ -1861,7 +1844,7 @@ Utiliapk() {
     echo "[[group]]"
     show_apkset
     else
-    desc_apks="$path_text: $(glog PTAD | sed "s|$SDCARD_PATH|\/sdcard|")"
+    desc_apks="$path_text: ${PTAD/$SDCARD_PATH/\/sdcard}"
     desc_apks1="$projects_text: $PTAH"
     fi
 
@@ -1870,7 +1853,7 @@ Utiliapk() {
   [[group.action]]
   title = "'$decompile_text'"
   desc = "'$desc_apks'"
-  icon = "'`urlpng decom`'"
+  icon = "'$urlicon'/decom.png"
   warn = "'$decom_apk_text_15'"
   script = """
     slog dexlib "$dexlib"
@@ -1986,7 +1969,7 @@ Utiliapk() {
   [[group.action]]
   title = "'$build_text'"
   desc = "'$desc_apks1'"
-  icon = "'`urlpng build`'"
+  icon = "'$urlicon'/build.png"
   warn = "'$build_apk_text_2'"
   script = """
     slog sign "$sign"
@@ -2053,7 +2036,7 @@ Utiliapk() {
   [[group]]
   [[group.page]]
   title = "'$apex_text'"
-  icon = "'`urlpng apex`'"
+  icon = "'$urlicon'/apex.png"
   config-sh = "'$ETC'/tool-tree.bash Apex"
   handler = """
     if [ "$menu_id" == "v1" ]; then
@@ -2072,7 +2055,7 @@ Utiliapk() {
   [[group]]
   [[group.action]]
   title = "'$distur_apk_text_2'"
-  icon = "'`urlpng apk_distur`'"
+  icon = "'$urlicon'/apk_distur.png"
   warn = "'$distur_apk_text_1'"
   script = """
     IFS=$'"'\n'"'
@@ -2093,7 +2076,7 @@ Utiliapk() {
 
   [[group.action]]
   title = "'$apk_restore_text_2'"
-  icon = "'`urlpng apk_restore`'"
+  icon = "'$urlicon'/apk_restore.png"
   warn = "'$apk_restore_text_1'"
   script = """
     IFS=$'"'\n'"'
@@ -2115,7 +2098,7 @@ Utiliapk() {
   [[group]]
   [[group.action]]
   title = "'$apk_mager_text_2'"
-  icon = "'`urlpng merge_apk`'"
+  icon = "'$urlicon'/merge_apk.png"
   warn = "'$apk_mager_text_1'"
   script = """
     IFS=$'"'\n'"'
@@ -2137,7 +2120,7 @@ Utiliapk() {
   [[group]]
   [[group.action]]
   title = "'$restore_apk_text_3'"
-  icon = "'`urlpng restore_sign`'"
+  icon = "'$urlicon'/restore_sign.png"
   script = """
     slog apk_restore_sign "$FILE"
     slog apk_restore_sign2 "$FILE2"
@@ -2354,7 +2337,14 @@ Addon() {
     fi
     
     sum_vb="$version $author$description_text"
-    icon_vb="$(urladd icon)"
+    
+    if [ "$(glog Ticon)" != 1 ]; then
+      if [ -f "$dirvad/icon.png" ]; then
+      icon_vb="$dirvad/icon.png"
+      else
+      icon_vb="$urlicon/icon.png"
+      fi
+    fi
   
     # Load trang danh sách
     if [ -f "$dirvad/delete" ]; then
