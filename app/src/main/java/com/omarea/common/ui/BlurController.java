@@ -15,6 +15,7 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
+import androidx.core.content.ContextCompat;
 import com.tool.tree.ThemeModeState;
 import com.tool.tree.R;
 import java.io.File;
@@ -95,6 +96,15 @@ public class BlurController {
             Canvas canvas = new Canvas(solidBitmap);
             canvas.drawColor(bgColor);
 
+            // Chỉ khi bật hẳn chế độ directbg (home/usr/log/directbg = 1, không phải trường hợp
+            // fallback do Live Wallpaper không chụp được) mới vẽ thêm icon app phóng to, mờ nhạt,
+            // lệch góc lên trên nền màu - để sau khi qua pipeline blur nặng bên dưới, thay vì chỉ
+            // còn 1 màu phẳng lì đơn điệu thì sẽ có thêm chút mảng sáng/tối mềm mại theo hình icon,
+            // nhìn có chiều sâu/đẹp hơn hẳn mà vẫn không lộ hình dạng icon rõ ràng.
+            if (BlurEngine.isDirectBgMode) {
+                drawIconAccent(context, canvas, width, height);
+            }
+
             // Áp dụng contrast (giống wallpaper pipeline)
             float contrastValue;
             if (ThemeModeState.isDarkMode()) {
@@ -124,6 +134,39 @@ public class BlurController {
             }
             solidBitmap.recycle();
         }).start();
+    }
+
+    /**
+     * Vẽ icon app phóng to, mờ nhạt, lệch góc lên trên canvas nền màu - chỉ dùng cho pipeline
+     * "directbg" (xem captureBackground()). Vì canvas ở đây rất nhỏ (15% màn hình) và còn bị
+     * blur nặng (radius 16) ngay sau đó, icon cần đủ LỚN và đủ MỜ mới còn sót lại thành các
+     * mảng sáng/tối mềm mại sau khi blur, thay vì biến mất hẳn hoặc lộ rõ hình icon (làm hỏng
+     * hiệu ứng "kính mờ" đang muốn có).
+     */
+    private void drawIconAccent(Context context, Canvas canvas, int width, int height) {
+        try {
+            Drawable icon = ContextCompat.getDrawable(context, R.mipmap.ic_launcher);
+            if (icon == null) return;
+
+            // Icon lớn gấp ~2.4 lần cạnh dài nhất của canvas - đủ để sau khi blur vẫn còn lưu
+            // lại hình khối rõ ràng thay vì tan biến hết vào màu nền
+            int iconSize = Math.round(Math.max(width, height) * 2.4f);
+
+            // Lệch về góc trên-phải, tràn ra ngoài canvas 1 phần - tạo cảm giác có chiều sâu/
+            // bố cục tự nhiên thay vì icon nằm giữa cứng nhắc, đối xứng
+            int left = Math.round(width * 0.35f);
+            int top = -Math.round(height * 0.45f);
+            icon = icon.mutate();
+            icon.setBounds(left, top, left + iconSize, top + iconSize);
+
+            // Vẽ mờ (alpha thấp) để hoà vào màu nền chứ không lấn át - đây là yếu tố quan
+            // trọng nhất để kết quả sau blur trông "sang" chứ không phải dán icon lên nền
+            icon.setAlpha(110);
+            icon.draw(canvas);
+        } catch (Exception ignored) {
+            // Không lấy được icon (thiết bị/launcher lạ, icon adaptive vẽ lỗi...) -> bỏ qua,
+            // giữ nguyên nền màu phẳng như trước đây, không làm crash cả pipeline blur
+        }
     }
 
     public void captureAndBlur(Activity activity) {

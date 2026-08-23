@@ -59,11 +59,12 @@ class SwipeBackHelper(
         private const val SETTLE_DURATION_MIN_MS = 150L
         private const val SETTLE_DURATION_MAX_MS = 300L
 
-        // Cử chỉ predictive-back của hệ thống (gesture-nav vuốt từ mép, Android 13+) chạy
-        // animation "settle"/"trượt nốt ra" chậm gấp đôi so với lúc tự vuốt bằng tay trên toàn
-        // màn hình - vì bản thân cử chỉ đó thường ngắn/nhanh hơn (chỉ vuốt 1 đoạn ngắn từ mép
-        // là hệ thống đã coi là đủ), nên cố ý kéo dài animation ra để không bị giật/hụt.
-        private const val SYSTEM_BACK_DURATION_MULTIPLIER = 2f
+        // Cử chỉ predictive-back của hệ thống (gesture-nav vuốt từ mép, Android 13+): lúc còn
+        // đang GIỮ TAY kéo thì cố ý cho trôi chậm lại 1 nửa tốc độ so với progress hệ thống báo
+        // (xem onSystemBackProgress) - còn lúc THẢ TAY ra (dù bật lại hay trượt nốt để trở lại)
+        // thì animation chạy tốc độ bình thường (1:1, giống hệt lúc vuốt tay trên toàn màn
+        // hình), không nhân đôi thời lượng nữa.
+        private const val SYSTEM_BACK_PROGRESS_DAMPING = 2f
     }
 
     private val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
@@ -298,36 +299,43 @@ class SwipeBackHelper(
     }
 
     /** Gọi từ handleOnBackProgressed() với progress 0f..1f do hệ thống tính sẵn theo khoảng
-     *  cách đã vuốt (đã được OS áp interpolator riêng, không cần xử lý thêm). */
+     *  cách đã vuốt (đã được OS áp interpolator riêng). Cố ý "ghìm" lại còn 1 nửa quãng đường
+     *  (chia cho SYSTEM_BACK_PROGRESS_DAMPING) trong lúc còn đang giữ tay kéo - để cửa sổ trôi
+     *  chậm gấp đôi so với tốc độ vuốt thật. Lúc buông tay ra (xem onSystemBackCancelled/
+     *  consumeSystemBackInvoked) thì KHÔNG áp hệ số này nữa, animation phần còn lại chạy tốc
+     *  độ bình thường (1:1) như vuốt tay trên toàn màn hình. */
     fun onSystemBackProgress(progress: Float) {
         if (!externalDragActive) return
         val width = contentView.width.takeIf { it > 0 } ?: return
-        applyProgress(progress.coerceIn(0f, 1f) * width)
+        val dampedProgress = progress.coerceIn(0f, 1f) / SYSTEM_BACK_PROGRESS_DAMPING
+        applyProgress(dampedProgress * width)
     }
 
     /** Gọi từ handleOnBackCancelled() - người dùng vuốt chưa đủ/thả tay giữa chừng, hệ thống
-     *  tự quyết định hủy cử chỉ (không cần tự tính threshold như lúc kéo bằng tay). */
+     *  tự quyết định hủy cử chỉ (không cần tự tính threshold như lúc kéo bằng tay). Đã thả tay
+     *  nên chạy animation tốc độ bình thường, không nhân đôi thời lượng nữa. */
     fun onSystemBackCancelled() {
         if (!externalDragActive) return
         externalDragActive = false
         dragging = false
-        animateTo(0f, 0f, null, SYSTEM_BACK_DURATION_MULTIPLIER)
+        animateTo(0f, 0f, null)
     }
 
     /**
      * Gọi từ handleOnBackPressed() - đây là điểm "chốt" cuối cùng cho cả 2 trường hợp: (a) 1
      * cử chỉ predictive-back đã có progress từ trước (Android 13+, gesture-nav), lúc này hàm
-     * tự lo animation trượt nốt ra rồi finish(), trả về true; (b) back thông thường không có
-     * progress (bấm phím back cứng/nav 3 nút, hoặc thiết bị/API cũ không hỗ trợ progress) thì
-     * không có gì để "trượt nốt" cả, trả về false để Activity tự finish() bình thường (dùng
-     * animation activity_close_enter/exit mặc định theo theme thay vì bị tắt animation).
+     * tự lo animation trượt nốt ra (tốc độ bình thường, vì đã thả tay) rồi finish(), trả về
+     * true; (b) back thông thường không có progress (bấm phím back cứng/nav 3 nút, hoặc thiết
+     * bị/API cũ không hỗ trợ progress) thì không có gì để "trượt nốt" cả, trả về false để
+     * Activity tự finish() bình thường (dùng animation activity_close_enter/exit mặc định
+     * theo theme thay vì bị tắt animation).
      */
     fun consumeSystemBackInvoked(): Boolean {
         if (!externalDragActive) return false
         externalDragActive = false
         dragging = false
         val width = contentView.width.takeIf { it > 0 }?.toFloat() ?: return false
-        animateTo(width, 0f, { onBack() }, SYSTEM_BACK_DURATION_MULTIPLIER)
+        animateTo(width, 0f, { onBack() })
         return true
     }
 }
