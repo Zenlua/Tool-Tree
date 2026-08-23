@@ -15,7 +15,6 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import androidx.core.content.ContextCompat;
 import com.tool.tree.ThemeModeState;
 import com.tool.tree.R;
 import java.io.File;
@@ -96,15 +95,6 @@ public class BlurController {
             Canvas canvas = new Canvas(solidBitmap);
             canvas.drawColor(bgColor);
 
-            // Chỉ khi bật hẳn chế độ directbg (home/usr/log/directbg = 1, không phải trường hợp
-            // fallback do Live Wallpaper không chụp được) mới vẽ thêm icon app phóng to, mờ nhạt,
-            // lệch góc lên trên nền màu - để sau khi qua pipeline blur nặng bên dưới, thay vì chỉ
-            // còn 1 màu phẳng lì đơn điệu thì sẽ có thêm chút mảng sáng/tối mềm mại theo hình icon,
-            // nhìn có chiều sâu/đẹp hơn hẳn mà vẫn không lộ hình dạng icon rõ ràng.
-            if (BlurEngine.isDirectBgMode) {
-                drawIconAccent(context, canvas, width, height);
-            }
-
             // Áp dụng contrast (giống wallpaper pipeline)
             float contrastValue;
             if (ThemeModeState.isDarkMode()) {
@@ -114,12 +104,8 @@ public class BlurController {
             }
             Bitmap processedSource = adjustContrast(solidBitmap, contrastValue);
 
-            // Áp dụng blur - dùng radius nhẹ hơn 1 chút so với pipeline wallpaper (16f) vì
-            // canvas ở đây rất nhỏ nên cùng 1 radius sẽ blur MẠNH HƠN nhiều lần so với ảnh
-            // wallpaper thật (vốn đã được scale nhỏ dần từ ảnh gốc lớn hơn hẳn) - hạ xuống 10f
-            // để hình khối icon (nếu có vẽ ở trên) còn sót lại rõ sau khi blur, không bị "xoá
-            // sạch" thành màu phẳng như trước.
-            Bitmap blurredResult = blurBitmap(context, processedSource, 10f);
+            // Áp dụng blur (giống wallpaper pipeline)
+            Bitmap blurredResult = blurBitmap(context, processedSource, 16f);
 
             if (blurredResult != null) {
                 BlurEngine.blurBitmap = blurredResult;
@@ -138,43 +124,6 @@ public class BlurController {
             }
             solidBitmap.recycle();
         }).start();
-    }
-
-    /**
-     * Vẽ icon app phóng to, mờ nhạt, lệch góc lên trên canvas nền màu - chỉ dùng cho pipeline
-     * "directbg" (xem captureBackground()). Vì canvas ở đây rất nhỏ (15% màn hình) và còn bị
-     * blur ngay sau đó (radius 10, xem captureBackground), cần cân bằng 2 yếu tố ngược nhau:
-     *  - Icon không được phóng quá to (zoom quá sâu) - nếu không sẽ chỉ còn "chụp" trúng 1 mảng
-     *    màu nền phẳng của icon (nhiều icon adaptive có lớp nền màu đặc, hoạ tiết glyph chỉ nằm
-     *    ở vùng an toàn giữa icon) thay vì giữ được hình khối đặc trưng để blur tạo hoạ tiết.
-     *  - Icon phải đủ đậm (alpha đủ cao) mới còn sót lại sau khi blur nặng, chứ không tan biến
-     *    hoàn toàn vào màu nền khiến nhìn không khác gì màu phẳng như trước.
-     */
-    private void drawIconAccent(Context context, Canvas canvas, int width, int height) {
-        try {
-            Drawable icon = ContextCompat.getDrawable(context, R.mipmap.ic_launcher);
-            if (icon == null) return;
-
-            // Chỉ phóng to vừa phải (~1.4 lần cạnh dài nhất) - đủ để tràn nhẹ ra ngoài canvas
-            // (tạo bố cục lệch góc tự nhiên) nhưng vẫn giữ được phần lớn hình khối/glyph đặc
-            // trưng của icon trong khung hình, thay vì zoom quá sâu chỉ còn màu nền phẳng
-            int iconSize = Math.round(Math.max(width, height) * 1.4f);
-
-            // Lệch nhẹ về góc trên-phải
-            int left = Math.round(width * 0.12f);
-            int top = -Math.round(height * 0.12f);
-            icon = icon.mutate();
-            icon.setBounds(left, top, left + iconSize, top + iconSize);
-
-            // Alpha đủ đậm (~70%) để hình khối icon còn sót lại rõ sau khi qua blur - alpha
-            // quá thấp (như 43% trước đây) gần như tan biến hết, nhìn không khác gì màu nền
-            // phẳng ban đầu
-            icon.setAlpha(180);
-            icon.draw(canvas);
-        } catch (Exception ignored) {
-            // Không lấy được icon (thiết bị/launcher lạ, icon adaptive vẽ lỗi...) -> bỏ qua,
-            // giữ nguyên nền màu phẳng như trước đây, không làm crash cả pipeline blur
-        }
     }
 
     public void captureAndBlur(Activity activity) {
