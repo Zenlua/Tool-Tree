@@ -1,9 +1,12 @@
 package com.omarea.krscript.ui
 
 import android.content.Context
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
+import com.omarea.common.ui.BlurEngine
 import com.tool.tree.R
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.model.ClickableNode
@@ -39,6 +42,49 @@ open class ListItemClickable(context: Context,
         desc = config.desc
         summary = config.summary
 
+        // Kích thước khung icon gốc (px), khớp với 35dp khai báo cứng trong kr_action_list_item.xml
+        // / kr_switch_list_item.xml. Tính cố định từ hằng số dp (không đọc layoutParams hiện tại)
+        // để không bị lệch nếu view này từng được phóng to bởi quầng mờ ở lần bind trước.
+        val baseIconSizePx = (35f * context.resources.displayMetrics.density + 0.5f).toInt()
+
+        // Quầng mờ phía sau icon (chỉ bật khi directbg=1 - xem BlurEngine.isDirectBgMode,
+        // được ThemeModeState cập nhật): thay vì nền đen phẳng, dùng chính bản mờ + phóng to nhẹ
+        // của icon đó làm nền, giữ nguyên màu thật của icon.
+        val applyIconGlow = fun(iconDrawable: Drawable) {
+            val icon = iconView ?: return
+            if (!BlurEngine.isDirectBgMode) {
+                icon.background = null
+                val params = icon.layoutParams
+                if (params != null && (params.width != baseIconSizePx || params.height != baseIconSizePx)) {
+                    params.width = baseIconSizePx
+                    params.height = baseIconSizePx
+                    icon.layoutParams = params
+                }
+                icon.setPadding(0, 0, 0, 0)
+                return
+            }
+
+            val glow = BlurEngine.controller.createIconGlow(context, iconDrawable, baseIconSizePx, 1.25f, 10f)
+            if (glow == null) {
+                icon.background = null
+                return
+            }
+
+            val glowSizePx = glow.width
+            val extra = (glowSizePx - baseIconSizePx).coerceAtLeast(0)
+            val pad = extra / 2
+
+            val params = icon.layoutParams
+            if (params != null) {
+                params.width = glowSizePx
+                params.height = glowSizePx
+                icon.layoutParams = params
+            }
+            icon.setPadding(pad, pad, pad, pad)
+            icon.scaleType = ImageView.ScaleType.FIT_CENTER
+            icon.background = BitmapDrawable(context.resources, glow)
+        }
+
         this.layout.setOnClickListener {
             this.mOnClickListener?.onClick(this)
         }
@@ -58,6 +104,7 @@ open class ListItemClickable(context: Context,
                     iconView?.setImageDrawable(this)
                     iconView?.visibility = View.VISIBLE
                     GifPlaybackHelper.bind(iconView, config.iconGifAutoplay, config.iconGifLoopCount)
+                    applyIconGlow(this)
                 }
             }
         }
