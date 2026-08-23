@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -15,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.tool.tree.ui.SwipeBackHelper
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.TryOpenActivity
@@ -49,6 +51,9 @@ class ActionPage : AppCompatActivity() {
     private lateinit var binding: ActivityActionPageBinding
     private var openedSubPage = false
 
+    // Vuốt từ mép trái để trở lại (giống nút back trên toolbar), có hiệu ứng kéo theo tay
+    private lateinit var swipeBackHelper: SwipeBackHelper
+
     // Khóa theo ID thật của item để không lệ thuộc vào vị trí trong mảng
     private val justClickedItemIds = HashSet<Int>()
 
@@ -78,6 +83,7 @@ class ActionPage : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        swipeBackHelper = SwipeBackHelper(this, binding.root)
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -131,6 +137,16 @@ class ActionPage : AppCompatActivity() {
             setResult(2)
             finish()
         }
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        // Có vài đường early-return trong onCreate() (chưa init xong ScriptEnvironmen,...)
+        // thoát trước khi setContentView/khởi tạo swipeBackHelper -> phải kiểm tra tránh
+        // UninitializedPropertyAccessException
+        if (::swipeBackHelper.isInitialized && swipeBackHelper.dispatchTouchEvent(ev)) {
+            return true
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     private val actionShortClickHandler = object : KrScriptActionHandler {
@@ -808,6 +824,7 @@ class ActionPage : AppCompatActivity() {
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
+        if (::swipeBackHelper.isInitialized) swipeBackHelper.release()
         setExcludeFromRecents()
         super.onDestroy()
     }
