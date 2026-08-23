@@ -87,16 +87,36 @@ class ActionPage : AppCompatActivity() {
         setContentView(binding.root)
 
         // Nếu trang trước đó có chụp lại màn hình (xem OpenPageHelper/SwipeBackPreviewCache),
-        // hiện nó làm "cửa sổ cũ" phía sau trong lúc vuốt để trở lại
-        SwipeBackPreviewCache.consume()?.let { binding.swipeBackPreview.setImageBitmap(it) }
+        // hiện nó làm "cửa sổ cũ" phía sau trong lúc vuốt để trở lại - bản mờ luôn hiện, bản
+        // nét chồng lên với alpha tăng dần theo tiến độ vuốt (vuốt càng nhiều càng nét)
+        val swipePreview = SwipeBackPreviewCache.consume()
+        swipePreview?.let {
+            binding.swipeBackPreviewSharp.setImageBitmap(it.sharp)
+            if (it.blurred != null) {
+                binding.swipeBackPreviewBlur.setImageBitmap(it.blurred)
+            } else {
+                // Không tạo được bản mờ (thiết bị yếu/OOM) -> dùng luôn bản nét làm lớp nền,
+                // vẫn có hiệu ứng kéo lộ ảnh, chỉ là không có phần "lấy nét dần"
+                binding.swipeBackPreviewBlur.setImageBitmap(it.sharp)
+            }
+        }
 
         swipeBackHelper = SwipeBackHelper(
             activity = this,
             contentView = binding.swipeForeground,
             onDragStateChanged = { dragging ->
-                if (binding.swipeBackPreview.drawable != null) {
-                    binding.swipeBackPreview.visibility = if (dragging) View.VISIBLE else View.GONE
+                if (swipePreview != null) {
+                    val visibility = if (dragging) View.VISIBLE else View.GONE
+                    binding.swipeBackPreviewBlur.visibility = visibility
+                    binding.swipeBackPreviewSharp.visibility = visibility
+                    if (!dragging) {
+                        binding.swipeBackPreviewSharp.alpha = 0f
+                    }
                 }
+            },
+            onDragProgress = { progress ->
+                // Vuốt càng nhiều -> bản nét càng hiện rõ đè lên bản mờ phía dưới
+                binding.swipeBackPreviewSharp.alpha = progress
             }
         )
 
@@ -841,14 +861,19 @@ class ActionPage : AppCompatActivity() {
         handler.removeCallbacksAndMessages(null)
         if (::swipeBackHelper.isInitialized) swipeBackHelper.release()
         if (::binding.isInitialized) {
-            val preview = binding.swipeBackPreview.drawable
-            if (preview is android.graphics.drawable.BitmapDrawable) {
-                binding.swipeBackPreview.setImageDrawable(null)
-                preview.bitmap?.takeIf { !it.isRecycled }?.recycle()
-            }
+            recycleImageViewBitmap(binding.swipeBackPreviewBlur)
+            recycleImageViewBitmap(binding.swipeBackPreviewSharp)
         }
         setExcludeFromRecents()
         super.onDestroy()
+    }
+
+    private fun recycleImageViewBitmap(imageView: android.widget.ImageView) {
+        val drawable = imageView.drawable
+        if (drawable is android.graphics.drawable.BitmapDrawable) {
+            imageView.setImageDrawable(null)
+            drawable.bitmap?.takeIf { !it.isRecycled }?.recycle()
+        }
     }
 
     private fun setExcludeFromRecents() {

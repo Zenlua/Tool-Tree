@@ -4,10 +4,12 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Activity
+import android.graphics.Outline
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.ViewOutlineProvider
 import android.view.animation.DecelerateInterpolator
 import kotlin.math.abs
 
@@ -30,20 +32,21 @@ import kotlin.math.abs
  * hiện ảnh preview lên); onDragStateChanged(false) được gọi khi kéo bị hủy và đã bật lại
  * về vị trí gốc (không gọi khi kéo thành công vì activity sắp finish() rồi, không cần ẩn
  * preview làm gì nữa).
+ *
+ * onDragProgress(0f..1f) được gọi liên tục theo khoảng cách đã kéo (0 = chưa kéo, 1 = kéo
+ * hết chiều rộng màn hình) - dùng để hiện hiệu ứng "lấy nét dần" cho ảnh preview phía sau:
+ * vuốt càng nhiều thì ảnh preview càng nét/rõ hơn.
  */
 class SwipeBackHelper(
     private val activity: Activity,
     private val contentView: View,
     private val onDragStateChanged: (dragging: Boolean) -> Unit = {},
+    private val onDragProgress: (progress: Float) -> Unit = {},
     private val onBack: () -> Unit = { activity.finish(); activity.overridePendingTransition(0, 0) }
 ) {
     companion object {
         // Kéo quá tỉ lệ này của chiều rộng màn hình (dù thả tay chậm) -> coi như xác nhận trở lại
         private const val COMMIT_DISTANCE_RATIO = 0.28f
-
-        // Độ mờ tối đa khi kéo hết cỡ (mô phỏng lại alpha 0.85 dùng trong activity_close_enter/
-        // activity_open_exit, để cảm giác nhất quán với animation chuyển trang có sẵn)
-        private const val MAX_ALPHA_FADE = 0.12f
 
         private const val SETTLE_DURATION_MIN_MS = 150L
         private const val SETTLE_DURATION_MAX_MS = 300L
@@ -52,6 +55,23 @@ class SwipeBackHelper(
     private val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
     private val minFlingVelocity = ViewConfiguration.get(activity).scaledMinimumFlingVelocity
     private val maxFlingVelocity = ViewConfiguration.get(activity).scaledMaximumFlingVelocity
+
+    // Đổ bóng nhẹ ở cạnh trái trong lúc kéo, cho cảm giác giống 1 "cửa sổ" đang được nhấc lên
+    // và kéo trượt sang phải (thay vì chỉ là 1 lớp phẳng lì di chuyển)
+    private val dragElevationPx = 8f * activity.resources.displayMetrics.density
+
+    init {
+        // contentView (swipe_foreground) không có background riêng (để không che mất lớp
+        // nền/blur hình nền của app phía dưới khi đứng yên) - nên outline mặc định (dựa theo
+        // background) sẽ rỗng và không đổ bóng được dù có set elevation. Tự khai outline theo
+        // đúng kích thước view để bóng vẫn hiển thị bình thường.
+        contentView.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setRect(0, 0, view.width, view.height)
+                outline.alpha = 1f
+            }
+        }
+    }
 
     private var velocityTracker: VelocityTracker? = null
     private var downX = 0f
@@ -108,6 +128,7 @@ class SwipeBackHelper(
                             // view con, ví dụ đang scroll dọc hoặc đang nhấn giữ 1 item
                             dragging = true
                             onDragStateChanged(true)
+                            contentView.elevation = dragElevationPx
                             val cancelEvent = MotionEvent.obtain(ev)
                             cancelEvent.action = MotionEvent.ACTION_CANCEL
                             contentView.dispatchTouchEvent(cancelEvent)
@@ -154,10 +175,12 @@ class SwipeBackHelper(
     }
 
     private fun applyProgress(dx: Float) {
+        // Chỉ dịch chuyển vị trí, KHÔNG làm mờ/trong suốt nội dung đang kéo - để trang hiện
+        // tại trông như 1 "cửa sổ" đặc, kéo trượt sang phải, để lộ ảnh preview phía sau,
+        // thay vì cảm giác bị mờ/xuyên thấu khi chồng lên ảnh preview.
         contentView.translationX = dx
         val width = contentView.width.takeIf { it > 0 } ?: 1
-        val fraction = (dx / width).coerceIn(0f, 1f)
-        contentView.alpha = 1f - MAX_ALPHA_FADE * fraction
+        onDragProgress((dx / width).coerceIn(0f, 1f))
     }
 
     private fun settleAfterDrag(velocityX: Float) {
@@ -189,7 +212,7 @@ class SwipeBackHelper(
                     if (target == 0f) {
                         // Đảm bảo về đúng trạng thái gốc, tránh sai số cộng dồn của animator
                         contentView.translationX = 0f
-                        contentView.alpha = 1f
+                        contentView.elevation = 0f
                         onDragStateChanged(false)
                     }
                     onEnd?.invoke()
