@@ -2,7 +2,6 @@ package com.tool.tree
 
 import android.app.ActivityManager
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -83,29 +82,6 @@ class ActionPage : AppCompatActivity() {
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Kiểm tra chế độ Wallpaper Mode (theme >= 3 và directbg != 1)
-        val themeLevel = ThemeConfig(this).getThemeMode()
-        val isDirectBg = ThemeModeState.isDirectBgEnabled(this)
-        val isWallpaperMode = themeLevel >= 3 && !isDirectBg
-
-        val defaultBgColor = ContextCompat.getColor(
-            this,
-            if (ThemeModeState.isDarkMode()) R.color.window_bg_dark else R.color.window_bg_light
-        )
-
-        if (isWallpaperMode) {
-            // Gán ảnh nền vào root layout để lộ ảnh nền thật khi vuốt
-            val wallpaperDrawable = ThemeModeState.getWallpaperDrawable(this)
-            if (wallpaperDrawable != null) {
-                binding.root.background = wallpaperDrawable
-            } else {
-                binding.root.setBackgroundColor(defaultBgColor)
-            }
-        } else {
-            // Chế độ màu đục: Tô màu nền chuẩn
-            binding.root.setBackgroundColor(defaultBgColor)
-        }
-
         val swipePreview = SwipeBackPreviewCache.consume()
         swipePreview?.let {
             binding.swipeBackPreviewSharp.setImageBitmap(it.sharp)
@@ -119,7 +95,6 @@ class ActionPage : AppCompatActivity() {
         swipeBackHelper = SwipeBackHelper(
             activity = this,
             contentView = binding.swipeForeground,
-            dragBackgroundColor = if (isWallpaperMode) Color.TRANSPARENT else defaultBgColor,
             onDragStateChanged = { dragging ->
                 if (swipePreview != null) {
                     val visibility = if (dragging) View.VISIBLE else View.GONE
@@ -403,7 +378,7 @@ class ActionPage : AppCompatActivity() {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(menuOption.link))
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
-            } catch (ex: Exception) {
+            } catch (_: Exception) {
                 Toast.makeText(this, getString(R.string.kr_slice_activity_fail), Toast.LENGTH_SHORT).show()
             }
             return

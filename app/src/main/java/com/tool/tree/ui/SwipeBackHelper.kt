@@ -38,20 +38,12 @@ import kotlin.math.abs
  * onDragProgress(0f..1f) được gọi liên tục theo khoảng cách đã kéo (0 = chưa kéo, 1 = kéo
  * hết chiều rộng màn hình) - dùng để hiện hiệu ứng "lấy nét dần" cho ảnh preview phía sau:
  * vuốt càng nhiều thì ảnh preview càng nét/rõ hơn.
- *
- * dragBackgroundColor: màu nền sẽ tạm thời gán cho contentView TRONG LÚC kéo (và gỡ ra ngay
- * khi kéo bị hủy/bật lại) - contentView vốn không có background riêng để không che nền/blur
- * hình nền lúc đứng yên, nhưng vì vậy các khoảng trống bên trong nó (viền list, khoảng cách
- * item...) sẽ hở ra ảnh preview phía sau ngay cả ở phần "chưa kéo tới", trông như bị trong
- * suốt. Gán tạm 1 màu nền đặc trong lúc kéo sẽ khắc phục việc này mà không ảnh hưởng gì lúc
- * đứng yên.
  */
 class SwipeBackHelper(
     private val activity: Activity,
     private val contentView: View,
     private val onDragStateChanged: (dragging: Boolean) -> Unit = {},
     private val onDragProgress: (progress: Float) -> Unit = {},
-    private val dragBackgroundColor: Int? = null,
     private val onBack: () -> Unit = { activity.finish(); activity.overridePendingTransition(0, 0) }
 ) {
     companion object {
@@ -172,9 +164,8 @@ class SwipeBackHelper(
                             dragging = true
                             onDragStateChanged(true)
                             contentView.elevation = dragElevationPx
-                            if (dragBackgroundColor != null) {
-                                contentView.setBackgroundColor(dragBackgroundColor)
-                            }
+                            // Đã loại bỏ gỡ/đổi background tại đây để giữ nguyên ảnh nền
+                            
                             val cancelEvent = MotionEvent.obtain(ev)
                             cancelEvent.action = MotionEvent.ACTION_CANCEL
                             contentView.dispatchTouchEvent(cancelEvent)
@@ -221,9 +212,7 @@ class SwipeBackHelper(
     }
 
     private fun applyProgress(dx: Float) {
-        // Chỉ dịch chuyển vị trí, KHÔNG làm mờ/trong suốt nội dung đang kéo - để trang hiện
-        // tại trông như 1 "cửa sổ" đặc, kéo trượt sang phải, để lộ ảnh preview phía sau,
-        // thay vì cảm giác bị mờ/xuyên thấu khi chồng lên ảnh preview.
+        // Chỉ dịch chuyển vị trí, KHÔNG làm mờ/trong suốt nội dung đang kéo
         contentView.translationX = dx
         val width = contentView.width.takeIf { it > 0 } ?: 1
         onDragProgress((dx / width).coerceIn(0f, 1f))
@@ -237,8 +226,7 @@ class SwipeBackHelper(
         if (shouldGoBack) {
             animateTo(width.toFloat(), velocityX, { onBack() })
         } else {
-            // Kéo chưa đủ hoặc vuốt ngược lại -> bật lại về vị trí ban đầu, tốc độ "settle"
-            // co giãn theo khoảng cách còn lại + vận tốc thả tay, giống cách SwipePager làm
+            // Kéo chưa đủ hoặc vuốt ngược lại -> bật lại về vị trí ban đầu
             animateTo(0f, velocityX, null)
         }
     }
@@ -256,13 +244,10 @@ class SwipeBackHelper(
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     if (target == 0f) {
-                        // Đảm bảo về đúng trạng thái gốc, tránh sai số cộng dồn của animator
+                        // Đảm bảo về đúng trạng thái gốc
                         contentView.translationX = 0f
                         contentView.elevation = 0f
-                        if (dragBackgroundColor != null) {
-                            // Gỡ màu nền tạm ra để không che nền/blur hình nền lúc đứng yên
-                            contentView.background = null
-                        }
+                        // Đã loại bỏ gán background = null tại đây
                         onDragStateChanged(false)
                     }
                     onEnd?.invoke()
@@ -287,30 +272,18 @@ class SwipeBackHelper(
     }
 
     // ================== Predictive-back (Android 13+, OnBackPressedCallback) ==================
-    // Các hàm dưới đây được gọi từ OnBackPressedCallback.handleOnBack*() khi hệ điều hành nhận
-    // diện cử chỉ vuốt từ mép màn hình cho gesture-nav (predictive back). Cố ý dùng lại đúng
-    // applyProgress()/animateTo() với cùng field "dragging" như khi kéo bằng tay thông thường,
-    // để chỉ có 1 bộ hiệu ứng nhất quán (dịch chuyển, đổ bóng, màu nền tạm, preview mờ/nét...) 
-    // cho mọi cách vuốt lùi, không phân biệt nguồn.
 
     /** Gọi từ handleOnBackStarted() - hệ thống vừa xác nhận người dùng bắt đầu vuốt từ mép. */
     fun onSystemBackStarted() {
-        if (dragging) return // đang có 1 cử chỉ khác dở dang (hiếm khi xảy ra) -> bỏ qua
+        if (dragging) return
         dragging = true
         externalDragActive = true
         onDragStateChanged(true)
         contentView.elevation = dragElevationPx
-        if (dragBackgroundColor != null) {
-            contentView.setBackgroundColor(dragBackgroundColor)
-        }
+        // Đã loại bỏ gỡ/đổi background tại đây để giữ nguyên ảnh nền
     }
 
-    /** Gọi từ handleOnBackProgressed() với progress 0f..1f do hệ thống tính sẵn theo khoảng
-     *  cách đã vuốt (đã được OS áp interpolator riêng). Cố ý "ghìm" lại còn 1 nửa quãng đường
-     *  (chia cho SYSTEM_BACK_PROGRESS_DAMPING) trong lúc còn đang giữ tay kéo - để cửa sổ trôi
-     *  chậm gấp đôi so với tốc độ vuốt thật. Lúc buông tay ra (xem onSystemBackCancelled/
-     *  consumeSystemBackInvoked) thì KHÔNG áp hệ số này nữa, animation phần còn lại chạy tốc
-     *  độ bình thường (1:1) như vuốt tay trên toàn màn hình. */
+    /** Gọi từ handleOnProgressed() */
     fun onSystemBackProgress(progress: Float) {
         if (!externalDragActive) return
         val width = contentView.width.takeIf { it > 0 } ?: return
@@ -318,9 +291,7 @@ class SwipeBackHelper(
         applyProgress(dampedProgress * width)
     }
 
-    /** Gọi từ handleOnBackCancelled() - người dùng vuốt chưa đủ/thả tay giữa chừng, hệ thống
-     *  tự quyết định hủy cử chỉ (không cần tự tính threshold như lúc kéo bằng tay). Đã thả tay
-     *  nên chạy animation tốc độ bình thường, không nhân đôi thời lượng nữa. */
+    /** Gọi từ handleOnBackCancelled() */
     fun onSystemBackCancelled() {
         if (!externalDragActive) return
         externalDragActive = false
@@ -328,15 +299,7 @@ class SwipeBackHelper(
         animateTo(0f, 0f, null)
     }
 
-    /**
-     * Gọi từ handleOnBackPressed() - đây là điểm "chốt" cuối cùng cho cả 2 trường hợp: (a) 1
-     * cử chỉ predictive-back đã có progress từ trước (Android 13+, gesture-nav), lúc này hàm
-     * tự lo animation trượt nốt ra (tốc độ bình thường, vì đã thả tay) rồi finish(), trả về
-     * true; (b) back thông thường không có progress (bấm phím back cứng/nav 3 nút, hoặc thiết
-     * bị/API cũ không hỗ trợ progress) thì không có gì để "trượt nốt" cả, trả về false để
-     * Activity tự finish() bình thường (dùng animation activity_close_enter/exit mặc định
-     * theo theme thay vì bị tắt animation).
-     */
+    /** Gọi từ handleOnBackPressed() */
     fun consumeSystemBackInvoked(): Boolean {
         if (!externalDragActive) return false
         externalDragActive = false
