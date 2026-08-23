@@ -112,22 +112,26 @@ class ActionPage : AppCompatActivity() {
                     val visibility = if (dragging) View.VISIBLE else View.GONE
                     binding.swipeBackPreviewBlur.visibility = visibility
                     binding.swipeBackPreviewSharp.visibility = visibility
-                    // Bật hardware layer cho ảnh nét vì nó bị đổi alpha liên tục mỗi khung
-                    // hình theo tiến độ vuốt - không dùng layer sẽ dễ bị nhấp nháy khi
-                    // animation alpha chạy trên view lớn full-screen
-                    binding.swipeBackPreviewSharp.setLayerType(
-                        if (dragging) View.LAYER_TYPE_HARDWARE else View.LAYER_TYPE_NONE, null
-                    )
+        
+                    // [Áp dụng Ý 2]: Ép về LAYER_TYPE_NONE cho các View đang thay đổi Alpha liên tục.
+                    // Bật LAYER_TYPE_HARDWARE ở đây chính là nguyên nhân làm GPU phải tạo lại Texture mỗi frame -> nhấp nháy đen/xám.
+                    binding.swipeBackPreviewSharp.setLayerType(View.LAYER_TYPE_NONE, null)
+                    binding.swipeBackPreviewBlur.setLayerType(View.LAYER_TYPE_NONE, null)
+        
                     if (!dragging) {
                         binding.swipeBackPreviewSharp.alpha = 0f
+                        binding.swipeBackPreviewBlur.alpha = 1f
                     }
                 }
             },
             onDragProgress = { progress ->
-                // Vuốt càng nhiều -> bản nét càng hiện rõ đè lên bản mờ phía dưới
-                binding.swipeBackPreviewSharp.alpha = progress * progress
+                // [Áp dụng Ý 1]: Cross-Fade mượt mà giữa lớp mờ và lớp nét
+                val sharpAlpha = progress * progress
+                binding.swipeBackPreviewSharp.alpha = sharpAlpha
+                binding.swipeBackPreviewBlur.alpha = 1f - sharpAlpha
             }
         )
+
 
         // Hỗ trợ predictive-back (Android 13+, gesture-nav vuốt từ mép do hệ thống nhận diện)
         // dùng đúng 1 bộ hiệu ứng với vuốt bằng tay ở trên (xem SwipeBackHelper.onSystemBack*).

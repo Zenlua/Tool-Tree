@@ -175,13 +175,6 @@ class SwipeBackHelper(
                             if (dragBackgroundColor != null) {
                                 contentView.setBackgroundColor(dragBackgroundColor)
                             }
-                            // Bật hardware layer trong lúc kéo: cả subtree (toolbar blur +
-                            // list + fab) được "chụp" lại thành 1 texture GPU rồi chỉ dịch
-                            // chuyển texture đó mỗi khung hình, thay vì phải vẽ lại toàn bộ
-                            // cây view (kèm shadow do elevation) ở mỗi frame - đây là nguyên
-                            // nhân chính gây nhấp nháy ở các khoảng trống khi kéo nhanh trên
-                            // một số thiết bị/driver GPU.
-                            contentView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
                             val cancelEvent = MotionEvent.obtain(ev)
                             cancelEvent.action = MotionEvent.ACTION_CANCEL
                             contentView.dispatchTouchEvent(cancelEvent)
@@ -272,9 +265,6 @@ class SwipeBackHelper(
                         }
                         onDragStateChanged(false)
                     }
-                    // Tắt hardware layer khi đã kết thúc kéo (dù bật lại hay trượt hẳn ra) -
-                    // giữ layer lâu dài không cần thiết sẽ tốn thêm bộ nhớ GPU
-                    contentView.setLayerType(View.LAYER_TYPE_NONE, null)
                     onEnd?.invoke()
                 }
             })
@@ -300,8 +290,8 @@ class SwipeBackHelper(
     // Các hàm dưới đây được gọi từ OnBackPressedCallback.handleOnBack*() khi hệ điều hành nhận
     // diện cử chỉ vuốt từ mép màn hình cho gesture-nav (predictive back). Cố ý dùng lại đúng
     // applyProgress()/animateTo() với cùng field "dragging" như khi kéo bằng tay thông thường,
-    // để chỉ có 1 bộ hiệu ứng nhất quán (dịch chuyển, đổ bóng, màu nền tạm, preview mờ/nét,
-    // hardware layer...) cho mọi cách vuốt lùi, không phân biệt nguồn.
+    // để chỉ có 1 bộ hiệu ứng nhất quán (dịch chuyển, đổ bóng, màu nền tạm, preview mờ/nét...) 
+    // cho mọi cách vuốt lùi, không phân biệt nguồn.
 
     /** Gọi từ handleOnBackStarted() - hệ thống vừa xác nhận người dùng bắt đầu vuốt từ mép. */
     fun onSystemBackStarted() {
@@ -313,7 +303,6 @@ class SwipeBackHelper(
         if (dragBackgroundColor != null) {
             contentView.setBackgroundColor(dragBackgroundColor)
         }
-        contentView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
     }
 
     /** Gọi từ handleOnBackProgressed() với progress 0f..1f do hệ thống tính sẵn theo khoảng
