@@ -14,11 +14,17 @@ class PageNode(currentConfigXml: String) : ClickableNode(currentConfigXml) {
     // 读取页面配置后
     var afterRead = ""
 
-    // 菜单选项设置
+    // Danh sách menu 3 chấm + fab của trang - gán trực tiếp từ PageConfigReader/PageConfigSh
+    // ngay khi đọc xong toml của CHÍNH trang này (xem ActionPage.loadPageConfig()). Không còn
+    // cơ chế option-sh (script sinh menu động, khai báo ở trang cha) nữa - đã bỏ hẳn; muốn menu
+    // động thì dùng "box"/"check" (điều kiện hiện/tích) hoặc "support"/"visible" ngay trên từng
+    // mục trong [[menu.items]]/[[fab.items]].
     var pageMenuOptions: ArrayList<PageMenuOption>? = null
-    var pageMenuOptionsSh: String = ""
-    // 处理菜单和悬浮按钮点击事件的脚本
-    var pageHandlerSh:  String = ""
+    // ĐÃ BỎ pageHandlerSh (handler-sh) khỏi page - page giờ chỉ dùng để MỞ TRANG cho nhanh
+    // (link/activity/config/config-sh), không còn kiêm nhiệm làm handler mặc định cho menu/fab
+    // nữa. Handler mặc định cho từng nhóm giờ khai báo NGAY TRONG [[menu]]/[[fab]] của trang
+    // (field "handler"/"handler-sh") - xem PageConfigReader.menuGroupOptionsToml(), đã được gộp
+    // sẵn vào PageMenuOption.script lúc parse nên lúc click chỉ cần đọc option.script.
 
     // Giống text.rows / action.rows: cho phép page hiển thị thêm các dòng rich-text bên dưới
     val rows = ArrayList<TextNode.TextRow>()

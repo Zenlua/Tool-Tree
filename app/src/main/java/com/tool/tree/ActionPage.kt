@@ -13,6 +13,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
 import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
@@ -32,7 +33,6 @@ import com.omarea.krscript.shortcut.ActionShortcutManager
 import com.omarea.krscript.ui.ActionListFragment
 import com.omarea.krscript.ui.DialogLogFragment
 import com.omarea.krscript.ui.ParamsFileChooserRender
-import com.omarea.krscript.ui.PageMenuLoader
 import com.tool.tree.databinding.ActivityActionPageBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -224,14 +224,23 @@ class ActionPage : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val config = currentPageConfig ?: return false
         if (menuOptions == null) {
-            menuOptions = PageMenuLoader(applicationContext, config).load()
+            // Đã bỏ hẳn option-sh (script sinh menu động ở trang cha) - menu/fab giờ luôn đến
+            // thẳng từ config.pageMenuOptions, được PageConfigReader/PageConfigSh gán sẵn ngay
+            // khi đọc xong toml của CHÍNH trang này (xem loadPageConfig()).
+            menuOptions = config.pageMenuOptions
         }
     
         menu?.clear()
-    
+
+        // menu/fab giờ được đọc lại mỗi lần trang load/reload (cùng lúc với items, xem
+        // loadPageConfig()) thay vì cố định 1 lần từ trang cha như trước - nên phải ẩn fab
+        // trước, tránh còn sót fab của lần build cũ khi lần build mới không có mục fab nào.
+        binding.actionPageFab.visibility = View.GONE
+
+        val fabOptions = ArrayList<PageMenuOption>()
         menuOptions?.forEach { option ->
             if (option.isFab) {
-                addFab(option)
+                fabOptions.add(option)
             } else {
                 val uniqueItemId = option.key.hashCode()
                 val menuItem = menu?.add(Menu.NONE, uniqueItemId, Menu.NONE, option.title)
@@ -240,6 +249,7 @@ class ActionPage : AppCompatActivity() {
                 }
             }
         }
+        setupFab(fabOptions)
     
         handler.post {
             refreshCheckboxMenuStates()
@@ -307,22 +317,64 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
+    private fun setupFab(fabOptions: List<PageMenuOption>) {
+        when (fabOptions.size) {
+            0 -> return // đã ẩn sẵn ở onCreateOptionsMenu
+            1 -> addFab(fabOptions[0])
+            else -> {
+                // Nhiều [[fab.items]] cùng lúc: 1 nút fab duy nhất, bấm vào mở popup danh sách
+                // để chọn item thực sự muốn chạy - xem showFabChooser().
+                binding.actionPageFab.apply {
+                    visibility = View.VISIBLE
+                    setOnClickListener { showFabChooser(fabOptions) }
+                    setImageDrawable(resolveFabIcon(fabOptions))
+                }
+            }
+        }
+    }
+
     private fun addFab(menuOption: PageMenuOption) {
         binding.actionPageFab.apply {
             visibility = View.VISIBLE
             setOnClickListener { onMenuItemClick(menuOption) }
-
-            val iconRes = if ((menuOption.type == "file" || menuOption.type == "folder") && menuOption.iconPath.isEmpty()) {
-                R.drawable.kr_folder
-            } else {
-                R.drawable.kr_fab
-            }
-            val customIcon = if (menuOption.iconPath.isNotEmpty()) {
-                IconPathAnalysis().loadLogo(context, menuOption, false)
-            } else null
-
-            setImageDrawable(customIcon ?: ContextCompat.getDrawable(context, iconRes))
+            setImageDrawable(resolveFabIcon(listOf(menuOption)))
         }
+    }
+
+    // Icon của nút fab: nếu chỉ có 1 item thì dùng icon của chính nó (như cũ). Nếu nhiều item
+    // cùng chung 1 icon-path thì vẫn tôn trọng icon đó; khác nhau thì dùng icon mặc định (dấu +)
+    // vì không có icon nào đại diện được cho tất cả các lựa chọn bên trong.
+    private fun resolveFabIcon(fabOptions: List<PageMenuOption>): android.graphics.drawable.Drawable? {
+        val distinctIconPaths = fabOptions.map { it.iconPath }.distinct()
+        val representative = if (distinctIconPaths.size == 1) fabOptions[0] else null
+
+        val iconRes = if (representative != null &&
+            (representative.type == "file" || representative.type == "folder") &&
+            representative.iconPath.isEmpty()
+        ) {
+            R.drawable.kr_folder
+        } else {
+            R.drawable.kr_fab
+        }
+        val customIcon = if (representative != null && representative.iconPath.isNotEmpty()) {
+            IconPathAnalysis().loadLogo(this, representative, false)
+        } else null
+
+        return customIcon ?: ContextCompat.getDrawable(this, iconRes)
+    }
+
+    // Danh sách chọn khi fab có nhiều item - popup nhỏ neo ngay tại nút fab, chọn xong chạy y
+    // hệt như bấm thẳng 1 fab đơn (onMenuItemClick).
+    private fun showFabChooser(fabOptions: List<PageMenuOption>) {
+        val popup = PopupMenu(this, binding.actionPageFab)
+        fabOptions.forEachIndexed { index, option ->
+            popup.menu.add(Menu.NONE, index, index, option.title)
+        }
+        popup.setOnMenuItemClickListener { item ->
+            fabOptions.getOrNull(item.itemId)?.let { onMenuItemClick(it) }
+            true
+        }
+        popup.show()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -404,7 +456,10 @@ class ActionPage : AppCompatActivity() {
     private fun menuItemExecuteSilent(menuOption: PageMenuOption) {
         val config = currentPageConfig ?: return
         val extraParams = hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key)
-        val script = if (menuOption.script.isNotEmpty()) menuOption.script else config.pageHandlerSh
+        // menuOption.script đã được gán sẵn handler dùng chung của nhóm [[menu]]/[[fab]] (nếu
+        // bản thân mục không tự khai báo script riêng) ngay lúc parse - page không còn handler
+        // riêng nữa (xem PageConfigReader.menuGroupOptionsToml()).
+        val script = menuOption.script
 
         lifecycleScope.launch(Dispatchers.IO) {
            val output = ScriptEnvironmen.executeResultRoot(this@ActionPage, script, config, extraParams)
@@ -502,12 +557,21 @@ class ActionPage : AppCompatActivity() {
             } else null
 
             var items: ArrayList<NodeInfoBase>? = null
+            // [[menu]]/[[fab]] gom được TRONG LÚC parse toml của CHÍNH trang này (thay cho
+            // [[page.options]] cũ khai báo ở trang cha) - đọc cùng lúc, cùng 1 lượt với các
+            // mục nội dung (items) bên dưới, KHÔNG sớm hơn.
+            var loadedMenuOptions: ArrayList<PageMenuOption>? = null
             if (config.pageConfigSh.isNotEmpty()) {
-                items = PageConfigSh(this@ActionPage, config.pageConfigSh, config).execute(onNodeReady)
+                val shReader = PageConfigSh(this@ActionPage, config.pageConfigSh, config)
+                items = shReader.execute(onNodeReady)
+                loadedMenuOptions = shReader.pageMenuOptions
             }
             if (items == null && config.pageConfigPath.isNotEmpty()) {
-                items = PageConfigReader(applicationContext, config.pageConfigPath, config.pageConfigDir).readConfigXml(onNodeReady)
+                val reader = PageConfigReader(applicationContext, config.pageConfigPath, config.pageConfigDir)
+                items = reader.readConfigXml(onNodeReady)
+                loadedMenuOptions = reader.pageMenuOptions
             }
+            config.pageMenuOptions = loadedMenuOptions
 
             if (config.afterRead.isNotEmpty()) {
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.afterRead, config)
@@ -516,7 +580,13 @@ class ActionPage : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 if (!isActive || isFinishing) return@withContext
 
-                if (items != null && items.isNotEmpty()) {
+                // Trang có thể KHÔNG có mục nội dung nào (items rỗng) nhưng vẫn hợp lệ nếu có
+                // [[menu]]/[[fab]] - ví dụ trang chỉ dùng để hiện 1 fab hành động, không cần
+                // danh sách. Trước đây "items rỗng" luôn bị coi là lỗi tải trang (đóng luôn
+                // activity) vì menu/fab từng nằm ở trang CHA nên luôn tách biệt với items; giờ
+                // cả hai cùng đọc từ 1 file toml nên phải tính thêm điều kiện này.
+                val hasMenuOrFab = loadedMenuOptions?.isNotEmpty() == true
+                if (items != null && (items.isNotEmpty() || hasMenuOrFab)) {
                     if (config.loadSuccess.isNotEmpty()) {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
                     }
@@ -534,6 +604,12 @@ class ActionPage : AppCompatActivity() {
                     } else {
                         updateActionList(items, showLoading)
                     }
+                    // Menu 3 chấm + fab của trang chỉ thật sự sẵn sàng tới đây (vừa đọc xong
+                    // cùng lượt với items ở trên) - bỏ cache cũ (nếu có, vd sau reload) rồi yêu
+                    // cầu vẽ lại toolbar để onCreateOptionsMenu() build lại menu/fab theo dữ liệu
+                    // mới nhất của config.pageMenuOptions.
+                    menuOptions = null
+                    invalidateOptionsMenu()
                     refreshCheckboxMenuStates()
                 } else {
                     handleLoadError(config)
@@ -642,8 +718,10 @@ class ActionPage : AppCompatActivity() {
             }
         }
 
-        val config = currentPageConfig ?: return
-        val script = if (menuOption.script.isNotEmpty()) menuOption.script else config.pageHandlerSh
+        // menuOption.script đã được gán sẵn handler dùng chung của nhóm [[menu]]/[[fab]] (nếu
+        // bản thân mục không tự khai báo script riêng) ngay lúc parse - page không còn handler
+        // riêng nữa (xem PageConfigReader.menuGroupOptionsToml()).
+        val script = menuOption.script
         val dialog = DialogLogFragment.create(
             menuOption,
             {},

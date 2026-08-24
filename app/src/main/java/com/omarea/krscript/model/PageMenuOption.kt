@@ -27,14 +27,15 @@ class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) 
     // Nếu true: khi click, chạy script ẩn ở nền (không hiện dialog log/không cho người dùng thấy output)
     var silent: Boolean = false
     // Cho phép menu item mở giống 1 "page" (như 1 dòng bình thường trong danh sách) thay vì chạy
-    // pageHandlerSh khi click. Thứ tự ưu tiên giống PageNode: link > activity > html/config-sh/config.
+    // script khi click. Thứ tự ưu tiên giống PageNode: link > activity > html/config-sh/config.
     var link: String = ""
     var activity: String = ""
     var onlineHtmlPage: String = ""
     var pageConfigPath: String = ""
     var pageConfigSh: String = ""
-    // Script CHẠY RIÊNG cho chính option này khi bấm, KHÔNG cần thông qua pageHandlerSh của page
-    // và không cần phân biệt bằng $menu_id/$state nữa. Nếu để trống, hành vi cũ giữ nguyên
-    // (vẫn chạy pageHandlerSh của page, truyền state/menu_id = key của option).
+    // Script chạy khi bấm mục này. Nếu bản thân mục không tự khai báo "script" riêng, giá trị
+    // này đã được PageConfigReader.menuGroupOptionsToml() gán sẵn = "handler" dùng chung của
+    // nhóm [[menu]]/[[fab]] chứa nó NGAY LÚC PARSE - lúc click chỉ cần đọc thẳng script, không
+    // còn fallback nào khác (page không còn handler riêng nữa).
     var script: String = ""
 }

@@ -7,11 +7,19 @@ import android.widget.Toast
 import com.tool.tree.R
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.NodeInfoBase
+import com.omarea.krscript.model.PageMenuOption
 import com.omarea.krscript.model.PageNode
 import java.io.ByteArrayInputStream
 
 class PageConfigSh(private var activity: Activity, private var pageConfigSh: String, private var parentConfig: PageNode?) {
     private var handler = Handler(Looper.getMainLooper())
+
+    // Reader được dùng ở lần execute() gần nhất - dùng để lấy pageMenuOptions ([[menu]]/[[fab]])
+    // được gom trong lúc parse, GIỐNG hệt cách ActionPage lấy từ PageConfigReader ở nhánh
+    // pageConfigPath (file .toml tĩnh). execute() có thể không tạo reader nào (vd script lỗi/rỗng)
+    // nên luôn fallback về danh sách rỗng thay vì null.
+    private var lastReader: PageConfigReader? = null
+    val pageMenuOptions: ArrayList<PageMenuOption> get() = lastReader?.pageMenuOptions ?: ArrayList()
 
     // Nhận diện nội dung TOML inline khi dòng 1 hoặc dòng 2 (bỏ qua dòng trống) là
     // header bắt đầu bằng từ khoá "group" - vd: [[group]], [[group.action]] ...
@@ -39,7 +47,9 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
         val result = ScriptEnvironmen.executeResultRoot(activity, pageConfigSh, parentConfig)?.trim()
         if (result != null) {
             if (result.endsWith(".toml")) {
-                items = PageConfigReader(activity, result, parentConfig?.pageConfigDir).readConfigXml(onNodeReady)
+                val reader = PageConfigReader(activity, result, parentConfig?.pageConfigDir)
+                lastReader = reader
+                items = reader.readConfigXml(onNodeReady)
                 if (items == null) {
                     noReadPermission()
                 }
@@ -47,7 +57,9 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
                 // Nội dung TOML trả về trực tiếp (không phải đường dẫn file):
                 // nhận diện qua header [[group]]/[[group. ...]] ở dòng 1 hoặc dòng 2.
                 val inputStream = ByteArrayInputStream(result.toByteArray())
-                items = PageConfigReader(activity, inputStream).readConfigXml(onNodeReady)
+                val reader = PageConfigReader(activity, inputStream)
+                lastReader = reader
+                items = reader.readConfigXml(onNodeReady)
             } else if (result.isNotEmpty()) {
                 pageConfigShError(result)
             }

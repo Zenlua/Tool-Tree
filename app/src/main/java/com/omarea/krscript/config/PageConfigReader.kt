@@ -194,7 +194,67 @@ class PageConfigReader {
     //   process = true
     // =====================================================================================
 
-    private val tomlNodeTypeOrder = listOf("group", "text", "switch", "picker", "action", "page", "editor", "resource")
+    private val tomlNodeTypeOrder = listOf("group", "text", "switch", "picker", "action", "page", "editor", "resource", "menu", "fab")
+
+    // ========== TÍNH NĂNG MỚI: [[menu]] / [[fab]] khai báo NGAY TRONG TOML CỦA CHÍNH TRANG ==========
+    // Thay thế hoàn toàn cơ chế [[page.options]] cũ (từng gọi là "group.page.options") vốn khai
+    // báo ở mục [[page]] của trang CHA - bị build eager ngay khi trang cha build xong, kể cả khi
+    // trang con chưa từng được mở. Giờ đây menu 3 chấm (overflow) và nút nổi (fab) được khai báo
+    // như 1 loại mục bình thường ngay trong file toml của CHÍNH trang đó - y hệt [[action]],
+    // [[text]] ... - nên chỉ được đọc (và mọi lệnh shell bên trong, vd checked/box, chỉ chạy) khi
+    // trang thực sự được mở, ĐÚNG LÚC các mục nội dung khác của trang cũng đang được đọc.
+    //
+    // [[menu]] / [[fab]] KHÔNG PHẢI là 1 mục đơn - mà là 1 "vỏ" chứa:
+    //   - handler (hoặc handler-sh): script MẶC ĐỊNH chạy khi bấm 1 mục con, nếu mục con đó
+    //     không tự khai báo "script" riêng. Thay thế cho handler-sh của page cũ (đã bỏ - xem
+    //     PageNode.pageHandlerSh).
+    //   - [[...items]]: danh sách các mục thực sự hiện trong menu/fab. Từng mục dùng field y hệt
+    //     [[page.options]] cũ (type/style/suffix/mime/path-home/multiple/box/silent/link/
+    //     activity/html/config/config-sh/script/title...) - xem pageMenuOptionToml().
+    // Ví dụ:
+    //   [[menu]]
+    //   handler = "menu_handler.sh"
+    //
+    //     [[menu.items]]
+    //     title = "Làm mới"
+    //     type = "refresh"
+    //
+    //     [[menu.items]]
+    //     title = "Bật X"
+    //     type = "checkbox"
+    //     box = "cat /sys/x/enabled"
+    //     script = "toggle_x.sh"     # ghi đè handler dùng chung ở trên
+    //
+    //   [[fab]]
+    //   handler = "fab_handler.sh"
+    //
+    //     [[fab.items]]
+    //     title = "Thêm mới"
+    //
+    // Có thể đặt ở gốc file trang hoặc lồng trong 1 [[group]] (vd [[group.menu]], [[group.fab]])
+    // giống hệt cách lồng action/page/text - dù đặt ở đâu, các mục menu/fab luôn được GOM VỀ 1
+    // danh sách chung cho cả trang (không hiển thị trong danh sách nội dung, không lồng theo group).
+    private val collectedMenuOptions = ArrayList<PageMenuOption>()
+
+    /** Danh sách menu 3 chấm + fab gom được sau khi readConfigXml()/readConfigToml() chạy xong. */
+    val pageMenuOptions: ArrayList<PageMenuOption> get() = collectedMenuOptions
+
+    // Đọc 1 khối [[menu]]/[[fab]]: lấy handler dùng chung rồi build từng mục con trong "items",
+    // mục nào không tự có "script" riêng thì dùng handler dùng chung này (gán thẳng vào
+    // option.script lúc parse - lúc click chỉ cần đọc option.script, không cần fallback nào khác).
+    private fun menuGroupOptionsToml(table: TomlTable, isFab: Boolean): ArrayList<PageMenuOption> {
+        val handler = tomlGet(table, "handler", "handler-sh").orEmpty()
+        val result = ArrayList<PageMenuOption>()
+        for (itemTable in tomlEntries(table, "items")) {
+            val option = pageMenuOptionToml(itemTable) ?: continue
+            if (option.script.isEmpty() && handler.isNotEmpty()) {
+                option.script = handler
+            }
+            option.isFab = isFab
+            result.add(option)
+        }
+        return result
+    }
 
     private fun tomlGet(table: TomlTable, vararg keys: String): String? {
         for (key in keys) {
@@ -364,6 +424,14 @@ class PageConfigReader {
                 resourceNodeToml(table)
                 null
             }
+            "menu" -> {
+                collectedMenuOptions.addAll(menuGroupOptionsToml(table, isFab = false))
+                null
+            }
+            "fab" -> {
+                collectedMenuOptions.addAll(menuGroupOptionsToml(table, isFab = true))
+                null
+            }
             else -> null
         }
     }
@@ -486,17 +554,14 @@ class PageConfigReader {
         tomlGet(table, "process")?.let { page.process = tomlTruthy(it, "process") }
         tomlGet(table, "link", "href")?.let { page.link = it }
         tomlGet(table, "activity", "a", "intent")?.let { page.activity = it }
-        tomlGet(table, "option-sh", "option-su", "options-sh")?.let { page.pageMenuOptionsSh = it }
-        tomlGet(table, "handler-sh", "handler", "set", "getstate", "script")?.let { page.pageHandlerSh = it }
         tomlGet(table, "lock", "lock-state")?.let { page.lockShell = it }
 
-        val pageOptions = tomlEntries(table, "options")
-        if (pageOptions.isNotEmpty()) {
-            if (page.pageMenuOptions == null) page.pageMenuOptions = ArrayList()
-            for (optTable in pageOptions) {
-                pageMenuOptionToml(optTable)?.let { page.pageMenuOptions!!.add(it) }
-            }
-        }
+        // ĐÃ LOẠI BỎ: option-sh (script sinh menu 3 chấm động, khai báo ở [[page]] của trang
+        // cha) VÀ handler-sh của page (script mặc định khi bấm menu/fab). Page giờ chỉ còn
+        // nhiệm vụ MỞ TRANG cho nhanh (link/activity/config/config-sh) - không kiêm nhiệm gì
+        // liên quan tới menu/fab nữa. Toàn bộ menu/fab (tĩnh lẫn có điều kiện qua support/box)
+        // giờ khai báo NGAY TRONG [[menu]]/[[fab]] của CHÍNH trang đó, xem menuGroupOptionsToml()
+        // bên dưới.
 
         // Giống text.rows / action.rows: cho phép page.rows hiển thị thêm các dòng rich-text bên dưới
         for (rowTable in tomlEntries(table, "rows")) {
