@@ -20,6 +20,12 @@ class PageNode(currentConfigXml: String) : ClickableNode(currentConfigXml) {
     // động thì dùng "box"/"check" (điều kiện hiện/tích) hoặc "support"/"visible" ngay trên từng
     // mục trong [[menu.items]]/[[fab.items]].
     var pageMenuOptions: ArrayList<PageMenuOption>? = null
+    // [[group.action]] menu = true: các action bị loại khỏi danh sách nội dung, hiện như icon
+    // riêng trên toolbar thay vào đó. show = true: các action (bất kể menu true/false) cần tự
+    // mở dialog ngay khi vào trang. Cả 2 gán trực tiếp từ PageConfigReader/PageConfigSh cùng
+    // lúc với pageMenuOptions (xem ActionPage.loadPageConfig()).
+    var headerActions: ArrayList<ActionNode>? = null
+    var autoShowActions: ArrayList<ActionNode>? = null
     // ĐÃ BỎ pageHandlerSh (handler-sh) khỏi page - page giờ chỉ dùng để MỞ TRANG cho nhanh
     // (link/activity/config/config-sh), không còn kiêm nhiệm làm handler mặc định cho menu/fab
     // nữa. Handler mặc định cho từng nhóm giờ khai báo NGAY TRONG [[menu]]/[[fab]] của trang

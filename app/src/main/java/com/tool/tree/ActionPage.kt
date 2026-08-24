@@ -60,6 +60,12 @@ class ActionPage : AppCompatActivity() {
     private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
 
     private var menuOptions: ArrayList<PageMenuOption>? = null
+    // [[group.action]] menu = true: icon riêng luôn hiện trên toolbar - xem onCreateOptionsMenu()
+    private var headerActions: ArrayList<ActionNode>? = null
+    // true sau khi đã tự mở dialog show=true 1 LẦN trong phiên mở trang hiện tại - tránh lặp
+    // lại mỗi khi trang reload (vd action khác gọi reload-page). Reset về false khi mở trang
+    // mới thật sự (activity mới), KHÔNG reset khi chỉ reload nội dung trang hiện tại.
+    private var autoShowTriggered = false
     private var menuCheckboxRefreshing = false
     private var checkboxRefreshJob: Job? = null
     private var loadPageJob: Job? = null
@@ -229,8 +235,22 @@ class ActionPage : AppCompatActivity() {
             // khi đọc xong toml của CHÍNH trang này (xem loadPageConfig()).
             menuOptions = config.pageMenuOptions
         }
+        if (headerActions == null) {
+            headerActions = config.headerActions
+        }
     
         menu?.clear()
+
+        // [[group.action]] menu = true: khác các mục ở trên (luôn ẩn trong popup "⋮"), mục này
+        // LUÔN hiện như 1 icon riêng ngay trên toolbar (SHOW_AS_ACTION_ALWAYS) - cạnh nút "⋮".
+        headerActions?.forEach { action ->
+            val uniqueItemId = ("header:" + action.key).hashCode()
+            val menuItem = menu?.add(Menu.NONE, uniqueItemId, Menu.NONE, action.title)
+            menuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            val icon = IconPathAnalysis().loadIcon(this, action)
+                ?: ContextCompat.getDrawable(this, R.drawable.kr_run)
+            menuItem?.icon = icon
+        }
 
         // menu/fab giờ được đọc lại mỗi lần trang load/reload (cùng lúc với items, xem
         // loadPageConfig()) thay vì cố định 1 lần từ trang cha như trước - nên phải ẩn fab
@@ -377,9 +397,23 @@ class ActionPage : AppCompatActivity() {
         popup.show()
     }
 
+    // Mở dialog của 1 action menu=true - dùng lại NGUYÊN VẸN logic dialog params/confirm/
+    // warning của group.action (ActionListFragment.onActionClick).
+    private fun openHeaderActionDialog(action: ActionNode) {
+        val fragment = supportFragmentManager.findFragmentById(R.id.main_list) as? ActionListFragment ?: return
+        fragment.onActionClick(action, Runnable {})
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val options = menuOptions ?: return false
         val targetItemId = item.itemId
+
+        val headerAction = headerActions?.find { ("header:" + it.key).hashCode() == targetItemId }
+        if (headerAction != null) {
+            openHeaderActionDialog(headerAction)
+            return true
+        }
+
+        val options = menuOptions ?: return false
         val option = options.find { it.key.hashCode() == targetItemId }
 
         if (option != null) {
@@ -561,17 +595,25 @@ class ActionPage : AppCompatActivity() {
             // [[page.options]] cũ khai báo ở trang cha) - đọc cùng lúc, cùng 1 lượt với các
             // mục nội dung (items) bên dưới, KHÔNG sớm hơn.
             var loadedMenuOptions: ArrayList<PageMenuOption>? = null
+            var loadedHeaderActions: ArrayList<ActionNode>? = null
+            var loadedAutoShowActions: ArrayList<ActionNode>? = null
             if (config.pageConfigSh.isNotEmpty()) {
                 val shReader = PageConfigSh(this@ActionPage, config.pageConfigSh, config)
                 items = shReader.execute(onNodeReady)
                 loadedMenuOptions = shReader.pageMenuOptions
+                loadedHeaderActions = shReader.headerActions
+                loadedAutoShowActions = shReader.autoShowActions
             }
             if (items == null && config.pageConfigPath.isNotEmpty()) {
                 val reader = PageConfigReader(applicationContext, config.pageConfigPath, config.pageConfigDir)
                 items = reader.readConfigXml(onNodeReady)
                 loadedMenuOptions = reader.pageMenuOptions
+                loadedHeaderActions = reader.headerActions
+                loadedAutoShowActions = reader.autoShowActions
             }
             config.pageMenuOptions = loadedMenuOptions
+            config.headerActions = loadedHeaderActions
+            config.autoShowActions = loadedAutoShowActions
 
             if (config.afterRead.isNotEmpty()) {
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.afterRead, config)
@@ -585,7 +627,7 @@ class ActionPage : AppCompatActivity() {
                 // danh sách. Trước đây "items rỗng" luôn bị coi là lỗi tải trang (đóng luôn
                 // activity) vì menu/fab từng nằm ở trang CHA nên luôn tách biệt với items; giờ
                 // cả hai cùng đọc từ 1 file toml nên phải tính thêm điều kiện này.
-                val hasMenuOrFab = loadedMenuOptions?.isNotEmpty() == true
+                val hasMenuOrFab = loadedMenuOptions?.isNotEmpty() == true || loadedHeaderActions?.isNotEmpty() == true
                 if (items != null && (items.isNotEmpty() || hasMenuOrFab)) {
                     if (config.loadSuccess.isNotEmpty()) {
                         ScriptEnvironmen.executeResultRoot(this@ActionPage, config.loadSuccess, config)
@@ -595,20 +637,22 @@ class ActionPage : AppCompatActivity() {
                         progressiveFragment?.finishProgressiveList()
                         actionsLoaded = true
                         hideLoadProgress()
+                        tryAutoShowActions()
                     } else if (showLoading) {
                         loadProgressBar.apply {
                             isIndeterminate = true
                             visibility = View.VISIBLE
                         }
-                        updateActionList(items, showLoading) { hideLoadProgress() }
+                        updateActionList(items, showLoading) { hideLoadProgress(); tryAutoShowActions() }
                     } else {
-                        updateActionList(items, showLoading)
+                        updateActionList(items, showLoading) { tryAutoShowActions() }
                     }
                     // Menu 3 chấm + fab của trang chỉ thật sự sẵn sàng tới đây (vừa đọc xong
                     // cùng lượt với items ở trên) - bỏ cache cũ (nếu có, vd sau reload) rồi yêu
                     // cầu vẽ lại toolbar để onCreateOptionsMenu() build lại menu/fab theo dữ liệu
                     // mới nhất của config.pageMenuOptions.
                     menuOptions = null
+                    headerActions = null
                     invalidateOptionsMenu()
                     refreshCheckboxMenuStates()
                 } else {
@@ -641,6 +685,21 @@ class ActionPage : AppCompatActivity() {
                 try { iconPathAnalysis.loadBg(this, node) } catch (_: Exception) {}
             }
         }
+    }
+
+    // [[group.action]] show=true: tự mở dialog ngay khi vào trang - CHỈ 1 LẦN trong phiên mở
+    // trang hiện tại (autoShowTriggered), không lặp lại khi trang tự reload (vd reload-page
+    // của action khác) - gọi ở đúng thời điểm nội dung trang đã render xong (onRendered/
+    // finishProgressiveList) để fragment.onActionClick() có UI sẵn sàng hiện dialog lên trên.
+    // Hoạt động với CẢ action còn nằm trong danh sách lẫn action đã chuyển ra icon toolbar
+    // (menu=true) - onActionClick() không quan tâm action có đang gắn vào view nào hay không.
+    private fun tryAutoShowActions() {
+        if (autoShowTriggered) return
+        val toShow = currentPageConfig?.autoShowActions?.filter { it.show }.orEmpty()
+        if (toShow.isEmpty()) return
+        autoShowTriggered = true
+        val fragment = supportFragmentManager.findFragmentById(R.id.main_list) as? ActionListFragment ?: return
+        toShow.forEach { fragment.onActionClick(it, Runnable {}) }
     }
 
     private fun buildAutoRunTask(): AutoRunTask? {

@@ -6,6 +6,7 @@ import android.os.Looper
 import android.widget.Toast
 import com.tool.tree.R
 import com.omarea.krscript.executor.ScriptEnvironmen
+import com.omarea.krscript.model.ActionNode
 import com.omarea.krscript.model.NodeInfoBase
 import com.omarea.krscript.model.PageMenuOption
 import com.omarea.krscript.model.PageNode
@@ -20,6 +21,8 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
     // nên luôn fallback về danh sách rỗng thay vì null.
     private var lastReader: PageConfigReader? = null
     val pageMenuOptions: ArrayList<PageMenuOption> get() = lastReader?.pageMenuOptions ?: ArrayList()
+    val headerActions: ArrayList<ActionNode> get() = lastReader?.headerActions ?: ArrayList()
+    val autoShowActions: ArrayList<ActionNode> get() = lastReader?.autoShowActions ?: ArrayList()
 
     // Nhận diện nội dung TOML inline khi dòng 1 hoặc dòng 2 (bỏ qua dòng trống) là
     // header bắt đầu bằng từ khoá "group" - vd: [[group]], [[group.action]] ...

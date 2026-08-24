@@ -239,6 +239,21 @@ class PageConfigReader {
     /** Danh sách menu 3 chấm + fab gom được sau khi readConfigXml()/readConfigToml() chạy xong. */
     val pageMenuOptions: ArrayList<PageMenuOption> get() = collectedMenuOptions
 
+    // ========== TÍNH NĂNG MỚI: [[group.action]] menu = true / show = true ==========
+    // menu = true: action bị loại khỏi cây nội dung (không add vào group.children/danh sách
+    // trang) và gom về đây thay - icon riêng LUÔN hiện trên toolbar, xem tomlBuildNode() case
+    // "action" bên dưới và ActionPage.onCreateOptionsMenu().
+    private val collectedHeaderActions = ArrayList<ActionNode>()
+    /** Danh sách group.action có menu = true, gom được sau khi đọc xong toàn bộ trang. */
+    val headerActions: ArrayList<ActionNode> get() = collectedHeaderActions
+
+    // show = true: action tự mở dialog ngay khi vào trang - ĐỘC LẬP với menu (áp dụng được cho
+    // cả action còn nằm trong danh sách lẫn action đã chuyển ra icon toolbar), nên gom riêng
+    // sang đây, không gộp chung điều kiện với collectedHeaderActions ở trên.
+    private val collectedAutoShowActions = ArrayList<ActionNode>()
+    /** Danh sách group.action có show = true, gom được sau khi đọc xong toàn bộ trang. */
+    val autoShowActions: ArrayList<ActionNode> get() = collectedAutoShowActions
+
     // Đọc 1 khối [[menu]]/[[fab]]: lấy handler dùng chung rồi build từng mục con trong "items",
     // mục nào không tự có "script" riêng thì dùng handler dùng chung này (gán thẳng vào
     // option.script lúc parse - lúc click chỉ cần đọc option.script, không cần fallback nào khác).
@@ -415,7 +430,24 @@ class PageConfigReader {
                 }
             }
             "page" -> pageNodeToml(table)
-            "action" -> actionNodeToml(table)
+            "action" -> {
+                val action = actionNodeToml(table)
+                if (action != null) {
+                    if (action.show) collectedAutoShowActions.add(action)
+                    if (action.menu) {
+                        // Cần key duy nhất để làm itemId cho Menu (toolbar) - action thường
+                        // không bắt buộc khai báo key/index/id, nên fallback về title nếu
+                        // trống, giống hệt cách pageMenuOptionToml() đang làm cho [[menu.items]].
+                        if (action.key.isEmpty()) action.key = action.title
+                        collectedHeaderActions.add(action)
+                        null
+                    } else {
+                        action
+                    }
+                } else {
+                    null
+                }
+            }
             "switch" -> switchNodeToml(table)
             "picker" -> pickerNodeToml(table)
             "text" -> textNodeToml(table)
@@ -689,6 +721,9 @@ class PageConfigReader {
         for (rowTable in tomlEntries(table, "rows")) {
             textRowToml(action.rows, rowTable)
         }
+
+        tomlGet(table, "menu")?.let { action.menu = tomlTruthy(it, "menu") }
+        tomlGet(table, "show")?.let { action.show = resolveBoolOrShell(it, "show") }
 
         resourceNodeToml(table)
         return action
