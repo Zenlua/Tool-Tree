@@ -177,17 +177,6 @@ fi
 Home() {
   inforkk
   
-  if [ -f "$AON/patch_rom/addon.prop" ]; then
-  vdbfbfsn='
-  [[group.page.options]]
-  key = "v4"
-  type = "checkbox"
-  title = "Patch ROM"
-  box = "glog hide_show_patch_rom"
-  silent = true
-  reload = true'
-  fi
-
   echo '
   [[group]]
   [[group.page]]
@@ -195,33 +184,6 @@ Home() {
   desc = "'$home_text_1'"
   icon = "'$urlicon'/settings.png"
   config-sh = "'$ETC'/tool-tree.bash Info"
-  handler = """
-    if [ "$menu_id" == "v1" ]; then
-    echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
-    elif [ "$menu_id" == "v2" ]; then
-    echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
-    elif [ "$menu_id" == "v3" ]; then
-    echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
-    fi
-  """
-
-    [[group.page.options]]
-    key = "v1"
-    type = "default"
-    title = "'$permis_text_1'"
-    silent = true
-
-    [[group.page.options]]
-    key = "v2"
-    type = "default"
-    title = "'$permis_text_4'"
-    silent = true
-
-    [[group.page.options]]
-    key = "v3"
-    type = "default"
-    title = "'$setting_text_5'"
-    silent = true
 
   [[group]]
   [[group.page]]
@@ -229,42 +191,6 @@ Home() {
   desc = "'$home_text_2'"
   icon = "'$urlicon'/utilities.png"
   config-sh = "'$ETC'/tool-tree.bash Utilities"
-  handler = """
-    if [ "$menu_id" == "v1" ]; then
-    [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
-    elif [ "$menu_id" == "v4" ]; then
-    [ "$(glog hide_show_patch_rom)" == 1 ] && slog hide_show_patch_rom 0 || slog hide_show_patch_rom 1
-    elif [ "$menu_id" == "v2" ]; then
-    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTSD#$SDCARD_PATH}]"
-    elif [ "$menu_id" == "v3" ]; then
-    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$SDH/$PTSH]"
-    fi
-  """
-    [[group.page.options]]
-    key = "v1"
-    type = "checkbox"
-    title = "'$input_folder_text'"
-    box = "glog hide_show"
-    silent = true
-    reload = true
-    '"$vdbfbfsn"'
-
-    [[group.page.options]]
-    key = "v2"
-    type = "default"
-    title = "'$open_activity_text' ROM"
-    silent = true
-
-    [[group.page.options]]
-    key = "v3"
-    type = "default"
-    title = "'$open_activity_text' (data-root)"
-    silent = true
-
-    [[group.page.options]]
-    type = "default"
-    title = "'$setting_text' - '$setting_text_3'"
-    config-sh = "'$ETC'/tool-tree.bash Project"
 
   [[group]]
   [[group.page]]
@@ -280,36 +206,6 @@ Home() {
   icon = "'$urlicon'/addon.png"
   process = true
   config-sh = "PATHADD=\"$AON\" '$ETC'/tool-tree.bash Addon"
-  handler = """
-  [ "$menu_id" == "file" ] && installadd "$file" "$AON"
-  """
-    [[group.page.options]]
-    type = "default"
-    title = "'$download_text'"
-    link = "https://zenlua.github.io/Tool-Tree/website/Addon.html"
-    silent = true
-    
-    [[group.page.options]]
-    title = "'$customize_text'"
-    box = "glog show_setting_add"
-    reload = true
-    silent = true
-    type = "checkbox"
-    script = """
-    if [ "$(glog show_setting_add)" == 1 ]; then
-    slog show_setting_add 0
-    else
-    slog show_setting_add 1
-    fi
-    """
-    
-    [[group.page.options]]
-    key = "file"
-    type = "file"
-    title = "'$input_add_text'"
-    suffix = "add,zip,7z"
-    style = "fab"
-    reload = true
   '
 
   [ "$(glog shellc)" == 1 ] && shell_bash shellc
@@ -325,108 +221,14 @@ More() {
   desc = "'$home_text_1'"
   icon = "'$urlicon'/settings.png"
   config-sh = "'$ETC'/tool-tree.bash Info"
-  handler = """
-    if [ "$menu_id" == "v1" ]; then
-    echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
-    elif [ "$menu_id" == "v2" ]; then
-    echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
-    elif [ "$menu_id" == "v3" ]; then
-    echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
-    fi
-  """
-
-    [[group.page.options]]
-    key = "v1"
-    type = "default"
-    title = "'$permis_text_1'"
-    silent = true
-
-    [[group.page.options]]
-    key = "v2"
-    type = "default"
-    title = "'$permis_text_4'"
-    silent = true
-
-    [[group.page.options]]
-    key = "v3"
-    type = "default"
-    title = "'$setting_text_5'"
-    silent = true
 
   [[group]]
   [[group.page]]
   title = "'$editor_apk'"
   desc = "'$more_text_6'"
   icon = "'$urlicon'/apk_utility.png"
-  process = true
   config-sh = "'$ETC'/tool-tree.bash Utiliapk"
   lock = "[ -f $LOG/javaww ] && echo \"'$boot_text_1'\" || echo 0"
-  handler = """
-    if [ "$menu_id" == "v1" ]; then
-    [ "$(glog hide_show2)" == 1 ] && slog hide_show2 0 || slog hide_show2 1
-    elif [ "$menu_id" == "b2" ]; then
-    echo "Looking for system apk..."
-    for mm in $(pm list package -s | cut -f2 -d:); do
-    cggdccg="$(pm path $mm | cut -f2 -d:)"
-    [ -f "$cggdccg" ] && apktool if "$cggdccg" 2>/dev/null | sed "/127.apk/d"
-    done
-    rm -fr $HOME/.local/share/apktool/framework/1.apk
-    echo
-    checktime
-    elif [ "$menu_id" == "b4" ]; then
-    echo "'$more_text_4' $file"
-    echo
-    apktool if "$file"
-    elif [ "$menu_id" == "v2" ]; then
-    echo "'$more_text_4' $file"
-    echo
-    [ "$(unzip -ql "$file" | grep -cm1 ".x509.pem")" == 1 ] || killtree "'$more_text_5' .x509.pem"
-    [ "$(unzip -ql "$file" | grep -cm1 ".pk8")" == 1 ] || killtree "'$more_text_5' .pk8"
-    unzip -oj "$file" *.x509.pem *.pk8 -d "$ETC/key"
-    elif [ "$menu_id" == "v4" ]; then
-    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTAD#$SDCARD_PATH}]"
-    elif [ "$menu_id" == "v5" ]; then
-    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$APK/$PTAH]"
-    fi
-  """
-  
-    [[group.page.options]]
-    key = "v1"
-    type = "checkbox"
-    title = "'$input_folder_text'"
-    box = "glog hide_show2"
-    silent = true
-    reload = true
-
-    [[group.page.options]]
-    key = "b2"
-    type = "default"
-    title = "'$framework_auto_text'"
-
-    [[group.page.options]]
-    key = "v2"
-    type = "file"
-    title = "'$more_text_3'"
-    suffix = "zip"
-    auto-off = true
-
-    [[group.page.options]]
-    key = "b4"
-    type = "file"
-    title = "'$more_text_10' framework"
-    suffix = "apk"
-
-    [[group.page.options]]
-    key = "v4"
-    type = "default"
-    title = "'$open_activity_text' APK"
-    silent = true
-
-    [[group.page.options]]
-    key = "v5"
-    type = "default"
-    title = "'$open_activity_text' (data-root)"
-    silent = true
 
   [[group]]
   [[group.page]]
@@ -442,37 +244,6 @@ More() {
   icon = "'$urlicon'/apk_addon.png"
   process = true
   config-sh = "PATHADD=\"$AOK\" '$ETC'/tool-tree.bash Addon"
-  handler = """
-  [ "$menu_id" == "file" ] && installadd "$file" "$AOK";
-  """
-    
-    [[group.page.options]]
-    type = "default"
-    title = "'$download_text'"
-    link = "https://zenlua.github.io/Tool-Tree/website/Apkon.html"
-    silent = true
-    
-    [[group.page.options]]
-    title = "'$customize_text'"
-    box = "glog show_setting_add"
-    reload = true
-    silent = true
-    type = "checkbox"
-    script = """
-    if [ "$(glog show_setting_add)" == 1 ]; then
-    slog show_setting_add 0
-    else
-    slog show_setting_add 1
-    fi
-    """
-    
-    [[group.page.options]]
-    key = "file"
-    type = "file"
-    title = "'$input_add_text'"
-    suffix = "add,zip,7z"
-    style = "fab"
-    reload = true
   '
 
   [ "$(glog shellc)" == 1 ] && shell_bash shells
@@ -480,81 +251,47 @@ More() {
 
 Info() {
   echo '
+  
+  [[group]]
+  [[group.menu]]
+    handler = """
+    if [ "$menu_id" == "v1" ]; then
+    echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
+    elif [ "$menu_id" == "v2" ]; then
+    echo "am:[start -a android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION -d package:com.tool.tree]"
+    elif [ "$menu_id" == "v3" ]; then
+    echo "am:[start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:com.tool.tree]"
+    fi
+  """
+  
+    [[group.menu.items]]
+    key = "v1"
+    title = "'$permis_text_1'"
+    silent = true
+
+    [[group.menu.items]]
+    key = "v2"
+    title = "'$permis_text_4'"
+    silent = true
+
+    [[group.menu.items]]
+    key = "v3"
+    title = "'$setting_text_5'"
+    silent = true
+  
   [[group]]
   [[group.page]]
   title = "'$setting_text_1'"
   desc = "'$setting_text_2'"
   icon = "'$urlicon'/info.png"
   config-sh = "'$ETC'/tool-tree.bash Update"
-  handler = """
-    if [ "$menu_id" == "share" ]; then
-      echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
-    elif [ "$menu_id" == "data" ]; then
-      slog boot_ver_code 1
-      slog sum_onl_plugin 1
-      slog sum_moduls 1
-    elif [ "$menu_id" == "beta" ]; then
-      echo "'$update_text_3'"
-      echo
-      if [ -f "$TMP/Tool-Tree.apk" ]; then
-        openfile "$TMP/Tool-Tree.apk"
-        exit
-        else
-        taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
-        openfile "$TMP/Tool-Tree.apk"
-        echo
-        echo "'$save_text' $TMP/Tool-Tree.apk"
-      fi
-    fi
-  """
-
-    [[group.page.options]]
-    title = "'$google_translate_text'"
-    box = "glog gg_trans_ver"
-    reload = true
-    silent = true
-    type = "checkbox"
-    script = """
-      if [ "$(glog gg_trans_ver)" == 1 ]; then
-      slog gg_trans_ver 0
-      else
-      slog gg_trans_ver 1
-      fi
-    """
-    
-    [[group.page.options]]
-    key = "share"
-    type = "default"
-    title = "'$share_text'"
-    silent = true
-    
-    [[group.page.options]]
-    key = "beta"
-    type = "default"
-    title = "'$download_text' beta"
-    
-    [[group.page.options]]
-    key = "data"
-    auto-kill = true
-    silent = true
-    type = "default"
-    title = "'$reset_data_text'"
-    
-    [[group.page.options]]
-    type = "refresh"
-    style = "fab"
-    icon = "'$ETC'/icon/Loading.png"
-
+  
   [[group]]
   [[group.page]]
   title = "'$setting_text_3'"
   desc = "'$setting_text_4'"
   icon = "'$urlicon'/project.png"
   config-sh = "'$ETC'/tool-tree.bash Project"
-
-    [[group.page.options]]
-    type = "refresh"
-    title = "'$refresh_text'"
     
   [[group]]
   [[group.page]]
@@ -562,12 +299,7 @@ Info() {
   desc = "'$setting_text_8'"
   icon = "'$urlicon'/feature.png"
   config-sh = "'$ETC'/tool-tree.bash Feature"
-
-    [[group.page.options]]
-    link = "https://aistudio.google.com/api-keys"
-    title = "'$generate_text' Gemini API"
-    silent = true
-
+  
   [[group]]
   [[group.picker]]
   title = "'$permis_text_2'"
@@ -626,6 +358,63 @@ Update() {
   fi
   echo '
   [[group]]
+  [[group.menu]]
+  handler = """
+    if [ "$menu_id" == "share" ]; then
+      echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
+    elif [ "$menu_id" == "data" ]; then
+      slog boot_ver_code 1
+      slog sum_onl_plugin 1
+      slog sum_moduls 1
+    elif [ "$menu_id" == "beta" ]; then
+      echo "'$update_text_3'"
+      echo
+      if [ -f "$TMP/Tool-Tree.apk" ]; then
+        openfile "$TMP/Tool-Tree.apk"
+        exit
+        else
+        taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
+        openfile "$TMP/Tool-Tree.apk"
+        echo
+        echo "'$save_text' $TMP/Tool-Tree.apk"
+      fi
+    fi
+  """
+  
+    [[group.menu.items]]
+    title = "'$google_translate_text'"
+    box = "glog gg_trans_ver"
+    reload = true
+    silent = true
+    type = "checkbox"
+    script = """
+      if [ "$(glog gg_trans_ver)" == 1 ]; then
+      slog gg_trans_ver 0
+      else
+      slog gg_trans_ver 1
+      fi
+    """
+    
+    [[group.menu.items]]
+    key = "share"
+    title = "'$share_text'"
+    silent = true
+    
+    [[group.menu.items]]
+    key = "beta"
+    title = "'$download_text' beta"
+    
+    [[group.menu.items]]
+    key = "data"
+    auto-kill = true
+    silent = true
+    title = "'$reset_data_text'"
+    
+    [[group.menu.items]]
+    type = "refresh"
+    style = "fab"
+    icon = "'$ETC'/icon/Loading.png"
+    
   [[group.page]]
   title = "'$author_text'"
   icon = "'$urlicon'/like.png"
@@ -682,6 +471,12 @@ Project() {
 
   echo '
   [[group]]
+
+  [[group.menu]]
+  [[group.menu.items]]
+  type = "refresh"
+  title = "'$refresh_text'"
+    
   [[group.action]]
   title = "'$project_text_3'"
   icon = "'$urlicon'/cleanup.png"
@@ -797,6 +592,12 @@ Project() {
 Feature() {
   echo '
   [[group]]
+  [[group.menu]]
+    [[group.menu.items]]
+    link = "https://aistudio.google.com/api-keys"
+    title = "'$generate_text' Gemini API"
+    silent = true
+    
   [[group.switch]]
   title = "'$project_text_5'"
   icon = "'$urlicon'/set_home.png"
@@ -1170,6 +971,21 @@ Generate() {
 
   echo '
   [[group]]
+  [[group.menu]]
+    [[group.menu.items]]
+    type = "checkbox"
+    title = "'$input_folder_text'"
+    box = "glog hide_show_generate"
+    silent = true
+    reload = true
+    script = """
+    if [ "$(glog hide_show_generate)" == 1 ]; then
+    slog hide_show_generate 0
+    else
+    slog hide_show_generate 1
+    fi
+    """
+    
   [[group.action]]
   title = "'$generate_text' Payload"
   icon = "'$urlicon'/build_payload.png"
@@ -1299,7 +1115,58 @@ Utilities() {
         desc_rom1="$projects_text: $PTSH"
     fi
 
+  if [ -f "$AON/patch_rom/Add-on.bash" ]; then
+  vdbfbfsn='
+  [[group.menu.items]]
+  key = "v4"
+  type = "checkbox"
+  title = "Patch ROM"
+  box = "glog hide_show_patch_rom"
+  silent = true
+  reload = true'
+  fi
+
   echo '
+  [[group]]
+  [[group.menu]]
+    handler = """
+    if [ "$menu_id" == "v1" ]; then
+    [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
+    elif [ "$menu_id" == "v4" ]; then
+      if [ "$(glog hide_show_patch_rom)" == 1 ]; then
+      slog hide_show_patch_rom 0
+      else
+      slog hide_show_patch_rom 1
+      fi
+    elif [ "$menu_id" == "v2" ]; then
+    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTSD#$SDCARD_PATH}]"
+    elif [ "$menu_id" == "v3" ]; then
+    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$SDH/$PTSH]"
+    fi
+  """
+    [[group.menu.items]]
+    key = "v1"
+    type = "checkbox"
+    title = "'$input_folder_text'"
+    box = "glog hide_show"
+    silent = true
+    reload = true
+    '"$vdbfbfsn"'
+
+    [[group.menu.items]]
+    key = "v2"
+    title = "'$open_activity_text' ROM"
+    silent = true
+
+    [[group.menu.items]]
+    key = "v3"
+    title = "'$open_activity_text' (data-root)"
+    silent = true
+
+    [[group.menu.items]]
+    title = "'$setting_text' - '$setting_text_3'"
+    config-sh = "'$ETC'/tool-tree.bash Project"
+    
   [[group]]
   [[group.action]]
   title = "'$decompile_text'"
@@ -1721,21 +1588,9 @@ Utilities() {
   title = "'$synthetic_text'"
   icon = "'$urlicon'/generate.png"
   config-sh = "'$ETC'/tool-tree.bash Generate"
-  handler = """
-    if [ "$menu_id" == "v1" ]; then
-    [ "$(glog hide_show_generate)" == 1 ] && slog hide_show_generate 0 || slog hide_show_generate 1
-    fi
-  """
-    [[group.page.options]]
-    key = "v1"
-    type = "checkbox"
-    title = "'$input_folder_text'"
-    box = "glog hide_show_generate"
-    silent = true
-    reload = true
   '
 
-  if [ "$(glog hide_show_patch_rom 1)" == 1 ] && [ -f "$AON/patch_rom/addon.prop" ]; then
+  if [ "$(glog hide_show_patch_rom 1)" == 1 ] && [ -f "$AON/patch_rom/Add-on.bash" ]; then
   dirvad="$AON/patch_rom"
   echo '
   [[group]]
@@ -1743,23 +1598,9 @@ Utilities() {
   title = "Patch ROM"
   icon = "'$dirvad'/icon.png"
   config-sh = "'$dirvad'/index.bash home"
-  handler = """
-    if [ "$menu_id" == "123" ]; then
-        '$dirvad'/index.bash update_addon
-    fi
-  """
-
-    [[group.page.options]]
-    type = "refresh"
-    title = "'$refresh_text'"
-
-    [[group.page.options]]
-    key = "123"
-    type = "default"
-    title = "'$update_text' add-on"
-    auto-finish = true
   '
-    fi
+  fi
+  
 }
 
 Apex() {
@@ -1773,6 +1614,21 @@ Apex() {
 
   echo '
   [[group]]
+    [[group.menu]]
+    handler = """
+    if [ "$menu_id" == "v1" ]; then
+        [ "$(glog hide_show_apex)" == 1 ] && slog hide_show_apex 0 || slog hide_show_apex 1
+    fi
+  """
+  
+    [[group.menu.items]]
+    key = "v1"
+    type = "checkbox"
+    title = "'$folder_text' APK"
+    box = "glog hide_show_apex"
+    silent = true
+    reload = true
+    
   [[group.action]]
   title = "'$decompile_text'"
   desc = "'$desc_apkd'"
@@ -1853,6 +1709,74 @@ Utiliapk() {
 
   echo '
   [[group]]
+  [[group.menu]]
+  handler = """
+    if [ "$menu_id" == "v1" ]; then
+    [ "$(glog hide_show2)" == 1 ] && slog hide_show2 0 || slog hide_show2 1
+    elif [ "$menu_id" == "b2" ]; then
+    echo "Looking for system apk..."
+    for mm in $(pm list package -s | cut -f2 -d:); do
+    cggdccg="$(pm path $mm | cut -f2 -d:)"
+    [ -f "$cggdccg" ] && apktool if "$cggdccg" 2>/dev/null | sed "/127.apk/d"
+    done
+    rm -fr $HOME/.local/share/apktool/framework/1.apk
+    echo
+    checktime
+    elif [ "$menu_id" == "b4" ]; then
+    echo "'$more_text_4' $file"
+    echo
+    apktool if "$file"
+    elif [ "$menu_id" == "v2" ]; then
+    echo "'$more_text_4' $file"
+    echo
+    [ "$(unzip -ql "$file" | grep -cm1 ".x509.pem")" == 1 ] || killtree "'$more_text_5' .x509.pem"
+    [ "$(unzip -ql "$file" | grep -cm1 ".pk8")" == 1 ] || killtree "'$more_text_5' .pk8"
+    unzip -oj "$file" *.x509.pem *.pk8 -d "$ETC/key"
+    elif [ "$menu_id" == "v4" ]; then
+    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTAD#$SDCARD_PATH}]"
+    elif [ "$menu_id" == "v5" ]; then
+    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$APK/$PTAH]"
+    fi
+  """
+  
+    [[group.menu.items]]
+    key = "v1"
+    type = "checkbox"
+    title = "'$input_folder_text'"
+    box = "glog hide_show2"
+    silent = true
+    reload = true
+
+    [[group.menu.items]]
+    key = "b2"
+    type = "default"
+    title = "'$framework_auto_text'"
+
+    [[group.menu.items]]
+    key = "v2"
+    type = "file"
+    title = "'$more_text_3'"
+    suffix = "zip"
+    auto-off = true
+
+    [[group.menu.items]]
+    key = "b4"
+    type = "file"
+    title = "'$more_text_10' framework"
+    suffix = "apk"
+
+    [[group.menu.items]]
+    key = "v4"
+    type = "default"
+    title = "'$open_activity_text' APK"
+    silent = true
+
+    [[group.menu.items]]
+    key = "v5"
+    type = "default"
+    title = "'$open_activity_text' (data-root)"
+    silent = true
+    
   [[group.action]]
   title = "'$decompile_text'"
   desc = "'$desc_apks'"
@@ -2041,19 +1965,6 @@ Utiliapk() {
   title = "'$apex_text'"
   icon = "'$urlicon'/apex.png"
   config-sh = "'$ETC'/tool-tree.bash Apex"
-  handler = """
-    if [ "$menu_id" == "v1" ]; then
-        [ "$(glog hide_show_apex)" == 1 ] && slog hide_show_apex 0 || slog hide_show_apex 1
-    fi
-  """
-
-    [[group.page.options]]
-    key = "v1"
-    type = "checkbox"
-    title = "'$folder_text' APK"
-    box = "glog hide_show_apex"
-    silent = true
-    reload = true
 
   [[group]]
   [[group.action]]
@@ -2153,6 +2064,48 @@ Utiliapk() {
 
 Addon() {
 
+  if [[ "$PATHADD" == "$AON" ]]; then
+  linkweb="Addon.html"
+  else
+  linkweb="Apkon.html"
+  fi
+  
+  echo '
+  [[group]]
+  
+    [[group.menu]]
+    [[group.menu.items]]
+    title = "'$download_text'"
+    link = "https://zenlua.github.io/Tool-Tree/website/'$linkweb'"
+    silent = true
+    
+    [[group.menu.items]]
+    title = "'$customize_text'"
+    box = "glog show_setting_add"
+    reload = true
+    silent = true
+    type = "checkbox"
+    script = """
+    if [ "$(glog show_setting_add)" == 1 ]; then
+    slog show_setting_add 0
+    else
+    slog show_setting_add 1
+    fi
+    """
+    
+    [[group.fab]]
+    handler = """
+    [ "$menu_id" == "file" ] && installadd "$file" "'$PATHADD'"
+    """
+    
+    [[group.fab.items]]
+    key = "file"
+    type = "file"
+    title = "'$input_add_text'"
+    suffix = "add,zip,7z"
+    reload = true
+  '
+  
   Download() {
     if [ "$url" ]; then
     echo '[[group]]
@@ -2203,53 +2156,6 @@ Addon() {
     beforesh='before-load = "MPAT=\"'$dirvad'\" '$dirvad'/before-load.bash"'
     fi
   
-    # Load menu
-    if [ -f "$dirvad/menu.bash" ]; then
-    code_option="$(MPAT="$dirvad" $dirvad/menu.bash 2>/dev/null)"
-    elif [ -f "$dirvad/menu.toml" ]; then
-    code_option="$(cat $dirvad/menu.toml 2>/dev/null)"
-    fi
-    
-    # Xác nhận có google dịch
-    if [ "$google_text" ]; then
-      google_trans='
-        [[group.page.options]]
-        title = "'$google_translate_text'"
-        box = "glog auto_trans_text_'$id'"
-        reload = true
-        silent = true
-        type = "checkbox"
-        script = """
-          if [ "$(glog auto_trans_text_'$id')" == 1 ]; then
-          slog auto_trans_text_'$id' 0
-          else
-          if [ "$(glog transai_text_'$id')" == 1 ]; then
-          rm -fr '$dirvad'/auto.sh
-          slog transai_text_'$id' 0
-          fi
-          slog auto_trans_text_'$id' 1
-          fi
-        """
-        [[group.page.options]]
-        title = "Gemini"
-        box = "glog transai_text_'$id'"
-        reload = true
-        silent = true
-        type = "checkbox"
-        script = """
-          if [ "$(glog transai_text_'$id')" == 1 ]; then
-          slog transai_text_'$id' 0
-          else
-          if [ "$(glog auto_trans_text_'$id')" == 1 ]; then
-          rm -fr '$dirvad'/auto.sh
-          slog auto_trans_text_'$id' 0
-          fi
-          transai -c && slog transai_text_'$id' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
-          fi
-        """
-      '
-    fi
-    
     if [ "$(glog show_setting_add)" == 1 ]; then
       hinde_add='
       [[group.page.rows]]
@@ -2294,22 +2200,8 @@ Addon() {
       '$shortcut_text'
       '$pagesh'
       '$beforesh'
-      '"$google_trans"'
       '"$hinde_add"'
       '"$delete_add"'
-      [[group.page.options]]
-      title = "'$pin_text_add'"
-      auto-finish = true
-      silent = true
-      script = """
-      if [ -f "'$dirvad'/pin" ]; then
-      rm -f "'$dirvad'/pin"
-      else
-      echo > "'$dirvad'/pin"
-      fi
-      """
-      
-      '"$code_option"'
       '
   }
 

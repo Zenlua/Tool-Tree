@@ -4,6 +4,7 @@
 # home
 home() {
 [ "$ROT" == 0 ] && text_root="ROOT" || text_rr="$fs_text_1"
+menuadd "$MPAT"
 echo '
 [[group]]
 title = "'$google_text'"

@@ -3,6 +3,7 @@
 
 # home
 home() {
+menuadd "$MPAT"
 echo '
 [[group]]
   title = "'$google_text'"

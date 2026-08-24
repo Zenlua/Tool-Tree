@@ -2,7 +2,6 @@
 # Kakathic
 
 fileprop="$1/Add-on.bash"
-folderid="${1##*/}"
 
 # Thoát
 if [ -d "$1" ] && [ -f "$fileprop" ]; then
@@ -12,29 +11,29 @@ if [ -d "$1" ] && [ -f "$fileprop" ]; then
   exit 1
 fi
 
-if [ "$(glog "auto_trans_text_${1##*/}")" == 1 ]; then
+if [ "$(glog "auto_trans_text_$id")" == 1 ]; then
   key_string="$(sed -n '/# default/,/# other languages/{ /# other languages/q; s/=.*//p; }' "$fileprop")"
   sum_mm="$(checksum "$fileprop")"
-  if [ "$sum_mm" != "$(glog "sum_$folderid")" ] || [ ! -f "$1/auto.bash" ]; then
+  if [ "$sum_mm" != "$(glog "sum_$id")" ] || [ ! -f "$1/auto.bash" ]; then
     for vc in $key_string; do
-    echo -e "${vc}=\"$(echo "${!vc}" | trans $LANGUAGE-$COUNTRY | \
-    awk '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\"" \
+    echo -e "${vc}=\"$(echo "${!vc}" | trans | awk \
+    '{ $0 = toupper(substr($0,1,1)) substr($0,2); print }')\"" \
     >>"$1/auto.bash" &
     done
     wait
     if [ "$(grep -cm1 '=""' "$1/auto.bash")" == 1 ]; then
       sed -i '/=""/d' "$1/auto.bash"
       else
-      slog "sum_$folderid" "$sum_mm"
+      slog "sum_$id" "$sum_mm"
     fi
   fi
   [ -f "$1/auto.bash" ] && source "$1/auto.bash"
-elif [ "$(glog "transai_text_${1##*/}")" == 1 ]; then
+elif [ "$(glog "transai_text_$id")" == 1 ]; then
   stringlg="$(sed -n '/# default/,/# other languages/{ /# default/d; /# other languages/q; p; }' "$fileprop")"
   sum_mm="$(checksum "$fileprop")"
-  if [ "$sum_mm" != "$(glog "sum_$folderid")" ] || [ ! -f "$1/auto.bash" ]; then
+  if [ "$sum_mm" != "$(glog "sum_$id")" ] || [ ! -f "$1/auto.bash" ]; then
   transai "$stringlg" > "$1/auto.bash"
-  slog "sum_$folderid" "$sum_mm"
+  slog "sum_$id" "$sum_mm"
   fi
   [ -f "$1/auto.bash" ] && source "$1/auto.bash"
 fi

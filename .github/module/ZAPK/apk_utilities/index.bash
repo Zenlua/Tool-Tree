@@ -31,6 +31,7 @@ search_plurals() {
 
 # home
 home() {
+menuadd "$MPAT"
 echo '[[group]]
 
   [[group]]

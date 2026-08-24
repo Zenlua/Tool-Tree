@@ -3,10 +3,18 @@
 
 # home
 home() {
+menuadd "$MPAT"
 echo '
 [[group]]
   title = "'$google_text'"
-
+  
+  [[group.menu.items]]
+  type = "default"
+  title = "@string/update_text"
+  script = """
+  MPAT='$MPAT' '$MPAT'/index.bash jadx_install
+  """
+  
   [[group.action]]
   title = "Jadx"
   desc = "'$view_source_text_11'"

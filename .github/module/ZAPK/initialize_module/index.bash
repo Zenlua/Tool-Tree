@@ -3,10 +3,16 @@
 
 # home
 home() {
+menuadd "$MPAT"
 echo '
   [[group]]
   title = "'$google_text'"
-
+  
+  [[group.menu.items]]
+  type = "refresh"
+  style = "fab"
+  icon = "'$ETC'/icon/Loading.png"
+  
   [[group.action]]
   warn = "'$lang_action_warn'"
   title = "'$lang_title'"
