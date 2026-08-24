@@ -10,6 +10,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.ListPopupWindow
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +23,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.tool.tree.ui.SwipeBackHelper
 import com.tool.tree.ui.SwipeBackPreviewCache
+import com.omarea.common.model.SelectItem
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.TryOpenActivity
@@ -69,6 +72,7 @@ class ActionPage : AppCompatActivity() {
     private var menuCheckboxRefreshing = false
     private var checkboxRefreshJob: Job? = null
     private var loadPageJob: Job? = null
+    private var spinnerLoadJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -446,6 +450,7 @@ class ActionPage : AppCompatActivity() {
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
             "file", "folder" -> menuItemChooseFile(menuOption)
+            "spinner" -> menuItemSpinner(menuOption)
             else -> {
                 if (menuOption.silent) {
                     menuItemExecuteSilent(menuOption)
@@ -819,6 +824,108 @@ class ActionPage : AppCompatActivity() {
                 ParamsFileChooserRender.FileSelectedInterface.TYPE_FILE
             }
         })
+    }
+
+    // type = "spinner": tải danh sách lựa chọn (tĩnh option.options + động option.optionsSh)
+    // và giá trị đang chọn hiện tại (option.spinnerGetState) - gộp 1 round-trip shell giống
+    // ActionListFragment.pickerExecute() - rồi mở dropdown Spinner ngay tại toolbar.
+    private fun menuItemSpinner(menuOption: PageMenuOption) {
+        val config = currentPageConfig ?: return
+        val anchor = findViewById<View>(R.id.toolbar) ?: binding.root
+
+        progressBarDialog.setCancelCallback { spinnerLoadJob?.cancel() }
+        progressBarDialog.showDialog(getString(R.string.kr_param_options_load) + " ")
+
+        spinnerLoadJob = lifecycleScope.launch(Dispatchers.IO) {
+            val scripts = LinkedHashMap<String, String>()
+            if (menuOption.spinnerGetState.isNotEmpty()) {
+                scripts["state"] = menuOption.spinnerGetState
+            }
+            if (menuOption.optionsSh.isNotEmpty()) {
+                scripts["options"] = menuOption.optionsSh
+            }
+
+            val shellResults = if (scripts.isNotEmpty()) {
+                ScriptEnvironmen.executeMultipleResultRoot(this@ActionPage, scripts, config)
+            } else {
+                LinkedHashMap()
+            }
+
+            if (!isActive) return@launch
+
+            val options = parseSpinnerOptions(menuOption, shellResults["options"])
+            val currentValue = shellResults["state"]?.trim()
+
+            withContext(Dispatchers.Main) {
+                progressBarDialog.hideDialog()
+                if (isFinishing || isDestroyed) return@withContext
+                if (options.isNullOrEmpty()) {
+                    Toast.makeText(this@ActionPage, getString(R.string.picker_not_item), Toast.LENGTH_SHORT).show()
+                } else {
+                    showSpinnerPopup(anchor, menuOption, options, currentValue)
+                }
+            }
+        }
+    }
+
+    // Giống ActionListFragment.parseOptionsResult(): mỗi dòng kết quả shell dạng "value|title"
+    // hoặc chỉ "value"; nếu options-sh rỗng/lỗi thì dùng lại danh sách tĩnh option.options.
+    private fun parseSpinnerOptions(menuOption: PageMenuOption, shellResult: String?): ArrayList<SelectItem>? {
+        val result = shellResult ?: ""
+        if (result == "error" || result == "null" || result.isEmpty()) {
+            return menuOption.options
+        }
+        val options = ArrayList<SelectItem>()
+        for (line in result.split("\n").filter { it.isNotEmpty() }) {
+            if (line.contains("|")) {
+                val split = line.split("|")
+                options.add(SelectItem().apply {
+                    value = split[0]
+                    title = if (split.size > 1) split[1] else split[0]
+                })
+            } else {
+                options.add(SelectItem().apply { title = line; value = line })
+            }
+        }
+        return options
+    }
+
+    // Hiện dropdown chọn giá trị kiểu Android Spinner (dùng ListPopupWindow, style y hệt
+    // ParamsSingleSelect.openSingleSelectPopup()) neo tại toolbar. Chọn xong chạy script của
+    // menu item với tham số "state" = giá trị vừa chọn - giống hệt các loại menu item khác.
+    private fun showSpinnerPopup(
+        anchor: View,
+        menuOption: PageMenuOption,
+        options: ArrayList<SelectItem>,
+        currentValue: String?
+    ) {
+        val selectedIndex = options.indexOfFirst { it.value == currentValue }.let { if (it < 0) 0 else it }
+
+        val adapter = ArrayAdapter(this, R.layout.kr_spinner_dropdown, R.id.text, options)
+        val background = ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg)
+
+        val popup = ListPopupWindow(this)
+        popup.anchorView = anchor
+        popup.setAdapter(adapter)
+        popup.setBackgroundDrawable(background)
+        popup.isModal = true
+        popup.setOnItemClickListener { _, _, position, _ ->
+            popup.dismiss()
+            val selected = options.getOrNull(position) ?: return@setOnItemClickListener
+            val value = selected.value ?: selected.title ?: ""
+            menuItemExecute(
+                menuOption,
+                hashMapOf("state" to value, "menu_id" to menuOption.key)
+            )
+        }
+
+        val screenWidth = resources.displayMetrics.widthPixels
+        popup.width = anchor.width.coerceAtLeast(400).coerceAtMost(screenWidth)
+
+        popup.show()
+        if (selectedIndex in options.indices) {
+            popup.listView?.setSelection(selectedIndex)
+        }
     }
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {

@@ -625,6 +625,20 @@ class PageConfigReader {
         tomlGet(table, "config-sh")?.let { option.pageConfigSh = it }
         // Script chạy riêng cho option này, không cần dựa vào pageHandlerSh + $menu_id nữa
         tomlGet(table, "script", "set", "setstate")?.let { option.script = it }
+        // type = "spinner": danh sách lựa chọn (tĩnh + động) và lệnh đọc giá trị đang chọn -
+        // giống hệt cơ chế của pickerNodeToml() nhưng gắn vào menu item thay vì mục nội dung.
+        tomlGet(table, "option-sh", "options-sh", "options-su")?.let {
+            if (option.options == null) option.options = ArrayList()
+            option.optionsSh = it
+        }
+        val spinnerOptionsToml = tomlEntries(table, "options")
+        if (spinnerOptionsToml.isNotEmpty()) {
+            if (option.options == null) option.options = ArrayList()
+            for (optTable in spinnerOptionsToml) {
+                option.options!!.add(selectItemToml(optTable))
+            }
+        }
+        tomlGet(table, "get", "getstate")?.let { option.spinnerGetState = it }
         // title-sh đã được xử lý ở mainNodeToml() (qua runnableNodeToml ở trên); ở đây chỉ
         // đọc thêm alias "text" và chỉ áp dụng khi chưa có title-sh (tránh ghi đè kết quả shell)
         if (option.title.isEmpty()) {

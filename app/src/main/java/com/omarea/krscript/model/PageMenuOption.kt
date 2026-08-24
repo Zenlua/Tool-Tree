@@ -1,5 +1,7 @@
 package com.omarea.krscript.model
 
+import com.omarea.common.model.SelectItem
+
 class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) {
     // 类型为普通菜单项还是其它具有特定行为的菜单项
     // 例如，类型为finish 点击后会关闭当前页面，类型为refresh点击后会刷新当前页面，而类型为file点击后则需要先选择文件
@@ -38,4 +40,21 @@ class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) 
     // nhóm [[menu]]/[[fab]] chứa nó NGAY LÚC PARSE - lúc click chỉ cần đọc thẳng script, không
     // còn fallback nào khác (page không còn handler riêng nữa).
     var script: String = ""
+
+    // ========== TÍNH NĂNG MỚI: type = "spinner" ==========
+    // Mục menu dạng dropdown chọn giá trị (giống Android Spinner/ParamsSingleSelect) thay vì
+    // chạy thẳng script khi bấm. Bấm vào mục sẽ hiện popup dạng Spinner ngay tại toolbar, chọn
+    // xong mới chạy "script" với tham số "state" = giá trị vừa chọn (xem
+    // ActionPage.menuItemSpinner()/showSpinnerPopup()).
+
+    // Danh sách lựa chọn khai báo tĩnh qua [[menu.items.options]] (title/value) - xem
+    // PageConfigReader.pageMenuOptionToml()/selectItemToml().
+    var options: ArrayList<SelectItem>? = null
+    // Lệnh shell sinh danh sách lựa chọn động (mỗi dòng "value|title" hoặc chỉ "value"),
+    // chạy lại mỗi lần mở dropdown - khai báo qua "options-sh"/"option-sh".
+    var optionsSh: String = ""
+    // Lệnh shell đọc giá trị đang được chọn hiện tại, dùng để tô sáng đúng mục tương ứng khi
+    // mở dropdown - khai báo qua "get"/"getstate". Chạy lại mỗi lần mở dropdown, cùng lúc với
+    // optionsSh (gộp 1 round-trip, xem ActionPage.menuItemSpinner()).
+    var spinnerGetState: String = ""
 }
