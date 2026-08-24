@@ -143,10 +143,20 @@ home() {
   fi
   ) &
   
+  menuadd "$MPAT"
   echo '
-[[group]]
+  [[group]]
   title = "'$google_text'"
 
+  [[group.menu]]
+  [[group.menu.items]]
+  type = "default"
+  auto-finish = true
+  title = "@string/update_text"
+  script = """
+  '$MPAT'/index.bash update_addon
+  """
+  
   [[group.page]]
   title = "'$title_quick'"
   summary = "'$project_text': '$PTSH'"

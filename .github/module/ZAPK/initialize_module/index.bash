@@ -8,6 +8,7 @@ echo '
   [[group]]
   title = "'$google_text'"
   
+  [[group.menu]]
   [[group.menu.items]]
   type = "refresh"
   style = "fab"

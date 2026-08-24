@@ -2,9 +2,27 @@
 # Kakathic
 
 home() {
+menuadd "$MPAT"
 echo '
 [[group]]
   title = "'$google_text'"
+  
+  [[group.menu]]
+  [[group.menu.items]]
+  type = "default"
+  title = "@string/update_text"
+  auto-off = true
+  reload = true
+  interruptible = false
+  script = """
+  taive "https://raw.githubusercontent.com/anbuinfosec/wipwn/refs/heads/main/main.py" '$MPAT'/main.py 2>&1
+  chmod 755 '$MPAT'/main.py
+  """
+  
+  [[group.menu.items]]
+  type = "refresh"
+  style = "fab"
+  icon = "'$ETC'/icon/Loading.png"
 
   [[group.text]]
   summary-sh = "iw dev wlan0 link"
@@ -98,6 +116,7 @@ fi
 } &
 
 [ "$(glog wifi_tool_customize)" == 1 ] && number_wifi_pin=1
+
 # Ngôn ngữ và Google dịch
 source langadd "$MPAT"
 "$@"
