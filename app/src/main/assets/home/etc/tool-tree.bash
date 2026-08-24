@@ -410,9 +410,9 @@ Update() {
     silent = true
     title = "'$reset_data_text'"
     
-    [[group.menu.items]]
+    [[group.fab]]
+    [[group.fab.items]]
     type = "refresh"
-    style = "fab"
     icon = "'$ETC'/icon/Loading.png"
     
   [[group.page]]
