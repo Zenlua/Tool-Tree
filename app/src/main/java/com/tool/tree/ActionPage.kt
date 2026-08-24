@@ -248,7 +248,7 @@ class ActionPage : AppCompatActivity() {
             val menuItem = menu?.add(Menu.NONE, uniqueItemId, Menu.NONE, action.title)
             menuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
             val icon = IconPathAnalysis().loadIcon(this, action)
-                ?: ContextCompat.getDrawable(this, R.drawable.kr_run)
+                ?: ContextCompat.getDrawable(this, R.drawable.ic_menu_hamburger)
             menuItem?.icon = icon
         }
 
