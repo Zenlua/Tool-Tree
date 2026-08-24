@@ -19,7 +19,8 @@ echo '
   chmod 755 '$MPAT'/main.py
   """
   
-  [[group.menu.items]]
+  [[group.fab]]
+  [[group.fab.items]]
   type = "refresh"
   style = "fab"
   icon = "'$ETC'/icon/Loading.png"

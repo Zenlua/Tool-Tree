@@ -8,8 +8,8 @@ echo '
   [[group]]
   title = "'$google_text'"
   
-  [[group.menu]]
-  [[group.menu.items]]
+  [[group.fab]]
+  [[group.fab.items]]
   type = "refresh"
   style = "fab"
   icon = "'$ETC'/icon/Loading.png"

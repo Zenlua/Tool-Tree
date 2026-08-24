@@ -48,6 +48,7 @@ echo '
   '
 fi
 
+[ -f "$1/pin" ] && pin_text_add="$unpin_text" || pin_text_add="$pin_text"
 echo '
   [[group]]
   [[group.menu]]

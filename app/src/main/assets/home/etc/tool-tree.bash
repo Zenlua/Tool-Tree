@@ -2266,7 +2266,6 @@ Addon() {
     dirvad="${vadd%/*}"
     [ -f "$dirvad/pin" ] || continue
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
-    pin_text_add="$unpin_text"
     Vips
     fi
   done
@@ -2277,7 +2276,6 @@ Addon() {
     dirvad="${vadd%/*}"
     [ -f "$dirvad/pin" ] && continue
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
-    pin_text_add="$pin_text"
     Vips
     fi
   done
