@@ -69,19 +69,6 @@ class ListItemGroup(context: Context,
         }
     }
 
-    // Bật/tắt hiển thị TOÀN BỘ mục hide=true trong cây (kể cả chính group này nếu bản thân nó
-    // cũng khai báo hide=true) - dùng cho cử chỉ 2 ngón vuốt xuống, xem ActionListFragment.
-    fun setHiddenItemsVisible(visible: Boolean, animate: Boolean = true) {
-        setHiddenItemVisible(visible, animate)
-        for (child in this.children) {
-            if (child is ListItemGroup) {
-                child.setHiddenItemsVisible(visible, animate)
-            } else {
-                child.setHiddenItemVisible(visible, animate)
-            }
-        }
-    }
-
     init {
         title = config.title
     }

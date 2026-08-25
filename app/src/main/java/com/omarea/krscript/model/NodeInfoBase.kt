@@ -34,9 +34,4 @@ open class NodeInfoBase(val currentPageConfigPath: String) : Serializable {
     var summary: String = ""
     // 摘要信息(脚本)
     var summarySh: String = ""
-
-    // hide = true: mục bị ẩn khỏi danh sách theo mặc định khi vào trang - chỉ hiện tạm thời
-    // bằng cử chỉ 2 ngón vuốt xuống (xem TwoFingerSwipeDownHelper/ActionListFragment), KHÔNG
-    // lưu trạng thái - mỗi lần vào lại trang phải vuốt lại mới hiện.
-    var hide: Boolean = false
 }

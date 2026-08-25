@@ -67,39 +67,6 @@ open class ListItemView(private val context: Context,
             return config.index
         }
 
-    // hide = true (xem NodeInfoBase.hide): mục này bị ẩn theo mặc định, chỉ hiện tạm bằng cử
-    // chỉ 2 ngón vuốt xuống - xem ListItemGroup.setHiddenItemsVisible/ActionListFragment.
-    val isHiddenItem: Boolean
-        get() = config.hide
-
-    // animate = true: có hiệu ứng mờ dần (fade) khi hiện/ẩn thay vì đổi trạng thái đột ngột.
-    // Không có tác dụng gì nếu mục này không phải loại hide=true (isHiddenItem = false).
-    open fun setHiddenItemVisible(visible: Boolean, animate: Boolean = true) {
-        if (!isHiddenItem) return
-        layout.animate().cancel()
-        if (visible) {
-            if (layout.visibility != View.VISIBLE) {
-                layout.alpha = if (animate) 0f else 1f
-                layout.visibility = View.VISIBLE
-                if (animate) {
-                    layout.animate().alpha(1f).setDuration(220).start()
-                }
-            }
-        } else {
-            if (layout.visibility == View.VISIBLE) {
-                if (animate) {
-                    layout.animate().alpha(0f).setDuration(180).withEndAction {
-                        layout.visibility = View.GONE
-                        layout.alpha = 1f
-                    }.start()
-                } else {
-                    layout.visibility = View.GONE
-                    layout.alpha = 1f
-                }
-            }
-        }
-    }
-
     open fun updateViewByShell() {
         if (config.titleSh.isNotEmpty()) {
             config.title = ScriptEnvironmen.executeResultRoot(context, config.titleSh, config)
@@ -125,10 +92,5 @@ open class ListItemView(private val context: Context,
         title = config.title
         desc = config.desc
         summary = config.summary
-        // Ẩn sẵn ngay từ đầu nếu mục khai báo hide=true - chỉ hiện lại tạm thời bằng cử chỉ 2
-        // ngón vuốt xuống (không animate lúc khởi tạo, tránh hiệu ứng thừa lúc mới dựng trang).
-        if (config.hide) {
-            layout.visibility = View.GONE
-        }
     }
 }

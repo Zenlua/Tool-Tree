@@ -23,7 +23,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.tool.tree.ui.SwipeBackHelper
 import com.tool.tree.ui.SwipeBackPreviewCache
-import com.tool.tree.ui.TwoFingerSwipeDownHelper
 import com.omarea.common.model.SelectItem
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.ProgressBarDialog
@@ -56,7 +55,6 @@ class ActionPage : AppCompatActivity() {
     private var openedSubPage = false
 
     private lateinit var swipeBackHelper: SwipeBackHelper
-    private lateinit var twoFingerSwipeDownHelper: TwoFingerSwipeDownHelper
 
     private val justClickedItemIds = HashSet<Int>()
 
@@ -153,28 +151,6 @@ class ActionPage : AppCompatActivity() {
         }
         toolbar.setNavigationOnClickListener { finish() }
 
-        // Vuốt xuống để làm mới nội dung trang hiện tại (chỉ khi trang đã tải xong lần đầu,
-        // và chỉ khi danh sách đang ở đầu trang - xem PullRefreshLayout.canChildScrollUp).
-        // Dùng lại nguyên vẹn loadPageConfig(showLoading = false) - giống hệt cơ chế reload-page
-        // hiện có, không hiện dialog/progress bar full màn hình mà chỉ có hiệu ứng vòng xoay
-        // ngay tại đầu danh sách; autoShowTriggered không bị reset nên show=true không lặp lại.
-        binding.mainListRefresh.setColorSchemeResources(R.color.colorAccent)
-        binding.mainListRefresh.setOnRefreshListener {
-            if (actionsLoaded) {
-                loadPageConfig(false)
-            } else {
-                binding.mainListRefresh.isRefreshing = false
-            }
-        }
-
-        // Cử chỉ 2 ngón cùng vuốt xuống ở bất kỳ đâu trên trang: hiện các mục hide=true trong
-        // danh sách hiện tại (vuốt lần nữa để ẩn lại) - không lưu trạng thái, xem
-        // ActionListFragment.toggleHiddenItems().
-        twoFingerSwipeDownHelper = TwoFingerSwipeDownHelper(this) {
-            val fragment = supportFragmentManager.findFragmentById(R.id.main_list) as? ActionListFragment
-            fragment?.toggleHiddenItems()
-        }
-
         val extras = intent.extras
         if (extras != null) {
             currentPageConfig = if (extras.containsKey("page")) {
@@ -222,9 +198,6 @@ class ActionPage : AppCompatActivity() {
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (::swipeBackHelper.isInitialized && swipeBackHelper.dispatchTouchEvent(ev)) {
             return true
-        }
-        if (::twoFingerSwipeDownHelper.isInitialized) {
-            twoFingerSwipeDownHelper.dispatchTouchEvent(ev)
         }
         return super.dispatchTouchEvent(ev)
     }
@@ -651,8 +624,6 @@ class ActionPage : AppCompatActivity() {
 
             withContext(Dispatchers.Main) {
                 if (!isActive || isFinishing) return@withContext
-
-                binding.mainListRefresh.isRefreshing = false
 
                 // Trang có thể KHÔNG có mục nội dung nào (items rỗng) nhưng vẫn hợp lệ nếu có
                 // [[menu]]/[[fab]] - ví dụ trang chỉ dùng để hiện 1 fab hành động, không cần
