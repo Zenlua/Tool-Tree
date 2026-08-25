@@ -38,11 +38,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <FrameLayout
-            android:id="@+id/main_list"
+        <com.tool.tree.ui.PullRefreshLayout
+            android:id="@+id/main_list_refresh"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="?android:actionBarSize" />
+            android:layout_marginTop="?android:actionBarSize">
+
+            <FrameLayout
+                android:id="@+id/main_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.tool.tree.ui.PullRefreshLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:visibility="gone"

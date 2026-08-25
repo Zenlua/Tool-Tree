@@ -151,6 +151,20 @@ class ActionPage : AppCompatActivity() {
         }
         toolbar.setNavigationOnClickListener { finish() }
 
+        // Vuốt xuống để làm mới nội dung trang hiện tại (chỉ khi trang đã tải xong lần đầu,
+        // và chỉ khi danh sách đang ở đầu trang - xem PullRefreshLayout.canChildScrollUp).
+        // Dùng lại nguyên vẹn loadPageConfig(showLoading = false) - giống hệt cơ chế reload-page
+        // hiện có, không hiện dialog/progress bar full màn hình mà chỉ có hiệu ứng vòng xoay
+        // ngay tại đầu danh sách; autoShowTriggered không bị reset nên show=true không lặp lại.
+        binding.mainListRefresh.setColorSchemeResources(R.color.colorAccent)
+        binding.mainListRefresh.setOnRefreshListener {
+            if (actionsLoaded) {
+                loadPageConfig(false)
+            } else {
+                binding.mainListRefresh.isRefreshing = false
+            }
+        }
+
         val extras = intent.extras
         if (extras != null) {
             currentPageConfig = if (extras.containsKey("page")) {
@@ -624,6 +638,8 @@ class ActionPage : AppCompatActivity() {
 
             withContext(Dispatchers.Main) {
                 if (!isActive || isFinishing) return@withContext
+
+                binding.mainListRefresh.isRefreshing = false
 
                 // Trang có thể KHÔNG có mục nội dung nào (items rỗng) nhưng vẫn hợp lệ nếu có
                 // [[menu]]/[[fab]] - ví dụ trang chỉ dùng để hiện 1 fab hành động, không cần

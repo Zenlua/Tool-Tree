@@ -69,6 +69,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7"
     implementation "androidx.webkit:webkit:1.15.0"
     implementation "org.tomlj:tomlj:1.1.1"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 }
 repositories {
     google()
