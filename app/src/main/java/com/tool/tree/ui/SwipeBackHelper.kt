@@ -50,13 +50,6 @@ class SwipeBackHelper(
 
         private const val SETTLE_DURATION_MIN_MS = 150L
         private const val SETTLE_DURATION_MAX_MS = 300L
-
-        // Cử chỉ predictive-back của hệ thống (gesture-nav vuốt từ mép, Android 13+): lúc còn
-        // đang GIỮ TAY kéo thì cố ý cho trôi chậm lại 1 nửa tốc độ so với progress hệ thống báo
-        // (xem onSystemBackProgress) - còn lúc THẢ TAY ra (dù bật lại hay trượt nốt để trở lại)
-        // thì animation chạy tốc độ bình thường (1:1, giống hệt lúc vuốt tay trên toàn màn
-        // hình), không nhân đôi thời lượng nữa.
-        private const val SYSTEM_BACK_PROGRESS_DAMPING = 3.5f
     }
 
     private val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
@@ -307,7 +300,8 @@ class SwipeBackHelper(
     fun onSystemBackProgress(progress: Float) {
         if (!externalDragActive) return
         val width = contentView.width.takeIf { it > 0 } ?: return
-        val dampedProgress = progress.coerceIn(0f, 1f) / SYSTEM_BACK_PROGRESS_DAMPING
+        val clampedProgress = progress.coerceIn(0f, 1f)
+        val dampedProgress = Math.pow(clampedProgress.toDouble(), 1.5).toFloat()
         applyProgress(dampedProgress * width)
     }
 
