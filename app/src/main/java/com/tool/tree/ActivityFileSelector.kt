@@ -3,13 +3,16 @@ package com.tool.tree
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.omarea.common.ui.ProgressBarDialog
 import com.tool.tree.databinding.ActivityFileSelectorBinding
@@ -114,7 +117,7 @@ class ActivityFileSelector : AppCompatActivity() {
     private fun finishWithSelection() {
         val selected = adapterFileSelector?.selectedFiles?.map { it.absolutePath }
         if (selected.isNullOrEmpty()) {
-            Snackbar.make(binding.root, R.string.msg_nothing_selected, Snackbar.LENGTH_SHORT).show()
+            showSnackbar(R.string.msg_nothing_selected, Snackbar.LENGTH_SHORT)
             return
         }
         setResult(RESULT_OK, Intent().putStringArrayListExtra("files", ArrayList(selected)))
@@ -125,9 +128,9 @@ class ActivityFileSelector : AppCompatActivity() {
         super.onResume()
         loadData()
         if (mode == MODE_FOLDER && !multiple) {
-            Snackbar.make(binding.root, R.string.msg_folder_mode, Snackbar.LENGTH_SHORT).show()
+            showSnackbar(R.string.msg_folder_mode, Snackbar.LENGTH_SHORT)
         } else if (multiple) {
-            Snackbar.make(binding.root, R.string.msg_multiple_select_mode, Snackbar.LENGTH_LONG).show()
+            showSnackbar(R.string.msg_multiple_select_mode, Snackbar.LENGTH_LONG)
         }
     }
 
@@ -138,7 +141,7 @@ class ActivityFileSelector : AppCompatActivity() {
             if (homeDir.exists() && homeDir.isDirectory && homeDir.canRead()) {
                 homeDir
             } else {
-                Snackbar.make(binding.root, getString(R.string.msg_path_home_not_found, pathHome), Snackbar.LENGTH_SHORT).show()
+                showSnackbar(getString(R.string.msg_path_home_not_found, pathHome), Snackbar.LENGTH_SHORT)
                 sdcard
             }
         } else {
@@ -148,7 +151,7 @@ class ActivityFileSelector : AppCompatActivity() {
         if (startDir.exists() && startDir.isDirectory) {
             val list = startDir.listFiles()
             if (list == null) {
-                Snackbar.make(binding.root, "Failed to retrieve file list!", Snackbar.LENGTH_LONG).show()
+                showSnackbar("Failed to retrieve file list!", Snackbar.LENGTH_LONG)
                 return
             }
             val onSelected = Runnable {
@@ -193,7 +196,27 @@ class ActivityFileSelector : AppCompatActivity() {
             }
 
         } else {
-            Snackbar.make(binding.root, "External storage not available!", Snackbar.LENGTH_LONG).show()
+            showSnackbar("External storage not available!", Snackbar.LENGTH_LONG)
         }
+    }
+
+    // Snackbar mặc định luôn dính ở đáy màn hình (nó tự leo lên tìm CoordinatorLayout, không có
+    // thì rơi về FrameLayout gốc android.R.id.content - tức toàn bộ cửa sổ - nên vị trí không
+    // liên quan gì tới Toolbar/list bên trong). Hàm này ép Snackbar hiện cố định ngay dưới
+    // Toolbar (dùng ANIMATION_MODE_FADE thay vì trượt từ dưới lên, vì vị trí đã đổi lên trên).
+    private fun showSnackbar(message: CharSequence, duration: Int) {
+        val snackbar = Snackbar.make(binding.root, message, duration)
+        snackbar.animationMode = BaseTransientBottomBar.ANIMATION_MODE_FADE
+        val view = snackbar.view
+        (view.layoutParams as? FrameLayout.LayoutParams)?.let { params ->
+            params.gravity = Gravity.TOP
+            params.topMargin = toolbar?.bottom ?: 0
+            view.layoutParams = params
+        }
+        snackbar.show()
+    }
+
+    private fun showSnackbar(messageRes: Int, duration: Int) {
+        showSnackbar(getString(messageRes), duration)
     }
 }
