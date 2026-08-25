@@ -215,7 +215,7 @@ class MainActivity : AppCompatActivity() {
                 1 -> R.drawable.tab_pages
                 2 -> R.drawable.tab_custom3
                 3 -> R.drawable.tab_custom4
-                else -> null
+                else -> R.drawable.tab_favorites
             }
             val icon = getDrawable(iconRes) ?: continue
             val tab = binding.tabLayout.newTab()
