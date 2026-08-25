@@ -208,8 +208,10 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     // khoá), chạy BẤT ĐỒNG BỘ trên luồng IO - trước đây (nodeUnlocked cũ) chạy lockShell
     // ĐỒNG BỘ ngay trên main thread ngay khi bấm, khiến bấm vào bất kỳ mục nào có lockShell
     // (page/action/switch/picker/editor) đều bị đơ 1 lúc không có gì báo hiệu rồi mới phản
-    // hồi - trông như "chạy shell rồi mới mở trang". Giờ hiện hộp thoại loading NGAY khi bấm
-    // (chỉ khi thật sự cần chạy shell), và chỉ gọi onUnlocked() sau khi có kết quả thật.
+    // hồi - trông như "chạy shell rồi mới mở trang". Giờ luôn chạy nền (IO thread) nên KHÔNG
+    // làm đơ UI - cố tình KHÔNG hiện dialog/spinner nào cho bước kiểm tra khoá này (check
+    // thường rất nhanh, hiện dialog rồi tắt ngay sẽ chỉ gây chớp nháy khó chịu). Chỉ gọi
+    // onUnlocked() sau khi có kết quả thật.
     private fun nodeUnlockedAsync(clickableNode: ClickableNode, onUnlocked: () -> Unit) {
         val currentSDK = Build.VERSION.SDK_INT
         if (clickableNode.targetSdkVersion > 0 && currentSDK != clickableNode.targetSdkVersion) {
@@ -236,7 +238,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val message = ScriptEnvironmen.executeResultRoot(context, clickableNode.lockShell, clickableNode)
             withContext(Dispatchers.Main) {
-                progressBarDialog.hideDialog()
                 if (!isAdded) return@withContext
                 val unlocked = message == "unlock" || message == "unlocked" || message == "false" || message == "0"
                 if (!unlocked) {
