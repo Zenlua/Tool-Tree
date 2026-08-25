@@ -494,6 +494,9 @@ class PageConfigReader {
         if (nodeInfoBase.summary.isEmpty()) {
             tomlGet(table, "summary")?.let { nodeInfoBase.summary = StringResRef.resolve(context, it) }
         }
+        // hide = true: ẩn mục này khỏi danh sách theo mặc định (xem NodeInfoBase.hide) - áp
+        // dụng chung cho MỌI loại node (group/text/action/page/switch/picker/editor).
+        tomlGet(table, "hide")?.let { nodeInfoBase.hide = tomlTruthy(it, "hide") }
         return nodeInfoBase
     }
 
@@ -571,6 +574,7 @@ class PageConfigReader {
             tomlGet(table, "title")?.let { group.title = StringResRef.resolve(context, it) }
         }
         tomlGet(table, "support", "visible")?.let { group.supported = resolveBoolOrShell(it, "support", "visible") }
+        tomlGet(table, "hide")?.let { group.hide = tomlTruthy(it, "hide") }
         return group
     }
 

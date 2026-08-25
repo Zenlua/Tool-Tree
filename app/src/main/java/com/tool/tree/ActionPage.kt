@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.tool.tree.ui.SwipeBackHelper
 import com.tool.tree.ui.SwipeBackPreviewCache
+import com.tool.tree.ui.TwoFingerSwipeDownHelper
 import com.omarea.common.model.SelectItem
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.ProgressBarDialog
@@ -55,6 +56,7 @@ class ActionPage : AppCompatActivity() {
     private var openedSubPage = false
 
     private lateinit var swipeBackHelper: SwipeBackHelper
+    private lateinit var twoFingerSwipeDownHelper: TwoFingerSwipeDownHelper
 
     private val justClickedItemIds = HashSet<Int>()
 
@@ -165,6 +167,14 @@ class ActionPage : AppCompatActivity() {
             }
         }
 
+        // Cử chỉ 2 ngón cùng vuốt xuống ở bất kỳ đâu trên trang: hiện các mục hide=true trong
+        // danh sách hiện tại (vuốt lần nữa để ẩn lại) - không lưu trạng thái, xem
+        // ActionListFragment.toggleHiddenItems().
+        twoFingerSwipeDownHelper = TwoFingerSwipeDownHelper(this) {
+            val fragment = supportFragmentManager.findFragmentById(R.id.main_list) as? ActionListFragment
+            fragment?.toggleHiddenItems()
+        }
+
         val extras = intent.extras
         if (extras != null) {
             currentPageConfig = if (extras.containsKey("page")) {
@@ -212,6 +222,9 @@ class ActionPage : AppCompatActivity() {
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (::swipeBackHelper.isInitialized && swipeBackHelper.dispatchTouchEvent(ev)) {
             return true
+        }
+        if (::twoFingerSwipeDownHelper.isInitialized) {
+            twoFingerSwipeDownHelper.dispatchTouchEvent(ev)
         }
         return super.dispatchTouchEvent(ev)
     }

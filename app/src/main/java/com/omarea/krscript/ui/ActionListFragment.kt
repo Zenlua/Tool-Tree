@@ -72,6 +72,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     // Xem create()/updateData() - báo cho bên gọi biết renderInterface() đã dựng xong.
     private var onRendered: (() -> Unit)? = null
 
+    // Trạng thái hiện/ẩn các mục hide=true - KHÔNG lưu lại (reset về false mỗi khi rootGroup
+    // được dựng lại, kể cả khi chỉ reload nội dung/pull-to-refresh) để đúng yêu cầu "vào lại
+    // trang phải vuốt 2 ngón lại mới hiện". Xem toggleHiddenItems()/renderInterface().
+    private var hiddenItemsVisible = false
+
     // process = true: xem createProgressive()/appendProgressiveItem()/finishProgressiveList()
     private var progressiveMode = false
     // Mục đến TRƯỚC khi onViewCreated() dựng xong rootGroup thì xếp hàng ở đây, tránh mất
@@ -126,6 +131,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         val context = context ?: run { onRendered?.invoke(); return }
         val currentActionInfos = actionInfos ?: run { onRendered?.invoke(); return }
         rootGroup = ListItemGroup(context, true, GroupNode(""))
+        hiddenItemsVisible = false
         pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
         val layout = rootGroup.getView()
         val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
@@ -143,6 +149,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         val context = context ?: return
         val currentActionInfos = actionInfos ?: ArrayList()
         rootGroup = ListItemGroup(context, true, GroupNode(""))
+        hiddenItemsVisible = false
         pageLayoutRender = PageLayoutRender(context, currentActionInfos, this, rootGroup)
         val layout = rootGroup.getView()
         val rootView = (this.view?.findViewById<ScrollView?>(R.id.kr_content))
@@ -176,6 +183,14 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             rootGroup.triggerUpdate()
         }
         triggerAction(autoRunTask)
+    }
+
+    // Cử chỉ 2 ngón vuốt xuống (xem ActionPage/TwoFingerSwipeDownHelper) - lần đầu hiện các
+    // mục hide=true, lần vuốt tiếp theo ẩn lại (toggle đơn giản), không lưu trạng thái.
+    fun toggleHiddenItems() {
+        if (!::rootGroup.isInitialized) return
+        hiddenItemsVisible = !hiddenItemsVisible
+        rootGroup.setHiddenItemsVisible(hiddenItemsVisible)
     }
 
     fun updateData(
