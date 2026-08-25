@@ -417,16 +417,16 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             val onCancel = if (isAutoShow) Runnable { requireActivity().finish() } else null
             val cancelable = !isAutoShow
             if (item.confirm) {
-                DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted) }, onCancel, cancelable)
+                DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted, isAutoShow) }, onCancel, cancelable)
             } else if (item.warning.isNotEmpty() && (item.params == null || item.params?.isEmpty() == true)) {
-                DialogHelper.warning(requireActivity(), item.title, item.warning, { actionExecute(item, onCompleted) }, onCancel, cancelable)
+                DialogHelper.warning(requireActivity(), item.title, item.warning, { actionExecute(item, onCompleted, isAutoShow) }, onCancel, cancelable)
             } else {
-                actionExecute(item, onCompleted)
+                actionExecute(item, onCompleted, isAutoShow)
             }
         }
     }
 
-    private fun actionExecute(action: ActionNode, onExit: Runnable) {
+    private fun actionExecute(action: ActionNode, onExit: Runnable, isAutoShow: Boolean = false) {
         val script = action.setState ?: return
 
         if (action.params != null && action.params!!.isNotEmpty()) {
@@ -525,16 +525,21 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         val center = dialogView.findViewById<ViewGroup>(R.id.kr_params_center)
                         center.removeAllViews()
                         center.addView(linearLayout)
-                        
+
+                        // isAutoShow = true (dialog tự mở khi vào trang): không cho ấn ra ngoài
+                        // để đóng, và ấn "Hủy" phải thoát khỏi trang thay vì chỉ đóng dialog.
+                        val cancelable = !isAutoShow
+
                         val darkMode = themeMode?.isDarkMode ?: false
                         val dialog = if (isLongList) {
                             AlertDialog.Builder(requireContext(), if (darkMode) R.style.kr_full_screen_dialog_dark else R.style.kr_full_screen_dialog_light)
-                                .setView(dialogView).create().apply {
+                                .setView(dialogView).setCancelable(cancelable).create().apply {
+                                    setCanceledOnTouchOutside(cancelable)
                                     show()
                                     window?.let { DialogHelper.setWindowBlurBg(it, requireActivity()) }
                                 }
                         } else {
-                            DialogHelper.customDialog(requireActivity(), dialogView).dialog
+                            DialogHelper.customDialog(requireActivity(), dialogView, cancelable).dialog
                         }
 
                         dialogView.findViewById<TextView>(R.id.title).text = action.title
@@ -551,7 +556,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                             action
                         )
 
-                        dialogView.findViewById<View>(R.id.btn_cancel).setOnClickListener { dialog?.dismiss() }
+                        dialogView.findViewById<View>(R.id.btn_cancel).setOnClickListener {
+                            dialog?.dismiss()
+                            if (isAutoShow) {
+                                requireActivity().finish()
+                            }
+                        }
                         dialogView.findViewById<View>(R.id.btn_confirm).setOnClickListener {
                             try {
                                 actionExecute(action, script, onExit, render.readParamsValue(actionParamInfos))
