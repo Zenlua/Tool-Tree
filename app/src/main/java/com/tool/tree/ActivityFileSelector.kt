@@ -3,6 +3,7 @@ package com.tool.tree
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
@@ -12,6 +13,8 @@ import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.omarea.common.ui.ProgressBarDialog
@@ -48,6 +51,7 @@ class ActivityFileSelector : AppCompatActivity() {
 
         supportActionBar!!.setHomeButtonEnabled(true)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_arrow_back)
         toolbar.setNavigationOnClickListener {
             finish()
         }
@@ -204,13 +208,37 @@ class ActivityFileSelector : AppCompatActivity() {
     // thì rơi về FrameLayout gốc android.R.id.content - tức toàn bộ cửa sổ - nên vị trí không
     // liên quan gì tới Toolbar/list bên trong). Hàm này ép Snackbar hiện cố định ngay dưới
     // Toolbar (dùng ANIMATION_MODE_FADE thay vì trượt từ dưới lên, vì vị trí đã đổi lên trên).
+    //
+    // LƯU Ý: KHÔNG dùng toolbar.bottom để tính khoảng cách - app chạy edge-to-edge
+    // (decorFitsSystemWindows = false) nên content root trải từ y=0 (dưới cả status bar).
+    // Nếu gọi hàm này sớm (vd ngay trong onResume()) trước khi Toolbar kịp layout xong,
+    // toolbar.bottom vẫn còn = 0, khiến Snackbar bị đẩy lên đè status bar. Thay vào đó tính
+    // trực tiếp từ actionBarSize (chiều cao Toolbar) + chiều cao status bar hiện tại - luôn
+    // đúng ngay cả khi View chưa layout lần nào.
+    private fun statusBarHeightPx(): Int {
+        val insets = ViewCompat.getRootWindowInsets(window.decorView)
+        val fromInsets = insets?.getInsets(WindowInsetsCompat.Type.statusBars())?.top ?: 0
+        if (fromInsets > 0) return fromInsets
+        val resId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resId > 0) resources.getDimensionPixelSize(resId) else 0
+    }
+
+    private fun actionBarHeightPx(): Int {
+        val typedValue = TypedValue()
+        return if (theme.resolveAttribute(androidx.appcompat.R.attr.actionBarSize, typedValue, true)) {
+            TypedValue.complexToDimensionPixelSize(typedValue.data, resources.displayMetrics)
+        } else {
+            (56 * resources.displayMetrics.density).toInt()
+        }
+    }
+
     private fun showSnackbar(message: CharSequence, duration: Int) {
         val snackbar = Snackbar.make(binding.root, message, duration)
         snackbar.animationMode = BaseTransientBottomBar.ANIMATION_MODE_FADE
         val view = snackbar.view
         (view.layoutParams as? FrameLayout.LayoutParams)?.let { params ->
             params.gravity = Gravity.TOP
-            params.topMargin = toolbar?.bottom ?: 0
+            params.topMargin = statusBarHeightPx() + actionBarHeightPx()
             view.layoutParams = params
         }
         snackbar.show()

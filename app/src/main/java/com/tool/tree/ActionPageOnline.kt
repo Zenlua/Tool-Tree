@@ -55,6 +55,7 @@ class ActionPageOnline : AppCompatActivity() {
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setHomeButtonEnabled(true)
+            setHomeAsUpIndicator(R.drawable.ic_arrow_back)
         }
 
         toolbar.setNavigationOnClickListener {

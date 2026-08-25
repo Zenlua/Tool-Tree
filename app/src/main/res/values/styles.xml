@@ -52,8 +52,6 @@
         <item name="colorControlNormal">?android:textColorPrimary</item>
         <item name="android:foregroundTint">?android:textColorSecondary</item>
         <item name="android:foregroundTintMode">screen</item>
-        <item name="homeAsUpIndicator">@drawable/ic_arrow_back</item>
-        <item name="android:homeAsUpIndicator">@drawable/ic_arrow_back</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.ActionBar">
@@ -62,8 +60,6 @@
         <item name="colorControlNormal">?android:textColorPrimary</item>
         <item name="android:foregroundTint">?android:textColorSecondary</item>
         <item name="android:foregroundTintMode">screen</item>
-        <item name="homeAsUpIndicator">@drawable/ic_arrow_back</item>
-        <item name="android:homeAsUpIndicator">@drawable/ic_arrow_back</item>
     </style>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat"/>

@@ -148,6 +148,11 @@ class ActionPage : AppCompatActivity() {
         supportActionBar?.apply {
             setHomeButtonEnabled(true)
             setDisplayHomeAsUpEnabled(true)
+            // ActionBar dựng từ Toolbar (setSupportActionBar) KHÔNG đọc thuộc tính style
+            // homeAsUpIndicator/android:homeAsUpIndicator (thuộc tính đó chỉ áp dụng cho
+            // WindowActionBar gốc, mà app đã tắt windowActionBar=false) - phải set icon
+            // trực tiếp bằng code như dưới đây thì mới đổi được icon back.
+            setHomeAsUpIndicator(R.drawable.ic_arrow_back)
         }
         toolbar.setNavigationOnClickListener { finish() }
 

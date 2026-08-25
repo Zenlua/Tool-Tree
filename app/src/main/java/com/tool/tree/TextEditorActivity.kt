@@ -167,6 +167,7 @@ class TextEditorActivity : AppCompatActivity() {
             supportActionBar?.apply {
                 setHomeButtonEnabled(true)
                 setDisplayHomeAsUpEnabled(true)
+                setHomeAsUpIndicator(R.drawable.ic_arrow_back)
             }
             it.setNavigationOnClickListener { attemptClose() }
         }
