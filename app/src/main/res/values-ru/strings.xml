@@ -85,7 +85,6 @@
     <string name="kr_download_create_success">Загрузка файла начата</string>
     <string name="kr_download_confirm">Загрузить этот файл?</string>
     <string name="kr_download_completed">Файл успешно загружен</string>
-    <string name="kr_download_downloading">Идет загрузка файла</string>
     <string name="kr_color_picker">Выбор цвета</string>
     <string name="kr_invalid_color">Недопустимое значение цвета. Поддерживается только формат вида #ff88aa00</string>
     <string name="kr_duplicate_param_name">Ошибка конфигурации: повторяющееся имя параметра \"%1$s\" - будет показан только первый</string>

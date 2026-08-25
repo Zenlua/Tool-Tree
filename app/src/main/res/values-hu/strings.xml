@@ -34,7 +34,6 @@
     <string name="kr_download_confirm">Letölti ezt a fájlt?</string>
     <string name="kr_download_create_fail">Nem sikerült létrehozni a letöltési feladatot</string>
     <string name="kr_download_create_success">A fájl letöltése elindult</string>
-    <string name="kr_download_downloading">A fájl letöltése folyamatban</string>
     <string name="kr_hidden_task_running">Túl gyors! Az előző művelet még nem fejeződött be</string>
     <string name="kr_invalid_color">Érvénytelen színérték. Csak az olyan formátum támogatott, mint a #ff88aa00</string>
     <string name="kr_duplicate_param_name">Konfigurációs hiba: duplikált paraméternév \"%1$s\" - csak az első jelenik meg</string>

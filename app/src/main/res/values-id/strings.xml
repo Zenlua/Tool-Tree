@@ -93,7 +93,6 @@ Jika setuju, tekan tombol konfirmasi untuk melanjutkan."</string>
     <string name="kr_download_create_success">Mulai mengunduh berkas</string>
     <string name="kr_download_confirm">Unduh berkas ini?</string>
     <string name="kr_download_completed">Unduh berkas berhasil</string>
-    <string name="kr_download_downloading">Mengunduh berkas</string>
     <string name="kr_color_picker">Pilih warna</string>
     <string name="kr_invalid_color">Nilai warna tidak valid. Hanya mendukung format seperti #ff88aa00</string>
     <string name="kr_duplicate_param_name">Kesalahan konfigurasi: nama parameter duplikat \"%1$s\" - hanya yang pertama yang akan ditampilkan</string>

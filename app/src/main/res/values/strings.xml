@@ -108,7 +108,6 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_download_create_success">File download started</string>
     <string name="kr_download_confirm">Download the file?</string>
     <string name="kr_download_completed">File downloaded successfully</string>
-    <string name="kr_download_downloading">Downloading file</string>
     <string name="kr_color_picker">Select a color</string>
     <string name="kr_invalid_color">Invalid color value. Formats like #ff88aa00 or @color/name are supported</string>
     <string name="kr_expand_fullscreen">Expand to fullscreen editor</string>
