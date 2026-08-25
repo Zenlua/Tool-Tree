@@ -300,8 +300,8 @@ class SwipeBackHelper(
     fun onSystemBackProgress(progress: Float) {
         if (!externalDragActive) return
         val width = contentView.width.takeIf { it > 0 } ?: return
-        val clampedProgress = progress.coerceIn(0f, 1f)
-        val dampedProgress = Math.pow(clampedProgress.toDouble(), 1.5).toFloat()
+        val clamped = progress.coerceIn(0f, 1f)
+        val dampedProgress = clamped * clamped
         applyProgress(dampedProgress * width)
     }
 
