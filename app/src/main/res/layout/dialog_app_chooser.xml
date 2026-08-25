@@ -37,8 +37,8 @@
             android:tint="?android:textColorPrimary"
             android:scaleType="centerInside"
             android:padding="15dp"
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
+            android:layout_width="50dp"
+            android:layout_height="50dp" />
     </RelativeLayout>
 
     <RelativeLayout
