@@ -5,7 +5,12 @@ import java.util.*
 class ActionNode(currentConfigXml: String) : RunnableNode(currentConfigXml){
     var params: ArrayList<ActionParamInfo>? = null
     // Giống text.rows: cho phép action hiển thị thêm các dòng văn bản rich-text bên dưới (rows)
+    // - CHỈ hiện ở item trong danh sách (list), không hiện trong dialog params.
     val rows = ArrayList<TextNode.TextRow>()
+    // Rows riêng cho dialog params (mở khi action có "params") - tách khỏi "rows" ở trên để
+    // không bị hiện trùng lặp (item trong list VÀ dialog cùng đọc chung 1 mảng). Khai báo bằng
+    // "params-rows" trong TOML, không liên quan/không ảnh hưởng gì tới "rows".
+    val paramsRows = ArrayList<TextNode.TextRow>()
 
     // menu = true: mục này KHÔNG xuất hiện trong danh sách nội dung của trang nữa, mà xuất
     // hiện như 1 icon riêng LUÔN hiện trên toolbar (cạnh nút "⋮"). Dialog params/confirm/warning

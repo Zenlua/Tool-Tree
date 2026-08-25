@@ -736,6 +736,12 @@ class PageConfigReader {
             textRowToml(action.rows, rowTable)
         }
 
+        // Rows riêng cho dialog params - tách khỏi "rows" ở trên để không bị hiện trùng lặp
+        // (list item và dialog params cùng đọc "rows" cũ sẽ ra 2 lần). Dùng key "params-rows".
+        for (rowTable in tomlEntries(table, "params-rows")) {
+            textRowToml(action.paramsRows, rowTable)
+        }
+
         tomlGet(table, "menu")?.let { action.menu = tomlTruthy(it, "menu") }
         tomlGet(table, "show")?.let { action.show = resolveBoolOrShell(it, "show") }
 

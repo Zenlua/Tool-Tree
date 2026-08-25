@@ -532,6 +532,16 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         dialogView.findViewById<TextView>(R.id.desc).apply { if (action.desc.isEmpty()) visibility = View.GONE else text = action.desc }
                         dialogView.findViewById<TextView>(R.id.warn).apply { if (action.warning.isEmpty()) visibility = View.GONE else text = action.warning }
 
+                        // Cho phép action.rows (text/photo/icon/toggle, giống rows ở item trong list)
+                        // hiện thêm ngay trên form nhập tham số của dialog params.
+                        RowsRenderHelper.bind(
+                            requireContext(),
+                            dialogView.findViewById<TextView>(R.id.kr_rows),
+                            dialogView.findViewById<android.widget.ImageView>(R.id.kr_rows_photo),
+                            action.paramsRows,
+                            action
+                        )
+
                         dialogView.findViewById<View>(R.id.btn_cancel).setOnClickListener { dialog?.dismiss() }
                         dialogView.findViewById<View>(R.id.btn_confirm).setOnClickListener {
                             try {

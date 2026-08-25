@@ -31,6 +31,24 @@
                 android:id="@+id/warn"
                 style="@style/dialogWarn" />
 
+            <TextView
+                android:id="@+id/kr_rows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:visibility="gone"
+                style="@style/textSmall" />
+
+            <ImageView
+                android:id="@+id/kr_rows_photo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true" />
+
             <FrameLayout
                 android:id="@+id/kr_params_center"
                 android:layout_margin="16dp"
