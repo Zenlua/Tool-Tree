@@ -56,7 +56,7 @@ class SwipeBackHelper(
         // (xem onSystemBackProgress) - còn lúc THẢ TAY ra (dù bật lại hay trượt nốt để trở lại)
         // thì animation chạy tốc độ bình thường (1:1, giống hệt lúc vuốt tay trên toàn màn
         // hình), không nhân đôi thời lượng nữa.
-        private const val SYSTEM_BACK_PROGRESS_DAMPING = 2f
+        private const val SYSTEM_BACK_PROGRESS_DAMPING = 3.5f
     }
 
     private val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
