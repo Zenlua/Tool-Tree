@@ -160,8 +160,9 @@ class DialogHelper {
                     title: String = "",
                     message: String = "",
                     onConfirm: Runnable? = null,
-                    onCancel: Runnable? = null): DialogWrap {
-            return openContinueAlert(context, R.layout.dialog_warning, title, message, onConfirm, onCancel)
+                    onCancel: Runnable? = null,
+                    cancelable: Boolean = true): DialogWrap {
+            return openContinueAlert(context, R.layout.dialog_warning, title, message, onConfirm, onCancel, cancelable)
         }
 
         private fun getCustomDialogView(context: Context,
@@ -318,10 +319,11 @@ class DialogHelper {
                                       title: String = "",
                                       message: String = "",
                                       onConfirm: Runnable? = null,
-                                      onCancel: Runnable? = null): DialogWrap {
+                                      onCancel: Runnable? = null,
+                                      cancelable: Boolean = true): DialogWrap {
             val view = getCustomDialogView(context, layout, title, message, null)
 
-            val dialog = customDialog(context, view)
+            val dialog = customDialog(context, view, cancelable)
             view.findViewById<View?>(R.id.btn_cancel)?.setOnClickListener {
                 dialog.dismiss()
                 onCancel?.run()

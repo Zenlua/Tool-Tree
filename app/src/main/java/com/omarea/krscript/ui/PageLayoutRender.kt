@@ -15,7 +15,7 @@ class PageLayoutRender(private val mContext: Context,
 
     interface OnItemClickListener {
         fun onPageClick(item: PageNode, onCompleted: Runnable)
-        fun onActionClick(item: ActionNode, onCompleted: Runnable)
+        fun onActionClick(item: ActionNode, onCompleted: Runnable, isAutoShow: Boolean = false)
         fun onSwitchClick(item: SwitchNode, onCompleted: Runnable)
         fun onPickerClick(item: PickerNode, onCompleted: Runnable)
         fun onEditorClick(item: EditorNode, onCompleted: Runnable)

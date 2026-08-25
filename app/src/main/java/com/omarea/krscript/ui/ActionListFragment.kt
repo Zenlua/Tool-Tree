@@ -405,13 +405,21 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         actionExecute(pickerNode, script, onExit, hashMapOf("state" to toValue))
     }
 
-    override fun onActionClick(item: ActionNode, onCompleted: Runnable) {
+    // isAutoShow = true: dialog được tự động mở khi vừa vào trang ([[group.action]] show=true,
+    // ActionPage.tryAutoShowActions). Trong trường hợp này:
+    //  - Không cho phép ấn ra ngoài dialog để đóng (cancelable = false).
+    //  - Ấn "Hủy" sẽ thoát khỏi trang luôn thay vì chỉ đóng dialog.
+    // Khi action được kích hoạt theo cách thông thường (bấm trong danh sách, hoặc bấm icon đã
+    // chuyển ra toolbar/menu) thì isAutoShow = false và giữ nguyên hành vi mặc định.
+    override fun onActionClick(item: ActionNode, onCompleted: Runnable, isAutoShow: Boolean) {
         if (!checkAndLockClick()) return
         nodeUnlockedAsync(item) {
+            val onCancel = if (isAutoShow) Runnable { requireActivity().finish() } else null
+            val cancelable = !isAutoShow
             if (item.confirm) {
-                DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted) })
+                DialogHelper.warning(requireActivity(), item.title, item.desc, { actionExecute(item, onCompleted) }, onCancel, cancelable)
             } else if (item.warning.isNotEmpty() && (item.params == null || item.params?.isEmpty() == true)) {
-                DialogHelper.warning(requireActivity(), item.title, item.warning, { actionExecute(item, onCompleted) })
+                DialogHelper.warning(requireActivity(), item.title, item.warning, { actionExecute(item, onCompleted) }, onCancel, cancelable)
             } else {
                 actionExecute(item, onCompleted)
             }

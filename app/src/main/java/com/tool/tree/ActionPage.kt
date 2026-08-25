@@ -702,7 +702,7 @@ class ActionPage : AppCompatActivity() {
         if (toShow.isEmpty()) return
         autoShowTriggered = true
         val fragment = supportFragmentManager.findFragmentById(R.id.main_list) as? ActionListFragment ?: return
-        toShow.forEach { fragment.onActionClick(it, Runnable {}) }
+        toShow.forEach { fragment.onActionClick(it, Runnable {}, true) }
     }
 
     private fun buildAutoRunTask(): AutoRunTask? {
