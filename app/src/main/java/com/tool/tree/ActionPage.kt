@@ -56,6 +56,13 @@ class ActionPage : AppCompatActivity() {
 
     private lateinit var swipeBackHelper: SwipeBackHelper
 
+    // Ảnh preview (sharp/blurred) đang hiển thị phía sau lúc vuốt lùi - lưu lại instance field
+    // (thay vì chỉ val cục bộ trong onCreate) để onRetainCustomNonConfigurationInstance() có
+    // thể lấy ra và giữ nó sống sót qua các lần recreate() CỦA CHÍNH trang này (xoay màn hình,
+    // hoặc gọi recreate() thủ công như spinFabThenRecreate()/reloadPage/restartApp...) - xem
+    // giải thích chi tiết ở onDestroy().
+    private var swipePreview: SwipeBackPreviewCache.Preview? = null
+
     private val justClickedItemIds = HashSet<Int>()
 
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
@@ -92,7 +99,15 @@ class ActionPage : AppCompatActivity() {
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val swipePreview = SwipeBackPreviewCache.consume()
+        // Ưu tiên lấy lại đúng cặp bitmap đã retain từ lần sống trước của CHÍNH activity này
+        // (xem onRetainCustomNonConfigurationInstance() ở dưới) - trường hợp onCreate() này
+        // chạy do recreate()/xoay màn hình chứ không phải do mở trang mới. Chỉ khi không có gì
+        // được retain (tức đây thực sự là lần mở trang đầu tiên) mới tiêu thụ
+        // SwipeBackPreviewCache - cache dùng 1 lần, chụp bởi OpenPageHelper NGAY TRƯỚC khi mở
+        // trang này từ trang cha.
+        @Suppress("DEPRECATION")
+        val retainedPreview = lastCustomNonConfigurationInstance as? SwipeBackPreviewCache.Preview
+        swipePreview = retainedPreview ?: SwipeBackPreviewCache.consume()
         swipePreview?.let {
             binding.swipeBackPreviewSharp.setImageBitmap(it.sharp)
             if (it.blurred != null) {
@@ -1057,11 +1072,28 @@ class ActionPage : AppCompatActivity() {
         OpenPageHelper(this).openPage(pageNode)
     }
 
+    // Trả về cặp bitmap preview đang giữ để nó SỐNG SÓT qua đúng lần huỷ activity này (nếu
+    // activity sắp được dựng lại ngay - do xoay màn hình HOẶC do gọi recreate() thủ công, ví
+    // dụ spinFabThenRecreate()/menuOption.reloadPage/restartApp...). Android tự động trả lại
+    // đúng giá trị này qua lastCustomNonConfigurationInstance ở onCreate() kế tiếp CỦA CÙNG
+    // activity - xem đọc lại ở trên. Đây là cách duy nhất đáng tin cậy để không phải phụ
+    // thuộc lại vào SwipeBackPreviewCache (cache dùng 1 lần, đã bị tiêu thụ ngay từ lần mở
+    // trang đầu tiên nên KHÔNG còn gì để lấy lại ở các lần recreate() sau).
+    @Suppress("DEPRECATION")
+    override fun onRetainCustomNonConfigurationInstance(): Any? = swipePreview
+
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()
         handler.removeCallbacksAndMessages(null)
         if (::swipeBackHelper.isInitialized) swipeBackHelper.release()
-        if (::binding.isInitialized) {
+        // CHỈ recycle bitmap khi trang thực sự đóng hẳn (isFinishing() true - người dùng bấm
+        // back/thoát trang, không còn activity nào dùng lại ảnh này nữa). Khi isFinishing() =
+        // false, activity đang bị huỷ để DỰNG LẠI ngay (recreate()/xoay màn hình) -
+        // onRetainCustomNonConfigurationInstance() ở trên đã giữ lại đúng object Preview
+        // (bitmap CHƯA recycle) để lần onCreate() kế tiếp dùng lại - nếu vẫn recycle() ở đây
+        // như trước, bitmap bị huỷ ngay trước khi instance mới kịp dùng lại, gây ra đúng lỗi
+        // "vuốt lùi bị mất ảnh phía sau" sau mỗi lần trang tự làm mới.
+        if (isFinishing && ::binding.isInitialized) {
             recycleImageViewBitmap(binding.swipeBackPreviewBlur)
             recycleImageViewBitmap(binding.swipeBackPreviewSharp)
         }
