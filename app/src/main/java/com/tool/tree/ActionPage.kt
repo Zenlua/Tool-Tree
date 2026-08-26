@@ -3,6 +3,7 @@ package com.tool.tree
 import android.app.ActivityManager
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -85,7 +86,8 @@ class ActionPage : AppCompatActivity() {
     // true ngay khi checkPageLockThenLoad() đã BẮT ĐẦU chạy 1 lần cho phiên mở trang hiện tại -
     // tránh chạy lại (và hiện chồng thêm dialog loading/lock) nếu onResume() gọi lại trong lúc
     // vẫn đang đợi kết quả lockShell hoặc đang hiện dialog báo khoá (ví dụ activity resume lại
-    // do người dùng vừa quay lại từ 1 activity hệ thống nào đó trong lúc dialog còn hiện).
+    // do người dùng vừa quay lại từ 1 activity hệ thống nào đó trong lúc dialog còn hiện) - áp
+    // dụng cho cả nhánh gọi từ onEnterAnimationComplete() lẫn nhánh dự phòng trong onResume().
     private var lockCheckStarted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -1116,8 +1118,25 @@ class ActionPage : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+    // Trước đây gọi checkPageLockThenLoad() ngay trong onResume() - chạy quá SỚM, ngay khi
+    // activity vừa resume (trước khi animation "vào trang" activity_open_enter chạy xong) nên
+    // dialog loading hiện ra ĐÈ LÊN LÚC ĐANG TRƯỢT VÀO, trông như xen ngang animation thay vì
+    // hiện liền mạch phía sau khi trang đã vào hẳn. Giờ dời sang onEnterAnimationComplete() -
+    // callback riêng được hệ thống gọi ĐÚNG 1 LẦN sau khi animation vào trang chạy xong hẳn
+    // (API 23+) - xem bên dưới. onResume() chỉ còn giữ lại làm phương án dự phòng cho API < 23
+    // (không có onEnterAnimationComplete()) - vẫn còn hơn không hiện gì cả trên dải máy cũ.
     override fun onResume() {
         super.onResume()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            if (!actionsLoaded) checkPageLockThenLoad()
+        }
+    }
+
+    // Gọi ĐÚNG 1 LẦN ngay sau khi animation "vào trang" (activity_open_enter) chạy xong hẳn -
+    // đây mới là thời điểm phù hợp để hiện dialog loading (kiểm tra khoá trang), để nó xuất
+    // hiện LIỀN MẠCH ngay phía sau lúc trang vừa vào xong, thay vì đè lên giữa lúc đang trượt.
+    override fun onEnterAnimationComplete() {
+        super.onEnterAnimationComplete()
         if (!actionsLoaded) checkPageLockThenLoad()
     }
 
