@@ -194,7 +194,7 @@ class PageConfigReader {
     //   process = true
     // =====================================================================================
 
-    private val tomlNodeTypeOrder = listOf("group", "text", "switch", "picker", "action", "page", "editor", "resource", "menu", "fab")
+    private val tomlNodeTypeOrder = listOf("group", "text", "switch", "picker", "action", "page", "download", "editor", "resource", "menu", "fab")
 
     // ========== TÍNH NĂNG MỚI: [[menu]] / [[fab]] khai báo NGAY TRONG TOML CỦA CHÍNH TRANG ==========
     // Thay thế hoàn toàn cơ chế [[page.options]] cũ (từng gọi là "group.page.options") vốn khai
@@ -450,6 +450,7 @@ class PageConfigReader {
             }
             "switch" -> switchNodeToml(table)
             "picker" -> pickerNodeToml(table)
+            "download" -> downloadNodeToml(table)
             "text" -> textNodeToml(table)
             "editor" -> editorNodeToml(table)
             "resource" -> {
@@ -714,6 +715,24 @@ class PageConfigReader {
         }
         if (picker.setState == null) picker.setState = ""
         return picker
+    }
+
+    // ========== TÍNH NĂNG MỚI: [[download]] - tải file, tiến trình hiện NGAY trong item ==========
+    // Ví dụ:
+    //   [[download]]
+    //   title = "Tải bản cập nhật"
+    //   url = "https://example.com/update.zip"
+    //   script = "install_update.sh"   # $state = đường dẫn file vừa tải (lưu ở cache, tên ngẫu nhiên)
+    //   reload = true                  # tuỳ chọn - làm mới trang sau khi script chạy xong
+    // Chỉ hỗ trợ "url" tĩnh (không có url-sh) theo yêu cầu hiện tại.
+    private fun downloadNodeToml(table: TomlTable): DownloadNode? {
+        val node = runnableNodeToml(DownloadNode(pageConfigAbsPath), table) as DownloadNode? ?: return null
+        tomlGet(table, "url")?.let { node.url = it.trim() }
+        tomlGet(table, "script", "set", "setstate")?.let { node.setState = it.trim() }
+        tomlGet(table, "lock", "lock-state")?.let { node.lockShell = it }
+        if (node.setState == null) node.setState = ""
+        if (node.url.isEmpty()) return null
+        return node
     }
 
     private fun actionNodeToml(table: TomlTable): ActionNode? {

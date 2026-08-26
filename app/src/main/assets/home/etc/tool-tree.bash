@@ -2110,17 +2110,16 @@ Addon() {
   Download() {
     if [ "$url" ]; then
     echo '[[group]]
-    [[group.action]]
+    [[group.download]]
     '$croot_add'
     warn = "'$use_network_text'"
     icon = "'$icon_vb'"
     title = "'$name'"
     desc = "'$sum_vb'"
     reload = true
+    url = "'$url'"
     script = """
-    echo "'$update_text_3'"
-    echo
-    installadd "'$url'" "'${dirvad%/*}'"
+    installadd "$state" "'${dirvad%/*}'"
     """'
       if [ "$(glog show_setting_add)" == 1 ]; then
         echo '

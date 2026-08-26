@@ -20,6 +20,7 @@ import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.BgTaskThread
 import com.omarea.krscript.HiddenTaskThread
+import com.omarea.krscript.downloader.DownloadTaskHelper
 import com.tool.tree.R
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
@@ -411,6 +412,30 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     private fun pickerExecute(pickerNode: PickerNode, toValue: String, onExit: Runnable) {
         val script = pickerNode.setState ?: return
         actionExecute(pickerNode, script, onExit, hashMapOf("state" to toValue))
+    }
+
+    // [[download]]: tải file (tiến trình hiện ngay trong item qua ListItemDownload), sau đó tự
+    // chạy script (nếu có) với $state = đường dẫn file - xem DownloadTaskHelper. Không cho tạm
+    // dừng/bấm lại trong lúc đang bận (đang tải HOẶC đang chạy script).
+    override fun onDownloadClick(item: DownloadNode, listItemView: ListItemDownload, onCompleted: Runnable) {
+        if (!checkAndLockClick()) return
+        if (listItemView.isBusy) return
+        nodeUnlockedAsync(item) {
+            if (item.confirm) {
+                DialogHelper.warning(requireActivity(), item.title, item.desc, { downloadExecute(item, listItemView, onCompleted) })
+            } else if (item.warning.isNotEmpty()) {
+                DialogHelper.warning(requireActivity(), item.title, item.warning, { downloadExecute(item, listItemView, onCompleted) })
+            } else {
+                downloadExecute(item, listItemView, onCompleted)
+            }
+        }
+    }
+
+    private fun downloadExecute(item: DownloadNode, listItemView: ListItemDownload, onExit: Runnable) {
+        DownloadTaskHelper.start(requireContext(), viewLifecycleOwner.lifecycleScope, item, listItemView) {
+            krScriptActionHandler?.onActionCompleted(item)
+            onExit.run()
+        }
     }
 
     // isAutoShow = true: dialog được tự động mở khi vừa vào trang ([[group.action]] show=true,

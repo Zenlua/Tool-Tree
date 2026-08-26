@@ -97,6 +97,10 @@ Si estás de acuerdo, pulsa el botón de confirmar para continuar."</string>
     <string name="kr_download_create_success">Descarga del archivo iniciada</string>
     <string name="kr_download_confirm">¿Descargar el archivo?</string>
     <string name="kr_download_completed">Archivo descargado correctamente</string>
+    <string name="kr_download_error">Error al descargar el archivo</string>
+    <string name="kr_download_execute_wait">Ejecutando script…</string>
+    <string name="kr_download_execute_success">Éxito</string>
+    <string name="kr_download_execute_fail">Fallido</string>
     <string name="kr_color_picker">Selecciona un color</string>
     <string name="kr_invalid_color">Valor de color no válido. Solo se admiten formatos como #ff88aa00</string>
     <string name="kr_duplicate_param_name">Error de configuración: nombre de parámetro duplicado \"%1$s\" - solo se mostrará el primero</string>

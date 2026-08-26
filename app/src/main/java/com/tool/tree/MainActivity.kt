@@ -176,19 +176,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Cập nhật lại nội dung 4 tab sau khi quay về từ trang con (xem onRestart()). Trước đây
-    // cả 4 tab được updateData() (=renderInterface(), kể cả decode icon/logo ĐỒNG BỘ trên
-    // main thread - xem comment ở ActionListFragment.updateData()/renderInterface()) dồn
-    // liền nhau trong CÙNG 1 khối withContext(Main) -> nếu người dùng vuốt tab ngay lúc vừa
-    // quay lại (rất hay gặp vì onRestart() chạy đúng lúc trang vừa hiện lại), cả cụm rebuild
-    // nặng của 3 tab KHÔNG hiển thị vẫn chặn main thread ngay trong (hoặc ngay sát) frame mà
-    // SwipePager đang cố bắt/animate cử chỉ vuốt -> rớt frame, cảm giác khựng nhẹ.
-    //
-    // Sửa: tab đang hiển thị (currentItem) được cập nhật NGAY (cần thiết, ít tốn vì chỉ 1
-    // tab); các tab còn lại được rải ra mỗi tab 1 post() riêng (mỗi post chạy ở 1 frame kế
-    // tiếp, sau khi frame hiện tại - nơi có thể đang xử lý cử chỉ vuốt - đã vẽ xong), thay vì
-    // dồn chung 1 lượt. Người dùng gần như không bao giờ thấy hết cả 4 tab cùng lúc nên việc
-    // các tab ẩn cập nhật chậm hơn vài frame không ảnh hưởng gì tới trải nghiệm.
     private fun reloadTabs() {
         lifecycleScope.launch(Dispatchers.IO) {
             val favorites = getItems(krScriptConfig.favoriteConfig)
@@ -203,36 +190,15 @@ class MainActivity : AppCompatActivity() {
 
                 val theme = ThemeModeState.getThemeMode()
 
-                val pendingUpdates = LinkedHashMap<Int, () -> Unit>()
-                favorites?.let { data -> pendingUpdates[0] = { adapter.getFragment(0)?.updateData(data, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), theme) } }
-                pages?.let { data -> pendingUpdates[1] = { adapter.getFragment(1)?.updateData(data, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), theme) } }
-                tab3Items?.let { data -> pendingUpdates[2] = { adapter.getFragment(2)?.updateData(data, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), theme) } }
-                tab4Items?.let { data -> pendingUpdates[3] = { adapter.getFragment(3)?.updateData(data, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), theme) } }
-
-                // Tab đang hiển thị lên TRƯỚC trong hàng đợi (chạy ngay), các tab còn lại giữ
-                // nguyên thứ tự cũ theo sau - rồi rải dần qua runStaggeredUpdates().
-                val currentTab = binding.viewPager.currentItem
-                val ordered = ArrayList<() -> Unit>(pendingUpdates.size)
-                pendingUpdates.remove(currentTab)?.let { ordered.add(it) }
-                ordered.addAll(pendingUpdates.values)
-
-                runStaggeredUpdates(ordered)
+                try {
+                    favorites?.let { adapter.getFragment(0)?.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), theme) }
+                    pages?.let { adapter.getFragment(1)?.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), theme) }
+                    tab3Items?.let { adapter.getFragment(2)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), theme) }
+                    tab4Items?.let { adapter.getFragment(3)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), theme) }
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "reloadTabs UI update failed", e)
+                }
             }
-        }
-    }
-
-    // Chạy update() đầu tiên NGAY, các update() còn lại mỗi cái nằm trong 1 post() riêng -
-    // rải qua nhiều frame thay vì dồn hết vào 1 lượt. Xem giải thích ở reloadTabs().
-    private fun runStaggeredUpdates(updates: List<() -> Unit>) {
-        if (updates.isEmpty() || isFinishing || isDestroyed) return
-        try {
-            updates[0]()
-        } catch (e: Exception) {
-            android.util.Log.e("MainActivity", "reloadTabs UI update failed", e)
-        }
-        val rest = updates.drop(1)
-        if (rest.isNotEmpty()) {
-            binding.root.post { runStaggeredUpdates(rest) }
         }
     }
 

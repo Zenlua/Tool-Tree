@@ -19,6 +19,7 @@ class PageLayoutRender(private val mContext: Context,
         fun onSwitchClick(item: SwitchNode, onCompleted: Runnable)
         fun onPickerClick(item: PickerNode, onCompleted: Runnable)
         fun onEditorClick(item: EditorNode, onCompleted: Runnable)
+        fun onDownloadClick(item: DownloadNode, listItemView: ListItemDownload, onCompleted: Runnable)
         fun onItemLongClick(clickableNode: ClickableNode)
     }
 
@@ -56,6 +57,7 @@ class PageLayoutRender(private val mContext: Context,
             is PickerNode -> clickListener.onPickerClick(item, getCommonOnExitRunnable(item, listItemView))
             is SwitchNode -> clickListener.onSwitchClick(item, getCommonOnExitRunnable(item, listItemView))
             is EditorNode -> clickListener.onEditorClick(item, getCommonOnExitRunnable(item, listItemView))
+            is DownloadNode -> clickListener.onDownloadClick(item, listItemView as ListItemDownload, getCommonOnExitRunnable(item, listItemView))
         }
     }
 
@@ -101,6 +103,8 @@ class PageLayoutRender(private val mContext: Context,
                 uiRender = createActionItem(it)
             } else if (it is PickerNode) {
                 uiRender = createListItem(it)
+            } else if (it is DownloadNode) {
+                uiRender = createDownloadItem(it)
             } else if (it is TextNode) {
                 uiRender = if (parent.isRootGroup) createTextItem(it) else createTextItemWhite(it)
             } else if (it is EditorNode) {
@@ -158,6 +162,10 @@ class PageLayoutRender(private val mContext: Context,
 
     private fun createEditorItem(node: EditorNode): ListItemView {
         return ListItemEditor(mContext, node)
+    }
+
+    private fun createDownloadItem(node: DownloadNode): ListItemView {
+        return ListItemDownload(mContext, node)
     }
 
     private fun createItemGroup(node: GroupNode): ListItemGroup {
