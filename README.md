@@ -11,7 +11,7 @@ Great tool, with many benefits for you
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/tool-tree.jpg" width="100%">
 </p>
 
-Official website: **https://zenlua.github.io/Tool-Tree**
+Official website: **[Tool-Tree](https://zenlua.github.io/Tool-Tree)**
 
 ## ✨ Features
 
@@ -63,16 +63,14 @@ amlogic, apk, apex, capex, squashfs, ...
 
 ## 📂 Working Directories
 
-**Input**
+**Input File**
 
-+ `/sdcard/TREE`
-- ROM
-- APK
+- ROM: `/sdcard/TREE/ROM`
+- APK: `/sdcard/TREE/APK`
 
-**Root Working Directory**
+**Output Folder**
 
 - APK: `/data/local/TOOL`
-
 - ROM: `/data/local/TREE`
 
 ---
