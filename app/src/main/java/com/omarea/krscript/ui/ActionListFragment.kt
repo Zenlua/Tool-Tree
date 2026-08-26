@@ -595,12 +595,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         } else {
                             DialogHelper.customDialog(requireActivity(), dialogView, cancelable).dialog
                         }
-
-                        // Dialog full-screen (isLongList) + có thể đóng bằng cách chạm ra ngoài
-                        // (cancelable) thì cũng cho vuốt sang phải để đóng, cùng cảm giác với
-                        // các "full dialog" khác (xem DialogFullScreen). Dialog bắt buộc (show=
-                        // true tự mở, cancelable=false) thì KHÔNG cho vuốt, giống việc đã tắt
-                        // touch-outside-to-dismiss ở trên.
                         var paramsDialogSwipeHelper: DialogSwipeBackHelper? = null
                         if (isLongList && cancelable) {
                             paramsDialogSwipeHelper = DialogSwipeBackHelper.bind(dialog, dialogView) { dialog.dismiss() }
