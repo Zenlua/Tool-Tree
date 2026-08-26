@@ -34,6 +34,20 @@
             android:alpha="0.9"
             app:tint="?android:attr/colorAccent" />
 
+        <!-- Vòng tròn tiến trình - thế chỗ kr_widget (icon tải) trong lúc đang tải/đang chạy
+             script, cùng vị trí/kích thước để không giật layout. Xem
+             ListItemDownload.markBusy()/updateDownloadProgress()/finishBusy(). -->
+        <com.omarea.krscript.ui.DownloadProgressRing
+            android:id="@+id/kr_download_ring"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginTop="22dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="10dp"
+            android:visibility="gone" />
+
         <LinearLayout
             android:orientation="horizontal"
             android:layout_marginStart="6dp"
@@ -80,16 +94,6 @@
                     android:layout_marginTop="4dp"
                     android:textColor="?android:attr/colorAccent"
                     style="@style/textSmall"
-                    android:visibility="gone" />
-
-                <!-- Thanh tiến trình tải file - chỉ hiện khi đang tải/đang chạy script sau
-                     khi tải xong (xem ListItemDownload.markBusy()/finishBusy()). -->
-                <ProgressBar
-                    android:id="@+id/kr_download_progress"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:max="1000"
                     android:visibility="gone" />
 
             </LinearLayout>

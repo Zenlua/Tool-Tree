@@ -3,7 +3,6 @@ package com.omarea.krscript.ui
 import android.content.Context
 import android.view.View
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.TextView
 import com.tool.tree.R
 import com.omarea.krscript.model.DownloadNode
@@ -12,7 +11,7 @@ class ListItemDownload(context: Context, config: DownloadNode) :
     ListItemClickable(context, R.layout.kr_download_list_item, config) {
 
     private val widgetView = layout.findViewById<ImageView?>(R.id.kr_widget)
-    private val progressView = layout.findViewById<ProgressBar?>(R.id.kr_download_progress)
+    private val ringView = layout.findViewById<DownloadProgressRing?>(R.id.kr_download_ring)
     private val rowsView = layout.findViewById<TextView?>(R.id.kr_rows)
     private val rowsPhotoView = layout.findViewById<ImageView?>(R.id.kr_rows_photo)
 
@@ -33,39 +32,39 @@ class ListItemDownload(context: Context, config: DownloadNode) :
         RowsRenderHelper.bind(context, rowsView, rowsPhotoView, config.rows, config)
     }
 
-    // Gọi ngay khi bắt đầu 1 phiên tải mới - khoá item lại, hiện progress bar dạng không xác
-    // định (indeterminate) cho tới khi biết được Content-Length thật từ server.
+    // Gọi ngay khi bắt đầu 1 phiên tải mới - khoá item lại, ẩn icon tải, thế bằng vòng tròn
+    // tiến trình (dạng xoay/indeterminate cho tới khi biết được Content-Length thật từ server).
     fun markBusy() {
         isBusy = true
-        progressView?.visibility = View.VISIBLE
-        progressView?.isIndeterminate = true
+        widgetView?.visibility = View.GONE
+        ringView?.visibility = View.VISIBLE
+        ringView?.setIndeterminate(true)
     }
 
     // Cập nhật tiến trình tải theo byte. total <= 0 nghĩa là server không trả Content-Length
-    // (không rõ tổng dung lượng) - giữ nguyên progress bar dạng indeterminate.
+    // (không rõ tổng dung lượng) - giữ nguyên vòng tròn dạng xoay/indeterminate.
     fun updateDownloadProgress(downloaded: Long, total: Long) {
         desc = formatProgress(downloaded, total)
-        progressView?.apply {
-            if (total > 0) {
-                isIndeterminate = false
-                max = 1000
-                progress = ((downloaded * 1000L) / total).toInt().coerceIn(0, 1000)
-            } else {
-                isIndeterminate = true
-            }
+        if (total > 0) {
+            ringView?.setIndeterminate(false)
+            ringView?.setProgress(downloaded * 100f / total)
+        } else {
+            ringView?.setIndeterminate(true)
         }
     }
 
     // Hiện 1 nhãn trạng thái (đang chạy script / thành công / lỗi...) thay cho desc dạng %.
+    // Vòng tròn chuyển về dạng xoay (không rõ script chạy trong bao lâu).
     fun showStatusLabel(label: String) {
         desc = label
-        progressView?.isIndeterminate = true
+        ringView?.setIndeterminate(true)
     }
 
-    // Kết thúc phiên (dù thành công hay lỗi) - mở khoá lại, ẩn progress bar.
+    // Kết thúc phiên (dù thành công hay lỗi) - mở khoá lại, ẩn vòng tròn, hiện lại icon tải.
     fun finishBusy() {
         isBusy = false
-        progressView?.visibility = View.GONE
+        ringView?.visibility = View.GONE
+        widgetView?.visibility = View.VISIBLE
     }
 
     companion object {
