@@ -6,76 +6,104 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.DialogFragment
 import com.tool.tree.R
 
-
-/*
-继承使用示例：
-
-class DialogAppChooser(private val darkMode: Boolean): DialogFullScreen(R.layout.dialog_app_chooser, darkMode) {
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-    }
-
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-    }
-}
-*/
-
-open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androidx.fragment.app.DialogFragment() {
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        currentView = inflater.inflate(layout, container)
-        return currentView
-    }
-
-    private var themeResId: Int = 0
-    private lateinit var currentView: View
-
-    // Cho vuốt sang phải để đóng dialog (xem onViewCreated() bên dưới / DialogSwipeBackHelper).
-    // Dialog con nào có cử chỉ kéo ngang riêng cần ưu tiên hơn (hiếm) có thể gán false TRƯỚC
-    // khi view được dựng (super.onViewCreated()) để tắt tính năng này.
-    protected var swipeToDismissEnabled = true
-    private var swipeBackHelper: DialogSwipeBackHelper? = null
+open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val theme = if (themeResId != 0) themeResId else R.style.dialog_full_screen_light
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Dialog(activity!!, if (themeResId != 0) themeResId else R.style.dialog_full_screen_light)
+            Dialog(requireContext(), theme)
         } else {
-            Dialog(activity!!, -1)
+            Dialog(requireContext(), -1)
         }
     }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(layout, container, false)
+    }
+
+    protected var swipeToDismissEnabled = true
+    private var swipeBackHelper: DialogSwipeBackHelper? = null
+    
+    // Dùng Any? để tránh lỗi lint ở các dòng dưới đối với device < Android 13
+    private var backInvokedCallback: Any? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val activity = requireActivity()
 
-        val activity = this.activity
-        if (activity != null) {
-            dialog?.window?.run {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                    setWindowAnimations(android.R.style.Animation_Translucent)
-                }
-
-                DialogHelper.setWindowBlurBg(this, activity)
+        dialog?.window?.run {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                setWindowAnimations(android.R.style.Animation_Translucent)
             }
+            DialogHelper.setWindowBlurBg(this, activity)
+        }
 
-            if (swipeToDismissEnabled) {
-                dialog?.let { swipeBackHelper = DialogSwipeBackHelper.bind(it, view) { closeView() } }
+        if (swipeToDismissEnabled) {
+            dialog?.let { d ->
+                // Truyền DecorView để trượt cả hiệu ứng blur/nền của dialog
+                val targetView = d.window?.decorView ?: view
+                swipeBackHelper = DialogSwipeBackHelper.bind(d, targetView) { closeView() }
+                
+                // Đăng ký Predictive Back (Vuốt từ mép) cho Android 13+
+                setupPredictiveBack(d)
             }
         }
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    /**
+     * Đăng ký OnBackInvokedCallback trực tiếp vào Window của Dialog.
+     * (Dialog không dùng chung onBackPressedDispatcher của Activity được)
+     */
+    private fun setupPredictiveBack(dialog: Dialog) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val dispatcher = dialog.window?.onBackInvokedDispatcher ?: return
+            val helper = swipeBackHelper ?: return
+
+            // Tạo callback cho Predictive Back
+            val callback = object : android.window.OnBackInvokedCallback {
+                override fun onBackStarted(backEvent: android.window.BackEvent) {
+                    helper.onSystemBackStarted()
+                }
+
+                override fun onBackProgressed(backEvent: android.window.BackEvent) {
+                    helper.onSystemBackProgress(backEvent.progress)
+                }
+
+                override fun onBackCancelled() {
+                    helper.onSystemBackCancelled()
+                }
+
+                override fun onBackInvoked() {
+                    // Nếu helper đang xử lý cử chỉ vuốt, nó sẽ trả về true và tự gọi onBack()
+                    // Nếu không (trường hợp bấm nút back vật lý chẳng hạn), closeView() sẽ được gọi
+                    if (!helper.consumeSystemBackInvoked()) {
+                        closeView()
+                    }
+                }
+            }
+
+            // Ưu tiên 0 (mặc định). Đăng ký vào Window dispatcher
+            dispatcher.registerOnBackInvokedCallback(0, callback)
+            backInvokedCallback = callback
+        }
     }
 
     override fun onDestroyView() {
+        // Hủy đăng ký Predictive Back để tránh leak memory
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            dialog?.window?.onBackInvokedDispatcher?.unregisterOnBackInvokedCallback(
+                backInvokedCallback as? android.window.OnBackInvokedCallback
+            )
+            backInvokedCallback = null
+        }
+
         swipeBackHelper?.release()
         swipeBackHelper = null
         super.onDestroyView()
@@ -84,8 +112,13 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     fun closeView() {
         try {
             dismiss()
-        } catch (ex: java.lang.Exception) {
+        } catch (ex: Exception) {
+            ex.printStackTrace()
         }
+    }
+
+    companion object {
+        private var themeResId: Int = 0
     }
 
     init {
