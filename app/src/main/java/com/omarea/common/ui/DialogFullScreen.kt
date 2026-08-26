@@ -1,6 +1,8 @@
 package com.omarea.common.ui
 
 import android.app.Dialog
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -43,6 +45,9 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     // khi view được dựng (super.onViewCreated()) để tắt tính năng này.
     protected var swipeToDismissEnabled = true
     private var swipeBackHelper: DialogSwipeBackHelper? = null
+    
+    // Wrapper để di chuyển blur background cùng với content
+    private var blurBackgroundWrapper: BlurBackgroundWrapper? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -63,10 +68,26 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                 }
 
                 DialogHelper.setWindowBlurBg(this, activity)
+                
+                // Gắn wrapper để di chuyển blur khi kéo
+                blurBackgroundWrapper = BlurBackgroundWrapper(this)
             }
 
             if (swipeToDismissEnabled) {
-                dialog?.let { swipeBackHelper = DialogSwipeBackHelper.bind(it, view) { closeView() } }
+                dialog?.let { 
+                    swipeBackHelper = DialogSwipeBackHelper.bind(
+                        it, 
+                        view,
+                        onDragStateChanged = { dragging ->
+                            // Xử lý thay đổi trạng thái kéo nếu cần
+                        },
+                        onDragProgress = { progress ->
+                            // Di chuyển blur cùng với translationX của content
+                            blurBackgroundWrapper?.setTranslationX(view.translationX)
+                        },
+                        onBack = { closeView() }
+                    ) 
+                }
             }
         }
     }
@@ -76,6 +97,8 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     }
 
     override fun onDestroyView() {
+        blurBackgroundWrapper?.release()
+        blurBackgroundWrapper = null
         swipeBackHelper?.release()
         swipeBackHelper = null
         super.onDestroyView()
@@ -85,6 +108,65 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
         try {
             dismiss()
         } catch (ex: java.lang.Exception) {
+        }
+    }
+
+    /**
+     * Wrapper để di chuyển blur background drawable khi content view di chuyển
+     */
+    private class BlurBackgroundWrapper(private val window: android.view.Window) {
+        private val originalDrawable = window.backgroundDrawable
+        private var translationX = 0f
+
+        init {
+            // Bọc drawable gốc với custom drawable hỗ trợ translation
+            if (originalDrawable != null) {
+                window.setBackgroundDrawable(TranslatingDrawable(originalDrawable))
+            }
+        }
+
+        fun setTranslationX(tx: Float) {
+            translationX = tx
+            // Trigger redraw
+            window.decorView.invalidate()
+        }
+
+        fun release() {
+            // Reset drawable về bình thường
+            if (originalDrawable != null) {
+                window.setBackgroundDrawable(originalDrawable)
+            }
+        }
+
+        /**
+         * Custom drawable hỗ trợ di chuyển màn hình khi vẽ
+         */
+        private inner class TranslatingDrawable(private val wrapped: Drawable) : Drawable() {
+            override fun draw(canvas: Canvas) {
+                // Lưu trạng thái canvas
+                canvas.save()
+                // Di chuyển canvas theo translationX của content view
+                canvas.translate(translationX, 0f)
+                // Vẽ drawable gốc tại vị trí đã tịnh tiến
+                wrapped.draw(canvas)
+                // Khôi phục trạng thái canvas
+                canvas.restore()
+            }
+
+            override fun setAlpha(alpha: Int) {
+                wrapped.alpha = alpha
+            }
+
+            override fun setColorFilter(colorFilter: android.graphics.ColorFilter?) {
+                wrapped.colorFilter = colorFilter
+            }
+
+            override fun getOpacity(): Int {
+                return wrapped.opacity
+            }
+
+            override fun getIntrinsicWidth(): Int = wrapped.intrinsicWidth
+            override fun getIntrinsicHeight(): Int = wrapped.intrinsicHeight
         }
     }
 
