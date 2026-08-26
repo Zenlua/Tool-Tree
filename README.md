@@ -2,6 +2,9 @@
 
 Great tool, with many benefits for you
 
+[![GitHub](https://img.shields.io/github/stars/Zenlua/Tool-Tree?style=flat)](https://github.com/Zenlua/Tool-Tree)
+[![License](https://img.shields.io/github/license/Zenlua/Tool-Tree)](https://github.com/Zenlua/Tool-Tree)
+
 ### Android ROM & APK Toolkit
 
 <p align="center">
@@ -9,9 +12,6 @@ Great tool, with many benefits for you
 </p>
 
 Official website: **https://zenlua.github.io/Tool-Tree**
-
-[![GitHub](https://img.shields.io/github/stars/Zenlua/Tool-Tree?style=flat)](https://github.com/Zenlua/Tool-Tree)
-[![License](https://img.shields.io/github/license/Zenlua/Tool-Tree)](https://github.com/Zenlua/Tool-Tree)
 
 ## ✨ Features
 
