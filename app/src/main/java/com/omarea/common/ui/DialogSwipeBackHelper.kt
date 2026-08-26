@@ -22,9 +22,10 @@ import kotlin.math.abs
  * dialog.window.onBackInvokedDispatcher, vì Dialog có Window RIÊNG, không tự động dùng chung
  * onBackPressedDispatcher của Activity.
  *
- * onDragStateChanged(true)/onDragProgress(0f..1f) dùng để bên gọi hiện/crossfade 1 ảnh chụp
- * (nét/mờ) của cửa sổ thật phía sau ngay trong lúc kéo - xem DialogFullScreen (dùng
- * DialogHelper.setWindowBlurBgWithSharpCopy() để có bản nét).
+ * onDragStateChanged(true)/onDragProgress(0f..1f) dành cho bên gọi nếu cần thêm hiệu ứng phụ
+ * lúc kéo - DialogFullScreen hiện không dùng gì thêm vì nền cửa sổ dialog đã sẵn là ảnh NÉT của
+ * cửa sổ thật phía sau (xem DialogHelper.setWindowBlurBgWithSharpCopy()), tự lộ ra khi
+ * contentView trượt đi mà không cần thêm view/animation nào khác.
  *
  * Dùng dispatchTouchEvent() gọi từ TRƯỚC khi phát sự kiện chạm cho cây view con (xem
  * bind()/DialogFullScreen) để có thể "giành" cử chỉ kéo ngang ngay khi phát hiện, đồng thời vẫn

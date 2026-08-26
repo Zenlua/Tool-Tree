@@ -6,8 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.ImageView
 import com.tool.tree.R
 
 
@@ -32,30 +30,17 @@ class DialogAppChooser(private val darkMode: Boolean): DialogFullScreen(R.layout
 */
 
 open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androidx.fragment.app.DialogFragment() {
-    // currentView = nội dung THẬT của dialog (kết quả inflate(layout)) - đây mới là view được
-    // trượt đi lúc vuốt để đóng, KHÔNG phải root trả về từ onCreateView() (root chỉ là 1
-    // FrameLayout bọc thêm revealView đứng yên phía dưới, xem onCreateView()).
+    // currentView = nội dung THẬT của dialog (kết quả inflate(layout)) - đây là view được
+    // trượt đi lúc vuốt để đóng. Không còn cần 1 lớp "revealView" ảnh chụp riêng đứng yên bên
+    // dưới nữa - nền CỦA CHÍNH CỬA SỔ dialog giờ đã được set thẳng bằng ảnh nét (xem
+    // onViewCreated() -> DialogHelper.setWindowBlurBgWithSharpCopy()), nên khi currentView
+    // trượt sang phải lúc vuốt, nó tự lộ ra đúng ảnh nét đó phía sau - không cần thêm view nào.
     private lateinit var currentView: View
-
-    // Ảnh chụp NÉT của cửa sổ/activity thật phía sau, đứng yên bên dưới currentView trong lúc
-    // kéo - dần hiện rõ (alpha tăng theo tiến độ vuốt) để tạo cảm giác đang thực sự "lộ" ra cửa
-    // sổ phía sau, thay vì chỉ thấy đúng 1 lớp nền mờ tĩnh như trước đây. Xem onViewCreated().
-    private var revealView: ImageView? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val inflated = inflater.inflate(layout, container, false)
         currentView = inflated
-
-        val reveal = ImageView(inflater.context).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            alpha = 0f
-        }
-        revealView = reveal
-
-        val root = FrameLayout(inflater.context)
-        root.addView(reveal, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-        root.addView(inflated, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-        return root
+        return inflated
     }
 
     private var themeResId: Int = 0
@@ -85,10 +70,10 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                     setWindowAnimations(android.R.style.Animation_Translucent)
                 }
 
-                // Giữ lại bản NÉT (không chỉ bản mờ như setWindowBlurBg() thường) để làm hiệu
-                // ứng "lộ dần cửa sổ phía sau" lúc vuốt đóng - xem revealView ở trên.
-                val sharp = DialogHelper.setWindowBlurBgWithSharpCopy(this, activity)
-                revealView?.setImageBitmap(sharp)
+                // Set thẳng nền cửa sổ dialog = ảnh NÉT màn hình phía sau (không làm mờ) - xem
+                // giải thích ở DialogHelper.setWindowBlurBgWithSharpCopy(). Không cần giữ lại
+                // bitmap trả về nữa vì không còn revealView nào phải gán ảnh cho.
+                DialogHelper.setWindowBlurBgWithSharpCopy(this, activity)
             }
 
             if (swipeToDismissEnabled) {
@@ -96,7 +81,6 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                     swipeBackHelper = DialogSwipeBackHelper.bind(
                         dialog = d,
                         contentView = currentView,
-                        onDragProgress = { progress -> revealView?.alpha = progress },
                         onBack = { closeView() }
                     )
                     setupPredictiveBack(d)
@@ -174,7 +158,6 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
         predictiveBackCallback = null
         swipeBackHelper?.release()
         swipeBackHelper = null
-        revealView = null
         super.onDestroyView()
     }
 

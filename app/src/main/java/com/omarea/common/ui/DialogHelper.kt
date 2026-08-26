@@ -444,15 +444,15 @@ class DialogHelper {
         }
 
         /**
-         * Giống setWindowBlurBg(), NHƯNG giữ lại thêm bản NÉT (không chỉ bản mờ) của ảnh chụp
-         * màn hình, để bên gọi (DialogFullScreen) có thể dùng nó làm hiệu ứng "lộ dần cửa sổ
-         * phía sau" khi vuốt để đóng dialog (crossfade mờ -> nét theo tiến độ vuốt, xem
-         * DialogSwipeBackHelper.onDragProgress). Không thay đổi hành vi của setWindowBlurBg cũ -
-         * chỗ nào không cần hiệu ứng lộ dần vẫn gọi hàm gốc như trước.
+         * Giống setWindowBlurBg(), NHƯNG dùng thẳng ẢNH NÉT (không làm mờ) của màn hình phía
+         * sau làm nền cửa sổ dialog - bên gọi (DialogFullScreen) không cần làm mờ thêm ở đây vì
+         * bản thân nội dung dialog (currentView) đã tự có phong cách kính mờ/translucent riêng
+         * rồi; nếu còn làm mờ luôn cả ảnh nền phía sau thì lúc vuốt lộ ra sẽ thành "mờ chồng mờ",
+         * mất hẳn độ tương phản khiến người dùng khó nhận ra là đang có cử chỉ vuốt hoạt động.
          *
-         * Trả về null nếu đang tắt blur nền (disableBlurBg) hoặc chụp màn hình thất bại - lúc đó
-         * ĐÃ tự động rơi về setWindowBlurBg() thường (không có bản nét để crossfade, nhưng nền
-         * dialog vẫn được set đúng như trước giờ).
+         * Trả về null nếu chụp màn hình thất bại - lúc đó ĐÃ tự động rơi về setWindowBlurBg()
+         * thường (nền dialog vẫn được set đúng như trước giờ, chỉ là không có ảnh nét để vuốt
+         * lộ ra).
          */
         fun setWindowBlurBgWithSharpCopy(window: Window, activity: Activity): Bitmap? {
             if (disableBlurBg) {
@@ -468,16 +468,7 @@ class DialogHelper {
                 setWindowBlurBg(window, activity)
                 return null
             }
-            val blurred = try {
-                FastBlurUtility.startBlurBackground(sharp)
-            } catch (_: Exception) {
-                null
-            }
-            if (blurred == null) {
-                setWindowBlurBg(window, activity)
-                return sharp
-            }
-            window.setBackgroundDrawable(blurred.toDrawable(activity.resources))
+            window.setBackgroundDrawable(sharp.toDrawable(activity.resources))
             return sharp
         }
     }

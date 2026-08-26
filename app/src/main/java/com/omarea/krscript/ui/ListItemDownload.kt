@@ -15,6 +15,11 @@ class ListItemDownload(context: Context, config: DownloadNode) :
     private val rowsView = layout.findViewById<TextView?>(R.id.kr_rows)
     private val rowsPhotoView = layout.findViewById<ImageView?>(R.id.kr_rows_photo)
 
+    // desc tĩnh ban đầu (config.desc) - lưu lại lúc khởi tạo (trước khi bất kỳ lần tải nào bắt
+    // đầu ghi đè desc bằng "% tiến trình") để có thể khôi phục lại đúng nội dung này khi người
+    // dùng HUỶ tải giữa chừng (xem restoreDesc() / DownloadTaskHelper nhánh cancelled).
+    private val originalDesc = config.desc
+
     // true trong suốt lúc đang tải HOẶC đang chạy script sau khi tải xong - PageLayoutRender
     // vẫn gọi onClick bình thường (không disable layout), nên bên xử lý click (ActionListFragment)
     // tự kiểm tra cờ này: nếu đang trong giai đoạn TẢI (xem cancelAction) thì bấm = huỷ tải; nếu
@@ -86,6 +91,14 @@ class ListItemDownload(context: Context, config: DownloadNode) :
     fun showStatusLabel(label: String) {
         desc = label
         ringView?.setIndeterminate(true)
+    }
+
+    // Khôi phục lại desc gốc (như lúc chưa bấm tải) - CHỈ gọi khi người dùng chủ động huỷ tải
+    // giữa chừng (xem DownloadTaskHelper, nhánh cancelled), để không để sót nhãn "đã tải x/y"
+    // trên item sau khi huỷ. Không gọi trong trường hợp tải xong/lỗi/chạy script xong - các
+    // trường hợp đó đã tự có nhãn trạng thái riêng qua showStatusLabel().
+    fun restoreDesc() {
+        desc = originalDesc
     }
 
     // Kết thúc phiên (dù thành công, lỗi, hay bị huỷ) - mở khoá lại, ẩn vòng tròn, hiện lại icon.

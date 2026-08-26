@@ -594,12 +594,12 @@ class ActionPage : AppCompatActivity() {
                         progressBarDialog.hideDialog()
                         loadPageConfig(true)
                     } else {
-                        // Hiện dialog "đã khoá" TRƯỚC rồi mới ẩn dialog loading phía dưới - để
-                        // dialog mới luôn đè lên dialog cũ ngay từ khung hình đầu tiên, tránh 1
-                        // khung hình "trắng" (không dialog nào cả, lộ ra nội dung trang phía
-                        // sau) giữa lúc ẩn dialog này và hiện dialog kia -> hết nhấp nháy.
+                        // Hiện dialog "đã khoá" ĐÈ LÊN dialog loading (không dismiss loading ở
+                        // đây) - tránh có khung hình nào bị ẩn/hiện xen giữa 2 dialog (nguồn gây
+                        // nháy trước đây). Dialog loading chỉ thực sự bị dismiss cùng lúc người
+                        // dùng đóng dialog khoá (xem showPageLockedDialog()), ngay trước finish() -
+                        // nên cũng không bị leak window khi activity kết thúc.
                         showPageLockedDialog(if (message.isNotEmpty()) message else getString(R.string.kr_lock_message))
-                        progressBarDialog.hideDialog()
                     }
                 }
             }
@@ -611,8 +611,14 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
+    // onDismiss (bấm OK): dismiss NỐT dialog loading còn đang che phía dưới (nếu có - trường
+    // hợp gọi từ nhánh lockShell) RỒI mới finish(), để 2 dialog biến mất cùng lúc thay vì phải
+    // hide dialog loading riêng ở bước trước đó (nguồn gây nháy) - xem checkPageLockThenLoad().
+    // Trường hợp gọi từ nhánh config.locked (không lockShell) thì dialog loading chưa từng hiện,
+    // hideDialog() ở đây chỉ là no-op, không có tác dụng phụ gì.
     private fun showPageLockedDialog(message: String) {
         DialogHelper.helpInfo(this, getString(R.string.kr_lock_title), message) {
+            progressBarDialog.hideDialog()
             finish()
         }
     }

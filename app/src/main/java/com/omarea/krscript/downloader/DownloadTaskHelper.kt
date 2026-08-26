@@ -85,6 +85,7 @@ object DownloadTaskHelper {
 
                 if (cancelled) {
                     destFile?.delete()
+                    view.restoreDesc()
                     view.finishBusy()
                     return@postMain
                 }
