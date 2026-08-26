@@ -115,18 +115,21 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
      * Wrapper để di chuyển blur background drawable khi content view di chuyển
      */
     private class BlurBackgroundWrapper(private val window: android.view.Window) {
-        private val originalDrawable = window.backgroundDrawable
+        private val originalDrawable: Drawable?
+        private var wrappedDrawable: TranslatingDrawable? = null
         private var translationX = 0f
 
         init {
-            // Bọc drawable gốc với custom drawable hỗ trợ translation
+            originalDrawable = window.background
             if (originalDrawable != null) {
-                window.setBackgroundDrawable(TranslatingDrawable(originalDrawable))
+                wrappedDrawable = TranslatingDrawable(originalDrawable)
+                window.setBackgroundDrawable(wrappedDrawable)
             }
         }
 
         fun setTranslationX(tx: Float) {
             translationX = tx
+            wrappedDrawable?.setTranslationX(tx)
             // Trigger redraw
             window.decorView.invalidate()
         }
@@ -136,12 +139,19 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
             if (originalDrawable != null) {
                 window.setBackgroundDrawable(originalDrawable)
             }
+            wrappedDrawable = null
         }
 
         /**
          * Custom drawable hỗ trợ di chuyển màn hình khi vẽ
          */
-        private inner class TranslatingDrawable(private val wrapped: Drawable) : Drawable() {
+        private class TranslatingDrawable(private val wrapped: Drawable) : Drawable() {
+            private var translationX = 0f
+
+            fun setTranslationX(tx: Float) {
+                translationX = tx
+            }
+
             override fun draw(canvas: Canvas) {
                 // Lưu trạng thái canvas
                 canvas.save()
@@ -161,6 +171,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                 wrapped.colorFilter = colorFilter
             }
 
+            @Deprecated("Deprecated in Java")
             override fun getOpacity(): Int {
                 return wrapped.opacity
             }
