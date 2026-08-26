@@ -450,7 +450,7 @@ class ActionPage : AppCompatActivity() {
         }
 
         when (menuOption.type) {
-            "refresh", "reload" -> recreate()
+            "refresh", "reload" -> spinFabThenRecreate()
             "restart" -> restartApp()
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
@@ -464,6 +464,25 @@ class ActionPage : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    // Xoay icon fab liên tục ngay khi bấm, chỉ áp dụng cho mục type = "refresh"/"reload"
+    // ("Làm mới") - không hiện dialog nào (giữ nguyên hành vi cũ). Vòng xoay chạy vô hạn,
+    // tự dừng khi recreate() phá huỷ activity hiện tại (tức "đến khi làm mới xong").
+    private fun spinFabThenRecreate() {
+        val fab = binding.actionPageFab
+        fab.clearAnimation()
+        val rotate = android.view.animation.RotateAnimation(
+            0f, 360f,
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f
+        ).apply {
+            duration = 600
+            repeatCount = android.view.animation.Animation.INFINITE
+            interpolator = android.view.animation.LinearInterpolator()
+        }
+        fab.startAnimation(rotate)
+        handler.postDelayed({ recreate() }, 600)
     }
 
     private fun openMenuOptionAsPage(menuOption: PageMenuOption) {
