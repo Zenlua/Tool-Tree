@@ -442,5 +442,43 @@ class DialogHelper {
                 }
             }
         }
+
+        /**
+         * Giống setWindowBlurBg(), NHƯNG giữ lại thêm bản NÉT (không chỉ bản mờ) của ảnh chụp
+         * màn hình, để bên gọi (DialogFullScreen) có thể dùng nó làm hiệu ứng "lộ dần cửa sổ
+         * phía sau" khi vuốt để đóng dialog (crossfade mờ -> nét theo tiến độ vuốt, xem
+         * DialogSwipeBackHelper.onDragProgress). Không thay đổi hành vi của setWindowBlurBg cũ -
+         * chỗ nào không cần hiệu ứng lộ dần vẫn gọi hàm gốc như trước.
+         *
+         * Trả về null nếu đang tắt blur nền (disableBlurBg) hoặc chụp màn hình thất bại - lúc đó
+         * ĐÃ tự động rơi về setWindowBlurBg() thường (không có bản nét để crossfade, nhưng nền
+         * dialog vẫn được set đúng như trước giờ).
+         */
+        fun setWindowBlurBgWithSharpCopy(window: Window, activity: Activity): Bitmap? {
+            if (disableBlurBg) {
+                setWindowBlurBg(window, activity)
+                return null
+            }
+            val sharp = try {
+                FastBlurUtility.takeScreenShot(activity)
+            } catch (_: Exception) {
+                null
+            }
+            if (sharp == null) {
+                setWindowBlurBg(window, activity)
+                return null
+            }
+            val blurred = try {
+                FastBlurUtility.startBlurBackground(sharp)
+            } catch (_: Exception) {
+                null
+            }
+            if (blurred == null) {
+                setWindowBlurBg(window, activity)
+                return sharp
+            }
+            window.setBackgroundDrawable(blurred.toDrawable(activity.resources))
+            return sharp
+        }
     }
 }

@@ -20,9 +20,9 @@ import java.util.UUID
 // Xử lý cho loại mục [[download]]: tải file qua HTTP(S) - tiến trình cập nhật NGAY trên
 // ListItemDownload (không dialog riêng) - lưu vào cache riêng của app với tên NGẪU NHIÊN, sau
 // đó chạy script (RunnableNode.setState) với biến môi trường $state = đường dẫn file vừa tải.
-// Trong lúc đang tải VÀ trong lúc script đang chạy, item luôn ở trạng thái "bận"
-// (ListItemDownload.isBusy) - bên gọi (ActionListFragment.onDownloadClick) tự bỏ qua các lần
-// bấm thêm, KHÔNG có thao tác tạm dừng/huỷ giữa chừng.
+// Trong lúc đang TẢI, bấm lại vào item sẽ HUỶ (xem ListItemDownload.cancelIfDownloading()) -
+// nhưng KHÔNG thể huỷ nữa một khi đã chuyển sang chạy script (script đã bắt đầu chạy dưới shell,
+// không có cách nào an toàn để dừng giữa chừng).
 object DownloadTaskHelper {
     // Khoảng thời gian (ms) giữ nguyên nhãn trạng thái cuối (đang chạy/thành công/lỗi) trên
     // màn hình trước khi báo hoàn tất cho bên gọi (mở khoá item lại, xử lý reload-page...) -
@@ -31,7 +31,9 @@ object DownloadTaskHelper {
 
     // onFinished: gọi ĐÚNG 1 LẦN khi toàn bộ phiên (tải + chạy script, dù thành công hay lỗi)
     // kết thúc - bên gọi dùng để gọi tiếp krScriptActionHandler.onActionCompleted(item) (xử lý
-    // reload-page/auto-finish/auto-kill/auto-restart) và onExit gốc của PageLayoutRender.
+    // reload-page/auto-finish/auto-kill/auto-restart) và onExit gốc của PageLayoutRender. KHÔNG
+    // gọi onFinished khi người dùng chủ động huỷ tải giữa chừng (xem bên dưới) - vì chưa có gì
+    // thay đổi thực sự để mà reload/auto-finish.
     fun start(
         context: Context,
         scope: LifecycleCoroutineScope,
@@ -40,7 +42,20 @@ object DownloadTaskHelper {
         onFinished: () -> Unit
     ) {
         if (view.isBusy) return
-        view.markBusy()
+
+        // Cờ + tham chiếu connection dùng chung giữa lambda huỷ (chạy trên main thread, do
+        // người dùng bấm) và coroutine IO đang tải (xem downloadToFile) - connection.disconnect()
+        // là cách duy nhất "đánh thức" được input.read() đang block giữa chừng.
+        var cancelled = false
+        var liveConnection: HttpURLConnection? = null
+
+        view.markBusy {
+            cancelled = true
+            try {
+                liveConnection?.disconnect()
+            } catch (_: Exception) {
+            }
+        }
 
         scope.launch(Dispatchers.IO) {
             val destFile = try {
@@ -52,12 +67,28 @@ object DownloadTaskHelper {
             val error = if (destFile == null) {
                 "invalid destination"
             } else {
-                downloadToFile(item.url, destFile) { downloaded, total ->
-                    postMain { view.updateDownloadProgress(downloaded, total) }
-                }
+                downloadToFile(
+                    url = item.url,
+                    destFile = destFile,
+                    onConnectionOpened = { conn -> liveConnection = conn },
+                    onProgress = { downloaded, total ->
+                        // Vẫn có thể có vài tick tiến trình tới trễ ngay sau lúc cancelled=true
+                        // (đã gọi disconnect() nhưng vòng đọc chưa kịp nhận IOException) - bỏ
+                        // qua để không "hồi sinh" UI đang trong lúc chuẩn bị đóng lại.
+                        postMain { if (!cancelled) view.updateDownloadProgress(downloaded, total) }
+                    }
+                )
             }
 
             postMain {
+                view.clearCancelAction()
+
+                if (cancelled) {
+                    destFile?.delete()
+                    view.finishBusy()
+                    return@postMain
+                }
+
                 if (error != null || destFile == null) {
                     view.showStatusLabel(context.getString(R.string.kr_download_error))
                     finishAfterDelay(view, onFinished)
@@ -86,8 +117,16 @@ object DownloadTaskHelper {
         return if (dot in 1 until name.length - 1) name.substring(dot) else ""
     }
 
-    // Trả về null nếu tải thành công, hoặc thông báo lỗi (không ném exception ra ngoài).
-    private fun downloadToFile(url: String, destFile: File, onProgress: (Long, Long) -> Unit): String? {
+    // Trả về null nếu tải thành công, hoặc thông báo lỗi (không ném exception ra ngoài). Khi bị
+    // huỷ giữa chừng (connection.disconnect() gọi từ luồng khác), input.read() sẽ ném IOException
+    // như 1 lỗi mạng bình thường - bên gọi (start()) tự phân biệt qua cờ [cancelled] chứ không
+    // dựa vào nội dung lỗi trả về ở đây.
+    private fun downloadToFile(
+        url: String,
+        destFile: File,
+        onConnectionOpened: (HttpURLConnection) -> Unit,
+        onProgress: (Long, Long) -> Unit
+    ): String? {
         var connection: HttpURLConnection? = null
         return try {
             connection = (URL(url).openConnection() as HttpURLConnection).apply {
@@ -96,6 +135,7 @@ object DownloadTaskHelper {
                 instanceFollowRedirects = true
             }
             connection.connect()
+            onConnectionOpened(connection)
             if (connection.responseCode !in 200..299) {
                 return "HTTP ${connection.responseCode}"
             }

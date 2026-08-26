@@ -432,11 +432,15 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     // [[download]]: tải file (tiến trình hiện ngay trong item qua ListItemDownload), sau đó tự
-    // chạy script (nếu có) với $state = đường dẫn file - xem DownloadTaskHelper. Không cho tạm
-    // dừng/bấm lại trong lúc đang bận (đang tải HOẶC đang chạy script).
+    // chạy script (nếu có) với $state = đường dẫn file - xem DownloadTaskHelper. Bấm lại vào
+    // item TRONG LÚC ĐANG TẢI sẽ huỷ tải (xem ListItemDownload.cancelIfDownloading()); bấm khi
+    // đã chuyển sang giai đoạn chạy script thì bị bỏ qua (không huỷ được script đang chạy).
     override fun onDownloadClick(item: DownloadNode, listItemView: ListItemDownload, onCompleted: Runnable) {
+        if (listItemView.isBusy) {
+            listItemView.cancelIfDownloading()
+            return
+        }
         if (!checkAndLockClick()) return
-        if (listItemView.isBusy) return
         nodeUnlockedAsync(item) {
             if (item.confirm) {
                 DialogHelper.warning(requireActivity(), item.title, item.desc, { downloadExecute(item, listItemView, onCompleted) })

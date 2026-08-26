@@ -24,6 +24,14 @@ public class FastBlurUtility {
     }
 
     /**
+     * Chụp màn hình đang hiển thị của activity - dùng public để nơi khác (DialogHelper) có
+     * thể tự giữ lại bản NÉT thay vì chỉ nhận về bản đã làm mờ như getBlurBackgroundDrawer().
+     */
+    public static Bitmap takeScreenShot(Activity activity) {
+        return takeScreenShotInternal(activity);
+    }
+
+    /**
      * Quy trình xử lý: Thu nhỏ -> Làm mờ -> Phóng to & Nhuộm tối (Dim)
      * Đảm bảo mượt mà từ SDK 23 trở lên.
      */
@@ -64,7 +72,7 @@ public class FastBlurUtility {
     /**
      * Chụp ảnh màn hình an toàn trên SDK 23+
      */
-    private static Bitmap takeScreenShot(Activity activity) {
+    private static Bitmap takeScreenShotInternal(Activity activity) {
         try {
             View view = activity.getWindow().getDecorView();
             if (view.getWidth() <= 0 || view.getHeight() <= 0) return null;

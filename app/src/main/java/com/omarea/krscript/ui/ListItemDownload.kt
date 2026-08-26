@@ -17,9 +17,16 @@ class ListItemDownload(context: Context, config: DownloadNode) :
 
     // true trong suốt lúc đang tải HOẶC đang chạy script sau khi tải xong - PageLayoutRender
     // vẫn gọi onClick bình thường (không disable layout), nên bên xử lý click (ActionListFragment)
-    // tự kiểm tra cờ này để bỏ qua các lần bấm thêm trong lúc đang bận.
+    // tự kiểm tra cờ này: nếu đang trong giai đoạn TẢI (xem cancelAction) thì bấm = huỷ tải; nếu
+    // đang chạy script thì bỏ qua tap (không huỷ được nữa).
     var isBusy: Boolean = false
         private set
+
+    // Hành động huỷ phiên tải HIỆN TẠI - chỉ khác null trong lúc đang thật sự tải byte (từ
+    // markBusy() tới ngay trước khi chuyển sang chạy script/kết thúc, xem
+    // DownloadTaskHelper.clearCancelAction()). Dùng để item biết được có nên coi 1 lần bấm tiếp
+    // theo là "huỷ" hay không.
+    private var cancelAction: (() -> Unit)? = null
 
     init {
         widgetView?.visibility = View.VISIBLE
@@ -34,8 +41,11 @@ class ListItemDownload(context: Context, config: DownloadNode) :
 
     // Gọi ngay khi bắt đầu 1 phiên tải mới - khoá item lại, ẩn icon tải, thế bằng vòng tròn
     // tiến trình (dạng xoay/indeterminate cho tới khi biết được Content-Length thật từ server).
-    fun markBusy() {
+    // [onCancel] được gọi nếu người dùng bấm lại vào item TRONG LÚC đang tải (xem
+    // cancelIfDownloading()) - DownloadTaskHelper truyền vào 1 lambda huỷ HTTP request dở dang.
+    fun markBusy(onCancel: () -> Unit) {
         isBusy = true
+        cancelAction = onCancel
         widgetView?.visibility = View.GONE
         ringView?.visibility = View.VISIBLE
         ringView?.setIndeterminate(true)
@@ -53,6 +63,24 @@ class ListItemDownload(context: Context, config: DownloadNode) :
         }
     }
 
+    // Gọi ngay khi việc TẢI kết thúc (dù xong, lỗi, hay chuẩn bị chạy script) - từ giờ không
+    // còn gì để huỷ nữa, 1 lần bấm tiếp theo (nếu còn isBusy vì đang chạy script) sẽ bị bỏ qua
+    // thay vì coi là huỷ.
+    fun clearCancelAction() {
+        cancelAction = null
+    }
+
+    // Người dùng bấm vào item trong lúc item đang bận. Trả về true nếu đây thực sự là giai đoạn
+    // có thể huỷ (đang tải) và đã gọi onCancel - bên gọi (ActionListFragment) không cần làm gì
+    // thêm. Trả về false nếu không có gì để huỷ (đang chạy script, hoặc đã lỡ kết thúc) - bên
+    // gọi tự bỏ qua tap này.
+    fun cancelIfDownloading(): Boolean {
+        val action = cancelAction ?: return false
+        cancelAction = null
+        action.invoke()
+        return true
+    }
+
     // Hiện 1 nhãn trạng thái (đang chạy script / thành công / lỗi...) thay cho desc dạng %.
     // Vòng tròn chuyển về dạng xoay (không rõ script chạy trong bao lâu).
     fun showStatusLabel(label: String) {
@@ -60,9 +88,10 @@ class ListItemDownload(context: Context, config: DownloadNode) :
         ringView?.setIndeterminate(true)
     }
 
-    // Kết thúc phiên (dù thành công hay lỗi) - mở khoá lại, ẩn vòng tròn, hiện lại icon tải.
+    // Kết thúc phiên (dù thành công, lỗi, hay bị huỷ) - mở khoá lại, ẩn vòng tròn, hiện lại icon.
     fun finishBusy() {
         isBusy = false
+        cancelAction = null
         ringView?.visibility = View.GONE
         widgetView?.visibility = View.VISIBLE
     }

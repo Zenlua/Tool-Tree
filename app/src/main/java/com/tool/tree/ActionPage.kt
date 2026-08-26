@@ -589,12 +589,17 @@ class ActionPage : AppCompatActivity() {
                 val message = ScriptEnvironmen.executeResultRoot(this@ActionPage, config.lockShell, config)
                 withContext(Dispatchers.Main) {
                     if (!isActive || isFinishing || isDestroyed) return@withContext
-                    progressBarDialog.hideDialog()
                     val unlocked = message == "unlock" || message == "unlocked" || message == "false" || message == "0"
                     if (unlocked) {
+                        progressBarDialog.hideDialog()
                         loadPageConfig(true)
                     } else {
+                        // Hiện dialog "đã khoá" TRƯỚC rồi mới ẩn dialog loading phía dưới - để
+                        // dialog mới luôn đè lên dialog cũ ngay từ khung hình đầu tiên, tránh 1
+                        // khung hình "trắng" (không dialog nào cả, lộ ra nội dung trang phía
+                        // sau) giữa lúc ẩn dialog này và hiện dialog kia -> hết nhấp nháy.
                         showPageLockedDialog(if (message.isNotEmpty()) message else getString(R.string.kr_lock_message))
+                        progressBarDialog.hideDialog()
                     }
                 }
             }
