@@ -63,13 +63,13 @@ amlogic, apk, apex, capex, squashfs, ...
 
 ## 📂 Working Directories
 
-### Input
+**Input**
 
 + `/sdcard/TREE`
 - ROM
 - APK
 
-### Root Working Directory
+**Root Working Directory**
 
 - APK: `/data/local/TOOL`
 
