@@ -4,7 +4,7 @@
 unset shell_progres
 # Dọn dẹp tmp
 find "$TMPDIR" -maxdepth 1 ! -path "$TMPDIR" ! -name '*.log' -exec rm -rf {} + &
-rm -fr $TEMP/documents $TEMP/WebView $START_DIR/icons/* &
+rm -fr $TEMP/documents $TEMP/kr_download_* $TEMP/WebView $START_DIR/icons/* &
 
 {
 if checkonline; then
