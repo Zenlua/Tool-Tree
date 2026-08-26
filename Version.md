@@ -14,7 +14,7 @@
 + Delete all data after the update to avoid conflicts.
 + System optimization, code
 + re-compress super
-+ Add an option to enable f2fss compression
++ Add an option to enable f2fs compression
 + Upgrade app support process loading
 + Modify the Add-on menu options
 + Change some effects
