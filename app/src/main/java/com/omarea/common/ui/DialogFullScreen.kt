@@ -22,7 +22,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     // Callback cho Predictive Back trên Android 13+ (API 33+)
     private var systemBackCallback: OnBackInvokedCallback? = null
 
-    override fun init {
+    init {
         themeResId = if (darkMode) R.style.dialog_full_screen_dark else R.style.dialog_full_screen_light
     }
 
@@ -54,7 +54,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
 
         // 2. Gán Blur lên trực tiếp currentView thay vì cấp Window
         currentView.post {
-            DialogHelper.setViewBlurBg(currentView, activity)
+            DialogHelper.setWindowBlurBg(currentView, activity)
         }
 
         // 3. Khởi tạo SwipeBackHelper & đăng ký Predictive Back
@@ -63,7 +63,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                 swipeBackHelper = DialogSwipeBackHelper.bind(
                     dialog = dlg,
                     contentView = view,
-                    onDragStateChanged = { /* Không cần đổi nền window ở đây nữa */ },
+                    onDragStateChanged = { /* Không đổi nền Window ở đây */ },
                     onDragProgress = { /* Xử lý thêm nếu cần */ }
                 ) {
                     closeView()
