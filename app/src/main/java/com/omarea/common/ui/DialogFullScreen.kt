@@ -70,7 +70,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                 DialogHelper.setWindowBlurBg(this, activity)
                 
                 // Gắn wrapper để di chuyển blur khi kéo
-                blurBackgroundWrapper = BlurBackgroundWrapper(this)
+                blurBackgroundWrapper = BlurBackgroundWrapper(this, view)
             }
 
             if (swipeToDismissEnabled) {
@@ -114,16 +114,17 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     /**
      * Wrapper để di chuyển blur background drawable khi content view di chuyển
      */
-    private class BlurBackgroundWrapper(private val window: android.view.Window) {
+    private class BlurBackgroundWrapper(private val window: android.view.Window, private val contentView: View) {
         private val originalDrawable: Drawable?
         private var wrappedDrawable: TranslatingDrawable? = null
         private var translationX = 0f
 
         init {
-            originalDrawable = window.background
+            // Lấy drawable hiện tại từ decorView
+            originalDrawable = window.decorView.background
             if (originalDrawable != null) {
                 wrappedDrawable = TranslatingDrawable(originalDrawable)
-                window.setBackgroundDrawable(wrappedDrawable)
+                window.decorView.background = wrappedDrawable
             }
         }
 
@@ -131,13 +132,13 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
             translationX = tx
             wrappedDrawable?.setTranslationX(tx)
             // Trigger redraw
-            window.decorView.invalidate()
+            contentView.invalidate()
         }
 
         fun release() {
             // Reset drawable về bình thường
             if (originalDrawable != null) {
-                window.setBackgroundDrawable(originalDrawable)
+                window.decorView.background = originalDrawable
             }
             wrappedDrawable = null
         }
