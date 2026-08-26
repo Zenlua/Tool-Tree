@@ -48,22 +48,25 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                 setWindowAnimations(android.R.style.Animation_Translucent)
             }
-            // 1. Set nền Window thành trong suốt để khi currentView trượt đi sẽ lộ nguyên vẹn Activity phía sau
-            setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
+            // Gọi đúng hàm nhận Window của DialogHelper
+            DialogHelper.setWindowBlurBg(this, activity)
         }
 
-        // 2. Gán Blur lên trực tiếp currentView thay vì cấp Window
-        currentView.post {
-            DialogHelper.setWindowBlurBg(currentView, activity)
-        }
-
-        // 3. Khởi tạo SwipeBackHelper & đăng ký Predictive Back
+        // Khởi tạo SwipeBackHelper & đăng ký Predictive Back
         if (swipeToDismissEnabled) {
             dialog?.let { dlg ->
                 swipeBackHelper = DialogSwipeBackHelper.bind(
                     dialog = dlg,
                     contentView = view,
-                    onDragStateChanged = { /* Không đổi nền Window ở đây */ },
+                    onDragStateChanged = { dragging ->
+                        // Khi bắt đầu kéo, ẩn nền window blur đi để lộ activity phía sau trượt theo
+                        val window = dlg.window
+                        if (dragging) {
+                            window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
+                        } else {
+                            window?.let { DialogHelper.setWindowBlurBg(it, activity) }
+                        }
+                    },
                     onDragProgress = { /* Xử lý thêm nếu cần */ }
                 ) {
                     closeView()
