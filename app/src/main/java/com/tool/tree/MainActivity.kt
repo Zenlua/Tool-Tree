@@ -305,7 +305,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSubPageClick(pageNode: PageNode) {
                 if (openedSubPage) return
-                openedSubPage = true
+                openedSubPage = false
                 OpenPageHelper(this@MainActivity).openPage(pageNode)
             }
 
