@@ -442,34 +442,5 @@ class DialogHelper {
                 }
             }
         }
-
-        /**
-         * Giống setWindowBlurBg(), NHƯNG dùng thẳng ẢNH NÉT (không làm mờ) của màn hình phía
-         * sau làm nền cửa sổ dialog - bên gọi (DialogFullScreen) không cần làm mờ thêm ở đây vì
-         * bản thân nội dung dialog (currentView) đã tự có phong cách kính mờ/translucent riêng
-         * rồi; nếu còn làm mờ luôn cả ảnh nền phía sau thì lúc vuốt lộ ra sẽ thành "mờ chồng mờ",
-         * mất hẳn độ tương phản khiến người dùng khó nhận ra là đang có cử chỉ vuốt hoạt động.
-         *
-         * Trả về null nếu chụp màn hình thất bại - lúc đó ĐÃ tự động rơi về setWindowBlurBg()
-         * thường (nền dialog vẫn được set đúng như trước giờ, chỉ là không có ảnh nét để vuốt
-         * lộ ra).
-         */
-        fun setWindowBlurBgWithSharpCopy(window: Window, activity: Activity): Bitmap? {
-            if (disableBlurBg) {
-                setWindowBlurBg(window, activity)
-                return null
-            }
-            val sharp = try {
-                FastBlurUtility.takeScreenShot(activity)
-            } catch (_: Exception) {
-                null
-            }
-            if (sharp == null) {
-                setWindowBlurBg(window, activity)
-                return null
-            }
-            window.setBackgroundDrawable(sharp.toDrawable(activity.resources))
-            return sharp
-        }
     }
 }
