@@ -13,33 +13,51 @@
         android:background="@android:color/transparent"
         android:theme="?android:actionBarTheme">
 
-        <com.omarea.common.ui.BlurTopBarLayout
-            android:id="@+id/blur_top_container"
+        <!-- FrameLayout bọc chung Toolbar + ProgressBar để 2 view này CHỒNG LÊN NHAU thay vì
+             xếp dọc như con trực tiếp của AppBarLayout (bản chất là LinearLayout dọc). Trước
+             đây ProgressBar là con thứ 2 ngay dưới BlurTopBarLayout -> mỗi lần đổi
+             visibility (gone/visible) làm tổng chiều cao wrap_content của AppBarLayout đổi
+             theo (cộng thêm ~8dp), kéo theo mọi view đặt layout_below="@id/appbar" (vd
+             viewPager ở MainActivity) bị đẩy xuống/lên theo - đây chính là hiện tượng "đẩy
+             layout xuống" khi hiện thanh tiến trình. Giờ ProgressBar nằm trong FrameLayout
+             cùng cấp với Toolbar, layout_gravity="bottom" để nó đè lên đúng mép dưới toolbar
+             - vì Toolbar cao hơn nhiều so với ProgressBar (8dp), chiều cao wrap_content của
+             FrameLayout luôn cố định = chiều cao Toolbar, không đổi dù ProgressBar ẩn/hiện ->
+             chỉ xuất hiện/biến mất tại chỗ, không ảnh hưởng layout xung quanh. -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/krscript_item_ripple_in">
-            
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="@android:color/transparent"
-                app:elevation="0dp"
-                app:popupTheme="@style/AppTheme.PopupOverlay"
-                app:subtitleTextColor="?android:textColorPrimary"
-                app:titleTextColor="?android:textColorPrimary" />
+            android:layout_height="wrap_content">
 
-        </com.omarea.common.ui.BlurTopBarLayout>
-        <ProgressBar
-            android:id="@+id/page_load_progress"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:translationY="-4dp"
-            android:max="100"
-            android:progress="0"
-            android:indeterminate="true"
-            android:visibility="gone" />
+            <com.omarea.common.ui.BlurTopBarLayout
+                android:id="@+id/blur_top_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/krscript_item_ripple_in">
+
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="@android:color/transparent"
+                    app:elevation="0dp"
+                    app:popupTheme="@style/AppTheme.PopupOverlay"
+                    app:subtitleTextColor="?android:textColorPrimary"
+                    app:titleTextColor="?android:textColorPrimary" />
+
+            </com.omarea.common.ui.BlurTopBarLayout>
+
+            <ProgressBar
+                android:id="@+id/page_load_progress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_gravity="bottom"
+                android:max="100"
+                android:progress="0"
+                android:indeterminate="true"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
 
