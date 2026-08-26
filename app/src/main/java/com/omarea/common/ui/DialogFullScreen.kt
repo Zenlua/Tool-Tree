@@ -132,7 +132,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
             translationX = tx
             wrappedDrawable?.setTranslationX(tx)
             // Trigger redraw
-            contentView.invalidate()
+            window.decorView.invalidate()
         }
 
         fun release() {
