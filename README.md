@@ -25,9 +25,8 @@ zip, apk, apks, apex, capex, squashfs, amlogic, ...
 **📥 Pack**
 
 ```
-boot, dtbo, ext4, erofs, f2fs
-payload, super, amlogic
-apk, apex, capex, squashfs, ...
+boot, dtbo, ext4, erofs, f2fs, payload, super
+amlogic, apk, apex, capex, squashfs, ...
 ```
 
 > And many more tools waiting to be discovered.
