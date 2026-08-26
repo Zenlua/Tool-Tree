@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOML Configuration Guide · Tool-Tree</title>
+<style>
+:root {
+  --bg: #fafafa; --bg-elev: #ffffff; --bg-soft: #f4f5f7;
+  --fg: #1a1a1a; --fg-soft: #525a6b; --fg-muted: #8a93a6;
+  --accent: #2563eb; --accent-soft: #dbeafe;
+  --green: #10b981; --orange: #f59e0b; --red: #ef4444;
+  --purple: #8b5cf6; --pink: #ec4899;
+  --border: #e5e7eb;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.08);
+  --radius: 8px; --radius-lg: 12px;
+  --mono: 'JetBrains Mono','SF Mono','Cascadia Code','Fira Code',Consolas,monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+}
+*{box-sizing:border-box;}
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-wrap: break-word;
+}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:var(--bg-elev);
+  border-bottom:1px solid var(--border);
+  padding:10px 24px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  box-shadow:var(--shadow);
+  width:100%;
+}
+.topbar .logo{font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;}
+.topbar .logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));}
+.topbar .spacer{flex:1;}
+.topbar .search{flex:0 1 320px;padding:7px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-soft);color:var(--fg);font-size:14px;outline:none;transition:border-color .15s;}
+.topbar .search:focus{border-color:var(--accent);}
+
+/* Nút ẩn/hiện Mục lục */
+.btn-toc {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+.btn-toc:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:260px 1fr;
+  max-width:1400px;
+  margin:0 auto;
+  width:100%;
+  transition:grid-template-columns 0.2s ease;
+}
+.layout.sidebar-hidden{grid-template-columns:1fr;}
+
+.sidebar{
+  position:sticky;
+  top:57px;
+  align-self:start;
+  height:calc(100vh - 57px);
+  overflow-y:auto;
+  padding:24px 16px 24px 24px;
+  border-right:1px solid var(--border);
+  background:var(--bg);
+}
+.sidebar.hidden{display:none;}
+.sidebar h3{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-muted);margin:18px 0 6px;font-weight:600;}
+.sidebar h3:first-child{margin-top:0;}
+.sidebar a{display:block;padding:4px 10px;border-radius:5px;color:var(--fg-soft);font-size:13.5px;border-left:2px solid transparent;margin-left:-2px;}
+.sidebar a:hover{background:var(--bg-soft);color:var(--fg);text-decoration:none;}
+.sidebar a.active{color:var(--accent);background:var(--accent-soft);border-left-color:var(--accent);font-weight:500;}
+
+.main{padding:32px 40px 80px;min-width:0;width:100%;}
+
+.main h1{font-size:30px;font-weight:700;margin:0 0 8px;letter-spacing:-.5px;}
+.main h2{font-size:22px;font-weight:700;margin:40px 0 12px;padding-top:16px;border-top:1px solid var(--border);letter-spacing:-.3px;scroll-margin-top:80px;}
+.main h2:first-of-type{border-top:none;padding-top:0;}
+.main h3{font-size:17px;font-weight:600;margin:24px 0 8px;scroll-margin-top:80px;color:var(--fg);}
+.main h4{font-size:14px;font-weight:600;margin:16px 0 6px;color:var(--fg-soft);text-transform:uppercase;letter-spacing:.5px;}
+.main p{margin:8px 0 12px;color:var(--fg);}
+.main ul,.main ol{margin:8px 0 12px;padding-left:22px;}
+.main li{margin:4px 0;}
+.main code{font-family:var(--mono);font-size:13px;background:var(--bg-soft);padding:1px 5px;border-radius:4px;color:var(--accent);overflow-wrap:break-word;}
+.main pre{
+  background:var(--bg-soft);
+  padding:14px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  border:1px solid var(--border);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.main pre code{background:none;padding:0;color:var(--fg);white-space: pre-wrap;word-break: break-all;}
+
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;margin:14px 0;border-radius:0 6px 6px 0;font-size:14px;}
+.callout.warn{border-color:var(--orange);background:rgba(245,158,11,.12);}
+.callout.tip{border-color:var(--green);background:rgba(16,185,129,.10);}
+.callout.danger{border-color:var(--red);background:rgba(239,68,68,.10);}
+
+.demo-block{margin:18px 0;max-width:100%;}
+.demo-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-muted);margin-bottom:6px;font-weight:600;}
+.demo-frame{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-lg);padding:0;overflow:hidden;box-shadow:var(--shadow-lg);font-family:var(--sans);position:relative;max-width:100%;}
+.d-toolbar{background:var(--accent);color:#fff;padding:12px 14px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;}
+.d-toolbar .d-back{font-size:18px;opacity:.9;}
+.d-toolbar .d-title{flex:1;}
+.d-toolbar .d-menu{font-size:18px;opacity:.9;padding:0 4px;}
+.d-body{padding:12px 14px;}
+.d-group{background:var(--bg-soft);border-radius:10px;padding:4px 14px;margin-bottom:12px;}
+.d-group-title{font-size:12px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.5px;padding:12px 0 6px;font-weight:600;}
+.d-item{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);gap:12px;max-width:100%;}
+.d-item:last-child{border-bottom:none;}
+.d-item .d-icon{width:30px;height:30px;background:var(--accent-soft);color:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.d-item .d-content{flex:1;min-width:0;}
+.d-item .d-title2{font-size:14px;font-weight:500;color:var(--fg);}
+.d-item .d-desc{font-size:12px;color:var(--fg-muted);margin-top:1px;}
+.d-item .d-summary{font-size:12px;color:var(--fg-soft);margin-top:1px;}
+.d-item .d-trail{font-size:13px;color:var(--fg-muted);flex-shrink:0;}
+.d-item .d-trail .d-chevron{font-size:14px;opacity:.6;}
+.d-switch{width:38px;height:22px;background:var(--green);border-radius:11px;position:relative;flex-shrink:0;transition:background .15s;}
+.d-switch.off{background:var(--fg-muted);}
+.d-switch::after{content:'';position:absolute;top:2px;left:18px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.d-switch.off::after{left:2px;}
+.d-progress{height:6px;background:var(--bg-soft);border-radius:3px;overflow:hidden;margin-top:4px;}
+.d-progress>div{height:100%;background:var(--accent);width:45%;border-radius:3px;}
+.d-fab{position:absolute;bottom:16px;right:16px;width:48px;height:48px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;box-shadow:0 4px 12px rgba(0,0,0,.3);}
+.d-menu-popup{position:absolute;top:48px;right:8px;background:var(--bg-elev);border:1px solid var(--border);border-radius:8px;padding:6px 0;min-width:180px;box-shadow:var(--shadow-lg);z-index:5;}
+.d-menu-popup .d-mi{padding:9px 14px;font-size:13px;color:var(--fg);display:flex;align-items:center;gap:8px;}
+.d-menu-popup .d-mi .d-check{color:var(--accent);}
+.d-richtext{padding:6px 0;border-bottom:1px solid var(--border);}
+.d-richtext:last-child{border-bottom:none;}
+.d-row{padding:5px 0;font-size:13px;}
+.d-row.bold{font-weight:700;}
+.d-row.italic{font-style:italic;}
+.d-row.underline{text-decoration:underline;}
+.d-row.strike{text-decoration:line-through;}
+.d-row.mono{font-family:var(--mono);background:var(--bg-soft);padding:2px 6px;border-radius:3px;display:inline-block;}
+.d-row.link{color:var(--accent);text-decoration:underline;}
+.d-row.center{text-align:center;}
+.d-row.right{text-align:right;}
+.d-divider{border-top:1px solid var(--border);margin:8px 0;}
+
+/* Custom responsive table for Mobile */
+.tbl-container {
+  width: 100%;
+  overflow-x: auto;
+  margin: 14px 0;
+  -webkit-overflow-scrolling: touch;
+}
+.tbl{
+  width: 100%;
+  border-collapse:collapse;
+  font-size:13.5px;
+  background:var(--bg-elev);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  min-width: 600px;
+}
+.tbl th,.tbl td{
+  text-align:left;
+  padding:9px 12px;
+  border-bottom:1px solid var(--border);
+  vertical-align:top;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+.tbl th{background:var(--bg-soft);font-weight:600;font-size:12.5px;color:var(--fg-soft);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td code,.tbl th code{font-size:12px;white-space:nowrap;}
+.tbl .field-name{color:var(--accent);font-family:var(--mono);font-size:12.5px;white-space:nowrap;}
+.tbl .field-type{color:var(--purple);font-family:var(--mono);font-size:12.5px;white-space:nowrap;}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;vertical-align:middle;white-space:nowrap;}
+.badge.req{background:rgba(239,68,68,.15);color:var(--red);}
+.badge.opt{background:var(--bg-soft);color:var(--fg-muted);}
+.badge.new{background:rgba(16,185,129,.15);color:var(--green);}
+.badge.shell{background:rgba(245,158,11,.15);color:var(--orange);}
+.badge.alias{background:rgba(139,92,246,.15);color:var(--purple);}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+.kv-list{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;font-size:13px;}
+.kv-list dt{color:var(--fg-muted);}
+.kv-list dd{margin:0;}
+
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin:18px 0;}
+.toc-card{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:block;color:inherit;text-decoration:none;transition:all .15s;}
+.toc-card:hover{border-color:var(--accent);box-shadow:var(--shadow);text-decoration:none;}
+.toc-card .tc-name{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:600;}
+.toc-card .tc-desc{font-size:12.5px;color:var(--fg-soft);margin-top:3px;}
+
+/* Back to top button styling */
+.back-to-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .25s ease, visibility .25s ease, transform .2s ease;
+  z-index: 99;
+}
+.back-to-top.show {
+  opacity: 1;
+  visibility: visible;
+}
+.back-to-top:hover {
+  transform: translateY(-3px);
+}
+
+footer {
+  text-align: center;
+  padding: 24px;
+  background: var(--bg-elev);
+  border-top: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 13.5px;
+}
+
+/* Mobile Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 57px;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 57px);
+  background: rgba(0,0,0,0.4);
+  z-index: 99;
+}
+.sidebar-overlay.show {
+  display: block;
+}
+
+/* Mobile Media Queries */
+@media (max-width: 900px){
+  .grid-2{grid-template-columns:1fr;}
+  .layout{grid-template-columns:1fr;}
+  .sidebar{
+    display:none;
+  }
+  /* Mobile Sidebar Slide-out Drawer */
+  .sidebar.mobile-show{
+    display: block !important;
+    position: fixed;
+    top: 57px;
+    left: 0;
+    width: 280px;
+    max-width: 80vw;
+    height: calc(100vh - 57px);
+    background: var(--bg-elev);
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+  }
+  .main{padding:20px 16px 60px;}
+  .topbar .search{display:none;}
+}
+
+@media (max-width: 600px){
+  .topbar{padding:10px 14px;}
+  .topbar .logo{font-size:14px;}
+  .main h1{font-size:22px;}
+  .main h2{font-size:18px;scroll-margin-top:60px;}
+  .main h3{font-size:15px;}
+  .toc-grid{grid-template-columns:1fr;}
+  .kv-list{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button id="tocToggle" class="btn-toc" aria-label="Toggle Table of Contents">
+    <span>☰</span> <span>Mục lục</span>
+  </button>
+  <div class="logo"><span class="dot"></span> Tool-Tree &middot; TOML Guide</div>
+  <div class="spacer"></div>
+  <input type="text" class="search" id="search" placeholder="Search section / field..." />
+</div>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+  <h3>Basics</h3>
+  <a href="#intro">1. Introduction</a>
+  <a href="#rules">2. Syntax rules</a>
+  <a href="#overview">3. Node overview</a>
+  <a href="#shared-fields">4. Shared fields</a>
+
+  <h3>Node types</h3>
+  <a href="#group">5. [[group]]</a>
+  <a href="#page">6. [[page]]</a>
+  <a href="#action">7. [[action]]</a>
+  <a href="#action-params">8. [[action.params]]</a>
+  <a href="#switch">9. [[switch]]</a>
+  <a href="#picker">10. [[picker]]</a>
+  <a href="#text">11. [[text]]</a>
+  <a href="#text-rows">12. [[text.rows]]</a>
+  <a href="#editor">13. [[editor]]</a>
+  <a href="#download">14. [[download]]</a>
+  <a href="#resource">15. [[resource]]</a>
+  <a href="#menu-fab">16. [[menu]] / [[fab]]</a>
+
+  <h3>Advanced</h3>
+  <a href="#depend">17. Dependencies (depend-*)</a>
+  <a href="#shell-fields">18. Shell-script fields</a>
+  <a href="#bool-or-shell">19. resolveBoolOrShell</a>
+  <a href="#pending-states">20. Pending states</a>
+  <a href="#process">21. process = true</a>
+  <a href="#lifecycle">22. Page lifecycle</a>
+
+  <h3>Practice</h3>
+  <a href="#example">23. Full example</a>
+  <a href="#tips">24. Tips &amp; pitfalls</a>
+</aside>
+<main class="main">
+
+<section id="intro">
+<h1>TOML configuration guide for Tool-Tree</h1>
+<p class="callout">
+This guide is for <strong>Tool-Tree</strong>, the component that powers the function menu in the <code>com.tool.tree</code> Android app.
+All page configuration files must use <strong>TOML</strong> (XML is no longer supported).
+The parser lives in <code>com.omarea.krscript.config.PageConfigReader</code> and uses the <code>org.tomlj:tomlj</code> library.
+</p>
+
+<p>A TOML configuration file describes <strong>the node tree of a page</strong>: each page is a list of <em>nodes</em>
+(group, action, switch, picker, text, page, editor, download, resource, menu, fab) displayed in the order they appear in the file.
+Nodes can be nested (e.g. <code>[[group.action]]</code> is an action inside a group) to build a hierarchical tree.</p>
+</section>
+
+<section id="rules">
+<h2>2. Syntax rules</h2>
+
+<h3>2.1. Always use double brackets <code>[[name]]</code> for every entry</h3>
+<p>TOML does not allow mixing <code>[name]</code> (single brackets, single table) and <code>[[name]]</code> (double brackets, array of tables) for the same key at the same position - this will cause a parse error. To be safe, <strong>always use <code>[[name]]</code></strong> for any entry, even if there is currently only one entry of that type. This prevents breaking the file later when you add a second entry of the same type but forget to switch the brackets.</p>
+<div class="callout danger"><strong>Wrong:</strong> declaring <code>[group]</code> and then later declaring another <code>[[group]]</code> in the same file -&gt; parse error.</div>
+<div class="callout tip"><strong>Right:</strong> always use <code>[[group]]</code>, <code>[[action]]</code>, etc. for all entries.</div>
+
+<h3>2.2. Node type = TOML table name</h3>
+<p>There is no separate <code>type</code> field. A node's type is determined by its TOML table name:</p>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Table name</th><th>Node type</th><th>Description</th></tr>
+<tr><td><code>group</code></td><td>Container</td><td>Holds child nodes; can be nested</td></tr>
+<tr><td><code>page</code></td><td>Sub-page</td><td>Opens another page when clicked</td></tr>
+<tr><td><code>action</code></td><td>Action</td><td>Runs a shell script</td></tr>
+<tr><td><code>switch</code></td><td>Toggle</td><td>On/off switch with get/set shell</td></tr>
+<tr><td><code>picker</code></td><td>Picker</td><td>Single/multi value selector</td></tr>
+<tr><td><code>text</code></td><td>Rich text block</td><td>Multi-row text (bold/italic/link/photo...)</td></tr>
+<tr><td><code>editor</code></td><td>File editor</td><td>Opens a file in the built-in editor</td></tr>
+<tr><td><code>download</code></td><td>Download</td><td>Downloads a file, then runs a script</td></tr>
+<tr><td><code>resource</code></td><td>Asset extraction</td><td>Extracts assets from APK (invisible)</td></tr>
+<tr><td><code>menu</code></td><td>Overflow menu</td><td>Toolbar 3-dot menu container</td></tr>
+<tr><td><code>fab</code></td><td>Floating button</td><td>FAB container on the page</td></tr>
+</table>
+</div>
+
+<h3>2.3. Nesting = dotted path</h3>
+<p>A child node of a group is declared using the dotted path <code>[[group.type]]</code> (or <code>[[group.subgroup.type]]</code> for deeper nesting). Child nodes always belong to the most recently declared group above them in the file.</p>
+
+<h3>2.4. Display order = position in file</h3>
+<p>Display order is always <strong>top-to-bottom</strong> by the position of the <code>[[name]]</code> entry in the file, regardless of node type (group, action, page, text, switch ...) - even when types are <strong>interleaved</strong> (e.g. an action, then a page, then another action). The position is read directly from the <code>tomlj</code> API, so there is no need for an <code>order</code> field.</p>
+<div class="callout tip">The parser uses <code>TomlArray.inputPositionOf(index).line()</code> to obtain the line number of each array element. If the API returns null (due to error or unsupported feature), the parser falls back to read order (seq) - it never crashes.</div>
+
+<h3>2.5. Boolean values - 3 accepted forms</h3>
+<p>Boolean fields such as <code>confirm</code>, <code>readonly</code>, <code>auto-off</code> accept:</p>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Value</th><th>Result</th><th>Notes</th></tr>
+<tr><td><code>true</code> / <code>1</code></td><td>true</td><td>Statically true</td></tr>
+<tr><td><code>false</code> / <code>0</code></td><td>false</td><td>Statically false</td></tr>
+<tr><td>(any other string)</td><td>Run as shell, <code>"1"</code> =&gt; true, otherwise =&gt; false</td><td><span class="badge shell">shell</span> via <code>resolveBoolOrShell()</code></td></tr>
+</table>
+</div>
+<p>Example: <code>readonly = "test -f /sdcard/lock &amp;&amp; echo 1"</code> - the parser runs that command, and if it returns <code>"1"</code> then readonly = true.</p>
+<div class="callout warn"><strong>Note:</strong> <code>resolveBoolOrShell</code> does NOT run immediately during page parsing for <code>readonly</code>/<code>support</code> of action or <code>checked</code> of switch - these are queued into <em>pending states</em> and batched at the end (see <a href="#pending-states">section 20</a>).</div>
+
+<h3>2.6. String resource references</h3>
+<p>Any text field (<code>title</code>, <code>desc</code>, <code>summary</code> ...) may include a reference to the app's string resources via <code>@string/name</code> or <code>@string:name</code>. The parser resolves these automatically. If the resource is not found, the original string is kept.</p>
+</section>
+
+<section id="overview">
+<h2>3. Node type overview</h2>
+<p>Quick reference for all node types. Click a name to jump to its detailed section.</p>
+<div class="toc-grid">
+<a class="toc-card" href="#group"><div class="tc-name">[[group]]</div><div class="tc-desc">Container holding child nodes; nestable</div></a>
+<a class="toc-card" href="#page"><div class="tc-name">[[page]]</div><div class="tc-desc">Sub-page - opens a new page (file/config-sh)</div></a>
+<a class="toc-card" href="#action"><div class="tc-name">[[action]]</div><div class="tc-desc">Action - runs a shell script, may have params/rows</div></a>
+<a class="toc-card" href="#action-params"><div class="tc-name">[[action.params]]</div><div class="tc-desc">Input parameters for an action (text/file/seekbar...)</div></a>
+<a class="toc-card" href="#switch"><div class="tc-name">[[switch]]</div><div class="tc-desc">On/off toggle, reads/writes state via shell</div></a>
+<a class="toc-card" href="#picker"><div class="tc-name">[[picker]]</div><div class="tc-desc">Single/multi value selector from a list</div></a>
+<a class="toc-card" href="#text"><div class="tc-name">[[text]]</div><div class="tc-desc">Rich text block (bold/italic/link/photo...)</div></a>
+<a class="toc-card" href="#text-rows"><div class="tc-name">[[text.rows]]</div><div class="tc-desc">Rich text row inside text/action/page/download</div></a>
+<a class="toc-card" href="#editor"><div class="tc-name">[[editor]]</div><div class="tc-desc">Opens a file in the built-in text editor</div></a>
+<a class="toc-card" href="#download"><div class="tc-name">[[download]]</div><div class="tc-desc">Downloads a file via HTTP then runs a script</div></a>
+<a class="toc-card" href="#resource"><div class="tc-name">[[resource]]</div><div class="tc-desc">Extracts assets from APK to storage (invisible)</div></a>
+<a class="toc-card" href="#menu-fab"><div class="tc-name">[[menu]] / [[fab]]</div><div class="tc-desc">Overflow menu and FAB of the page itself</div></a>
+</div>
+</section>
+
+<section id="shared-fields">
+<h2>4. Shared fields (NodeInfoBase + ClickableNode + RunnableNode)</h2>
+<p>These are the fields that <strong>every node has</strong> (inherited from <code>NodeInfoBase</code>).
+All text fields accept <code>@string/...</code> references.</p>
+
+<h3>4.1. NodeInfoBase (present on every node)</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td class="field-name">title</td><td>-</td><td class="field-type">String</td><td>""</td><td>Display title. Accepts <code>@string/...</code></td></tr>
+<tr><td class="field-name">title-sh</td><td>-</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script that produces title dynamically. Runs during parse; overrides <code>title</code></td></tr>
+<tr><td class="field-name">desc</td><td>-</td><td class="field-type">String</td><td>""</td><td>Short description shown below title</td></tr>
+<tr><td class="field-name">desc-sh</td><td>-</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script that produces desc dynamically</td></tr>
+<tr><td class="field-name">summary</td><td>-</td><td class="field-type">String</td><td>""</td><td>Extra info shown in small grey text</td></tr>
+<tr><td class="field-name">summary-sh</td><td>-</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script that produces summary dynamically</td></tr>
+<tr><td class="field-name">key</td><td>index, id</td><td class="field-type">String</td><td>auto UUID</td><td>Unique ID. Required for Desktop shortcuts. If key starts with <code>@</code>, <code>allowShortcut</code> defaults to false</td></tr>
+<tr><td class="field-name">support</td><td>visible</td><td class="field-type">Bool|Shell</td><td>true</td><td>Hide/show this node. Accepts <code>true</code>/<code>false</code> or a <span class="badge shell">shell</span> returning <code>"1"</code></td></tr>
+</table>
+</div>
+
+<h3>4.2. ClickableNode (for page, action, switch, picker, editor, download)</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">icon</td><td>icon-path</td><td class="field-type">String</td><td>Icon path shown on the left of the item</td></tr>
+<tr><td class="field-name">logo</td><td>logo-path</td><td class="field-type">String</td><td>Large icon used when creating a shortcut (different from small <code>icon</code>)</td></tr>
+<tr><td class="field-name">photo</td><td>photo-path</td><td class="field-type">String</td><td>Large image shown in the detail dialog</td></tr>
+<tr><td class="field-name">photo-real-size</td><td>photo-original-size</td><td class="field-type">Bool</td><td>true: show image at its real size, no stretching</td></tr>
+<tr><td class="field-name">photo-gif-num</td><td>gif-num</td><td class="field-type">Int</td><td>&gt;0: image is an animated GIF (photo_1.png, photo_2.png...)</td></tr>
+<tr><td class="field-name">photo-gif-time</td><td>gif-time</td><td class="field-type">Int</td><td>Time per frame (ms; default 300)</td></tr>
+<tr><td class="field-name">photo-gif-autoplay</td><td>gif-autoplay</td><td class="field-type">Bool</td><td>true (default): auto-play the GIF</td></tr>
+<tr><td class="field-name">photo-gif-loop</td><td>photo-gif-loop-count</td><td class="field-type">Int</td><td>Loop count (0 = infinite)</td></tr>
+<tr><td class="field-name">icon-gif-num</td><td>-</td><td class="field-type">Int</td><td>Same as photo-gif-num but for the small icon</td></tr>
+<tr><td class="field-name">icon-gif-time</td><td>-</td><td class="field-type">Int</td><td>Time per frame for the icon</td></tr>
+<tr><td class="field-name">icon-gif-autoplay</td><td>-</td><td class="field-type">Bool</td><td>Auto-play icon GIF</td></tr>
+<tr><td class="field-name">icon-gif-loop</td><td>icon-gif-loop-count</td><td class="field-type">Int</td><td>Loop count for the icon GIF</td></tr>
+<tr><td class="field-name">bg</td><td>bg-path</td><td class="field-type">String</td><td>Background image for the item/dialog</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state, locked</td><td class="field-type">Bool</td><td>true: lock this item (no interaction allowed)</td></tr>
+<tr><td class="field-name">min-sdk</td><td>sdk-min</td><td class="field-type">Int</td><td>Minimum Android SDK version</td></tr>
+<tr><td class="field-name">max-sdk</td><td>sdk-max</td><td class="field-type">Int</td><td>Maximum Android SDK version (default 100)</td></tr>
+<tr><td class="field-name">target-sdk</td><td>sdk-target</td><td class="field-type">Int</td><td>Target Android SDK version</td></tr>
+<tr><td class="field-name">allow-shortcut</td><td>-</td><td class="field-type">Bool?</td><td>Allow creating a shortcut. Default null (auto). Forced false when key starts with <code>@</code></td></tr>
+</table>
+</div>
+
+<h3>4.3. RunnableNode (for action, switch, picker, download)</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">confirm</td><td>-</td><td class="field-type">Bool</td><td>Ask for confirmation before running</td></tr>
+<tr><td class="field-name">warn</td><td>warning</td><td class="field-type">String</td><td>Warning text shown in the confirmation dialog</td></tr>
+<tr><td class="field-name">warn-sh</td><td>warning-sh</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces warning dynamically</td></tr>
+<tr><td class="field-name">auto-off</td><td>auto-close</td><td class="field-type">Bool</td><td>Auto-close the log dialog after running</td></tr>
+<tr><td class="field-name">auto-finish</td><td>-</td><td class="field-type">Bool</td><td>Auto-close the page after running</td></tr>
+<tr><td class="field-name">auto-kill</td><td>-</td><td class="field-type">Bool</td><td>Auto-kill related processes</td></tr>
+<tr><td class="field-name">auto-restart</td><td>-</td><td class="field-type">Bool</td><td>Auto-restart the service</td></tr>
+<tr><td class="field-name">interruptible</td><td>interruptable</td><td class="field-type">Bool</td><td>Allow interrupting mid-run</td></tr>
+<tr><td class="field-name">need-input</td><td>needs-input, require-input</td><td class="field-type">Bool</td><td>Script uses <code>read</code> to receive keyboard input</td></tr>
+<tr><td class="field-name">reload-page</td><td>-</td><td class="field-type">Bool</td><td>Reload the whole page after running</td></tr>
+<tr><td class="field-name">reload</td><td>-</td><td class="field-type">Bool|String</td><td><code>true</code> = reload page; or a comma-separated list of block IDs to refresh only those blocks</td></tr>
+<tr><td class="field-name">shell</td><td>-</td><td class="field-type">String</td><td>Shell script content (alias of <code>script</code> for actions)</td></tr>
+<tr><td class="field-name">bg-task</td><td>background-task, async-task</td><td class="field-type">Bool</td><td>Run in background (no log dialog)</td></tr>
+<tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Script to set state (for switch/picker - see dedicated sections)</td></tr>
+</table>
+</div>
+<div class="callout tip"><strong>Refreshing the page:</strong> use <code>reload-page = true</code> or <code>reload = true</code> to make the app reload the whole page after a script finishes (e.g. after toggling a switch, to refresh the summary). To refresh only specific blocks (e.g. only the affected switches), use <code>reload = "id1,id2"</code>.</div>
+</section>
+
+<section id="group">
+<h2>5. [[group]] - Container for child nodes</h2>
+<p><code>[[group]]</code> is a container that groups related nodes. It has no icon and is not clickable - it's just a title with a list of child nodes below it.</p>
+
+<h3>5.1. Group fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td class="field-name">title</td><td>-</td><td class="field-type">String</td><td>""</td><td>Group title (displayed uppercase, grey)</td></tr>
+<tr><td class="field-name">title-sh</td><td>-</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script that produces title</td></tr>
+<tr><td class="field-name">key</td><td>index, id</td><td class="field-type">String</td><td>auto</td><td>Unique ID</td></tr>
+<tr><td class="field-name">support</td><td>visible</td><td class="field-type">Bool|Shell</td><td>true</td><td>Hide/show the entire group. Accepts shell too!</td></tr>
+</table>
+</div>
+
+<h3>5.2. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">Settings</span></div>
+<div class="d-body">
+  <div class="d-group">
+    <div class="d-group-title">CPU</div>
+    <div class="d-item"><div class="d-icon">&#9889;</div><div class="d-content"><div class="d-title2">Optimize CPU</div><div class="d-desc">Set governor to performance</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
+    <div class="d-item"><div class="d-content"><div class="d-title2">Governor</div><div class="d-summary">performance</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
+  </div>
+  <div class="d-group">
+    <div class="d-group-title">Memory</div>
+    <div class="d-item"><div class="d-icon">&#128465;</div><div class="d-content"><div class="d-title2">Clear cache</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
+  </div>
+</div>
+</div></div>
+
+<h3>5.3. Multi-level nesting</h3>
+<p>Groups can be nested inside other groups to build deep trees:</p>
+<div class="callout warn">The parser supports arbitrary nesting depth, but in practice don't go beyond 3 levels - it becomes hard to read and maintain.</div>
+</section>
+
+<section id="page">
+<h2>6. [[page]] - Sub-page</h2>
+<p><code>[[page]]</code> is not an action - it's a <strong>link to another page</strong>. Clicking it opens a new page (another .toml file, an HTML page, or another Activity).</p>
+
+<h3>6.1. Page fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">config</td><td>-</td><td class="field-type">String</td><td>Path to the sub-page .toml file (relative or absolute)</td></tr>
+<tr><td class="field-name">config-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script returning <strong>inline TOML content</strong> or a <strong>.toml file path</strong>. Auto-detected by the <code>[[group]]</code> header</td></tr>
+<tr><td class="field-name">html</td><td>-</td><td class="field-type">String</td><td>Online HTML URL - opens in a WebView</td></tr>
+<tr><td class="field-name">link</td><td>href</td><td class="field-type">String</td><td>URL opened by the system browser</td></tr>
+<tr><td class="field-name">activity</td><td>a, intent</td><td class="field-type">String</td><td>Activity intent to launch (e.g. <code>com.example.MyActivity</code>)</td></tr>
+<tr><td class="field-name">before-load</td><td>before-read</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script run BEFORE reading the sub-page config</td></tr>
+<tr><td class="field-name">after-load</td><td>after-read</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script run AFTER reading completes</td></tr>
+<tr><td class="field-name">load-ok</td><td>load-success</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script run if load succeeds</td></tr>
+<tr><td class="field-name">load-fail</td><td>load-error</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script run if load fails</td></tr>
+<tr><td class="field-name">process</td><td>-</td><td class="field-type">Bool</td><td><span class="badge new">new</span> true: show items one by one as they build (with progress bar) instead of waiting (see <a href="#process">section 21</a>)</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Shell to check the lock state</td></tr>
+<tr><td class="field-name">rows</td><td>-</td><td class="field-type">Array</td><td>Rich-text rows shown below the page (see <a href="#text-rows">section 12</a>)</td></tr>
+</table>
+</div>
+
+<h3>6.2. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">CPU</span></div>
+<div class="d-body">
+  <div class="d-item"><div class="d-icon">&#128202;</div><div class="d-content"><div class="d-title2">App list</div><div class="d-desc">Manage installed apps</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
+  <div class="d-item"><div class="d-icon">&#9881;</div><div class="d-content"><div class="d-title2">Advanced settings</div><div class="d-desc">Open external config file</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
+</div>
+</div></div>
+<div class="callout tip"><code>config-sh</code> returns <strong>one of two things</strong>: either a .toml file path (ending with <code>.toml</code>), or inline TOML content (whose first or second non-empty line starts with <code>[[group]]</code> or <code>[[group.</code>). The parser auto-detects - see <code>PageConfigSh.looksLikeInlineToml()</code>.</div>
+</section>
+
+<section id="action">
+<h2>7. [[action]] - Action (runs a shell script)</h2>
+<p><code>[[action]]</code> is the most common node type: clicking it shows a dialog (if it has <code>confirm</code>/<code>params</code>/<code>warning</code>), then runs the script and shows the output in a log dialog.</p>
+
+<h3>7.1. Action fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td><span class="badge req">required</span> Main shell script. Receives <code>$param_name</code> env vars from params</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock. If it returns <code>"1"</code>, the action is locked (not clickable)</td></tr>
+<tr><td class="field-name">menu</td><td>-</td><td class="field-type">Bool</td><td><span class="badge new">new</span> true: action does NOT appear in the list; instead appears as its own icon on the toolbar</td></tr>
+<tr><td class="field-name">show</td><td>-</td><td class="field-type">Bool|Shell</td><td><span class="badge new">new</span> true (or shell): auto-open this action's dialog when entering the page (only once)</td></tr>
+<tr><td class="field-name">params</td><td>-</td><td class="field-type">Array</td><td>List of input parameters - see <a href="#action-params">section 8</a></td></tr>
+<tr><td class="field-name">rows</td><td>-</td><td class="field-type">Array</td><td>Rich-text rows shown below the item - see <a href="#text-rows">section 12</a></td></tr>
+<tr><td class="field-name">params-rows</td><td>-</td><td class="field-type">Array</td><td>Rows for the params dialog only (separate from <code>rows</code> which appear both in list and dialog)</td></tr>
+<tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">+ all fields of RunnableNode, ClickableNode, NodeInfoBase (see <a href="#shared-fields">section 4</a>)</td></tr>
+</table>
+</div>
+
+<h3>7.2. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">CPU</span><span class="d-menu">&#8942;</span></div>
+<div class="d-body">
+  <div class="d-item">
+    <div class="d-icon">&#9889;</div>
+    <div class="d-content"><div class="d-title2">Optimize CPU</div><div class="d-desc">Set governor to performance</div></div>
+    <div class="d-trail"><span class="d-chevron">&rsaquo;</span></div>
+  </div>
+  <div class="d-item">
+    <div class="d-icon">&#128293;</div>
+    <div class="d-content"><div class="d-title2">Clear cache</div><div class="d-desc">Clear system cache</div></div>
+    <div class="d-trail"><span class="d-chevron">&rsaquo;</span></div>
+  </div>
+</div>
+</div></div>
+<div class="callout tip"><code>menu = true</code> and <code>show = true</code> are <strong>independent</strong>: an action can be both on the toolbar (menu=true) and auto-open its dialog (show=true). When an action moves to the toolbar (menu=true), an unset key falls back to <code>title</code> to use as the Menu itemId.</div>
+</section>
+
+<section id="action-params">
+<h2>8. [[action.params]] - Input parameters</h2>
+<p>Each <code>[[action.params]]</code> defines one input field in the dialog shown when the user clicks an action. The parameter's value is passed to the action's script via the <code>$param_name</code> environment variable.</p>
+
+<h3>8.1. Basic param fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">name</td><td>-</td><td class="field-type">String</td><td><span class="badge req">required</span> Variable name (unique within an action). Becomes <code>$name</code> in the script</td></tr>
+<tr><td class="field-name">title</td><td>-</td><td class="field-type">String</td><td>Display label</td></tr>
+<tr><td class="field-name">title-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces title dynamically</td></tr>
+<tr><td class="field-name">label</td><td>-</td><td class="field-type">String</td><td>Secondary label</td></tr>
+<tr><td class="field-name">label-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces label</td></tr>
+<tr><td class="field-name">desc</td><td>-</td><td class="field-type">String</td><td>Short description</td></tr>
+<tr><td class="field-name">desc-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces desc</td></tr>
+<tr><td class="field-name">desc-on</td><td>on-desc, desc-checked</td><td class="field-type">String</td><td><span class="badge new">new</span> Note shown SPECIFICALLY when the checkbox/switch is ON (only for type=bool/checkbox/switch)</td></tr>
+<tr><td class="field-name">desc-on-sh</td><td>on-desc-sh, desc-checked-sh</td><td class="field-type">String</td><td><span class="badge new">new</span> <span class="badge shell">shell</span> Script that produces desc-on</td></tr>
+<tr><td class="field-name">type</td><td>-</td><td class="field-type">String</td><td>Input type: <code>text</code>/<code>bool</code>/<code>checkbox</code>/<code>switch</code>/<code>seekbar</code>/<code>file</code>/<code>folder</code>/<code>app</code>/<code>spinner</code>/<code>single-select</code>/<code>multi-select</code></td></tr>
+<tr><td class="field-name">value</td><td>-</td><td class="field-type">String</td><td>Default value</td></tr>
+<tr><td class="field-name">value-sh</td><td>value-su</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that fetches value dynamically (runs when dialog opens)</td></tr>
+<tr><td class="field-name">placeholder</td><td>-</td><td class="field-type">String</td><td>Hint when empty</td></tr>
+<tr><td class="field-name">placeholder-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces placeholder</td></tr>
+<tr><td class="field-name">required</td><td>-</td><td class="field-type">Bool</td><td>Required input</td></tr>
+<tr><td class="field-name">readonly</td><td>-</td><td class="field-type">Bool|Shell</td><td>Read-only (no editing). Accepts shell too!</td></tr>
+<tr><td class="field-name">maxlength</td><td>-</td><td class="field-type">Int</td><td>Max character count (type=text)</td></tr>
+<tr><td class="field-name">min</td><td>-</td><td class="field-type">Int</td><td>Minimum value (seekbar)</td></tr>
+<tr><td class="field-name">max</td><td>-</td><td class="field-type">Int</td><td>Maximum value (seekbar). Default <code>Int.MAX_VALUE</code></td></tr>
+<tr><td class="field-name">options</td><td>-</td><td class="field-type">Array</td><td>List of choices (spinner/single-select/multi-select)</td></tr>
+<tr><td class="field-name">options-sh</td><td>option-sh, options-su</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options dynamically</td></tr>
+<tr><td class="field-name">multiple</td><td>-</td><td class="field-type">Bool</td><td>Allow multiple files/options</td></tr>
+<tr><td class="field-name">separator</td><td>-</td><td class="field-type">String</td><td>Value separator (multi). Default <code>\n</code></td></tr>
+<tr><td class="field-name">suffix</td><td>-</td><td class="field-type">String</td><td>File extension filter (e.g. <code>"zip,apk"</code>). Only type=file</td></tr>
+<tr><td class="field-name">mime</td><td>-</td><td class="field-type">String</td><td>MIME type filter. Only type=file</td></tr>
+<tr><td class="field-name">path-home</td><td>home-path</td><td class="field-type">String</td><td>Initial directory when opening file picker</td></tr>
+<tr><td class="field-name">editable</td><td>-</td><td class="field-type">Bool</td><td>Allow manual path entry</td></tr>
+<tr><td class="field-name">support</td><td>visible</td><td class="field-type">Bool|Shell</td><td>Hide/show the param</td></tr>
+<tr><td class="field-name">sort</td><td>-</td><td class="field-type">Bool</td><td><span class="badge new">new</span> Move readonly params to the bottom (only effective when <code>readonly</code> is declared)</td></tr>
+<tr><td class="field-name">allow-no-selection</td><td>no-select</td><td class="field-type">Bool</td><td><span class="badge new">new</span> Allow spinner to be empty (e.g. when you need to distinguish "not selected" from "first item")</td></tr>
+</table>
+</div>
+
+<h3>8.2. Common <code>type</code> values</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>type</th><th>UI</th><th>Related fields</th></tr>
+<tr><td><code>text</code></td><td>Text input</td><td><code>value</code>, <code>placeholder</code>, <code>maxlength</code>, <code>required</code></td></tr>
+<tr><td><code>bool</code> / <code>checkbox</code> / <code>switch</code></td><td>Toggle ON/OFF</td><td><code>value</code> = "1"/"0", <code>desc-on</code> for ON-state note</td></tr>
+<tr><td><code>seekbar</code></td><td>Slider</td><td><code>min</code>, <code>max</code>, <code>value</code></td></tr>
+<tr><td><code>file</code></td><td>File picker</td><td><code>suffix</code>, <code>mime</code>, <code>path-home</code>, <code>multiple</code>, <code>editable</code></td></tr>
+<tr><td><code>folder</code></td><td>Directory picker</td><td><code>path-home</code>, <code>multiple</code>, <code>editable</code></td></tr>
+<tr><td><code>app</code></td><td>App picker</td><td><code>multiple</code></td></tr>
+<tr><td><code>spinner</code> / <code>single-select</code></td><td>Dropdown single choice</td><td><code>options</code>/<code>options-sh</code>, <code>allow-no-selection</code></td></tr>
+<tr><td><code>multi-select</code></td><td>Checkbox list multi choice</td><td><code>options</code>, <code>multiple=true</code>, <code>separator</code></td></tr>
+</table>
+</div>
+
+<h3>8.3. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo - params dialog</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">Set CPU max freq</span></div>
+<div class="d-body">
+  <div class="d-item"><div class="d-content"><div class="d-title2">Frequency (kHz)</div><div class="d-desc">Enter max frequency</div></div></div>
+  <div class="d-item"><div class="d-content"><div class="d-title2">2400000</div></div></div>
+  <div class="d-item"><div class="d-content"><div class="d-title2">Governor</div></div><div class="d-trail">performance</div></div>
+  <div class="d-item"><div class="d-content"><div class="d-title2">Apply to all CPUs</div></div><div class="d-trail"><div class="d-switch"></div></div></div>
+  <div class="d-item"><div class="d-content"><div class="d-title2">Config file</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
+</div>
+</div></div>
+
+<h3>8.4. Dependencies (depend-*)</h3>
+<p>A param can be hidden/shown (or switched to readonly) based on the value of another param. This is a large feature - see <a href="#depend">section 17</a> for details.</p>
+</section>
+
+<section id="switch">
+<h2>9. [[switch]] - On/off toggle</h2>
+<p><code>[[switch]]</code> displays an ON/OFF toggle. When the user toggles it, the <code>set</code> script is called with the env var <code>$state</code> set to <code>"1"</code> or <code>"0"</code>. When the page loads, the <code>get</code> script is called to read the current state.</p>
+
+<h3>9.1. Switch fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to read state. Returning <code>"1"</code>/<code>"true"</code> = ON</td></tr>
+<tr><td class="field-name">set</td><td>setstate, script</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to set state. Receives <code>$state</code> = "1"/"0"</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock</td></tr>
+<tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">+ all fields of RunnableNode, ClickableNode, NodeInfoBase</td></tr>
+</table>
+</div>
+
+<h3>9.2. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">Display</span></div>
+<div class="d-body">
+  <div class="d-group">
+    <div class="d-group-title">Display</div>
+    <div class="d-item">
+      <div class="d-content"><div class="d-title2">Dark mode</div><div class="d-desc">Enable dark UI</div></div>
+      <div class="d-switch"></div>
+    </div>
+    <div class="d-item">
+      <div class="d-content"><div class="d-title2">Auto brightness</div></div>
+      <div class="d-switch off"></div>
+    </div>
+  </div>
+</div>
+</div></div>
+<div class="callout tip">The parser does NOT run <code>get</code> immediately when parsing each switch. Instead, all <code>get</code> scripts of switches/pickers are <strong>queued into pendingSwitchStates</strong> and run <strong>exactly once</strong> at the end of <code>readConfigToml()</code> via <code>resolvePendingStates()</code> - reducing N shell round-trips to 1 (see <a href="#pending-states">section 20</a>).</div>
+</section>
+
+<section id="picker">
+<h2>10. [[picker]] - Value selector</h2>
+<p><code>[[picker]]</code> displays a current value; clicking it opens a popup to choose one (or more) values from a list. When the user confirms, the <code>set</code> script is called with <code>$state</code> = the chosen value.</p>
+
+<h3>10.1. Picker fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to read the current value</td></tr>
+<tr><td class="field-name">set</td><td>setstate, script</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to set the value. Receives <code>$state</code></td></tr>
+<tr><td class="field-name">options</td><td>-</td><td class="field-type">Array</td><td>Static options list - <code>[[picker.options]]</code> with <code>title</code>/<code>value</code></td></tr>
+<tr><td class="field-name">option-sh</td><td>options-sh, options-su</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options dynamically. Each line <code>value|title</code> or just <code>value</code></td></tr>
+<tr><td class="field-name">multiple</td><td>-</td><td class="field-type">Bool</td><td>Allow selecting multiple values</td></tr>
+<tr><td class="field-name">separator</td><td>-</td><td class="field-type">String</td><td>Separator for multi-select values (default <code>\n</code>)</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock</td></tr>
+<tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">+ all fields of RunnableNode, ClickableNode, NodeInfoBase</td></tr>
+</table>
+</div>
+
+<h3>10.2. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">CPU</span></div>
+<div class="d-body">
+  <div class="d-item">
+    <div class="d-content"><div class="d-title2">Governor</div><div class="d-summary">performance</div></div>
+    <div class="d-trail"><span class="d-chevron">&rsaquo;</span></div>
+  </div>
+  <div class="d-item">
+    <div class="d-content"><div class="d-title2">Max freq</div><div class="d-summary">2400000 kHz</div></div>
+    <div class="d-trail"><span class="d-chevron">&rsaquo;</span></div>
+  </div>
+</div>
+</div></div>
+<div class="callout warn">When a picker has both static <code>[[picker.options]]</code> and dynamic <code>option-sh</code>, the final list is the <strong>union of both</strong> (static options first, dynamic options appended after running the shell).</div>
+</section>
+
+<section id="text">
+<h2>11. [[text]] - Rich text block</h2>
+<p><code>[[text]]</code> is a non-clickable display block containing multiple rich-text rows. Use it for notices, instructions, or inline image/gif blocks.</p>
+
+<h3>11.1. Text fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">rows</td><td>-</td><td class="field-type">Array</td><td><span class="badge req">required</span> Rich-text rows - see <a href="#text-rows">section 12</a></td></tr>
+<tr><td colspan="3" style="background:var(--bg-soft);font-style:italic;">+ NodeInfoBase fields (title, title-sh, desc, desc-sh, summary, support...)</td></tr>
+</table>
+</div>
+
+<h3>11.2. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">Notice</span></div>
+<div class="d-body">
+  <div class="d-richtext">
+    <div class="d-row bold">CAUTION</div>
+    <div class="d-row">The actions below may affect the system.</div>
+    <div class="d-divider"></div>
+    <div class="d-row mono">  $ run backup --full</div>
+    <div class="d-row italic">See more at: example.com/docs</div>
+  </div>
+</div>
+</div></div>
+</section>
+
+<section id="text-rows">
+<h2>12. [[text.rows]] - Rich text row</h2>
+<p>This is the <strong>most common</strong> display component: used in <code>[[text]]</code>, <code>[[action]]</code>, <code>[[page]]</code>, <code>[[download]]</code> and <code>[[group.action.params-rows]]</code>. Each row is a single line of text that can have style, icon, toggle, photo, etc.</p>
+
+<h3>12.1. Row fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td class="field-name">text</td><td>-</td><td class="field-type">String</td><td>""</td><td>Text content</td></tr>
+<tr><td class="field-name">sh</td><td>-</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script that produces text dynamically</td></tr>
+<tr><td class="field-name">bold</td><td>b</td><td class="field-type">Bool</td><td>false</td><td>Bold</td></tr>
+<tr><td class="field-name">italic</td><td>i</td><td class="field-type">Bool</td><td>false</td><td>Italic</td></tr>
+<tr><td class="field-name">underline</td><td>u</td><td class="field-type">Bool</td><td>false</td><td>Underline</td></tr>
+<tr><td class="field-name">strikethrough</td><td>line-through, del</td><td class="field-type">Bool</td><td>false</td><td>Strikethrough</td></tr>
+<tr><td class="field-name">monospace</td><td>mono, code</td><td class="field-type">Bool</td><td>false</td><td>Monospace font (for code/log)</td></tr>
+<tr><td class="field-name">letter-spacing</td><td>letterspacing, spacing</td><td class="field-type">Float</td><td>0</td><td>Letter spacing (em units)</td></tr>
+<tr><td class="field-name">line-height</td><td>lineheight, row-height</td><td class="field-type">Float</td><td>0</td><td>Line height multiplier (1.5 = +50%)</td></tr>
+<tr><td class="field-name">margin-top</td><td>spacing-top</td><td class="field-type">Int</td><td>0</td><td>Top margin (dp)</td></tr>
+<tr><td class="field-name">margin-bottom</td><td>spacing-bottom</td><td class="field-type">Int</td><td>0</td><td>Bottom margin (dp)</td></tr>
+<tr><td class="field-name">alpha</td><td>opacity</td><td class="field-type">Float</td><td>-1</td><td>Opacity 0.0-1.0 or 0-255</td></tr>
+<tr><td class="field-name">foreground</td><td>color</td><td class="field-type">String</td><td>-1</td><td>Text color (e.g. <code>#FF0000</code>)</td></tr>
+<tr><td class="field-name">bg</td><td>background, bgcolor</td><td class="field-type">String</td><td>-1</td><td>Background color</td></tr>
+<tr><td class="field-name">size</td><td>-</td><td class="field-type">Int</td><td>-1</td><td>Font size (sp)</td></tr>
+<tr><td class="field-name">break</td><td>-</td><td class="field-type">Bool</td><td>false</td><td>Line break after this row</td></tr>
+<tr><td class="field-name">line</td><td>divider, separator</td><td class="field-type">Bool</td><td>false</td><td>Draw a horizontal divider before this row</td></tr>
+<tr><td class="field-name">align</td><td>-</td><td class="field-type">String</td><td>normal</td><td><code>normal</code>/<code>center</code>/<code>opposite</code></td></tr>
+<tr><td class="field-name">link</td><td>href</td><td class="field-type">String</td><td>""</td><td>URL to open on click</td></tr>
+<tr><td class="field-name">activity</td><td>a, intent</td><td class="field-type">String</td><td>""</td><td>Intent to open on click</td></tr>
+<tr><td class="field-name">photo</td><td>photo-path</td><td class="field-type">String</td><td>""</td><td>Large image (own line, separate from text)</td></tr>
+<tr><td class="field-name">photo-real-size</td><td>photo-original-size</td><td class="field-type">Bool</td><td>false</td><td>Show image at real size</td></tr>
+<tr><td class="field-name">photo-gif-num</td><td>gif-num</td><td class="field-type">Int</td><td>0</td><td>&gt;0: image is animated (photo_1.png...)</td></tr>
+<tr><td class="field-name">photo-gif-time</td><td>gif-time</td><td class="field-type">Int</td><td>300</td><td>Time per frame (ms)</td></tr>
+<tr><td class="field-name">photo-gif-autoplay</td><td>gif-autoplay</td><td class="field-type">Bool</td><td>true</td><td>Auto-play the GIF</td></tr>
+<tr><td class="field-name">photo-gif-loop</td><td>photo-gif-loop-count</td><td class="field-type">Int</td><td>0</td><td>Loop count (0=infinite)</td></tr>
+<tr><td class="field-name">icon</td><td>icon-path</td><td class="field-type">String</td><td>""</td><td><span class="badge new">new</span> INLINE small icon (same line, different from photo)</td></tr>
+<tr><td class="field-name">icon-position</td><td>icon-pos</td><td class="field-type">String</td><td>before</td><td><code>before</code> / <code>after</code> the text</td></tr>
+<tr><td class="field-name">icon-size</td><td>-</td><td class="field-type">Int</td><td>0</td><td>Icon size (dp)</td></tr>
+<tr><td class="field-name">script</td><td>run</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script to run when the row is clicked</td></tr>
+<tr><td class="field-name">toggle</td><td>toggle-type</td><td class="field-type">String</td><td>""</td><td><code>checkbox</code>/<code>switch</code> = show a small toggle next to the row</td></tr>
+<tr><td class="field-name">checked</td><td>checked-sh, check</td><td class="field-type">Bool|Shell</td><td>false</td><td>Toggle state. Accepts shell too!</td></tr>
+<tr><td class="field-name">onchange-sh</td><td>on-change-sh, toggle-sh, set-sh</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script to run when the user toggles (receives <code>$state</code>)</td></tr>
+<tr><td class="field-name">support</td><td>visible</td><td class="field-type">Bool|Shell</td><td>true</td><td>Hide/show the row</td></tr>
+</table>
+</div>
+
+<h3>12.2. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">Info</span></div>
+<div class="d-body">
+  <div class="d-richtext">
+    <div class="d-row bold">Device info</div>
+    <div class="d-divider"></div>
+    <div class="d-row">Model: <strong>Pixel 7</strong></div>
+    <div class="d-row">Android: <strong>14</strong></div>
+    <div class="d-row mono">ro.build.fingerprint=google/raven/...</div>
+    <div class="d-divider"></div>
+    <div class="d-row center italic">Updated 2024-08-26</div>
+    <div class="d-divider"></div>
+    <div class="d-item">
+      <div class="d-content"><div class="d-title2">Show notifications</div><div class="d-desc">Display system notifications</div></div>
+      <div class="d-switch"></div>
+    </div>
+  </div>
+</div>
+</div></div>
+<div class="callout warn"><code>sh</code> for a row runs IMMEDIATELY during page parse (synchronous, not pending). <code>checked</code> when shell is QUEUED into <code>pendingRowCheckedStates</code> and batched at the end - like switch/picker.</div>
+</section>
+
+<section id="editor">
+<h2>13. [[editor]] - Open file in the text editor</h2>
+<p><code>[[editor]]</code> lets the user open a file in the built-in text editor (<code>TextEditorActivity</code>) to view or edit it. If the file does not exist, the editor creates it when the user saves.</p>
+
+<h3>13.1. Editor fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td class="field-name">file</td><td>path</td><td class="field-type">String</td><td>""</td><td><span class="badge req">required</span> Path of the file to open</td></tr>
+<tr><td class="field-name">wrap</td><td>-</td><td class="field-type">Bool</td><td>true</td><td>Enable line wrapping</td></tr>
+<tr><td class="field-name">placeholder</td><td>-</td><td class="field-type">String</td><td>null</td><td>Hint when file is empty</td></tr>
+<tr><td class="field-name">readonly</td><td>-</td><td class="field-type">Bool|Shell</td><td>false</td><td>Read-only. Accepts shell too!</td></tr>
+<tr><td class="field-name">need-input</td><td>-</td><td class="field-type">Bool</td><td>false</td><td>Whether the run script uses <code>read</code></td></tr>
+<tr><td class="field-name">value</td><td>-</td><td class="field-type">String</td><td>""</td><td>Initial content (only when file does not exist)</td></tr>
+<tr><td class="field-name">value-sh</td><td>-</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script that produces initial content (higher priority than <code>value</code>)</td></tr>
+<tr><td colspan="5" style="background:var(--bg-soft);font-style:italic;">+ ClickableNode fields (icon, lock, min-sdk...) and NodeInfoBase (title, desc...)</td></tr>
+</table>
+</div>
+
+<h3>13.2. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">CPU</span></div>
+<div class="d-body">
+  <div class="d-item">
+    <div class="d-icon">&#128221;</div>
+    <div class="d-content"><div class="d-title2">Edit build.prop</div><div class="d-desc">/system/build.prop</div></div>
+    <div class="d-trail"><span class="d-chevron">&rsaquo;</span></div>
+  </div>
+  <div class="d-item">
+    <div class="d-icon">&#128221;</div>
+    <div class="d-content"><div class="d-title2">Create new script</div><div class="d-desc">/sdcard/myscript.sh</div></div>
+    <div class="d-trail"><span class="d-chevron">&rsaquo;</span></div>
+  </div>
+</div>
+</div></div>
+<div class="callout warn"><code>value</code> is only written when the file <strong>does not exist</strong>. If the file already exists, <code>value</code>/<code>value-sh</code> are ignored - the existing file content is preserved.</div>
+</section>
+
+<section id="download">
+<h2>14. [[download]] - Download a file via HTTP</h2>
+<p><code>[[download]]</code> is a new node type that displays download progress <strong>directly in the item</strong> (no separate dialog). When download completes, it runs the <code>script</code> with the env var <code>$state</code> = path of the downloaded file (cached, random name).</p>
+
+<h3>14.1. Download fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">url</td><td>-</td><td class="field-type">String</td><td><span class="badge req">required</span> URL (http/https) to download. Only static URLs are supported - no <code>url-sh</code></td></tr>
+<tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Script run after download. Receives <code>$state</code> = path of downloaded file</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock</td></tr>
+<tr><td class="field-name">rows</td><td>-</td><td class="field-type">Array</td><td>Rich-text rows shown below the item - see <a href="#text-rows">section 12</a></td></tr>
+<tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">+ all RunnableNode fields: confirm, warn, reload, auto-finish...</td></tr>
+</table>
+</div>
+
+<h3>14.2. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">Update</span></div>
+<div class="d-body">
+  <div class="d-item">
+    <div class="d-icon">&#11015;</div>
+    <div class="d-content">
+      <div class="d-title2">Download update</div>
+      <div class="d-desc">update.zip - 24 MB / 53 MB</div>
+      <div class="d-progress"><div></div></div>
+    </div>
+    <div class="d-trail">45%</div>
+  </div>
+</div>
+</div></div>
+<div class="callout danger">The parser does NOT support <code>url-sh</code> (script generating URL dynamically). The URL must be a constant in the TOML file.</div>
+</section>
+
+<section id="resource">
+<h2>15. [[resource]] - Extract assets</h2>
+<p><code>[[resource]]</code> is an <strong>invisible</strong> node (it returns <code>null</code> after initialization). It only extracts assets from the APK to storage (typically <code>/data/data/&lt;pkg&gt;/files/...</code> or cache). This is how to ship script files, images, etc. from the APK to outside so shell can call them.</p>
+
+<p>You can also put <code>resource-file</code>/<code>resource-dir</code> fields directly inside <code>[[group]]</code>/<code>[[action]]</code>/<code>[[page]]</code>/<code>[[switch]]</code>/<code>[[picker]]</code>/<code>[[text]]</code> - no need to declare a separate <code>[[resource]]</code> entry.</p>
+
+<h3>15.1. Fields</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">resource-file</td><td>-</td><td class="field-type">String</td><td>Name of a single asset file to extract</td></tr>
+<tr><td class="field-name">resource-dir</td><td>-</td><td class="field-type">String</td><td>Name of an asset directory to extract entirely</td></tr>
+<tr><td class="field-name">resources</td><td>-</td><td class="field-type">Array</td><td>List of more complex resources - each entry is a table with <code>file</code> and/or <code>dir</code></td></tr>
+</table>
+</div>
+<div class="callout tip"><code>ExtractAssets.extractResource()</code> and <code>extractResources()</code> check if the file already exists before re-extracting. To avoid re-extracting on every run, use <code>support = "test -f ..."</code> to only extract when needed.</div>
+</section>
+
+<section id="menu-fab">
+<h2>16. [[menu]] / [[fab]] - Overflow menu and FAB</h2>
+<p>This feature <strong>replaces</strong> the old <code>[[page.options]]</code> mechanism (declared in the parent page, built eagerly even when the sub-page was never opened). Now the menu and FAB are declared <strong>directly inside the page's own TOML file</strong>, just like <code>[[action]]</code>/<code>[[text]]</code> - they are only read (and only their inner shell runs) when the page is actually opened.</p>
+
+<h3>16.1. Structure</h3>
+<p>A <code>[[menu]]</code> or <code>[[fab]]</code> block is a <strong>container</strong>, NOT a single entry:</p>
+<ul>
+<li><code>handler</code> (or <code>handler-sh</code>): the DEFAULT script that runs when clicking a child item, if that item does not declare its own <code>script</code></li>
+<li><code>[[...items]]</code>: the list of items shown in the menu/fab - each item uses the same fields as the old <code>[[page.options]]</code> (type/style/suffix/mime/path-home/multiple/box/silent/link/activity/html/config/config-sh/script/title...)</li>
+</ul>
+
+<h3>16.2. Item fields (inside menu/fab)</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
+<tr><td class="field-name">title</td><td>text</td><td class="field-type">String</td><td>Title</td></tr>
+<tr><td class="field-name">type</td><td>-</td><td class="field-type">String</td><td><code>refresh</code>/<code>finish</code>/<code>file</code>/<code>folder</code>/<code>spinner</code>/<code>checkbox</code>...</td></tr>
+<tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Script to run on click. If empty, uses the group's <code>handler</code></td></tr>
+<tr><td class="field-name">box</td><td>visible, check</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check the tick (type=checkbox)</td></tr>
+<tr><td class="field-name">silent</td><td>hidden</td><td class="field-type">Bool</td><td>true: run silently in background (no log)</td></tr>
+<tr><td class="field-name">link</td><td>href</td><td class="field-type">String</td><td>URL</td></tr>
+<tr><td class="field-name">activity</td><td>a, intent</td><td class="field-type">String</td><td>Intent</td></tr>
+<tr><td class="field-name">html</td><td>-</td><td class="field-type">String</td><td>WebView URL</td></tr>
+<tr><td class="field-name">config</td><td>-</td><td class="field-type">String</td><td>Open sub-page (.toml)</td></tr>
+<tr><td class="field-name">config-sh</td><td>-</td><td class="field-type">String</td><td>Script returning inline toml</td></tr>
+<tr><td class="field-name">suffix</td><td>-</td><td class="field-type">String</td><td>File extension filter (type=file)</td></tr>
+<tr><td class="field-name">mime</td><td>-</td><td class="field-type">String</td><td>MIME filter</td></tr>
+<tr><td class="field-name">path-home</td><td>home-path</td><td class="field-type">String</td><td>Initial directory (file picker)</td></tr>
+<tr><td class="field-name">multiple</td><td>-</td><td class="field-type">Bool</td><td>Allow multiple file selection</td></tr>
+<tr><td class="field-name">options</td><td>-</td><td class="field-type">Array</td><td>(type=spinner) Choice list</td></tr>
+<tr><td class="field-name">option-sh</td><td>options-sh, options-su</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options</td></tr>
+<tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td><span class="badge shell">shell</span> (type=spinner) Script to read the currently selected value</td></tr>
+<tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">+ RunnableNode, ClickableNode, NodeInfoBase fields</td></tr>
+</table>
+</div>
+
+<h3>16.3. Demo</h3>
+<div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">CPU</span><span class="d-menu">&#8942;</span></div>
+<div class="d-menu-popup">
+  <div class="d-mi">Refresh</div>
+  <div class="d-mi"><span class="d-check">&#10003;</span> Show module</div>
+  <div class="d-mi">Select governor <span style="margin-left:auto;opacity:.5">&#9662;</span></div>
+  <div class="d-mi">View log</div>
+  <div class="d-mi">Open in browser</div>
+</div>
+<div class="d-fab">+</div>
+</div></div>
+<div class="callout tip"><code>[[menu]]</code>/<code>[[fab]]</code> do NOT appear in the page's content list - they only show on the toolbar or as a floating button. The parser merges all items from <code>[[menu]]</code>/<code>[[fab]]</code> blocks (declared anywhere - top-level or inside a group) into <strong>one shared list</strong> for the whole page.</div>
+</section>
+
+<section id="depend">
+<h2>17. Dependencies (depend-*)</h2>
+<p>This is the <strong>largest feature</strong> of <code>[[action.params]]</code>: a param can be hidden/shown (or switched to <em>readonly</em>) based on the value of one (or more) other params in the same action. This is how to build complex dialogs that are still easy to manage - the UI auto-hides irrelevant fields when the user picks a different mode.</p>
+
+<h3>17.1. depend-* fields (only for [[action.params]])</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td class="field-name">depend-on</td><td class="field-type">String</td><td>null</td><td>Name(s) of parent param(s), separated by <code>|</code>. E.g. <code>"mode|cam"</code></td></tr>
+<tr><td class="field-name">depend-value</td><td class="field-type">String</td><td>null</td><td>Required matching value for each parent. Parents separated by <code>|</code>; within one parent: accepted values OR-separated by comma <code>,</code>. E.g. <code>"a|b,c"</code></td></tr>
+<tr><td class="field-name">depend-mode</td><td class="field-type">String</td><td>"show"</td><td><code>"show"</code>: show when matched (default). <code>"hide"</code>: hide when matched. Can be declared per-parent, separated by <code>|</code>: <code>"show|hide"</code></td></tr>
+<tr><td class="field-name">depend-logic</td><td class="field-type">String</td><td>"and"</td><td>How to combine multiple parents: <code>and</code> / <code>priority</code> (= or LTR) / <code>priority-rtl</code> (= or RTL) / <code>xor</code> / <code>nand</code></td></tr>
+<tr><td class="field-name">depend-default</td><td class="field-type">String</td><td>"show"</td><td>Default value when NO condition matches: <code>"show"</code> or <code>"hide"</code></td></tr>
+<tr><td class="field-name">depend-initial</td><td class="field-type">String</td><td>"auto"</td><td>Initial state before any evaluation: <code>"auto"</code> / <code>"show"</code> / <code>"hide"</code></td></tr>
+<tr><td class="field-name">depend-negate</td><td class="field-type">Bool</td><td>false</td><td>Invert ALL conditions (NOT logic)</td></tr>
+<tr><td class="field-name">depend-threshold</td><td class="field-type">Int</td><td>-1</td><td>Only for <code>and</code>: % of conditions that must match (0-100). E.g. <code>67</code> = at least 2/3</td></tr>
+<tr><td class="field-name">depend-include-hidden</td><td class="field-type">Bool</td><td>true</td><td>true: hidden param still included in result. false: skip hidden param</td></tr>
+<tr><td class="field-name">depend-cascade</td><td class="field-type">Bool</td><td>true</td><td>true: parent hidden =&gt; child hidden too. false: only visible parents are used</td></tr>
+<tr><td class="field-name">depend-onchange</td><td class="field-type">String</td><td>null</td><td>Shell callback name run when this param's hide/show state changes</td></tr>
+<tr><td class="field-name">depend-readonly</td><td class="field-type">Bool</td><td>false</td><td><span class="badge new">new</span> true: don't hide - just <em>dim</em> and lock interaction</td></tr>
+<tr><td class="field-name">depend-sort</td><td class="field-type">Bool</td><td>false</td><td><span class="badge new">new</span> true: move locked params to the bottom (only effective when depend-readonly=true)</td></tr>
+</table>
+</div>
+
+<h3>17.2. Demo - simple dependency</h3>
+<div class="demo-block"><div class="demo-label">Demo - hidden param</div><div class="demo-frame">
+<div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">Backup</span></div>
+<div class="d-body">
+  <div class="d-item">
+    <div class="d-content"><div class="d-title2">Backup mode</div></div>
+    <div class="d-trail">Single file</div>
+  </div>
+  <div class="d-item">
+    <div class="d-content"><div class="d-title2">Source file</div><div class="d-desc">/sdcard/file.zip</div></div>
+    <div class="d-trail"><span class="d-chevron">&rsaquo;</span></div>
+  </div>
+  <div class="d-item" style="opacity:.4">
+    <div class="d-content"><div class="d-title2">Destination folder</div><div class="d-desc">(hidden because mode != "folder")</div></div>
+    <div class="d-trail"><span class="d-chevron">&rsaquo;</span></div>
+  </div>
+</div>
+</div></div>
+<div class="callout warn"><code>depend-sort = true</code> only works when <code>depend-readonly = true</code>. If you declare <code>depend-sort = true</code> without <code>depend-readonly</code>, the parser forces it to <strong>false</strong> - because sort only makes sense for items "locked in place" (still visible, just dimmed), not for fully hidden items (View.GONE has no slot to "move down").</div>
+
+<h3>17.3. depend-logic reference</h3>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Logic</th><th>Meaning</th><th>Example</th></tr>
+<tr><td><code>and</code> (default)</td><td>ALL conditions must match</td><td><code>depend-on="a|b"</code> =&gt; both a and b must match depend-value</td></tr>
+<tr><td><code>priority</code></td><td>left-to-right, first matching condition wins</td><td>If a matches =&gt; result follows a's mode; if a doesn't match, check b...</td></tr>
+<tr><td><code>priority-rtl</code></td><td>right-to-left, opposite of priority</td><td>If b matches before a</td></tr>
+<tr><td><code>xor</code></td><td>EXACTLY ONE condition must match</td><td>a matches OR b matches, not both</td></tr>
+<tr><td><code>nand</code></td><td>negation of and</td><td>NOT all matching =&gt; true</td></tr>
+</table>
+</div>
+
+<h3>17.4. depend-default and depend-initial</h3>
+<p>By default, when no condition matches, the param is <code>show</code>n. To change the default to hidden:</p>
+<div class="callout tip"><code>depend-initial = "auto"</code> (default) auto-determines based on <code>depend-default</code>. Use <code>"show"</code>/<code>"hide"</code> when you want to avoid "flicker" when the dialog first opens - the UI will pin to that state until evaluation completes.</div>
+</section>
+
+<section id="shell-fields">
+<h2>18. Shell-script fields - overview</h2>
+<p>In Tool-Tree, many fields accept either a <strong>static value</strong> (string/bool) or a <strong>dynamic shell script</strong>. The parser runs the script and uses its output as the value. Here is a summary of all shell-style fields:</p>
+
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Field</th><th>Applies to</th><th>Description</th></tr>
+<tr><td class="field-name">title-sh</td><td>Node, param, option, row</td><td>Produce title dynamically</td></tr>
+<tr><td class="field-name">desc-sh</td><td>Node, param</td><td>Produce desc dynamically</td></tr>
+<tr><td class="field-name">summary-sh</td><td>Node</td><td>Produce summary dynamically</td></tr>
+<tr><td class="field-name">warn-sh / warning-sh</td><td>RunnableNode</td><td>Produce warning dynamically</td></tr>
+<tr><td class="field-name">label-sh</td><td>ActionParamInfo</td><td>Produce label dynamically</td></tr>
+<tr><td class="field-name">placeholder-sh</td><td>ActionParamInfo</td><td>Produce placeholder dynamically</td></tr>
+<tr><td class="field-name">desc-on-sh</td><td>ActionParamInfo (type=bool)</td><td>Produce desc-on dynamically</td></tr>
+<tr><td class="field-name">value-sh</td><td>ActionParamInfo, EditorNode</td><td>Fetch current value</td></tr>
+<tr><td class="field-name">options-sh / option-sh / options-su</td><td>PickerNode, ActionParamInfo, PageMenuOption</td><td>Produce options list dynamically</td></tr>
+<tr><td class="field-name">get / getstate</td><td>SwitchNode, PickerNode, PageMenuOption(spinner)</td><td>Read current state (batched via pending states at parse time)</td></tr>
+<tr><td class="field-name">set / setstate / script</td><td>SwitchNode, PickerNode, ActionNode, DownloadNode, EditorNode, PageMenuOption</td><td>Set new state on user interaction</td></tr>
+<tr><td class="field-name">lock / lock-state</td><td>ClickableNode, PageNode, PageMenuOption</td><td>Check lock state</td></tr>
+<tr><td class="field-name">support / visible</td><td>All nodes, row, param</td><td>Hide/show (accepts shell too)</td></tr>
+</table>
+</div>
+</section>
+
+<section id="bool-or-shell">
+<h2>19. resolveBoolOrShell</h2>
+<p>The <code>resolveBoolOrShell()</code> function parses fields that can take either a static boolean or a shell command. If the string evaluates to <code>"true"</code> or <code>"1"</code>, it resolves to <code>true</code>. For non-boolean strings, it executes the shell script in the background; if the command output equals <code>"1"</code>, it returns <code>true</code>, otherwise <code>false</code>.</p>
+</section>
+
+<section id="pending-states">
+<h2>20. Pending states</h2>
+<p>To maximize performance when parsing large configuration files, dynamic shell evaluations for nodes (such as <code>get</code> scripts for switches or lock checks) are queued into pending state batches rather than executed synchronously one by one. Once reading finishes, all pending states run asynchronously to update node UI values in a single pass.</p>
+</section>
+
+<section id="process">
+<h2>21. process = true</h2>
+<p>Setting <code>process = true</code> on a <code>[[page]]</code> instructs the rendering engine to build and render child nodes progressively on the UI as they are parsed, accompanied by a linear progress indicator, rather than holding display until the entire tree has loaded.</p>
+</section>
+
+<section id="lifecycle">
+<h2>22. Page lifecycle</h2>
+<p>Sub-pages trigger lifecycle callbacks during initialization and reading. <code>before-load</code> executes before parsing begins, followed by <code>after-load</code> upon parsing completion. Dependent on the parse status, <code>load-ok</code> or <code>load-fail</code> shell scripts execute accordingly.</p>
+</section>
+
+<section id="example">
+<h2>23. Full example</h2>
+<p>A representative TOML configuration showcasing groups, actions, parameters, switches, and rich text rows:</p>
+<pre><code>[[group]]
+title = "System Performance"
+
+[[group.switch]]
+title = "Performance Mode"
+desc = "Enable performance governor"
+get = "getprop sys.perf.mode"
+set = "setprop sys.perf.mode $state"
+
+[[group.action]]
+title = "Set CPU Frequency"
+script = "echo $freq &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"
+
+[[group.action.params]]
+name = "freq"
+title = "Frequency (kHz)"
+type = "spinner"
+options = ["1800000", "2200000", "2800000"]
+</code></pre>
+</section>
+
+<section id="tips">
+<h2>24. Tips &amp; pitfalls</h2>
+<ul>
+  <li>Always use double brackets <code>[[node]]</code> across all declarations to prevent TOML table array parser exceptions.</li>
+  <li>Keep nesting structures under 3 levels deep to maintain responsive UI performance and code clarity.</li>
+  <li>Use selective refresh via <code>reload = "id1,id2"</code> instead of reloading the entire page after action execution.</li>
+</ul>
+</section>
+</main>
+</div>
+
+<!-- Back to top button -->
+<button id="backToTop" class="back-to-top" title="Back to top">&uarr;</button>
+
+<footer>TOML Configuration Guide &middot; Tool-Tree</footer>
+
+<script>
+  // Xử lý nút ẩn/hiện Sidebar / Mục lục
+  const tocToggleBtn = document.getElementById('tocToggle');
+  const sidebar = document.getElementById('sidebar');
+  const layout = document.querySelector('.layout');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+  function toggleSidebar() {
+    const isMobile = window.innerWidth <= 900;
+    if (isMobile) {
+      const isShown = sidebar.classList.toggle('mobile-show');
+      if (sidebarOverlay) {
+        sidebarOverlay.classList.toggle('show', isShown);
+      }
+    } else {
+      sidebar.classList.toggle('hidden');
+      layout.classList.toggle('sidebar-hidden');
+    }
+  }
+
+  function closeMobileSidebar() {
+    if (window.innerWidth <= 900) {
+      sidebar.classList.remove('mobile-show');
+      if (sidebarOverlay) {
+        sidebarOverlay.classList.remove('show');
+      }
+    }
+  }
+
+  if (tocToggleBtn && sidebar && layout) {
+    tocToggleBtn.addEventListener('click', toggleSidebar);
+
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', closeMobileSidebar);
+    }
+
+    // Ẩn sidebar trên mobile khi nhấp chọn một mục
+    sidebar.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', closeMobileSidebar);
+    });
+  }
+
+  const backToTopBtn = document.getElementById('backToTop');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) {
+      backToTopBtn.classList.add('show');
+    } else {
+      backToTopBtn.classList.remove('show');
+    }
+  });
+
+  backToTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Live search functionality
+  const searchInput = document.getElementById('search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const sections = document.querySelectorAll('main section');
+      sections.forEach(section => {
+        if (!query) {
+          section.style.display = '';
+          return;
+        }
+        const text = section.textContent.toLowerCase();
+        section.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+  }
+</script>
+</body>
+</html>
