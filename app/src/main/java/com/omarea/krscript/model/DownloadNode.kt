@@ -14,4 +14,8 @@ package com.omarea.krscript.model
 class DownloadNode(currentConfigXml: String) : RunnableNode(currentConfigXml) {
     // Đường dẫn URL cần tải (bắt buộc)
     var url: String = ""
+
+    // Giống group.action.rows: cho phép hiển thị thêm các dòng rich-text (text/icon/toggle/photo...)
+    // ngay bên dưới item, y hệt cơ chế của ActionNode.rows - dùng chung TextNode.TextRow/RowsRenderHelper.
+    val rows = ArrayList<TextNode.TextRow>()
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.TextView
 import com.tool.tree.R
 import com.omarea.krscript.model.DownloadNode
 
@@ -12,6 +13,8 @@ class ListItemDownload(context: Context, config: DownloadNode) :
 
     private val widgetView = layout.findViewById<ImageView?>(R.id.kr_widget)
     private val progressView = layout.findViewById<ProgressBar?>(R.id.kr_download_progress)
+    private val rowsView = layout.findViewById<TextView?>(R.id.kr_rows)
+    private val rowsPhotoView = layout.findViewById<ImageView?>(R.id.kr_rows_photo)
 
     // true trong suốt lúc đang tải HOẶC đang chạy script sau khi tải xong - PageLayoutRender
     // vẫn gọi onClick bình thường (không disable layout), nên bên xử lý click (ActionListFragment)
@@ -22,6 +25,12 @@ class ListItemDownload(context: Context, config: DownloadNode) :
     init {
         widgetView?.visibility = View.VISIBLE
         widgetView?.setImageDrawable(context.getDrawable(R.drawable.kr_download))
+
+        // Giống action.rows: hiển thị thêm các dòng rich-text (nếu có khai báo download.rows).
+        // desc tĩnh (config.desc, nếu có) vẫn hiện bình thường ở đây (đã set qua init của
+        // ListItemView/ListItemClickable) - chỉ bị đè bởi updateDownloadProgress() SAU khi
+        // người dùng bấm tải, không đụng gì lúc khởi tạo.
+        RowsRenderHelper.bind(context, rowsView, rowsPhotoView, config.rows, config)
     }
 
     // Gọi ngay khi bắt đầu 1 phiên tải mới - khoá item lại, hiện progress bar dạng không xác

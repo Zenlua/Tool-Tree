@@ -732,6 +732,12 @@ class PageConfigReader {
         tomlGet(table, "lock", "lock-state")?.let { node.lockShell = it }
         if (node.setState == null) node.setState = ""
         if (node.url.isEmpty()) return null
+
+        // Giống action.rows: cho phép download.rows hiển thị thêm các dòng rich-text bên dưới
+        for (rowTable in tomlEntries(table, "rows")) {
+            textRowToml(node.rows, rowTable)
+        }
+
         return node
     }
 

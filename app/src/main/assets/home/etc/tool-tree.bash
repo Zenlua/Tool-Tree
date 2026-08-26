@@ -428,30 +428,14 @@ Update() {
   link = "https://zenlua.github.io/Tool-Tree"
 
   [[group]]
-  [[group.action]]
+  [[group.download]]
   title = "'$update_text'"
   desc = "'$sizes_text': '$(cat $TEMP/size 2>/dev/null)'"
   icon = "'$urlicon'/update.png"
   warn = "'$use_network_text'"
-  support = "echo '$show_update'"
-  script = """
-    echo "'$update_text_2'"
-    if [[ -f "$TMP/Tool-Tree.apk" ]] && [[ "$(checksum "$TMP/Tool-Tree.apk")" == "$(cat $TEMP/sum 2>/dev/null)" ]]; then
-    openfile "$TMP/Tool-Tree.apk"
-    exit
-    fi
-    echo
-    if [[ "'$show_update'" == 1 ]]; then
-    taive "'$url_dowload'" "$TMP/Tool-Tree.apk" 2>&1 || killtree "\n'$load_text_2'"
-    if [ -f "$TMP/Tool-Tree.apk" ]; then
-    openfile "$TMP/Tool-Tree.apk"
-    fi
-    echo
-    echo "'$save_text' $TMP/Tool-Tree.apk"
-    else
-    echo "'$update_text_4'"
-    fi
-  """
+  support = "'$show_update'"
+  url = "'$url_dowload'"
+  script = "openfile \"$state\""
 
   [[group.text]]
   desc-sh = "cat $TEMP/'$link_vers' 2>/dev/null"
@@ -2123,7 +2107,7 @@ Addon() {
     """'
       if [ "$(glog show_setting_add)" == 1 ]; then
         echo '
-        [[group.action.rows]]
+        [[group.download.rows]]
         toggle = "checkbox"
         text = "'$hide_add_text'"
         checked = "[ -f '$dirvad'/hide ] && echo 1"
