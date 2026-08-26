@@ -4,14 +4,14 @@ Great tool, with many benefits for you
 
 ### Android ROM & APK Toolkit
 
-[![GitHub](https://img.shields.io/github/stars/Zenlua/Tool-Tree?style=flat)](https://github.com/Zenlua/Tool-Tree)
-[![License](https://img.shields.io/github/license/Zenlua/Tool-Tree)](https://github.com/Zenlua/Tool-Tree)
-
 <p align="center">
 <img src="https://github.com/Zenlua/Tool-Tree/raw/refs/heads/main/.github/img/tool-tree.jpg" width="100%">
 </p>
 
-- Official website: **https://zenlua.github.io/Tool-Tree**
+Official website: **https://zenlua.github.io/Tool-Tree**
+
+[![GitHub](https://img.shields.io/github/stars/Zenlua/Tool-Tree?style=flat)](https://github.com/Zenlua/Tool-Tree)
+[![License](https://img.shields.io/github/license/Zenlua/Tool-Tree)](https://github.com/Zenlua/Tool-Tree)
 
 ## ✨ Features
 
