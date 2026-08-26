@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.window.BackEvent
+import android.window.OnBackAnimationCallback
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import androidx.core.graphics.drawable.toDrawable
@@ -19,7 +21,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     protected var swipeToDismissEnabled = true
     private var swipeBackHelper: DialogSwipeBackHelper? = null
 
-    // Callback cho Predictive Back trên Android 13+ (API 33+)
+    // Callback cử chỉ Predictive Back hệ thống (Android 13+)
     private var systemBackCallback: OnBackInvokedCallback? = null
 
     init {
@@ -48,51 +50,69 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                 setWindowAnimations(android.R.style.Animation_Translucent)
             }
-            // Gọi đúng hàm nhận Window của DialogHelper
-            DialogHelper.setWindowBlurBg(this, activity)
+            // 1. Giữ Window luôn trong suốt để lộ Activity thật phía dưới khi currentView trượt đi
+            setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
         }
 
-        // Khởi tạo SwipeBackHelper & đăng ký Predictive Back
+        // 2. Chụp và gán Blur trực tiếp làm NỀN CỦA currentView
+        currentView.post {
+            setupViewBlurBackground(activity)
+        }
+
+        // 3. Đăng ký cử chỉ vuốt trượt cửa sổ & Vuốt mép (Predictive Back)
         if (swipeToDismissEnabled) {
             dialog?.let { dlg ->
                 swipeBackHelper = DialogSwipeBackHelper.bind(
                     dialog = dlg,
                     contentView = view,
-                    onDragStateChanged = { dragging ->
-                        // Khi bắt đầu kéo, ẩn nền window blur đi để lộ activity phía sau trượt theo
-                        val window = dlg.window
-                        if (dragging) {
-                            window?.setBackgroundDrawable(android.graphics.Color.TRANSPARENT.toDrawable())
-                        } else {
-                            window?.let { DialogHelper.setWindowBlurBg(it, activity) }
-                        }
-                    },
-                    onDragProgress = { /* Xử lý thêm nếu cần */ }
+                    onDragStateChanged = { /* Nền window đã trong suốt sẵn, không cần can thiệp */ },
+                    onDragProgress = { /* Cập nhật hiệu ứng phụ nếu cần */ }
                 ) {
                     closeView()
                 }
 
-                // Tích hợp vuốt mép hệ thống (Predictive Back - Android 13+)
                 registerSystemPredictiveBack(dlg)
             }
         }
     }
 
     /**
-     * Đăng ký Predictive Back Dispatcher với Window của Dialog (Android 13+)
+     * Lấy Blur từ FastBlurUtility và set trực tiếp vào View nội dung
+     * giúp lớp Blur trượt đồng bộ theo translationX của currentView.
+     */
+    private fun setupViewBlurBackground(activity: android.app.Activity) {
+        if (!DialogHelper.disableBlurBg) {
+            val blurBitmap = FastBlurUtility.getBlurBackgroundDrawer(activity)
+            if (blurBitmap != null) {
+                currentView.background = blurBitmap.toDrawable(activity.resources)
+                return
+            }
+        }
+        // Fallback màu nền phẳng nếu không tạo được blur
+        val isDark = ThemeModeState.isDarkMode()
+        val defaultBgColor = if (isDark) {
+            android.graphics.Color.argb(255, 18, 18, 18)
+        } else {
+            android.graphics.Color.argb(255, 245, 245, 245)
+        }
+        currentView.setBackgroundColor(defaultBgColor)
+    }
+
+    /**
+     * Đăng ký Predictive Back (vuốt từ mép màn hình) với Window của Dialog (Android 13+)
      */
     private fun registerSystemPredictiveBack(dialog: Dialog) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val window = dialog.window ?: return
 
-            // API 34+ hỗ trợ Animation progress khi vuốt mép
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                systemBackCallback = object : android.window.OnBackAnimationCallback {
-                    override fun onBackStarted(backEvent: android.window.BackEvent) {
+                // Android 14+ (API 34+): Hỗ trợ animation vuốt mép có độ trễ/tiến độ (progress)
+                systemBackCallback = object : OnBackAnimationCallback {
+                    override fun onBackStarted(backEvent: BackEvent) {
                         swipeBackHelper?.onSystemBackStarted()
                     }
 
-                    override fun onBackProgressed(backEvent: android.window.BackEvent) {
+                    override fun onBackProgressed(backEvent: BackEvent) {
                         swipeBackHelper?.onSystemBackProgress(backEvent.progress)
                     }
 
@@ -107,7 +127,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                     }
                 }
             } else {
-                // API 33 fallback
+                // Android 13 (API 33): Fallback phản hồi sự kiện back đơn thuần
                 systemBackCallback = OnBackInvokedCallback {
                     if (swipeBackHelper?.consumeSystemBackInvoked() != true) {
                         closeView()
@@ -124,9 +144,6 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
         }
     }
 
-    /**
-     * Hủy đăng ký Predictive Back Dispatcher
-     */
     private fun unregisterSystemPredictiveBack() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val window = dialog?.window ?: return
@@ -147,8 +164,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     fun closeView() {
         try {
             dismiss()
-        } catch (ex: Exception) {
-            // Ignore
+        } catch (_: Exception) {
         }
     }
 }
