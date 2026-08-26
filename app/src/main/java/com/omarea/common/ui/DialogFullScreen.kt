@@ -38,6 +38,12 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     private var themeResId: Int = 0
     private lateinit var currentView: View
 
+    // Cho vuốt sang phải để đóng dialog (xem onViewCreated() bên dưới / DialogSwipeBackHelper).
+    // Dialog con nào có cử chỉ kéo ngang riêng cần ưu tiên hơn (hiếm) có thể gán false TRƯỚC
+    // khi view được dựng (super.onViewCreated()) để tắt tính năng này.
+    protected var swipeToDismissEnabled = true
+    private var swipeBackHelper: DialogSwipeBackHelper? = null
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Dialog(activity!!, if (themeResId != 0) themeResId else R.style.dialog_full_screen_light)
@@ -58,11 +64,21 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
 
                 DialogHelper.setWindowBlurBg(this, activity)
             }
+
+            if (swipeToDismissEnabled) {
+                dialog?.let { swipeBackHelper = DialogSwipeBackHelper.bind(it, view) { closeView() } }
+            }
         }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+    }
+
+    override fun onDestroyView() {
+        swipeBackHelper?.release()
+        swipeBackHelper = null
+        super.onDestroyView()
     }
 
     fun closeView() {

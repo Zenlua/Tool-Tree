@@ -25,6 +25,7 @@ import com.tool.tree.ui.SwipeBackHelper
 import com.tool.tree.ui.SwipeBackPreviewCache
 import com.omarea.common.model.SelectItem
 import com.omarea.common.shared.FilePathResolver
+import com.omarea.common.ui.DialogHelper
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
@@ -80,6 +81,12 @@ class ActionPage : AppCompatActivity() {
     private var checkboxRefreshJob: Job? = null
     private var loadPageJob: Job? = null
     private var spinnerLoadJob: Job? = null
+    private var lockCheckJob: Job? = null
+    // true ngay khi checkPageLockThenLoad() đã BẮT ĐẦU chạy 1 lần cho phiên mở trang hiện tại -
+    // tránh chạy lại (và hiện chồng thêm dialog loading/lock) nếu onResume() gọi lại trong lúc
+    // vẫn đang đợi kết quả lockShell hoặc đang hiện dialog báo khoá (ví dụ activity resume lại
+    // do người dùng vừa quay lại từ 1 activity hệ thống nào đó trong lúc dialog còn hiện).
+    private var lockCheckStarted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -557,6 +564,51 @@ class ActionPage : AppCompatActivity() {
                     refreshCheckboxMenuStates()
                 }
             }
+        }
+    }
+
+    // Kiểm tra khoá của CHÍNH trang này (config.lockShell/config.locked) - gọi TỪ onResume()
+    // thay cho loadPageConfig(true) trực tiếp như trước. Khác với cách cũ (kiểm tra khoá ở
+    // trang CHA, TRƯỚC khi mở trang - xem ActionListFragment.onPageClick()/nodeUnlockedAsync()):
+    // giờ luôn VÀO TRANG NGAY (activity đã mở, toolbar/title đã hiện), rồi mới hiện dialog
+    // loading trong lúc chờ lockShell chạy xong. Nếu khoá, hiện dialog báo lỗi (thay vì toast)
+    // với nút OK - bấm OK mới thật sự thoát khỏi trang (finish()), thay vì tự thoát ngay lập
+    // tức không cho người dùng kịp đọc thông báo.
+    private fun checkPageLockThenLoad() {
+        if (lockCheckStarted) return
+        lockCheckStarted = true
+
+        val config = currentPageConfig ?: return
+
+        if (config.lockShell.isNotEmpty()) {
+            progressBarDialog.setCancelCallback { lockCheckJob?.cancel(); finish() }
+            progressBarDialog.showDialog(getString(R.string.kr_page_loading))
+
+            lockCheckJob?.cancel()
+            lockCheckJob = lifecycleScope.launch(Dispatchers.IO) {
+                val message = ScriptEnvironmen.executeResultRoot(this@ActionPage, config.lockShell, config)
+                withContext(Dispatchers.Main) {
+                    if (!isActive || isFinishing || isDestroyed) return@withContext
+                    progressBarDialog.hideDialog()
+                    val unlocked = message == "unlock" || message == "unlocked" || message == "false" || message == "0"
+                    if (unlocked) {
+                        loadPageConfig(true)
+                    } else {
+                        showPageLockedDialog(if (message.isNotEmpty()) message else getString(R.string.kr_lock_message))
+                    }
+                }
+            }
+        } else if (config.locked) {
+            // Không cần chạy shell - kiểm tra local tức thời, không có gì phải đợi.
+            showPageLockedDialog(getString(R.string.kr_lock_message))
+        } else {
+            loadPageConfig(true)
+        }
+    }
+
+    private fun showPageLockedDialog(message: String) {
+        DialogHelper.helpInfo(this, getString(R.string.kr_lock_title), message) {
+            finish()
         }
     }
 
@@ -1055,7 +1107,7 @@ class ActionPage : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (!actionsLoaded) loadPageConfig(true)
+        if (!actionsLoaded) checkPageLockThenLoad()
     }
 
     override fun onRestart() {
@@ -1084,6 +1136,7 @@ class ActionPage : AppCompatActivity() {
 
     override fun onDestroy() {
         checkboxRefreshJob?.cancel()
+        lockCheckJob?.cancel()
         handler.removeCallbacksAndMessages(null)
         if (::swipeBackHelper.isInitialized) swipeBackHelper.release()
         // CHỈ recycle bitmap khi trang thực sự đóng hẳn (isFinishing() true - người dùng bấm

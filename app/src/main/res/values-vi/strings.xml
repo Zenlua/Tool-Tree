@@ -46,6 +46,7 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="turn_off_wakelock">Tắt WakeLock</string>
     <string name="turn_on_wakelock">Bật WakeLock</string>
     <string name="msg_folder_mode">Nhấn giữ để chọn thư mục</string>
+    <string name="msg_file_extension_required">Yêu cầu loại tệp: %1$s</string>
     <string name="dialog_title_select_directory">Bạn muốn chọn thư mục này?</string>
     <string name="dialog_title_select_file">Bạn muốn chọn tệp tin này?</string>
     <string name="no_files_in_directory">Thư mục trống và không có tệp tin nào!</string>
@@ -125,6 +126,7 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_auto_run_item_losted">Mục được chỉ định không tồn tại</string>
     <string name="kr_hidden_task_running">Quá nhanh! Thao tác trước đó vẫn chưa hoàn tất</string>
     <string name="kr_lock_message">Tính năng này đã bị khóa</string>
+    <string name="kr_lock_title">Đã khóa</string>
     <string name="kr_sdk_too_low">Phiên bản hệ thống quá thấp</string>
     <string name="kr_sdk_overtop">Phiên bản hệ thống quá cao</string>
     <string formatted="false" name="kr_sdk_message">Tính năng này chỉ chạy trên hệ thống có SDK từ %d đến %d</string>

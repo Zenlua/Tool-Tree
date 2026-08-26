@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.omarea.common.model.SelectItem
 import com.omarea.common.ui.DialogHelper
 import com.omarea.common.ui.DialogItemChooser
+import com.omarea.common.ui.DialogSwipeBackHelper
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.BgTaskThread
@@ -205,27 +206,32 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         }
     }
 
-    // Kiểm tra khoá TRƯỚC khi cho thực hiện 1 mục. Nếu có lockShell (lệnh shell kiểm tra
-    // khoá), chạy BẤT ĐỒNG BỘ trên luồng IO - trước đây (nodeUnlocked cũ) chạy lockShell
-    // ĐỒNG BỘ ngay trên main thread ngay khi bấm, khiến bấm vào bất kỳ mục nào có lockShell
-    // (page/action/switch/picker/editor) đều bị đơ 1 lúc không có gì báo hiệu rồi mới phản
-    // hồi - trông như "chạy shell rồi mới mở trang". Giờ luôn chạy nền (IO thread) nên KHÔNG
-    // làm đơ UI, đồng thời hiện thanh tiến trình ngay trên trang (page_load_progress, dùng
-    // chung với lúc tải trang - có sẵn ở mọi activity include app_bar_main.xml) trong lúc
-    // chờ kết quả, thay vì im lặng như trước. Kiểm tra xong (dù khoá hay mở) mới ẩn thanh và
-    // gọi onUnlocked() nếu thật sự đã mở khoá.
-    private fun nodeUnlockedAsync(clickableNode: ClickableNode, onUnlocked: () -> Unit) {
+    // Kiểm tra tương thích SDK - đồng bộ, không cần chạy shell nên không cần đợi/hiện dialog
+    // gì cả. Tách riêng khỏi nodeUnlockedAsync() để onPageClick() có thể gọi thẳng cho trường
+    // hợp mở trang con (không qua nodeUnlockedAsync nữa - xem onPageClick()).
+    private fun checkSdkCompatibility(clickableNode: ClickableNode): Boolean {
         val currentSDK = Build.VERSION.SDK_INT
         if (clickableNode.targetSdkVersion > 0 && currentSDK != clickableNode.targetSdkVersion) {
             DialogHelper.helpInfo(requireContext(), getString(R.string.kr_sdk_discrepancy), getString(R.string.kr_sdk_discrepancy_message).format(clickableNode.targetSdkVersion))
-            return
+            return false
         } else if (currentSDK > clickableNode.maxSdkVersion) {
             DialogHelper.helpInfo(requireContext(), getString(R.string.kr_sdk_overtop), getString(R.string.kr_sdk_message).format(clickableNode.minSdkVersion, clickableNode.maxSdkVersion))
-            return
+            return false
         } else if (currentSDK < clickableNode.minSdkVersion) {
             DialogHelper.helpInfo(requireContext(), getString(R.string.kr_sdk_too_low), getString(R.string.kr_sdk_message).format(clickableNode.minSdkVersion, clickableNode.maxSdkVersion))
-            return
+            return false
         }
+        return true
+    }
+
+    // Kiểm tra khoá TRƯỚC khi cho thực hiện 1 mục (dùng cho switch/action/picker/editor, và
+    // cho page loại link/activity - page loại mở ActionPage con thì KHÔNG còn qua đây nữa, xem
+    // onPageClick()). Nếu có lockShell (lệnh shell kiểm tra khoá), chạy BẤT ĐỒNG BỘ trên luồng
+    // IO, đồng thời hiện thanh tiến trình ngay trên trang (page_load_progress) trong lúc chờ
+    // kết quả. Kiểm tra xong (dù khoá hay mở) mới ẩn thanh và gọi onUnlocked() nếu thật sự đã
+    // mở khoá.
+    private fun nodeUnlockedAsync(clickableNode: ClickableNode, onUnlocked: () -> Unit) {
+        if (!checkSdkCompatibility(clickableNode)) return
 
         if (clickableNode.lockShell.isEmpty()) {
             // Không cần chạy shell - kiểm tra local tức thời, không có gì phải đợi/hiện dialog.
@@ -281,8 +287,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
     override fun onPageClick(item: PageNode, onCompleted: Runnable) {
         if (!checkAndLockClick()) return
-        nodeUnlockedAsync(item) {
-            if (context != null && item.link.isNotEmpty()) {
+
+        // link/activity: mở thẳng ra ngoài (trình duyệt/activity khác), không có "trang" riêng
+        // nào để tự kiểm tra khoá SAU khi mở - vẫn phải kiểm tra khoá ở đây TRƯỚC khi mở như cũ.
+        if (context != null && item.link.isNotEmpty()) {
+            nodeUnlockedAsync(item) {
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, item.link.toUri())
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -290,11 +299,19 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 } catch (ex: Exception) {
                     Toast.makeText(context, context?.getString(R.string.kr_slice_activity_fail), Toast.LENGTH_SHORT).show()
                 }
-            } else if (context != null && item.activity.isNotEmpty()) {
-                TryOpenActivity(requireContext(), item.activity).tryOpen()
-            } else {
-                krScriptActionHandler?.onSubPageClick(item)
             }
+        } else if (context != null && item.activity.isNotEmpty()) {
+            nodeUnlockedAsync(item) {
+                TryOpenActivity(requireContext(), item.activity).tryOpen()
+            }
+        } else {
+            // Trang con (ActionPage): vào trang NGAY, không đợi kiểm tra khoá ở đây nữa - nếu
+            // trang có lockShell/locked, CHÍNH trang đó sẽ tự hiện dialog loading rồi kiểm tra
+            // sau khi đã mở, và báo lỗi bằng dialog (thay vì toast) nếu khoá - xem
+            // ActionPage.checkPageLockThenLoad(). Vẫn giữ kiểm tra SDK ở đây vì nó đồng bộ,
+            // không cần đợi gì cả.
+            if (!checkSdkCompatibility(item)) return
+            krScriptActionHandler?.onSubPageClick(item)
         }
     }
 
@@ -573,6 +590,17 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 }
                         } else {
                             DialogHelper.customDialog(requireActivity(), dialogView, cancelable).dialog
+                        }
+
+                        // Dialog full-screen (isLongList) + có thể đóng bằng cách chạm ra ngoài
+                        // (cancelable) thì cũng cho vuốt sang phải để đóng, cùng cảm giác với
+                        // các "full dialog" khác (xem DialogFullScreen). Dialog bắt buộc (show=
+                        // true tự mở, cancelable=false) thì KHÔNG cho vuốt, giống việc đã tắt
+                        // touch-outside-to-dismiss ở trên.
+                        var paramsDialogSwipeHelper: DialogSwipeBackHelper? = null
+                        if (isLongList && cancelable) {
+                            paramsDialogSwipeHelper = DialogSwipeBackHelper.bind(dialog, dialogView) { dialog.dismiss() }
+                            dialog.setOnDismissListener { paramsDialogSwipeHelper?.release() }
                         }
 
                         dialogView.findViewById<TextView>(R.id.title).text = action.title

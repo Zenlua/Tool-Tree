@@ -60,6 +60,7 @@ If you agree, press the confirm button to continue."</string>
     <string name="turn_off_wakelock">Turn off WakeLock</string>
     <string name="turn_on_wakelock">Turn on WakeLock</string>
     <string name="msg_folder_mode">Press and hold to select a folder</string>
+    <string name="msg_file_extension_required">Required file type: %1$s</string>
     <string name="dialog_title_select_directory">Do you want to select this folder?</string>
     <string name="dialog_title_select_file">Do you want to select this file?</string>
     <string name="no_files_in_directory">The folder is empty and contains no files!</string>
@@ -140,6 +141,7 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_auto_run_item_losted">Specified item is missing</string>
     <string name="kr_hidden_task_running">Too fast! The previous operation has not finished yet</string>
     <string name="kr_lock_message">This feature is locked</string>
+    <string name="kr_lock_title">Locked</string>
     <string name="kr_sdk_too_low">System version is too low</string>
     <string name="kr_sdk_overtop">System version is too high</string>
     <string formatted="false" name="kr_sdk_message">This feature only runs on systems with SDK %d to %d</string>
