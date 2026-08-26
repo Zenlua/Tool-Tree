@@ -59,16 +59,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             fragment.setListData(ArrayList(), krScriptActionHandler, autoRunTask, themeMode)
             return fragment
         }
-
-        // Thời gian tối thiểu (ms) tính từ lúc bấm đến lúc THẬT SỰ mở mục/gọi onUnlocked() -
-        // đảm bảo hiệu ứng ripple/nhấn của item (background ripple mặc định) có đủ thời gian
-        // chạy xong trước khi chuyển màn hình. Với mục KHÔNG có lockShell (kiểm tra local tức
-        // thời) hoặc lockShell chạy quá nhanh, onUnlocked() gần như được gọi ngay lập tức
-        // trong cùng 1 frame với sự kiện nhấn - Activity mới mở đè lên ngay khi ripple còn
-        // chưa kịp lan hết, item không nhận được ACTION_UP/CANCEL bình thường để tự thoát
-        // trạng thái "đang nhấn" -> lúc quay lại (swipe back) vẫn thấy item bị "đơ" ở trạng
-        // thái pressed. Xem dùng ở nodeUnlockedAsync().
-        private const val CLICK_EFFECT_MIN_DELAY_MS = 200L
     }
 
     private var actionInfos: ArrayList<NodeInfoBase>? = null
@@ -223,11 +213,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     // chung với lúc tải trang - có sẵn ở mọi activity include app_bar_main.xml) trong lúc
     // chờ kết quả, thay vì im lặng như trước. Kiểm tra xong (dù khoá hay mở) mới ẩn thanh và
     // gọi onUnlocked() nếu thật sự đã mở khoá.
-    //
-    // onUnlocked() LUÔN được gọi cách thời điểm bấm ÍT NHẤT CLICK_EFFECT_MIN_DELAY_MS (xem
-    // invokeUnlockedWithMinDelay()) - dù kiểm tra local tức thời hay lockShell chạy rất
-    // nhanh, để ripple/hiệu ứng nhấn của item kịp hiển thị trước khi trang mới đè lên, tránh
-    // hiện tượng quay lại vẫn thấy item bị "đơ" ở trạng thái đang nhấn.
     private fun nodeUnlockedAsync(clickableNode: ClickableNode, onUnlocked: () -> Unit) {
         val currentSDK = Build.VERSION.SDK_INT
         if (clickableNode.targetSdkVersion > 0 && currentSDK != clickableNode.targetSdkVersion) {
@@ -241,27 +226,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             return
         }
 
-        val clickedAt = System.currentTimeMillis()
-        // Đợi đủ CLICK_EFFECT_MIN_DELAY_MS (tính từ lúc bấm) rồi mới thật sự gọi onUnlocked() -
-        // nếu đã trôi qua đủ lâu rồi (ví dụ lockShell chạy lâu) thì gọi ngay, không đợi thêm.
-        fun invokeUnlockedWithMinDelay() {
-            val remaining = CLICK_EFFECT_MIN_DELAY_MS - (System.currentTimeMillis() - clickedAt)
-            if (remaining > 0) {
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                    delay(remaining)
-                    if (isAdded) onUnlocked()
-                }
-            } else {
-                onUnlocked()
-            }
-        }
-
         if (clickableNode.lockShell.isEmpty()) {
             // Không cần chạy shell - kiểm tra local tức thời, không có gì phải đợi/hiện dialog.
             if (clickableNode.locked) {
                 Toast.makeText(context, getString(R.string.kr_lock_message), Toast.LENGTH_LONG).show()
             } else {
-                invokeUnlockedWithMinDelay()
+                onUnlocked()
             }
             return
         }
@@ -281,7 +251,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 if (!unlocked) {
                     Toast.makeText(context, if (message.isNotEmpty()) message else getString(R.string.kr_lock_message), Toast.LENGTH_LONG).show()
                 } else {
-                    invokeUnlockedWithMinDelay()
+                    onUnlocked()
                 }
             }
         }

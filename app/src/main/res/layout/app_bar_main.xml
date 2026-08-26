@@ -52,6 +52,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="8dp"
                 android:layout_gravity="bottom"
+                android:translationY="-4dp"
                 android:max="100"
                 android:progress="0"
                 android:indeterminate="true"
