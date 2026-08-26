@@ -22,14 +22,6 @@ file.add
     └── uninstall.sh         # remove add-on it will run shell
 ```
 
-**Menu.sh**
-
-```
-MPAT="${0%/*}"
-[ "$1" == "code_option" ] && echo '<option type="default" id="kk1" auto-off="true" reload="true" interruptible="false" >test</option>'
-[ "$1" == "code_shell" ] && echo '[ "$menu_id" == "kk1" ] && echo "path addon: '$MPAT' " '
-```
-
 **Contents of addon.prop file**
 
 ```
@@ -54,4 +46,4 @@ root=false
 
 - There are many things that are difficult to say that can only be found out by yourself.
 
-- [See details](https://zenlua.github.io/Tool-Tree/website/References.html)
+- [See details](https://zenlua.github.io/Tool-Tree/website/toml.html)

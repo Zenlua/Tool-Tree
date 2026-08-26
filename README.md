@@ -34,7 +34,7 @@ Official website: **https://zenlua.github.io/Tool-Tree**
 
 | Item | Support |
 |------|---------|
-| Architecture | aarch64, armv8l |
+| Architecture | Aarch64, Armv8l |
 | Root | ✅ Root |
 | No Root | ✅ Supported |
 
@@ -42,9 +42,8 @@ Official website: **https://zenlua.github.io/Tool-Tree**
 
 ## 📲 Download
 
-
-+ Stable: **[Latest release](https://github.com/Zenlua/Tool-Tree/releases/latest)**
-+ Beta: **[Link](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
++ **[Stable Version](https://github.com/Zenlua/Tool-Tree/releases/latest)**
++ **[Beta](https://github.com/Zenlua/Tool-Tree/releases/tag/beta)**
 
 ---
 
@@ -69,18 +68,9 @@ Official website: **https://zenlua.github.io/Tool-Tree**
 
 ### Root Working Directory
 
-APK: `/data/local/TOOL`
+- APK: `/data/local/TOOL`
 
-ROM: `/data/local/TREE`
-
----
-
-## 🧩 Extensions
-
-| Extension | Description |
-|-----------|-------------|
-| **[Addon](https://zenlua.github.io/Tool-Tree/website/Addon.html)** | ROM editor modules |
-| **[Apkon](https://zenlua.github.io/Tool-Tree/website/Apkon.html)** | APK editor modules |
+- ROM: `/data/local/TREE`
 
 ---
 
