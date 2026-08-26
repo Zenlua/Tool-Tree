@@ -209,9 +209,10 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     // ĐỒNG BỘ ngay trên main thread ngay khi bấm, khiến bấm vào bất kỳ mục nào có lockShell
     // (page/action/switch/picker/editor) đều bị đơ 1 lúc không có gì báo hiệu rồi mới phản
     // hồi - trông như "chạy shell rồi mới mở trang". Giờ luôn chạy nền (IO thread) nên KHÔNG
-    // làm đơ UI - cố tình KHÔNG hiện dialog/spinner nào cho bước kiểm tra khoá này (check
-    // thường rất nhanh, hiện dialog rồi tắt ngay sẽ chỉ gây chớp nháy khó chịu). Chỉ gọi
-    // onUnlocked() sau khi có kết quả thật.
+    // làm đơ UI, đồng thời hiện thanh tiến trình ngay trên trang (page_load_progress, dùng
+    // chung với lúc tải trang - có sẵn ở mọi activity include app_bar_main.xml) trong lúc
+    // chờ kết quả, thay vì im lặng như trước. Kiểm tra xong (dù khoá hay mở) mới ẩn thanh và
+    // gọi onUnlocked() nếu thật sự đã mở khoá.
     private fun nodeUnlockedAsync(clickableNode: ClickableNode, onUnlocked: () -> Unit) {
         val currentSDK = Build.VERSION.SDK_INT
         if (clickableNode.targetSdkVersion > 0 && currentSDK != clickableNode.targetSdkVersion) {
@@ -235,9 +236,16 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             return
         }
 
+        val progressBar = activity?.findViewById<android.widget.ProgressBar>(R.id.page_load_progress)
+        progressBar?.apply {
+            isIndeterminate = true
+            visibility = View.VISIBLE
+        }
+
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val message = ScriptEnvironmen.executeResultRoot(context, clickableNode.lockShell, clickableNode)
             withContext(Dispatchers.Main) {
+                progressBar?.visibility = View.GONE
                 if (!isAdded) return@withContext
                 val unlocked = message == "unlock" || message == "unlocked" || message == "false" || message == "0"
                 if (!unlocked) {
