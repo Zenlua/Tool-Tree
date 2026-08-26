@@ -12,6 +12,7 @@ import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import androidx.core.graphics.drawable.toDrawable
 import com.tool.tree.R
+import com.tool.tree.ThemeModeState
 
 open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androidx.fragment.app.DialogFragment() {
 
