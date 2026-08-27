@@ -29,7 +29,7 @@ class DialogAppChooser(private val darkMode: Boolean): DialogFullScreen(R.layout
 }
 */
 
-open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androidx.fragment.app.DialogFragment() {
+open class DialogFullScreen(private val layout: Int, private val darkMode: Boolean) : androidx.fragment.app.DialogFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         currentView = inflater.inflate(layout, container)
         return currentView
@@ -63,6 +63,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                     setWindowAnimations(android.R.style.Animation_Translucent)
                 }
+                DialogHelper.applyEdgeToEdge(this, darkMode)
             }
 
             if (swipeToDismissEnabled) {

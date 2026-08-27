@@ -16,6 +16,8 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.tool.tree.R
 import androidx.core.graphics.drawable.toDrawable
 import com.tool.tree.ThemeModeState
@@ -404,6 +406,25 @@ class DialogHelper {
 
         private fun isNightMode(context: Context): Boolean {
             return ThemeModeState.isDarkMode()
+        }
+
+        /**
+         * Dialog full-screen (DialogFullScreen, kr_dialog_params khi isLongList) có Window RIÊNG,
+         * KHÔNG tự "thừa hưởng" cờ edge-to-edge mà ThemeModeState.applyWindowFlags() đã set cho
+         * Window của Activity - nếu không tự gọi lại ở đây, status bar/navigation bar của dialog
+         * sẽ không được vẽ xuyên qua (mất hiệu ứng mờ) dù các style dialog_full_screen (light/dark)
+         * và kr_full_screen_dialog (light/dark) đã khai statusBarColor/navigationBarColor =
+         * transparent (chỉ khai màu, không tự bật e-t-e thật sự).
+         */
+        fun applyEdgeToEdge(window: Window, darkMode: Boolean) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            window.statusBarColor = Color.TRANSPARENT
+            window.navigationBarColor = Color.TRANSPARENT
+
+            val controller = WindowInsetsControllerCompat(window, window.decorView)
+            val useLightIcons = !darkMode
+            controller.isAppearanceLightStatusBars = useLightIcons
+            controller.isAppearanceLightNavigationBars = useLightIcons
         }
 
         // Trong setWindowBlurBg
