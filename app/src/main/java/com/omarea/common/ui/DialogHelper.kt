@@ -393,6 +393,17 @@ class DialogHelper {
                     decorView.run {
                         systemUiVisibility = context.window.decorView.systemUiVisibility // View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                     }
+                    if (useBlur) {
+                        // Mặc định (decorFitsSystemWindows=true) window CHỈ trải nội dung ra tới
+                        // mép status/navigation bar - android.R.id.content bị hệ thống tự cộng
+                        // padding = kích thước 2 thanh đó. Ảnh blur (match_parent bên trong
+                        // wrapper, xem DialogSwipeBackBlurWrapper.wrap()) vì vậy cũng bị thu hẹp
+                        // theo, để lộ 2 dải KHÔNG blur ở trên/dưới màn hình. Gọi
+                        // applyEdgeToEdge() (contentView=null - KHÔNG cộng padding bù insets cho
+                        // dialogView nhỏ, nó vốn đã canh giữa, không cần né status/nav bar) để
+                        // window vẽ tràn viền thật, cho ảnh blur phủ kín toàn màn hình.
+                        applyEdgeToEdge(this, isNightMode(context))
+                    }
                 }
                 dialog.show()
 
