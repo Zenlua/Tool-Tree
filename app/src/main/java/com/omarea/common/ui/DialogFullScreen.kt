@@ -50,27 +50,31 @@ open class DialogFullScreen(private val layout: Int, private val darkMode: Boole
     companion object {
         /**
          * Gắn cử chỉ vuốt lùi (vuốt sang phải để đóng, + vuốt-từ-mép predictive-back API 33+)
-         * cho 1 Dialog TOÀN MÀN HÌNH bất kỳ ĐÃ show (dialog.window khác null, contentView đã có
-         * parent) - dùng chung cho chính DialogFullScreen (bên dưới, xem onViewCreated()) LẪN
-         * các dialog dựng tay khác không kế thừa DialogFullScreen, ví dụ dialog tham số
-         * (kr_dialog_params/kr_dialog_params_small) ở ActionListFragment - kể cả nhánh "ít mục"
-         * (<=4, dựng qua DialogHelper.customDialog()) trước đây KHÔNG có vuốt lùi, giờ gọi thẳng
-         * hàm này để có tính năng y hệt nhánh danh sách dài, không phải chép lại logic.
+         * cho 1 Dialog TOÀN MÀN HÌNH bất kỳ ĐÃ show (dialog.window khác null, đã setContentView)
+         * - dùng chung cho chính DialogFullScreen (bên dưới, xem onViewCreated()) LẪN các dialog
+         * dựng tay khác không kế thừa DialogFullScreen, ví dụ dialog tham số
+         * (kr_dialog_params/kr_dialog_params_small) ở ActionListFragment, dialog blur ở
+         * DialogHelper.customDialog(), hay DialogLogFragment - kể cả dialog dựng qua AlertDialog
+         * (không chỉ Dialog thường), vì DialogSwipeBackBlurWrapper.wrap() giờ tự lấy nội dung
+         * thật từ android.R.id.content của window, không cần bên gọi tự chỉ view nào.
          *
          * @param activity Activity đang chứa dialog (cần để FastBlurUtility chụp màn hình phía
          * sau, xem DialogSwipeBackBlurWrapper).
-         * @param dialog Dialog ĐÃ show.
-         * @param contentView root view thật sự của nội dung dialog (đã có parent).
+         * @param dialog Dialog ĐÃ show (đã setContentView - với DialogFragment nghĩa là gọi SAU
+         * onActivityCreated(), ví dụ trong view.post {} từ onViewCreated()).
          * @param onBack callback khi vuốt lùi hoàn tất - thường là dialog.dismiss().
          * @return handle để bên gọi release() đúng lúc dialog bị dismiss/destroy (tránh leak
          * VelocityTracker/animator + hủy đăng ký predictive-back), null nếu dialog chưa có
          * window.
          */
-        fun bindSwipeToDismiss(activity: Activity, dialog: Dialog, contentView: View, onBack: () -> Unit): SwipeToDismissBinding? {
+        fun bindSwipeToDismiss(activity: Activity, dialog: Dialog, onBack: () -> Unit): SwipeToDismissBinding? {
             val window = dialog.window ?: return null
-            val swipeTarget = DialogSwipeBackBlurWrapper.wrap(activity, window, contentView) ?: run {
+            val swipeTarget = DialogSwipeBackBlurWrapper.wrap(activity, window) ?: run {
                 DialogHelper.setWindowBlurBg(window, activity)
-                contentView
+                // Fallback: không bọc blur trượt được thì vẫn kéo được cả khối android.R.id.content
+                // (toàn bộ nội dung window) - chỉ là nền blur phía dưới đứng yên tĩnh như hành vi
+                // cũ, không trượt cùng.
+                window.findViewById(android.R.id.content)
             }
             val helper = DialogSwipeBackHelper.bind(dialog, swipeTarget) { onBack() } ?: return null
             val predictiveBackCallback = DialogPredictiveBackBinder.bind(dialog, helper)
