@@ -2,6 +2,7 @@ package com.tool.tree
 
 import android.app.ActivityManager
 import android.content.Intent
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -387,7 +388,7 @@ class ActionPage : AppCompatActivity() {
     private fun addFab(menuOption: PageMenuOption) {
         binding.actionPageFab.apply {
             visibility = View.VISIBLE
-            setOnClickListener { onMenuItemClick(menuOption) }
+            setOnClickListener { onMenuItemClick(menuOption, this) }
             setImageDrawable(resolveFabIcon(listOf(menuOption)))
         }
     }
@@ -422,7 +423,7 @@ class ActionPage : AppCompatActivity() {
             popup.menu.add(Menu.NONE, index, index, option.title)
         }
         popup.setOnMenuItemClickListener { item ->
-            fabOptions.getOrNull(item.itemId)?.let { onMenuItemClick(it) }
+            fabOptions.getOrNull(item.itemId)?.let { onMenuItemClick(it, binding.actionPageFab) }
             true
         }
         popup.show()
@@ -464,7 +465,11 @@ class ActionPage : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun onMenuItemClick(menuOption: PageMenuOption) {
+    // anchor: view dùng làm điểm neo cho popup dạng "spinner" (xem menuItemSpinner()) - mặc
+    // định null nghĩa là dùng toolbar (trường hợp bấm từ menu 3 chấm). Khi gọi từ FAB
+    // (addFab()/showFabChooser()) truyền thẳng binding.actionPageFab vào để popup "spinner"
+    // đè lên đúng vị trí fab vừa bấm thay vì luôn hiện ở toolbar bất kể nguồn gọi.
+    private fun onMenuItemClick(menuOption: PageMenuOption, anchor: View? = null) {
         if (menuOption.link.isNotEmpty() || menuOption.activity.isNotEmpty() ||
             menuOption.onlineHtmlPage.isNotEmpty() || menuOption.pageConfigSh.isNotEmpty() ||
             menuOption.pageConfigPath.isNotEmpty()
@@ -479,7 +484,7 @@ class ActionPage : AppCompatActivity() {
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
             "file", "folder" -> menuItemChooseFile(menuOption)
-            "spinner" -> menuItemSpinner(menuOption)
+            "spinner" -> menuItemSpinner(menuOption, anchor)
             else -> {
                 if (menuOption.silent) {
                     menuItemExecuteSilent(menuOption)
@@ -932,10 +937,11 @@ class ActionPage : AppCompatActivity() {
 
     // type = "spinner": tải danh sách lựa chọn (tĩnh option.options + động option.optionsSh)
     // và giá trị đang chọn hiện tại (option.spinnerGetState) - gộp 1 round-trip shell giống
-    // ActionListFragment.pickerExecute() - rồi mở dropdown Spinner ngay tại toolbar.
-    private fun menuItemSpinner(menuOption: PageMenuOption) {
+    // ActionListFragment.pickerExecute() - rồi mở dropdown Spinner ngay tại vị trí vừa bấm
+    // (toolbar nếu chọn từ menu 3 chấm, hoặc FAB nếu chọn từ fab - xem tham số anchor).
+    private fun menuItemSpinner(menuOption: PageMenuOption, anchor: View? = null) {
         val config = currentPageConfig ?: return
-        val anchor = findViewById<View>(R.id.toolbar) ?: binding.root
+        val resolvedAnchor = anchor ?: findViewById<View>(R.id.toolbar) ?: binding.root
 
         progressBarDialog.setCancelCallback { spinnerLoadJob?.cancel() }
         progressBarDialog.showDialog(getString(R.string.kr_param_options_load) + " ")
@@ -966,7 +972,7 @@ class ActionPage : AppCompatActivity() {
                 if (options.isNullOrEmpty()) {
                     Toast.makeText(this@ActionPage, getString(R.string.picker_not_item), Toast.LENGTH_SHORT).show()
                 } else {
-                    showSpinnerPopup(anchor, menuOption, options, currentValue)
+                    showSpinnerPopup(resolvedAnchor, menuOption, options, currentValue)
                 }
             }
         }
@@ -995,8 +1001,10 @@ class ActionPage : AppCompatActivity() {
     }
 
     // Hiện dropdown chọn giá trị kiểu Android Spinner (dùng ListPopupWindow, style y hệt
-    // ParamsSingleSelect.openSingleSelectPopup()) neo tại toolbar. Chọn xong chạy script của
-    // menu item với tham số "state" = giá trị vừa chọn - giống hệt các loại menu item khác.
+    // ParamsSingleSelect.openSingleSelectPopup()) neo về góc phải toolbar - đè lên đúng vị trí
+    // menu vừa bấm thay vì tràn full chiều rộng màn hình (xem applySpinnerPopupWidthAndPosition).
+    // Chọn xong chạy script của menu item với tham số "state" = giá trị vừa chọn - giống hệt
+    // các loại menu item khác.
     private fun showSpinnerPopup(
         anchor: View,
         menuOption: PageMenuOption,
@@ -1023,13 +1031,56 @@ class ActionPage : AppCompatActivity() {
             )
         }
 
-        val screenWidth = resources.displayMetrics.widthPixels
-        popup.width = anchor.width.coerceAtLeast(400).coerceAtMost(screenWidth)
+        // Mục "spinner" trong menu 3 chấm/toolbar trước đây neo cả popup theo CHIỀU RỘNG
+        // TOÀN BỘ toolbar (anchor.width.coerceAtLeast(400)) - vì toolbar gần như chiếm hết
+        // chiều ngang màn hình nên trông giống 1 danh sách full màn hình thay vì 1 popup nhỏ
+        // "đè lên" đúng chỗ menu vừa bấm. Giờ đo width theo NỘI DUNG thực tế (giống
+        // ParamsSingleSelect.applyPopupWidthAndPosition) rồi neo popup về SÁT GÓC PHẢI của
+        // anchor (nơi icon menu 3 chấm/fab thường nằm) bằng horizontalOffset âm, để popup hiện
+        // ra gọn, đúng cảm giác "đè lên vị trí menu cũ" thay vì tràn ngang cả toolbar.
+        applySpinnerPopupWidthAndPosition(popup, anchor, options, background)
 
         popup.show()
         if (selectedIndex in options.indices) {
             popup.listView?.setSelection(selectedIndex)
         }
+    }
+
+    private fun applySpinnerPopupWidthAndPosition(
+        popup: ListPopupWindow,
+        anchor: View,
+        options: ArrayList<SelectItem>,
+        background: android.graphics.drawable.Drawable?
+    ) {
+        val inflater = layoutInflater
+        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        val parent = anchor.parent as? android.view.ViewGroup
+
+        var maxItemWidth = 0
+        for (item in options) {
+            val itemView = inflater.inflate(R.layout.kr_spinner_dropdown, parent, false)
+            itemView.findViewById<android.widget.TextView>(R.id.text).text = item.toString()
+            itemView.measure(unspecified, unspecified)
+            if (itemView.measuredWidth > maxItemWidth) {
+                maxItemWidth = itemView.measuredWidth
+            }
+        }
+
+        val bgPadding = Rect()
+        background?.getPadding(bgPadding)
+        val screenWidth = resources.displayMetrics.widthPixels
+        val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
+        val minWidth = resources.displayMetrics.density * 200 // tối thiểu ~200dp cho dễ bấm
+        val desiredWidth = contentWidth.coerceAtLeast(minWidth.toInt()).coerceAtMost(screenWidth)
+        popup.width = desiredWidth
+
+        // Neo sát góc phải anchor (toolbar) - đúng vị trí icon menu 3 chấm thường nằm - thay vì
+        // để mặc định ListPopupWindow căn trái (tràn từ mép trái toolbar).
+        val anchorLocation = IntArray(2)
+        anchor.getLocationOnScreen(anchorLocation)
+        val rightAligned = anchor.width - desiredWidth
+        val overflowLeft = anchorLocation[0] + rightAligned
+        popup.horizontalOffset = if (overflowLeft < 0) -anchorLocation[0] else rightAligned
     }
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {

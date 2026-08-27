@@ -16,7 +16,9 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.tool.tree.R
 import androidx.core.graphics.drawable.toDrawable
@@ -415,8 +417,15 @@ class DialogHelper {
          * sẽ không được vẽ xuyên qua (mất hiệu ứng mờ) dù các style dialog_full_screen (light/dark)
          * và kr_full_screen_dialog (light/dark) đã khai statusBarColor/navigationBarColor =
          * transparent (chỉ khai màu, không tự bật e-t-e thật sự).
+         *
+         * LƯU Ý: bật setDecorFitsSystemWindows(false) đồng nghĩa hệ thống KHÔNG còn tự chừa chỗ
+         * cho status bar/navigation bar nữa - nội dung dialog sẽ tự vẽ tràn lên đè cả 2 thanh đó
+         * nếu không tự pad lại. Truyền contentView (root view thật sự của dialog, ví dụ view của
+         * DialogFullScreen hoặc dialogView của kr_dialog_params) để hàm này tự lắng nghe
+         * WindowInsets và CỘNG THÊM đúng phần bị che (systemBars) vào padding GỐC đã khai sẵn ở
+         * layout/style (vd dialogRoot padding=12dp) - không ghi đè mất padding cũ.
          */
-        fun applyEdgeToEdge(window: Window, darkMode: Boolean) {
+        fun applyEdgeToEdge(window: Window, darkMode: Boolean, contentView: View? = null) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.TRANSPARENT
             window.navigationBarColor = Color.TRANSPARENT
@@ -425,6 +434,25 @@ class DialogHelper {
             val useLightIcons = !darkMode
             controller.isAppearanceLightStatusBars = useLightIcons
             controller.isAppearanceLightNavigationBars = useLightIcons
+
+            if (contentView != null) {
+                val basePaddingLeft = contentView.paddingLeft
+                val basePaddingTop = contentView.paddingTop
+                val basePaddingRight = contentView.paddingRight
+                val basePaddingBottom = contentView.paddingBottom
+
+                ViewCompat.setOnApplyWindowInsetsListener(contentView) { v, insets ->
+                    val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                    v.setPadding(
+                        basePaddingLeft + systemBars.left,
+                        basePaddingTop + systemBars.top,
+                        basePaddingRight + systemBars.right,
+                        basePaddingBottom + systemBars.bottom
+                    )
+                    insets
+                }
+                ViewCompat.requestApplyInsets(contentView)
+            }
         }
 
         // Trong setWindowBlurBg

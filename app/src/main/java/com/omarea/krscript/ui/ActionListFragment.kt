@@ -592,7 +592,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 .setView(dialogView).setCancelable(cancelable).create().apply {
                                     setCanceledOnTouchOutside(cancelable)
                                     show()
-                                    window?.let { DialogHelper.applyEdgeToEdge(it, darkMode) }
+                                    window?.let { DialogHelper.applyEdgeToEdge(it, darkMode, dialogView) }
                                     if (!cancelable) {
                                         // Không bật swipe-to-dismiss (nhánh dưới) -> giữ nguyên
                                         // nền blur cố định như trước.

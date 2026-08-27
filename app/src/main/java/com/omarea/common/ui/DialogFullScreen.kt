@@ -63,7 +63,7 @@ open class DialogFullScreen(private val layout: Int, private val darkMode: Boole
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                     setWindowAnimations(android.R.style.Animation_Translucent)
                 }
-                DialogHelper.applyEdgeToEdge(this, darkMode)
+                DialogHelper.applyEdgeToEdge(this, darkMode, view)
             }
 
             if (swipeToDismissEnabled) {
