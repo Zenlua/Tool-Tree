@@ -587,20 +587,20 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
                         val lp = when (center) {
                             is FrameLayout -> FrameLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
                                 Gravity.CENTER
                             )
                             is LinearLayout -> LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
                             ).apply { gravity = Gravity.CENTER }
                             is RelativeLayout -> RelativeLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
                             ).apply { addRule(RelativeLayout.CENTER_IN_PARENT) }
                             else -> ViewGroup.MarginLayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
                             )
                         }
