@@ -42,7 +42,7 @@ root=false
 
 - Can also rename icon_true.png, icon_false.png, true is dark mode, false is light mode.
 
-**Content inside index.sh, index.xml**
+**Content inside index.bash, index.toml**
 
 - There are many things that are difficult to say that can only be found out by yourself.
 

@@ -58,6 +58,7 @@ amlogic, apk, apex, capex, squashfs, ...
 | [Version Changelog](https://zenlua.github.io/Tool-Tree/Version.html) | View the change log across versions |
 | [Add-on Development](https://zenlua.github.io/Tool-Tree/website/Instruct.html) | Basic add-on creation guide |
 | [Information](https://zenlua.github.io/Tool-Tree/website/Information.html) | Project developer information |
+| [TOML Guide](https://zenlua.github.io/Tool-Tree/website/toml.html) | TOML configuration guide |
 
 ---
 
