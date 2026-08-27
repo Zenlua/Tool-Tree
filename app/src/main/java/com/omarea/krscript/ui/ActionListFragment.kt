@@ -210,7 +210,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     // Kiểm tra tương thích SDK - đồng bộ, không cần chạy shell nên không cần đợi/hiện dialog
-    // gì cả. T��ch riêng khỏi nodeUnlockedAsync() để onPageClick() có thể gọi thẳng cho trường
+    // gì cả. Tách riêng khỏi nodeUnlockedAsync() để onPageClick() có thể gọi thẳng cho trường
     // hợp mở trang con (không qua nodeUnlockedAsync nữa - xem onPageClick()).
     private fun checkSdkCompatibility(clickableNode: ClickableNode): Boolean {
         val currentSDK = Build.VERSION.SDK_INT
@@ -585,7 +585,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         (linearLayout.parent as? ViewGroup)?.removeView(linearLayout)
                         center.removeAllViews()
 
-                        // ========== CĂN GIỮA CHIỀU DỌC KHI DƯỚI 4 ITEM ==========
+                        // ========== CĂN GIỮA CHIỀU DỌC KHI DƯỚI 4 ITEM (GIỮ WRAP_CONTENT TRÁNH GIÃN KHOẢNG TRẮNG) ==========
                         if (!isLongList) {
                             linearLayout.gravity = Gravity.CENTER_VERTICAL
                             if (center is LinearLayout) {
@@ -596,16 +596,16 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         val lp = when (center) {
                             is FrameLayout -> FrameLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
-                                if (!isLongList) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
                                 Gravity.CENTER
                             )
                             is LinearLayout -> LinearLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
-                                if (!isLongList) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT
+                                ViewGroup.LayoutParams.WRAP_CONTENT
                             ).apply { gravity = Gravity.CENTER }
                             is RelativeLayout -> RelativeLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
-                                if (!isLongList) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT
+                                ViewGroup.LayoutParams.WRAP_CONTENT
                             ).apply { addRule(RelativeLayout.CENTER_IN_PARENT) }
                             else -> ViewGroup.MarginLayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
