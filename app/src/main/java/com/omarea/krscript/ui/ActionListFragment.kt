@@ -210,7 +210,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     // Kiểm tra tương thích SDK - đồng bộ, không cần chạy shell nên không cần đợi/hiện dialog
-    // gì cả. Tách riêng khỏi nodeUnlockedAsync() để onPageClick() có thể gọi thẳng cho trường
+    // gì cả. T��ch riêng khỏi nodeUnlockedAsync() để onPageClick() có thể gọi thẳng cho trường
     // hợp mở trang con (không qua nodeUnlockedAsync nữa - xem onPageClick()).
     private fun checkSdkCompatibility(clickableNode: ClickableNode): Boolean {
         val currentSDK = Build.VERSION.SDK_INT
@@ -584,20 +584,6 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         // ensure linearLayout not attached elsewhere and add with suitable LayoutParams
                         (linearLayout.parent as? ViewGroup)?.removeView(linearLayout)
                         center.removeAllViews()
-
-                        // ========== CĂN GIỮA VÀ CẤP KHÔNG GIAN DỌC CHO DƯỚI 4 ITEM ==========
-                        if (!isLongList) {
-                            linearLayout.gravity = Gravity.CENTER_VERTICAL
-                            if (center is LinearLayout) {
-                                center.gravity = Gravity.CENTER_VERTICAL
-                            }
-                            // Ép center chiếm hết khoảng trống dọc trong dialog nhỏ để có chỗ căn giữa
-                            val centerLp = center.layoutParams
-                            if (centerLp != null) {
-                                centerLp.height = ViewGroup.LayoutParams.MATCH_PARENT
-                                center.layoutParams = centerLp
-                            }
-                        }
 
                         val lp = when (center) {
                             is FrameLayout -> FrameLayout.LayoutParams(
