@@ -30,6 +30,10 @@ import com.omarea.krscript.model.*
 import com.omarea.krscript.shortcut.ActionShortcutManager
 import com.tool.tree.ThemeModeState
 import kotlinx.coroutines.*
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.RelativeLayout
 
 class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.OnItemClickListener {
     companion object {
@@ -577,8 +581,32 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         val isLongList = actionParamInfos.size > 4
                         val dialogView = LayoutInflater.from(context).inflate(if (isLongList) R.layout.kr_dialog_params else R.layout.kr_dialog_params_small, null)
                         val center = dialogView.findViewById<ViewGroup>(R.id.kr_params_center)
+
+                        // ensure linearLayout not attached elsewhere and add with suitable LayoutParams
+                        (linearLayout.parent as? ViewGroup)?.removeView(linearLayout)
                         center.removeAllViews()
-                        center.addView(linearLayout)
+
+                        val lp = when (center) {
+                            is FrameLayout -> FrameLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                Gravity.CENTER
+                            )
+                            is LinearLayout -> LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply { gravity = Gravity.CENTER }
+                            is RelativeLayout -> RelativeLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            ).apply { addRule(RelativeLayout.CENTER_IN_PARENT) }
+                            else -> ViewGroup.MarginLayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            )
+                        }
+
+                        center.addView(linearLayout, lp)
 
                         // isAutoShow = true (dialog tự mở khi vào trang): không cho ấn ra ngoài
                         // để đóng, và ấn "Hủy" phải thoát khỏi trang thay vì chỉ đóng dialog.
@@ -595,8 +623,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         } else {
                             // Nhánh <=4 mục dùng chung DialogHelper.customDialog() - nền blur
                             // (+ vuốt lùi khi cancelable) đã được xử lý sẵn bên trong đó (xem
-                            // DialogHelper.customDialog()), không cần lặp lại ở đây.
-                            DialogHelper.customDialog(requireActivity(), dialogView, cancelable).dialog
+                            // DialogHelper.customDialog()), nhưng vẫn apply edge-to-edge so dialog
+                            // window status/navigation drawing matches full-screen branch.
+                            val dlgWrap = DialogHelper.customDialog(requireActivity(), dialogView, cancelable)
+                            val dlg = dlgWrap.dialog
+                            dlg.window?.let { DialogHelper.applyEdgeToEdge(it, darkMode, dialogView) }
+                            dlg
                         }
                         if (isLongList) {
                             if (cancelable) {
