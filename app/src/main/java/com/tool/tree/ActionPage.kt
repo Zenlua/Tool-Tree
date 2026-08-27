@@ -305,7 +305,14 @@ class ActionPage : AppCompatActivity() {
 
         val fabOptions = ArrayList<PageMenuOption>()
         menuOptions?.forEach { option ->
-            if (option.isFab) {
+            // type = "spinner" LUÔN hiện như 1 menu item bình thường (icon mũi tên dropdown
+            // đứng CẠNH tiêu đề trong popup "⋮", giống cách checkbox hiện dấu tích cạnh tiêu
+            // đề) - kể cả khi mục này được khai báo trong [[fab]] (isFab = true). Trước đây
+            // spinner+isFab bị gộp chung vào fabOptions rồi resolveFabIcon() lại gắn icon dropdown
+            // lên thẳng nút FAB - sai vì FAB không có chỗ hiện tiêu đề đi kèm icon, khiến người
+            // dùng không biết đây là 1 dropdown chọn giá trị. Chỉ những type KHÁC spinner mới
+            // thực sự được phép làm fab.
+            if (option.isFab && option.type != "spinner") {
                 fabOptions.add(option)
             } else {
                 val uniqueItemId = option.key.hashCode()
@@ -421,6 +428,8 @@ class ActionPage : AppCompatActivity() {
     // Icon của nút fab: nếu chỉ có 1 item thì dùng icon của chính nó (như cũ). Nếu nhiều item
     // cùng chung 1 icon-path thì vẫn tôn trọng icon đó; khác nhau thì dùng icon mặc định (dấu +)
     // vì không có icon nào đại diện được cho tất cả các lựa chọn bên trong.
+    // Lưu ý: fabOptions không bao giờ chứa type = "spinner" nữa (xem onCreateOptionsMenu()) nên
+    // ở đây không còn cần xử lý riêng icon mũi tên dropdown cho fab.
     private fun resolveFabIcon(fabOptions: List<PageMenuOption>): android.graphics.drawable.Drawable? {
         val distinctIconPaths = fabOptions.map { it.iconPath }.distinct()
         val representative = if (distinctIconPaths.size == 1) fabOptions[0] else null
@@ -430,11 +439,6 @@ class ActionPage : AppCompatActivity() {
             representative.iconPath.isEmpty()
         ) {
             R.drawable.kr_folder
-        } else if (representative != null &&
-            representative.type == "spinner" &&
-            representative.iconPath.isEmpty()
-        ) {
-            R.drawable.ic_arrow_dropdown
         } else {
             R.drawable.kr_fab
         }
