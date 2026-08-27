@@ -317,6 +317,41 @@ class PageConfigReader {
         }
     }
 
+    // ========== TÍNH NĂNG MỚI: DẠNG RÚT GỌN CHO "options" (mảng chuỗi "key|title") ==========
+    // Bên cạnh dạng đầy đủ [[options]] (mỗi lựa chọn 1 bảng con value=... title=...), giờ
+    // "options" còn chấp nhận dạng mảng chuỗi thuần, mỗi phần tử là "key|title", ví dụ:
+    //   options = [
+    //     "home|Trang chủ",
+    //     "profile|Hồ sơ cá nhân",
+    //     "settings|Cài đặt"
+    //   ]
+    // -> key (trước dấu "|" đầu tiên) dùng làm value, phần còn lại (sau dấu "|") dùng làm
+    // title (được resolve qua StringResRef như title thường). Nếu 1 dòng KHÔNG có dấu "|",
+    // cả chuỗi được dùng làm cả value lẫn title (giống hành vi mặc định của selectItemToml
+    // khi thiếu value). Chỉ áp dụng khi "options" là mảng CHUỖI (không phải mảng bảng
+    // [[options]]) - nếu không phải mảng chuỗi, trả về danh sách rỗng để nhường chỗ cho
+    // tomlEntries() xử lý dạng bảng như cũ.
+    private fun tomlStringOptions(parent: TomlTable, key: String): List<SelectItem> {
+        if (!parent.isArray(key)) return emptyList()
+        val arr = parent.getArray(key) ?: return emptyList()
+        if (arr.size() == 0 || !arr.containsStrings()) return emptyList()
+        val result = ArrayList<SelectItem>()
+        for (i in 0 until arr.size()) {
+            val raw = arr.getString(i)
+            val sep = raw.indexOf('|')
+            val item = SelectItem()
+            if (sep >= 0) {
+                item.value = raw.substring(0, sep).trim()
+                item.title = StringResRef.resolve(context, raw.substring(sep + 1).trim())
+            } else {
+                item.value = raw.trim()
+                item.title = item.value
+            }
+            result.add(item)
+        }
+        return result
+    }
+
     private fun readConfigToml(rawText: String, onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = null): ArrayList<NodeInfoBase>? {
         return try {
             val result = Toml.parse(rawText)
@@ -639,6 +674,11 @@ class PageConfigReader {
                 option.options!!.add(selectItemToml(optTable))
             }
         }
+        val spinnerOptionsStr = tomlStringOptions(table, "options")
+        if (spinnerOptionsStr.isNotEmpty()) {
+            if (option.options == null) option.options = ArrayList()
+            option.options!!.addAll(spinnerOptionsStr)
+        }
         tomlGet(table, "get", "getstate")?.let { option.spinnerGetState = it }
         // title-sh đã được xử lý ở mainNodeToml() (qua runnableNodeToml ở trên); ở đây chỉ
         // đọc thêm alias "text" và chỉ áp dụng khi chưa có title-sh (tránh ghi đè kết quả shell)
@@ -704,6 +744,11 @@ class PageConfigReader {
             for (optTable in pickerOptions) {
                 picker.options!!.add(selectItemToml(optTable))
             }
+        }
+        val pickerOptionsStr = tomlStringOptions(table, "options")
+        if (pickerOptionsStr.isNotEmpty()) {
+            if (picker.options == null) picker.options = ArrayList()
+            picker.options!!.addAll(pickerOptionsStr)
         }
         resourceNodeToml(table)
 
@@ -872,6 +917,11 @@ class PageConfigReader {
             for (optTable in paramOptions) {
                 p.options!!.add(selectItemToml(optTable))
             }
+        }
+        val paramOptionsStr = tomlStringOptions(table, "options")
+        if (paramOptionsStr.isNotEmpty()) {
+            if (p.options == null) p.options = ArrayList()
+            p.options!!.addAll(paramOptionsStr)
         }
 
         return if (p.supported && !p.name.isNullOrEmpty()) p else null

@@ -312,18 +312,13 @@ class ActionPage : AppCompatActivity() {
             // lên thẳng nút FAB - sai vì FAB không có chỗ hiện tiêu đề đi kèm icon, khiến người
             // dùng không biết đây là 1 dropdown chọn giá trị. Chỉ những type KHÁC spinner mới
             // thực sự được phép làm fab.
-            if (option.isFab && option.type != "spinner") {
+            if (option.isFab) {
                 fabOptions.add(option)
             } else {
                 val uniqueItemId = option.key.hashCode()
-                val menuItem = menu?.add(Menu.NONE, uniqueItemId, Menu.NONE, option.title)
+                val menuItem = menu?.add(Menu.NONE, uniqueItemId, Menu.NONE, displayTitle(option))
                 if (option.type == "checkbox") {
                     menuItem?.isCheckable = true
-                }
-                if (option.type == "spinner") {
-                    // Icon mũi tên dropdown báo hiệu mục này mở popup chọn giá trị (xem
-                    // menuItemSpinner()/showSpinnerPopup()) thay vì thực thi thẳng như các mục khác.
-                    menuItem?.icon = ContextCompat.getDrawable(this, R.drawable.ic_arrow_dropdown)
                 }
             }
         }
@@ -425,6 +420,14 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
+    // Hậu tố hiển thị cho item type = "spinner" - dùng chung cho CẢ popup menu 3 chấm
+    // (onCreateOptionsMenu) LẪN popup chọn khi fab có nhiều item (showFabChooser), để báo hiệu
+    // nhất quán đây là 1 dropdown chọn giá trị. Hiện tại spinner luôn bị lọc khỏi fabOptions từ
+    // lúc parse (xem comment ở resolveFabIcon()) nên nhánh fab chưa thực sự có type spinner,
+    // nhưng để hàm dùng chung ở đây phòng khi điều đó đổi - không cần sửa lại 2 nơi.
+    private fun displayTitle(option: PageMenuOption): String {
+        return if (option.type == "spinner") "${option.title} ▼" else option.title
+    }
     // Icon của nút fab: nếu chỉ có 1 item thì dùng icon của chính nó (như cũ). Nếu nhiều item
     // cùng chung 1 icon-path thì vẫn tôn trọng icon đó; khác nhau thì dùng icon mặc định (dấu +)
     // vì không có icon nào đại diện được cho tất cả các lựa chọn bên trong.
@@ -1155,7 +1158,7 @@ class ActionPage : AppCompatActivity() {
     // liền cạnh trên fab trông rất chật, nên đẩy thêm 1 khoảng hở nhỏ (fabPopupGap) giữa 2 bên.
     private fun showFabChooser(fabOptions: List<PageMenuOption>) {
         val anchor = binding.actionPageFab
-        val labels = fabOptions.map { it.title }
+        val labels = fabOptions.map { displayTitle(it) }
 
         val adapter = ArrayAdapter(this, R.layout.kr_spinner_dropdown, R.id.text, labels)
         val background = ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg)
