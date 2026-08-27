@@ -585,22 +585,30 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         (linearLayout.parent as? ViewGroup)?.removeView(linearLayout)
                         center.removeAllViews()
 
+                        // ========== CĂN GIỮA CHIỀU DỌC KHI DƯỚI 4 ITEM ==========
+                        if (!isLongList) {
+                            linearLayout.gravity = Gravity.CENTER_VERTICAL
+                            if (center is LinearLayout) {
+                                center.gravity = Gravity.CENTER_VERTICAL
+                            }
+                        }
+
                         val lp = when (center) {
                             is FrameLayout -> FrameLayout.LayoutParams(
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                if (!isLongList) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT,
                                 Gravity.CENTER
                             )
                             is LinearLayout -> LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                if (!isLongList) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT
                             ).apply { gravity = Gravity.CENTER }
                             is RelativeLayout -> RelativeLayout.LayoutParams(
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                if (!isLongList) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT
                             ).apply { addRule(RelativeLayout.CENTER_IN_PARENT) }
                             else -> ViewGroup.MarginLayoutParams(
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT
                             )
                         }
