@@ -2,9 +2,9 @@ name: Add-on CI
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/addon/**'
+  # push:
+    # paths:
+      # - '.github/addon/**'
 
 permissions: write-all
 
