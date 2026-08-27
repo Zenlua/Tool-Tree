@@ -580,32 +580,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         val isLongList = actionParamInfos.size > 4
                         val dialogView = LayoutInflater.from(context).inflate(if (isLongList) R.layout.kr_dialog_params else R.layout.kr_dialog_params_small, null)
                         val center = dialogView.findViewById<ViewGroup>(R.id.kr_params_center)
-
-                        // ensure linearLayout not attached elsewhere and add with suitable LayoutParams
-                        (linearLayout.parent as? ViewGroup)?.removeView(linearLayout)
                         center.removeAllViews()
-
-                        val lp = when (center) {
-                            is FrameLayout -> FrameLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                Gravity.CENTER
-                            )
-                            is LinearLayout -> LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply { gravity = Gravity.CENTER }
-                            is RelativeLayout -> RelativeLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply { addRule(RelativeLayout.CENTER_IN_PARENT) }
-                            else -> ViewGroup.MarginLayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
-                            )
-                        }
-
-                        center.addView(linearLayout, lp)
+                        center.addView(linearLayout)
 
                         // isAutoShow = true (dialog tự mở khi vào trang): không cho ấn ra ngoài
                         // để đóng, và ấn "Hủy" phải thoát khỏi trang thay vì chỉ đóng dialog.
