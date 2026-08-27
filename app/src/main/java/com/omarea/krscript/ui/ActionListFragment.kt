@@ -590,14 +590,24 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 .setView(dialogView).setCancelable(cancelable).create().apply {
                                     setCanceledOnTouchOutside(cancelable)
                                     show()
-                                    window?.let { DialogHelper.setWindowBlurBg(it, requireActivity()) }
+                                    if (!cancelable) {
+                                        // Không bật swipe-to-dismiss (nhánh dưới) -> giữ nguyên
+                                        // nền blur cố định như trước.
+                                        window?.let { DialogHelper.setWindowBlurBg(it, requireActivity()) }
+                                    }
                                 }
                         } else {
                             DialogHelper.customDialog(requireActivity(), dialogView, cancelable).dialog
                         }
                         var paramsDialogSwipeHelper: DialogSwipeBackHelper? = null
                         if (isLongList && cancelable) {
-                            paramsDialogSwipeHelper = DialogSwipeBackHelper.bind(dialog, dialogView) { dialog.dismiss() }
+                            // Bọc dialogView + ảnh blur chung 1 wrapper để cả khối trượt cùng
+                            // nhau khi kéo (xem DialogSwipeBackBlurWrapper). Không bọc được thì
+                            // fallback về hành vi cũ: nền blur cố định + chỉ dialogView trượt.
+                            val window = dialog.window
+                            val swipeTarget = window?.let { DialogSwipeBackBlurWrapper.wrap(requireActivity(), it, dialogView) }
+                                ?: dialogView.also { window?.let { w -> DialogHelper.setWindowBlurBg(w, requireActivity()) } }
+                            paramsDialogSwipeHelper = DialogSwipeBackHelper.bind(dialog, swipeTarget) { dialog.dismiss() }
                             dialog.setOnDismissListener { paramsDialogSwipeHelper?.release() }
                         }
 

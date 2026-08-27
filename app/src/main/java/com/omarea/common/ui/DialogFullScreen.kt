@@ -56,17 +56,25 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
         super.onViewCreated(view, savedInstanceState)
 
         val activity = this.activity
-        if (activity != null) {
-            dialog?.window?.run {
+        val d = dialog
+        if (activity != null && d != null) {
+            d.window?.run {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                     setWindowAnimations(android.R.style.Animation_Translucent)
                 }
 
-                DialogHelper.setWindowBlurBg(this, activity)
-            }
-
-            if (swipeToDismissEnabled) {
-                dialog?.let { swipeBackHelper = DialogSwipeBackHelper.bind(it, view) { closeView() } }
+                if (swipeToDismissEnabled) {
+                    // Bọc view + ảnh blur chung 1 wrapper để cả khối trượt cùng nhau khi kéo
+                    // (xem DialogSwipeBackBlurWrapper). Không bọc được thì fallback về hành vi
+                    // cũ: nền blur cố định + chỉ view trượt, không có gì lộ ra khi kéo.
+                    val swipeTarget = DialogSwipeBackBlurWrapper.wrap(activity, this, view) ?: run {
+                        DialogHelper.setWindowBlurBg(this, activity)
+                        view
+                    }
+                    swipeBackHelper = DialogSwipeBackHelper.bind(d, swipeTarget) { closeView() }
+                } else {
+                    DialogHelper.setWindowBlurBg(this, activity)
+                }
             }
         }
     }
