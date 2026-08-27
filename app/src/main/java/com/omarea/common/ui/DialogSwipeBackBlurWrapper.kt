@@ -2,7 +2,6 @@ package com.omarea.common.ui
 
 import android.app.Activity
 import android.graphics.Color
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
@@ -21,51 +20,43 @@ object DialogSwipeBackBlurWrapper {
         } ?: return null
 
         val index = parent.indexOfChild(contentView)
+        
+        // 1. Lấy layoutParams gốc của contentView và GIỮ NGUYÊN KHÔNG ĐỔI
         val originalLayoutParams = contentView.layoutParams
 
-        val originalWidth = originalLayoutParams.width
-        val originalHeight = originalLayoutParams.height
-
-        // SỬA LỖI 1: Xử lý an toàn layout params gốc, giữ lại margin và tính chất căn lề
-        val contentLp = when (originalLayoutParams) {
-            is FrameLayout.LayoutParams -> FrameLayout.LayoutParams(originalWidth, originalHeight, originalLayoutParams.gravity).apply {
-                setMargins(originalLayoutParams.leftMargin, originalLayoutParams.topMargin, originalLayoutParams.rightMargin, originalLayoutParams.bottomMargin)
-            }
-            else -> {
-                val gravity = (originalLayoutParams as? ViewGroup.MarginLayoutParams)?.let {
-                    Gravity.CENTER
-                } ?: Gravity.CENTER
-                
-                FrameLayout.LayoutParams(originalWidth, originalHeight, gravity).apply {
-                    if (originalLayoutParams is ViewGroup.MarginLayoutParams) {
-                        setMargins(originalLayoutParams.leftMargin, originalLayoutParams.topMargin, originalLayoutParams.rightMargin, originalLayoutParams.bottomMargin)
-                    }
-                }
-            }
-        }
-
+        // 2. Set window trong suốt để lộ activity phía sau khi vuốt
         window.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        
         parent.removeView(contentView)
 
+        // 3. Tạo ImageView chứa ảnh blur phủ kín nền
         val blurImage = ImageView(activity).apply {
             setImageBitmap(blurBitmap)
             scaleType = ImageView.ScaleType.FIT_XY
         }
 
-        // SỬA LỖI 2: Cấu hình wrapper hỗ trợ focus tốt hơn để EditText không bị mất trạng thái nhập liệu
+        // 4. Tạo wrapper, cấu hình focus để các ô EditText bên trong hoạt động bình thường, không bị kẹt bàn phím
         val wrapper = FrameLayout(activity).apply {
-            isFocusable = false
-            isFocusableInTouchMode = false
             descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
         }
 
-        wrapper.addView(blurImage, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-        wrapper.addView(contentView, contentLp)
+        // Thêm ảnh blur làm lớp nền dưới cùng (MATCH_PARENT)
+        wrapper.addView(
+            blurImage, 
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        )
+        
+        // Thêm lại contentView với CHÍNH XÁC originalLayoutParams gốc — không ép buộc hay tính toán lại gì cả
+        wrapper.addView(contentView, originalLayoutParams)
 
-        val wrapperLp = when (originalLayoutParams) {
-            is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            else -> ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        }
+        // 5. Đưa wrapper vào vị trí cũ của contentView với kích thước phủ kín màn hình
+        val wrapperLp = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
 
         parent.addView(wrapper, index, wrapperLp)
 
