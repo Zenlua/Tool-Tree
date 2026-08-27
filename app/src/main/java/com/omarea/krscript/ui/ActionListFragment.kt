@@ -31,7 +31,6 @@ import com.omarea.krscript.shortcut.ActionShortcutManager
 import com.tool.tree.ThemeModeState
 import kotlinx.coroutines.*
 import android.view.Gravity
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 
@@ -211,7 +210,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     // Kiểm tra tương thích SDK - đồng bộ, không cần chạy shell nên không cần đợi/hiện dialog
-    // gì cả. Tách riêng khỏi nodeUnlockedAsync() để onPageClick() có thể gọi thẳng cho trường
+    // gì cả. T��ch riêng khỏi nodeUnlockedAsync() để onPageClick() có thể gọi thẳng cho trường
     // hợp mở trang con (không qua nodeUnlockedAsync nữa - xem onPageClick()).
     private fun checkSdkCompatibility(clickableNode: ClickableNode): Boolean {
         val currentSDK = Build.VERSION.SDK_INT
