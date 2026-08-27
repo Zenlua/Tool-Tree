@@ -59,9 +59,6 @@ class ActivityFileSelector : AppCompatActivity() {
         intent.extras?.run {
             if (containsKey("extension")) {
                 extension = "" + intent.extras?.getString("extension")
-                if (!extension.startsWith(".")) {
-                    extension = ".$extension"
-                }
                 // Không còn nối "(.ext)" vào title nữa - đã chuyển sang báo bằng toast lúc vào
                 // trang (xem onResume()), giống cách chế độ chọn thư mục vẫn đang báo bằng toast.
             }
@@ -129,9 +126,6 @@ class ActivityFileSelector : AppCompatActivity() {
         } else if (multiple) {
             showToast(R.string.msg_multiple_select_mode)
         } else if (mode == MODE_FILE && extension.isNotEmpty()) {
-            // Chế độ chọn 1 tệp tin có yêu cầu định dạng - báo bằng toast ngay lúc vào trang,
-            // cùng kiểu với toast msg_folder_mode ở chế độ chọn thư mục, thay vì phải hiện
-            // "(.ext)" trong title như trước.
             showToast(getString(R.string.msg_file_extension_required, extension))
         }
     }
