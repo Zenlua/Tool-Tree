@@ -1123,12 +1123,26 @@ class ActionPage : AppCompatActivity() {
     // dialog loading hiện ra ĐÈ LÊN LÚC ĐANG TRƯỢT VÀO, trông như xen ngang animation thay vì
     // hiện liền mạch phía sau khi trang đã vào hẳn. Giờ dời sang onEnterAnimationComplete() -
     // callback riêng được hệ thống gọi ĐÚNG 1 LẦN sau khi animation vào trang chạy xong hẳn
-    // (API 23+) - xem bên dưới. onResume() chỉ còn giữ lại làm phương án dự phòng cho API < 23
-    // (không có onEnterAnimationComplete()) - vẫn còn hơn không hiện gì cả trên dải máy cũ.
+    // (API 23+) - xem bên dưới.
+    //
+    // NHƯNG onEnterAnimationComplete() CHỈ được đảm bảo gọi khi có animation "vào trang" THẬT SỰ
+    // (mở activity mới bằng startActivity) - khi trang tự làm mới bằng recreate() (vd nút
+    // "refresh"/"reload" - xem spinFabThenRecreate()), đó là destroy + dựng lại activity TẠI
+    // CHỖ, không có animation vào trang nào chạy cả -> hệ thống có thể KHÔNG BAO GIỜ gọi
+    // onEnterAnimationComplete() cho lần sống này -> nếu chỉ trông chờ vào nó, trang sẽ đứng yên
+    // mãi mãi, không tải lại được (fab xoay xong nhưng nội dung vẫn cũ). Vì vậy onResume() vẫn
+    // giữ lại làm phương án dự phòng cho MỌI API level (không chỉ riêng < 23 như trước), nhưng
+    // trễ 1 chút (đủ cho animation vào trang thật sự - nếu có - chạy xong) trước khi tự gọi bù,
+    // để không xung đột/đè lên trường hợp onEnterAnimationComplete() vẫn hoạt động bình thường.
+    // actionsLoaded + lockCheckStarted đã đảm bảo dù cả 2 đường cùng gọi cũng không chạy lặp.
     override fun onResume() {
         super.onResume()
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             if (!actionsLoaded) checkPageLockThenLoad()
+        } else {
+            handler.postDelayed({
+                if (!actionsLoaded && !isFinishing && !isDestroyed) checkPageLockThenLoad()
+            }, 400)
         }
     }
 
