@@ -445,31 +445,34 @@ class DialogHelper {
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.TRANSPARENT
             window.navigationBarColor = Color.TRANSPARENT
-
+        
             val controller = WindowInsetsControllerCompat(window, window.decorView)
             val useLightIcons = !darkMode
             controller.isAppearanceLightStatusBars = useLightIcons
             controller.isAppearanceLightNavigationBars = useLightIcons
-
+        
             if (contentView != null) {
                 val basePaddingLeft = contentView.paddingLeft
                 val basePaddingTop = contentView.paddingTop
                 val basePaddingRight = contentView.paddingRight
                 val basePaddingBottom = contentView.paddingBottom
-
+        
                 ViewCompat.setOnApplyWindowInsetsListener(contentView) { v, insets ->
+                    // Chỉ lấy systemBars cho phía trên (Status bar)
                     val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+        
                     v.setPadding(
                         basePaddingLeft + systemBars.left,
-                        basePaddingTop + systemBars.top,
+                        basePaddingTop + systemBars.top,      // Né status bar
                         basePaddingRight + systemBars.right,
-                        basePaddingBottom + systemBars.bottom
+                        basePaddingBottom                     // Giữ nguyên đáy, nhường quyền cho layout con hoặc windowSoftInputMode
                     )
                     insets
                 }
                 ViewCompat.requestApplyInsets(contentView)
             }
         }
+
 
         // Trong setWindowBlurBg
         fun setWindowBlurBg(window: Window, activity: Activity) {
