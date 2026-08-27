@@ -52,14 +52,19 @@
         android:layout_below="@+id/top_bar" >
 
         <ScrollView
-            android:id="@+id/kr_params_center"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:requiresFadingEdge="vertical"
             android:scrollbarSize="0dp"
             android:overScrollMode="never"
             android:layout_above="@+id/bottom_actions"
-            android:padding="16dp" />
+            android:padding="16dp">
+
+            <FrameLayout
+                android:id="@+id/kr_params_center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </ScrollView>
 
         <LinearLayout
             android:id="@+id/bottom_actions"
