@@ -46,6 +46,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ActionPage : AppCompatActivity() {
+    companion object {
+        // Icon fab lúc bấm "refresh"/"reload" (xem spinFabThenRecreate()) - lưu ở static (KHÔNG
+        // phải field instance) vì recreate() huỷ hẳn activity cũ rồi dựng instance HOÀN TOÀN
+        // MỚI, field instance thường sẽ mất; static field vẫn sống vì class chưa bị unload.
+        // != null nghĩa là "đang có 1 lượt xoay dở dang, đợi trang mới tải xong" - xem
+        // onCreateOptionsMenu()/stopFabSpinIfPending(). Luôn được set về null ngay khi tiêu thụ
+        // xong (tải xong HOẶC tải lỗi HOẶC activity đóng hẳn giữa chừng - xem handleLoadError()/
+        // onDestroy()) để không lỡ tay làm fab của 1 trang khác không liên quan tự xoay.
+        private var pendingSpinIcon: android.graphics.drawable.Drawable? = null
+    }
+
     private val progressBarDialog by lazy { ProgressBarDialog(this) }
     private val loadProgressBar by lazy { findViewById<ProgressBar>(R.id.page_load_progress) }
     private var actionsLoaded = false
@@ -301,7 +312,13 @@ class ActionPage : AppCompatActivity() {
             }
         }
         setupFab(fabOptions)
-    
+
+        // Trang vẫn đang tải dở (đợi xong sau khi bấm "refresh"/"reload") - đè lên trạng thái
+        // fab vừa build ở trên (setupFab() dựa vào config, lúc này có thể chưa đọc xong toml).
+        if (pendingSpinIcon != null) {
+            startFabSpin()
+        }
+
         handler.post {
             refreshCheckboxMenuStates()
         }
@@ -481,11 +498,26 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Xoay icon fab liên tục ngay khi bấm, chỉ áp dụng cho mục type = "refresh"/"reload"
-    // ("Làm mới") - không hiện dialog nào (giữ nguyên hành vi cũ). Vòng xoay chạy vô hạn,
-    // tự dừng khi recreate() phá huỷ activity hiện tại (tức "đến khi làm mới xong").
+    // Gọi recreate() NGAY LẬP TỨC khi bấm mục type = "refresh"/"reload" ("Làm mới") - không đợi
+    // animation nào cả. Icon fab hiện tại được lưu lại (static, xem pendingSpinIcon ở companion
+    // object) để instance MỚI dựng lên biết cần tiếp tục xoay đúng icon đó - xem
+    // onCreateOptionsMenu()/startFabSpin(). Vòng xoay sẽ chạy vô hạn XUYÊN SUỐT qua activity mới
+    // cho tới khi trang thật sự tải xong hoàn toàn (hoặc lỗi) - xem stopFabSpinIfPending(),
+    // được gọi từ tryAutoShowActions()/handleLoadError().
     private fun spinFabThenRecreate() {
+        pendingSpinIcon = binding.actionPageFab.drawable
+        recreate()
+    }
+
+    // Ép fab hiện + xoay bằng icon đã lưu (pendingSpinIcon) - gọi lại mỗi lần
+    // onCreateOptionsMenu() build lại menu/fab trong lúc vẫn còn đang đợi trang tải xong, để đè
+    // lên trạng thái GONE/icon thật mà setupFab() vừa set theo config (config lúc này CÓ THỂ vẫn
+    // chưa đọc xong - xem loadPageConfig()).
+    private fun startFabSpin() {
         val fab = binding.actionPageFab
+        pendingSpinIcon?.let { fab.setImageDrawable(it) }
+        fab.visibility = View.VISIBLE
+        fab.isEnabled = false
         fab.clearAnimation()
         val rotate = android.view.animation.RotateAnimation(
             0f, 360f,
@@ -497,7 +529,22 @@ class ActionPage : AppCompatActivity() {
             interpolator = android.view.animation.LinearInterpolator()
         }
         fab.startAnimation(rotate)
-        handler.postDelayed({ recreate() }, 600)
+    }
+
+    // Gọi ĐÚNG lúc nội dung trang đã render xong thật sự (tryAutoShowActions()) hoặc tải lỗi
+    // (handleLoadError()) - dừng xoay, cho phép bấm lại fab, rồi invalidateOptionsMenu() để
+    // onCreateOptionsMenu() build lại đúng trạng thái fab thật sự theo config vừa tải (có thể
+    // ẩn hẳn nếu trang không có mục fab nào).
+    private fun stopFabSpinIfPending() {
+        if (pendingSpinIcon == null) return
+        pendingSpinIcon = null
+        if (::binding.isInitialized) {
+            binding.actionPageFab.apply {
+                clearAnimation()
+                isEnabled = true
+            }
+        }
+        invalidateOptionsMenu()
     }
 
     private fun openMenuOptionAsPage(menuOption: PageMenuOption) {
@@ -792,6 +839,7 @@ class ActionPage : AppCompatActivity() {
     // Hoạt động với CẢ action còn nằm trong danh sách lẫn action đã chuyển ra icon toolbar
     // (menu=true) - onActionClick() không quan tâm action có đang gắn vào view nào hay không.
     private fun tryAutoShowActions() {
+        stopFabSpinIfPending()
         if (autoShowTriggered) return
         val toShow = currentPageConfig?.autoShowActions?.filter { it.show }.orEmpty()
         if (toShow.isEmpty()) return
@@ -837,6 +885,9 @@ class ActionPage : AppCompatActivity() {
     }
 
     private fun handleLoadError(config: PageNode) {
+        // Trang sắp bị finish() ngay dưới - không cần invalidateOptionsMenu() nữa, chỉ cần dọn
+        // biến static để không ảnh hưởng tới các trang khác mở sau này.
+        pendingSpinIcon = null
         if (config.loadFail.isNotEmpty()) {
             ScriptEnvironmen.executeResultRoot(this, config.loadFail, config)
         }
@@ -1256,6 +1307,13 @@ class ActionPage : AppCompatActivity() {
     override fun onRetainCustomNonConfigurationInstance(): Any? = swipePreview
 
     override fun onDestroy() {
+        // isFinishing = true nghĩa là trang đóng HẲN (vd người dùng bấm back giữa lúc đang tải
+        // dở sau khi bấm refresh) - KHÔNG phải bị huỷ để dựng lại bởi chính recreate() của
+        // spinFabThenRecreate(). Phải dọn biến static ở đây, nếu không lần mở 1 trang KHÁC
+        // (không liên quan) sau này sẽ vô tình thấy pendingSpinIcon còn sót và tự xoay fab.
+        if (isFinishing) {
+            pendingSpinIcon = null
+        }
         checkboxRefreshJob?.cancel()
         lockCheckJob?.cancel()
         handler.removeCallbacksAndMessages(null)
