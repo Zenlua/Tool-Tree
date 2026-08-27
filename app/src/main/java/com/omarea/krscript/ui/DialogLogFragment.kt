@@ -126,7 +126,7 @@ class DialogLogFragment : DialogFragment() {
                 // fallback về nền blur tĩnh (xem DialogFullScreen).
                 view.post {
                     if (d.window == null) return@post
-                    swipeToDismissBinding = DialogFullScreen.bindSwipeToDismiss(activity, d, view) { closeView() }
+                    swipeToDismissBinding = DialogFullScreen.bindSwipeToDismiss(activity, d) { closeView() }
                 }
             } else {
                 d.window?.let { window -> DialogHelper.setWindowBlurBg(window, activity) }

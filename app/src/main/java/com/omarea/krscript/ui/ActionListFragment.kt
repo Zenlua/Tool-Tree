@@ -608,7 +608,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                 // Vuốt lùi để đóng - dùng chung 1 hàm với DialogFullScreen (xem
                                 // DialogFullScreen.bindSwipeToDismiss()) thay vì lặp lại logic
                                 // bọc blur + bind DialogSwipeBackHelper + predictive-back ở đây.
-                                val binding = DialogFullScreen.bindSwipeToDismiss(requireActivity(), dialog, dialogView) { dialog.dismiss() }
+                                val binding = DialogFullScreen.bindSwipeToDismiss(requireActivity(), dialog) { dialog.dismiss() }
                                 dialog.setOnDismissListener { binding?.release(dialog) }
                             } else {
                                 // Không cancelable -> không vuốt lùi, giữ nguyên nền blur tĩnh cố định.

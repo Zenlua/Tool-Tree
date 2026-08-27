@@ -129,7 +129,7 @@ open class DialogFullScreen(private val layout: Int, private val darkMode: Boole
                 // vòng của UI thread - lúc đó setContentView() đã chạy xong, view đã có parent.
                 view.post {
                     if (d.window == null) return@post
-                    swipeToDismissBinding = bindSwipeToDismiss(activity, d, view) { closeView() }
+                    swipeToDismissBinding = bindSwipeToDismiss(activity, d) { closeView() }
                 }
             } else {
                 d.window?.run { DialogHelper.setWindowBlurBg(this, activity) }

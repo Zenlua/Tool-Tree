@@ -404,7 +404,7 @@ class DialogHelper {
                     // dụng khi useBlur=true (theme custom_alert_dialog, window phủ toàn màn hình
                     // trong suốt) - nhánh useBlur=false dùng theme AlertDialog nổi mặc định
                     // (windowIsFloating=true), không hợp với hiệu ứng "trượt lộ nền phía sau".
-                    val swipeBinding = DialogFullScreen.bindSwipeToDismiss(context, dialog, view) { dialog.dismiss() }
+                    val swipeBinding = DialogFullScreen.bindSwipeToDismiss(context, dialog) { dialog.dismiss() }
                     if (swipeBinding != null) {
                         dialog.setOnDismissListener { swipeBinding.release(dialog) }
                     }
