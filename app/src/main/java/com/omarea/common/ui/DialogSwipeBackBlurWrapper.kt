@@ -11,8 +11,8 @@ import androidx.core.graphics.drawable.toDrawable
 
 /**
  * CHỈ dùng cho các dialog ĐÃ bật DialogSwipeBackHelper (xem DialogFullScreen,
- * ActionListFragment) - các dialog thường khác (DialogHelper.customDialog không có
- * swipe-to-dismiss) không đụng tới, vẫn giữ nguyên window.setBackgroundDrawable() tĩnh như cũ.
+ * ActionListFragment, DialogHelper.customDialog()) - các dialog không cancelable (không cho
+ * đóng) thì không đụng tới, vẫn giữ nguyên window.setBackgroundDrawable() tĩnh như cũ.
  *
  * Vấn đề cũ: DialogHelper.setWindowBlurBg() gán ảnh blur làm background của WINDOW (decorView)
  * - một lớp tách biệt với contentView. DialogSwipeBackHelper chỉ translate contentView, nên khi

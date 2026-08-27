@@ -1,5 +1,6 @@
 package com.omarea.common.ui
 
+import android.app.Activity
 import android.app.Dialog
 import android.os.Build
 import android.os.Bundle
@@ -30,6 +31,47 @@ class DialogAppChooser(private val darkMode: Boolean): DialogFullScreen(R.layout
 */
 
 open class DialogFullScreen(private val layout: Int, private val darkMode: Boolean) : androidx.fragment.app.DialogFragment() {
+    companion object {
+        /**
+         * Gắn cử chỉ vuốt lùi (vuốt sang phải để đóng, + vuốt-từ-mép predictive-back API 33+)
+         * cho 1 Dialog TOÀN MÀN HÌNH bất kỳ ĐÃ show (dialog.window khác null, contentView đã có
+         * parent) - dùng chung cho chính DialogFullScreen (bên dưới, xem onViewCreated()) LẪN
+         * các dialog dựng tay khác không kế thừa DialogFullScreen, ví dụ dialog tham số
+         * (kr_dialog_params/kr_dialog_params_small) ở ActionListFragment - kể cả nhánh "ít mục"
+         * (<=4, dựng qua DialogHelper.customDialog()) trước đây KHÔNG có vuốt lùi, giờ gọi thẳng
+         * hàm này để có tính năng y hệt nhánh danh sách dài, không phải chép lại logic.
+         *
+         * @param activity Activity đang chứa dialog (cần để FastBlurUtility chụp màn hình phía
+         * sau, xem DialogSwipeBackBlurWrapper).
+         * @param dialog Dialog ĐÃ show.
+         * @param contentView root view thật sự của nội dung dialog (đã có parent).
+         * @param onBack callback khi vuốt lùi hoàn tất - thường là dialog.dismiss().
+         * @return handle để bên gọi release() đúng lúc dialog bị dismiss/destroy (tránh leak
+         * VelocityTracker/animator + hủy đăng ký predictive-back), null nếu dialog chưa có
+         * window.
+         */
+        fun bindSwipeToDismiss(activity: Activity, dialog: Dialog, contentView: View, onBack: () -> Unit): SwipeToDismissBinding? {
+            val window = dialog.window ?: return null
+            val swipeTarget = DialogSwipeBackBlurWrapper.wrap(activity, window, contentView) ?: run {
+                DialogHelper.setWindowBlurBg(window, activity)
+                contentView
+            }
+            val helper = DialogSwipeBackHelper.bind(dialog, swipeTarget) { onBack() } ?: return null
+            val predictiveBackCallback = DialogPredictiveBackBinder.bind(dialog, helper)
+            return SwipeToDismissBinding(helper, predictiveBackCallback)
+        }
+
+        class SwipeToDismissBinding internal constructor(
+            private val helper: DialogSwipeBackHelper,
+            private val predictiveBackCallback: Any?
+        ) {
+            fun release(dialog: Dialog) {
+                DialogPredictiveBackBinder.unbind(dialog, predictiveBackCallback)
+                helper.release()
+            }
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         currentView = inflater.inflate(layout, container)
         return currentView
@@ -42,8 +84,7 @@ open class DialogFullScreen(private val layout: Int, private val darkMode: Boole
     // Dialog con nào có cử chỉ kéo ngang riêng cần ưu tiên hơn (hiếm) có thể gán false TRƯỚC
     // khi view được dựng (super.onViewCreated()) để tắt tính năng này.
     protected var swipeToDismissEnabled = true
-    private var swipeBackHelper: DialogSwipeBackHelper? = null
-    private var predictiveBackCallback: Any? = null
+    private var swipeToDismissBinding: SwipeToDismissBinding? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -73,15 +114,8 @@ open class DialogFullScreen(private val layout: Int, private val darkMode: Boole
                 // sẽ luôn thấy parent null và fallback về nền blur tĩnh cũ. view.post() đợi 1
                 // vòng của UI thread - lúc đó setContentView() đã chạy xong, view đã có parent.
                 view.post {
-                    val window = d.window ?: return@post
-                    val swipeTarget = DialogSwipeBackBlurWrapper.wrap(activity, window, view) ?: run {
-                        DialogHelper.setWindowBlurBg(window, activity)
-                        view
-                    }
-                    swipeBackHelper = DialogSwipeBackHelper.bind(d, swipeTarget) { closeView() }
-                    // Vuốt từ mép màn hình (predictive-back hệ thống, API 33+) - dùng chung
-                    // tiến độ với vuốt tay trực tiếp ở trên (xem DialogPredictiveBackBinder).
-                    predictiveBackCallback = swipeBackHelper?.let { DialogPredictiveBackBinder.bind(d, it) }
+                    if (d.window == null) return@post
+                    swipeToDismissBinding = bindSwipeToDismiss(activity, d, view) { closeView() }
                 }
             } else {
                 d.window?.run { DialogHelper.setWindowBlurBg(this, activity) }
@@ -94,10 +128,8 @@ open class DialogFullScreen(private val layout: Int, private val darkMode: Boole
     }
 
     override fun onDestroyView() {
-        dialog?.let { DialogPredictiveBackBinder.unbind(it, predictiveBackCallback) }
-        predictiveBackCallback = null
-        swipeBackHelper?.release()
-        swipeBackHelper = null
+        dialog?.let { swipeToDismissBinding?.release(it) }
+        swipeToDismissBinding = null
         super.onDestroyView()
     }
 

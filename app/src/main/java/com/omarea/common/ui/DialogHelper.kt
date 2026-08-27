@@ -385,7 +385,9 @@ class DialogHelper {
 
             if (context is Activity) {
                 // Tính & set nền blur TRƯỚC khi show() để không có khung hình nào
-                // dialog hiện ra mà chưa có nền mờ (tránh nháy mờ/rõ).
+                // dialog hiện ra mà chưa có nền mờ (tránh nháy mờ/rõ). Nếu cancelable, ngay sau
+                // show() sẽ thử "nâng cấp" lên bản blur trượt cùng nội dung + bind vuốt lùi (xem
+                // dưới) - bản tĩnh này chỉ còn là fallback lúc đó.
                 dialog.window?.run {
                     setWindowBlurBg(this, context)
                     decorView.run {
@@ -393,6 +395,20 @@ class DialogHelper {
                     }
                 }
                 dialog.show()
+
+                if (useBlur && cancelable) {
+                    // Mọi dialog dùng nền blur (customDialog là nơi DUY NHẤT gọi setWindowBlurBg
+                    // ở trên) đều được vuốt sang phải để đóng, dùng chung cơ chế với
+                    // DialogFullScreen/kr_dialog_params (xem DialogFullScreen.bindSwipeToDismiss())
+                    // - không cancelable thì giữ nguyên nền blur tĩnh, không có vuốt lùi. Chỉ áp
+                    // dụng khi useBlur=true (theme custom_alert_dialog, window phủ toàn màn hình
+                    // trong suốt) - nhánh useBlur=false dùng theme AlertDialog nổi mặc định
+                    // (windowIsFloating=true), không hợp với hiệu ứng "trượt lộ nền phía sau".
+                    val swipeBinding = DialogFullScreen.bindSwipeToDismiss(context, dialog, view) { dialog.dismiss() }
+                    if (swipeBinding != null) {
+                        dialog.setOnDismissListener { swipeBinding.release(dialog) }
+                    }
+                }
             } else {
                 dialog.window?.run {
                     setWindowAnimations(R.style.windowAnim2)

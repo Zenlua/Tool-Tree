@@ -14,11 +14,9 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.model.SelectItem
+import com.omarea.common.ui.DialogFullScreen
 import com.omarea.common.ui.DialogHelper
 import com.omarea.common.ui.DialogItemChooser
-import com.omarea.common.ui.DialogPredictiveBackBinder
-import com.omarea.common.ui.DialogSwipeBackBlurWrapper
-import com.omarea.common.ui.DialogSwipeBackHelper
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.BgTaskThread
@@ -593,34 +591,26 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                     setCanceledOnTouchOutside(cancelable)
                                     show()
                                     window?.let { DialogHelper.applyEdgeToEdge(it, darkMode, dialogView) }
-                                    if (!cancelable) {
-                                        // Không bật swipe-to-dismiss (nhánh dưới) -> giữ nguyên
-                                        // nền blur cố định như trước.
-                                        window?.let { DialogHelper.setWindowBlurBg(it, requireActivity()) }
-                                    }
                                 }
                         } else {
+                            // Nhánh <=4 mục dùng chung DialogHelper.customDialog() - nền blur
+                            // (+ vuốt lùi khi cancelable) đã được xử lý sẵn bên trong đó (xem
+                            // DialogHelper.customDialog()), không cần lặp lại ở đây.
                             DialogHelper.customDialog(requireActivity(), dialogView, cancelable).dialog
                         }
-                        var paramsDialogSwipeHelper: DialogSwipeBackHelper? = null
-                        var paramsPredictiveBackCallback: Any? = null
-                        if (isLongList && cancelable) {
-                            // Bọc dialogView + ảnh blur chung 1 wrapper để cả khối trượt cùng
-                            // nhau khi kéo (xem DialogSwipeBackBlurWrapper). Không bọc được thì
-                            // fallback về hành vi cũ: nền blur cố định + chỉ dialogView trượt.
-                            val window = dialog.window
-                            val swipeTarget = window?.let { DialogSwipeBackBlurWrapper.wrap(requireActivity(), it, dialogView) }
-                                ?: dialogView.also { window?.let { w -> DialogHelper.setWindowBlurBg(w, requireActivity()) } }
-                            paramsDialogSwipeHelper = DialogSwipeBackHelper.bind(dialog, swipeTarget) { dialog.dismiss() }
-                            // Vuốt từ mép màn hình (predictive-back hệ thống, API 33+) - dùng
-                            // chung tiến độ với vuốt tay trực tiếp ở trên (xem
-                            // DialogPredictiveBackBinder).
-                            paramsPredictiveBackCallback = paramsDialogSwipeHelper?.let { DialogPredictiveBackBinder.bind(dialog, it) }
-                            dialog.setOnDismissListener {
-                                DialogPredictiveBackBinder.unbind(dialog, paramsPredictiveBackCallback)
-                                paramsDialogSwipeHelper?.release()
+                        if (isLongList) {
+                            if (cancelable) {
+                                // Vuốt lùi để đóng - dùng chung 1 hàm với DialogFullScreen (xem
+                                // DialogFullScreen.bindSwipeToDismiss()) thay vì lặp lại logic
+                                // bọc blur + bind DialogSwipeBackHelper + predictive-back ở đây.
+                                val binding = DialogFullScreen.bindSwipeToDismiss(requireActivity(), dialog, dialogView) { dialog.dismiss() }
+                                dialog.setOnDismissListener { binding?.release(dialog) }
+                            } else {
+                                // Không cancelable -> không vuốt lùi, giữ nguyên nền blur tĩnh cố định.
+                                dialog.window?.let { DialogHelper.setWindowBlurBg(it, requireActivity()) }
                             }
                         }
+
 
                         dialogView.findViewById<TextView>(R.id.title).text = action.title
                         dialogView.findViewById<TextView>(R.id.desc).apply { if (action.desc.isEmpty()) visibility = View.GONE else text = action.desc }
