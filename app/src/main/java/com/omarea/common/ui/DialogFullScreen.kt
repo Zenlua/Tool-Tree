@@ -63,22 +63,27 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                     setWindowAnimations(android.R.style.Animation_Translucent)
                 }
+            }
 
-                if (swipeToDismissEnabled) {
-                    // Bọc view + ảnh blur chung 1 wrapper để cả khối trượt cùng nhau khi kéo
-                    // (xem DialogSwipeBackBlurWrapper). Không bọc được thì fallback về hành vi
-                    // cũ: nền blur cố định + chỉ view trượt, không có gì lộ ra khi kéo.
-                    val swipeTarget = DialogSwipeBackBlurWrapper.wrap(activity, this, view) ?: run {
-                        DialogHelper.setWindowBlurBg(this, activity)
+            if (swipeToDismissEnabled) {
+                // QUAN TRỌNG: view.parent vẫn còn null tại đây - AndroidX DialogFragment chỉ
+                // thật sự gọi dialog.setContentView(view) ở onActivityCreated() (chạy SAU
+                // onViewCreated()), nên DialogSwipeBackBlurWrapper.wrap() gọi ngay tại chỗ này
+                // sẽ luôn thấy parent null và fallback về nền blur tĩnh cũ. view.post() đợi 1
+                // vòng của UI thread - lúc đó setContentView() đã chạy xong, view đã có parent.
+                view.post {
+                    val window = d.window ?: return@post
+                    val swipeTarget = DialogSwipeBackBlurWrapper.wrap(activity, window, view) ?: run {
+                        DialogHelper.setWindowBlurBg(window, activity)
                         view
                     }
                     swipeBackHelper = DialogSwipeBackHelper.bind(d, swipeTarget) { closeView() }
                     // Vuốt từ mép màn hình (predictive-back hệ thống, API 33+) - dùng chung
                     // tiến độ với vuốt tay trực tiếp ở trên (xem DialogPredictiveBackBinder).
                     predictiveBackCallback = swipeBackHelper?.let { DialogPredictiveBackBinder.bind(d, it) }
-                } else {
-                    DialogHelper.setWindowBlurBg(this, activity)
                 }
+            } else {
+                d.window?.run { DialogHelper.setWindowBlurBg(this, activity) }
             }
         }
     }
