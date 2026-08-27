@@ -432,7 +432,6 @@ Update() {
   title = "'$update_text'"
   desc = "'$sizes_text': '$(cat $TEMP/size 2>/dev/null)'"
   icon = "'$urlicon'/update.png"
-  warn = "'$use_network_text'"
   support = "'$show_update'"
   url = "'$url_dowload'"
   script = "openfile \"$state\""
