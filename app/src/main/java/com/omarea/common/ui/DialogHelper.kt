@@ -451,24 +451,24 @@ class DialogHelper {
             controller.isAppearanceLightStatusBars = useLightIcons
             controller.isAppearanceLightNavigationBars = useLightIcons
 
-            // if (contentView != null) {
-                // val basePaddingLeft = contentView.paddingLeft
-                // val basePaddingTop = contentView.paddingTop
-                // val basePaddingRight = contentView.paddingRight
-                // val basePaddingBottom = contentView.paddingBottom
+            if (contentView != null) {
+                val basePaddingLeft = contentView.paddingLeft
+                val basePaddingTop = contentView.paddingTop
+                val basePaddingRight = contentView.paddingRight
+                val basePaddingBottom = contentView.paddingBottom
 
-                // ViewCompat.setOnApplyWindowInsetsListener(contentView) { v, insets ->
-                    // val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                    // v.setPadding(
-                        // basePaddingLeft + systemBars.left,
-                        // basePaddingTop + systemBars.top,
-                        // basePaddingRight + systemBars.right,
-                        // basePaddingBottom + systemBars.bottom
-                    // )
-                    // insets
-                // }
-                // ViewCompat.requestApplyInsets(contentView)
-            // }
+                ViewCompat.setOnApplyWindowInsetsListener(contentView) { v, insets ->
+                    val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                    v.setPadding(
+                        basePaddingLeft + systemBars.left,
+                        basePaddingTop + systemBars.top,
+                        basePaddingRight + systemBars.right,
+                        basePaddingBottom + systemBars.bottom
+                    )
+                    insets
+                }
+                ViewCompat.requestApplyInsets(contentView)
+            }
         }
 
         // Trong setWindowBlurBg
