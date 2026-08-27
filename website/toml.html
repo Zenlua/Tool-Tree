@@ -1123,14 +1123,7 @@ script = "echo $freq &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"
 name = "freq"
 title = "Frequency (kHz)"
 type = "spinner"
-
-[[group.action.params.options]]
-title = "Mode 1"
-value = "1800000"
-
-[[group.action.params.options]]
-title = "Mode 2"
-value = "2200000"
+options = ["1800000", "2200000", "2800000"]
 </code></pre>
 </section>
 
