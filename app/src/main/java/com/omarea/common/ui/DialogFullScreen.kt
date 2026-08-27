@@ -43,6 +43,7 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     // khi view được dựng (super.onViewCreated()) để tắt tính năng này.
     protected var swipeToDismissEnabled = true
     private var swipeBackHelper: DialogSwipeBackHelper? = null
+    private var predictiveBackCallback: Any? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -72,6 +73,9 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
                         view
                     }
                     swipeBackHelper = DialogSwipeBackHelper.bind(d, swipeTarget) { closeView() }
+                    // Vuốt từ mép màn hình (predictive-back hệ thống, API 33+) - dùng chung
+                    // tiến độ với vuốt tay trực tiếp ở trên (xem DialogPredictiveBackBinder).
+                    predictiveBackCallback = swipeBackHelper?.let { DialogPredictiveBackBinder.bind(d, it) }
                 } else {
                     DialogHelper.setWindowBlurBg(this, activity)
                 }
@@ -84,6 +88,8 @@ open class DialogFullScreen(private val layout: Int, darkMode: Boolean) : androi
     }
 
     override fun onDestroyView() {
+        dialog?.let { DialogPredictiveBackBinder.unbind(it, predictiveBackCallback) }
+        predictiveBackCallback = null
         swipeBackHelper?.release()
         swipeBackHelper = null
         super.onDestroyView()

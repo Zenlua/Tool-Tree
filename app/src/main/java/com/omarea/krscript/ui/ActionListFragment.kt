@@ -16,6 +16,8 @@ import androidx.lifecycle.lifecycleScope
 import com.omarea.common.model.SelectItem
 import com.omarea.common.ui.DialogHelper
 import com.omarea.common.ui.DialogItemChooser
+import com.omarea.common.ui.DialogPredictiveBackBinder
+import com.omarea.common.ui.DialogSwipeBackBlurWrapper
 import com.omarea.common.ui.DialogSwipeBackHelper
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.common.ui.ThemeMode
@@ -600,6 +602,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                             DialogHelper.customDialog(requireActivity(), dialogView, cancelable).dialog
                         }
                         var paramsDialogSwipeHelper: DialogSwipeBackHelper? = null
+                        var paramsPredictiveBackCallback: Any? = null
                         if (isLongList && cancelable) {
                             // Bọc dialogView + ảnh blur chung 1 wrapper để cả khối trượt cùng
                             // nhau khi kéo (xem DialogSwipeBackBlurWrapper). Không bọc được thì
@@ -608,7 +611,14 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                             val swipeTarget = window?.let { DialogSwipeBackBlurWrapper.wrap(requireActivity(), it, dialogView) }
                                 ?: dialogView.also { window?.let { w -> DialogHelper.setWindowBlurBg(w, requireActivity()) } }
                             paramsDialogSwipeHelper = DialogSwipeBackHelper.bind(dialog, swipeTarget) { dialog.dismiss() }
-                            dialog.setOnDismissListener { paramsDialogSwipeHelper?.release() }
+                            // Vuốt từ mép màn hình (predictive-back hệ thống, API 33+) - dùng
+                            // chung tiến độ với vuốt tay trực tiếp ở trên (xem
+                            // DialogPredictiveBackBinder).
+                            paramsPredictiveBackCallback = paramsDialogSwipeHelper?.let { DialogPredictiveBackBinder.bind(dialog, it) }
+                            dialog.setOnDismissListener {
+                                DialogPredictiveBackBinder.unbind(dialog, paramsPredictiveBackCallback)
+                                paramsDialogSwipeHelper?.release()
+                            }
                         }
 
                         dialogView.findViewById<TextView>(R.id.title).text = action.title
