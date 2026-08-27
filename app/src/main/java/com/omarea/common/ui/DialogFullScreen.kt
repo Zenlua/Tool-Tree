@@ -107,7 +107,11 @@ open class DialogFullScreen(private val layout: Int, private val darkMode: Boole
                 DialogHelper.applyEdgeToEdge(this, darkMode, view)
             }
 
-            if (swipeToDismissEnabled) {
+            if (swipeToDismissEnabled && isCancelable) {
+                // isCancelable=false (xem androidx.fragment.app.DialogFragment) nghĩa là dialog
+                // này KHÔNG cho phép đóng bằng nút back/chạm ra ngoài -> vuốt lùi cũng phải bị
+                // chặn theo, không thì người dùng vẫn có 1 đường lách để đóng dialog "không thể
+                // đóng" này.
                 // QUAN TRỌNG: view.parent vẫn còn null tại đây - AndroidX DialogFragment chỉ
                 // thật sự gọi dialog.setContentView(view) ở onActivityCreated() (chạy SAU
                 // onViewCreated()), nên DialogSwipeBackBlurWrapper.wrap() gọi ngay tại chỗ này

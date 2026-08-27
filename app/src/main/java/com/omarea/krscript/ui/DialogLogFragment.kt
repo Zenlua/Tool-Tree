@@ -106,8 +106,29 @@ class DialogLogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        dialog?.window?.let { window ->
-            DialogHelper.setWindowBlurBg(window, requireActivity())
+        val activity = this.activity
+        val d = dialog
+        if (activity != null && d != null) {
+            if (isCancelable) {
+                // isCancelable=false (xem DialogLogFragment.resume() - mở lại dialog log của 1
+                // tác vụ nền đang chạy từ thông báo) -> không cho đóng bằng back/chạm ra ngoài,
+                // nên vuốt lùi cũng phải chặn theo, giữ nguyên nền blur tĩnh như cũ. Dùng chung 1
+                // hàm với DialogFullScreen/customDialog (xem
+                // DialogFullScreen.bindSwipeToDismiss()) thay vì lặp lại logic bọc blur + bind
+                // DialogSwipeBackHelper + predictive-back ở đây.
+                //
+                // QUAN TRỌNG: view.parent vẫn còn null tại đây - AndroidX DialogFragment chỉ
+                // thật sự gọi dialog.setContentView(view) ở onActivityCreated() (chạy SAU
+                // onViewCreated()), nên phải đợi view.post() 1 vòng UI thread để
+                // DialogSwipeBackBlurWrapper.wrap() thấy được parent thật, không thì luôn
+                // fallback về nền blur tĩnh (xem DialogFullScreen).
+                view.post {
+                    if (d.window == null) return@post
+                    swipeToDismissBinding = DialogFullScreen.bindSwipeToDismiss(activity, d, view) { closeView() }
+                }
+            } else {
+                d.window?.let { window -> DialogHelper.setWindowBlurBg(window, activity) }
+            }
         }
 
         val resumingHandler = resumeHandler
