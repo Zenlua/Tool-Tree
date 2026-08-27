@@ -625,8 +625,13 @@ class ActionPage : AppCompatActivity() {
         val config = currentPageConfig ?: return
 
         if (config.lockShell.isNotEmpty()) {
-            progressBarDialog.setCancelCallback { lockCheckJob?.cancel(); finish() }
-            progressBarDialog.showDialog(getString(R.string.kr_page_loading))
+        
+            // progressBarDialog.setCancelCallback {
+                // lockCheckJob?.cancel();
+                // finish()
+            // }
+            
+            // progressBarDialog.showDialog(getString(R.string.kr_page_loading))
 
             lockCheckJob?.cancel()
             lockCheckJob = lifecycleScope.launch(Dispatchers.IO) {
@@ -638,28 +643,17 @@ class ActionPage : AppCompatActivity() {
                         // progressBarDialog.hideDialog()
                         loadPageConfig(true)
                     } else {
-                        // Hiện dialog "đã khoá" ĐÈ LÊN dialog loading (không dismiss loading ở
-                        // đây) - tránh có khung hình nào bị ẩn/hiện xen giữa 2 dialog (nguồn gây
-                        // nháy trước đây). Dialog loading chỉ thực sự bị dismiss cùng lúc người
-                        // dùng đóng dialog khoá (xem showPageLockedDialog()), ngay trước finish() -
-                        // nên cũng không bị leak window khi activity kết thúc.
                         showPageLockedDialog(if (message.isNotEmpty()) message else getString(R.string.kr_lock_message))
                     }
                 }
             }
         } else if (config.locked) {
-            // Không cần chạy shell - kiểm tra local tức thời, không có gì phải đợi.
             showPageLockedDialog(getString(R.string.kr_lock_message))
         } else {
             loadPageConfig(true)
         }
     }
 
-    // onDismiss (bấm OK): dismiss NỐT dialog loading còn đang che phía dưới (nếu có - trường
-    // hợp gọi từ nhánh lockShell) RỒI mới finish(), để 2 dialog biến mất cùng lúc thay vì phải
-    // hide dialog loading riêng ở bước trước đó (nguồn gây nháy) - xem checkPageLockThenLoad().
-    // Trường hợp gọi từ nhánh config.locked (không lockShell) thì dialog loading chưa từng hiện,
-    // hideDialog() ở đây chỉ là no-op, không có tác dụng phụ gì.
     private fun showPageLockedDialog(message: String) {
         DialogHelper.helpInfo(this, getString(R.string.kr_lock_title), message) {
             progressBarDialog.hideDialog()
