@@ -26,19 +26,15 @@ if checkonline; then
         echo "Url: $url_dowload"
     fi
 
-    if [[ "$websum" == "$filesum" ]]; then
-        rm -fr $TEMP/size $TEMP/update $TEMP/sum
-    else
+    if [[ "$websum" != "$filesum" ]]; then
         if [[ "$url_dowload" ]]; then
-            echo "$url_dowload" > $TEMP/update
-            echo "$websize" > $TEMP/size
-            echo "$websum" > $TEMP/sum
-        else
-            rm -fr $TEMP/size $TEMP/update $TEMP/sum
+            echo "$url_dowload" > $TMP/update
+            echo "$websize" > $TMP/size
+            echo "$websum" > $TMP/sum
         fi
     fi
 
-    if [ -f $TEMP/update ] && [ "$1" == "boot" ]; then
+    if [ -f $TMP/update ] && [ "$1" == "boot" ]; then
         notiservice \
         -t "$update_text" \
         -m "$update_text_6" \
