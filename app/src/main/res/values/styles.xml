@@ -62,7 +62,26 @@
         <item name="android:foregroundTintMode">screen</item>
     </style>
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat"/>
+    <!-- Style riêng cho nền popup (menu 3 chấm của toolbar + popup chọn item của FAB) - dùng
+         chung 1 nền bo góc với dropdown kiểu Spinner (kr_spinner_popup_bg) cho đồng bộ giao
+         diện, thay vì nền popup mặc định của hệ thống/AppCompat (vuông cạnh, không theo theme
+         sáng/tối rõ ràng). Xem AppTheme.PopupOverlay bên dưới + showFabChooser() trong
+         ActionPage.kt. -->
+    <style name="AppPopupMenuStyle" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@drawable/kr_spinner_popup_bg</item>
+    </style>
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat">
+        <!-- android:popupMenuStyle: style cho popup menu 3 chấm THẬT SỰ của Toolbar (widget hệ
+             thống, tự vẽ khi bấm icon "⋮") - Toolbar áp dụng theme này qua app:popupTheme (xem
+             app_bar_main.xml) nên chỉ cần khai báo ở đây, không cần đụng gì thêm ở code. -->
+        <item name="android:popupMenuStyle">@style/AppPopupMenuStyle</item>
+        <!-- popupMenuStyle (không tiền tố android:) - thuộc tính của AppCompat, để
+             androidx.appcompat.widget.PopupMenu dựng bằng tay (ContextThemeWrapper(this,
+             R.style.AppTheme_PopupOverlay), xem showFabChooser()) cũng lấy đúng nền này, đồng
+             bộ với menu 3 chấm ở trên thay vì nền PopupMenu mặc định. -->
+        <item name="popupMenuStyle">@style/AppPopupMenuStyle</item>
+    </style>
 
     <style name="textTitle">
         <item name="android:textColor">?android:attr/textColorPrimary</item>

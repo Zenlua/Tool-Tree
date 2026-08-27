@@ -17,7 +17,6 @@ import android.widget.ListPopupWindow
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
 import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
@@ -415,19 +414,6 @@ class ActionPage : AppCompatActivity() {
         return customIcon ?: ContextCompat.getDrawable(this, iconRes)
     }
 
-    // Danh sách chọn khi fab có nhiều item - popup nhỏ neo ngay tại nút fab, chọn xong chạy y
-    // hệt như bấm thẳng 1 fab đơn (onMenuItemClick).
-    private fun showFabChooser(fabOptions: List<PageMenuOption>) {
-        val popup = PopupMenu(this, binding.actionPageFab)
-        fabOptions.forEachIndexed { index, option ->
-            popup.menu.add(Menu.NONE, index, index, option.title)
-        }
-        popup.setOnMenuItemClickListener { item ->
-            fabOptions.getOrNull(item.itemId)?.let { onMenuItemClick(it, binding.actionPageFab) }
-            true
-        }
-        popup.show()
-    }
 
     // Mở dialog của 1 action menu=true - dùng lại NGUYÊN VẸN logic dialog params/confirm/
     // warning của group.action (ActionListFragment.onActionClick).
@@ -1002,7 +988,7 @@ class ActionPage : AppCompatActivity() {
 
     // Hiện dropdown chọn giá trị kiểu Android Spinner (dùng ListPopupWindow, style y hệt
     // ParamsSingleSelect.openSingleSelectPopup()) neo về góc phải toolbar - đè lên đúng vị trí
-    // menu vừa bấm thay vì tràn full chiều rộng màn hình (xem applySpinnerPopupWidthAndPosition).
+    // menu vừa bấm thay vì tràn full chiều rộng màn hình (xem applyPopupWidthAndPosition).
     // Chọn xong chạy script của menu item với tham số "state" = giá trị vừa chọn - giống hệt
     // các loại menu item khác.
     private fun showSpinnerPopup(
@@ -1038,7 +1024,7 @@ class ActionPage : AppCompatActivity() {
         // ParamsSingleSelect.applyPopupWidthAndPosition) rồi neo popup về SÁT GÓC PHẢI của
         // anchor (nơi icon menu 3 chấm/fab thường nằm) bằng horizontalOffset âm, để popup hiện
         // ra gọn, đúng cảm giác "đè lên vị trí menu cũ" thay vì tràn ngang cả toolbar.
-        applySpinnerPopupWidthAndPosition(popup, anchor, options, background)
+        applyPopupWidthAndPosition(popup, anchor, options.map { it.toString() }, background)
 
         popup.show()
         if (selectedIndex in options.indices) {
@@ -1046,20 +1032,27 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    private fun applySpinnerPopupWidthAndPosition(
+    // Dùng chung cho cả showSpinnerPopup() (neo ở toolbar/menu 3 chấm) LẪN showFabChooser()
+    // (neo ở FAB) - đo bề rộng popup theo NỘI DUNG thực tế (thay vì tràn hết chiều ngang màn
+    // hình) rồi neo sát mép phải anchor. extraTopGapPx > 0 dùng riêng cho FAB (luôn nằm ở đáy
+    // màn hình - xem showFabChooser()): đẩy thêm popup lên CAO HƠN vị trí ListPopupWindow tự
+    // tính (nó đã tự lật lên trên anchor do không đủ chỗ hiện xuống dưới, nhưng mặc định lật
+    // sát liền cạnh trên của FAB, trông dính chùm) để chừa 1 khoảng hở giữa popup và FAB.
+    private fun applyPopupWidthAndPosition(
         popup: ListPopupWindow,
         anchor: View,
-        options: ArrayList<SelectItem>,
-        background: android.graphics.drawable.Drawable?
+        labels: List<String>,
+        background: android.graphics.drawable.Drawable?,
+        extraTopGapPx: Int = 0
     ) {
         val inflater = layoutInflater
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         val parent = anchor.parent as? android.view.ViewGroup
 
         var maxItemWidth = 0
-        for (item in options) {
+        for (label in labels) {
             val itemView = inflater.inflate(R.layout.kr_spinner_dropdown, parent, false)
-            itemView.findViewById<android.widget.TextView>(R.id.text).text = item.toString()
+            itemView.findViewById<android.widget.TextView>(R.id.text).text = label
             itemView.measure(unspecified, unspecified)
             if (itemView.measuredWidth > maxItemWidth) {
                 maxItemWidth = itemView.measuredWidth
@@ -1074,13 +1067,46 @@ class ActionPage : AppCompatActivity() {
         val desiredWidth = contentWidth.coerceAtLeast(minWidth.toInt()).coerceAtMost(screenWidth)
         popup.width = desiredWidth
 
-        // Neo sát góc phải anchor (toolbar) - đúng vị trí icon menu 3 chấm thường nằm - thay vì
-        // để mặc định ListPopupWindow căn trái (tràn từ mép trái toolbar).
+        // Neo sát góc phải anchor (toolbar/FAB) - đúng vị trí icon menu 3 chấm/FAB thường nằm -
+        // thay vì để mặc định ListPopupWindow căn trái (tràn từ mép trái anchor).
         val anchorLocation = IntArray(2)
         anchor.getLocationOnScreen(anchorLocation)
         val rightAligned = anchor.width - desiredWidth
         val overflowLeft = anchorLocation[0] + rightAligned
         popup.horizontalOffset = if (overflowLeft < 0) -anchorLocation[0] else rightAligned
+
+        if (extraTopGapPx > 0) {
+            popup.verticalOffset = -extraTopGapPx
+        }
+    }
+
+    // Danh sách chọn khi fab có nhiều item - popup nhỏ neo ngay tại nút fab, chọn xong chạy y
+    // hệt như bấm thẳng 1 fab đơn (onMenuItemClick). Dùng ListPopupWindow (giống
+    // showSpinnerPopup(), cùng nền kr_spinner_popup_bg cho đồng bộ) thay vì PopupMenu mặc định
+    // vì PopupMenu không cho tùy chỉnh khoảng cách với anchor - ở đây FAB luôn nằm sát đáy màn
+    // hình nên popup luôn tự lật lên TRÊN fab; nếu không có gì tách biệt, cạnh dưới popup dính
+    // liền cạnh trên fab trông rất chật, nên đẩy thêm 1 khoảng hở nhỏ (fabPopupGap) giữa 2 bên.
+    private fun showFabChooser(fabOptions: List<PageMenuOption>) {
+        val anchor = binding.actionPageFab
+        val labels = fabOptions.map { it.title }
+
+        val adapter = ArrayAdapter(this, R.layout.kr_spinner_dropdown, R.id.text, labels)
+        val background = ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg)
+
+        val popup = ListPopupWindow(this)
+        popup.anchorView = anchor
+        popup.setAdapter(adapter)
+        popup.setBackgroundDrawable(background)
+        popup.isModal = true
+        popup.setOnItemClickListener { _, _, position, _ ->
+            popup.dismiss()
+            fabOptions.getOrNull(position)?.let { onMenuItemClick(it, anchor) }
+        }
+
+        val fabPopupGap = (8 * resources.displayMetrics.density).toInt() // ~8dp
+        applyPopupWidthAndPosition(popup, anchor, labels, background, fabPopupGap)
+
+        popup.show()
     }
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
