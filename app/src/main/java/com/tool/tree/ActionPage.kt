@@ -598,7 +598,7 @@ class ActionPage : AppCompatActivity() {
                     if (!isActive || isFinishing || isDestroyed) return@withContext
                     val unlocked = message == "unlock" || message == "unlocked" || message == "false" || message == "0"
                     if (unlocked) {
-                        progressBarDialog.hideDialog()
+                        // progressBarDialog.hideDialog()
                         loadPageConfig(true)
                     } else {
                         // Hiện dialog "đã khoá" ĐÈ LÊN dialog loading (không dismiss loading ở
