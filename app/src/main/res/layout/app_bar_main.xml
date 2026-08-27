@@ -40,7 +40,7 @@
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
                 android:layout_height="8dp"
-                android:translationY="4dp"
+                android:translationY="3dp"
                 android:layout_gravity="bottom"
                 android:max="100"
                 android:progress="0"
