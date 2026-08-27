@@ -313,6 +313,11 @@ class ActionPage : AppCompatActivity() {
                 if (option.type == "checkbox") {
                     menuItem?.isCheckable = true
                 }
+                if (option.type == "spinner") {
+                    // Icon mũi tên dropdown báo hiệu mục này mở popup chọn giá trị (xem
+                    // menuItemSpinner()/showSpinnerPopup()) thay vì thực thi thẳng như các mục khác.
+                    menuItem?.icon = ContextCompat.getDrawable(this, R.drawable.ic_arrow_dropdown)
+                }
             }
         }
         setupFab(fabOptions)
@@ -425,6 +430,11 @@ class ActionPage : AppCompatActivity() {
             representative.iconPath.isEmpty()
         ) {
             R.drawable.kr_folder
+        } else if (representative != null &&
+            representative.type == "spinner" &&
+            representative.iconPath.isEmpty()
+        ) {
+            R.drawable.ic_arrow_dropdown
         } else {
             R.drawable.kr_fab
         }
@@ -1073,7 +1083,11 @@ class ActionPage : AppCompatActivity() {
         // ParamsSingleSelect.applyPopupWidthAndPosition) rồi neo popup về SÁT GÓC PHẢI của
         // anchor (nơi icon menu 3 chấm/fab thường nằm) bằng horizontalOffset âm, để popup hiện
         // ra gọn, đúng cảm giác "đè lên vị trí menu cũ" thay vì tràn ngang cả toolbar.
-        applyPopupWidthAndPosition(popup, anchor, options.map { it.toString() }, background)
+        // anchor == fab (menuItemSpinner được gọi từ addFab() với anchor = actionPageFab, xem
+        // onMenuItemClick()) nghĩa là popup cũng sẽ tự lật lên TRÊN fab giống showFabChooser() -
+        // cần chừa khoảng hở (fabPopupGap()) như nhau để không dính sát cạnh trên fab.
+        val extraTopGapPx = if (anchor === binding.actionPageFab) fabPopupGap() else 0
+        applyPopupWidthAndPosition(popup, anchor, options.map { it.toString() }, background, extraTopGapPx)
 
         popup.show()
         if (selectedIndex in options.indices) {
@@ -1152,11 +1166,15 @@ class ActionPage : AppCompatActivity() {
             fabOptions.getOrNull(position)?.let { onMenuItemClick(it, anchor) }
         }
 
-        val fabPopupGap = (8 * resources.displayMetrics.density).toInt() // ~8dp
-        applyPopupWidthAndPosition(popup, anchor, labels, background, fabPopupGap)
+        applyPopupWidthAndPosition(popup, anchor, labels, background, fabPopupGap())
 
         popup.show()
     }
+
+    // Khoảng hở (~8dp) giữa popup và FAB - dùng chung cho showFabChooser() (chọn giữa nhiều
+    // fab item) LẪN showSpinnerPopup() khi anchor là fab (mục type="spinner" được gán làm fab) -
+    // xem applyPopupWidthAndPosition().
+    private fun fabPopupGap(): Int = (8 * resources.displayMetrics.density).toInt()
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         return try {
