@@ -585,11 +585,17 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                         (linearLayout.parent as? ViewGroup)?.removeView(linearLayout)
                         center.removeAllViews()
 
-                        // ========== CĂN GIỮA CHIỀU DỌC KHI DƯỚI 4 ITEM (GIỮ WRAP_CONTENT TRÁNH GIÃN KHOẢNG TRẮNG) ==========
+                        // ========== CĂN GIỮA VÀ CẤP KHÔNG GIAN DỌC CHO DƯỚI 4 ITEM ==========
                         if (!isLongList) {
                             linearLayout.gravity = Gravity.CENTER_VERTICAL
                             if (center is LinearLayout) {
                                 center.gravity = Gravity.CENTER_VERTICAL
+                            }
+                            // Ép center chiếm hết khoảng trống dọc trong dialog nhỏ để có chỗ căn giữa
+                            val centerLp = center.layoutParams
+                            if (centerLp != null) {
+                                centerLp.height = ViewGroup.LayoutParams.MATCH_PARENT
+                                center.layoutParams = centerLp
                             }
                         }
 
