@@ -31,6 +31,22 @@ class DialogAppChooser(private val darkMode: Boolean): DialogFullScreen(R.layout
 */
 
 open class DialogFullScreen(private val layout: Int, private val darkMode: Boolean) : androidx.fragment.app.DialogFragment() {
+    // Lưu ý: class này phải khai báo BÊN NGOÀI companion object (dù chỉ được tạo ra từ hàm trong
+    // companion object bên dưới). Kotlin không tự "nâng" 1 class lồng BÊN TRONG companion object
+    // thành DialogFullScreen.TenClass như với hàm/property - phải gọi là
+    // DialogFullScreen.Companion.TenClass, khiến mọi nơi gọi từ file khác
+    // (DialogLogFragment.kt, ActionListFragment.kt, DialogHelper.kt) bị lỗi build "Unresolved
+    // reference" vì chỉ viết DialogFullScreen.SwipeToDismissBinding.
+    class SwipeToDismissBinding internal constructor(
+        private val helper: DialogSwipeBackHelper,
+        private val predictiveBackCallback: Any?
+    ) {
+        fun release(dialog: Dialog) {
+            DialogPredictiveBackBinder.unbind(dialog, predictiveBackCallback)
+            helper.release()
+        }
+    }
+
     companion object {
         /**
          * Gắn cử chỉ vuốt lùi (vuốt sang phải để đóng, + vuốt-từ-mép predictive-back API 33+)
@@ -59,16 +75,6 @@ open class DialogFullScreen(private val layout: Int, private val darkMode: Boole
             val helper = DialogSwipeBackHelper.bind(dialog, swipeTarget) { onBack() } ?: return null
             val predictiveBackCallback = DialogPredictiveBackBinder.bind(dialog, helper)
             return SwipeToDismissBinding(helper, predictiveBackCallback)
-        }
-
-        class SwipeToDismissBinding internal constructor(
-            private val helper: DialogSwipeBackHelper,
-            private val predictiveBackCallback: Any?
-        ) {
-            fun release(dialog: Dialog) {
-                DialogPredictiveBackBinder.unbind(dialog, predictiveBackCallback)
-                helper.release()
-            }
         }
     }
 
