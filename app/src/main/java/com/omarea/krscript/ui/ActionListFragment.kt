@@ -30,9 +30,6 @@ import com.omarea.krscript.model.*
 import com.omarea.krscript.shortcut.ActionShortcutManager
 import com.tool.tree.ThemeModeState
 import kotlinx.coroutines.*
-import android.view.Gravity
-import android.widget.FrameLayout
-import android.widget.RelativeLayout
 
 class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.OnItemClickListener {
     companion object {
@@ -210,7 +207,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     }
 
     // Kiểm tra tương thích SDK - đồng bộ, không cần chạy shell nên không cần đợi/hiện dialog
-    // gì cả. T��ch riêng khỏi nodeUnlockedAsync() để onPageClick() có thể gọi thẳng cho trường
+    // gì cả. Tách riêng khỏi nodeUnlockedAsync() để onPageClick() có thể gọi thẳng cho trường
     // hợp mở trang con (không qua nodeUnlockedAsync nữa - xem onPageClick()).
     private fun checkSdkCompatibility(clickableNode: ClickableNode): Boolean {
         val currentSDK = Build.VERSION.SDK_INT
@@ -596,14 +593,15 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                                     window?.let { DialogHelper.applyEdgeToEdge(it, darkMode, dialogView) }
                                 }
                         } else {
-                            // Nhánh <=4 mục dùng chung DialogHelper.customDialog() - nền blur
-                            // (+ vuốt lùi khi cancelable) đã được xử lý sẵn bên trong đó (xem
-                            // DialogHelper.customDialog()), nhưng vẫn apply edge-to-edge so dialog
-                            // window status/navigation drawing matches full-screen branch.
-                            val dlgWrap = DialogHelper.customDialog(requireActivity(), dialogView, cancelable)
-                            val dlg = dlgWrap.dialog
-                            dlg.window?.let { DialogHelper.applyEdgeToEdge(it, darkMode, dialogView) }
-                            dlg
+                            // Nhánh <=4 mục dùng chung DialogHelper.customDialog() - nền blur (+
+                            // vuốt lùi khi cancelable) đã được xử lý sẵn bên trong đó (xem
+                            // DialogHelper.customDialog()). KHÔNG gọi applyEdgeToEdge() ở đây:
+                            // hàm đó cộng thêm padding = kích thước status/navigation bar vào
+                            // dialogView, chỉ đúng cho dialog TOÀN MÀN HÌNH (root match_parent) -
+                            // còn root của kr_dialog_params_small.xml là wrap_content (card nổi
+                            // giữa màn hình, không chạm mép nào) nên bị phình to/lệch vị trí nếu
+                            // cộng thêm padding này (đúng kiểu lỗi bố cục đã gặp trước đây).
+                            DialogHelper.customDialog(requireActivity(), dialogView, cancelable).dialog
                         }
                         if (isLongList) {
                             if (cancelable) {
