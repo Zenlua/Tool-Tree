@@ -13,6 +13,7 @@
 
         <LinearLayout
             android:alpha="0.9"
+            android:paddingBottom="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="150dp"
@@ -44,20 +45,19 @@
                 android:id="@+id/confirm_custom_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-        </LinearLayout>
 
-        <LinearLayout
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <Button
-                android:id="@+id/btn_confirm"
-                android:layout_marginStart="0dp"
-                style="@style/dialogConfirmBtn"
-                android:text="@string/btn_confirm">
-            </Button>
+                <Button
+                    android:id="@+id/btn_confirm"
+                    style="@style/dialogConfirmBtn"
+                    android:text="@string/btn_confirm">
+                </Button>
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>

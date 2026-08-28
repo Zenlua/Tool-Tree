@@ -36,25 +36,24 @@
                 android:id="@+id/confirm_custom_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-        </LinearLayout>
 
-        <LinearLayout
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <Button
-                android:id="@+id/btn_cancel"
-                style="@style/dialogCancelBtn"
-                android:layout_marginEnd="8dp"
-                android:text="@string/btn_cancel">
-            </Button>
-            <Button
-                android:id="@+id/btn_confirm"
-                style="@style/dialogConfirmBtn"
-                android:text="@string/btn_confirm">
-            </Button>
+                <Button
+                    android:id="@+id/btn_cancel"
+                    style="@style/dialogCancelBtn"
+                    android:text="@string/btn_cancel">
+                </Button>
+                <Button
+                    android:id="@+id/btn_confirm"
+                    style="@style/dialogConfirmBtn"
+                    android:text="@string/btn_confirm">
+                </Button>
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>
