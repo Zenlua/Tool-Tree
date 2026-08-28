@@ -171,21 +171,30 @@ object ThemeModeState {
 
         val rootView = window.decorView
 
-        // Khoảng hở thêm giữa 2 đảo nổi (top/bottom) và status bar/navigation bar, cộng thêm
-        // vào trên phần padding = chiều cao inset, để đảo không dính sát mép thanh hệ thống.
-        // Dùng lại island_margin_v (đã có sẵn trong dimens.xml, cùng bộ với island_margin_h)
-        // thay vì hardcode số mới, cho đồng bộ với khoảng cách ngang của đảo.
-        val islandGap = activity.resources.getDimensionPixelSize(R.dimen.island_margin_v)
+        // Khoảng hở giữa đảo nổi và status bar/navigation bar được tính TỰ ĐỘNG theo tỉ lệ
+        // % chiều cao inset thật của từng máy (thay vì 1 số dp cố định island_margin_v),
+        // để máy có status bar/navigation bar cao (notch to, thanh điều hướng 3 nút) thì đảo
+        // cách ra xa hơn máy có bar thấp (gesture nav). Có coerce min/max để tránh gap = 0dp
+        // (bar quá thấp/ẩn) hoặc quá to bất thường (bar cao dị thường, ví dụ máy gập).
+        val minGapPx = activity.resources.getDimensionPixelSize(R.dimen.island_gap_min)
+        val maxGapPx = activity.resources.getDimensionPixelSize(R.dimen.island_gap_max)
+        val gapRatio = 0.3f
+
+        fun autoGap(barInsetPx: Int): Int {
+            return (barInsetPx * gapRatio).toInt().coerceIn(minGapPx, maxGapPx)
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val topGap = autoGap(systemBars.top)
+            val bottomGap = autoGap(systemBars.bottom)
 
             // GHI CHÚ: dùng setPadding(paddingLeft/paddingRight hiện tại, ...) thay vì
             // setPadding(0, top, 0, 0) cứng để KHÔNG xoá mất padding ngang (margin đảo nổi)
             // đã khai báo sẵn trong layout XML của từng màn hình - chỉ cập nhật phần padding
             // do system bar chiếm chỗ (top cho thanh trên, bottom cho thanh dưới).
             activity.findViewById<View>(R.id.blur_top_container)?.let { v ->
-                v.setPadding(v.paddingLeft, systemBars.top + islandGap, v.paddingRight, v.paddingBottom)
+                v.setPadding(v.paddingLeft, systemBars.top + topGap, v.paddingRight, v.paddingBottom)
             }
             
             activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
@@ -193,7 +202,7 @@ object ThemeModeState {
             
             // Nếu xoá marginBottom trong XML và muốn dính đáy:
             activity.findViewById<View>(R.id.blur_bottom_container)?.let { v ->
-                v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom + islandGap)
+                v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom + bottomGap)
             }
             
             
