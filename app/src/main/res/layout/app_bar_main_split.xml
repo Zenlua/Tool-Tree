@@ -28,7 +28,6 @@
             android:id="@+id/title_island"
             android:layout_width="wrap_content"
             android:layout_height="?attr/actionBarSize"
-            android:layout_marginEnd="@dimen/island_gap"
             android:elevation="@dimen/island_elevation"
             android:background="@drawable/krscript_item_ripple_in"
             android:orientation="horizontal"
@@ -51,6 +50,12 @@
 
         </com.omarea.common.ui.BlurViewLinearLayout>
 
+        <!-- Khoảng trống co giãn tự động đẩy Đảo 2 về góc phải -->
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
         <!-- Đảo 2: 2 nút hành động (khởi động lại / thông tin) -->
         <com.omarea.common.ui.BlurViewLinearLayout
             android:id="@+id/actions_island"
@@ -68,7 +73,7 @@
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:layout_margin="4dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:background="?android:attr/selectableItemBackground"
                 android:contentDescription="@string/text_power_reboot"
                 android:padding="10dp"
                 android:scaleType="fitCenter"
@@ -80,7 +85,7 @@
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:layout_margin="4dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:background="?android:attr/selectableItemBackground"
                 android:contentDescription="@string/about_title"
                 android:padding="10dp"
                 android:scaleType="fitCenter"
