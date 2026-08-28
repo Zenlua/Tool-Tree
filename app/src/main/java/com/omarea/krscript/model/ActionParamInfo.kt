@@ -1,8 +1,9 @@
 package com.omarea.krscript.model
 
 import com.omarea.common.model.SelectItem
+import java.io.Serializable
 
-class ActionParamInfo {
+class ActionParamInfo : Serializable {
     // 参数名：必需保持唯一
     var name: String? = null
 
