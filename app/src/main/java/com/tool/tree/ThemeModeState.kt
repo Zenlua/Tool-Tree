@@ -172,23 +172,12 @@ object ThemeModeState {
 
         val rootView = window.decorView
 
-        // Khoảng hở giữa đảo nổi và status bar/navigation bar được tính TỰ ĐỘNG theo tỉ lệ
-        // % chiều cao inset thật của từng máy (thay vì 1 số dp cố định island_margin_v),
-        // để máy có status bar/navigation bar cao (notch to, thanh điều hướng 3 nút) thì đảo
-        // cách ra xa hơn máy có bar thấp (gesture nav). Có coerce min/max để tránh gap = 0dp
-        // (bar quá thấp/ẩn) hoặc quá to bất thường (bar cao dị thường, ví dụ máy gập).
-        val minGapPx = activity.resources.getDimensionPixelSize(R.dimen.island_gap_min)
-        val maxGapPx = activity.resources.getDimensionPixelSize(R.dimen.island_gap_max)
-        val gapRatio = 0.3f
-
-        fun autoGap(barInsetPx: Int): Int {
-            return (barInsetPx * gapRatio).toInt().coerceIn(minGapPx, maxGapPx)
-        }
+        // Khoảng hở cố định giữa đảo nổi và status bar/navigation bar, cộng thêm vào margin
+        // bên cạnh phần margin = chiều cao inset, để đảo không dính sát mép thanh hệ thống.
+        val islandGap = activity.resources.getDimensionPixelSize(R.dimen.island_margin_v)
 
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val topGap = autoGap(systemBars.top)
-            val bottomGap = autoGap(systemBars.bottom)
 
             // GHI CHÚ: dùng margin (dịch cả khối đảo ra xa mép) thay vì padding (kéo giãn nền
             // đảo để phủ luôn phần trống) - padding sẽ làm nền blur/bo góc bị "nở" to ra để
@@ -198,23 +187,27 @@ object ThemeModeState {
             // đã khai báo sẵn trong layout XML của từng màn hình.
             activity.findViewById<View>(R.id.blur_top_container)?.let { v ->
                 (v.layoutParams as? ViewGroup.MarginLayoutParams)?.let { lp ->
-                    lp.topMargin = systemBars.top + topGap
+                    lp.topMargin = systemBars.top + islandGap
                     v.layoutParams = lp
                 }
             }
             
-            activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
+            // main_list KHÔNG cần set padding-top ở đây nữa: từ nay nó tự bám theo chiều cao
+            // thật của toolbar qua layout_below="@id/appbar" trong activity_action_page.xml
+            // (đã bao gồm sẵn inset + khoảng hở), set thêm padding ở đây sẽ bị cộng dồn 2 lần.
             
             
             activity.findViewById<View>(R.id.blur_bottom_container)?.let { v ->
                 (v.layoutParams as? ViewGroup.MarginLayoutParams)?.let { lp ->
-                    lp.bottomMargin = systemBars.bottom + bottomGap
+                    lp.bottomMargin = systemBars.bottom + islandGap
                     v.layoutParams = lp
                 }
             }
             
             
-            activity.findViewById<View>(R.id.kr_online_webview)?.setPadding(0, systemBars.top, 0, 0)
+            // kr_online_webview cũng đã bám layout_below="@id/webappbar" trong
+            // activity_action_page_online.xml (đã bao gồm sẵn inset + khoảng hở) - không set
+            // padding-top ở đây nữa, cùng lý do với main_list ở trên.
 
             insets
         }

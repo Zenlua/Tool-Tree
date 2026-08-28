@@ -34,6 +34,7 @@
         android:fitsSystemWindows="false">
 
         <include
+            android:id="@+id/appbar"
             layout="@layout/app_bar_main"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -42,7 +43,8 @@
             android:id="@+id/main_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="?android:actionBarSize" />
+            android:layout_below="@id/appbar"
+            android:layout_marginTop="@dimen/island_margin_v" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:visibility="gone"

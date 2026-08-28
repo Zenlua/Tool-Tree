@@ -13,6 +13,7 @@
 
     <WebView
         android:layout_below="@id/webappbar"
+        android:layout_marginTop="@dimen/island_margin_v"
         android:id="@+id/kr_online_webview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

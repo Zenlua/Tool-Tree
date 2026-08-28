@@ -9,10 +9,4 @@
     <dimen name="island_margin_v">8dp</dimen>
     <dimen name="island_gap">8dp</dimen>
     <dimen name="island_elevation">6dp</dimen>
-
-    <!-- Chặn dưới/trên cho khoảng hở đảo nổi <-> status bar/navigation bar, khi khoảng hở
-         này được tính tự động theo % chiều cao inset thật của từng máy - xem
-         ThemeModeState.kt (applyWindowFlags -> autoGap()). -->
-    <dimen name="island_gap_min">4dp</dimen>
-    <dimen name="island_gap_max">20dp</dimen>
 </resources>
