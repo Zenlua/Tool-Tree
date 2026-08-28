@@ -65,41 +65,25 @@ object SwipeBackPreviewCache {
                 return
             }
 
-            // capture() được gọi ngay sau khi người dùng vừa bấm vào 1 item để mở trang này -
-            // item đó lúc này vẫn còn đang ở trạng thái "pressed" (ripple/hiệu ứng nhấn chưa kịp
-            // tắt). Nếu chụp nguyên trạng thái đó, ảnh preview sẽ "đóng băng" luôn cả hiệu ứng
-            // nhấn, và khi vuốt lùi lại sẽ thấy hiệu ứng nhấn còn sót lại trên item dù thực tế
-            // ngón tay đã buông từ lâu. Xoá pressed state + ép mọi drawable (kể cả ripple) nhảy
-            // thẳng tới trạng thái cuối NGAY LẬP TỨC (thay vì tự chạy animation rồi mới tắt).
-            PressStateUtils.clearPressedState(decorView)
-
             val scaledWidth = (width * SCALE).toInt().coerceAtLeast(1)
             val scaledHeight = (height * SCALE).toInt().coerceAtLeast(1)
             val sharp = Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
 
-            // clearPressedState() ở trên chỉ MỜI (invalidate) một lượt vẽ lại chứ không vẽ lại
-            // ngay lập tức - nếu gọi PixelCopy.request() liền sau đó, rất có thể nó vẫn chụp
-            // trúng buffer của khung hình CŨ (còn hiệu ứng nhấn) vì khung hình mới (đã hết
-            // pressed) chưa kịp render xong. Đẩy toàn bộ việc chụp vào decorView.post {} để nó
-            // chạy SAU khi khung hình vừa invalidate ở trên đã được xử lý/vẽ xong, đảm bảo lúc
-            // chụp thật sự thì view đã sạch hiệu ứng nhấn.
-            decorView.post {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    PixelCopy.request(window, sharp, { copyResult ->
-                        if (copyResult != PixelCopy.SUCCESS) {
-                            // PixelCopy thất bại (hiếm, ví dụ window đang chuyển trạng thái) ->
-                            // vẫn còn hơn không có ảnh gì, chấp nhận mất bo góc trong trường hợp
-                            // hiếm này thay vì bỏ hẳn hiệu ứng preview
-                            drawFallback(decorView, sharp)
-                        }
-                        finishCapture(sharp, onCaptured)
-                    }, Handler(Looper.getMainLooper()))
-                } else {
-                    // API < 26 không có PixelCopy(Window) - giữ cách chụp cũ (chấp nhận không
-                    // giữ được bo góc, nhưng đây là dải thiết bị cũ, ít quan trọng hơn)
-                    drawFallback(decorView, sharp)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                PixelCopy.request(window, sharp, { copyResult ->
+                    if (copyResult != PixelCopy.SUCCESS) {
+                        // PixelCopy thất bại (hiếm, ví dụ window đang chuyển trạng thái) -> vẫn
+                        // còn hơn không có ảnh gì, chấp nhận mất bo góc trong trường hợp hiếm
+                        // này thay vì bỏ hẳn hiệu ứng preview
+                        drawFallback(decorView, sharp)
+                    }
                     finishCapture(sharp, onCaptured)
-                }
+                }, Handler(Looper.getMainLooper()))
+            } else {
+                // API < 26 không có PixelCopy(Window) - giữ cách chụp cũ (chấp nhận không giữ
+                // được bo góc, nhưng đây là dải thiết bị cũ, ít quan trọng hơn)
+                drawFallback(decorView, sharp)
+                finishCapture(sharp, onCaptured)
             }
         } catch (_: Exception) {
             recycle()

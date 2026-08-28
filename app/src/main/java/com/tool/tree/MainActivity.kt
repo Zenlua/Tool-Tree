@@ -9,14 +9,16 @@ import android.text.Spanned
 import android.text.style.RelativeSizeSpan
 import android.text.style.SuperscriptSpan
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.ArrayAdapter
 import android.widget.CheckBox
-import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.ListPopupWindow
+import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
 import com.omarea.common.shared.FilePathResolver
@@ -28,7 +30,6 @@ import com.omarea.krscript.config.PageConfigSh
 import com.omarea.krscript.model.*
 import com.omarea.krscript.ui.ActionListFragment
 import com.omarea.krscript.ui.DialogLogFragment
-import com.tool.tree.ui.PressStateUtils
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.FadeScalePageTransformer
@@ -39,9 +40,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import android.view.Menu
-import android.view.MenuItem
-import androidx.appcompat.widget.Toolbar
 
 class MainActivity : AppCompatActivity() {
 
@@ -297,15 +295,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onSubPageClick(pageNode: PageNode) {
-                if (openedSubPage) return
-                openedSubPage = true
-                OpenPageHelper(this@MainActivity).openPage(pageNode) {
-                    // Không mở được trang (lỗi, bị khoá, huỷ preload...) -> không có Activity
-                    // con nào được mở nên onRestart() sẽ KHÔNG bắn ra để tự reset cờ này -
-                    // phải tự reset ở đây, nếu không lần bấm item kế tiếp sẽ bị chặn bởi guard
-                    // "if (openedSubPage) return" phía trên.
-                    openedSubPage = false
-                }
+                OpenPageHelper(this@MainActivity).openPage(pageNode)
             }
 
             override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
@@ -408,17 +398,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRestart() {
-        super.onRestart()
-        // Xoá NGAY hiệu ứng nhấn còn sót lại trên item vừa bấm để mở trang con - làm trước,
-        // không đợi reloadTabs() bên dưới (chạy bất đồng bộ trên IO thread) thay view cũ bằng
-        // view mới. Xem giải thích đầy đủ ở ActionPage.onRestart().
-        PressStateUtils.clearPressedState(window.decorView)
-        if (openedSubPage) {
-            openedSubPage = false
-            reloadTabs()
-        }
-    }
+    // override fun onRestart() {
+        // super.onRestart()
+        // if (openedSubPage) {
+            // openedSubPage = false
+            // reloadTabs()
+        // }
+    // }
 
     private fun showSettingsDialog() {
         val layout = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
