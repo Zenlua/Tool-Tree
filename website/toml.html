@@ -299,18 +299,33 @@ footer {
     box-shadow: var(--shadow-lg);
   }
   .main{padding:20px 16px 60px;}
-  .topbar .search{display:none;}
+  
+  /* Đã cho phép hiện ô tìm kiếm và tinh chỉnh kích thước trên tablet/mobile lớn */
+  .topbar .search {
+    flex: 0 1 140px;
+    font-size: 13px;
+    padding: 5px 8px;
+  }
 }
 
 @media (max-width: 600px){
-  .topbar{padding:10px 14px;}
-  .topbar .logo{font-size:14px;}
+  .topbar{padding:10px 12px; gap: 8px;}
+  .topbar .logo{font-size:13px;}
+  
+  /* Tinh chỉnh tiếp cho màn hình điện thoại nhỏ */
+  .topbar .search {
+    flex: 0 1 100px;
+    font-size: 12px;
+    padding: 4px 6px;
+  }
+  
   .main h1{font-size:22px;}
   .main h2{font-size:18px;scroll-margin-top:60px;}
   .main h3{font-size:15px;}
   .toc-grid{grid-template-columns:1fr;}
   .kv-list{grid-template-columns:1fr;}
 }
+
 </style>
 </head>
 <body>
@@ -318,7 +333,7 @@ footer {
   <button id="tocToggle" class="btn-toc" aria-label="Toggle Table of Contents">
     <span>☰</span> <span>Index</span>
   </button>
-  <div class="logo"><span class="dot"></span> Tool-Tree &middot; TOML Guide</div>
+  <div>TOML Guide</div>
   <div class="spacer"></div>
   <input type="text" class="search" id="search" placeholder="Search section / field..." />
 </div>

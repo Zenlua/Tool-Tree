@@ -63,6 +63,11 @@ class ActionPage : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
 
     private var currentPageConfig: PageNode? = null
+    // Dữ liệu (items + menu/fab) đã được OpenPageHelper.preloadThenOpen() TỰ TẢI SẴN ở trang
+    // cha (mục process = false) TRƯỚC khi mở Activity này - khác null nghĩa là bỏ qua hẳn
+    // checkPageLockThenLoad()/loadPageConfig() (đã chạy xong ở ngoài rồi), chỉ cần hiện ra
+    // ngay - xem onCreate()/applyPreloadedData().
+    private var preloadedPageData: PagePreloadedData? = null
     private var autoRunItemId = ""
     private lateinit var binding: ActivityActionPageBinding
     private var openedSubPage = false
@@ -199,6 +204,8 @@ class ActionPage : AppCompatActivity() {
                 ActionShortcutManager(this).getShortcutTarget(extras.getString("shortcutId") ?: "")
             } else null
 
+            preloadedPageData = extras.getSerializable("preloadedItems") as? PagePreloadedData
+
             autoRunItemId = extras.getString("autoRunItemId", "")
         }
 
@@ -233,8 +240,15 @@ class ActionPage : AppCompatActivity() {
             setResult(2)
             finish()
         } else {
-            // Thêm dòng này để gọi ngay lập tức khi Activity vừa được khởi tạo
-            checkPageLockThenLoad()
+            val preloaded = preloadedPageData
+            if (preloaded != null) {
+                // Đã tải sẵn (kể cả khoá + before/afterRead + loadSuccess) ở trang cha rồi -
+                // hiện ra ngay, KHÔNG chạy lại checkPageLockThenLoad()/loadPageConfig() nữa.
+                applyPreloadedData(preloaded)
+            } else {
+                // Thêm dòng này để gọi ngay lập tức khi Activity vừa được khởi tạo
+                checkPageLockThenLoad()
+            }
         }
         
     }
@@ -824,6 +838,24 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
+    // Áp dụng dữ liệu ĐÃ tải sẵn từ trang cha (OpenPageHelper.preloadThenOpen(), mục
+    // process = false) - gương THẲNG nhánh thành công (showLoading=false) của
+    // loadPageConfig() ở trên, chỉ khác là items/menu/fab đến từ Intent thay vì tự đọc lại.
+    private fun applyPreloadedData(data: PagePreloadedData) {
+        val config = currentPageConfig ?: return
+
+        config.pageMenuOptions = data.menuOptions
+        config.headerActions = data.headerActions
+        config.autoShowActions = data.autoShowActions
+
+        updateActionList(data.items, false) { tryAutoShowActions() }
+
+        menuOptions = null
+        headerActions = null
+        invalidateOptionsMenu()
+        refreshCheckboxMenuStates()
+    }
+
     private fun prewarmNodeImages(node: NodeInfoBase) {
         val iconPathAnalysis = IconPathAnalysis()
         when (node) {
@@ -1280,7 +1312,10 @@ class ActionPage : AppCompatActivity() {
     fun _openPage(pageNode: PageNode) {
         if (openedSubPage) return
         openedSubPage = true
-        OpenPageHelper(this).openPage(pageNode)
+        // process = false giờ có thể preload NGOÀI trang này rồi mới quyết định có mở trang
+        // con hay không (xem OpenPageHelper) - nếu cuối cùng KHÔNG mở (bị khoá/tải lỗi/người
+        // dùng bấm Hủy) thì sẽ KHÔNG có onRestart() nào bắn ra để tự dọn cờ, phải reset ở đây.
+        OpenPageHelper(this).openPage(pageNode) { openedSubPage = false }
     }
 
     // Trả về cặp bitmap preview đang giữ để nó SỐNG SÓT qua đúng lần huỷ activity này (nếu
