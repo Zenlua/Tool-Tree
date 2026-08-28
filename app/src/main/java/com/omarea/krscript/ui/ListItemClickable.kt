@@ -40,6 +40,7 @@ open class ListItemClickable(context: Context,
         summary = config.summary
 
         this.layout.setOnClickListener {
+            this.layout.isPressed = false
             this.mOnClickListener?.onClick(this)
         }
         if (this.key.isNotEmpty() && config.allowShortcut != false) {
