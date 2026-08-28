@@ -185,7 +185,7 @@ object ThemeModeState {
             
             
             // Nếu xoá marginBottom trong XML và muốn dính đáy:
-            activity.findViewById<View>(R.id.tabLayout)?.let { v ->
+            activity.findViewById<View>(R.id.blur_bottom_container)?.let { v ->
                 v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom)
             }
             
