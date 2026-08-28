@@ -43,8 +43,7 @@
             android:id="@+id/main_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/appbar"
-            android:layout_marginTop="@dimen/island_margin_v" />
+            android:layout_below="@id/appbar" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:visibility="gone"

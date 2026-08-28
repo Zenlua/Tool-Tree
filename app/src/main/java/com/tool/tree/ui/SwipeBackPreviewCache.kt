@@ -65,6 +65,15 @@ object SwipeBackPreviewCache {
                 return
             }
 
+            // capture() được gọi ngay sau khi người dùng vừa bấm vào 1 item để mở trang này -
+            // item đó lúc này vẫn còn đang ở trạng thái "pressed" (ripple/hiệu ứng nhấn chưa kịp
+            // tắt). Nếu chụp nguyên trạng thái đó, ảnh preview sẽ "đóng băng" luôn cả hiệu ứng
+            // nhấn, và khi vuốt lùi lại sẽ thấy hiệu ứng nhấn còn sót lại trên item dù thực tế
+            // ngón tay đã buông từ lâu. Xoá pressed state + ép mọi drawable (kể cả ripple) nhảy
+            // thẳng tới trạng thái cuối NGAY LẬP TỨC (thay vì tự chạy animation rồi mới tắt)
+            // trước khi chụp, để ảnh preview sạch hiệu ứng nhấn.
+            clearPressedState(decorView)
+
             val scaledWidth = (width * SCALE).toInt().coerceAtLeast(1)
             val scaledHeight = (height * SCALE).toInt().coerceAtLeast(1)
             val sharp = Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
@@ -88,6 +97,25 @@ object SwipeBackPreviewCache {
         } catch (_: Exception) {
             recycle()
             onCaptured()
+        }
+    }
+
+    /**
+     * Xoá trạng thái "pressed" trên toàn bộ cây view và ép mọi drawable (kể cả hiệu ứng ripple)
+     * nhảy thẳng tới trạng thái cuối cùng ngay lập tức - xem giải thích ở nơi gọi (capture()).
+     */
+    private fun clearPressedState(view: View) {
+        try {
+            if (view.isPressed) {
+                view.isPressed = false
+            }
+            view.jumpDrawablesToCurrentState()
+        } catch (_: Exception) {
+        }
+        if (view is android.view.ViewGroup) {
+            for (i in 0 until view.childCount) {
+                clearPressedState(view.getChildAt(i))
+            }
         }
     }
 
