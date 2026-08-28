@@ -45,7 +45,8 @@
 
         <FrameLayout
             android:id="@+id/kr_params_center"
-            android:layout_margin="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginHorizontal="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical" />
@@ -53,7 +54,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginHorizontal="16dp"
             android:orientation="horizontal">
 
             <Button

@@ -126,7 +126,7 @@ class ActivityFileSelector : AppCompatActivity() {
         } else if (multiple) {
             showToast(R.string.msg_multiple_select_mode)
         } else if (mode == MODE_FILE && extension.isNotEmpty()) {
-            showToast(getString(R.string.msg_file_extension_required, extension))
+            showToast(getString(R.string.msg_file_extension_required, extension.replace(",", ", ")))
         }
     }
 
