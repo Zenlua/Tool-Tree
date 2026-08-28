@@ -170,6 +170,13 @@ object ThemeModeState {
         window.navigationBarColor = Color.TRANSPARENT
 
         val rootView = window.decorView
+
+        // Khoảng hở thêm giữa 2 đảo nổi (top/bottom) và status bar/navigation bar, cộng thêm
+        // vào trên phần padding = chiều cao inset, để đảo không dính sát mép thanh hệ thống.
+        // Dùng lại island_margin_v (đã có sẵn trong dimens.xml, cùng bộ với island_margin_h)
+        // thay vì hardcode số mới, cho đồng bộ với khoảng cách ngang của đảo.
+        val islandGap = activity.resources.getDimensionPixelSize(R.dimen.island_margin_v)
+
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 
@@ -178,7 +185,7 @@ object ThemeModeState {
             // đã khai báo sẵn trong layout XML của từng màn hình - chỉ cập nhật phần padding
             // do system bar chiếm chỗ (top cho thanh trên, bottom cho thanh dưới).
             activity.findViewById<View>(R.id.blur_top_container)?.let { v ->
-                v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
+                v.setPadding(v.paddingLeft, systemBars.top + islandGap, v.paddingRight, v.paddingBottom)
             }
             
             activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
@@ -186,7 +193,7 @@ object ThemeModeState {
             
             // Nếu xoá marginBottom trong XML và muốn dính đáy:
             activity.findViewById<View>(R.id.blur_bottom_container)?.let { v ->
-                v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom)
+                v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom + islandGap)
             }
             
             
