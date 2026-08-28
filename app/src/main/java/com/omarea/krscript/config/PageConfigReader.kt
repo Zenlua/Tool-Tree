@@ -306,13 +306,19 @@ class PageConfigReader {
 
     // Đọc 1 khoá `key` trong bảng `parent`, chấp nhận cả 2 dạng: bảng đơn [key] (1 ngoặc)
     // hoặc mảng bảng [[key]] (2 ngoặc). Luôn trả về danh sách để xử lý đồng nhất.
+    // FIX: Nếu mảng KHÔNG chứa bảng nào (vd mảng chuỗi "a|Title A", "b|Title B" cho options)
+    // thì bỏ qua để tomlStringOptions() xử lý thay - tránh TomlInvalidTypeException khi gọi
+    // getTable() trên phần tử không phải bảng (lỗi này khiến TOÀN BỘ trang bị lỗi load).
     private fun tomlEntries(parent: TomlTable, key: String): List<TomlTable> {
         return when {
             parent.isArray(key) -> {
                 val arr = parent.getArray(key) ?: return emptyList()
-                (0 until arr.size()).map { arr.getTable(it) }
+                if (!arr.containsTables()) return emptyList()
+                (0 until arr.size()).mapNotNull { i ->
+                    try { arr.getTable(i) } catch (_: Exception) { null }
+                }
             }
-            parent.isTable(key) -> listOf(parent.getTable(key)!!)
+            parent.isTable(key) -> listOfNotNull(parent.getTable(key))
             else -> emptyList()
         }
     }
