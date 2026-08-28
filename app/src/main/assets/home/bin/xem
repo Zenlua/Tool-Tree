@@ -4,4 +4,4 @@ if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
 echo "xem http://file.txt"
 exit
 fi
-curl -s -4 --retry 2 --retry-delay 2 -G -L -H "$WEBS" "$@"
+curl -s --retry 2 --retry-delay 2 -G -L -H "$WEBS" "$@"
