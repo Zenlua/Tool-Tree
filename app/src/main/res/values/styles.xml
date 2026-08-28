@@ -259,7 +259,7 @@
 
     <style name="dialogLargeBtn" parent="@style/Widget.AppCompat.Button.ButtonBar.AlertDialog">
         <item name="android:alpha">0.8</item>
-        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:layout_marginStart">16dp</item>
         <item name="android:layout_weight">1</item>
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">50dp</item>
