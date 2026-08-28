@@ -6,7 +6,7 @@
     android:fitsSystemWindows="false">
 
     <include
-        layout="@layout/app_bar_main_split"
+        layout="@layout/app_bar_main"
         android:id="@+id/appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -24,10 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/krscript_item_ripple_in"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="@dimen/island_margin_h"
-        android:layout_marginEnd="@dimen/island_margin_h"
-        android:elevation="@dimen/island_elevation" >
+        android:layout_alignParentBottom="true" >
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"

@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -171,44 +170,14 @@ object ThemeModeState {
         window.navigationBarColor = Color.TRANSPARENT
 
         val rootView = window.decorView
-
-        // Khoảng hở cố định giữa đảo nổi và status bar/navigation bar, cộng thêm vào margin
-        // bên cạnh phần margin = chiều cao inset, để đảo không dính sát mép thanh hệ thống.
-        val islandGap = activity.resources.getDimensionPixelSize(R.dimen.island_margin_v)
-
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-            // GHI CHÚ: dùng margin (dịch cả khối đảo ra xa mép) thay vì padding (kéo giãn nền
-            // đảo để phủ luôn phần trống) - padding sẽ làm nền blur/bo góc bị "nở" to ra để
-            // lấp khoảng hở, còn margin thì đảo giữ nguyên kích thước gọn theo nội dung, chỉ
-            // dịch xuống/lên xa khỏi status bar/navigation bar, để lộ khoảng trống thật sự ở
-            // giữa. Chỉ set topMargin/bottomMargin, giữ nguyên marginStart/End (island_margin_h)
-            // đã khai báo sẵn trong layout XML của từng màn hình.
-            activity.findViewById<View>(R.id.blur_top_container)?.let { v ->
-                (v.layoutParams as? ViewGroup.MarginLayoutParams)?.let { lp ->
-                    lp.topMargin = systemBars.top + islandGap
-                    v.layoutParams = lp
-                }
-            }
             
-            // main_list KHÔNG cần set padding-top ở đây nữa: từ nay nó tự bám theo chiều cao
-            // thật của toolbar qua layout_below="@id/appbar" trong activity_action_page.xml
-            // (đã bao gồm sẵn inset + khoảng hở), set thêm padding ở đây sẽ bị cộng dồn 2 lần.
+            activity.findViewById<View>(R.id.blur_top_container)?.setPadding(0, systemBars.top, 0, 0)
+            activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
+            activity.findViewById<View>(R.id.blur_bottom_container)?.setPadding(0, 0, 0, systemBars.bottom)
+            activity.findViewById<View>(R.id.kr_online_webview)?.setPadding(0, systemBars.top, 0, 0)
             
-            
-            activity.findViewById<View>(R.id.blur_bottom_container)?.let { v ->
-                (v.layoutParams as? ViewGroup.MarginLayoutParams)?.let { lp ->
-                    lp.bottomMargin = systemBars.bottom + islandGap
-                    v.layoutParams = lp
-                }
-            }
-            
-            
-            // kr_online_webview cũng đã bám layout_below="@id/webappbar" trong
-            // activity_action_page_online.xml (đã bao gồm sẵn inset + khoảng hở) - không set
-            // padding-top ở đây nữa, cùng lý do với main_list ở trên.
-
             insets
         }
 
