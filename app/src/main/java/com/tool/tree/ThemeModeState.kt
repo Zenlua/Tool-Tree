@@ -172,12 +172,20 @@ object ThemeModeState {
         val rootView = window.decorView
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            
-            activity.findViewById<View>(R.id.blur_top_container)?.setPadding(0, systemBars.top, 0, 0)
+
+            // GHI CHÚ: dùng setPadding(paddingLeft/paddingRight hiện tại, ...) thay vì
+            // setPadding(0, top, 0, 0) cứng để KHÔNG xoá mất padding ngang (margin đảo nổi)
+            // đã khai báo sẵn trong layout XML của từng màn hình - chỉ cập nhật phần padding
+            // do system bar chiếm chỗ (top cho thanh trên, bottom cho thanh dưới).
+            activity.findViewById<View>(R.id.blur_top_container)?.let { v ->
+                v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
+            }
             activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
-            activity.findViewById<View>(R.id.blur_bottom_container)?.setPadding(0, 0, 0, systemBars.bottom)
+            activity.findViewById<View>(R.id.blur_bottom_container)?.let { v ->
+                v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom)
+            }
             activity.findViewById<View>(R.id.kr_online_webview)?.setPadding(0, systemBars.top, 0, 0)
-            
+
             insets
         }
 

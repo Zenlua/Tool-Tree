@@ -18,11 +18,12 @@
             android:layout_height="wrap_content"
             android:paddingStart="@dimen/island_margin_h"
             android:paddingEnd="@dimen/island_margin_h"
-            android:paddingTop="@dimen/island_margin_v"
             android:clipToPadding="false"
             android:clipChildren="false">
 
-            <!-- Đảo nổi duy nhất (liền nhau, không tách rời) cho các màn hình khác Main -->
+            <!-- Đảo nổi duy nhất (liền nhau, không tách rời) cho các màn hình khác Main.
+                 id blur_top_container: ThemeModeState áp status bar inset làm padding-top
+                 động ở đây, xem java/com/tool/tree/ThemeModeState.kt (applyWindowFlags) -->
             <com.omarea.common.ui.BlurTopBarLayout
                 android:id="@+id/blur_top_container"
                 android:layout_width="match_parent"
