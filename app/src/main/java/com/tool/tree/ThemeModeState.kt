@@ -180,10 +180,16 @@ object ThemeModeState {
             activity.findViewById<View>(R.id.blur_top_container)?.let { v ->
                 v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
             }
+            
             activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
-            activity.findViewById<View>(R.id.blur_bottom_container)?.let { v ->
+            
+            
+            // Nếu xoá marginBottom trong XML và muốn dính đáy:
+            activity.findViewById<View>(R.id.tabLayout)?.let { v ->
                 v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom)
             }
+            
+            
             activity.findViewById<View>(R.id.kr_online_webview)?.setPadding(0, systemBars.top, 0, 0)
 
             insets

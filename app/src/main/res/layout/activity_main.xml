@@ -27,7 +27,6 @@
         android:layout_alignParentBottom="true"
         android:layout_marginStart="@dimen/island_margin_h"
         android:layout_marginEnd="@dimen/island_margin_h"
-        android:layout_marginBottom="@dimen/island_margin_v"
         android:elevation="@dimen/island_elevation" >
 
         <com.google.android.material.tabs.TabLayout

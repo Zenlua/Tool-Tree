@@ -71,24 +71,24 @@
 
             <ImageButton
                 android:id="@+id/btn_reboot"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_margin="4dp"
-                android:background="?android:attr/selectableItemBackground"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_margin="8dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/text_power_reboot"
-                android:padding="10dp"
+                android:padding="2dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/power"
                 app:tint="?android:attr/textColorPrimary" />
 
             <ImageButton
                 android:id="@+id/btn_info"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_margin="4dp"
-                android:background="?android:attr/selectableItemBackground"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_margin="8dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/about_title"
-                android:padding="10dp"
+                android:padding="2dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/info"
                 app:tint="?android:attr/textColorPrimary" />
