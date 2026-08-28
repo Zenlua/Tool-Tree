@@ -92,40 +92,35 @@ class OpenPageHelper(private val activity: Activity) {
             pageNode.onlineHtmlPage.isNotEmpty() -> {
                 Intent(activity, ActionPageOnline::class.java).apply {
                     putExtra("config", pageNode.onlineHtmlPage)
-                    // Nội dung html đã tải sẵn ở preloadHtmlThenOpen() (nếu có) - ActionPageOnline
-                    // dùng loadDataWithBaseURL() để hiện NGAY thay vì tải lại từ mạng lần nữa.
                     if (!preloadedHtml.isNullOrEmpty()) {
                         putExtra("preloadedHtml", preloadedHtml)
                         putExtra("preloadedHtmlBaseUrl", preloadedHtmlBaseUrl ?: pageNode.onlineHtmlPage)
                     }
                 }
             }
-
+    
             pageNode.pageConfigSh.isNotEmpty() ||
             pageNode.pageConfigPath.isNotEmpty() -> {
                 Intent(activity, ActionPage::class.java)
             }
-
+    
             else -> null
         } ?: return false
-
+    
         intent.apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra("page", pageNode)
             if (preloaded != null) {
                 putExtra("preloadedItems", preloaded)
             }
-            // Chụp lại màn hình hiện tại NGAY TRƯỚC khi mở trang mới, để trang mới có thể
-            // hiện lại nó làm nền phía sau lúc vuốt để trở lại (xem SwipeBackHelper).
-            // capture() dùng PixelCopy nên là bất đồng bộ (để giữ đúng bo góc từng item -
-            // xem SwipeBackPreviewCache) - PHẢI startActivity() bên trong callback, không
-            // gọi ngay sau capture() như trước nữa.
             SwipeBackPreviewCache.capture(activity) {
                 activity.startActivity(this)
             }
         }
         return true
     }
+
+
 
     /**
      * process = false: chạy lại ĐÚNG pipeline mà ActionPage.checkPageLockThenLoad() +

@@ -1312,12 +1312,9 @@ class ActionPage : AppCompatActivity() {
     fun _openPage(pageNode: PageNode) {
         if (openedSubPage) return
         openedSubPage = true
-        
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            OpenPageHelper(this).openPage(pageNode) { 
-                openedSubPage = false 
-            }
-        }, 100) // Delay 150ms để hiệu ứng nhấn kịp chạy
+        OpenPageHelper(this).openPage(pageNode) {
+            openedSubPage = false
+        }
     }
 
 
