@@ -1312,11 +1312,14 @@ class ActionPage : AppCompatActivity() {
     fun _openPage(pageNode: PageNode) {
         if (openedSubPage) return
         openedSubPage = true
-        // process = false giờ có thể preload NGOÀI trang này rồi mới quyết định có mở trang
-        // con hay không (xem OpenPageHelper) - nếu cuối cùng KHÔNG mở (bị khoá/tải lỗi/người
-        // dùng bấm Hủy) thì sẽ KHÔNG có onRestart() nào bắn ra để tự dọn cờ, phải reset ở đây.
-        OpenPageHelper(this).openPage(pageNode) { openedSubPage = false }
+        
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            OpenPageHelper(this).openPage(pageNode) { 
+                openedSubPage = false 
+            }
+        }, 100) // Delay 150ms để hiệu ứng nhấn kịp chạy
     }
+
 
     // Trả về cặp bitmap preview đang giữ để nó SỐNG SÓT qua đúng lần huỷ activity này (nếu
     // activity sắp được dựng lại ngay - do xoay màn hình HOẶC do gọi recreate() thủ công, ví
