@@ -28,6 +28,7 @@ import com.omarea.krscript.config.PageConfigSh
 import com.omarea.krscript.model.*
 import com.omarea.krscript.ui.ActionListFragment
 import com.omarea.krscript.ui.DialogLogFragment
+import com.tool.tree.ui.PressStateUtils
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityMainBinding
 import com.tool.tree.ui.FadeScalePageTransformer
@@ -316,8 +317,14 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSubPageClick(pageNode: PageNode) {
                 if (openedSubPage) return
-                openedSubPage = false
-                OpenPageHelper(this@MainActivity).openPage(pageNode)
+                openedSubPage = true
+                OpenPageHelper(this@MainActivity).openPage(pageNode) {
+                    // Không mở được trang (lỗi, bị khoá, huỷ preload...) -> không có Activity
+                    // con nào được mở nên onRestart() sẽ KHÔNG bắn ra để tự reset cờ này -
+                    // phải tự reset ở đây, nếu không lần bấm item kế tiếp sẽ bị chặn bởi guard
+                    // "if (openedSubPage) return" phía trên.
+                    openedSubPage = false
+                }
             }
 
             override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
@@ -404,6 +411,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRestart() {
         super.onRestart()
+        // Xoá NGAY hiệu ứng nhấn còn sót lại trên item vừa bấm để mở trang con - làm trước,
+        // không đợi reloadTabs() bên dưới (chạy bất đồng bộ trên IO thread) thay view cũ bằng
+        // view mới. Xem giải thích đầy đủ ở ActionPage.onRestart().
+        PressStateUtils.clearPressedState(window.decorView)
         if (openedSubPage) {
             openedSubPage = false
             reloadTabs()

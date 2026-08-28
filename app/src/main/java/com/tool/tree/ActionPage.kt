@@ -22,6 +22,7 @@ import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.tool.tree.ui.PressStateUtils
 import com.tool.tree.ui.SwipeBackHelper
 import com.tool.tree.ui.SwipeBackPreviewCache
 import com.omarea.common.model.SelectItem
@@ -1303,6 +1304,12 @@ class ActionPage : AppCompatActivity() {
 
     override fun onRestart() {
         super.onRestart()
+        // Xoá NGAY hiệu ứng nhấn còn sót lại trên item vừa bấm để mở trang con - làm trước,
+        // không đợi loadPageConfig() bên dưới (chạy bất đồng bộ, đọc lại toml/sh trên IO thread
+        // nên có thể mất một khoảng thời gian) thay view cũ bằng view mới. Nếu không xoá ngay ở
+        // đây, người dùng sẽ thấy view CŨ (còn hiệu ứng nhấn) trong khoảng thời gian chờ đó
+        // trước khi view mới kịp thay vào.
+        PressStateUtils.clearPressedState(window.decorView)
         if (openedSubPage && actionsLoaded) {
             openedSubPage = false
             loadPageConfig(false)
