@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -189,20 +190,27 @@ object ThemeModeState {
             val topGap = autoGap(systemBars.top)
             val bottomGap = autoGap(systemBars.bottom)
 
-            // GHI CHÚ: dùng setPadding(paddingLeft/paddingRight hiện tại, ...) thay vì
-            // setPadding(0, top, 0, 0) cứng để KHÔNG xoá mất padding ngang (margin đảo nổi)
-            // đã khai báo sẵn trong layout XML của từng màn hình - chỉ cập nhật phần padding
-            // do system bar chiếm chỗ (top cho thanh trên, bottom cho thanh dưới).
+            // GHI CHÚ: dùng margin (dịch cả khối đảo ra xa mép) thay vì padding (kéo giãn nền
+            // đảo để phủ luôn phần trống) - padding sẽ làm nền blur/bo góc bị "nở" to ra để
+            // lấp khoảng hở, còn margin thì đảo giữ nguyên kích thước gọn theo nội dung, chỉ
+            // dịch xuống/lên xa khỏi status bar/navigation bar, để lộ khoảng trống thật sự ở
+            // giữa. Chỉ set topMargin/bottomMargin, giữ nguyên marginStart/End (island_margin_h)
+            // đã khai báo sẵn trong layout XML của từng màn hình.
             activity.findViewById<View>(R.id.blur_top_container)?.let { v ->
-                v.setPadding(v.paddingLeft, systemBars.top + topGap, v.paddingRight, v.paddingBottom)
+                (v.layoutParams as? ViewGroup.MarginLayoutParams)?.let { lp ->
+                    lp.topMargin = systemBars.top + topGap
+                    v.layoutParams = lp
+                }
             }
             
             activity.findViewById<View>(R.id.main_list)?.setPadding(0, systemBars.top, 0, 0)
             
             
-            // Nếu xoá marginBottom trong XML và muốn dính đáy:
             activity.findViewById<View>(R.id.blur_bottom_container)?.let { v ->
-                v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom + bottomGap)
+                (v.layoutParams as? ViewGroup.MarginLayoutParams)?.let { lp ->
+                    lp.bottomMargin = systemBars.bottom + bottomGap
+                    v.layoutParams = lp
+                }
             }
             
             
