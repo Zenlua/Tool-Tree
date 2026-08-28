@@ -24,32 +24,31 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <!-- Đảo 1: tên app - gọn theo nội dung, không kéo giãn hết chỗ trống -->
-        <com.omarea.common.ui.BlurViewLinearLayout
+        <LinearLayout
             android:id="@+id/title_island"
             android:layout_width="wrap_content"
             android:layout_height="?attr/actionBarSize"
-            android:elevation="@dimen/island_elevation"
-            android:background="@drawable/krscript_item_ripple_in"
-            android:orientation="horizontal"
+            android:background="@android:color/transparent"
+            android:elevation="4dp"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="16dp">
-
+        
             <TextView
                 android:id="@+id/main_title_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
                 android:maxWidth="220dp"
                 android:maxLines="1"
-                android:fontFamily="sans-serif-medium"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 tools:text="Tool Tree" />
-
-        </com.omarea.common.ui.BlurViewLinearLayout>
+        
+        </LinearLayout>
 
         <!-- Khoảng trống co giãn tự động đẩy Đảo 2 về góc phải -->
         <Space
