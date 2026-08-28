@@ -60,13 +60,13 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
         val versionName = try {
             packageManager.getPackageInfo(packageName, 0).versionName
         } catch (e: Exception) {
             "1.0.0"
         }
         setAppTitleWithVersion(versionName ?: "1.0.0")
-        setupToolbarIslands()
 
         if (ThemeConfig(this).getAllowNotificationUI()) {
             WakeLockService.startService(applicationContext)
@@ -104,10 +104,6 @@ class MainActivity : AppCompatActivity() {
         DialogLogFragment.resume(notificationId)?.show(supportFragmentManager, "")
     }
 
-    /**
-     * Hiển thị tên app kèm số phiên bản nhỏ, nằm trên dạng số mũ (superscript) ngay cạnh tên,
-     * trong đảo (island) tên app ở toolbar.
-     */
     private fun setAppTitleWithVersion(versionName: String) {
         val appName = getString(R.string.app_name)
         val fullTitle = "$appName $versionName"
@@ -120,24 +116,6 @@ class MainActivity : AppCompatActivity() {
         spannable.setSpan(RelativeSizeSpan(0.55f), versionStart, versionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         title = spannable
-        findViewById<TextView>(R.id.main_title_text)?.text = spannable
-    }
-
-    /**
-     * Toolbar dạng "đảo nổi" của MainActivity: tên app và 2 nút hành động nằm ở 2 đảo tách
-     * biệt (xem res/layout/app_bar_main_split.xml), thay cho Toolbar + Options Menu hệ thống
-     * dùng chung với các màn hình khác.
-     */
-    private fun setupToolbarIslands() {
-        val btnReboot = findViewById<ImageButton>(R.id.btn_reboot)
-        val btnInfo = findViewById<ImageButton>(R.id.btn_info)
-
-        btnReboot?.apply {
-            isEnabled = hasRoot
-            alpha = if (hasRoot) 1f else 0.4f
-            setOnClickListener { DialogPower(this@MainActivity).showPowerMenu() }
-        }
-        btnInfo?.setOnClickListener { showSettingsDialog() }
     }
 
     private fun initAdapter() {
@@ -406,6 +384,24 @@ class MainActivity : AppCompatActivity() {
             }
             fileSelectedInterface?.onFileSelected(path)
             fileSelectedInterface = null
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main, menu)
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        menu.findItem(R.id.option_menu_reboot)?.isEnabled = hasRoot
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.option_menu_info -> { showSettingsDialog(); true }
+            R.id.option_menu_reboot -> { DialogPower(this).showPowerMenu(); true }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
