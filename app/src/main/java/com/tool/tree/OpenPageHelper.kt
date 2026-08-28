@@ -20,8 +20,22 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import java.io.ByteArrayOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
 
 class OpenPageHelper(private val activity: Activity) {
+
+    companion object {
+        // Thời gian tối đa chờ tải trước nội dung html (ms) - quá thời gian này vẫn cứ mở
+        // trang bình thường (không kèm nội dung preload), để trang tự tải lại từ đầu như hành
+        // vi cũ thay vì bắt người dùng chờ vô hạn khi mạng chậm/treo.
+        private const val HTML_PRELOAD_TIMEOUT_MS = 10000L
+        // Giới hạn dung lượng tải trước - phòng trường hợp "onlineHtmlPage" trỏ nhầm sang 1
+        // file rất lớn (không phải trang html thông thường), tránh tốn bộ nhớ vô ích.
+        private const val HTML_PRELOAD_MAX_BYTES = 8L * 1024 * 1024
+    }
 
     /**
      * @param onNoNavigate gọi khi hàm này KHÔNG mở Activity mới (mục không hợp lệ, bị khoá,
@@ -43,6 +57,16 @@ class OpenPageHelper(private val activity: Activity) {
                 return
             }
 
+            // Giống hệt cơ chế preload của config page ở trên: hiện dialog loading NGAY TẠI
+            // trang cha, tải trước nội dung html qua mạng, CHỈ mở ActionPageOnline sau khi đã
+            // có sẵn nội dung - tránh cảnh mở Activity ra rồi mới thấy loading bên trong
+            // WebView như trước. Cũng tôn trọng "process = true" để bỏ qua bước này (mở ngay,
+            // tự tải bên trong) y hệt quy ước của config page.
+            if (pageNode.onlineHtmlPage.isNotEmpty() && !pageNode.process) {
+                preloadHtmlThenOpen(pageNode, onNoNavigate)
+                return
+            }
+
             if (!openPageDirect(pageNode, null)) {
                 onNoNavigate?.invoke()
             }
@@ -58,11 +82,22 @@ class OpenPageHelper(private val activity: Activity) {
      * Intent/SwipeBackPreviewCache ở 2 nơi.
      * @return false nếu pageNode không khớp bất kỳ loại trang nào (không có Activity nào được mở).
      */
-    private fun openPageDirect(pageNode: PageNode, preloaded: PagePreloadedData?): Boolean {
+    private fun openPageDirect(
+        pageNode: PageNode,
+        preloaded: PagePreloadedData?,
+        preloadedHtml: String? = null,
+        preloadedHtmlBaseUrl: String? = null
+    ): Boolean {
         val intent = when {
             pageNode.onlineHtmlPage.isNotEmpty() -> {
                 Intent(activity, ActionPageOnline::class.java).apply {
                     putExtra("config", pageNode.onlineHtmlPage)
+                    // Nội dung html đã tải sẵn ở preloadHtmlThenOpen() (nếu có) - ActionPageOnline
+                    // dùng loadDataWithBaseURL() để hiện NGAY thay vì tải lại từ mạng lần nữa.
+                    if (!preloadedHtml.isNullOrEmpty()) {
+                        putExtra("preloadedHtml", preloadedHtml)
+                        putExtra("preloadedHtmlBaseUrl", preloadedHtmlBaseUrl ?: pageNode.onlineHtmlPage)
+                    }
                 }
             }
 
@@ -212,6 +247,123 @@ class OpenPageHelper(private val activity: Activity) {
                     onNoNavigate?.invoke()
                 }
             }
+        }
+    }
+
+    /**
+     * Tương tự preloadThenOpen() nhưng dành cho trang html online (onlineHtmlPage): tải trước
+     * NỘI DUNG html qua mạng NGAY TẠI trang cha (kèm dialog loading ở đây), CHỈ mở
+     * ActionPageOnline sau khi đã tải xong - ActionPageOnline sẽ hiện thẳng nội dung đã có sẵn
+     * qua loadDataWithBaseURL() thay vì tự loadUrl() lại từ đầu (xem
+     * ActionPageOnline.initWebview()).
+     *
+     * CHỦ ĐỘNG không tải trước (mở thẳng như cũ) khi: không có LifecycleScope để chạy nền, hoặc
+     * URL không phải http/https (ví dụ trang html đóng gói sẵn trong assets - vốn đã hiện tức
+     * thì, tải trước ở đây chỉ tổ chậm thêm không cần thiết).
+     *
+     * Nếu tải lỗi/hết thời gian/không phải nội dung html - KHÔNG báo lỗi ở đây, chỉ đơn giản mở
+     * trang bình thường (không kèm preload) để chính WebView bên trong ActionPageOnline tự tải
+     * lại và tự hiện lỗi (nếu có) như hành vi cũ - tránh phải xử lý lại UI báo lỗi ở 2 nơi.
+     */
+    private fun preloadHtmlThenOpen(pageNode: PageNode, onNoNavigate: (() -> Unit)?) {
+        val url = pageNode.onlineHtmlPage
+        val owner = activity as? LifecycleOwner
+        if (owner == null || !(url.startsWith("http://") || url.startsWith("https://"))) {
+            if (!openPageDirect(pageNode, null)) {
+                onNoNavigate?.invoke()
+            }
+            return
+        }
+
+        val dialog = ProgressBarDialog(activity)
+        var job: Job? = null
+        dialog.setCancelCallback {
+            job?.cancel()
+            onNoNavigate?.invoke()
+        }
+        dialog.showDialog(activity.getString(R.string.kr_page_loading))
+
+        job = owner.lifecycleScope.launch(Dispatchers.IO) {
+            val fetched = try {
+                withTimeoutOrNull(HTML_PRELOAD_TIMEOUT_MS) { fetchHtml(url) }
+            } catch (_: Exception) {
+                null
+            }
+
+            withContext(Dispatchers.Main) {
+                if (!isActive) return@withContext
+                dialog.hideDialog()
+                if (!openPageDirect(pageNode, null, fetched?.first, fetched?.second)) {
+                    onNoNavigate?.invoke()
+                }
+            }
+        }
+    }
+
+    /**
+     * Tải toàn bộ nội dung html (text) của [url] qua HTTP(S), theo redirect tới cùng.
+     * @return Pair(nội dung html, url cuối cùng sau redirect) nếu thành công, null nếu lỗi/hết
+     * dung lượng cho phép/không phải nội dung dạng text (html/xml) - bên gọi tự fallback về mở
+     * trang bình thường khi trả về null, KHÔNG ném exception ra ngoài.
+     */
+    private fun fetchHtml(url: String): Pair<String, String>? {
+        var connection: HttpURLConnection? = null
+        return try {
+            connection = (URL(url).openConnection() as HttpURLConnection).apply {
+                connectTimeout = HTML_PRELOAD_TIMEOUT_MS.toInt()
+                readTimeout = HTML_PRELOAD_TIMEOUT_MS.toInt()
+                instanceFollowRedirects = true
+                setRequestProperty("Accept", "text/html,application/xhtml+xml,*/*;q=0.8")
+            }
+            connection.connect()
+            if (connection.responseCode !in 200..299) {
+                return null
+            }
+
+            val contentType = connection.contentType ?: ""
+            // Bỏ qua nếu rõ ràng không phải nội dung dạng text (ảnh/file nhị phân...) - để
+            // WebView tự tải lại theo cách cũ thay vì hiện linh tinh từ dữ liệu preload sai kiểu.
+            if (contentType.isNotEmpty() &&
+                !contentType.contains("text", ignoreCase = true) &&
+                !contentType.contains("html", ignoreCase = true) &&
+                !contentType.contains("xml", ignoreCase = true)
+            ) {
+                return null
+            }
+
+            val charsetName = Regex("charset=([\\w-]+)", RegexOption.IGNORE_CASE)
+                .find(contentType)?.groupValues?.get(1) ?: "UTF-8"
+
+            // Với java.net.HttpURLConnection (instanceFollowRedirects=true), sau connect() thành
+            // công thì getURL() đã phản ánh URL cuối cùng (sau khi theo hết chuỗi redirect) -
+            // dùng làm baseUrl để các link/script/ảnh tương đối trong trang tiếp tục phân giải
+            // đúng khi hiện lại bằng loadDataWithBaseURL().
+            val finalUrl = connection.url?.toString() ?: url
+
+            val bytes = connection.inputStream.use { input ->
+                val buffer = ByteArrayOutputStream()
+                val chunk = ByteArray(64 * 1024)
+                var total = 0L
+                while (true) {
+                    val read = input.read(chunk)
+                    if (read == -1) break
+                    total += read
+                    if (total > HTML_PRELOAD_MAX_BYTES) return null
+                    buffer.write(chunk, 0, read)
+                }
+                buffer.toByteArray()
+            }
+
+            val html = try {
+                String(bytes, charset(charsetName))
+            } catch (_: Exception) {
+                String(bytes, Charsets.UTF_8)
+            }
+            html to finalUrl
+        } catch (_: Exception) {
+            null
+        } finally {
+            connection?.disconnect()
         }
     }
 }

@@ -107,14 +107,19 @@ class ActionPageOnline : AppCompatActivity() {
                 title = extras.getString("title")
             }
 
+            // Nội dung html đã được tải sẵn ở trang cha (OpenPageHelper.preloadHtmlThenOpen) -
+            // nếu có, hiện thẳng ra bằng loadDataWithBaseURL() thay vì loadUrl() tải lại từ đầu.
+            val preloadedHtml = extras.getString("preloadedHtml")
+            val preloadedHtmlBaseUrl = extras.getString("preloadedHtmlBaseUrl")
+
             when {
-                extras.containsKey("config") -> initWebview(extras.getString("config"))
-                extras.containsKey("url") -> initWebview(extras.getString("url"))
+                extras.containsKey("config") -> initWebview(extras.getString("config"), preloadedHtml, preloadedHtmlBaseUrl)
+                extras.containsKey("url") -> initWebview(extras.getString("url"), preloadedHtml, preloadedHtmlBaseUrl)
             }
         }
     }
 
-    private fun initWebview(url: String?) {
+    private fun initWebview(url: String?, preloadedHtml: String? = null, preloadedHtmlBaseUrl: String? = null) {
         binding.krOnlineWebview.visibility = View.VISIBLE
         val settings = binding.krOnlineWebview.settings
         
@@ -192,7 +197,16 @@ class ActionPageOnline : AppCompatActivity() {
 
         webViewInjector.inject(this, url?.startsWith("file:///android_asset") == true)
 
-        url?.let { binding.krOnlineWebview.loadUrl(it) }
+        if (!preloadedHtml.isNullOrEmpty()) {
+            // Đã có sẵn nội dung tải trước từ trang cha - hiện NGAY, KHÔNG loadUrl() lại (tránh
+            // tải lại từ đầu qua mạng lần nữa). baseUrl giữ nguyên URL thật (không phải "data:")
+            // để link/script/ảnh tương đối trong trang vẫn phân giải đúng, và để "mở bằng trình
+            // duyệt" ở menu vẫn lấy đúng địa chỉ gốc.
+            val baseUrl = preloadedHtmlBaseUrl ?: url
+            binding.krOnlineWebview.loadDataWithBaseURL(baseUrl, preloadedHtml, "text/html", "UTF-8", baseUrl)
+        } else {
+            url?.let { binding.krOnlineWebview.loadUrl(it) }
+        }
     }
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
