@@ -94,11 +94,15 @@
 
     </ScrollView>
 
-    <!-- Thanh phím đặc biệt ở đáy -->
+    <!-- Thanh phím đặc biệt ở đáy - đảo nổi riêng, cách mép màn hình -->
     <com.omarea.common.ui.BlurBottomBarLayout
         android:id="@+id/editor_special_chars_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/island_margin_h"
+        android:layout_marginEnd="@dimen/island_margin_h"
+        android:layout_marginBottom="@dimen/island_margin_v"
+        android:elevation="@dimen/island_elevation"
         android:background="@drawable/krscript_item_ripple_in">
 
         <HorizontalScrollView

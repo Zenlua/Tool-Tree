@@ -2,4 +2,11 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <!-- "Floating island" style: khoảng cách và độ nổi (elevation) dùng chung cho
+         các thanh toolbar/tabbar dạng đảo nổi (BlurTopBarLayout/BlurBottomBarLayout). -->
+    <dimen name="island_margin_h">12dp</dimen>
+    <dimen name="island_margin_v">8dp</dimen>
+    <dimen name="island_gap">8dp</dimen>
+    <dimen name="island_elevation">6dp</dimen>
 </resources>

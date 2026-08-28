@@ -15,13 +15,20 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/island_margin_h"
+            android:paddingEnd="@dimen/island_margin_h"
+            android:paddingTop="@dimen/island_margin_v"
+            android:clipToPadding="false"
+            android:clipChildren="false">
 
+            <!-- Đảo nổi duy nhất (liền nhau, không tách rời) cho các màn hình khác Main -->
             <com.omarea.common.ui.BlurTopBarLayout
                 android:id="@+id/blur_top_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/krscript_item_ripple_in">
+                android:background="@drawable/krscript_item_ripple_in"
+                android:elevation="@dimen/island_elevation">
 
                 <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
