@@ -101,50 +101,27 @@ object SwipeBackPreviewCache {
     }
 
     private fun finishCapture(sharp: Bitmap, onCaptured: () -> Unit) {
-        // Trước đây làm mờ (blur) ĐỒNG BỘ ngay tại đây rồi mới gọi onCaptured() -> bên gọi
-        // (OpenPageHelper) chỉ startActivity() SAU KHI có xong bản mờ, khiến người dùng cảm
-        // thấy tải xong rồi mà phải khựng lại 1 chút mới thực sự vào trang. Blur (dù đã thu nhỏ
-        // 10% trước khi tính) vẫn tốn vài chục ms CPU, chặn ngay trên main thread lúc đang
-        // chuyển trang - đúng lúc cảm nhận độ trễ rõ nhất.
-        //
-        // Sửa lại: gán preview với bản mờ = null và gọi onCaptured() (-> startActivity()) NGAY,
-        // không chờ blur nữa - trang mới tự fallback dùng bản NÉT cho lớp preview khi vuốt
-        // (xem ActionPage.onCreate(): "if (it.blurred != null) ... else binding.swipeBackPreviewBlur.setImageBitmap(it.sharp)").
-        // Việc làm mờ vẫn được tính ở luồng nền NGAY SAU ĐÓ, phòng khi tốc độ vuốt-quay-lại của
-        // người dùng đủ chậm để preview.blurred kịp có trước lúc cần tới - nếu không kịp thì
-        // cũng không sao, hành vi fallback ở trên đã lo sẵn.
-        recycle()
-        val current = Preview(sharp, null)
-        preview = current
-        onCaptured()
+        // Bản mờ dùng lại đúng thuật toán blur nền đang có sẵn của app (StackBlur, tự thu nhỏ
+        // 10% trước khi làm mờ nên rất nhanh) - để phong cách nhất quán với hiệu ứng blur nền
+        // khác trong app
+        val blurred = try {
+            FastBlurUtility.startBlurBackground(sharp)
+        } catch (_: Exception) {
+            null
+        }
 
-        Thread {
-            val blurred = try {
-                FastBlurUtility.startBlurBackground(sharp)
-            } catch (_: Exception) {
-                null
-            }
-            synchronized(this) {
-                // Chỉ cập nhật nếu preview NÀY vẫn còn đang được giữ (chưa bị consume()/recycle()/
-                // ghi đè bởi 1 lần capture() khác xảy ra sau đó) - tránh "hồi sinh" 1 preview đã cũ.
-                if (preview === current && !sharp.isRecycled) {
-                    preview = Preview(sharp, blurred)
-                } else {
-                    blurred?.takeIf { !it.isRecycled }?.recycle()
-                }
-            }
-        }.start()
+        recycle()
+        preview = Preview(sharp, blurred)
+        onCaptured()
     }
 
     /** Lấy ảnh đã chụp (nếu có) và xóa khỏi cache - chỉ dùng được 1 lần. */
-    @Synchronized
     fun consume(): Preview? {
         val result = preview
         preview = null
         return result
     }
 
-    @Synchronized
     private fun recycle() {
         preview?.let {
             if (!it.sharp.isRecycled) it.sharp.recycle()

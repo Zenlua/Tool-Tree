@@ -440,7 +440,7 @@ class ActionPage : AppCompatActivity() {
     // lúc parse (xem comment ở resolveFabIcon()) nên nhánh fab chưa thực sự có type spinner,
     // nhưng để hàm dùng chung ở đây phòng khi điều đó đổi - không cần sửa lại 2 nơi.
     private fun displayTitle(option: PageMenuOption): String {
-        return if (option.type == "spinner") "${option.title} ▼" else option.title
+        return if (option.type == "spinner") "${option.title} ▾" else option.title
     }
     // Icon của nút fab: nếu chỉ có 1 item thì dùng icon của chính nó (như cũ). Nếu nhiều item
     // cùng chung 1 icon-path thì vẫn tôn trọng icon đó; khác nhau thì dùng icon mặc định (dấu +)

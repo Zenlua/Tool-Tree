@@ -283,6 +283,18 @@ class OpenPageHelper(private val activity: Activity) {
         }
         dialog.showDialog(activity.getString(R.string.kr_page_loading))
 
+        // "Làm nóng" WebView TRƯỚC khi bắt đầu tải mạng - lần đầu tạo WebView trong tiến trình,
+        // Android phải khởi động engine Chromium (khá nặng, có thể mất vài trăm ms). Nếu không
+        // làm trước ở đây, chi phí này sẽ rơi đúng vào lúc ActionPageOnline.onCreate() tạo
+        // WebView thật - tức là ngay SAU KHI dialog loading vừa đóng - đúng lúc người dùng cảm
+        // nhận độ trễ rõ nhất ("đóng dialog xong mới vào trang"). Gọi ở đây thay vào đó để chi
+        // phí này bị "giấu" trong lúc dialog loading vẫn còn đang hiện (dialog đã show() xong ở
+        // trên trước khi gọi hàm này) - dialog có hiện lâu hơn 1 chút cũng không sao vì người
+        // dùng đang trông đợi có loading sẵn, khác hẳn cảm giác khựng lại SAU KHI loading đã
+        // biến mất. Tạo trước rồi hủy ngay - KHÔNG giữ lại dùng (ActionPageOnline vẫn tự tạo
+        // WebView riêng của nó), chỉ nhằm buộc phần khởi tạo native 1 LẦN xảy ra sớm.
+        warmUpWebViewEngine()
+
         job = owner.lifecycleScope.launch(Dispatchers.IO) {
             val fetched = try {
                 withTimeoutOrNull(HTML_PRELOAD_TIMEOUT_MS) { fetchHtml(url) }
@@ -297,6 +309,23 @@ class OpenPageHelper(private val activity: Activity) {
                     onNoNavigate?.invoke()
                 }
             }
+        }
+    }
+
+    /**
+     * Tạo thử 1 WebView (dùng applicationContext, không gắn vào bất kỳ layout nào) rồi hủy ngay
+     * - chỉ nhằm kích hoạt sớm bước khởi tạo engine Chromium (nếu đây là lần đầu tiên trong
+     * tiến trình app tạo WebView). PHẢI gọi trên main thread (mọi thao tác WebView đều vậy) -
+     * hàm này được gọi đồng bộ ngay tại preloadHtmlThenOpen(), TRƯỚC khi launch coroutine tải
+     * mạng, nên có chặn main thread trong lúc khởi tạo (chỉ 1 lần đầu tiên - các lần sau engine
+     * đã sẵn, gọi lại gần như tức thì) - chấp nhận được vì dialog loading đã hiện sẵn lúc này.
+     */
+    private fun warmUpWebViewEngine() {
+        try {
+            android.webkit.WebView(activity.applicationContext).destroy()
+        } catch (_: Exception) {
+            // Một số ROM/thiết bị thiếu WebView provider hợp lệ - bỏ qua, ActionPageOnline sẽ
+            // tự báo lỗi khi thật sự cần tạo WebView (như hành vi vốn có từ trước).
         }
     }
 
