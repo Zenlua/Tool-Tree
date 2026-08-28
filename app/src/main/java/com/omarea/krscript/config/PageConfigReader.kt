@@ -310,6 +310,14 @@ class PageConfigReader {
         return when {
             parent.isArray(key) -> {
                 val arr = parent.getArray(key) ?: return emptyList()
+                // FIX: mảng có thể là mảng CHUỖI (dạng rút gọn "key|title" - xem tomlStringOptions)
+                // thay vì mảng bảng [[key]]. Trước đây cứ isArray() là ép arr.getTable(it), nên
+                // khi gặp mảng chuỗi sẽ ném TomlInvalidTypeException -> lỗi này không bị bắt cục
+                // bộ, bay thẳng lên readConfigToml() làm SẬP LUÔN toàn bộ trang (kể cả các mục
+                // khác đang dùng đúng dạng [[key]] bảng, vì cả file bị coi là parse lỗi). Giờ chỉ
+                // đọc như mảng bảng khi mảng thực sự CHỨA BẢNG; nếu không, trả về rỗng để nhường
+                // cho tomlStringOptions() (hoặc nơi gọi khác) xử lý dạng mảng chuỗi.
+                if (arr.size() == 0 || !arr.containsTables()) return emptyList()
                 (0 until arr.size()).map { arr.getTable(it) }
             }
             parent.isTable(key) -> listOf(parent.getTable(key)!!)
