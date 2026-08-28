@@ -539,9 +539,17 @@ class ActionPage : AppCompatActivity() {
     // onCreateOptionsMenu()/startFabSpin(). Vòng xoay sẽ chạy vô hạn XUYÊN SUỐT qua activity mới
     // cho tới khi trang thật sự tải xong hoàn toàn (hoặc lỗi) - xem stopFabSpinIfPending(),
     // được gọi từ tryAutoShowActions()/handleLoadError().
+    // Gọi recreate() NHƯNG bỏ extra "preloadedItems" trước - nếu không, instance
+    // mới dựng lên lại sẽ dùng ngay data cũ đã preload từ lần mở TRƯỚC (process=false)
+    // thay vì đọc lại toml từ đầu, khiến nút "Làm mới" không có tác dụng.
+    private fun recreateWithoutPreload() {
+        intent.removeExtra("preloadedItems")
+        recreate()
+    }
+
     private fun spinFabThenRecreate() {
         pendingSpinIcon = binding.actionPageFab.drawable
-        recreate()
+        recreateWithoutPreload()
     }
 
     // Ép fab hiện + xoay bằng icon đã lưu (pendingSpinIcon) - gọi lại mỗi lần
@@ -631,7 +639,7 @@ class ActionPage : AppCompatActivity() {
                 }
                 when {
                     menuOption.autoFinish -> finish()
-                    menuOption.reloadPage -> recreate()
+                    menuOption.reloadPage -> recreateWithoutPreload()
                     menuOption.autoKill -> killApp()
                     menuOption.autoRestart -> restartApp()
                 }
@@ -963,7 +971,7 @@ class ActionPage : AppCompatActivity() {
         val onDismiss = Runnable {
             when {
                 menuOption.autoFinish -> finish()
-                menuOption.reloadPage -> recreate()
+                menuOption.reloadPage -> recreateWithoutPreload()
                 menuOption.autoKill -> killApp()
                 menuOption.autoRestart -> restartApp()
             }
