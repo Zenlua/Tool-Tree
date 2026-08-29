@@ -10,7 +10,6 @@ import java.io.OutputStream
 import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 /**
@@ -91,37 +90,6 @@ class KeepShell(private var rootMode: Boolean = true) {
     private val startTagBytes = "\necho '$startTag'\n".toByteArray(Charset.defaultCharset())
     private val endTagBytes = "\necho '$endTag'\n".toByteArray(Charset.defaultCharset())
 
-    // ========== FIX: Thêm timeout cho doCmdSync ==========
-    // Nếu 1 lệnh shell bị treo (script lỗi, tiến trình con block...), readLine() sẽ
-    // block vô thời hạn -> toàn bộ app đơ vì ReentrantLock giữ nguyên.
-    // watchdog thread sẽ tryExit() sau CMD_TIMEOUT ms nếu lệnh chưa xong.
-    private val CMD_TIMEOUT = 15000L // 15 giây tối đa cho 1 lệnh
-    private val cmdTimedOut = AtomicBoolean(false)
-    private var watchdogThread: Thread? = null
-
-    private fun startWatchdog() {
-        cmdTimedOut.set(false)
-        watchdogThread = Thread({
-            try {
-                Thread.sleep(CMD_TIMEOUT)
-                if (!cmdTimedOut.get()) {
-                    cmdTimedOut.set(true)
-                    Log.e("KeepShell", "doCmdSync timeout after ${CMD_TIMEOUT}ms - force exit shell")
-                    tryExit()
-                }
-            } catch (_: InterruptedException) {
-                // Bình thường - lệnh đã xong trước timeout, watchdog bị hủy
-            }
-        }, "shell-watchdog").also { it.isDaemon = true }
-        watchdogThread?.start()
-    }
-
-    private fun stopWatchdog() {
-        cmdTimedOut.set(true)
-        watchdogThread?.interrupt()
-        watchdogThread = null
-    }
-
     //执行脚本
     fun doCmdSync(cmd: String): String {
         if (mLock.isLocked && enterLockTime > 0 && System.currentTimeMillis() - enterLockTime > LOCK_TIMEOUT) {
@@ -134,7 +102,6 @@ class KeepShell(private var rootMode: Boolean = true) {
         try {
             mLock.lockInterruptibly()
             currentIsIdle = false
-            startWatchdog()
 
             out?.run {
                 GlobalScope.launch(Dispatchers.IO) {
@@ -146,7 +113,7 @@ class KeepShell(private var rootMode: Boolean = true) {
             }
 
             var unstart = true
-            while (reader != null && !cmdTimedOut.get()) {
+            while (reader != null) {
                 val line = reader!!.readLine()
                 if (line == null) {
                     break
@@ -162,19 +129,15 @@ class KeepShell(private var rootMode: Boolean = true) {
                     shellOutputCache.append("\n")
                 }
             }
-            stopWatchdog()
             // Log.e("shell-unlock", cmd)
             // Log.d("Shell", cmd.toString() + "\n" + "Result:"+results.toString().trim())
-            val result = shellOutputCache.toString().trim()
-            shellOutputCache.clear()
-            return if (cmdTimedOut.get() && result.isEmpty()) "error" else result
+            return shellOutputCache.toString().trim()
         }
         catch (e: Exception) {
             tryExit()
             Log.e("KeepShellAsync", "" + e.message)
             return "error"
         } finally {
-            stopWatchdog()
             enterLockTime = 0L
             mLock.unlock()
 
