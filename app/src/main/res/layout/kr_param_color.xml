@@ -17,6 +17,7 @@
         android:hint="@string/kr_please_input_color"
         android:marqueeRepeatLimit="marquee_forever"
         android:maxLength="60"
+        android:maxLines="2"
         android:textSize="15dp" />
 
     <ImageView
