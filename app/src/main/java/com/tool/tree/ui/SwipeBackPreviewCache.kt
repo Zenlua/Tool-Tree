@@ -101,14 +101,9 @@ object SwipeBackPreviewCache {
     }
 
     private fun finishCapture(sharp: Bitmap, onCaptured: () -> Unit) {
-        // Bản mờ dùng lại đúng thuật toán blur nền đang có sẵn của app (StackBlur, tự thu nhỏ
-        // 10% trước khi làm mờ nên rất nhanh) - để phong cách nhất quán với hiệu ứng blur nền
-        // khác trong app
-        val blurred = try {
-            FastBlurUtility.startBlurBackground(sharp)
-        } catch (_: Exception) {
-            null
-        }
+        // TẠM THỜI TẮT LẤY ẢNH NỀN MỜ:
+        // Đặt blurred = null để bỏ qua bước tính toán StackBlur/FastBlurUtility
+        val blurred: Bitmap? = null
 
         recycle()
         preview = Preview(sharp, blurred)

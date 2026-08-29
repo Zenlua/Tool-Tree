@@ -113,10 +113,8 @@ class OpenPageHelper(private val activity: Activity) {
             if (preloaded != null) {
                 putExtra("preloadedItems", preloaded)
             }
-            activity.window.decorView.post {
-                SwipeBackPreviewCache.capture(activity) {
-                    activity.startActivity(this)
-                }
+            SwipeBackPreviewCache.capture(activity) {
+                activity.startActivity(this)
             }
         }
         return true
