@@ -27,7 +27,7 @@ class BlurController {
     private fun adjustContrast(bitmap: Bitmap?, contrast: Float): Bitmap? {
         if (bitmap == null) return null
 
-        val out = Bitmap.createBitmap(bitmap.width, bitmap.height, bitmap.config)
+        val out = Bitmap.createBitmap(bitmap.width, bitmap.height, bitmap.config ?: Bitmap.Config.ARGB_8888)
         val canvas = Canvas(out)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -51,7 +51,7 @@ class BlurController {
 
     private fun blurBitmap(context: Context, bitmap: Bitmap?, radius: Float): Bitmap? {
         if (bitmap == null) return null
-        val outBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, bitmap.config)
+        val outBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, bitmap.config ?: Bitmap.Config.ARGB_8888)
         val rs = RenderScript.create(context)
         try {
             val input = Allocation.createFromBitmap(rs, bitmap)

@@ -157,7 +157,7 @@ class TextEditorActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         binding = ActivityTextEditorBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
-        binding.editorRoot.isDrawStrokeEnabled = false
+        binding.editorRoot.setDrawStrokeEnabled(false)
 
         setupKeyboardInsets()
 

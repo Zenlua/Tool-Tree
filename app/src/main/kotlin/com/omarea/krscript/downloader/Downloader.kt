@@ -110,7 +110,7 @@ class Downloader(private var context: Context, private var activity: Activity? =
         try {
             val file = File(absPath)
             if (file.exists() && file.canRead()) {
-                val md5 = FileMD5().getFileMD5(file).lowercase(getDefault())
+                val md5 = (FileMD5().getFileMD5(file) ?: "").lowercase(getDefault())
                 FileWrite.writePrivateFile(absPath.toByteArray(Charset.defaultCharset()),
                     "downloader/path/$md5", context)
                 taskAliasId?.run {

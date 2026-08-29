@@ -137,10 +137,10 @@ class MainActivity : AppCompatActivity() {
         } else {
             // Không có preload (vd: recreate, reload) — tải thẳng, không hiện dialog
             lifecycleScope.launch(Dispatchers.IO) {
-                val favorites = getItems(krScriptConfig.favoriteConfig)
-                val pages = getItems(krScriptConfig.pageListConfig)
-                val tab3Items = getItems(krScriptConfig.customTab3Config)
-                val tab4Items = getItems(krScriptConfig.customTab4Config)
+                val favorites = getItems(krScriptConfig.getFavoriteConfig())
+                val pages = getItems(krScriptConfig.getPageListConfig())
+                val tab3Items = getItems(krScriptConfig.getCustomTab3Config())
+                val tab4Items = getItems(krScriptConfig.getCustomTab4Config())
 
                 if (!isActive) return@launch
 
@@ -173,10 +173,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         try {
-            updateTab(0, favorites, R.string.tab_favorites, krScriptConfig.favoriteConfig, true)
-            updateTab(1, pages, R.string.tab_pages, krScriptConfig.pageListConfig, false)
-            updateTab(2, tab3Items, R.string.tab_custom3, krScriptConfig.customTab3Config, false)
-            updateTab(3, tab4Items, R.string.tab_custom4, krScriptConfig.customTab4Config, false)
+            updateTab(0, favorites, R.string.tab_favorites, krScriptConfig.getFavoriteConfig(), true)
+            updateTab(1, pages, R.string.tab_pages, krScriptConfig.getPageListConfig(), false)
+            updateTab(2, tab3Items, R.string.tab_custom3, krScriptConfig.getCustomTab3Config(), false)
+            updateTab(3, tab4Items, R.string.tab_custom4, krScriptConfig.getCustomTab4Config(), false)
 
             setupTabs()
         } catch (e: Exception) {
@@ -186,10 +186,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun reloadTabs() {
         lifecycleScope.launch(Dispatchers.IO) {
-            val favorites = getItems(krScriptConfig.favoriteConfig)
-            val pages = getItems(krScriptConfig.pageListConfig)
-            val tab3Items = getItems(krScriptConfig.customTab3Config)
-            val tab4Items = getItems(krScriptConfig.customTab4Config)
+            val favorites = getItems(krScriptConfig.getFavoriteConfig())
+            val pages = getItems(krScriptConfig.getPageListConfig())
+            val tab3Items = getItems(krScriptConfig.getCustomTab3Config())
+            val tab4Items = getItems(krScriptConfig.getCustomTab4Config())
 
             if (!isActive) return@launch
 
@@ -199,10 +199,10 @@ class MainActivity : AppCompatActivity() {
                 val theme = ThemeModeState.getThemeMode()
 
                 try {
-                    favorites?.let { adapter.getFragment(0)?.updateData(it, getKrScriptActionHandler(krScriptConfig.favoriteConfig, true), theme) }
-                    pages?.let { adapter.getFragment(1)?.updateData(it, getKrScriptActionHandler(krScriptConfig.pageListConfig, false), theme) }
-                    tab3Items?.let { adapter.getFragment(2)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab3Config, false), theme) }
-                    tab4Items?.let { adapter.getFragment(3)?.updateData(it, getKrScriptActionHandler(krScriptConfig.customTab4Config, false), theme) }
+                    favorites?.let { adapter.getFragment(0)?.updateData(it, getKrScriptActionHandler(krScriptConfig.getFavoriteConfig(), true), theme) }
+                    pages?.let { adapter.getFragment(1)?.updateData(it, getKrScriptActionHandler(krScriptConfig.getPageListConfig(), false), theme) }
+                    tab3Items?.let { adapter.getFragment(2)?.updateData(it, getKrScriptActionHandler(krScriptConfig.getCustomTab3Config(), false), theme) }
+                    tab4Items?.let { adapter.getFragment(3)?.updateData(it, getKrScriptActionHandler(krScriptConfig.getCustomTab4Config(), false), theme) }
                 } catch (e: Exception) {
                     android.util.Log.e("MainActivity", "reloadTabs UI update failed", e)
                 }

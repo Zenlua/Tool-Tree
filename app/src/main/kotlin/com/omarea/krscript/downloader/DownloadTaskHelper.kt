@@ -187,7 +187,7 @@ object DownloadTaskHelper {
 
         val errorRows = ArrayList<String>()
         val handler = object : ShellHandlerBase(context.applicationContext) {
-            override fun updateLog(msg: SpannableString?) {}
+            override fun updateLog(msg: SpannableString) {}
             override fun onError(msg: Any?) {
                 synchronized(errorRows) { errorRows.add("" + msg?.toString()) }
             }

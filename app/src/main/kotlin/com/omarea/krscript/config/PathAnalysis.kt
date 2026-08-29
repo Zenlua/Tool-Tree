@@ -62,7 +62,7 @@ class PathAnalysis(private var context: Context, private var parentDir: String =
             // Tạo tên file cache dựa trên hash đường dẫn để tránh ghi đè khi mở nhiều file cùng lúc
             val fileName = "cache_${filePath.hashCode()}"
             val cachePath = File(cacheDir, fileName).absolutePath
-            val fileOwner = FileOwner(context).fileOwner
+            val fileOwner = FileOwner(context).getFileOwner()
 
             val command = """
                 cp -f "$filePath" "$cachePath"

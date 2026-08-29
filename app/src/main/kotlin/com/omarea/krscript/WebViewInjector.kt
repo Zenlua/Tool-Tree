@@ -158,7 +158,7 @@ class WebViewInjector(
 
         @JavascriptInterface
         fun extractAssets(assets: String): String {
-            return ExtractAssets(context).extractResource(assets)
+            return ExtractAssets(context).extractResource(assets) ?: ""
         }
 
         @JavascriptInterface

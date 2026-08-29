@@ -33,7 +33,7 @@ class ShellExecutor {
         nodeInfo: RunnableNode?,
         cmds: String,
         onExit: Runnable?,
-        params: HashMap<String, String>,
+        params: HashMap<String, String>?,
         shellHandlerBase: ShellHandlerBase
     ): Process? {
         if (started) {
@@ -80,13 +80,13 @@ class ShellExecutor {
                             try {
                                 process.destroyForcibly()
                             } catch (ex: Exception) {
-                                Log.e("KrScriptError", Objects.requireNonNull(ex.message))
+                                Log.e("KrScriptError", ex.message ?: ex.toString())
                             }
                         } else {
                             try {
                                 process.destroy()
                             } catch (ex: Exception) {
-                                Log.e("KrScriptError", Objects.requireNonNull(ex.message))
+                                Log.e("KrScriptError", ex.message ?: ex.toString())
                             }
                         }
                     }

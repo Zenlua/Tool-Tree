@@ -21,7 +21,7 @@ open class SilentShellOutputHandler(context: Context) : ShellHandlerBase(context
     override fun onStart(forceStop: Runnable?) {}
     override fun onExit(msg: Any?) {}
 
-    override fun updateLog(msg: SpannableString?) {
+    override fun updateLog(msg: SpannableString) {
         // Không có log view -> bỏ qua có chủ đích.
     }
 

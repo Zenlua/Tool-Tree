@@ -227,7 +227,7 @@ class SplashActivity : AppCompatActivity() {
         binding.startStateText.text = getString(R.string.pop_started)
         val config = KrScriptConfig().init(this)
 
-        if (config.beforeStartSh.isNotEmpty()) {
+        if (config.getBeforeStartSh().isNotEmpty()) {
             runBeforeStartSh(config, hasRoot)
         } else {
             loadTabsThenHome()
@@ -250,10 +250,10 @@ class SplashActivity : AppCompatActivity() {
             // Đảm bảo config đã init (có thể đã init từ lần trước nhưng không sao)
             config.init(this@SplashActivity)
 
-            val favorites = getItems(config.favoriteConfig)
-            val pages = getItems(config.pageListConfig)
-            val tab3Items = getItems(config.customTab3Config)
-            val tab4Items = getItems(config.customTab4Config)
+            val favorites = getItems(config.getFavoriteConfig())
+            val pages = getItems(config.getPageListConfig())
+            val tab3Items = getItems(config.getCustomTab3Config())
+            val tab4Items = getItems(config.getCustomTab4Config())
 
             if (!isActive) return@launch
 
@@ -300,7 +300,7 @@ class SplashActivity : AppCompatActivity() {
                 val process = if (hasRoot) ShellExecutor.getSuperUserRuntime() else ShellExecutor.getRuntime()
                 process?.let {
                     DataOutputStream(it.outputStream).use { os ->
-                        ScriptEnvironmen.executeShell(this@SplashActivity, os, config.beforeStartSh, config.variables, null, "pio-splash")
+                        ScriptEnvironmen.executeShell(this@SplashActivity, os, config.getBeforeStartSh(), config.getVariables(), null, "pio-splash")
                     }
                     launch { readStreamAsync(it.inputStream.bufferedReader()) }
                     launch { readStreamAsync(it.errorStream.bufferedReader()) }

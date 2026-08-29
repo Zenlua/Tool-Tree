@@ -921,7 +921,7 @@ class DialogLogFragment : DialogFragment() {
             }
         }
 
-        override fun onChooseRequest(options: MutableList<ChoiceOption>) {
+        override fun onChooseRequest(options: List<ChoiceOption>) {
             val logView = logViewRef.get()
             val container = chooseOptionsContainerRef.get() ?: return
             val row = chooseRowRef.get() ?: return
@@ -1017,7 +1017,7 @@ class DialogLogFragment : DialogFragment() {
             dispatchLogUpdate(builder)
         }
 
-        override fun onPickRequest(options: MutableList<ChoiceOption>, vertical: Boolean) {
+        override fun onPickRequest(options: List<ChoiceOption>, vertical: Boolean) {
             val answered = AtomicBoolean(false)
             val choiceSpans = mutableListOf<ChoiceSpan>()
 
@@ -1069,15 +1069,15 @@ class DialogLogFragment : DialogFragment() {
             super.handleMessage(msg)
         }
 
-        override fun onReader(msg: Any) {
+        override fun onReader(msg: Any?) {
             updateLogWithColor(msg.toString(), basicColor)
         }
 
-        override fun onWrite(msg: Any) {
+        override fun onWrite(msg: Any?) {
             updateLogWithColor(msg.toString(), scriptColor)
         }
 
-        override fun onError(msg: Any) {
+        override fun onError(msg: Any?) {
             hasError = true
             updateLogWithColor(msg.toString(), errorColor)
         }
@@ -1169,8 +1169,8 @@ class DialogLogFragment : DialogFragment() {
             actionEventHandler?.onCompleted()
         }
 
-        override fun updateLog(msg: SpannableString?) {
-            msg?.let { dispatchLogUpdate(it) }
+        override fun updateLog(msg: SpannableString) {
+            dispatchLogUpdate(msg)
         }
 
         private fun updateLogWithColor(text: String, forcedColor: Int?, pushToNotification: Boolean = true) {

@@ -74,64 +74,64 @@ class KrScriptConfig {
         return TOOLKIT_DIR_DEFAULT
     }
 
-    fun getPageListConfig(): PageNode? {
+    fun getPageListConfig(): PageNode {
         val info = configInfo
         if (info != null) {
             val pageInfo = PageNode("")
             if (info.containsKey(PAGE_LIST_CONFIG_SH)) {
-                pageInfo.pageConfigSh = info[PAGE_LIST_CONFIG_SH]
+                pageInfo.pageConfigSh = info[PAGE_LIST_CONFIG_SH] ?: ""
             }
             if (info.containsKey(PAGE_LIST_CONFIG)) {
-                pageInfo.pageConfigPath = info[PAGE_LIST_CONFIG]
+                pageInfo.pageConfigPath = info[PAGE_LIST_CONFIG] ?: ""
             }
             return pageInfo
         }
-        return null
+        return PageNode("")
     }
 
-    fun getFavoriteConfig(): PageNode? {
+    fun getFavoriteConfig(): PageNode {
         val info = configInfo
         if (info != null) {
             val pageInfo = PageNode("")
             if (info.containsKey(FAVORITE_CONFIG_SH)) {
-                pageInfo.pageConfigSh = info[FAVORITE_CONFIG_SH]
+                pageInfo.pageConfigSh = info[FAVORITE_CONFIG_SH] ?: ""
             }
             if (info.containsKey(FAVORITE_CONFIG)) {
-                pageInfo.pageConfigPath = info[FAVORITE_CONFIG]
+                pageInfo.pageConfigPath = info[FAVORITE_CONFIG] ?: ""
             }
             return pageInfo
         }
-        return null
+        return PageNode("")
     }
 
-    fun getCustomTab3Config(): PageNode? {
+    fun getCustomTab3Config(): PageNode {
         val info = configInfo
         if (info != null) {
             val pageInfo = PageNode("")
             if (info.containsKey("custom_tab3_config_sh")) {
-                pageInfo.pageConfigSh = info["custom_tab3_config_sh"]
+                pageInfo.pageConfigSh = info["custom_tab3_config_sh"] ?: ""
             }
             if (info.containsKey(CUSTOM_TAB3_CONFIG)) {
-                pageInfo.pageConfigPath = info[CUSTOM_TAB3_CONFIG]
+                pageInfo.pageConfigPath = info[CUSTOM_TAB3_CONFIG] ?: ""
             }
             return pageInfo
         }
-        return null
+        return PageNode("")
     }
 
-    fun getCustomTab4Config(): PageNode? {
+    fun getCustomTab4Config(): PageNode {
         val info = configInfo
         if (info != null) {
             val pageInfo = PageNode("")
             if (info.containsKey("custom_tab4_config_sh")) {
-                pageInfo.pageConfigSh = info["custom_tab4_config_sh"]
+                pageInfo.pageConfigSh = info["custom_tab4_config_sh"] ?: ""
             }
             if (info.containsKey(CUSTOM_TAB4_CONFIG)) {
-                pageInfo.pageConfigPath = info[CUSTOM_TAB4_CONFIG]
+                pageInfo.pageConfigPath = info[CUSTOM_TAB4_CONFIG] ?: ""
             }
             return pageInfo
         }
-        return null
+        return PageNode("")
     }
 
     fun getBeforeStartSh(): String {

@@ -36,8 +36,8 @@ class ActivityFileSelector : AppCompatActivity() {
         binding = ActivityFileSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        binding.fileDrawerContainer.engine.cornerRadius = 0f
-        binding.fileDrawerContainer.isDrawStrokeEnabled = false
+        binding.fileDrawerContainer.getEngine().cornerRadius = 0f
+        binding.fileDrawerContainer.setDrawStrokeEnabled(false)
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         this.toolbar = toolbar
@@ -109,7 +109,7 @@ class ActivityFileSelector : AppCompatActivity() {
     }
 
     private fun finishWithSelection() {
-        val selected = adapterFileSelector?.selectedFiles?.map { it.absolutePath }
+        val selected = adapterFileSelector?.getSelectedFiles()?.map { it.absolutePath }
         if (selected.isNullOrEmpty()) {
             showToast(R.string.msg_nothing_selected)
             return
@@ -151,7 +151,7 @@ class ActivityFileSelector : AppCompatActivity() {
                 return
             }
             val onSelected = Runnable {
-                val file = adapterFileSelector?.selectedFile
+                val file = adapterFileSelector?.getSelectedFile()
                 if (file != null) {
                     this.setResult(RESULT_OK, Intent().putExtra("file", file.absolutePath))
                     this.finish()

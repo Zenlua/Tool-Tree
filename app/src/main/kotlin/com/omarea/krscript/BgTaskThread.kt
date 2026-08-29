@@ -37,7 +37,7 @@ class BgTaskThread(private var process: Process) : Thread() {
     }
 
     class ServiceShellHandler(
-        private val context: Context,
+        context: Context,
         private val runnableNode: RunnableNode,
         private val notificationID: Int
     ) : ShellHandlerBase(context) {
@@ -218,7 +218,7 @@ class BgTaskThread(private var process: Process) : Thread() {
             updateNotificationInternal()
         }
 
-        override fun updateLog(msg: SpannableString?) {}
+        override fun updateLog(msg: SpannableString) {}
 
         override fun onReader(msg: Any?) {
             val text = AnsiColorParser.stripToPlainText(msg?.toString())
