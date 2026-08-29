@@ -14,7 +14,8 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.TypedValue
-import android.view.animation.AnimationUtils
+import android.animation.ObjectAnimator
+import android.view.animation.LinearInterpolator
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -48,7 +49,7 @@ class SplashActivity : AppCompatActivity() {
 
     private var hasRoot = false
     private var started = false
-    private var logoAnimation: android.view.animation.Animation? = null
+    private var logoAnimator: ObjectAnimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LanguageManager.init(this)
@@ -82,8 +83,12 @@ class SplashActivity : AppCompatActivity() {
             }
         }
 
-        logoAnimation = AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate)
-        binding.startLogoXml.startAnimation(logoAnimation)
+        logoAnimator = ObjectAnimator.ofFloat(binding.startLogoXml, "rotation", 0f, 360f).apply {
+            duration = 3000
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = LinearInterpolator()
+            start()
+        }
 
     }
 
@@ -262,9 +267,8 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun gotoHome(preloadedTabs: MainTabsPreloadedData? = null) {
-        binding.startLogoXml.clearAnimation()
-        logoAnimation?.cancel()
-        logoAnimation = null
+        logoAnimator?.cancel()
+        logoAnimator = null
 
         val targetIntent =
             if (intent?.getBooleanExtra("JumpActionPage", false) == true)

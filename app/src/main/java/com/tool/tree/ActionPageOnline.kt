@@ -8,6 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.webkit.*
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
@@ -27,6 +28,7 @@ import com.tool.tree.databinding.ActivityActionPageOnlineBinding
 class ActionPageOnline : AppCompatActivity() {
     private lateinit var themeMode: ThemeMode
     private lateinit var binding: ActivityActionPageOnlineBinding
+    private val loadProgressBar by lazy { findViewById<ProgressBar>(R.id.page_load_progress) }
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
     private val ACTION_FILE_PATH_CHOOSER = 65400
     private val MENU_OPEN_BROWSER = 1001
@@ -139,6 +141,17 @@ class ActionPageOnline : AppCompatActivity() {
             })
 
         binding.krOnlineWebview.webChromeClient = object : WebChromeClient() {
+            override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                super.onProgressChanged(view, newProgress)
+                if (newProgress < 100) {
+                    loadProgressBar.isIndeterminate = false
+                    loadProgressBar.progress = newProgress
+                    loadProgressBar.visibility = View.VISIBLE
+                } else {
+                    loadProgressBar.visibility = View.GONE
+                }
+            }
+
             override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
                 DialogHelper.animDialog(
                     AlertDialog.Builder(this@ActionPageOnline)
@@ -165,13 +178,14 @@ class ActionPageOnline : AppCompatActivity() {
         binding.krOnlineWebview.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                webViewInjector.hideLoading()
+                loadProgressBar.visibility = View.GONE
                 view?.title?.let { setTitle(it) }
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
-                webViewInjector.showLoading(getString(R.string.please_wait))
+                loadProgressBar.isIndeterminate = true
+                loadProgressBar.visibility = View.VISIBLE
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -230,6 +244,7 @@ class ActionPageOnline : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        loadProgressBar.visibility = View.GONE
         binding.krOnlineWebview.apply {
             stopLoading()
             removeAllViews()
