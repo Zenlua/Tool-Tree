@@ -8,7 +8,7 @@ import android.util.AttributeSet
 import android.widget.LinearLayout
 
 open class BlurViewLinearLayout(context: Context, attrs: AttributeSet?) : LinearLayout(context, attrs) {
-    protected var engine: BlurEngine = BlurEngine(this)
+    var engine: BlurEngine = BlurEngine(this)
     private val strokeRect = RectF()
     private val srcRect = Rect()
     private val dstRect = Rect()
@@ -28,10 +28,6 @@ open class BlurViewLinearLayout(context: Context, attrs: AttributeSet?) : Linear
 
     fun isDrawStrokeEnabled(): Boolean {
         return drawStrokeEnabled
-    }
-
-    fun getEngine(): BlurEngine {
-        return engine
     }
 
     override fun onAttachedToWindow() {

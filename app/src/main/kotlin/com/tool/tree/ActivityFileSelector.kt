@@ -36,7 +36,7 @@ class ActivityFileSelector : AppCompatActivity() {
         binding = ActivityFileSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        binding.fileDrawerContainer.getEngine().cornerRadius = 0f
+        binding.fileDrawerContainer.engine.cornerRadius = 0f
         binding.fileDrawerContainer.setDrawStrokeEnabled(false)
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
