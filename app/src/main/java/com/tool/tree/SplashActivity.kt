@@ -25,16 +25,20 @@ import com.omarea.common.shell.ShellExecutor
 import com.omarea.common.ui.DialogHelper
 import com.omarea.krscript.config.StringResRef
 import com.omarea.krscript.executor.ScriptEnvironmen
+import com.omarea.krscript.config.PageConfigReader
+import com.omarea.krscript.config.PageConfigSh
+import com.omarea.krscript.model.NodeInfoBase
+import com.omarea.krscript.model.PageNode
 import com.omarea.krscript.model.SilentShellOutputHandler
 import com.tool.tree.databinding.ActivitySplashBinding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
-import com.tool.tree.databinding.ActivityMainBinding
 
 class SplashActivity : AppCompatActivity() {
 
@@ -57,10 +61,10 @@ class SplashActivity : AppCompatActivity() {
         // định của hệ thống (thường /data/local/tmp) app không có quyền ghi.
         ShellExecutor.setTmpDir(cacheDir.absolutePath)
 
-        // 1. Kiểm tra nếu script đã chạy hoặc đang chạy thì vào thẳng Home
+        // 1. Kiểm tra nếu script đã chạy hoặc đang chạy thì load tabs rồi vào Home
         if (ScriptEnvironmen.isInited() && isTaskRoot &&
             !intent.getBooleanExtra("force_reset", false)) {
-            gotoHome()
+            loadTabsThenHome()
             return
         }
 
@@ -222,7 +226,7 @@ class SplashActivity : AppCompatActivity() {
         if (config.beforeStartSh.isNotEmpty()) {
             runBeforeStartSh(config, hasRoot)
         } else {
-            gotoHome()
+            loadTabsThenHome()
         }
     }
 
@@ -236,13 +240,51 @@ class SplashActivity : AppCompatActivity() {
             .apply()
     }
 
-    private fun gotoHome() {
-        startActivity(
+    private fun loadTabsThenHome() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val config = KrScriptConfig()
+            // Đảm bảo config đã init (có thể đã init từ lần trước nhưng không sao)
+            config.init(this@SplashActivity)
+
+            val favorites = getItems(config.favoriteConfig)
+            val pages = getItems(config.pageListConfig)
+            val tab3Items = getItems(config.customTab3Config)
+            val tab4Items = getItems(config.customTab4Config)
+
+            if (!isActive) return@launch
+
+            val preloaded = MainTabsPreloadedData(favorites, pages, tab3Items, tab4Items)
+
+            withContext(Dispatchers.Main) {
+                if (!isActive || isFinishing || isDestroyed) return@withContext
+                gotoHome(preloaded)
+            }
+        }
+    }
+
+    private fun gotoHome(preloadedTabs: MainTabsPreloadedData? = null) {
+        val targetIntent =
             if (intent?.getBooleanExtra("JumpActionPage", false) == true)
                 Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
-            else Intent(this, MainActivity::class.java)
-        )
+            else
+                Intent(this, MainActivity::class.java).apply {
+                    if (preloadedTabs != null) putExtra("preloadedTabs", preloadedTabs)
+                }
+        startActivity(targetIntent)
         finish()
+    }
+
+    private fun getItems(pageNode: PageNode?): ArrayList<NodeInfoBase>? {
+        if (pageNode == null) return null
+        return try {
+            if (pageNode.pageConfigSh.isNotEmpty()) {
+                PageConfigSh(this, pageNode.pageConfigSh, null).execute()
+            } else if (pageNode.pageConfigPath.isNotEmpty()) {
+                PageConfigReader(applicationContext, pageNode.pageConfigPath, null).readConfigXml()
+            } else null
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun runBeforeStartSh(config: KrScriptConfig, hasRoot: Boolean) {
@@ -259,7 +301,7 @@ class SplashActivity : AppCompatActivity() {
                 }
             } finally {
                 withContext(Dispatchers.Main) {
-                    gotoHome()
+                    loadTabsThenHome()
                 }
             }
         }

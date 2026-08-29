@@ -719,7 +719,7 @@ class DialogLogFragment : DialogFragment() {
             if (!notificationChannelCreated) {
                 val channel = NotificationChannel(
                     NOTIFICATION_CHANNEL_ID,
-                    context.getString(R.string.kr_script_task_notification),
+                    context.getString(R.string.kr_slice_script_result),
                     NotificationManager.IMPORTANCE_DEFAULT
                 )
                 channel.enableLights(false)

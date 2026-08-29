@@ -3,6 +3,7 @@ package com.tool.tree
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
@@ -24,7 +25,6 @@ import com.google.android.material.tabs.TabLayout
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.ui.DialogHelper
-import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.config.PageConfigReader
 import com.omarea.krscript.config.PageConfigSh
 import com.omarea.krscript.model.*
@@ -44,7 +44,6 @@ import kotlinx.coroutines.withContext
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val progressBarDialog by lazy { ProgressBarDialog(this) }
     private var krScriptConfig = KrScriptConfig()
     private val hasRoot by lazy { KeepShellPublic.checkRoot() }
     private var openedSubPage = false
@@ -128,48 +127,63 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadTabs() {
-        binding.root.post {
-            progressBarDialog.showDialog(getString(R.string.please_wait))
-        }
-        
-        lifecycleScope.launch(Dispatchers.IO) {
-            val favorites = getItems(krScriptConfig.favoriteConfig)
-            val pages = getItems(krScriptConfig.pageListConfig)
-            val tab3Items = getItems(krScriptConfig.customTab3Config)
-            val tab4Items = getItems(krScriptConfig.customTab4Config)
+        // Ưu tiên dùng data đã preload từ SplashActivity
+        @Suppress("DEPRECATION")
+        val preloaded = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            intent.getSerializableExtra("preloadedTabs", MainTabsPreloadedData::class.java)
+        else
+            intent.getSerializableExtra("preloadedTabs") as? MainTabsPreloadedData
 
-            if (!isActive) return@launch
+        if (preloaded != null) {
+            // Đã có sẵn data — hiện ngay, không cần dialog
+            applyTabsData(preloaded.favorites, preloaded.pages, preloaded.tab3Items, preloaded.tab4Items)
+        } else {
+            // Không có preload (vd: recreate, reload) — tải thẳng, không hiện dialog
+            lifecycleScope.launch(Dispatchers.IO) {
+                val favorites = getItems(krScriptConfig.favoriteConfig)
+                val pages = getItems(krScriptConfig.pageListConfig)
+                val tab3Items = getItems(krScriptConfig.customTab3Config)
+                val tab4Items = getItems(krScriptConfig.customTab4Config)
 
-            withContext(Dispatchers.Main) {
-                // Activity/View có thể đã bị huỷ trong lúc đọc file config ở IO thread
-                // (xoay màn hình, bấm back...). Không đụng vào UI nữa nếu điều đó xảy ra.
-                if (isFinishing || isDestroyed || !::adapter.isInitialized) return@withContext
+                if (!isActive) return@launch
 
-                progressBarDialog.hideDialog()
-                val theme = ThemeModeState.getThemeMode()
-
-                fun updateTab(pos: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, config: PageNode, isFav: Boolean) {
-                    items?.takeIf { it.isNotEmpty() }?.let { data ->
-                        val fragment = ActionListFragment.create(data, getKrScriptActionHandler(config, isFav), null, theme)
-                        if (adapter.getFragment(pos) == null) {
-                            adapter.addFragment(fragment, getString(titleRes))
-                        } else {
-                            adapter.replaceFragment(pos, fragment)
-                        }
-                    }
-                }
-
-                try {
-                    updateTab(0, favorites, R.string.tab_favorites, krScriptConfig.favoriteConfig, true)
-                    updateTab(1, pages, R.string.tab_pages, krScriptConfig.pageListConfig, false)
-                    updateTab(2, tab3Items, R.string.tab_custom3, krScriptConfig.customTab3Config, false)
-                    updateTab(3, tab4Items, R.string.tab_custom4, krScriptConfig.customTab4Config, false)
-
-                    setupTabs()
-                } catch (e: Exception) {
-                    android.util.Log.e("MainActivity", "loadTabs UI update failed", e)
+                withContext(Dispatchers.Main) {
+                    if (isFinishing || isDestroyed || !::adapter.isInitialized) return@withContext
+                    applyTabsData(favorites, pages, tab3Items, tab4Items)
                 }
             }
+        }
+    }
+
+    private fun applyTabsData(
+        favorites: ArrayList<NodeInfoBase>?,
+        pages: ArrayList<NodeInfoBase>?,
+        tab3Items: ArrayList<NodeInfoBase>?,
+        tab4Items: ArrayList<NodeInfoBase>?
+    ) {
+        if (!::adapter.isInitialized) return
+        val theme = ThemeModeState.getThemeMode()
+
+        fun updateTab(pos: Int, items: ArrayList<NodeInfoBase>?, titleRes: Int, config: PageNode, isFav: Boolean) {
+            items?.takeIf { it.isNotEmpty() }?.let { data ->
+                val fragment = ActionListFragment.create(data, getKrScriptActionHandler(config, isFav), null, theme)
+                if (adapter.getFragment(pos) == null) {
+                    adapter.addFragment(fragment, getString(titleRes))
+                } else {
+                    adapter.replaceFragment(pos, fragment)
+                }
+            }
+        }
+
+        try {
+            updateTab(0, favorites, R.string.tab_favorites, krScriptConfig.favoriteConfig, true)
+            updateTab(1, pages, R.string.tab_pages, krScriptConfig.pageListConfig, false)
+            updateTab(2, tab3Items, R.string.tab_custom3, krScriptConfig.customTab3Config, false)
+            updateTab(3, tab4Items, R.string.tab_custom4, krScriptConfig.customTab4Config, false)
+
+            setupTabs()
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "applyTabsData UI update failed", e)
         }
     }
 
