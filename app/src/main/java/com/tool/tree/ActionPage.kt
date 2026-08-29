@@ -18,8 +18,6 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.activity.BackEventCompat
-import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.tool.tree.ui.SwipeBackHelper
@@ -63,11 +61,6 @@ class ActionPage : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
 
     private var currentPageConfig: PageNode? = null
-    // Dữ liệu (items + menu/fab) đã được OpenPageHelper.preloadThenOpen() TỰ TẢI SẴN ở trang
-    // cha (mục process = false) TRƯỚC khi mở Activity này - khác null nghĩa là bỏ qua hẳn
-    // checkPageLockThenLoad()/loadPageConfig() (đã chạy xong ở ngoài rồi), chỉ cần hiện ra
-    // ngay - xem onCreate()/applyPreloadedData().
-    private var preloadedPageData: PagePreloadedData? = null
     private var autoRunItemId = ""
     private lateinit var binding: ActivityActionPageBinding
     private var openedSubPage = false
@@ -161,26 +154,6 @@ class ActionPage : AppCompatActivity() {
             }
         )
 
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackStarted(backEvent: BackEventCompat) {
-                swipeBackHelper.onSystemBackStarted()
-            }
-
-            override fun handleOnBackProgressed(backEvent: BackEventCompat) {
-                swipeBackHelper.onSystemBackProgress(backEvent.progress)
-            }
-
-            override fun handleOnBackCancelled() {
-                swipeBackHelper.onSystemBackCancelled()
-            }
-
-            override fun handleOnBackPressed() {
-                if (!swipeBackHelper.consumeSystemBackInvoked()) {
-                    finish()
-                }
-            }
-        })
-
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
         setTitle(R.string.app_name)
@@ -203,8 +176,6 @@ class ActionPage : AppCompatActivity() {
             } else if (extras.containsKey("shortcutId")) {
                 ActionShortcutManager(this).getShortcutTarget(extras.getString("shortcutId") ?: "")
             } else null
-
-            preloadedPageData = extras.getSerializable("preloadedItems") as? PagePreloadedData
 
             autoRunItemId = extras.getString("autoRunItemId", "")
         }
@@ -240,15 +211,8 @@ class ActionPage : AppCompatActivity() {
             setResult(2)
             finish()
         } else {
-            val preloaded = preloadedPageData
-            if (preloaded != null) {
-                // Đã tải sẵn (kể cả khoá + before/afterRead + loadSuccess) ở trang cha rồi -
-                // hiện ra ngay, KHÔNG chạy lại checkPageLockThenLoad()/loadPageConfig() nữa.
-                applyPreloadedData(preloaded)
-            } else {
-                // Thêm dòng này để gọi ngay lập tức khi Activity vừa được khởi tạo
-                checkPageLockThenLoad()
-            }
+            // Thêm dòng này để gọi ngay lập tức khi Activity vừa được khởi tạo
+            checkPageLockThenLoad()
         }
         
     }
@@ -539,17 +503,9 @@ class ActionPage : AppCompatActivity() {
     // onCreateOptionsMenu()/startFabSpin(). Vòng xoay sẽ chạy vô hạn XUYÊN SUỐT qua activity mới
     // cho tới khi trang thật sự tải xong hoàn toàn (hoặc lỗi) - xem stopFabSpinIfPending(),
     // được gọi từ tryAutoShowActions()/handleLoadError().
-    // Gọi recreate() NHƯNG bỏ extra "preloadedItems" trước - nếu không, instance
-    // mới dựng lên lại sẽ dùng ngay data cũ đã preload từ lần mở TRƯỚC (process=false)
-    // thay vì đọc lại toml từ đầu, khiến nút "Làm mới" không có tác dụng.
-    private fun recreateWithoutPreload() {
-        intent.removeExtra("preloadedItems")
-        recreate()
-    }
-
     private fun spinFabThenRecreate() {
         pendingSpinIcon = binding.actionPageFab.drawable
-        recreateWithoutPreload()
+        recreate()
     }
 
     // Ép fab hiện + xoay bằng icon đã lưu (pendingSpinIcon) - gọi lại mỗi lần
@@ -639,7 +595,7 @@ class ActionPage : AppCompatActivity() {
                 }
                 when {
                     menuOption.autoFinish -> finish()
-                    menuOption.reloadPage -> recreateWithoutPreload()
+                    menuOption.reloadPage -> recreate()
                     menuOption.autoKill -> killApp()
                     menuOption.autoRestart -> restartApp()
                 }
@@ -839,24 +795,6 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Áp dụng dữ liệu ĐÃ tải sẵn từ trang cha (OpenPageHelper.preloadThenOpen(), mục
-    // process = false) - gương THẲNG nhánh thành công (showLoading=false) của
-    // loadPageConfig() ở trên, chỉ khác là items/menu/fab đến từ Intent thay vì tự đọc lại.
-    private fun applyPreloadedData(data: PagePreloadedData) {
-        val config = currentPageConfig ?: return
-
-        config.pageMenuOptions = data.menuOptions
-        config.headerActions = data.headerActions
-        config.autoShowActions = data.autoShowActions
-
-        updateActionList(data.items, false) { tryAutoShowActions() }
-
-        menuOptions = null
-        headerActions = null
-        invalidateOptionsMenu()
-        refreshCheckboxMenuStates()
-    }
-
     private fun prewarmNodeImages(node: NodeInfoBase) {
         val iconPathAnalysis = IconPathAnalysis()
         when (node) {
@@ -964,7 +902,7 @@ class ActionPage : AppCompatActivity() {
         val onDismiss = Runnable {
             when {
                 menuOption.autoFinish -> finish()
-                menuOption.reloadPage -> recreateWithoutPreload()
+                menuOption.reloadPage -> recreate()
                 menuOption.autoKill -> killApp()
                 menuOption.autoRestart -> restartApp()
             }

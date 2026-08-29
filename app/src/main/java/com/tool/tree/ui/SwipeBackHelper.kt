@@ -36,6 +36,10 @@ import kotlin.math.abs
  * onDragProgress(0f..1f) được gọi liên tục theo khoảng cách đã kéo (0 = chưa kéo, 1 = kéo
  * hết chiều rộng màn hình) - dùng để hiện hiệu ứng "lấy nét dần" cho ảnh preview phía sau:
  * vuốt càng nhiều thì ảnh preview càng nét/rõ hơn.
+ *
+ * CHỈ hỗ trợ vuốt tự theo dõi bằng tay qua dispatchTouchEvent() (vuốt ở bất kỳ đâu trên màn
+ * hình) - KHÔNG hỗ trợ cử chỉ vuốt-từ-mép predictive-back của hệ thống (Android 13+/14+ gesture
+ * nav), tính năng đó đã bị loại bỏ.
  */
 class SwipeBackHelper(
     private val activity: Activity,
@@ -125,20 +129,13 @@ class SwipeBackHelper(
     private var settleAnimator: ValueAnimator? = null
     var enabled = true
 
-    // Tăng dần mỗi khi 1 phiên kéo MỚI bắt đầu (tay hoặc predictive-back hệ thống) - dùng để
-    // "đánh dấu" settleAnimator được tạo ra thuộc về phiên nào. Nếu 1 animator cũ lỡ chạy xong
-    // (onAnimationEnd) SAU KHI 1 phiên kéo mới đã bắt đầu (dù bình thường đã bị cancel() ở đầu
-    // phiên mới - xem beginNewDragSession() - nhưng cancel() không tuyệt đối chặn được mọi race
-    // hiếm giữa main thread và animation callback queue), nó sẽ tự nhận ra mình đã "lỗi thời" và
-    // KHÔNG được phép gọi onDragStateChanged(false) đè lên trạng thái của phiên đang chạy.
+    // Tăng dần mỗi khi 1 phiên kéo MỚI bắt đầu - dùng để "đánh dấu" settleAnimator được tạo ra
+    // thuộc về phiên nào. Nếu 1 animator cũ lỡ chạy xong (onAnimationEnd) SAU KHI 1 phiên kéo
+    // mới đã bắt đầu (dù bình thường đã bị cancel() ở đầu phiên mới - xem beginNewDragSession()
+    // - nhưng cancel() không tuyệt đối chặn được mọi race hiếm giữa main thread và animation
+    // callback queue), nó sẽ tự nhận ra mình đã "lỗi thời" và KHÔNG được phép gọi
+    // onDragStateChanged(false) đè lên trạng thái của phiên đang chạy.
     private var dragSessionId = 0
-
-    // true khi đang có 1 cử chỉ predictive-back của hệ thống (Android 13+, vuốt từ mép được
-    // OS/gesture-nav nhận trước) điều khiển tiến độ, thay vì do dispatchTouchEvent() ở trên
-    // theo dõi trực tiếp ngón tay. Dùng chung applyProgress()/animateTo() với đường vuốt tay
-    // thường để có đúng 1 bộ hiệu ứng (dịch chuyển, đổ bóng, preview mờ/nét...) cho cả 2
-    // trường hợp.
-    private var externalDragActive = false
 
     /**
      * Gọi từ Activity.dispatchTouchEvent(). Trả về true nghĩa là sự kiện đã được xử lý bởi
@@ -151,11 +148,9 @@ class SwipeBackHelper(
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 // Chỉ bắt đầu 1 cử chỉ mới khi trang đang ở vị trí gốc (không phải đang
-                // dở dang settle từ lần kéo trước, và không phải đang có 1 cử chỉ
-                // predictive-back của hệ thống điều khiển)
+                // dở dang settle từ lần kéo trước)
                 val isIdle = settleAnimator?.isRunning != true &&
-                    contentView.translationX == 0f &&
-                    !externalDragActive
+                    contentView.translationX == 0f
                 candidate = isIdle
                 dragging = false
                 downX = ev.rawX
@@ -241,12 +236,12 @@ class SwipeBackHelper(
     }
 
     /**
-     * Gọi ngay khi 1 phiên kéo MỚI được xác nhận (tay hoặc predictive-back hệ thống), TRƯỚC
-     * khi set dragging/externalDragActive = true. Cancel ngay settleAnimator của phiên trước
-     * (nếu còn đang bounce dở) để tránh 2 nguồn cùng ghi contentView.translationX song song,
-     * đồng thời tăng dragSessionId để "khóa" animator cũ lại - dù cancel() không kịp chặn
-     * onAnimationEnd của nó (race hiếm), animator cũ vẫn tự nhận ra mình lỗi thời qua token và
-     * không gọi onDragStateChanged(false) đè lên phiên mới đang chạy.
+     * Gọi ngay khi 1 phiên kéo MỚI được xác nhận, TRƯỚC khi set dragging = true. Cancel ngay
+     * settleAnimator của phiên trước (nếu còn đang bounce dở) để tránh 2 nguồn cùng ghi
+     * contentView.translationX song song, đồng thời tăng dragSessionId để "khóa" animator cũ
+     * lại - dù cancel() không kịp chặn onAnimationEnd của nó (race hiếm), animator cũ vẫn tự
+     * nhận ra mình lỗi thời qua token và không gọi onDragStateChanged(false) đè lên phiên mới
+     * đang chạy.
      */
     private fun beginNewDragSession() {
         settleAnimator?.cancel()
@@ -313,44 +308,5 @@ class SwipeBackHelper(
         settleAnimator?.cancel()
         settleAnimator = null
         recycleTracker()
-    }
-
-    // ================== Predictive-back (Android 13+, OnBackPressedCallback) ==================
-
-    /** Gọi từ handleOnBackStarted() - hệ thống vừa xác nhận người dùng bắt đầu vuốt từ mép. */
-    fun onSystemBackStarted() {
-        if (dragging) return
-        beginNewDragSession()
-        dragging = true
-        externalDragActive = true
-        onDragStateChanged(true)
-        contentView.elevation = dragElevationPx
-        // Đã loại bỏ gỡ/đổi background tại đây để giữ nguyên ảnh nền
-    }
-
-    /** Gọi từ handleOnProgressed() */
-    fun onSystemBackProgress(progress: Float) {
-        if (!externalDragActive) return
-        val width = contentView.width.takeIf { it > 0 } ?: return
-        val dampedProgress = progress.coerceIn(0f, 1f) / 3.75f
-        applyProgress(dampedProgress * width)
-    }
-
-    /** Gọi từ handleOnBackCancelled() */
-    fun onSystemBackCancelled() {
-        if (!externalDragActive) return
-        externalDragActive = false
-        dragging = false
-        animateTo(0f, 0f, null)
-    }
-
-    /** Gọi từ handleOnBackPressed() */
-    fun consumeSystemBackInvoked(): Boolean {
-        if (!externalDragActive) return false
-        externalDragActive = false
-        dragging = false
-        val width = contentView.width.takeIf { it > 0 }?.toFloat() ?: return false
-        animateTo(width, 0f, { onBack() })
-        return true
     }
 }
