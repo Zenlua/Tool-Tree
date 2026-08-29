@@ -252,7 +252,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         }
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val message = ScriptEnvironmen.executeResultRoot(context, clickableNode.lockShell, clickableNode)
+            val message = ScriptEnvironmen.executeResultRoot(requireContext(), clickableNode.lockShell, clickableNode)
             withContext(Dispatchers.Main) {
                 progressBar?.visibility = View.GONE
                 if (!isAdded) return@withContext
