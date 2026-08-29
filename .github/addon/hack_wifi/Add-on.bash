@@ -7,6 +7,7 @@ description="Wi-Fi hacking tool"
 version=1.0
 versionCode=101
 root=true
+process=true
 
 # default
 google_text="Currently using a translation tool"

@@ -587,6 +587,7 @@ Feature() {
   title = "'$project_text_5'"
   icon = "'$urlicon'/set_home.png"
   shell = "hidden"
+  auto-restart = true
   get = "glog Tset"
   set = "slog Tset $state"
 
@@ -594,7 +595,7 @@ Feature() {
   title = "'$project_text_7'"
   icon = "'$urlicon'/icon_off.png"
   shell = "hidden"
-  reload = true
+  auto-restart = true
   get = "glog Ticon"
   set = "slog Ticon $state"
 
@@ -602,6 +603,7 @@ Feature() {
   title = "'$project_text_6'"
   icon = "'$urlicon'/shell_off.png"
   shell = "hidden"
+  auto-restart = true
   get = "glog shellc"
   set = "slog shellc $state"
 
@@ -2129,7 +2131,7 @@ Addon() {
   
     # Load index
     if [ -f "$dirvad/index.bash" ]; then
-    pagesh='config-sh = "MPAT=\"'$dirvad'\" '$dirvad'/index.bash home"'
+    pagesh='config-sh = "MPAT='$dirvad' '$dirvad'/index.bash home"'
     elif [ -f "$dirvad/index.toml" ]; then
     pagesh='config = "'$dirvad'/index.toml"'
     else
@@ -2137,12 +2139,11 @@ Addon() {
     fi
   
     if [ -f "$dirvad/before-load.bash" ]; then
-    beforesh='before-load = "MPAT=\"'$dirvad'\" '$dirvad'/before-load.bash"'
+    beforesh='before-load = "MPAT='$dirvad' '$dirvad'/before-load.bash"'
     fi
   
     if [ "$(glog show_setting_add)" == 1 ]; then
-      hinde_add='
-      [[group.page.rows]]
+      hinde_add='[[group.page.rows]]
       toggle = "checkbox"
       text = "'$hide_add_text'"
       checked = "[ -f '$dirvad'/hide ] && echo 1"
@@ -2180,6 +2181,7 @@ Addon() {
       title = "'$name'"
       desc = "'$sum_vb'"
       icon = "'$icon_vb'"
+      process = "'$process'"
       '$croot_add'
       '$shortcut_text'
       '$pagesh'
@@ -2193,7 +2195,7 @@ Addon() {
     
     # Xoá giá trị cũ
     id= root= shortcut= description= google_text= url= name=
-    google_trans= code_option= beforesh= croot_add=
+    google_trans= code_option= beforesh= croot_add= process=
     description_text= sum_vb= hinde_add= shortcut_text= delete_add=
     
     # Nạp string

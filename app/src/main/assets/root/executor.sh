@@ -43,7 +43,6 @@ export LIB="$HOME/lib"
 export TMP="$TMPDIR"
 export SDC="$SDCARD_PATH/TREE"
 export JAVA_HOME="$TERMUX"
-export PYTHONHOME="$TERMUX"
 export PIP_ROOT_USER_ACTION=ignore
 export COLORTERM=truecolor
 export PATH="$BIN:$TERMUX/bin:$TERMUX/py:$PATH"

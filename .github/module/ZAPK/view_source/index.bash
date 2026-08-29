@@ -60,8 +60,8 @@ url_dowload="$(echo "$websums" | jq -r ".assets[0].browser_download_url // empty
 if [[ "$sumon" ]] && [[ "$sumon" != "$(glog sum_jadx_online)" ]]; then
 taive -# "$url_dowload" "$TMP/Jadx.zip" 2>&1
   if [[ "$sumon" == "$(checksum "$TMP/Jadx.zip")" ]]; then
-  unzip -oj "$TMP/Jadx.zip" bin/jadx -d "$BIN"
-  unzip -oj "$TMP/Jadx.zip" lib/* -d "$LIB"
+  unzip -oj "$TMP/Jadx.zip" bin/jadx -d "$BIN" || killtree "Error unpack"
+  unzip -oj "$TMP/Jadx.zip" lib/*.jar -d "$LIB" || killtree "Error unpack"
   sed -i "s|#!/usr/bin/env sh|#!/data/data/com.tool.tree/files/home/bin/bash|" "$BIN/jadx"
   chmod 755 "$BIN/jadx"
   slog sum_jadx_online "$sumon"

@@ -7,6 +7,7 @@ description="Customize module"
 version=1.0
 versionCode=100
 root=true
+process=true
 
 # default
 google_text="Currently using a translation tool"
