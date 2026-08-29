@@ -104,15 +104,34 @@ class PageConfigReader {
     private val pendingRowCheckedStates = ArrayList<Pair<TextNode.TextRow, String>>()
     private val pendingRowVisibleStates = ArrayList<Triple<ArrayList<TextNode.TextRow>, TextNode.TextRow, String>>()
 
+    // ========== FIX: GỘP DYNAMIC STRINGS (title-sh, desc-sh, summary-sh, warn-sh) ==========
+    // Tương tự pendingSwitchStates: thay vì mỗi field title-sh/desc-sh/summary-sh/warn-sh
+    // gọi executeResultRoot() riêng lẻ (N mục × M field = N×M round-trip shell), giờ chỉ
+    // đăng ký (node, fieldKey, script) vào đây. resolvePendingStates() sẽ gộp TẤT CẢ thành
+    // 1 lệnh shell duy nhất.
+    // fieldKey: "title", "desc", "summary", "warning"
+    private val pendingDynamicStrings = ArrayList<Triple<Any, String, String>>()
+
+    private fun registerDynamicString(target: Any, fieldKey: String, script: String) {
+        pendingDynamicStrings.add(Triple(target, fieldKey, script))
+    }
+
+    // Cho resolveBoolOrShell: gộp các lệnh shell dạng boolean (dành cho tương lai,
+    // hiện tại support/visible của group vẫn gọi trực tiếp vì cần kết quả NGAY).
+    private val pendingBoolShells = ArrayList<Triple<NodeInfoBase?, String, String>>()
+
     private fun resolvePendingStates() {
         if (pendingSwitchStates.isEmpty() && pendingPickerStates.isEmpty() &&
-            pendingRowCheckedStates.isEmpty() && pendingRowVisibleStates.isEmpty()) return
+            pendingRowCheckedStates.isEmpty() && pendingRowVisibleStates.isEmpty() &&
+            pendingDynamicStrings.isEmpty() && pendingBoolShells.isEmpty()) return
 
         val scripts = LinkedHashMap<String, String>()
         pendingSwitchStates.forEachIndexed { index, pair -> scripts["switch:$index"] = pair.second }
         pendingPickerStates.forEachIndexed { index, pair -> scripts["picker:$index"] = pair.second }
         pendingRowCheckedStates.forEachIndexed { index, pair -> scripts["row-checked:$index"] = pair.second }
         pendingRowVisibleStates.forEachIndexed { index, triple -> scripts["row-visible:$index"] = triple.third }
+        pendingDynamicStrings.forEachIndexed { index, triple -> scripts["dynstr:$index"] = triple.third }
+        pendingBoolShells.forEachIndexed { index, triple -> scripts["boolsh:$index"] = triple.third }
 
         if (vitualRootNode == null) {
             vitualRootNode = NodeInfoBase(pageConfigAbsPath)
@@ -136,11 +155,39 @@ class PageConfigReader {
                 triple.first.remove(triple.second)
             }
         }
+        // Áp dụng kết quả dynamic strings cho từng target
+        pendingDynamicStrings.forEachIndexed { index, triple ->
+            val shellResult = results["dynstr:$index"] ?: ""
+            if (shellResult != "error") {
+                val (target, fieldKey, _) = triple
+                when (target) {
+                    is NodeInfoBase -> when (fieldKey) {
+                        "title" -> target.title = shellResult
+                        "desc" -> target.desc = shellResult
+                        "summary" -> target.summary = shellResult
+                    }
+                    is RunnableNode -> if (fieldKey == "warning") target.warning = shellResult
+                    is com.omarea.common.model.SelectItem -> if (fieldKey == "title") target.title = shellResult
+                }
+            }
+        }
+        // Áp dụng kết quả bool shells
+        pendingBoolShells.forEachIndexed { index, triple ->
+            val shellResult = results["boolsh:$index"] ?: ""
+            val result = shellResult.trim() == "1"
+            val (target, fieldKey, _) = triple
+            if (fieldKey == "bool-support" && target != null) {
+                if (!result) (target as GroupNode).supported = false
+            }
+            // bool-generic: kết quả được trả về cho caller (xem resolveBoolOrShellBatched)
+        }
 
         pendingSwitchStates.clear()
         pendingPickerStates.clear()
         pendingRowCheckedStates.clear()
         pendingRowVisibleStates.clear()
+        pendingDynamicStrings.clear()
+        pendingBoolShells.clear()
     }
 
     // =====================================================================================
@@ -314,6 +361,18 @@ class PageConfigReader {
     // chạy lệnh đó và coi kết quả trả về "1" là true, còn lại là false.
     // Ví dụ: readonly="echo 1"  ->  chạy `echo 1`, kết quả "1" -> readonly = true
     //        readonly="test -f /sdcard/lock && echo 1" -> readonly = true nếu file tồn tại
+    // Biến tạm để lưu kết quả resolveBoolOrShell cho trường hợp batch (dùng trong
+    // mainNodeToml khi support/visible là shell - cần trả về false ngay để lọc node, sau
+    // đó resolvePendingStates mới cập nhật .supported cho GroupNode). Trường hợp batch
+    // chỉ xảy ra khi target là GroupNode (có field .supported). Các node khác (action,
+    // page, switch...) dùng clickableNodeToml -> mainNodeToml, nếu support trả về false
+    // thì node bị loại - không ảnh hưởng vì group support/visible là trường hợp duy nhất
+    // cần kiểm tra lại sau.
+    //
+    // Giải pháp: đối với mainNodeToml (được gọi CHO MỌI LOẠI node), KHÔNG dùng batch
+    // cho support/visible vì cần kết quả NGAY để quyết định return null hay tiếp tục.
+    // Chỉ groupNodeToml() hỗ trợ batch cho support/visible (vì nó luôn trả về GroupNode,
+    // không bao giờ return null vì support). Các node khác giữ nguyên hành vi cũ.
     private fun resolveBoolOrShell(raw: String?, vararg extraTruthyValues: String): Boolean {
         if (raw == null) return false
         val v = raw.trim()
@@ -496,23 +555,27 @@ class PageConfigReader {
             if (!resolveBoolOrShell(it, "support", "visible")) return null
         }
         tomlGet(table, "key", "index", "id")?.let { nodeInfoBase.key = it.trim() }
+        // ========== FIX: KHÔNG chạy shell riêng lẻ cho title-sh/desc-sh/summary-sh nữa ==========
+        // Chỉ lưu script vào titleSh/descSh/summarySh và đăng ký vào pendingDynamicStrings.
+        // Toàn bộ sẽ được gộp chạy ĐÚNG 1 LẦN trong resolvePendingStates() ở cuối
+        // readConfigToml(). Giá trị tĩnh (title/desc/summary) vẫn áp dụng ngay như cũ.
         tomlGet(table, "title-sh")?.let {
             nodeInfoBase.titleSh = it
-            nodeInfoBase.title = executeResultRoot(context, it)
+            registerDynamicString(nodeInfoBase, "title", it)
         }
         if (nodeInfoBase.title.isEmpty()) {
             tomlGet(table, "title")?.let { nodeInfoBase.title = StringResRef.resolve(context, it) }
         }
         tomlGet(table, "desc-sh")?.let {
             nodeInfoBase.descSh = it
-            nodeInfoBase.desc = executeResultRoot(context, it)
+            registerDynamicString(nodeInfoBase, "desc", it)
         }
         if (nodeInfoBase.desc.isEmpty()) {
             tomlGet(table, "desc")?.let { nodeInfoBase.desc = StringResRef.resolve(context, it) }
         }
         tomlGet(table, "summary-sh")?.let {
             nodeInfoBase.summarySh = it
-            nodeInfoBase.summary = executeResultRoot(context, it)
+            registerDynamicString(nodeInfoBase, "summary", it)
         }
         if (nodeInfoBase.summary.isEmpty()) {
             tomlGet(table, "summary")?.let { nodeInfoBase.summary = StringResRef.resolve(context, it) }
@@ -550,9 +613,10 @@ class PageConfigReader {
     private fun runnableNodeToml(node: RunnableNode, table: TomlTable): RunnableNode? {
         return (clickableNodeToml(node, table) as RunnableNode?)?.apply {
             tomlGet(table, "confirm")?.let { confirm = tomlTruthy(it, "confirm") }
+            // ========== FIX: gộp warn-sh vào pendingDynamicStrings ==========
             tomlGet(table, "warn-sh", "warning-sh")?.let {
                 warningSh = it
-                warning = executeResultRoot(context, it)
+                registerDynamicString(this, "warning", it)
             }
             if (warning.isEmpty()) {
                 tomlGet(table, "warn", "warning")?.let { warning = it }
@@ -587,13 +651,17 @@ class PageConfigReader {
     private fun groupNodeToml(table: TomlTable): GroupNode {
         val group = GroupNode(pageConfigAbsPath)
         tomlGet(table, "key", "index", "id")?.let { group.key = it.trim() }
+        // ========== FIX: gộp title-sh vào pendingDynamicStrings (giống mainNodeToml) ==========
         tomlGet(table, "title-sh")?.let {
             group.titleSh = it
-            group.title = executeResultRoot(context, it)
+            registerDynamicString(group, "title", it)
         }
         if (group.title.isEmpty()) {
             tomlGet(table, "title")?.let { group.title = StringResRef.resolve(context, it) }
         }
+        // support/visible của group GIỮ NGUYÊN gọi trực tiếp (không batch) vì cần kết quả
+        // NGAY để quyết định có build children hay không - khác với các node khác (return null
+        // nếu support=false), group luôn trả về object, nên phải check ở tomlBuildNode.
         tomlGet(table, "support", "visible")?.let { group.supported = resolveBoolOrShell(it, "support", "visible") }
         return group
     }
@@ -700,9 +768,10 @@ class PageConfigReader {
     private fun selectItemToml(optTable: TomlTable): SelectItem {
         val item = SelectItem()
         tomlGet(optTable, "val", "value")?.let { item.value = it }
+        // ========== FIX: gộp title-sh vào pendingDynamicStrings ==========
         tomlGet(optTable, "title-sh")?.let {
             item.titleSh = it
-            item.title = executeResultRoot(context, it)
+            registerDynamicString(item, "title", it)
         }
         if (item.title.isNullOrEmpty()) {
             tomlGet(optTable, "title", "text")?.let { item.title = StringResRef.resolve(context, it) }
