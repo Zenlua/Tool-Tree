@@ -124,20 +124,6 @@ class AdapterItemChooser(private val context: Context, private var items: ArrayL
         return convertView
     }
 
-    fun updateRow(position: Int, listView: OverScrollGridView, SelectItem: SelectItem) {
-        try {
-            val visibleFirstPosi = listView.firstVisiblePosition
-            val visibleLastPosi = listView.lastVisiblePosition
-
-            if (position in visibleFirstPosi..visibleLastPosi) {
-                filterItems[position] = SelectItem
-                val view = listView.getChildAt(position - visibleFirstPosi)
-                updateRow(position, view)
-            }
-        } catch (ex: Exception) {
-        }
-    }
-
     fun updateRow(position: Int, convertView: View) {
         val item = getItem(position)
         val viewHolder = ViewHolder()
