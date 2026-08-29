@@ -15,12 +15,9 @@ import kotlin.math.abs
 
 /**
  * Vuốt sang phải ở bất kỳ đâu trên nội dung 1 dialog TOÀN MÀN HÌNH để đóng dialog lại - cùng
- * cảm giác/cơ chế với vuốt lùi toàn trang ở ActionPage (xem com.tool.tree.ui.SwipeBackHelper),
- * kể cả hỗ trợ cử chỉ vuốt-từ-mép (predictive-back của hệ thống, Android 13+/14+) qua
- * onSystemBackStarted()/onSystemBackProgress()/onSystemBackCancelled()/consumeSystemBackInvoked()
- * - bên gọi (DialogFullScreen) tự đăng ký các callback này với
- * dialog.window.onBackInvokedDispatcher, vì Dialog có Window RIÊNG, không tự động dùng chung
- * onBackPressedDispatcher của Activity.
+ * cảm giác/cơ chế với vuốt lùi toàn trang ở ActionPage (xem com.tool.tree.ui.SwipeBackHelper).
+ * Chỉ hỗ trợ vuốt trực tiếp trên nội dung dialog - KHÔNG còn hỗ trợ cử chỉ vuốt-từ-mép
+ * (predictive-back của hệ thống) nữa.
  *
  * onDragStateChanged(true)/onDragProgress(0f..1f) dành cho bên gọi nếu cần thêm hiệu ứng phụ
  * lúc kéo - DialogFullScreen hiện không dùng gì thêm vì nền cửa sổ dialog đã sẵn là ảnh NÉT của
@@ -47,8 +44,7 @@ class DialogSwipeBackHelper(
          * Gắn tính năng vuốt lùi cho 1 Dialog TOÀN MÀN HÌNH bất kỳ ĐÃ show (dialog.window khác
          * null) bằng cách bọc lại Window.Callback hiện có - áp dụng được cho cả Dialog dựng qua
          * AlertDialog.Builder lẫn Dialog thường, không cần tạo riêng 1 lớp con Dialog. Trả về
-         * helper để bên gọi có thể release() đúng lúc (tránh leak VelocityTracker/animator), và
-         * để đăng ký thêm predictive-back (xem onSystemBackStarted()...).
+         * helper để bên gọi có thể release() đúng lúc (tránh leak VelocityTracker/animator).
          */
         fun bind(
             dialog: Dialog,
@@ -86,11 +82,6 @@ class DialogSwipeBackHelper(
     private var settleAnimator: ValueAnimator? = null
     var enabled = true
 
-    // true khi đang có 1 cử chỉ predictive-back của hệ thống (vuốt từ mép) điều khiển tiến độ,
-    // thay vì do dispatchTouchEvent() theo dõi trực tiếp ngón tay - xem SwipeBackHelper (bản
-    // toàn trang) để hiểu rõ cơ chế chung, ở đây dùng lại y hệt.
-    private var externalDragActive = false
-
     // Tăng dần mỗi khi 1 phiên kéo MỚI bắt đầu - "đánh dấu" settleAnimator thuộc phiên nào, để
     // 1 animator cũ lỡ chạy xong sau khi phiên mới đã bắt đầu không tự ý gọi
     // onDragStateChanged(false) đè lên trạng thái của phiên đang chạy (race hiếm giữa main
@@ -107,8 +98,7 @@ class DialogSwipeBackHelper(
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 val isIdle = settleAnimator?.isRunning != true &&
-                    contentView.translationX == 0f &&
-                    !externalDragActive
+                    contentView.translationX == 0f
                 candidate = isIdle
                 dragging = false
                 downX = ev.rawX
@@ -249,51 +239,5 @@ class DialogSwipeBackHelper(
         settleAnimator?.cancel()
         settleAnimator = null
         recycleTracker()
-    }
-
-    // ================== Predictive-back (Android 13+, vuốt từ mép) ==================
-    // Bên gọi (DialogFullScreen) tự đăng ký các hàm này với dialog.window.onBackInvokedDispatcher
-    // (Dialog có Window riêng, KHÔNG dùng chung onBackPressedDispatcher của Activity như trang
-    // toàn màn hình - xem SwipeBackHelper). Logic bên trong giống hệt SwipeBackHelper để 2 nơi
-    // cho cảm giác nhất quán.
-
-    /** Gọi khi hệ thống vừa xác nhận người dùng bắt đầu vuốt từ mép để đóng dialog. */
-    fun onSystemBackStarted() {
-        if (dragging) return
-        beginNewDragSession()
-        dragging = true
-        externalDragActive = true
-        onDragStateChanged(true)
-        contentView.elevation = dragElevationPx
-    }
-
-    /** Gọi liên tục theo tiến độ vuốt từ mép (0f..1f). */
-    fun onSystemBackProgress(progress: Float) {
-        if (!externalDragActive) return
-        val width = contentView.width.takeIf { it > 0 } ?: return
-        val dampedProgress = progress.coerceIn(0f, 1f) / 3.75f
-        applyProgress(dampedProgress * width)
-    }
-
-    /** Gọi khi người dùng buông tay/hủy giữa chừng cử chỉ vuốt từ mép. */
-    fun onSystemBackCancelled() {
-        if (!externalDragActive) return
-        externalDragActive = false
-        dragging = false
-        animateTo(0f, 0f, null)
-    }
-
-    /**
-     * Gọi khi hệ thống xác nhận cử chỉ vuốt từ mép đã hoàn tất (tương đương bấm back). Trả về
-     * true nếu đã tự xử lý (đang có cử chỉ dở dang) - bên gọi KHÔNG cần tự dismiss() thêm. Trả
-     * về false nghĩa là không có gì để xử lý, bên gọi tự quyết định (thường là dismiss() ngay).
-     */
-    fun consumeSystemBackInvoked(): Boolean {
-        if (!externalDragActive) return false
-        externalDragActive = false
-        dragging = false
-        val width = contentView.width.takeIf { it > 0 }?.toFloat() ?: return false
-        animateTo(width, 0f) { onBack() }
-        return true
     }
 }
