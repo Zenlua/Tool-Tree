@@ -2112,10 +2112,10 @@ Addon() {
         [[group.download.rows]]
         toggle = "checkbox"
         text = "'$hide_add_text'"
-        checked = "[ -f '$dirvad'/hide ] && echo 1"
+        get = "[ -f '$dirvad'/hide ] && echo 1"
         line = true
         align="opposite"
-        onchange-sh = """
+        set = """
         if [ -f '$dirvad'/hide ]; then
         rm '$dirvad'/hide
         else
@@ -2146,10 +2146,10 @@ Addon() {
       hinde_add='[[group.page.rows]]
       toggle = "checkbox"
       text = "'$hide_add_text'"
-      checked = "[ -f '$dirvad'/hide ] && echo 1"
+      get = "[ -f '$dirvad'/hide ] && echo 1"
       line = true
       align="opposite"
-      onchange-sh = """
+      set = """
       if [ -f '$dirvad'/hide ]; then
       rm '$dirvad'/hide
       else
@@ -2162,8 +2162,8 @@ Addon() {
       [[group.page.rows]]
       toggle = "switch"
       text = "'$deleted_text'"
-      checked = "[ -f '$dirvad'/delete ] && echo 1"
-      onchange-sh = """
+      get = "[ -f '$dirvad'/delete ] && echo 1"
+      set = """
       if [ -f '$dirvad'/delete ]; then
       rm '$dirvad'/delete
       else
