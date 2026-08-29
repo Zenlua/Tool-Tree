@@ -470,11 +470,12 @@ class DialogHelper {
 
                 ViewCompat.setOnApplyWindowInsetsListener(contentView) { v, insets ->
                     val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                    val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
                     v.setPadding(
                         basePaddingLeft + systemBars.left,
                         basePaddingTop + systemBars.top,
                         basePaddingRight + systemBars.right,
-                        basePaddingBottom + systemBars.bottom
+                        basePaddingBottom + systemBars.bottom + ime.bottom
                     )
                     insets
                 }
