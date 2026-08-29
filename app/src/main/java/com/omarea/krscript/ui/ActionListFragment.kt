@@ -234,9 +234,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         if (!checkSdkCompatibility(clickableNode)) return
 
         if (clickableNode.lockShell.isEmpty()) {
-            // Không cần chạy shell - kiểm tra local tức thời, không có gì phải đợi/hiện dialog.
+            // Không cần chạy shell - kiểm tra local tức thời.
             if (clickableNode.locked) {
-                Toast.makeText(context, getString(R.string.kr_lock_message), Toast.LENGTH_LONG).show()
+                // lock = "1|message" → khoá, hiện Toast
+                val msg = clickableNode.lockMessage.ifEmpty { getString(R.string.kr_lock_message) }
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             } else {
                 onUnlocked()
             }
@@ -256,7 +258,8 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 if (!isAdded) return@withContext
                 val unlocked = message == "unlock" || message == "unlocked" || message == "false" || message == "0"
                 if (!unlocked) {
-                    Toast.makeText(context, if (message.isNotEmpty()) message else getString(R.string.kr_lock_message), Toast.LENGTH_LONG).show()
+                    val msg = if (message.isNotEmpty()) message else getString(R.string.kr_lock_message)
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                 } else {
                     onUnlocked()
                 }

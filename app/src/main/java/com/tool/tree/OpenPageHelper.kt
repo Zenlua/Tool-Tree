@@ -5,7 +5,6 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.omarea.common.ui.DialogHelper
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.config.PageConfigReader
 import com.omarea.krscript.config.PageConfigSh
@@ -151,9 +150,8 @@ class OpenPageHelper(private val activity: Activity) {
         dialog.showDialog(activity.getString(R.string.kr_page_loading))
 
         job = owner.lifecycleScope.launch(Dispatchers.IO) {
-            // 1. Kiểm tra khoá của TRANG SẮP MỞ - gộp vào đây cho mục process=false thay vì để
-            // ActionPage tự kiểm tra sau khi đã mở (xem ActionPage.checkPageLockThenLoad cũ) -
-            // nhờ vậy bị khoá thì KHÔNG mở trang mới nữa, báo thẳng tại đây.
+            // 1. Kiểm tra khoá của TRANG SẮP MỞ - check ngay tại trang hiện tại,
+            // không vào trang mới. Bị khoá thì hiện Toast nhẹ tại đây.
             if (pageNode.lockShell.isNotEmpty()) {
                 val message = ScriptEnvironmen.executeResultRoot(activity, pageNode.lockShell, pageNode)
                 val unlocked = message == "unlock" || message == "unlocked" || message == "false" || message == "0"
@@ -161,11 +159,8 @@ class OpenPageHelper(private val activity: Activity) {
                     withContext(Dispatchers.Main) {
                         dialog.hideDialog()
                         if (!activity.isFinishing && !activity.isDestroyed) {
-                            DialogHelper.helpInfo(
-                                activity,
-                                activity.getString(R.string.kr_lock_title),
-                                message.ifEmpty { activity.getString(R.string.kr_lock_message) }
-                            )
+                            val msg = if (message.isNotEmpty()) message else activity.getString(R.string.kr_lock_message)
+                            Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
                         }
                         onNoNavigate?.invoke()
                     }
@@ -175,11 +170,8 @@ class OpenPageHelper(private val activity: Activity) {
                 withContext(Dispatchers.Main) {
                     dialog.hideDialog()
                     if (!activity.isFinishing && !activity.isDestroyed) {
-                        DialogHelper.helpInfo(
-                            activity,
-                            activity.getString(R.string.kr_lock_title),
-                            activity.getString(R.string.kr_lock_message)
-                        )
+                        val msg = pageNode.lockMessage.ifEmpty { activity.getString(R.string.kr_lock_message) }
+                        Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
                     }
                     onNoNavigate?.invoke()
                 }

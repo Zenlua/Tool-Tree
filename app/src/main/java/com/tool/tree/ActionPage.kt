@@ -664,14 +664,6 @@ class ActionPage : AppCompatActivity() {
         val config = currentPageConfig ?: return
 
         if (config.lockShell.isNotEmpty()) {
-        
-            // progressBarDialog.setCancelCallback {
-                // lockCheckJob?.cancel();
-                // finish()
-            // }
-            
-            // progressBarDialog.showDialog(getString(R.string.kr_page_loading))
-
             lockCheckJob?.cancel()
             lockCheckJob = lifecycleScope.launch(Dispatchers.IO) {
                 val message = ScriptEnvironmen.executeResultRoot(this@ActionPage, config.lockShell, config)
@@ -679,15 +671,17 @@ class ActionPage : AppCompatActivity() {
                     if (!isActive || isFinishing || isDestroyed) return@withContext
                     val unlocked = message == "unlock" || message == "unlocked" || message == "false" || message == "0"
                     if (unlocked) {
-                        // progressBarDialog.hideDialog()
                         loadPageConfig(true)
                     } else {
-                        showPageLockedDialog(if (message.isNotEmpty()) message else getString(R.string.kr_lock_message))
+                        val msg = if (message.isNotEmpty()) message else getString(R.string.kr_lock_message)
+                        showPageLockedDialog(msg)
                     }
                 }
             }
         } else if (config.locked) {
-            showPageLockedDialog(getString(R.string.kr_lock_message))
+            // lock = "1|message" → khoá, hiện thông báo tuỳ chỉnh
+            val msg = config.lockMessage.ifEmpty { getString(R.string.kr_lock_message) }
+            showPageLockedDialog(msg)
         } else {
             loadPageConfig(true)
         }

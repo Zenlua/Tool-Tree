@@ -281,6 +281,28 @@ class PageConfigReader {
         return null
     }
 
+    // Phân tích thuộc tính "lock" theo format mới: "state|message"
+    //   lock = "1|Tính năng này bị khoá" → locked=true, lockMessage="Tính năng này bị khoá"
+    //   lock = "0|..."              → locked=false (message bị bỏ qua, không hiện thông báo)
+    // Hỗ trợ tương thích cũ: lock = true / "locked" / "1" → locked=true (không có message)
+    //                       lock = false / "0" → không đổi gì
+    private fun parseLockAttr(raw: String?, node: ClickableNode) {
+        if (raw == null) return
+        val v = raw.trim()
+        val pipeIndex = v.indexOf('|')
+        if (pipeIndex >= 0) {
+            // Format mới: "state|message"
+            val state = v.substring(0, pipeIndex).trim()
+            val message = v.substring(pipeIndex + 1).trim()
+            node.locked = (state == "1")
+            node.lockMessage = message
+        } else {
+            // Hỗ trợ cũ: boolean hoặc từ khoá
+            node.locked = tomlTruthy(v, "locked")
+            node.lockMessage = ""
+        }
+    }
+
     private fun tomlTruthy(raw: String?, vararg extraTruthyValues: String): Boolean {
         if (raw == null) return false
         val v = raw.lowercase(getDefault()).trim()
@@ -500,7 +522,8 @@ class PageConfigReader {
 
     private fun clickableNodeToml(node: ClickableNode, table: TomlTable): ClickableNode? {
         return (mainNodeToml(node, table) as ClickableNode?)?.apply {
-            tomlGet(table, "lock", "lock-state", "locked")?.let { locked = tomlTruthy(it, "locked") }
+            tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, this) }
+            tomlGet(table, "lock-sh")?.let { lockShell = it.trim() }
             tomlGet(table, "min-sdk", "sdk-min")?.let { minSdkVersion = it.trim().toIntOrNull() ?: minSdkVersion }
             tomlGet(table, "max-sdk", "sdk-max")?.let { maxSdkVersion = it.trim().toIntOrNull() ?: maxSdkVersion }
             tomlGet(table, "target-sdk", "sdk-target")?.let { targetSdkVersion = it.trim().toIntOrNull() ?: targetSdkVersion }
@@ -587,7 +610,8 @@ class PageConfigReader {
         tomlGet(table, "process")?.let { page.process = tomlTruthy(it, "process") }
         tomlGet(table, "link", "href")?.let { page.link = it }
         tomlGet(table, "activity", "a", "intent")?.let { page.activity = it }
-        tomlGet(table, "lock", "lock-state")?.let { page.lockShell = it }
+        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, page) }
+        tomlGet(table, "lock-sh")?.let { page.lockShell = it.trim() }
 
         // ĐÃ LOẠI BỎ: option-sh (script sinh menu 3 chấm động, khai báo ở [[page]] của trang
         // cha) VÀ handler-sh của page (script mặc định khi bấm menu/fab). Page giờ chỉ còn
@@ -653,7 +677,8 @@ class PageConfigReader {
         val switchNode = runnableNodeToml(SwitchNode(pageConfigAbsPath), table) as SwitchNode? ?: return null
         tomlGet(table, "get", "getstate")?.let { switchNode.getState = it }
         tomlGet(table, "set", "setstate")?.let { switchNode.setState = it }
-        tomlGet(table, "lock", "lock-state")?.let { switchNode.lockShell = it }
+        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, switchNode) }
+        tomlGet(table, "lock-sh")?.let { switchNode.lockShell = it.trim() }
         resourceNodeToml(table)
 
         // ========== FIX: KHÔNG chạy getState riêng lẻ ngay tại đây nữa ==========
@@ -696,7 +721,8 @@ class PageConfigReader {
         tomlGet(table, "separator")?.let { picker.separator = it }
         tomlGet(table, "get", "getstate")?.let { picker.getState = it }
         tomlGet(table, "set", "setstate")?.let { picker.setState = it }
-        tomlGet(table, "lock", "lock-state")?.let { picker.lockShell = it }
+        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, picker) }
+        tomlGet(table, "lock-sh")?.let { picker.lockShell = it.trim() }
 
         val pickerOptions = tomlEntries(table, "options")
         if (pickerOptions.isNotEmpty()) {
@@ -729,7 +755,8 @@ class PageConfigReader {
         val node = runnableNodeToml(DownloadNode(pageConfigAbsPath), table) as DownloadNode? ?: return null
         tomlGet(table, "url")?.let { node.url = it.trim() }
         tomlGet(table, "script", "set", "setstate")?.let { node.setState = it.trim() }
-        tomlGet(table, "lock", "lock-state")?.let { node.lockShell = it }
+        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, node) }
+        tomlGet(table, "lock-sh")?.let { node.lockShell = it.trim() }
         if (node.setState == null) node.setState = ""
         if (node.url.isEmpty()) return null
 
@@ -744,7 +771,8 @@ class PageConfigReader {
     private fun actionNodeToml(table: TomlTable): ActionNode? {
         val action = runnableNodeToml(ActionNode(pageConfigAbsPath), table) as ActionNode? ?: return null
         tomlGet(table, "script", "set", "setstate")?.let { action.setState = it.trim() }
-        tomlGet(table, "lock", "lock-state")?.let { action.lockShell = it }
+        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, action) }
+        tomlGet(table, "lock-sh")?.let { action.lockShell = it.trim() }
         if (action.setState == null) action.setState = ""
 
         val paramTables = tomlEntries(table, "params")

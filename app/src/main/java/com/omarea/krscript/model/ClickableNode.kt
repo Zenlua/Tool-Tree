@@ -30,9 +30,11 @@ open class ClickableNode(currentPageConfigPath: String) : NodeInfoBase(currentPa
     // 是否允许添加快捷方式（非false，且具有key则默认允许）
     var allowShortcut:Boolean? = null
 
-    // 是否锁定
+    // true = khoá (hiện thông báo tuỳ chỉnh từ lockMessage); false = mở khoá
     var locked: Boolean = false
-    // 锁定状态获取（脚本）
+    // Thông báo tuỳ chỉnh khi bị khoá (lock = "1|message")
+    var lockMessage: String = ""
+    // 锁定状态获取（脚本）— đọc từ thuộc tính "lock-sh"
     var lockShell: String = ""
 
     // 此功能的Android SDK版本要求
