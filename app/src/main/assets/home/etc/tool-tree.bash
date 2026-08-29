@@ -384,7 +384,7 @@ Update() {
   
     [[group.menu.items]]
     title = "'$google_translate_text'"
-    box = "glog gg_trans_ver"
+    get = "glog gg_trans_ver"
     reload = true
     silent = true
     type = "checkbox"
@@ -962,7 +962,7 @@ Generate() {
     [[group.menu.items]]
     type = "checkbox"
     title = "'$input_folder_text'"
-    box = "glog hide_show_generate"
+    get = "glog hide_show_generate"
     silent = true
     reload = true
     script = """
@@ -1108,7 +1108,7 @@ Utilities() {
   key = "v4"
   type = "checkbox"
   title = "Patch ROM"
-  box = "glog hide_show_patch_rom"
+  get = "glog hide_show_patch_rom"
   silent = true
   reload = true'
   fi
@@ -1135,7 +1135,7 @@ Utilities() {
     key = "v1"
     type = "checkbox"
     title = "'$input_folder_text'"
-    box = "glog hide_show"
+    get = "glog hide_show"
     silent = true
     reload = true
     '"$vdbfbfsn"'
@@ -1612,7 +1612,7 @@ Apex() {
     key = "v1"
     type = "checkbox"
     title = "'$folder_text' APK"
-    box = "glog hide_show_apex"
+    get = "glog hide_show_apex"
     silent = true
     reload = true
     
@@ -1730,7 +1730,7 @@ Utiliapk() {
     key = "v1"
     type = "checkbox"
     title = "'$input_folder_text'"
-    box = "glog hide_show2"
+    get = "glog hide_show2"
     silent = true
     reload = true
 
@@ -2068,7 +2068,7 @@ Addon() {
     
     [[group.menu.items]]
     title = "'$customize_text'"
-    box = "glog show_setting_add"
+    get = "glog show_setting_add"
     reload = true
     silent = true
     type = "checkbox"
