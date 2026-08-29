@@ -17,6 +17,9 @@ open class ListItemClickable(context: Context,
     protected var iconView = layout.findViewById<ImageView?>(R.id.kr_icon)
     protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon)
     protected var extraBgView = layout.findViewById<ImageView?>(R.id.kr_extra_bg)
+    // Icon chính (kr_icon) đã nạp từ config.iconPath, nếu có - dùng cho WidgetTintHelper
+    // để tô màu kr_widget theo màu trung bình của icon này (null nếu item không có icon).
+    protected var iconDrawable: android.graphics.drawable.Drawable? = null
 
     fun setOnClickListener(onClickListener: OnClickListener): ListItemClickable {
         this.mOnClickListener = onClickListener
@@ -55,6 +58,7 @@ open class ListItemClickable(context: Context,
             iconView?.visibility = View.GONE
             if (config.iconPath.isNotEmpty()) {
                 IconPathAnalysis().loadIcon(context, config)?.run {
+                    iconDrawable = this
                     iconView?.setImageDrawable(this)
                     iconView?.visibility = View.VISIBLE
                     GifPlaybackHelper.bind(iconView, config.iconGifAutoplay, config.iconGifLoopCount)

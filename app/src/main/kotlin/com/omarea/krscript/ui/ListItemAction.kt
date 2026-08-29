@@ -19,6 +19,7 @@ class ListItemAction(context: Context, config: ActionNode) : ListItemClickable(c
         } else {
             widgetView?.setImageDrawable(context.getDrawable(R.drawable.kr_run))
         }
+        WidgetTintHelper.applyTint(context, widgetView, iconDrawable)
 
         // Giống text.rows: hiển thị thêm các dòng rich-text (nếu có khai báo action.rows)
         RowsRenderHelper.bind(context, rowsView, rowsPhotoView, config.rows, config)

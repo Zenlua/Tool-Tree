@@ -15,6 +15,7 @@ class ListItemPage(context: Context, config: PageNode) : ListItemClickable(conte
     init {
         widgetView?.visibility = View.VISIBLE
         widgetView?.setImageDrawable(context.getDrawable(R.drawable.kr_arrow))
+        WidgetTintHelper.applyTint(context, widgetView, iconDrawable)
 
         // Giống text.rows / action.rows: hiển thị thêm các dòng rich-text (nếu có khai báo page.rows)
         RowsRenderHelper.bind(context, rowsView, rowsPhotoView, config.rows, config)

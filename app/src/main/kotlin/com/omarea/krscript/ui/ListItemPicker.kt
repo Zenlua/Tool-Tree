@@ -12,5 +12,6 @@ class ListItemPicker(context: Context, config: PickerNode) : ListItemClickable(c
     init {
         widgetView?.visibility = View.VISIBLE
         widgetView?.setImageDrawable(context.getDrawable(R.drawable.kr_picker))
+        WidgetTintHelper.applyTint(context, widgetView, iconDrawable)
     }
 }
