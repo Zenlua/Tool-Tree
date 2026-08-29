@@ -62,8 +62,10 @@ export WEBS="User-Agent: Mozilla/5.0 (Linux; Android $ANDROID_RELEASE; $ANDROID_
 
 if [ "$ROOT" == 'true' ]; then
     export ROT=1
+    export LOT=0
     else
     export ROT=0
+    export LOT=1
     export xu=xu
     export show_root_text="ROOT"
 fi

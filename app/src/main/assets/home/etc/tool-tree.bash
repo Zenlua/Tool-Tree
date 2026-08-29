@@ -420,6 +420,7 @@ Update() {
   title = "'$author_text'"
   icon = "'$urlicon'/like.png"
   html = "https://zenlua.github.io/Tool-Tree/website/Information.html"
+  process = true
 
   [[group]]
   [[group.page]]
@@ -702,7 +703,7 @@ Root() {
   title = "'$mount_text_1'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/mount.png"
-  lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
+  lock = "'$LOT'|'$root_warning_text'"
   interruptible = false
   script = """
     for kkh in $IMG_NAME; do
@@ -730,7 +731,7 @@ Root() {
   title = "'$umount_text_1'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/umount.png"
-  lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
+  lock = "'$LOT'|'$root_warning_text'"
   interruptible = false
   script = """
     for kkh in $IMG_NAME; do
@@ -757,7 +758,7 @@ Root() {
   title = "'$backup_text_1'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/backup.png"
-  lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
+  lock = "'$LOT'|'$root_warning_text'"
   interruptible = false
   script = """
     Extract=$PTSD/backup
@@ -789,7 +790,7 @@ Root() {
   title = "'$flash_text_1'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/flash.png"
-  lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
+  lock = "'$LOT'|'$root_warning_text'"
   script = """
     e=${IMG##*/}
     if [ "$e" = "vendor" ] || [ "$e" = "system" ] || [ "$e" = "super" ]; then
@@ -875,7 +876,7 @@ Troot() {
   title = "'$dexopt_app_text'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/dexopt_app.png"
-  lock = "[ \"$ROT\" == 0 ] && echo \"'$root_warning_text'\" || echo 0"
+  lock = "'$LOT'|'$root_warning_text'"
   script = """
     if [ "$bools" == 1 ]; then
     pm compile -v -a -m $name_dex_list
@@ -2201,7 +2202,7 @@ Addon() {
     
     # Phát hiện root
     if [ "$root" == "true" ]; then
-    croot_add='lock = "[ $ROT == 0 ] && echo \"'$root_warning_text'\" || echo 0"'
+    croot_add='lock = "'$LOT'|'$root_warning_text'"'
     fi
   
     # Phát hiện tính năng
