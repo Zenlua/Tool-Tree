@@ -406,7 +406,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
 
             withContext(Dispatchers.Main) {
                 progressBarDialog.hideDialog()
-                if (optionsSorted != null) {
+                if (optionsSorted != null && optionsSorted.isNotEmpty()) {
                     val darkMode = ThemeModeState.isDarkMode()
                     DialogItemChooser(darkMode, optionsSorted, item.multiple, object : DialogItemChooser.Callback {
                         override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {

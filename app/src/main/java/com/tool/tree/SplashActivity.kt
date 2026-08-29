@@ -48,6 +48,7 @@ class SplashActivity : AppCompatActivity() {
 
     private var hasRoot = false
     private var started = false
+    private var logoAnimation: android.view.animation.Animation? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LanguageManager.init(this)
@@ -81,10 +82,8 @@ class SplashActivity : AppCompatActivity() {
             }
         }
 
-        binding.startLogoXml.postDelayed({
-            val animation = AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate)
-            binding.startLogoXml.startAnimation(animation)
-        }, 2000)
+        logoAnimation = AnimationUtils.loadAnimation(this, R.anim.ic_settings_rotate)
+        binding.startLogoXml.startAnimation(logoAnimation)
 
     }
 
@@ -263,6 +262,10 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun gotoHome(preloadedTabs: MainTabsPreloadedData? = null) {
+        binding.startLogoXml.clearAnimation()
+        logoAnimation?.cancel()
+        logoAnimation = null
+
         val targetIntent =
             if (intent?.getBooleanExtra("JumpActionPage", false) == true)
                 Intent(this, ActionPage::class.java).apply { putExtras(intent!!) }
