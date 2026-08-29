@@ -750,18 +750,17 @@ class ActionPage : AppCompatActivity() {
                         }
                     }
 
+                    // ========== FIX: bỏ CountDownLatch.await(1000ms) blocking ==========
+                    // Trước đây dùng latch.await(1000ms) để đồng bộ IO thread -> Main thread
+                    // cho TỪNG item. Điều này gây block IO thread tối đa 1s/item, làm chậm toàn
+                    // bộ quá trình parse - VI PHẠM mục đích của progressive mode (hiện item
+                    // nhanh). Giờ chỉ post lên Main thread không chờ (fire-and-forget).
                     if (!isFinishing && !isDestroyed) {
-                        val latch = java.util.concurrent.CountDownLatch(1)
                         handler.post {
-                            try {
-                                if (!isFinishing && !isDestroyed) {
-                                    if (node != null) progressiveFragment?.appendProgressiveItem(node)
-                                }
-                            } finally {
-                                latch.countDown()
+                            if (!isFinishing && !isDestroyed) {
+                                if (node != null) progressiveFragment?.appendProgressiveItem(node)
                             }
                         }
-                        latch.await(1000, java.util.concurrent.TimeUnit.MILLISECONDS)
                     }
                 }
             } else null
