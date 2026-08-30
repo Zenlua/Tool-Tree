@@ -74,11 +74,19 @@ class DialogSwipeBackHelper(
     // màn hình) - cho cảm giác dialog đang được "nhấc lên" khỏi cửa sổ thật phía sau.
     private val dragElevationPx = 8f * context.resources.displayMetrics.density
 
+    // Giới hạn kéo tối đa khi vuốt SANG TRÁI (nảy rubber-band) - xem SwipeBounceEffect
+    private val maxLeftPullPx = com.tool.tree.ui.SwipeBounceEffect.maxPullPx(context.resources.displayMetrics.density)
+
     private var velocityTracker: VelocityTracker? = null
     private var downX = 0f
     private var downY = 0f
     private var candidate = false
     private var dragging = false
+
+    // Đã xác nhận là đang kéo NẢY sang trái (rubber-band, không dẫn tới hành động gì, chỉ để
+    // phản hồi "đã chạm biên") - tách riêng khỏi `dragging` vì 2 hướng có ý nghĩa khác nhau
+    private var draggingLeft = false
+
     private var settleAnimator: ValueAnimator? = null
     var enabled = true
 
@@ -101,6 +109,7 @@ class DialogSwipeBackHelper(
                     contentView.translationX == 0f
                 candidate = isIdle
                 dragging = false
+                draggingLeft = false
                 downX = ev.rawX
                 downY = ev.rawY
                 if (candidate) {
@@ -114,12 +123,12 @@ class DialogSwipeBackHelper(
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (!candidate && !dragging) return false
+                if (!candidate && !dragging && !draggingLeft) return false
                 velocityTracker?.addMovement(ev)
                 val dx = ev.rawX - downX
                 val dy = ev.rawY - downY
 
-                if (!dragging) {
+                if (!dragging && !draggingLeft) {
                     when {
                         dx > touchSlop && dx > abs(dy) -> {
                             beginNewDragSession()
@@ -133,9 +142,19 @@ class DialogSwipeBackHelper(
                             contentView.dispatchTouchEvent(cancelEvent)
                             cancelEvent.recycle()
                         }
-                        dx < -touchSlop || abs(dy) > touchSlop -> {
-                            // Kéo sang trái hoặc kéo dọc -> không phải cử chỉ đóng dialog, nhường
-                            // hẳn cho view con (cuộn list, kéo seekbar...).
+                        dx < -touchSlop && abs(dx) > abs(dy) -> {
+                            // Vuốt sang trái -> không có hành động nào (đóng dialog chỉ gắn với
+                            // vuốt phải), chỉ nảy nhẹ (rubber-band) để phản hồi rồi bật lại
+                            beginNewDragSession()
+                            draggingLeft = true
+                            val cancelEvent = MotionEvent.obtain(ev)
+                            cancelEvent.action = MotionEvent.ACTION_CANCEL
+                            contentView.dispatchTouchEvent(cancelEvent)
+                            cancelEvent.recycle()
+                        }
+                        abs(dy) > touchSlop -> {
+                            // Kéo dọc chiếm ưu thế -> không phải cử chỉ ngang, nhường hẳn cho
+                            // view con (cuộn list, kéo seekbar...).
                             candidate = false
                             return false
                         }
@@ -148,21 +167,33 @@ class DialogSwipeBackHelper(
                     applyProgress(clampedDx)
                     return true
                 }
+
+                if (draggingLeft) {
+                    val pulled = com.tool.tree.ui.SwipeBounceEffect.dampen((-dx).coerceAtLeast(0f), maxLeftPullPx)
+                    contentView.translationX = -pulled
+                    return true
+                }
                 return false
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 val wasDragging = dragging
+                val wasDraggingLeft = draggingLeft
                 if (wasDragging) {
                     velocityTracker?.addMovement(ev)
                     velocityTracker?.computeCurrentVelocity(1000, maxFlingVelocity.toFloat())
                     val velocityX = velocityTracker?.xVelocity ?: 0f
                     settleAfterDrag(velocityX)
+                } else if (wasDraggingLeft) {
+                    // Luôn bật lại về 0 (không có "commit" nào cho hướng trái) - dùng
+                    // interpolator nảy thay vì DecelerateInterpolator thường
+                    animateTo(0f, 0f, null, durationMultiplier = 1.3f, bounce = true, notifyStateChange = false)
                 }
                 recycleTracker()
                 candidate = false
                 dragging = false
-                return wasDragging
+                draggingLeft = false
+                return wasDragging || wasDraggingLeft
             }
         }
         return false
@@ -192,17 +223,25 @@ class DialogSwipeBackHelper(
         val shouldGoBack = distance > width * COMMIT_DISTANCE_RATIO || velocityX > minFlingVelocity
 
         if (shouldGoBack) {
-            animateTo(width.toFloat(), velocityX) { onBack() }
+            animateTo(width.toFloat(), velocityX, onEnd = { onBack() })
         } else {
-            // Kéo chưa đủ hoặc vuốt ngược lại -> bật lại về vị trí ban đầu.
-            animateTo(0f, velocityX, null)
+            // Kéo chưa đủ hoặc vuốt ngược lại -> bật lại về vị trí ban đầu, có nảy nhẹ
+            // (bounce) giống hiệu ứng vuốt trái, thay vì trượt về đều đều như trước.
+            animateTo(0f, velocityX, null, durationMultiplier = 1.3f, bounce = true)
         }
     }
 
-    private fun animateTo(target: Float, velocityX: Float, onEnd: (() -> Unit)?) {
+    private fun animateTo(
+        target: Float,
+        velocityX: Float,
+        onEnd: (() -> Unit)?,
+        durationMultiplier: Float = 1f,
+        bounce: Boolean = false,
+        notifyStateChange: Boolean = true
+    ) {
         val start = contentView.translationX
         val distance = abs(target - start)
-        val duration = computeSettleDuration(distance, velocityX)
+        val duration = (computeSettleDuration(distance, velocityX) * durationMultiplier).toLong()
 
         // Chụp lại đúng phiên kéo mà animator này thuộc về (xem dragSessionId ở trên).
         val sessionAtStart = dragSessionId
@@ -210,7 +249,7 @@ class DialogSwipeBackHelper(
         settleAnimator?.cancel()
         settleAnimator = ValueAnimator.ofFloat(start, target).apply {
             this.duration = duration
-            interpolator = DecelerateInterpolator(1.2f)
+            interpolator = if (bounce) com.tool.tree.ui.SwipeBounceEffect.bounceInterpolator else DecelerateInterpolator(1.2f)
             addUpdateListener { applyProgress(it.animatedValue as Float) }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
@@ -218,7 +257,9 @@ class DialogSwipeBackHelper(
                     if (target == 0f && !isStale) {
                         contentView.translationX = 0f
                         contentView.elevation = 0f
-                        onDragStateChanged(false)
+                        // notifyStateChange = false cho phiên nảy trái, vì phiên đó chưa từng
+                        // gọi onDragStateChanged(true) - không được gọi false đè lên trạng thái
+                        if (notifyStateChange) onDragStateChanged(false)
                     }
                     onEnd?.invoke()
                 }
