@@ -287,12 +287,13 @@ class ActionPage : AppCompatActivity() {
         val fabOptions = ArrayList<PageMenuOption>()
         val overflowOptions = ArrayList<PageMenuOption>()
         menuOptions?.forEach { option ->
-            // type = "spinner" LUÔN hiện trong overflow menu (thay vì trên FAB) - kể cả khi
-            // mục này được khai báo trong [[fab]] (isFab = true). Trước đây spinner+isFab bị
-            // gộp chung vào fabOptions rồi resolveFabIcon() lại gắn icon dropdown lên thẳng
-            // nút FAB - sai vì FAB không có chỗ hiện tiêu đề đi kèm icon, khiến người dùng
-            // không biết đây là 1 dropdown chọn giá trị. Chỉ những type KHÁC spinner mới
-            // thực sự được phép làm fab.
+            // type = "spinner" LUÔN hiện như 1 mục bình thường trong popup "⋮" (icon mũi tên
+            // dropdown bên phải, giống cách checkbox hiện dấu tích bên phải - xem
+            // PopupMenuListAdapter/buildPopupRow()) - kể cả khi mục này được khai báo trong
+            // [[fab]] (isFab = true). Trước đây spinner+isFab bị gộp chung vào fabOptions rồi
+            // resolveFabIcon() lại gắn icon dropdown lên thẳng nút FAB - sai vì FAB không có
+            // chỗ hiện tiêu đề đi kèm icon, khiến người dùng không biết đây là 1 dropdown chọn
+            // giá trị. Chỉ những type KHÁC spinner mới thực sự được phép làm fab.
             if (option.isFab) {
                 fabOptions.add(option)
             } else {
@@ -300,18 +301,10 @@ class ActionPage : AppCompatActivity() {
             }
         }
         setupFab(fabOptions)
-
-        // Thêm mục [[menu]] vào overflow của Android (KHÔNG setShowAsAction) để hệ thống tự
-        // vẽ popup menu mặc định: vị trí đúng ngay dưới toolbar, hỗ trợ nhấn giữ + kéo để chọn
-        // (tính năng native của Android overflow menu).
-        overflowOptions.forEach { option ->
-            val uniqueItemId = ("overflow:" + option.key).hashCode()
-            val menuItem = menu?.add(Menu.NONE, uniqueItemId, Menu.NONE, option.title)
-            if (option.type == "checkbox") {
-                menuItem?.isCheckable = true
-                menuItem?.isChecked = option.checked
-            }
-        }
+        // Popup List Item mới cho menu "⋮" (thay hẳn cách cũ để mỗi option tự thêm 1 MenuItem
+        // native - chỉ còn 1 MenuItem duy nhất đóng vai trò nút mở popup, xem
+        // setupOverflowMenuButton()).
+        setupOverflowMenuButton(menu, overflowOptions)
 
         // Trang vẫn đang tải dở (đợi xong sau khi bấm "refresh"/"reload") - đè lên trạng thái
         // fab vừa build ở trên (setupFab() dựa vào config, lúc này có thể chưa đọc xong toml).
@@ -326,8 +319,10 @@ class ActionPage : AppCompatActivity() {
         return true
     }
 
-    // Mục checkbox giờ lại là native MenuItem (isCheckable + isChecked) nên
-    // invalidateOptionsMenu() sẽ vẽ lại đúng trạng thái tích mới nhất.
+    // Không còn onPrepareOptionsMenu() đồng bộ trạng thái tích - các mục checkbox giờ không
+    // còn là native MenuItem nào cả (xem setupOverflowMenuButton()/showOverflowMenuPopup()),
+    // nên chỉ cần đọc đúng option.checked hiện tại MỖI LẦN popup được mở (buildPopupRow()) là
+    // đủ, không cần cơ chế "chuẩn bị hiển thị" riêng như của native Menu nữa.
     private fun refreshCheckboxMenuStates() {
         val config = currentPageConfig ?: return
     
@@ -425,8 +420,33 @@ class ActionPage : AppCompatActivity() {
         return customIcon ?: ContextCompat.getDrawable(this, iconRes)
     }
 
-    // Dựng 1 dòng cho popup List Item từ 1 PageMenuOption - dùng riêng cho popup chọn khi
-    // FAB có nhiều item (showFabChooser()).
+    // Nút "⋮" trên toolbar - thay vì để native Menu tự vẽ submenu CHỈ CÓ CHỮ như trước (mỗi
+    // option = 1 MenuItem riêng), giờ chỉ thêm ĐÚNG 1 MenuItem duy nhất đóng vai trò nút mở
+    // popup List Item mới (showOverflowMenuPopup()). Dùng actionView (thay vì để hệ thống tự
+    // vẽ icon "⋮" mặc định) để có 1 View THẬT làm điểm neo cho ListPopupWindow - nếu không có
+    // actionView, MenuItem không có View nào để anchor popup vào đúng vị trí nút "⋮".
+    // Ẩn hẳn nút này nếu trang không có mục [[menu]] nào (overflowOptions rỗng), giống cách
+    // fab tự ẩn khi không có mục [[fab]] nào (xem setupFab()).
+    private fun setupOverflowMenuButton(menu: Menu?, overflowOptions: List<PageMenuOption>) {
+        if (overflowOptions.isEmpty()) return
+
+        val menuItem = menu?.add(Menu.NONE, Menu.NONE, Menu.NONE, getString(R.string.kr_more_options))
+        menuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+
+        val button = layoutInflater.inflate(R.layout.toolbar_more_action, null)
+        button.setOnClickListener { showOverflowMenuPopup(button, overflowOptions) }
+        menuItem?.actionView = button
+    }
+
+    // Popup List Item mới cho menu "⋮" - đọc lại danh sách row MỖI LẦN mở popup (buildPopupRow())
+    // nên luôn phản ánh đúng trạng thái checkbox mới nhất, không cần cơ chế đồng bộ riêng như
+    // onPrepareOptionsMenu() của native Menu trước đây.
+    private fun showOverflowMenuPopup(anchor: View, overflowOptions: List<PageMenuOption>) {
+        showListPopup(anchor, overflowOptions.map { buildPopupRow(it, anchor) })
+    }
+
+    // Dựng 1 dòng cho popup List Item mới từ 1 PageMenuOption - dùng chung cho CẢ popup menu
+    // "⋮" (showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item (showFabChooser()).
     // Icon PHẢI mặc định theo type (xem PopupRowRightIcon): checkbox -> dấu tích, spinner ->
     // mũi tên dropdown, mục "mở trang" (link/activity/onlineHtmlPage/pageConfigSh/
     // pageConfigPath) -> mũi tên ">"; các type còn lại (run/action...) -> icon "script"
@@ -478,37 +498,22 @@ class ActionPage : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Các mục [[menu]] (không phải header action) không còn là native MenuItem nào nữa -
+        // giờ luôn nằm trong popup List Item mới (xem setupOverflowMenuButton()/
+        // showOverflowMenuPopup()/buildPopupRow()), tự xử lý click ngay trong
+        // PopupMenuRow.onClick chứ không đi qua onOptionsItemSelected().
         val targetItemId = item.itemId
 
-        // Header actions (menu=true trên group.action) - luôn hiện icon riêng trên toolbar.
         val headerAction = headerActions?.find { ("header:" + it.key).hashCode() == targetItemId }
         if (headerAction != null) {
             openHeaderActionDialog(headerAction)
             return true
         }
-
-        // Mục [[menu]] trong overflow - giờ lại là native MenuItem nên click đi qua đây.
-        val overflowOption = menuOptions?.find { ("overflow:" + it.key).hashCode() == targetItemId }
-        if (overflowOption != null) {
-            if (overflowOption.type == "checkbox") {
-                overflowOption.checked = !overflowOption.checked
-                item.isChecked = overflowOption.checked
-
-                val uniqueItemId = overflowOption.key.hashCode()
-                justClickedItemIds.add(uniqueItemId)
-                handler.postDelayed({
-                    justClickedItemIds.remove(uniqueItemId)
-                }, 1500)
-            }
-            onMenuItemClick(overflowOption)
-            return true
-        }
-
         return super.onOptionsItemSelected(item)
     }
 
     // anchor: view dùng làm điểm neo cho popup dạng "spinner" (xem menuItemSpinner()) - mặc
-    // định null nghĩa là dùng toolbar. Khi gọi từ FAB
+    // định null nghĩa là dùng toolbar (trường hợp bấm từ menu 3 chấm). Khi gọi từ FAB
     // (addFab()/showFabChooser()) truyền thẳng binding.actionPageFab vào để popup "spinner"
     // đè lên đúng vị trí fab vừa bấm thay vì luôn hiện ở toolbar bất kể nguồn gọi.
     private fun onMenuItemClick(menuOption: PageMenuOption, anchor: View? = null) {
@@ -1063,8 +1068,11 @@ class ActionPage : AppCompatActivity() {
         return options
     }
 
-    // Hiện dropdown chọn giá trị kiểu Android Spinner (dùng ListPopupWindow) neo về
-    // góc phải anchor. Chọn xong chạy script với tham số "state" = giá trị vừa chọn.
+    // Hiện dropdown chọn giá trị kiểu Android Spinner (dùng ListPopupWindow, style y hệt
+    // ParamsSingleSelect.openSingleSelectPopup()) neo về góc phải toolbar - đè lên đúng vị trí
+    // menu vừa bấm thay vì tràn full chiều rộng màn hình (xem applyPopupWidthAndPosition).
+    // Chọn xong chạy script của menu item với tham số "state" = giá trị vừa chọn - giống hệt
+    // các loại menu item khác.
     private fun showSpinnerPopup(
         anchor: View,
         menuOption: PageMenuOption,
@@ -1091,7 +1099,13 @@ class ActionPage : AppCompatActivity() {
             )
         }
 
-        // Neo popup theo NỘI DUNG thực tế rồi neo sát góc phải anchor.
+        // Mục "spinner" trong menu 3 chấm/toolbar trước đây neo cả popup theo CHIỀU RỘNG
+        // TOÀN BỘ toolbar (anchor.width.coerceAtLeast(400)) - vì toolbar gần như chiếm hết
+        // chiều ngang màn hình nên trông giống 1 danh sách full màn hình thay vì 1 popup nhỏ
+        // "đè lên" đúng chỗ menu vừa bấm. Giờ đo width theo NỘI DUNG thực tế (giống
+        // ParamsSingleSelect.applyPopupWidthAndPosition) rồi neo popup về SÁT GÓC PHẢI của
+        // anchor (nơi icon menu 3 chấm/fab thường nằm) bằng horizontalOffset âm, để popup hiện
+        // ra gọn, đúng cảm giác "đè lên vị trí menu cũ" thay vì tràn ngang cả toolbar.
         // anchor == fab (menuItemSpinner được gọi từ addFab() với anchor = actionPageFab, xem
         // onMenuItemClick()) nghĩa là popup cũng sẽ tự lật lên TRÊN fab giống showFabChooser() -
         // cần chừa khoảng hở (fabPopupGap()) như nhau để không dính sát cạnh trên fab.
@@ -1125,8 +1139,9 @@ class ActionPage : AppCompatActivity() {
         return maxItemWidth
     }
 
-    // Dùng cho showSpinnerPopup() và showListPopup() (popup chọn khi FAB nhiều item) -
-    // đặt bề rộng popup theo NỘI DUNG thực tế rồi neo sát mép phải anchor.
+    // Dùng chung cho cả showSpinnerPopup() (neo ở toolbar/menu 3 chấm) LẪN showListPopup()
+    // (menu "⋮" kiểu List Item mới + popup chọn khi FAB nhiều item) - đặt bề rộng popup theo
+    // NỘI DUNG thực tế (thay vì tràn hết chiều ngang màn hình) rồi neo sát mép phải anchor.
     // extraTopGapPx > 0 dùng riêng cho FAB (luôn nằm ở đáy màn hình - xem showFabChooser()):
     // đẩy thêm popup lên CAO HƠN vị trí ListPopupWindow tự tính (nó đã tự lật lên trên anchor
     // do không đủ chỗ hiện xuống dưới, nhưng mặc định lật sát liền cạnh trên của FAB, trông
@@ -1146,7 +1161,8 @@ class ActionPage : AppCompatActivity() {
         val desiredWidth = contentWidth.coerceAtLeast(minWidth.toInt()).coerceAtMost(screenWidth)
         popup.width = desiredWidth
 
-        // Neo sát góc phải anchor (FAB) thay vì để mặc định ListPopupWindow căn trái.
+        // Neo sát góc phải anchor (toolbar/FAB) - đúng vị trí icon menu 3 chấm/FAB thường nằm -
+        // thay vì để mặc định ListPopupWindow căn trái (tràn từ mép trái anchor).
         val anchorLocation = IntArray(2)
         anchor.getLocationOnScreen(anchorLocation)
         val rightAligned = anchor.width - desiredWidth
@@ -1158,8 +1174,12 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Popup kiểu List Item (ListView có icon trái/phải) cho popup chọn khi FAB có nhiều
-    // item (showFabChooser()). Giữ nguyên cơ chế ListPopupWindow neo góc/tự lật lên trên.
+    // Popup kiểu List Item mới (RecyclerView/ListView có icon trái/phải) - dùng chung cho CẢ
+    // popup menu "⋮" (showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item
+    // (showFabChooser()) để đồng bộ giao diện, thay cho ArrayAdapter chỉ có chữ trước đây. Vẫn
+    // giữ NGUYÊN VẸN cơ chế PopupWindow neo góc/tự lật lên trên khi không đủ chỗ như cũ
+    // (ListPopupWindow + applyPopupWidthAndPosition) - chỉ đổi adapter/nội dung bên trong từng
+    // dòng sang PopupMenuListAdapter (xem PopupMenuListAdapter.kt).
     private fun showListPopup(anchor: View, rows: List<PopupMenuRow>, extraTopGapPx: Int = 0) {
         if (rows.isEmpty()) return
 
@@ -1183,10 +1203,12 @@ class ActionPage : AppCompatActivity() {
         popup.show()
     }
 
-    // Danh sách chọn khi fab có nhiều item - popup nhỏ neo ngay tại nút fab, chọn xong
-    // chạy y hệt như bấm thẳng 1 fab đơn (onMenuItemClick). FAB luôn nằm sát đáy màn hình
-    // nên popup luôn tự lật lên TRÊN fab; nếu không có gì tách biệt, cạnh dưới popup dính
-    // liền cạnh trên fab trông rất chật, nên đẩy thêm 1 khoảng hở nhỏ (fabPopupGap) giữa 2 bên.
+    // Danh sách chọn khi fab có nhiều item - popup nhỏ neo ngay tại nút fab, chọn xong chạy y
+    // hệt như bấm thẳng 1 fab đơn (onMenuItemClick). Cùng kiểu List Item + cùng nền
+    // kr_spinner_popup_bg với popup menu "⋮" (showOverflowMenuPopup()) để đồng bộ giao diện -
+    // xem showListPopup(). FAB luôn nằm sát đáy màn hình nên popup luôn tự lật lên TRÊN fab;
+    // nếu không có gì tách biệt, cạnh dưới popup dính liền cạnh trên fab trông rất chật, nên
+    // đẩy thêm 1 khoảng hở nhỏ (fabPopupGap) giữa 2 bên.
     private fun showFabChooser(fabOptions: List<PageMenuOption>) {
         val anchor = binding.actionPageFab
         val rows = fabOptions.map { buildPopupRow(it, anchor) }

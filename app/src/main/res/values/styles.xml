@@ -49,47 +49,19 @@
     <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="titleTextColor">?android:textColorPrimary</item>
         <item name="subtitleTextColor">?android:textColorSecondary</item>
-        <!-- colorControlNormal: quyết định màu TINT của icon toolbar (xem android:tint trong
-             ic_more_vert.xml). Phải dùng ?android:textColorSecondary (xám ~rgba(0,0,0,0.54) trong
-             light theme) - đây CHÍNH LÀ màu mà icon "⋮" mặc định của AppCompat toolbar dùng
-             (kế thừa từ Theme.AppCompat.Light). Nếu dùng ?android:textColorPrimary (~rgba(0,0,0,
-             0.87), gần đen) icon sẽ trông tối hơn mặc định rõ rệt, không khớp với menu hệ thống.
-             titleTextColor vẫn giữ textColorPrimary (đậm hơn) để phân biệt với icon phụ. -->
-        <item name="colorControlNormal">?android:textColorSecondary</item>
-        <item name="android:foregroundTint">?android:textColorSecondary</item>
-        <item name="android:foregroundTintMode">screen</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.ActionBar">
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="titleTextColor">?android:textColorPrimary</item>
         <item name="subtitleTextColor">?android:textColorSecondary</item>
-        <!-- colorControlNormal (dark theme): ?android:textColorSecondary trong dark theme =
-             rgba(255,255,255,0.54) - xám trắng mềm, khớp với icon "⋮" mặc định của AppCompat
-             toolbar dark. Nếu dùng textColorPrimary (rgba(255,255,255,0.87), gần trắng nguyên
-             chất) icon sẽ quá chói so với popup menu xám của hệ thống. -->
-        <item name="colorControlNormal">?android:textColorSecondary</item>
-        <item name="android:foregroundTint">?android:textColorSecondary</item>
-        <item name="android:foregroundTintMode">screen</item>
     </style>
 
-    <!-- Style riêng cho nền popup (menu 3 chấm của toolbar + popup chọn item của FAB) - dùng
-         chung 1 nền bo góc với dropdown kiểu Spinner (kr_spinner_popup_bg) cho đồng bộ giao
-         diện, thay vì nền popup mặc định của hệ thống/AppCompat (vuông cạnh, không theo theme
-         sáng/tối rõ ràng). Xem AppTheme.PopupOverlay bên dưới + showFabChooser() trong
-         ActionPage.kt. -->
     <style name="AppPopupMenuStyle" parent="Widget.AppCompat.PopupMenu">
         <item name="android:popupBackground">@drawable/kr_spinner_popup_bg</item>
     </style>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat">
-        <!-- android:popupMenuStyle: style cho popup menu 3 chấm THẬT SỰ của Toolbar (widget hệ
-             thống, tự vẽ khi bấm icon "⋮") - Toolbar áp dụng theme này qua app:popupTheme (xem
-             app_bar_main.xml) nên chỉ cần khai báo ở đây, không cần đụng gì thêm ở code. -->
         <item name="android:popupMenuStyle">@style/AppPopupMenuStyle</item>
-        <!-- popupMenuStyle (không tiền tố android:) - thuộc tính của AppCompat, để
-             androidx.appcompat.widget.PopupMenu dựng bằng tay (ContextThemeWrapper(this,
-             R.style.AppTheme_PopupOverlay), xem showFabChooser()) cũng lấy đúng nền này, đồng
-             bộ với menu 3 chấm ở trên thay vì nền PopupMenu mặc định. -->
         <item name="popupMenuStyle">@style/AppPopupMenuStyle</item>
     </style>
 
@@ -146,7 +118,6 @@
     </style>
 
     <style name="custom_alert_dialog">
-        <!--<item name="android:windowLightStatusBar">true</item>-->
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
@@ -293,8 +264,6 @@
     </style>
 
     <style name="dialogChoiceBtn" parent="@style/Widget.AppCompat.Button.Borderless">
-        <!-- Dùng chung nền + hiệu ứng nhấn với nút "Sao chép" (btn_copy) để đồng bộ giao diện:
-             bo góc tròn, đổi màu khi ấn (state_pressed), thay vì màu nhấn đậm rời rạc trước đó. -->
         <item name="android:background">@drawable/btn_bg_large_secondary</item>
         <item name="android:textColor">@color/colorAccent</item>
         <item name="android:layout_width">wrap_content</item>
@@ -342,16 +311,13 @@
     </style>
 
     <style name="dialog_full_screen" parent="Theme.AppCompat.Dialog">
-        <!--<item name="android:windowNoTitle">true</item>-->
         <item name="android:windowFullscreen">false</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:fitsSystemWindows">false</item>
-        <!-- 浮于Activity之上 -->
         <item name="android:windowIsFloating">false</item>
-        <!-- 边框 -->
         <item name="android:windowFrame">@null</item>
         <item name="android:windowCloseOnTouchOutside">false</item>
     </style>
@@ -377,16 +343,13 @@
     </style>
 
     <style name="kr_full_screen_dialog" parent="Theme.AppCompat.Dialog">
-        <!--<item name="android:windowNoTitle">true</item>-->
         <item name="android:windowFullscreen">false</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:fitsSystemWindows">false</item>
-        <!-- 浮于Activity之上 -->
         <item name="android:windowIsFloating">false</item>
-        <!-- 边框 -->
         <item name="android:windowFrame">@null</item>
         <item name="android:windowCloseOnTouchOutside">false</item>
     </style>
