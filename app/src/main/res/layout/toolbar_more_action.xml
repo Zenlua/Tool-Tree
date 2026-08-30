@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ActionView của mục menu "⋮" trên toolbar (xem ActionPage.setupOverflowMenuButton()) - dùng
+     actionView (thay vì để hệ thống tự vẽ submenu chữ mặc định) để có 1 View THẬT làm điểm neo
+     cho popup List Item mới (ActionPage.showOverflowMenuPopup()), đồng thời vẫn nằm đúng vị trí
+     "⋮" quen thuộc trên toolbar. -->
+<ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/toolbar_more_button"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:padding="12dp"
+    android:background="?android:attr/selectableItemBackgroundBorderless"
+    android:scaleType="fitCenter"
+    android:src="@drawable/ic_more_vert"
+    android:contentDescription="@string/kr_more_options" />
