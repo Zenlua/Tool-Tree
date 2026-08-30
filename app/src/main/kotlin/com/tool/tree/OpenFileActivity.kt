@@ -2,7 +2,6 @@ package com.tool.tree
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.webkit.MimeTypeMap
 import android.widget.Toast
@@ -11,18 +10,6 @@ import androidx.core.content.FileProvider
 import java.io.File
 
 class OpenFileActivity : AppCompatActivity() {
-
-    companion object {
-        private val mimeTypeMap = MimeTypeMap.getSingleton()
-
-        // Hàm trả về MIME type của file
-        fun getMimeType(path: String): String {
-            // Thay thế toLowerCase() bằng lowercase()
-            val fileExtension = MimeTypeMap.getFileExtensionFromUrl(path.lowercase())
-            return mimeTypeMap.getMimeTypeFromExtension(fileExtension)
-                ?: if (path.endsWith(".apk")) "application/vnd.android.package-archive" else "*/*"
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,25 +21,34 @@ class OpenFileActivity : AppCompatActivity() {
         }
 
         val file = File(filePath)
-        
         if (!file.exists()) {
             showToast("File does not exist")
             finish()
             return
         }
 
-        val uri = FileProvider.getUriForFile(this, "${applicationContext.packageName}.provider", file)
-        val mimeType = getMimeType(file.name)
+        val uri = FileProvider.getUriForFile(this, "${packageName}.provider", file)
+        val ext = MimeTypeMap.getFileExtensionFromUrl(file.name.lowercase())
+        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
+            ?: if (file.name.endsWith(".apk", true)) "application/vnd.android.package-archive" else "*/*"
 
-        val intent = Intent(Intent.ACTION_VIEW).apply {
+        val viewIntent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, mimeType)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         }
 
         try {
-            startActivity(intent)
+            startActivity(viewIntent)
         } catch (e: ActivityNotFoundException) {
             showToast("No application found to open this file")
+        }
+
+        // Tắt chuyển cảnh
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0)
+        } else {
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, 0)
         }
 
         finish()
