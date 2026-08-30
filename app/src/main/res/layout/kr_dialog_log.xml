@@ -193,9 +193,8 @@
         android:layout_width="match_parent"
         android:layout_height="7dp"
         android:layout_below="@id/header_row"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="13dp"
-        android:layout_marginEnd="10dp"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="11dp"
         android:indeterminate="true"
         android:max="100"
         android:progress="0" />
