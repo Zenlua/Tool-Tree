@@ -8,11 +8,14 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.ImageButton
 import android.widget.ListPopupWindow
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -433,9 +436,32 @@ class ActionPage : AppCompatActivity() {
         val menuItem = menu?.add(Menu.NONE, Menu.NONE, Menu.NONE, getString(R.string.kr_more_options))
         menuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
 
-        val button = layoutInflater.inflate(R.layout.toolbar_more_action, null)
+        val button = buildOverflowMenuButton()
         button.setOnClickListener { showOverflowMenuPopup(button, overflowOptions) }
         menuItem?.actionView = button
+    }
+
+    // Dựng nút "⋮" hoàn toàn bằng code (không dùng layout toolbar_more_action.xml), icon lấy
+    // thẳng từ ic_more_vert.xml (vector code, không phải ảnh) - giữ đúng kích thước/padding/
+    // background như layout cũ để không đổi giao diện.
+    private fun buildOverflowMenuButton(): ImageButton {
+        val density = resources.displayMetrics.density
+        val sizePx = (48 * density).toInt()
+        val paddingPx = (12 * density).toInt()
+
+        val backgroundResId = TypedValue().let {
+            theme.resolveAttribute(android.R.attr.actionBarItemBackground, it, true)
+            it.resourceId
+        }
+
+        return ImageButton(this).apply {
+            layoutParams = ViewGroup.LayoutParams(sizePx, sizePx)
+            setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+            if (backgroundResId != 0) setBackgroundResource(backgroundResId)
+            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+            setImageResource(R.drawable.ic_more_vert)
+            contentDescription = getString(R.string.kr_more_options)
+        }
     }
 
     // Popup List Item mới cho menu "⋮" - đọc lại danh sách row MỖI LẦN mở popup (buildPopupRow())
