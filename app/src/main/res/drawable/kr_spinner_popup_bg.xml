@@ -5,7 +5,7 @@
     
     <shape android:shape="rectangle">
         <!-- Màu nền tự động theo theme sáng/tối -->
-        <solid android:color="?attr/cardBg" />
+        <solid android:color="?android:attr/colorBackgroundFloating" />
         
         <!-- Đỉnh độ bo góc nhẹ (tăng/giảm dp tùy ý) -->
         <corners android:radius="8dp" />
