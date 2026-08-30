@@ -64,6 +64,9 @@ class SwipeBackHelper(
     // và kéo trượt sang phải (thay vì chỉ là 1 lớp phẳng lì di chuyển)
     private val dragElevationPx = 8f * activity.resources.displayMetrics.density
 
+    // Giới hạn kéo tối đa khi vuốt SANG TRÁI (nảy rubber-band) - xem SwipeBounceEffect
+    private val maxLeftPullPx = SwipeBounceEffect.maxPullPx(activity.resources.displayMetrics.density)
+
     init {
         // contentView (khối bọc toolbar + list) thường KHÔNG tự vẽ background riêng, nó
         // "ăn theo" windowBackground của Activity phía dưới. Bình thường không sao vì
@@ -126,6 +129,10 @@ class SwipeBackHelper(
     // Đã xác nhận là đang kéo lùi (đã vượt touchSlop theo chiều ngang)
     private var dragging = false
 
+    // Đã xác nhận là đang kéo NẢY sang trái (rubber-band, không dẫn tới hành động gì, chỉ để
+    // phản hồi "đã chạm biên") - tách riêng khỏi `dragging` vì 2 hướng có ý nghĩa khác nhau
+    private var draggingLeft = false
+
     private var settleAnimator: ValueAnimator? = null
     var enabled = true
 
@@ -153,6 +160,7 @@ class SwipeBackHelper(
                     contentView.translationX == 0f
                 candidate = isIdle
                 dragging = false
+                draggingLeft = false
                 downX = ev.rawX
                 downY = ev.rawY
                 if (candidate) {
@@ -166,13 +174,13 @@ class SwipeBackHelper(
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (!candidate && !dragging) return false
+                if (!candidate && !dragging && !draggingLeft) return false
                 velocityTracker?.addMovement(ev)
 
                 val dx = ev.rawX - downX
                 val dy = ev.rawY - downY
 
-                if (!dragging) {
+                if (!dragging && !draggingLeft) {
                     when {
                         dx > touchSlop && dx > abs(dy) * 1.2f -> {
                             // Xác nhận là kéo lùi -> hủy sự kiện đang dở dang (nếu có) trên
@@ -188,9 +196,19 @@ class SwipeBackHelper(
                             contentView.dispatchTouchEvent(cancelEvent)
                             cancelEvent.recycle()
                         }
-                        dx < -touchSlop || abs(dy) > touchSlop -> {
-                            // Kéo sang trái hoặc kéo dọc -> không phải cử chỉ trở lại, nhường
-                            // hẳn cho view con (cuộn list, ...)
+                        dx < -touchSlop && abs(dx) > abs(dy) * 1.2f -> {
+                            // Vuốt sang trái -> không có hành động điều hướng nào, chỉ nảy nhẹ
+                            // (rubber-band) để phản hồi rồi bật lại - xem SwipeBounceEffect
+                            beginNewDragSession()
+                            draggingLeft = true
+                            val cancelEvent = MotionEvent.obtain(ev)
+                            cancelEvent.action = MotionEvent.ACTION_CANCEL
+                            contentView.dispatchTouchEvent(cancelEvent)
+                            cancelEvent.recycle()
+                        }
+                        abs(dy) > touchSlop -> {
+                            // Kéo dọc chiếm ưu thế -> không phải cử chỉ ngang, nhường hẳn cho
+                            // view con (cuộn list, ...)
                             candidate = false
                             return false
                         }
@@ -203,21 +221,33 @@ class SwipeBackHelper(
                     applyProgress(clampedDx)
                     return true
                 }
+
+                if (draggingLeft) {
+                    val pulled = SwipeBounceEffect.dampen((-dx).coerceAtLeast(0f), maxLeftPullPx)
+                    contentView.translationX = -pulled
+                    return true
+                }
                 return false
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 val wasDragging = dragging
+                val wasDraggingLeft = draggingLeft
                 if (wasDragging) {
                     velocityTracker?.addMovement(ev)
                     velocityTracker?.computeCurrentVelocity(1000, maxFlingVelocity.toFloat())
                     val velocityX = velocityTracker?.xVelocity ?: 0f
                     settleAfterDrag(velocityX)
+                } else if (wasDraggingLeft) {
+                    // Luôn bật lại về 0 (không có "commit" nào cho hướng trái) - dùng
+                    // interpolator nảy thay vì DecelerateInterpolator thường
+                    animateTo(0f, 0f, null, durationMultiplier = 1.3f, bounce = true, notifyStateChange = false)
                 }
                 recycleTracker()
                 candidate = false
                 dragging = false
-                return wasDragging
+                draggingLeft = false
+                return wasDragging || wasDraggingLeft
             }
         }
         return false
@@ -262,7 +292,14 @@ class SwipeBackHelper(
         }
     }
 
-    private fun animateTo(target: Float, velocityX: Float, onEnd: (() -> Unit)?, durationMultiplier: Float = 1f) {
+    private fun animateTo(
+        target: Float,
+        velocityX: Float,
+        onEnd: (() -> Unit)?,
+        durationMultiplier: Float = 1f,
+        bounce: Boolean = false,
+        notifyStateChange: Boolean = true
+    ) {
         val start = contentView.translationX
         val distance = abs(target - start)
         val duration = (computeSettleDuration(distance, velocityX) * durationMultiplier).toLong()
@@ -276,7 +313,7 @@ class SwipeBackHelper(
         settleAnimator?.cancel()
         settleAnimator = ValueAnimator.ofFloat(start, target).apply {
             this.duration = duration
-            interpolator = DecelerateInterpolator(1.2f)
+            interpolator = if (bounce) SwipeBounceEffect.bounceInterpolator else DecelerateInterpolator(1.2f)
             addUpdateListener { applyProgress(it.animatedValue as Float) }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
@@ -287,7 +324,9 @@ class SwipeBackHelper(
                         contentView.translationX = 0f
                         contentView.elevation = 0f
                         // Đã loại bỏ gán background = null tại đây
-                        onDragStateChanged(false)
+                        // notifyStateChange = false cho phiên nảy trái, vì phiên đó chưa từng
+                        // gọi onDragStateChanged(true) - không được gọi false đè lên trạng thái
+                        if (notifyStateChange) onDragStateChanged(false)
                     }
                     onEnd?.invoke()
                 }
