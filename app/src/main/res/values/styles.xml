@@ -49,7 +49,13 @@
     <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="titleTextColor">?android:textColorPrimary</item>
         <item name="subtitleTextColor">?android:textColorSecondary</item>
-        <item name="colorControlNormal">?android:textColorPrimary</item>
+        <!-- colorControlNormal: quyết định màu TINT của icon toolbar (xem android:tint trong
+             ic_more_vert.xml). Phải dùng ?android:textColorSecondary (xám ~rgba(0,0,0,0.54) trong
+             light theme) - đây CHÍNH LÀ màu mà icon "⋮" mặc định của AppCompat toolbar dùng
+             (kế thừa từ Theme.AppCompat.Light). Nếu dùng ?android:textColorPrimary (~rgba(0,0,0,
+             0.87), gần đen) icon sẽ trông tối hơn mặc định rõ rệt, không khớp với menu hệ thống.
+             titleTextColor vẫn giữ textColorPrimary (đậm hơn) để phân biệt với icon phụ. -->
+        <item name="colorControlNormal">?android:textColorSecondary</item>
         <item name="android:foregroundTint">?android:textColorSecondary</item>
         <item name="android:foregroundTintMode">screen</item>
     </style>
@@ -57,7 +63,11 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="titleTextColor">?android:textColorPrimary</item>
         <item name="subtitleTextColor">?android:textColorSecondary</item>
-        <item name="colorControlNormal">?android:textColorPrimary</item>
+        <!-- colorControlNormal (dark theme): ?android:textColorSecondary trong dark theme =
+             rgba(255,255,255,0.54) - xám trắng mềm, khớp với icon "⋮" mặc định của AppCompat
+             toolbar dark. Nếu dùng textColorPrimary (rgba(255,255,255,0.87), gần trắng nguyên
+             chất) icon sẽ quá chói so với popup menu xám của hệ thống. -->
+        <item name="colorControlNormal">?android:textColorSecondary</item>
         <item name="android:foregroundTint">?android:textColorSecondary</item>
         <item name="android:foregroundTintMode">screen</item>
     </style>

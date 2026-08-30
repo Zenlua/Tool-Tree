@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Icon "⋮" (3 chấm dọc) dùng cho nút mở popup List Item mới thay cho menu 3 chấm mặc định
-     của hệ thống - xem ActionPage.setupOverflowMenuButton()/toolbar_more_action.xml. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
