@@ -10,16 +10,28 @@ import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import android.widget.ImageView
 
-// Tự động tô màu cho kr_widget (icon phụ ở góc phải các item action/page/picker/editor):
-// - Nếu item có icon riêng (kr_icon, config.iconPath) -> lấy màu TRUNG BÌNH của icon đó áp
-//   vào kr_widget, để icon phụ "hoà" theo tông màu icon chính thay vì luôn 1 màu cố định.
-// - Nếu item KHÔNG có icon riêng -> giữ nguyên ?android:attr/colorAccent như mặc định
-//   khai báo sẵn trong kr_action_list_item.xml.
+// Tự động tô màu cho kr_widget:
+// - Lấy màu TRUNG BÌNH của icon chính.
+// - Đẩy độ sáng (Value trong không gian HSV) lên mức TỐI ĐA (100%) để màu luôn sáng nhất.
 object WidgetTintHelper {
     fun applyTint(context: Context, widgetView: ImageView?, iconDrawable: Drawable?) {
         widgetView ?: return
-        val color = iconDrawable?.let { extractAverageColor(it) } ?: resolveAccentColor(context)
-        widgetView.imageTintList = ColorStateList.valueOf(color)
+        val rawColor = iconDrawable?.let { extractAverageColor(it) } ?: resolveAccentColor(context)
+        
+        // Đẩy độ sáng của màu lên tối đa
+        val brightColor = maximizeBrightness(rawColor)
+        
+        widgetView.imageTintList = ColorStateList.valueOf(brightColor)
+    }
+
+    /**
+     * Chuyển đổi màu sang hệ màu HSV và ép Value (độ sáng) thành 1.0f (100%)
+     */
+    private fun maximizeBrightness(color: Int): Int {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+        hsv[2] = 1.0f // hsv[0]: Hue, hsv[1]: Saturation, hsv[2]: Value (Brightness)
+        return Color.HSVToColor(hsv)
     }
 
     private fun resolveAccentColor(context: Context): Int {
@@ -28,8 +40,7 @@ object WidgetTintHelper {
         return typedValue.data
     }
 
-    // Thu nhỏ icon về lưới nhỏ (12x12) rồi lấy trung bình RGB, bỏ qua pixel gần như
-    // trong suốt (nền) để màu không bị pha loãng bởi vùng trống của icon.
+    // Thu nhỏ icon về lưới nhỏ (12x12) rồi lấy trung bình RGB, bỏ qua pixel trong suốt.
     private fun extractAverageColor(drawable: Drawable): Int? {
         val bitmap = drawableToBitmap(drawable) ?: return null
         val sampleSize = 12
