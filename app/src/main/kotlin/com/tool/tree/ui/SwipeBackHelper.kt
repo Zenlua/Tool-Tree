@@ -28,10 +28,10 @@ import kotlin.math.abs
  * mở/đóng ActionPage bằng cách thông thường - NHƯNG không nên là root ngoài cùng, vì cần
  * còn 1 lớp phía dưới (ví dụ ảnh preview màn hình cũ) đứng yên để lộ ra trong lúc kéo.
  *
- * onDragStateChanged(true) được gọi ngay khi xác nhận là đang kéo lùi (để phía Activity
- * hiện ảnh preview lên); onDragStateChanged(false) được gọi khi kéo bị hủy và đã bật lại
- * về vị trí gốc (không gọi khi kéo thành công vì activity sắp finish() rồi, không cần ẩn
- * preview làm gì nữa).
+ * onDragStateChanged(true) được gọi ngay khi xác nhận là đang kéo (CẢ 2 hướng phải/trái) để
+ * phía Activity hiện ảnh preview mờ/nét lên; onDragStateChanged(false) được gọi khi kéo bị
+ * hủy/nảy xong và đã bật lại về vị trí gốc (không gọi khi kéo phải THÀNH CÔNG vì activity sắp
+ * finish() rồi, không cần ẩn preview làm gì nữa).
  *
  * onDragProgress(0f..1f) được gọi liên tục theo khoảng cách đã kéo (0 = chưa kéo, 1 = kéo
  * hết chiều rộng màn hình) - dùng để hiện hiệu ứng "lấy nét dần" cho ảnh preview phía sau:
@@ -198,9 +198,12 @@ class SwipeBackHelper(
                         }
                         dx < -touchSlop && abs(dx) > abs(dy) * 1.2f -> {
                             // Vuốt sang trái -> không có hành động điều hướng nào, chỉ nảy nhẹ
-                            // (rubber-band) để phản hồi rồi bật lại - xem SwipeBounceEffect
+                            // (rubber-band) để phản hồi rồi bật lại - xem SwipeBounceEffect.
+                            // Vẫn hiện preview mờ/nét giống hệt bên phải (onDragStateChanged)
+                            // để có cảm giác đồng nhất, dù không thật sự "lùi" về trang nào.
                             beginNewDragSession()
                             draggingLeft = true
+                            onDragStateChanged(true)
                             val cancelEvent = MotionEvent.obtain(ev)
                             cancelEvent.action = MotionEvent.ACTION_CANCEL
                             contentView.dispatchTouchEvent(cancelEvent)
@@ -240,8 +243,11 @@ class SwipeBackHelper(
                     settleAfterDrag(velocityX)
                 } else if (wasDraggingLeft) {
                     // Luôn bật lại về 0 (không có "commit" nào cho hướng trái) - dùng
-                    // interpolator nảy thay vì DecelerateInterpolator thường
-                    animateTo(0f, 0f, null, durationMultiplier = 1.3f, bounce = true, notifyStateChange = false)
+                    // interpolator nảy thay vì DecelerateInterpolator thường. notifyStateChange
+                    // = true (đã đổi từ false) vì giờ nhánh vuốt trái CŨNG gọi
+                    // onDragStateChanged(true) lúc bắt đầu (để hiện preview mờ giống bên phải)
+                    // nên phải tắt lại đúng lúc kết thúc, tránh preview bị treo mãi.
+                    animateTo(0f, 0f, null, durationMultiplier = 1.3f, bounce = true, notifyStateChange = true)
                 }
                 recycleTracker()
                 candidate = false
@@ -325,8 +331,9 @@ class SwipeBackHelper(
                         contentView.translationX = 0f
                         contentView.elevation = 0f
                         // Đã loại bỏ gán background = null tại đây
-                        // notifyStateChange = false cho phiên nảy trái, vì phiên đó chưa từng
-                        // gọi onDragStateChanged(true) - không được gọi false đè lên trạng thái
+                        // notifyStateChange mặc định = true, tắt preview đúng lúc animation về 0
+                        // kết thúc - áp dụng cho CẢ 2 hướng (phải: hủy kéo giữa chừng; trái: nảy
+                        // rubber-band), vì giờ cả 2 đều gọi onDragStateChanged(true) lúc bắt đầu.
                         if (notifyStateChange) onDragStateChanged(false)
                     }
                     onEnd?.invoke()
