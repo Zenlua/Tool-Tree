@@ -1,22 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 1 dòng trong popup kiểu List Item mới (thay ArrayAdapter chỉ có chữ trước đây) - dùng
-     chung cho CẢ popup menu "⋮" (ActionPage.showOverflowMenuPopup()) LẪN popup chọn khi FAB có
-     nhiều item (ActionPage.showFabChooser()), xem PopupMenuListAdapter.
-     - popup_item_icon_left: icon riêng của mục (icon-path, nếu có khai báo) - GONE hẳn (không
-       giữ chỗ) nếu mục không có icon riêng để tiêu đề canh sát lề trái, không bị hụt/trống như
-       khi dùng INVISIBLE.
-     - popup_item_icon_right: icon mặc định theo type (xem ActionPage.buildPopupRow()) - dấu
-       tích (checkbox), mũi tên ">" (mở trang), mũi tên dropdown (spinner), hoặc icon "script"
-       (các type còn lại - run/action...). Luôn hiện, không có type nào ẩn hẳn icon phải.
-     - popup_item_divider: đường kẻ mỏng ngăn cách giữa các mục - PopupMenuListAdapter tự ẩn ở
-       dòng CUỐI CÙNG của popup. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:clipToOutline="true"
-    android:clickable="true"
-    android:focusable="true">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"

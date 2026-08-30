@@ -2,13 +2,22 @@
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:insetLeft="@dimen/activity_horizontal_margin"
     android:insetRight="@dimen/activity_horizontal_margin">
-    
-    <shape android:shape="rectangle">
-        <!-- Màu nền tự động theo theme sáng/tối -->
-        <solid android:color="?android:attr/colorBackgroundFloating" />
-        
-        <!-- Đỉnh độ bo góc nhẹ (tăng/giảm dp tùy ý) -->
-        <corners android:radius="8dp" />
-    </shape>
-    
+
+    <ripple android:color="?android:attr/colorControlHighlight">
+        <item android:id="@android:id/mask">
+            <shape android:shape="rectangle">
+                <corners android:radius="8dp" />
+                <solid android:color="#FFFFFF" />
+            </shape>
+        </item>
+
+        <!-- Nền mặc định khi không nhấn -->
+        <item>
+            <shape android:shape="rectangle">
+                <solid android:color="?android:attr/colorBackgroundFloating" />
+                <corners android:radius="8dp" />
+            </shape>
+        </item>
+    </ripple>
+
 </inset>

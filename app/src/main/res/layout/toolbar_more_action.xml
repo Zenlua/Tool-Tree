@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ActionView của mục menu "⋮" trên toolbar (xem ActionPage.setupOverflowMenuButton()) - dùng
-     actionView (thay vì để hệ thống tự vẽ submenu chữ mặc định) để có 1 View THẬT làm điểm neo
-     cho popup List Item mới (ActionPage.showOverflowMenuPopup()), đồng thời vẫn nằm đúng vị trí
-     "⋮" quen thuộc trên toolbar. -->
-<!-- Sửa nền ImageButton: dùng ?attr/actionBarItemBackground (CHÍNH LÀ nền hệ thống dùng cho nút
-     overflow "⋮" mặc định của AppCompat Toolbar - Widget.AppCompat.ActionButton.Overflow). Nền này
-     có 1 mask hình tròn (~20dp bán kính) ở giữa, ripple khi nhấn chỉ lan trong vùng tròn đó,
-     "thon gọn" giống mặc định - KHÔNG lan ra toàn 48dp hay tràn ra ngoài biên view như
-     selectableItemBackgroundBorderless (vốn không có mask, ripple tự do phình to như sóng). -->
 <ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/toolbar_more_button"
     android:layout_width="48dp"
     android:layout_height="48dp"
@@ -16,4 +8,5 @@
     android:background="?attr/actionBarItemBackground"
     android:scaleType="fitCenter"
     android:src="@drawable/ic_more_vert"
+    app:tint="?attr/colorControlNormal"
     android:contentDescription="@string/kr_more_options" />
