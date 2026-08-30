@@ -287,8 +287,9 @@ class SwipeBackHelper(
         if (shouldGoBack) {
             animateTo(width.toFloat(), velocityX, { onBack() })
         } else {
-            // Kéo chưa đủ hoặc vuốt ngược lại -> bật lại về vị trí ban đầu
-            animateTo(0f, velocityX, null)
+            // Kéo chưa đủ hoặc vuốt ngược lại -> bật lại về vị trí ban đầu, có nảy nhẹ
+            // (bounce) giống hiệu ứng vuốt trái, thay vì trượt về đều đều như trước
+            animateTo(0f, velocityX, null, durationMultiplier = 1.3f, bounce = true)
         }
     }
 
