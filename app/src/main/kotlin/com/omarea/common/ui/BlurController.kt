@@ -6,9 +6,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
-import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.renderscript.Allocation
 import android.renderscript.Element
@@ -17,118 +14,68 @@ import android.renderscript.ScriptIntrinsicBlur
 import com.tool.tree.ThemeModeState
 import java.io.File
 import java.lang.ref.WeakReference
-import kotlin.math.max
-import kotlin.math.round
 
 class BlurController {
 
-    /**
-     * Tỉ lệ thu nhỏ wallpaper để xử lý blur.
-     * 20% = nhiều pixel hơn 1.78x so với 15% cũ, blur mượt hơn,
-     * chi phí RenderScript tăng không đáng kể (vài ms).
-     */
-    private val BLUR_SCALE = 0.20f
-    private val BLUR_RADIUS = 16f
+    // === Optimization 1: Cache RenderScript context + ScriptIntrinsicBlur ===
+    // Tránh tạo mới RenderScript (rất nặng) mỗi lần blur.
+    // RS context được tái sử dụng xuyên suốt lifecycle của controller (singleton).
+    private var cachedRs: RenderScript? = null
+    private var cachedBlurScript: ScriptIntrinsicBlur? = null
+    private var cachedRsContext: Context? = null
 
-    // ─── Cache RenderScript ────────────────────────────────────────
-    // Tránh tạo/huỷ RS context mỗi lần capture (tốn ~30-50ms/lần).
-    @Volatile
-    private var rs: RenderScript? = null
-    @Volatile
-    private var blurScript: ScriptIntrinsicBlur? = null
-    private var rsContext: Context? = null
-
-    private fun getRenderScript(context: Context): RenderScript {
-        val rsInstance = rs
-        // Tạo RS context mới chỉ khi chưa có hoặc đổi context (hiếm khi xảy ra)
-        if (rsInstance == null || rsContext !== context) {
-            rsInstance?.destroy()
-            blurScript?.destroy()
-            blurScript = null
-            val newRs = RenderScript.create(context)
-            rs = newRs
-            rsContext = context
-            return newRs
+    private fun getRenderScript(context: Context): Pair<RenderScript, ScriptIntrinsicBlur> {
+        val rs = cachedRs
+        val script = cachedBlurScript
+        if (rs != null && !rs.isDestroyed && script != null && cachedRsContext === context) {
+            return Pair(rs, script)
         }
-        return rsInstance
-    }
-
-    private fun getBlurScript(rs: RenderScript): ScriptIntrinsicBlur {
-        var script = blurScript
-        if (script == null) {
-            script = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs))
-            blurScript = script
-        }
-        return script
+        // Hủy RS cũ nếu context thay đổi
+        rs?.destroy()
+        val newRs = RenderScript.create(context)
+        val newScript = ScriptIntrinsicBlur.create(newRs, Element.U8_4(newRs))
+        cachedRs = newRs
+        cachedBlurScript = newScript
+        cachedRsContext = context
+        return Pair(newRs, newScript)
     }
 
     /**
-     * Làm mờ bitmap bằng RenderScript (cache RS context + script).
-     * Allocation được tạo/huỷ mỗi lần vì kích thước bitmap đầu vào có thể khác.
-     *
-     * @return bitmap mới đã blur, hoặc null nếu lỗi. Caller phải recycle bitmap trả về
-     *         khi không còn dùng (trừ khi gán vào BlurEngine.blurBitmap).
+     * Hủy RenderScript cache (gọi khi không còn cần blur nữa).
      */
-    private fun blurBitmap(context: Context, bitmap: Bitmap, radius: Float): Bitmap? {
-        val outBitmap = Bitmap.createBitmap(
-            bitmap.width, bitmap.height,
-            bitmap.config ?: Bitmap.Config.ARGB_8888
-        )
-        val rsInstance = getRenderScript(context)
-        var input: Allocation? = null
-        var output: Allocation? = null
+    fun destroyRenderScript() {
+        cachedRs?.destroy()
+        cachedRs = null
+        cachedBlurScript = null
+        cachedRsContext = null
+    }
+
+    // === Optimization 1 + 5: Cache RS + Allocation.destroy() ===
+    private fun blurBitmap(context: Context, bitmap: Bitmap?, radius: Float): Bitmap? {
+        if (bitmap == null) return null
+        val outBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, bitmap.config ?: Bitmap.Config.ARGB_8888)
+        val (rs, intrinsicBlur) = getRenderScript(context)
         try {
-            input = Allocation.createFromBitmap(rsInstance, bitmap)
-            output = Allocation.createFromBitmap(rsInstance, outBitmap)
-            val script = getBlurScript(rsInstance)
-            script.setRadius(radius)
-            script.setInput(input)
-            script.forEach(output)
+            val input = Allocation.createFromBitmap(rs, bitmap)
+            val output = Allocation.createFromBitmap(rs, outBitmap)
+            intrinsicBlur.setRadius(radius)
+            intrinsicBlur.setInput(input)
+            intrinsicBlur.forEach(output)
             output.copyTo(outBitmap)
+            // Optimization 5: Giải phóng Allocation ngay sau dùng để tránh rò rỉ native memory
+            input.destroy()
+            output.destroy()
         } catch (e: Exception) {
             outBitmap.recycle()
             return null
-        } finally {
-            input?.destroy()
-            output?.destroy()
         }
         return outBitmap
     }
 
     /**
-     * Điều chỉnh độ tương phản (Contrast) của Bitmap.
-     * Tạo bitmap mới, KHÔNG sửa bitmap đầu vào.
-     *
-     * @return bitmap mới đã áp dụng contrast. Caller phải recycle khi không dùng.
-     */
-    private fun adjustContrast(bitmap: Bitmap, contrast: Float): Bitmap {
-        val out = Bitmap.createBitmap(
-            bitmap.width, bitmap.height,
-            bitmap.config ?: Bitmap.Config.ARGB_8888
-        )
-        val offset = (1f - contrast) * 128f
-        val cm = ColorMatrix(
-            floatArrayOf(
-                contrast, 0f, 0f, 0f, offset,
-                0f, contrast, 0f, 0f, offset,
-                0f, 0f, contrast, 0f, offset,
-                0f, 0f, 0f, 1f, 0f
-            )
-        )
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.colorFilter = ColorMatrixColorFilter(cm)
-        val canvas = Canvas(out)
-        canvas.drawBitmap(bitmap, 0f, 0f, paint)
-        return out
-    }
-
-    /**
      * Chụp màu background solid (dùng khi directbg=1).
-     *
-     * Pipeline tối ưu:
-     *   solid (20% size) → contrast (20% size, bitmap mới) → blur → kết quả
-     *
-     * Tất cả bitmap ở kích thước 20% màn hình → rất nhỏ, xử lý nhanh.
+     * Tạo bitmap solid color → scale xuống 20% → blur.
+     * Contrast được áp dụng ở giai đoạn vẽ (BlurEngine) thay vì tạo bitmap trung gian.
      */
     fun captureBackground(activity: Activity) {
         val activityRef = WeakReference(activity)
@@ -140,25 +87,22 @@ class BlurController {
             val context = act.applicationContext
             val bgColor = BlurEngine.directBgColor
 
+            // Optimization 4: Tăng scale từ 0.15 lên 0.20 để blur mượt hơn
             val screenWidth = act.resources.displayMetrics.widthPixels
             val screenHeight = act.resources.displayMetrics.heightPixels
-            val width = max(round(screenWidth * BLUR_SCALE).toInt(), 1)
-            val height = max(round(screenHeight * BLUR_SCALE).toInt(), 1)
+            val width = Math.max(Math.round(screenWidth * 0.20f), 1)
+            val height = Math.max(Math.round(screenHeight * 0.20f), 1)
 
-            // Bitmap #1: solid color ở kích thước nhỏ
             val solidBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            Canvas(solidBitmap).drawColor(bgColor)
+            val canvas = Canvas(solidBitmap)
+            canvas.drawColor(bgColor)
 
-            // Bitmap #2: áp dụng contrast (tạo mới, nhỏ)
-            val contrastValue: Float = if (ThemeModeState.isDarkMode()) 0.9f else 1.2f
-            val contrasted = adjustContrast(solidBitmap, contrastValue)
-            solidBitmap.recycle()  // #1 đã dùng xong, recycle ngay
-
-            // Bitmap #3: blur output (sẽ lưu vào BlurEngine.blurBitmap)
-            val blurredResult = blurBitmap(context, contrasted, BLUR_RADIUS)
-            contrasted.recycle()  // #2 đã dùng xong, recycle ngay
+            // Optimization 2: Bỏ adjustContrast ở đây, contrast áp dụng ở BlurEngine khi vẽ
+            val blurredResult = blurBitmap(context, solidBitmap, 16f)
 
             if (blurredResult != null) {
+                // Cập nhật contrast value để BlurEngine áp dụng khi draw
+                BlurEngine.blurContrast = if (ThemeModeState.isDarkMode()) 0.9f else 1.2f
                 BlurEngine.blurBitmap = blurredResult
                 BlurEngine.isPaused = false
 
@@ -168,18 +112,11 @@ class BlurController {
                     }
                 }
             }
+
+            solidBitmap.recycle()
         }.start()
     }
 
-    /**
-     * Chụp wallpaper, làm mờ và lưu vào BlurEngine.blurBitmap.
-     *
-     * Pipeline tối ưu:
-     *   wallpaper (full size) → scale 20% (nhỏ) → contrast (nhỏ) → blur → kết quả
-     *
-     * So với bản gốc: contrast được áp dụng trên bitmap nhỏ (20%) thay vì
-     * bitmap full-size → tiết kiệm ~96% memory cho bitmap contrast.
-     */
     fun captureAndBlur(activity: Activity) {
         val activityRef = WeakReference(activity)
 
@@ -188,17 +125,15 @@ class BlurController {
             if (act == null || act.isFinishing || act.isDestroyed) return@Thread
 
             var source: Bitmap? = null
+            var isFromFile = false
             val context = act.applicationContext
-            val isCustomWallpaper: Boolean
 
             // 1. Lấy Wallpaper gốc
             val customWallpaperFile = File(act.filesDir, "home/etc/wallpaper.jpg")
             if (customWallpaperFile.exists()) {
-                isCustomWallpaper = true
                 val currentLength = customWallpaperFile.length()
                 val currentModified = customWallpaperFile.lastModified()
 
-                // Cache check: wallpaper chưa đổi + bitmap còn hiệu lực → skip
                 if (currentLength == lastFileLength && currentModified == lastFileModified) {
                     val current = BlurEngine.blurBitmap
                     if (current != null && !current.isRecycled) return@Thread
@@ -207,8 +142,8 @@ class BlurController {
                 lastFileLength = currentLength
                 lastFileModified = currentModified
                 source = BitmapFactory.decodeFile(customWallpaperFile.absolutePath)
+                isFromFile = true
             } else {
-                isCustomWallpaper = false
                 val wm = WallpaperManager.getInstance(context)
                 wm.forgetLoadedWallpaper()
                 val drawable = wm.drawable
@@ -217,31 +152,26 @@ class BlurController {
                 }
             }
 
-            // 2. Scale → Contrast → Blur
+            // 2. Scale → Blur (Optimization 2: bỏ adjustContrast trung gian)
             if (source != null) {
-                val contrastValue: Float = if (ThemeModeState.isDarkMode()) 0.9f else 1.2f
+                // Optimization 4: Tăng scale từ 0.15 lên 0.20 để blur mượt hơn
+                val width = Math.max(Math.round(source.width * 0.20f), 1)
+                val height = Math.max(Math.round(source.height * 0.20f), 1)
+                val scaledSource = Bitmap.createScaledBitmap(source, width, height, false)
 
-                // Bitmap #1: scale xuống 20% (nhỏ)
-                val width = max(round(source.width * BLUR_SCALE).toInt(), 1)
-                val height = max(round(source.height * BLUR_SCALE).toInt(), 1)
-                val scaledSource = Bitmap.createScaledBitmap(source, width, height, true)
-
-                // Source từ custom file: tự decode → được recycle.
-                // Source từ system wallpaper: thuộc hệ thống → KHÔNG recycle.
-                if (isCustomWallpaper) {
+                // Giải phóng source nếu đọc từ file (BitmapFactory tạo bitmap mới)
+                if (isFromFile) {
                     source.recycle()
-                    source = null
                 }
 
-                // Bitmap #2: contrast (nhỏ, tạo mới)
-                val contrasted = adjustContrast(scaledSource, contrastValue)
-                scaledSource.recycle()  // #1 đã dùng xong
+                val blurredResult = blurBitmap(context, scaledSource, 16f)
 
-                // Bitmap #3: blur output (sẽ lưu vào BlurEngine.blurBitmap)
-                val blurredResult = blurBitmap(context, contrasted, BLUR_RADIUS)
-                contrasted.recycle()  // #2 đã dùng xong
+                // Giải phóng bitmap trung gian sau khi blur xong
+                scaledSource.recycle()
 
                 if (blurredResult != null) {
+                    // Optimization 2: Lưu contrast value để BlurEngine áp dụng khi draw
+                    BlurEngine.blurContrast = if (ThemeModeState.isDarkMode()) 0.9f else 1.2f
                     BlurEngine.blurBitmap = blurredResult
                     BlurEngine.isPaused = false
 
@@ -253,18 +183,6 @@ class BlurController {
                 }
             }
         }.start()
-    }
-
-    /**
-     * Giải phóng tài nguyên RenderScript.
-     * Gọi khi app kết thúc (không cần gọi mỗi lần chuyển trang).
-     */
-    fun destroyRs() {
-        blurScript?.destroy()
-        blurScript = null
-        rs?.destroy()
-        rs = null
-        rsContext = null
     }
 
     companion object {

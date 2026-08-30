@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PorterDuff
@@ -20,20 +22,25 @@ class BlurEngine(private val targetView: View) {
     private var cachedBitmap: Bitmap? = null
     private var cachedCanvas: Canvas? = null
 
-    // ─── Cache BitmapShader ───────────────────────────────────────
-    // Tái sử dụng shader khi blurBitmap không đổi, tránh tạo object mỗi frame
-    // khi cuộn/vuốt (giảm GC pressure).
-    private var cachedShader: BitmapShader? = null
-    private var cachedShaderBitmap: Bitmap? = null
-
-    // ─── Cache tint color ──────────────────────────────────────────
-    // Chỉ đọc resource 1 lần, cache lại đến khi dark/light mode đổi.
-    private var cachedTintColor: Int = 0
-    private var cachedTintColorForDark: Boolean? = null
-
     // Tái sử dụng đối tượng để tránh tạo rác bộ nhớ (GC lag) khi vuốt/cuộn
     private val shaderPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val shaderMatrix = Matrix()
+
+    // === Optimization 3: Cache BitmapShader ===
+    // Chỉ tạo lại BitmapShader khi source bitmap thay đổi (wallpaper/theme mới),
+    // KHÔNG tạo lại mỗi frame khi chỉ thay đổi vị trí (cuộn/vuốt).
+    private var cachedShader: BitmapShader? = null
+    private var shaderSourceBitmap: Bitmap? = null
+
+    // === Optimization 3: Cache tint color ===
+    // Chỉ đọc lại từ resources khi dark mode thay đổi.
+    private var cachedTint: Int = 0
+    private var cachedTintIsDark: Boolean? = null
+
+    // === Optimization 2: Cache contrast ColorMatrixColorFilter ===
+    // Contrast áp dụng qua paint.colorFilter thay vì tạo bitmap trung gian.
+    private var cachedContrastFilter: ColorMatrixColorFilter? = null
+    private var cachedContrastValue: Float = Float.NaN
 
     fun setup() {
         if (cornerRadius > 0) {
@@ -85,9 +92,6 @@ class BlurEngine(private val targetView: View) {
                 cached = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
                 cachedBitmap = cached
                 cachedCanvas = Canvas(cached)
-                // Size đổi → shader cũ không dùng được nữa
-                cachedShader = null
-                cachedShaderBitmap = null
             }
 
             val canvas = cachedCanvas!!
@@ -95,21 +99,52 @@ class BlurEngine(private val targetView: View) {
             // Xóa canvas cũ
             canvas.drawColor(0, PorterDuff.Mode.CLEAR)
 
-            // Tái sử dụng BitmapShader nếu cùng source bitmap
-            if (cachedShaderBitmap !== blurBitmap || cachedShader == null) {
-                cachedShader = BitmapShader(blurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-                cachedShaderBitmap = blurBitmap
+            // === Optimization 3: Tái sử dụng BitmapShader khi source bitmap không đổi ===
+            var shader = cachedShader
+            if (shader == null || shaderSourceBitmap !== blurBitmap) {
+                shader = BitmapShader(blurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+                cachedShader = shader
+                shaderSourceBitmap = blurBitmap
             }
 
+            // Cập nhật matrix vị trí MỖI FRAME (quan trọng để blur bám đúng khi cuộn)
             shaderMatrix.reset()
             shaderMatrix.postTranslate(-x.toFloat(), -y.toFloat())
-            cachedShader!!.setLocalMatrix(shaderMatrix)
+            shader.setLocalMatrix(shaderMatrix)
 
-            shaderPaint.shader = cachedShader
+            // === Optimization 2: Áp dụng contrast qua ColorMatrixColorFilter ===
+            val contrast = BlurEngine.blurContrast
+            var contrastFilter = cachedContrastFilter
+            if (cachedContrastValue != contrast) {
+                if (contrast != 1.0f) {
+                    val offset = (1f - contrast) * 128f
+                    val cm = ColorMatrix(
+                        floatArrayOf(
+                            contrast, 0f, 0f, 0f, offset,
+                            0f, contrast, 0f, 0f, offset,
+                            0f, 0f, contrast, 0f, offset,
+                            0f, 0f, 0f, 1f, 0f
+                        )
+                    )
+                    contrastFilter = ColorMatrixColorFilter(cm)
+                } else {
+                    contrastFilter = null
+                }
+                cachedContrastFilter = contrastFilter
+                cachedContrastValue = contrast
+            }
+
+            // Gắn shader + contrast filter vào paint
+            shaderPaint.shader = shader
+            shaderPaint.colorFilter = contrastFilter
             canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), shaderPaint)
 
+            // === Optimization 3: Cache tint color ===
             // Phủ lớp màu (Tint) lên trên lớp blur
-            canvas.drawColor(getBlurTintColorCached())
+            val tint = getCachedTintColor()
+            if (tint != 0) {
+                canvas.drawColor(tint)
+            }
 
             return cached
         } catch (e: Exception) {
@@ -118,18 +153,17 @@ class BlurEngine(private val targetView: View) {
     }
 
     /**
-     * Cache tint color — chỉ đọc resource khi dark/light mode thay đổi.
-     * getBlurTintColor() gốc đọc ContextCompat.getColor() mỗi frame,
-     * dù giá trị chỉ đổi khi chuyển theme.
+     * Optimization 3: Chỉ đọc tint color từ resources khi dark mode thay đổi.
+     * Tránh gọi ContextCompat.getColor() mỗi frame.
      */
-    private fun getBlurTintColorCached(): Int {
+    private fun getCachedTintColor(): Int {
         val isDark = ThemeModeState.isDarkMode()
-        if (cachedTintColorForDark != isDark) {
-            cachedTintColorForDark = isDark
+        if (cachedTintIsDark != isDark) {
+            cachedTintIsDark = isDark
             val colorRes = if (isDark) R.color.colorBlurDark else R.color.colorBlurLight
-            cachedTintColor = ContextCompat.getColor(targetView.context, colorRes)
+            cachedTint = ContextCompat.getColor(targetView.context, colorRes)
         }
-        return cachedTintColor
+        return cachedTint
     }
 
     fun destroy() {
@@ -139,9 +173,11 @@ class BlurEngine(private val targetView: View) {
             cachedBitmap = null
         }
         cachedCanvas = null
+        // Xóa cache shader khi view bị detach
         cachedShader = null
-        cachedShaderBitmap = null
-        cachedTintColorForDark = null
+        shaderSourceBitmap = null
+        cachedContrastFilter = null
+        cachedContrastValue = Float.NaN
     }
 
     companion object {
@@ -172,6 +208,15 @@ class BlurEngine(private val targetView: View) {
          */
         @JvmField
         var directBgColor = 0xFF0f0f0f.toInt()
+
+        /**
+         * Optimization 2: Giá trị contrast được áp dụng qua ColorMatrixColorFilter
+         * tại giai đoạn vẽ (BlurEngine.getUpdatedBlurBitmap) thay vì tạo bitmap trung gian.
+         * Cập nhật bởi BlurController sau khi capture xong.
+         */
+        @Volatile
+        @JvmField
+        var blurContrast: Float = 1.0f
 
         private var strokePaint: Paint? = null
 
