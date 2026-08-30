@@ -20,6 +20,17 @@ class BlurEngine(private val targetView: View) {
     private var cachedBitmap: Bitmap? = null
     private var cachedCanvas: Canvas? = null
 
+    // ─── Cache BitmapShader ───────────────────────────────────────
+    // Tái sử dụng shader khi blurBitmap không đổi, tránh tạo object mỗi frame
+    // khi cuộn/vuốt (giảm GC pressure).
+    private var cachedShader: BitmapShader? = null
+    private var cachedShaderBitmap: Bitmap? = null
+
+    // ─── Cache tint color ──────────────────────────────────────────
+    // Chỉ đọc resource 1 lần, cache lại đến khi dark/light mode đổi.
+    private var cachedTintColor: Int = 0
+    private var cachedTintColorForDark: Boolean? = null
+
     // Tái sử dụng đối tượng để tránh tạo rác bộ nhớ (GC lag) khi vuốt/cuộn
     private val shaderPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val shaderMatrix = Matrix()
@@ -74,6 +85,9 @@ class BlurEngine(private val targetView: View) {
                 cached = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
                 cachedBitmap = cached
                 cachedCanvas = Canvas(cached)
+                // Size đổi → shader cũ không dùng được nữa
+                cachedShader = null
+                cachedShaderBitmap = null
             }
 
             val canvas = cachedCanvas!!
@@ -81,22 +95,21 @@ class BlurEngine(private val targetView: View) {
             // Xóa canvas cũ
             canvas.drawColor(0, PorterDuff.Mode.CLEAR)
 
-            /**
-             * GIẢI PHÁP TRÀN VIỀN (Trái, Phải, Trên, Dưới):
-             * Sử dụng BitmapShader với TileMode.CLAMP.
-             * Khi View trượt ra khỏi màn hình (x < 0 hoặc x + w > width),
-             * TileMode.CLAMP tự động kéo giãn điểm ảnh ở rìa blurBitmap để lấp đầy cachedBitmap.
-             */
-            val shader = BitmapShader(blurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+            // Tái sử dụng BitmapShader nếu cùng source bitmap
+            if (cachedShaderBitmap !== blurBitmap || cachedShader == null) {
+                cachedShader = BitmapShader(blurBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+                cachedShaderBitmap = blurBitmap
+            }
+
             shaderMatrix.reset()
             shaderMatrix.postTranslate(-x.toFloat(), -y.toFloat())
-            shader.setLocalMatrix(shaderMatrix)
+            cachedShader!!.setLocalMatrix(shaderMatrix)
 
-            shaderPaint.shader = shader
+            shaderPaint.shader = cachedShader
             canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), shaderPaint)
 
             // Phủ lớp màu (Tint) lên trên lớp blur
-            canvas.drawColor(getBlurTintColor())
+            canvas.drawColor(getBlurTintColorCached())
 
             return cached
         } catch (e: Exception) {
@@ -104,10 +117,19 @@ class BlurEngine(private val targetView: View) {
         }
     }
 
-    private fun getBlurTintColor(): Int {
-        val context = targetView.context
-        val colorRes = if (ThemeModeState.isDarkMode()) R.color.colorBlurDark else R.color.colorBlurLight
-        return ContextCompat.getColor(context, colorRes)
+    /**
+     * Cache tint color — chỉ đọc resource khi dark/light mode thay đổi.
+     * getBlurTintColor() gốc đọc ContextCompat.getColor() mỗi frame,
+     * dù giá trị chỉ đổi khi chuyển theme.
+     */
+    private fun getBlurTintColorCached(): Int {
+        val isDark = ThemeModeState.isDarkMode()
+        if (cachedTintColorForDark != isDark) {
+            cachedTintColorForDark = isDark
+            val colorRes = if (isDark) R.color.colorBlurDark else R.color.colorBlurLight
+            cachedTintColor = ContextCompat.getColor(targetView.context, colorRes)
+        }
+        return cachedTintColor
     }
 
     fun destroy() {
@@ -117,6 +139,9 @@ class BlurEngine(private val targetView: View) {
             cachedBitmap = null
         }
         cachedCanvas = null
+        cachedShader = null
+        cachedShaderBitmap = null
+        cachedTintColorForDark = null
     }
 
     companion object {

@@ -59,6 +59,7 @@ object ThemeModeState {
                 android.content.res.Configuration.UI_MODE_NIGHT_YES
 
         val directBg = isDirectBgEnabled(activity)
+        val blurDisabled = isBlurDisabled(activity)
 
         when (level.coerceIn(0, 5)) {
             0 -> {
@@ -95,11 +96,15 @@ object ThemeModeState {
 
         ScriptEnvironmen.updateDarkMode(activity, themeMode.isDarkMode)
 
-        BlurEngine.isDirectBgMode = (level >= 3 && directBg && !isBlurDisabled(activity))
+        BlurEngine.isDirectBgMode = (level >= 3 && directBg && !blurDisabled)
         
-        if (level >= 3 && !isBlurDisabled(activity)) {
+        if (level >= 3 && !blurDisabled) {
             BlurEngine.isPaused = false
-            BlurEngine.blurBitmap = null
+            // KHÔNG xóa blurBitmap cũ.
+            // Giữ lại bitmap hiện có để toolbar không bị flash (trong suốt → mờ)
+            // trong lúc background thread capture + blur wallpaper mới.
+            // BlurController.captureAndBlur() đã có cache check (file length/modified),
+            // nó sẽ skip nếu wallpaper chưa đổi và bitmap vẫn còn hiệu lực.
 
             activity.window.decorView.post {
                 val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
