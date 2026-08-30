@@ -16,8 +16,8 @@ import kotlin.math.round
 object FastBlurUtility {
 
     // Tỉ lệ thu nhỏ ảnh để xử lý nhanh (1/10 giúp giảm 100 lần số pixel cần tính toán)
-    private const val SCALE_FACTOR = 0.10f
-    private const val BLUR_RADIUS = 8
+    private const val SCALE_FACTOR = 0.15f
+    private const val BLUR_RADIUS = 10
 
     /**
      * Chụp màn hình và làm mờ (Dùng làm phương án dự phòng khi không lấy được Wallpaper)
