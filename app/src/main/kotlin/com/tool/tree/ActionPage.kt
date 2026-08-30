@@ -1183,7 +1183,7 @@ class ActionPage : AppCompatActivity() {
         background?.getPadding(bgPadding)
         val screenWidth = resources.displayMetrics.widthPixels
         val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
-        val minWidth = resources.displayMetrics.density * 200 // tối thiểu ~200dp cho dễ bấm
+        val minWidth = resources.displayMetrics.density * 300 // tối thiểu ~200dp cho dễ bấm
         val desiredWidth = contentWidth.coerceAtLeast(minWidth.toInt()).coerceAtMost(screenWidth)
         popup.width = desiredWidth
 
@@ -1194,10 +1194,7 @@ class ActionPage : AppCompatActivity() {
         val rightAligned = anchor.width - desiredWidth
         val overflowLeft = anchorLocation[0] + rightAligned
         popup.horizontalOffset = if (overflowLeft < 0) -anchorLocation[0] else rightAligned
-
-        if (extraTopGapPx > 0) {
-            popup.verticalOffset = -extraTopGapPx
-        }
+        popup.verticalOffset = if (extraTopGapPx > 0) -extraTopGapPx else -anchor.height
     }
 
     // Popup kiểu List Item mới (RecyclerView/ListView có icon trái/phải) - dùng chung cho CẢ
@@ -1330,14 +1327,6 @@ class ActionPage : AppCompatActivity() {
         }
         fileSelectedInterface = null
         super.onActivityResult(requestCode, resultCode, data)
-    }
-
-    override fun onRestart() {
-        super.onRestart()
-        if (openedSubPage && actionsLoaded) {
-            openedSubPage = false
-            loadPageConfig(false)
-        }
     }
 
     fun _openPage(pageNode: PageNode) {

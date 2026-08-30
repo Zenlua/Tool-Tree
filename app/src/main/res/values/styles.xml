@@ -21,6 +21,7 @@
         <item name="android:seekBarStyle">@style/SceneSeekBar</item>
         <item name="android:checkboxStyle">@style/SceneCheckBox</item>
         <item name="android:radioButtonStyle">@style/SceneRadioBox</item>
+        <item name="toolbarIconTint">@android:color/black</item>
     </style>
 
     <style name="AppThemeDark" parent="Theme.AppCompat">
@@ -44,6 +45,7 @@
         <item name="android:seekBarStyle">@style/SceneSeekBar</item>
         <item name="android:checkboxStyle">@style/SceneCheckBox</item>
         <item name="android:radioButtonStyle">@style/SceneRadioBox</item>
+        <item name="toolbarIconTint">@android:color/white</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.ActionBar">

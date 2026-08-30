@@ -31,4 +31,8 @@
 
     <!-- Kiểu tham chiếu cho RadioButton -->
     <attr name="radioButtonStyle" format="reference"/>
+
+    <!-- Màu icon toolbar (dùng cho ic_more_vert...) - luôn là màu đặc (opaque), khác
+         colorControlNormal mặc định của Material vốn có alpha khiến icon bị mờ. -->
+    <attr name="toolbarIconTint" format="color" />
 </resources>

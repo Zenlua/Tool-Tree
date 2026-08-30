@@ -123,7 +123,7 @@ class CrashLogActivity : AppCompatActivity() {
 
         if (truncated) {
             val notice = TextView(this)
-            notice.text = "Log đã bị cắt bớt khi hiển thị vì quá dài. Dùng Share để lấy đầy đủ."
+            notice.text = "The log was truncated during display because it was too long. Use Share to get the full log."
             notice.textSize = 11f
             notice.setPadding(14, 8, 14, 0)
             root.addView(notice)
