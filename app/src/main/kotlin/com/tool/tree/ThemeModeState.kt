@@ -59,6 +59,7 @@ object ThemeModeState {
                 android.content.res.Configuration.UI_MODE_NIGHT_YES
 
         val directBg = isDirectBgEnabled(activity)
+        val blurDisabled = isBlurDisabled(activity)
 
         when (level.coerceIn(0, 5)) {
             0 -> {
@@ -95,42 +96,31 @@ object ThemeModeState {
 
         ScriptEnvironmen.updateDarkMode(activity, themeMode.isDarkMode)
 
-        BlurEngine.isDirectBgMode = (level >= 3 && directBg && !isBlurDisabled(activity))
+        BlurEngine.isDirectBgMode = (level >= 3 && directBg && !blurDisabled)
         
-        if (level >= 3 && !isBlurDisabled(activity)) {
+        if (level >= 3 && !blurDisabled) {
             BlurEngine.isPaused = false
-
-            // === Optimization 6: XOÁ `BlurEngine.blurBitmap = null` ===
-            // Giữ nguyên blur bitmap cũ trong lúc capture mới chạy async.
-            // Tránh flash: chưa mờ → mới mờ khi vào trang mới.
-            // Bitmap cũ sẽ được thay thế khi capture hoàn tất.
-
-            // Cập nhật contrast ngay lập tức để BlurEngine vẽ lại với giá trị mới
-            BlurEngine.blurContrast = if (themeMode.isDarkMode) 0.9f else 1.2f
+            // KHÔNG xóa blurBitmap cũ.
+            // Giữ lại bitmap hiện có để toolbar không bị flash (trong suốt → mờ)
+            // trong lúc background thread capture + blur wallpaper mới.
+            // BlurController.captureAndBlur() đã có cache check (file length/modified),
+            // nó sẽ skip nếu wallpaper chưa đổi và bitmap vẫn còn hiệu lực.
 
             activity.window.decorView.post {
-                // === Optimization 6: Chỉ trigger capture khi thực sự cần ===
-                // Nếu đã có blur bitmap hợp lệ, không cần chụp lại (tránh redundant capture)
-                val existing = BlurEngine.blurBitmap
-                val needCapture = existing == null || existing.isRecycled
+                val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
+                val wallpaperManager = WallpaperManager.getInstance(activity)
+                val isLiveWallpaper = (wallpaperManager.wallpaperInfo != null) && !customWallpaperFile.exists()
 
-                if (needCapture) {
-                    val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
-                    val wallpaperManager = WallpaperManager.getInstance(activity)
-                    val isLiveWallpaper = (wallpaperManager.wallpaperInfo != null) && !customWallpaperFile.exists()
-
-                    if (BlurEngine.isDirectBgMode || isLiveWallpaper) {
-                        BlurEngine.directBgColor = ContextCompat.getColor(
-                            activity,
-                            if (themeMode.isDarkMode) R.color.window_bg_dark else R.color.window_bg_light
-                        )
-                        BlurEngine.controller.captureBackground(activity)
-                    } else {
-                        BlurEngine.controller.captureAndBlur(activity)
-                    }
+                // Nếu bật directBg HOẶC là Live Wallpaper (decorView bị trong suốt không chụp được)
+                if (BlurEngine.isDirectBgMode || isLiveWallpaper) {
+                    BlurEngine.directBgColor = ContextCompat.getColor(
+                        activity,
+                        if (themeMode.isDarkMode) R.color.window_bg_dark else R.color.window_bg_light
+                    )
+                    BlurEngine.controller.captureBackground(activity)
                 } else {
-                    // Đã có bitmap hợp lệ, chỉ cần invalidate để vẽ lại với contrast/tint mới
-                    activity.window.decorView.invalidate()
+                    // Hình nền tĩnh / Custom Wallpaper: decorView đã có Drawable nên chụp bình thường
+                    BlurEngine.controller.captureAndBlur(activity)
                 }
             }
         } else {
