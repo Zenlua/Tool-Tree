@@ -1184,7 +1184,7 @@ class ActionPage : AppCompatActivity() {
         background?.getPadding(bgPadding)
         val screenWidth = resources.displayMetrics.widthPixels
         val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
-        val minWidth = resources.displayMetrics.density * 300 // tối thiểu ~200dp cho dễ bấm
+        val minWidth = resources.displayMetrics.density * 250 // tối thiểu ~200dp cho dễ bấm
         val desiredWidth = contentWidth.coerceAtLeast(minWidth.toInt()).coerceAtMost(screenWidth)
         popup.width = desiredWidth
 
