@@ -123,6 +123,7 @@ class DialogLogFragment : DialogFragment() {
 
             if (node.reloadPage) {
                 binding.btnHide.visibility = View.GONE
+            binding.btnDivider.visibility = View.GONE
             }
 
             ShellExecutor().execute(
@@ -189,6 +190,7 @@ class DialogLogFragment : DialogFragment() {
                             transition
                         )
                         b.btnHide.visibility = View.GONE
+                        b.btnDivider.visibility = View.GONE
                         b.btnCancel.visibility = View.GONE
                         b.btnExit.visibility = View.VISIBLE
                         b.actionProgress.visibility = View.GONE
@@ -205,12 +207,14 @@ class DialogLogFragment : DialogFragment() {
 
         if (nodeInfo.reloadPage) {
             binding.btnHide.visibility = View.GONE
+            binding.btnDivider.visibility = View.GONE
         }
 
         // onStart()/onCompleted() của tiến trình đã được gọi từ trước (trong lúc dialog đang
         // ẩn), nên cần tự khôi phục lại trạng thái giao diện hiện tại thay vì chờ callback.
         if (handler.isFinished) {
             binding.btnHide.visibility = View.GONE
+            binding.btnDivider.visibility = View.GONE
             binding.btnCancel.visibility = View.GONE
             binding.btnExit.visibility = View.VISIBLE
             binding.actionProgress.visibility = View.GONE
@@ -272,6 +276,7 @@ class DialogLogFragment : DialogFragment() {
                             transition
                         )
                         b.btnHide.visibility = View.GONE
+                        b.btnDivider.visibility = View.GONE
                         b.btnCancel.visibility = View.GONE
                         b.btnExit.visibility = View.VISIBLE
                         b.actionProgress.visibility = View.GONE
@@ -354,9 +359,11 @@ class DialogLogFragment : DialogFragment() {
 
         if (nodeInterruptable) {
             binding.btnHide.visibility = View.VISIBLE
+            binding.btnDivider.visibility = View.VISIBLE
             binding.btnCancel.visibility = View.VISIBLE
         } else {
             binding.btnHide.visibility = View.GONE
+            binding.btnDivider.visibility = View.GONE
             binding.btnCancel.visibility = View.GONE
         }
 
