@@ -2,45 +2,62 @@
 <!-- 1 dòng trong popup kiểu List Item mới (thay ArrayAdapter chỉ có chữ trước đây) - dùng
      chung cho CẢ popup menu "⋮" (ActionPage.showOverflowMenuPopup()) LẪN popup chọn khi FAB có
      nhiều item (ActionPage.showFabChooser()), xem PopupMenuListAdapter.
-     - popup_item_icon_left: icon tuỳ chỉnh riêng của từng mục (icon-path) - ẩn (INVISIBLE, vẫn
-       giữ chỗ để các dòng thẳng hàng) nếu mục không khai báo icon riêng.
-     - popup_item_icon_right: icon mặc định theo type - dấu tích (checkbox), mũi tên ">" (mở
-       trang) hoặc mũi tên dropdown (spinner); ẩn hẳn (GONE) với các type khác (run/action...)
-       để giữ gọn, chỉ còn icon trái + tiêu đề. -->
+     - popup_item_icon_left: icon riêng của mục (icon-path, nếu có khai báo) - GONE hẳn (không
+       giữ chỗ) nếu mục không có icon riêng để tiêu đề canh sát lề trái, không bị hụt/trống như
+       khi dùng INVISIBLE.
+     - popup_item_icon_right: icon mặc định theo type (xem ActionPage.buildPopupRow()) - dấu
+       tích (checkbox), mũi tên ">" (mở trang), mũi tên dropdown (spinner), hoặc icon "script"
+       (các type còn lại - run/action...). Luôn hiện, không có type nào ẩn hẳn icon phải.
+     - popup_item_divider: đường kẻ mỏng ngăn cách giữa các mục - PopupMenuListAdapter tự ẩn ở
+       dòng CUỐI CÙNG của popup. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:minHeight="48dp"
-    android:paddingLeft="16dp"
-    android:paddingTop="10dp"
-    android:paddingRight="16dp"
-    android:paddingBottom="10dp">
+    android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/popup_item_icon_left"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:layout_marginEnd="14dp"
-        android:scaleType="fitCenter"
-        android:importantForAccessibility="no" />
-
-    <TextView
-        android:id="@+id/popup_item_title"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        android:textColor="?android:attr/textColorPrimary" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:minHeight="48dp"
+        android:paddingLeft="16dp"
+        android:paddingTop="10dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="10dp">
 
-    <ImageView
-        android:id="@+id/popup_item_icon_right"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="14dp"
-        android:scaleType="fitCenter"
-        android:importantForAccessibility="no" />
+        <ImageView
+            android:id="@+id/popup_item_icon_left"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginEnd="14dp"
+            android:scaleType="fitCenter"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:id="@+id/popup_item_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <ImageView
+            android:id="@+id/popup_item_icon_right"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="14dp"
+            android:scaleType="fitCenter"
+            android:importantForAccessibility="no" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/popup_item_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="?android:attr/listDivider" />
 </LinearLayout>

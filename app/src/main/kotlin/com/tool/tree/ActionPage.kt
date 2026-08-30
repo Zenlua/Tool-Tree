@@ -449,9 +449,10 @@ class ActionPage : AppCompatActivity() {
     // "⋮" (showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item (showFabChooser()).
     // Icon PHẢI mặc định theo type (xem PopupRowRightIcon): checkbox -> dấu tích, spinner ->
     // mũi tên dropdown, mục "mở trang" (link/activity/onlineHtmlPage/pageConfigSh/
-    // pageConfigPath) -> mũi tên ">"; các type còn lại (run/action...) KHÔNG có icon phải mặc
-    // định - giữ gọn, chỉ icon trái + tiêu đề. Icon TRÁI luôn lấy theo icon-path riêng của
-    // từng mục (nếu có khai báo) - KHÔNG suy ra icon mặc định theo type.
+    // pageConfigPath) -> mũi tên ">"; các type còn lại (run/action...) -> icon "script"
+    // (ic_editor_run), báo hiệu bấm vào sẽ chạy 1 script/hành động.
+    // Icon TRÁI luôn lấy theo icon-path riêng của từng mục (nếu có khai báo) - KHÔNG suy ra
+    // icon mặc định theo type (icon phải đã đủ báo hiệu loại mục rồi).
     private fun buildPopupRow(option: PageMenuOption, anchor: View?): PopupMenuRow {
         val opensPage = option.link.isNotEmpty() || option.activity.isNotEmpty() ||
             option.onlineHtmlPage.isNotEmpty() || option.pageConfigSh.isNotEmpty() ||
@@ -461,7 +462,7 @@ class ActionPage : AppCompatActivity() {
             option.type == "checkbox" -> PopupRowRightIcon.CHECKBOX
             option.type == "spinner" -> PopupRowRightIcon.DROPDOWN
             opensPage -> PopupRowRightIcon.OPEN_PAGE
-            else -> PopupRowRightIcon.NONE
+            else -> PopupRowRightIcon.SCRIPT
         }
 
         val leftIcon = try {

@@ -11,16 +11,16 @@ import android.widget.TextView
 import com.tool.tree.R
 
 // Icon mặc định hiển thị bên PHẢI mỗi dòng trong popup List Item mới - quyết định theo "type"
-// của mục (checkbox/spinner/mở trang), KHÔNG áp dụng cho icon trái (icon trái luôn tuỳ chỉnh
-// riêng theo icon-path của từng mục, xem ActionPage.buildPopupRow()).
+// của mục (checkbox/spinner/mở trang/script), KHÔNG áp dụng cho icon trái (icon trái luôn tuỳ
+// chỉnh riêng theo icon-path của từng mục, xem ActionPage.buildPopupRow()).
 // - CHECKBOX: mục type = "checkbox" -> hiện dấu tích/bỏ tích (checkbox_true/checkbox_false).
 // - OPEN_PAGE: mục "mở trang" (link/activity/onlineHtmlPage/pageConfigSh/pageConfigPath không
 //   rỗng) -> hiện mũi tên ">" báo hiệu bấm vào sẽ điều hướng sang trang khác.
 // - DROPDOWN: mục type = "spinner" -> hiện mũi tên dropdown, thay cho hậu tố " ▾" gắn vào tiêu
 //   đề như cách cũ (ActionPage.displayTitle() đã bị bỏ).
-// - NONE: các type còn lại (run/action/refresh/reload/restart/exit/file/folder...) -> KHÔNG có
-//   icon phải mặc định, giữ gọn chỉ còn icon trái (nếu có) + tiêu đề, theo đúng yêu cầu.
-enum class PopupRowRightIcon { NONE, CHECKBOX, OPEN_PAGE, DROPDOWN }
+// - SCRIPT: các type còn lại (run/action/refresh/reload/restart/exit/file/folder...) - tức mục
+//   bấm vào là chạy 1 script/hành động - hiện icon "script" mặc định (ic_editor_run) bên PHẢI.
+enum class PopupRowRightIcon { SCRIPT, CHECKBOX, OPEN_PAGE, DROPDOWN }
 
 // 1 dòng dữ liệu cho popup kiểu List Item - dùng chung cho CẢ popup menu "⋮"
 // (ActionPage.showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item
@@ -56,9 +56,9 @@ class PopupMenuListAdapter(
             iconLeft.setImageDrawable(row.leftIcon)
             iconLeft.visibility = View.VISIBLE
         } else {
-            // INVISIBLE (không phải GONE) để tiêu đề của tất cả các dòng trong popup luôn
-            // thẳng hàng với nhau, kể cả khi chỉ 1 vài dòng có icon riêng.
-            iconLeft.visibility = View.INVISIBLE
+            // GONE (không phải INVISIBLE) để tiêu đề canh sát lề trái khi mục không khai báo
+            // icon riêng, thay vì để trống 1 khoảng chỗ icon như trước.
+            iconLeft.visibility = View.GONE
         }
 
         val iconRight = view.findViewById<ImageView>(R.id.popup_item_icon_right)
@@ -75,11 +75,15 @@ class PopupMenuListAdapter(
                 iconRight.visibility = View.VISIBLE
                 iconRight.setImageResource(R.drawable.ic_arrow_dropdown)
             }
-            PopupRowRightIcon.NONE -> {
-                // Không có gì - giữ gọn, chỉ icon trái + tiêu đề.
-                iconRight.visibility = View.GONE
+            PopupRowRightIcon.SCRIPT -> {
+                iconRight.visibility = View.VISIBLE
+                iconRight.setImageResource(R.drawable.ic_editor_run)
             }
         }
+
+        // Đường kẻ ngăn cách giữa các mục - ẩn ở dòng CUỐI CÙNG (không cần kẻ dưới mục cuối).
+        view.findViewById<View>(R.id.popup_item_divider).visibility =
+            if (position == rows.size - 1) View.GONE else View.VISIBLE
 
         return view
     }
