@@ -1144,6 +1144,7 @@ class ActionPage : AppCompatActivity() {
         applyPopupWidthAndPosition(popup, anchor, measureMaxItemWidth(itemViews), background, extraTopGapPx)
 
         popup.show()
+        applyRoundedClip(popup)
         if (selectedIndex in options.indices) {
             popup.listView?.setSelection(selectedIndex)
         }
@@ -1197,6 +1198,17 @@ class ActionPage : AppCompatActivity() {
         popup.verticalOffset = if (extraTopGapPx > 0) -extraTopGapPx else -anchor.height
     }
 
+    private fun applyRoundedClip(popup: ListPopupWindow) {
+        val listView = popup.listView ?: return
+        val radiusPx = resources.getDimension(R.dimen.kr_spinner_popup_radius)
+        listView.clipToOutline = true
+        listView.outlineProvider = object : android.view.ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: android.graphics.Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, radiusPx)
+            }
+        }
+    }
+    
     // Popup kiểu List Item mới (RecyclerView/ListView có icon trái/phải) - dùng chung cho CẢ
     // popup menu "⋮" (showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item
     // (showFabChooser()) để đồng bộ giao diện, thay cho ArrayAdapter chỉ có chữ trước đây. Vẫn
@@ -1224,6 +1236,7 @@ class ActionPage : AppCompatActivity() {
         applyPopupWidthAndPosition(popup, anchor, measureMaxItemWidth(itemViews), background, extraTopGapPx)
 
         popup.show()
+        applyRoundedClip(popup)
     }
 
     // Danh sách chọn khi fab có nhiều item - popup nhỏ neo ngay tại nút fab, chọn xong chạy y
