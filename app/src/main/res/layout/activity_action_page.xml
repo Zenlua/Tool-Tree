@@ -48,8 +48,8 @@
             android:visibility="gone"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
-            android:layout_marginBottom="24dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginBottom="34dp"
+            android:layout_marginEnd="34dp"
             android:id="@+id/action_page_fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />

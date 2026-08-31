@@ -1,7 +1,9 @@
 package com.tool.tree.ui
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -46,6 +48,21 @@ class PopupMenuListAdapter(
     private val context: Context,
     private val rows: List<PopupMenuRow>
 ) : BaseAdapter() {
+    // Màu tint cho icon menu (giống toolbar icon) - lazy init 1 lần
+    private val defaultTint: ColorStateList? by lazy {
+        val ta = context.obtainStyledAttributes(intArrayOf(R.attr.toolbarIconTint))
+        val tint = ta.getColorStateList(0)
+        ta.recycle()
+        tint
+    }
+
+    // Màu accent cho checkbox khi đã tích
+    private val accentTint: ColorStateList? by lazy {
+        val tv = TypedValue()
+        context.theme.resolveAttribute(android.R.attr.colorAccent, tv, true)
+        ColorStateList.valueOf(tv.data)
+    }
+
     override fun getCount(): Int = rows.size
     override fun getItem(position: Int): PopupMenuRow = rows[position]
     override fun getItemId(position: Int): Long = position.toLong()
@@ -62,39 +79,49 @@ class PopupMenuListAdapter(
         // định theo loại mục (typeIcon). Cả hai đều không có thì ẩn icon (GONE).
         if (row.leftIcon != null) {
             iconLeft.setImageDrawable(row.leftIcon)
+            iconLeft.imageTintList = null
             iconLeft.visibility = View.VISIBLE
         } else {
             when (row.typeIcon) {
                 PopupRowTypeIcon.CHECKBOX -> {
                     iconLeft.setImageResource(if (row.checked) R.drawable.checkbox_true else R.drawable.checkbox_false)
+                    // Checkbox đã tích: dùng màu accent; chưa tích: dùng màu toolbar icon
+                    iconLeft.imageTintList = if (row.checked) accentTint else defaultTint
                     iconLeft.visibility = View.VISIBLE
                 }
                 PopupRowTypeIcon.PAGE -> {
                     iconLeft.setImageResource(R.drawable.kr_page)
+                    iconLeft.imageTintList = defaultTint
                     iconLeft.visibility = View.VISIBLE
                 }
                 PopupRowTypeIcon.LINK -> {
                     iconLeft.setImageResource(R.drawable.kr_link)
+                    iconLeft.imageTintList = defaultTint
                     iconLeft.visibility = View.VISIBLE
                 }
                 PopupRowTypeIcon.REFRESH -> {
                     iconLeft.setImageResource(R.drawable.kr_refresh)
+                    iconLeft.imageTintList = defaultTint
                     iconLeft.visibility = View.VISIBLE
                 }
                 PopupRowTypeIcon.DROPDOWN -> {
                     iconLeft.setImageResource(R.drawable.kr_down)
+                    iconLeft.imageTintList = defaultTint
                     iconLeft.visibility = View.VISIBLE
                 }
                 PopupRowTypeIcon.FILE -> {
                     iconLeft.setImageResource(R.drawable.kr_file)
+                    iconLeft.imageTintList = defaultTint
                     iconLeft.visibility = View.VISIBLE
                 }
                 PopupRowTypeIcon.FOLDER -> {
                     iconLeft.setImageResource(R.drawable.kr_folder)
+                    iconLeft.imageTintList = defaultTint
                     iconLeft.visibility = View.VISIBLE
                 }
                 PopupRowTypeIcon.SCRIPT -> {
                     iconLeft.setImageResource(R.drawable.kr_script)
+                    iconLeft.imageTintList = defaultTint
                     iconLeft.visibility = View.VISIBLE
                 }
                 PopupRowTypeIcon.NONE -> {
