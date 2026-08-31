@@ -3,7 +3,7 @@ package com.tool.tree.ui
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
-import android.util.TypedValue
+import androidx.core.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -58,9 +58,7 @@ class PopupMenuListAdapter(
 
     // Màu accent cho checkbox khi đã tích
     private val accentTint: ColorStateList? by lazy {
-        val tv = TypedValue()
-        context.theme.resolveAttribute(android.R.attr.colorAccent, tv, true)
-        ColorStateList.valueOf(tv.data)
+        ColorStateList.valueOf(ContextCompat.getColor(context, R.color.colorAccent))
     }
 
     override fun getCount(): Int = rows.size
@@ -79,7 +77,11 @@ class PopupMenuListAdapter(
         // định theo loại mục (typeIcon). Cả hai đều không có thì ẩn icon (GONE).
         if (row.leftIcon != null) {
             iconLeft.setImageDrawable(row.leftIcon)
-            iconLeft.imageTintList = null
+            // Icon tuỳ chỉnh (icon-path) cũng ép tint như icon mặc định.
+            // Riêng checkbox khi đã tích thì dùng màu accent.
+            iconLeft.imageTintList =
+                if (row.typeIcon == PopupRowTypeIcon.CHECKBOX && row.checked) accentTint
+                else defaultTint
             iconLeft.visibility = View.VISIBLE
         } else {
             when (row.typeIcon) {
