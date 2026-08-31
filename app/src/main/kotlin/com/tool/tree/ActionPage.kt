@@ -25,7 +25,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.tool.tree.ui.PopupMenuListAdapter
 import com.tool.tree.ui.PopupMenuRow
-import com.tool.tree.ui.PopupRowRightIcon
+import com.tool.tree.ui.PopupRowTypeIcon
 import com.tool.tree.ui.SwipeBackHelper
 import com.tool.tree.ui.SwipeBackPreviewCache
 import com.omarea.common.model.SelectItem
@@ -472,14 +472,12 @@ class ActionPage : AppCompatActivity() {
 
     // Dựng 1 dòng cho popup List Item mới từ 1 PageMenuOption - dùng chung cho CẢ popup menu
     // "⋮" (showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item (showFabChooser()).
-    // Icon PHẢI mặc định theo type (xem PopupRowRightIcon): checkbox -> dấu tích, spinner ->
-    // kr_down, mục "mở trang nội bộ" (pageConfigSh/pageConfigPath) -> kr_page, mục "mở link/
-    // html/activity ngoài" (link/activity/onlineHtmlPage) -> kr_link, mục "reset" (refresh/
-    // reload/restart/exit/finish/close/killapp) -> kr_refresh, mục "file" -> kr_file, mục
-    // "folder" -> kr_folder; các type còn lại (run/action...) -> icon kr_script, báo hiệu
-    // bấm vào sẽ chạy 1 script/hành động.
-    // Icon TRÁI luôn lấy theo icon-path riêng của từng mục (nếu có khai báo) - KHÔNG suy ra
-    // icon mặc định theo type (icon phải đã đủ báo hiệu loại mục rồi).
+    // Icon TRÁI: ưu tiên icon tuỳ chỉnh (icon-path của mục); nếu không có thì dùng icon mặc
+    // định theo loại mục (xem PopupRowTypeIcon): checkbox -> dấu tích, spinner -> kr_down,
+    // mục "mở trang nội bộ" -> kr_page, mục "mở link/html/activity ngoài" -> kr_link,
+    // mục "reset" (refresh/reload/restart/exit/finish/close/killapp) -> kr_refresh, mục
+    // "file" -> kr_file, mục "folder" -> kr_folder; các type còn lại (run/action...) ->
+    // icon kr_script.
     private fun buildPopupRow(option: PageMenuOption, anchor: View?): PopupMenuRow {
         val opensInternalPage = option.pageConfigSh.isNotEmpty() || option.pageConfigPath.isNotEmpty()
         val opensLink = option.link.isNotEmpty() || option.activity.isNotEmpty() ||
@@ -488,15 +486,15 @@ class ActionPage : AppCompatActivity() {
             "refresh", "reload", "restart", "exit", "finish", "close", "killapp"
         )
 
-        val rightIcon = when {
-            option.type == "checkbox" -> PopupRowRightIcon.CHECKBOX
-            option.type == "spinner" -> PopupRowRightIcon.DROPDOWN
-            opensInternalPage -> PopupRowRightIcon.PAGE
-            opensLink -> PopupRowRightIcon.LINK
-            isResetType -> PopupRowRightIcon.REFRESH
-            option.type == "file" -> PopupRowRightIcon.FILE
-            option.type == "folder" -> PopupRowRightIcon.FOLDER
-            else -> PopupRowRightIcon.SCRIPT
+        val typeIcon = when {
+            option.type == "checkbox" -> PopupRowTypeIcon.CHECKBOX
+            option.type == "spinner" -> PopupRowTypeIcon.DROPDOWN
+            opensInternalPage -> PopupRowTypeIcon.PAGE
+            opensLink -> PopupRowTypeIcon.LINK
+            isResetType -> PopupRowTypeIcon.REFRESH
+            option.type == "file" -> PopupRowTypeIcon.FILE
+            option.type == "folder" -> PopupRowTypeIcon.FOLDER
+            else -> PopupRowTypeIcon.SCRIPT
         }
 
         val leftIcon = try {
@@ -508,7 +506,7 @@ class ActionPage : AppCompatActivity() {
         return PopupMenuRow(
             title = option.title,
             leftIcon = leftIcon,
-            rightIcon = rightIcon,
+            typeIcon = typeIcon,
             checked = option.checked
         ) {
             if (option.type == "checkbox") {

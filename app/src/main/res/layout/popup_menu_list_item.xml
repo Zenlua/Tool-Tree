@@ -32,14 +32,6 @@
             android:ellipsize="end"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="?android:attr/textColorPrimary" />
-
-        <ImageView
-            android:id="@+id/popup_item_icon_right"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginStart="14dp"
-            android:scaleType="fitCenter"
-            android:importantForAccessibility="no" />
     </LinearLayout>
 
     <View
