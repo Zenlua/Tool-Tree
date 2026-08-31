@@ -30,6 +30,7 @@
             android:layout_weight="1"
             android:singleLine="true"
             android:ellipsize="end"
+            android:gravity="end"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="?android:attr/textColorPrimary" />
 

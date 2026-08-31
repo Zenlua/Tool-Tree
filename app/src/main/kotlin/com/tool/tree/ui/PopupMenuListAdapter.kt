@@ -11,16 +11,21 @@ import android.widget.TextView
 import com.tool.tree.R
 
 // Icon mặc định hiển thị bên PHẢI mỗi dòng trong popup List Item mới - quyết định theo "type"
-// của mục (checkbox/spinner/mở trang/script), KHÔNG áp dụng cho icon trái (icon trái luôn tuỳ
-// chỉnh riêng theo icon-path của từng mục, xem ActionPage.buildPopupRow()).
+// của mục (checkbox/spinner/mở trang/mở link/reset/script), KHÔNG áp dụng cho icon trái (icon
+// trái luôn tuỳ chỉnh riêng theo icon-path của từng mục, xem ActionPage.buildPopupRow()).
 // - CHECKBOX: mục type = "checkbox" -> hiện dấu tích/bỏ tích (checkbox_true/checkbox_false).
-// - OPEN_PAGE: mục "mở trang" (link/activity/onlineHtmlPage/pageConfigSh/pageConfigPath không
-//   rỗng) -> hiện mũi tên ">" báo hiệu bấm vào sẽ điều hướng sang trang khác.
-// - DROPDOWN: mục type = "spinner" -> hiện mũi tên dropdown, thay cho hậu tố " ▾" gắn vào tiêu
-//   đề như cách cũ (ActionPage.displayTitle() đã bị bỏ).
-// - SCRIPT: các type còn lại (run/action/refresh/reload/restart/exit/file/folder...) - tức mục
-//   bấm vào là chạy 1 script/hành động - hiện icon "script" mặc định (ic_editor_run) bên PHẢI.
-enum class PopupRowRightIcon { SCRIPT, CHECKBOX, OPEN_PAGE, DROPDOWN }
+// - PAGE: mục "mở trang nội bộ" (pageConfigSh/pageConfigPath không rỗng) -> icon kr_page.
+// - LINK: mục "mở link/html/activity ngoài" (link/activity/onlineHtmlPage không rỗng) -> icon
+//   kr_link.
+// - REFRESH: mục type = refresh/reload/restart/exit/finish/close/killapp (các hành động
+//   làm mới trang, khởi động lại app, hoặc thoát/đóng) -> icon kr_refresh.
+// - DROPDOWN: mục type = "spinner" -> icon kr_down, thay cho hậu tố " ▾" gắn vào tiêu đề như
+//   cách cũ (ActionPage.displayTitle() đã bị bỏ).
+// - FILE: mục type = "file" (chọn file) -> icon kr_file.
+// - FOLDER: mục type = "folder" (chọn thư mục) -> icon kr_folder.
+// - SCRIPT: các type còn lại (run/action...) - tức mục bấm vào là chạy 1 script/hành động
+//   thông thường - hiện icon kr_script bên PHẢI.
+enum class PopupRowRightIcon { SCRIPT, CHECKBOX, PAGE, LINK, REFRESH, DROPDOWN, FILE, FOLDER }
 
 // 1 dòng dữ liệu cho popup kiểu List Item - dùng chung cho CẢ popup menu "⋮"
 // (ActionPage.showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item
@@ -67,17 +72,33 @@ class PopupMenuListAdapter(
                 iconRight.visibility = View.VISIBLE
                 iconRight.setImageResource(if (row.checked) R.drawable.checkbox_true else R.drawable.checkbox_false)
             }
-            PopupRowRightIcon.OPEN_PAGE -> {
+            PopupRowRightIcon.PAGE -> {
                 iconRight.visibility = View.VISIBLE
-                iconRight.setImageResource(R.drawable.kr_arrow)
+                iconRight.setImageResource(R.drawable.kr_page)
+            }
+            PopupRowRightIcon.LINK -> {
+                iconRight.visibility = View.VISIBLE
+                iconRight.setImageResource(R.drawable.kr_link)
+            }
+            PopupRowRightIcon.REFRESH -> {
+                iconRight.visibility = View.VISIBLE
+                iconRight.setImageResource(R.drawable.kr_refresh)
             }
             PopupRowRightIcon.DROPDOWN -> {
                 iconRight.visibility = View.VISIBLE
-                iconRight.setImageResource(R.drawable.ic_arrow_dropdown)
+                iconRight.setImageResource(R.drawable.kr_down)
+            }
+            PopupRowRightIcon.FILE -> {
+                iconRight.visibility = View.VISIBLE
+                iconRight.setImageResource(R.drawable.kr_file)
+            }
+            PopupRowRightIcon.FOLDER -> {
+                iconRight.visibility = View.VISIBLE
+                iconRight.setImageResource(R.drawable.kr_folder)
             }
             PopupRowRightIcon.SCRIPT -> {
                 iconRight.visibility = View.VISIBLE
-                iconRight.setImageResource(R.drawable.ic_editor_run)
+                iconRight.setImageResource(R.drawable.kr_script)
             }
         }
 

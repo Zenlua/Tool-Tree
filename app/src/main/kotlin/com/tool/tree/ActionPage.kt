@@ -474,20 +474,29 @@ class ActionPage : AppCompatActivity() {
     // Dựng 1 dòng cho popup List Item mới từ 1 PageMenuOption - dùng chung cho CẢ popup menu
     // "⋮" (showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item (showFabChooser()).
     // Icon PHẢI mặc định theo type (xem PopupRowRightIcon): checkbox -> dấu tích, spinner ->
-    // mũi tên dropdown, mục "mở trang" (link/activity/onlineHtmlPage/pageConfigSh/
-    // pageConfigPath) -> mũi tên ">"; các type còn lại (run/action...) -> icon "script"
-    // (ic_editor_run), báo hiệu bấm vào sẽ chạy 1 script/hành động.
+    // kr_down, mục "mở trang nội bộ" (pageConfigSh/pageConfigPath) -> kr_page, mục "mở link/
+    // html/activity ngoài" (link/activity/onlineHtmlPage) -> kr_link, mục "reset" (refresh/
+    // reload/restart/exit/finish/close/killapp) -> kr_refresh, mục "file" -> kr_file, mục
+    // "folder" -> kr_folder; các type còn lại (run/action...) -> icon kr_script, báo hiệu
+    // bấm vào sẽ chạy 1 script/hành động.
     // Icon TRÁI luôn lấy theo icon-path riêng của từng mục (nếu có khai báo) - KHÔNG suy ra
     // icon mặc định theo type (icon phải đã đủ báo hiệu loại mục rồi).
     private fun buildPopupRow(option: PageMenuOption, anchor: View?): PopupMenuRow {
-        val opensPage = option.link.isNotEmpty() || option.activity.isNotEmpty() ||
-            option.onlineHtmlPage.isNotEmpty() || option.pageConfigSh.isNotEmpty() ||
-            option.pageConfigPath.isNotEmpty()
+        val opensInternalPage = option.pageConfigSh.isNotEmpty() || option.pageConfigPath.isNotEmpty()
+        val opensLink = option.link.isNotEmpty() || option.activity.isNotEmpty() ||
+            option.onlineHtmlPage.isNotEmpty()
+        val isResetType = option.type in setOf(
+            "refresh", "reload", "restart", "exit", "finish", "close", "killapp"
+        )
 
         val rightIcon = when {
             option.type == "checkbox" -> PopupRowRightIcon.CHECKBOX
             option.type == "spinner" -> PopupRowRightIcon.DROPDOWN
-            opensPage -> PopupRowRightIcon.OPEN_PAGE
+            opensInternalPage -> PopupRowRightIcon.PAGE
+            opensLink -> PopupRowRightIcon.LINK
+            isResetType -> PopupRowRightIcon.REFRESH
+            option.type == "file" -> PopupRowRightIcon.FILE
+            option.type == "folder" -> PopupRowRightIcon.FOLDER
             else -> PopupRowRightIcon.SCRIPT
         }
 
