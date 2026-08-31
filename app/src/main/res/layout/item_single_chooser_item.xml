@@ -8,7 +8,7 @@
 
     <LinearLayout
         android:layout_marginStart="10dp"
-        android:layout_toStartOf="@id/itemDivider"
+        android:layout_toStartOf="@id/ItemChecBox"
         android:layout_centerVertical="true"
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -32,16 +32,6 @@
             android:maxLines="2"
             style="@style/textSmall" />
     </LinearLayout>
-
-    <View
-        android:id="@+id/itemDivider"
-        android:layout_width="1dp"
-        android:layout_height="18dp"
-        android:layout_toStartOf="@id/ItemChecBox"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
-        android:background="@drawable/kr_param_label" />
 
     <RadioButton
         android:id="@+id/ItemChecBox"
