@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Layout cho param type="spinner" khi editable="true" - mô phỏng ĐÚNG cấu trúc hàng
+    của param type="file"/"folder" (kr_param_file.xml, xem ParamsFileChooserRender):
+    - EditText (kr_param_spinner_edit): ô nhập chiếm gần hết bề ngang, người dùng gõ tay
+      giá trị bất kỳ vào đây. Ô này mang TAG = tên param nên ActionParamsLayoutRender
+      quét đọc đúng giá trị khi bấm chạy action (giống cơ chế kr_param_file_path).
+    - Vạch ngăn dọc mảnh (kr_param_label) + nút mở danh sách (kr_param_spinner_btn)
+      bên phải: bấm vào mở dropdown (danh sách ngắn) hoặc DialogItemChooser (danh sách
+      dài). Chọn mục nào thì VALUE của mục đó được điền thẳng vào ô nhập (WYSIWYG).
+    Bản spinner thường (editable="false") vẫn dùng kr_param_spinner.xml /
+    kr_param_single_select.xml như cũ - layout này KHÔNG ảnh hưởng hành vi cũ.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <EditText
+        android:id="@+id/kr_param_spinner_edit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:background="@android:color/transparent"
+        android:textSize="15dp"
+        android:maxLines="3"
+        android:hint="@string/kr_please_select"
+        android:breakStrategy="simple" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="18dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/kr_param_label" />
+
+    <RelativeLayout
+        android:id="@+id/kr_param_spinner_btn"
+        android:layout_width="30dp"
+        android:minHeight="40dp"
+        android:layout_height="match_parent">
+        <ImageButton
+            android:clickable="false"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="4dp"
+            android:background="@android:color/transparent"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_arrow_dropdown" />
+    </RelativeLayout>
+</LinearLayout>
