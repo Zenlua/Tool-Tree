@@ -69,7 +69,6 @@ class ActionPage : AppCompatActivity() {
     private var currentPageConfig: PageNode? = null
     private var autoRunItemId = ""
     private lateinit var binding: ActivityActionPageBinding
-    private var openedSubPage = false
 
     private lateinit var swipeBackHelper: SwipeBackHelper
 
@@ -1352,11 +1351,7 @@ class ActionPage : AppCompatActivity() {
     }
 
     fun _openPage(pageNode: PageNode) {
-        if (openedSubPage) return
-        openedSubPage = true
-        OpenPageHelper(this).openPage(pageNode) {
-            openedSubPage = false
-        }
+        OpenPageHelper(this).openPage(pageNode)
     }
 
 
