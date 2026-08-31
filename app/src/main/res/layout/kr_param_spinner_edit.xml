@@ -25,7 +25,7 @@
         android:layout_weight="1"
         android:background="@android:color/transparent"
         android:textSize="15dp"
-        android:maxLines="3"
+        android:maxLines="2"
         android:hint="@string/kr_please_select"
         android:breakStrategy="simple" />
 
