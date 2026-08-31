@@ -1194,13 +1194,11 @@ class ActionPage : AppCompatActivity() {
         val desiredWidth = contentWidth.coerceAtLeast(minWidth.toInt()).coerceAtMost(screenWidth)
         popup.width = desiredWidth
 
-        // Neo sát góc phải anchor (toolbar/FAB) - đúng vị trí icon menu 3 chấm/FAB thường nằm -
-        // thay vì để mặc định ListPopupWindow căn trái (tràn từ mép trái anchor).
+        // Neo sát mép phải MÀN HÌNH (giống menu 3 chấm hệ thống) thay vì căn phải
+        // theo anchor - popup luôn dính sát lề phải bất kể vị trí nút bấm.
         val anchorLocation = IntArray(2)
         anchor.getLocationOnScreen(anchorLocation)
-        val rightAligned = anchor.width - desiredWidth
-        val overflowLeft = anchorLocation[0] + rightAligned
-        popup.horizontalOffset = if (overflowLeft < 0) -anchorLocation[0] else rightAligned
+        popup.horizontalOffset = (screenWidth - desiredWidth) - anchorLocation[0]
         popup.verticalOffset = if (extraTopGapPx > 0) -extraTopGapPx else -anchor.height
     }
 
