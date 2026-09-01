@@ -70,7 +70,10 @@ object SpinnerPopupHelper {
      * Tính độ rộng popup theo nội dung (đo trước từ [itemViews]) và vị trí ngang, đảm bảo:
      *   - Rộng tối thiểu [minWidthPx].
      *   - Có thể mở rộng theo nội dung, nhưng KHÔNG bao giờ chạm mép màn hình - luôn chừa
-     *     EDGE_INSET_DP (16dp) hở ở CẢ 2 bên.
+     *     EDGE_INSET_DP (16dp) hở ở CẢ 2 bên (giới hạn maxWidth). Riêng khoảng hở 16dp hiển
+     *     thị thực tế bên cạnh hộp bo góc đến từ chính inset của nền kr_spinner_popup_bg.xml
+     *     (insetLeft/insetRight = activity_horizontal_margin), KHÔNG phải do hàm này cộng
+     *     thêm - xem nhánh alignRight bên dưới, tránh cộng dồn 2 lần thành 32dp.
      *   - Chữ dài quá độ rộng tối đa sẽ tự xuống dòng (TextView trong kr_spinner_dropdown.xml
      *     không giới hạn số dòng), không cần xử lý riêng.
      *
@@ -113,7 +116,13 @@ object SpinnerPopupHelper {
         val anchorX = anchorLocation[0]
 
         var offset = if (alignRight) {
-            (screenWidth - marginPx - desiredWidth) - anchorX
+            // KHÔNG trừ thêm marginPx ở đây: nền kr_spinner_popup_bg.xml đã tự
+            // insetLeft/insetRight = 16dp (activity_horizontal_margin) để bo góc hộp bên
+            // trong khung popup - đó chính là khoảng margin 16dp hiển thị thực tế. Nếu trừ
+            // thêm marginPx nữa vào vị trí khung, hộp bo góc sẽ bị đẩy vào tận 32dp
+            // (16dp margin ở đây + 16dp inset của nền) thay vì đúng 16dp như ý đồ thiết kế -
+            // khung chỉ cần neo sát mép phải màn hình (offset 0), phần margin để nền tự lo.
+            (screenWidth - desiredWidth) - anchorX
         } else {
             val overflowRight = (anchorX + desiredWidth) - (screenWidth - marginPx)
             if (overflowRight > 0) -overflowRight else 0

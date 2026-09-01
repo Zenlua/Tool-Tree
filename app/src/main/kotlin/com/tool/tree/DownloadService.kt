@@ -2,6 +2,7 @@ package com.tool.tree
 
 import android.app.*
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.*
 import androidx.core.app.NotificationCompat
 import java.io.BufferedReader
@@ -43,6 +44,16 @@ class DownloadService : Service() {
 
         // STOP - xoá notification
         if (intent.getBooleanExtra("stop", false)) {
+            // QUAN TRỌNG: mọi lệnh gọi tới service này đều đến từ
+            // Context.startForegroundService() (xem DownloadTaskHelper) - kể cả khi mục đích
+            // chỉ là DỪNG service. Android 8+ vẫn bắt buộc startForeground() phải được gọi
+            // trong vòng vài giây sau đó, nếu không hệ thống tự ném
+            // ForegroundServiceDidNotStartInTimeException và CRASH CẢ APP - dù ta không hề
+            // định giữ service chạy lâu. Gọi startForeground() rồi ngay lập tức
+            // stopForeground()+stopSelf() là cách an toàn để "trả nợ" hợp đồng này.
+            startForegroundCompat(createProgressBuilder(
+                applicationInfo.loadLabel(packageManager).toString(), -1, 0, null
+            ).build())
             stopWatching()
             manager.cancel(currentNotificationId)
             stopForegroundCompat(remove = true)
@@ -64,6 +75,8 @@ class DownloadService : Service() {
                 .setCategory(NotificationCompat.CATEGORY_ERROR)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            // Cùng lý do như nhánh "stop" ở trên: phải vào foreground trước rồi mới thoát.
+            startForegroundCompat(builder.build())
             // Dừng foreground nhưng KHÔNG xoá notification
             stopForegroundCompat(remove = false)
             manager.notify(currentNotificationId, builder.build())
@@ -86,16 +99,43 @@ class DownloadService : Service() {
             val progress = intent.getIntExtra("progress", 0)
             val max = intent.getIntExtra("max", 100)
             val builder = createProgressBuilder(displayTitle, progress, max, customText)
-            manager.notify(currentNotificationId, builder.build())
+            // QUAN TRỌNG: đây là dòng thật sự đưa service vào trạng thái foreground mà
+            // startForegroundService() đòi hỏi - bản cũ chỉ gọi manager.notify() (thông báo
+            // thường), KHÔNG đưa service vào foreground. Thiếu dòng này, trong vòng vài giây
+            // kể từ lần startForegroundService() đầu tiên, Android sẽ tự crash app bằng
+            // ForegroundServiceDidNotStartInTimeException - và vì app chết ngay lúc đó, thông
+            // báo "đang tải" (setOngoing(true)) vừa hiện sẽ bị TREO VĨNH VIỄN vì không còn ai
+            // sống để cập nhật nó sang lỗi hay xoá nó đi.
+            startForegroundCompat(builder.build())
             return START_NOT_STICKY
         }
 
         // Theo dõi file (tính năng cũ, giữ lại)
         intent.getStringExtra("path")?.let {
+            // Cùng lý do trên: phải vào foreground trước khi bắt đầu theo dõi file.
+            startForegroundCompat(createProgressBuilder(displayTitle, -1, 0, null).build())
             startWatching(it, displayTitle)
         }
 
         return START_NOT_STICKY
+    }
+
+    /**
+     * Gọi startForeground() thật sự (không chỉ manager.notify()) - đây là lệnh "trả nợ" hợp
+     * đồng startForegroundService(), bắt buộc trên Android 8+ để tránh
+     * ForegroundServiceDidNotStartInTimeException. Trên Android 10+ (Q), truyền kèm
+     * foregroundServiceType để khớp với foregroundServiceType="dataSync" đã khai trong
+     * manifest - bắt buộc trên Android 14+, nếu không sẽ bị
+     * MissingForegroundServiceTypeException/InvalidForegroundServiceTypeException.
+     * An toàn gọi lại nhiều lần (mỗi lần cập nhật tiến độ) - Android chỉ cập nhật notification,
+     * không lỗi gì khi service đã ở trạng thái foreground từ trước.
+     */
+    private fun startForegroundCompat(notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(currentNotificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(currentNotificationId, notification)
+        }
     }
 
     private fun createProgressBuilder(title: String, progress: Int, max: Int, customText: String?): NotificationCompat.Builder {

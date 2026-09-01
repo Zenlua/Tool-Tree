@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:insetLeft="@dimen/activity_horizontal_margin"
-    android:insetRight="@dimen/activity_horizontal_margin">
+    android:insetRight="@dimen/activity_horizontal_margin"
+    android:insetTop="8dp"
+    android:insetBottom="8dp">
 
     <ripple android:color="?android:attr/colorControlHighlight">
         <item android:id="@android:id/mask">
