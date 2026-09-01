@@ -7,12 +7,41 @@
 
     <TextView
         android:id="@+id/kr_param_spinner"
-        android:background="@drawable/ic_arrow_dropdown"
+        android:background="@android:color/transparent"
         android:textColor="?android:attr/textColorPrimary"
         android:minHeight="35dp"
-        android:gravity="center_vertical"
-        android:hint="@string/kr_please_select"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:hint="@string/kr_please_select"
+        android:textSize="14dp"
+        android:maxLines="1"
         android:breakStrategy="simple" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="18dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/kr_param_label" />
+
+    <RelativeLayout
+        android:id="@+id/kr_param_spinner_btn"
+        android:layout_width="30dp"
+        android:minHeight="40dp"
+        android:layout_height="match_parent">
+        <ImageButton
+            android:clickable="false"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="4dp"
+            android:background="@android:color/transparent"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_arrow_dropdown" />
+    </RelativeLayout>
 </LinearLayout>
