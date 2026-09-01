@@ -24,8 +24,8 @@
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
         android:background="@android:color/transparent"
-        android:textSize="15dp"
-        android:maxLines="2"
+        android:textSize="14dp"
+        android:maxLines="1"
         android:hint="@string/kr_please_select"
         android:breakStrategy="simple" />
 

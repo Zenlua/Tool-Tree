@@ -7,7 +7,7 @@
 
     <TextView
         android:id="@+id/kr_param_spinner"
-        android:background="@drawable/abc_spinner_mtrl_am_alpha"
+        android:background="@drawable/ic_arrow_dropdown"
         android:textColor="?android:attr/textColorPrimary"
         android:minHeight="35dp"
         android:gravity="center_vertical"
