@@ -28,7 +28,8 @@ object SpinnerPopupHelper {
     @JvmStatic
     fun applyRoundedClip(popup: ListPopupWindow, radiusPx: Float) {
         val listView = popup.listView ?: return
-
+        listView.divider = null
+        listView.dividerHeight = 0
         listView.clipToOutline = true
         listView.outlineProvider = object : ViewOutlineProvider() {
             override fun getOutline(view: View, outline: Outline) {
