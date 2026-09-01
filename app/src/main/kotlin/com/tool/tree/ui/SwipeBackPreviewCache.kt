@@ -77,13 +77,13 @@ object SwipeBackPreviewCache {
                         // này thay vì bỏ hẳn hiệu ứng preview
                         drawFallback(decorView, sharp)
                     }
-                    finishCapture(sharp, onCaptured)
+                    finishCapture(activity, sharp, onCaptured)
                 }, Handler(Looper.getMainLooper()))
             } else {
                 // API < 26 không có PixelCopy(Window) - giữ cách chụp cũ (chấp nhận không giữ
                 // được bo góc, nhưng đây là dải thiết bị cũ, ít quan trọng hơn)
                 drawFallback(decorView, sharp)
-                finishCapture(sharp, onCaptured)
+                finishCapture(activity, sharp, onCaptured)
             }
         } catch (_: Exception) {
             recycle()
@@ -100,12 +100,11 @@ object SwipeBackPreviewCache {
         }
     }
 
-    private fun finishCapture(sharp: Bitmap, onCaptured: () -> Unit) {
-        // Bản mờ dùng lại đúng thuật toán blur nền đang có sẵn của app (StackBlur, tự thu nhỏ
-        // 10% trước khi làm mờ nên rất nhanh) - để phong cách nhất quán với hiệu ứng blur nền
-        // khác trong app
+    private fun finishCapture(activity: Activity, sharp: Bitmap, onCaptured: () -> Unit) {
+        // Bản mờ dùng lại đúng pipeline blur nền đang có sẵn của app (RenderScript qua
+        // BlurController) - để phong cách nhất quán với hiệu ứng blur nền khác trong app
         val blurred = try {
-            FastBlurUtility.startBlurBackground(sharp)
+            FastBlurUtility.blurBitmap(activity, sharp)
         } catch (_: Exception) {
             null
         }

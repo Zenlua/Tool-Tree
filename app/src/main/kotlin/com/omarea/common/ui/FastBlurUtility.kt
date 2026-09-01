@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
+import android.graphics.RectF
 import android.view.View
 import kotlin.math.max
 import kotlin.math.round
@@ -64,6 +65,22 @@ object FastBlurUtility {
     }
 
     /**
+     * Blur trực tiếp 1 bitmap đã chụp sẵn từ nơi khác (không tự chụp screenshot của activity).
+     *
+     * Dùng cho SwipeBackPreviewCache: bitmap "sharp" đã được chụp qua PixelCopy (giữ đúng bo
+     * góc/clip) - chỉ cần blur nó bằng pipeline RenderScript sẵn có, giữ nguyên kích thước gốc
+     * của bitmap đầu vào.
+     *
+     * @return bitmap đã blur + tint (cùng kích thước với sourceBitmap), hoặc null nếu lỗi.
+     *         Caller phải recycle bitmap khi không còn dùng.
+     */
+    @JvmStatic
+    fun blurBitmap(activity: Activity, sourceBitmap: Bitmap): Bitmap? {
+        if (sourceBitmap.isRecycled) return null
+        return blurViaController(activity, sourceBitmap, sourceBitmap.width, sourceBitmap.height)
+    }
+
+    /**
      * Chụp ảnh màn hình an toàn.
      */
     private fun takeScreenShot(activity: Activity): Bitmap? {
@@ -109,7 +126,7 @@ object FastBlurUtility {
             )
             paint.colorFilter = ColorMatrixColorFilter(cm)
 
-            canvas.drawBitmap(blurBitmap, 0f, 0f, targetW.toFloat(), targetH.toFloat(), paint)
+            canvas.drawBitmap(blurBitmap, null, RectF(0f, 0f, targetW.toFloat(), targetH.toFloat()), paint)
             output
         } catch (e: OutOfMemoryError) {
             null
