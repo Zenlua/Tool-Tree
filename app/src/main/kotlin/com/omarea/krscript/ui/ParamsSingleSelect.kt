@@ -313,9 +313,18 @@ class ParamsSingleSelect(
             popup.dismiss()
         }
 
-        applyPopupWidthAndPosition(popup, editText, background)
+        val inflater = LayoutInflater.from(context)
+        val itemViews = options.map { item ->
+            inflater.inflate(R.layout.kr_spinner_dropdown, editText.parent as? ViewGroup, false).apply {
+                findViewById<TextView>(R.id.text).text = item.title
+            }
+        }
+        com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+            popup, editText, itemViews, background, editText.width, alignRight = false
+        )
 
         popup.show()
+        com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, context.resources.getDimension(R.dimen.kr_spinner_popup_radius))
         if (selectedIndex > -1 && selectedIndex < options.size) {
             popup.listView?.setSelection(selectedIndex)
         }
