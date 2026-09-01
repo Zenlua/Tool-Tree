@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:minHeight="48dp"
+        android:minHeight="35dp"
         android:paddingLeft="16dp"
         android:paddingTop="10dp"
         android:paddingRight="16dp"
