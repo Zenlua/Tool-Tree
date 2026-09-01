@@ -6,69 +6,65 @@ import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
-import android.graphics.Rect
 import android.view.View
-import kotlin.math.abs
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.round
 
+/**
+ * Tiện ích tạo ảnh nền mờ cho Dialog.
+ *
+ * Ưu tiên lấy bitmap blur đã được cache bởi BlurController (RenderScript, chất lượng cao,
+ * đã bao gồm wallpaper/contrast/tint) → chỉ cần scale lên full-screen, cực nhanh.
+ *
+ * Fallback: nếu chưa có cache, chụp screenshot + blur bằng RenderScript (thông qua
+ * BlurController.controller) thay vì StackBlur CPU cũ (thường bị fail trên một số thiết bị).
+ *
+ * So sánh với bản cũ (StackBlur):
+ *   - RenderScript: GPU-accelerated, ổn định hơn, blur mượt hơn
+ *   - Ưu tiên cache: tránh chụp + blur lại mỗi lần mở dialog
+ *   - Scale 20% + radius 16f: chất lượng blur cao hơn hẳn bản 15% + radius 10 cũ
+ *   - Contrast thích ứng dark/light mode thay vì cố định 0.80f
+ */
 object FastBlurUtility {
 
-    // Tỉ lệ thu nhỏ ảnh để xử lý nhanh (1/10 giúp giảm 100 lần số pixel cần tính toán)
-    private const val SCALE_FACTOR = 0.15f
-    private const val BLUR_RADIUS = 10
-
     /**
-     * Chụp màn hình và làm mờ (Dùng làm phương án dự phòng khi không lấy được Wallpaper)
+     * Tạo ảnh nền mờ full-screen cho Dialog.
+     *
+     * Pipeline:
+     *   1. Nếu BlurEngine.blurBitmap đã có (BlurController đã xử lý trước đó) →
+     *      scale lên full-screen + tint → trả về ngay (không cần chụp/blur lại).
+     *   2. Nếu chưa có → chụp screenshot → blur bằng RenderScript (BlurController) →
+     *      tint → trả về.
+     *
+     * @return bitmap full-screen đã blur + tint, hoặc null nếu thất bại.
+     *         Caller phải recycle bitmap khi không còn dùng.
      */
     @JvmStatic
     fun getBlurBackgroundDrawer(activity: Activity): Bitmap? {
-        val bmp = takeScreenShot(activity)
-        return startBlurBackground(bmp)
-    }
+        val screenWidth = activity.resources.displayMetrics.widthPixels
+        val screenHeight = activity.resources.displayMetrics.heightPixels
+        if (screenWidth <= 0 || screenHeight <= 0) return null
 
-    /**
-     * Quy trình xử lý: Thu nhỏ -> Làm mờ -> Phóng to & Nhuộm tối (Dim)
-     * Đảm bảo mượt mà từ SDK 23 trở lên.
-     */
-    @JvmStatic
-    fun startBlurBackground(bkg: Bitmap?): Bitmap? {
-        if (bkg == null || bkg.isRecycled) return null
-
-        // 1. Tính toán kích thước thu nhỏ
-        val width = Math.round(bkg.width * SCALE_FACTOR)
-        val height = Math.round(bkg.height * SCALE_FACTOR)
-
-        if (width <= 0 || height <= 0) return bkg
-
-        return try {
-            // 2. Thu nhỏ ảnh (Sử dụng bộ lọc Bilinear để ảnh mượt hơn)
-            val smallBitmap = Bitmap.createScaledBitmap(bkg, width, height, true)
-
-            // 3. Làm mờ bằng thuật toán StackBlur (CPU-based, cực kỳ ổn định)
-            val blurred = fastBlur(smallBitmap, BLUR_RADIUS)
-
-            // FIX: smallBitmap chỉ là ảnh trung gian, luôn giải phóng sau khi dùng xong
-            // (trừ trường hợp createScaledBitmap trả về chính bkg do width/height không đổi)
-            if (smallBitmap !== bkg && !smallBitmap.isRecycled) {
-                smallBitmap.recycle()
-            }
-
-            // FIX: fastBlur() có thể trả về null (radius < 1), phải kiểm tra trước khi dùng
-            if (blurred == null || blurred.isRecycled) {
-                return bkg
-            }
-
-            // 4. Phóng to về kích thước gốc và áp dụng bộ lọc màu tối
-            scaleAndDim(blurred, bkg.width, bkg.height)
-        } catch (e: OutOfMemoryError) {
-            bkg
+        // ─── Ưu tiên 1: Dùng blur bitmap đã cache bởi BlurController ───
+        val cachedBlur = BlurEngine.blurBitmap
+        if (cachedBlur != null && !cachedBlur.isRecycled) {
+            return scaleWithTint(cachedBlur, screenWidth, screenHeight)
         }
+
+        // ─── Ưu tiên 2: Chụp màn hình + blur bằng RenderScript ───
+        val screenshot = takeScreenShot(activity)
+        if (screenshot == null || screenshot.isRecycled) return null
+
+        val result = blurViaController(activity, screenshot, screenWidth, screenHeight)
+        // Screenshot chỉ là nguồn trung gian, recycle sau khi đã dùng xong
+        if (!screenshot.isRecycled) {
+            screenshot.recycle()
+        }
+        return result
     }
 
     /**
-     * Chụp ảnh màn hình an toàn trên SDK 23+
+     * Chụp ảnh màn hình an toàn.
      */
     private fun takeScreenShot(activity: Activity): Bitmap? {
         return try {
@@ -85,233 +81,86 @@ object FastBlurUtility {
     }
 
     /**
-     * Phóng to ảnh và áp dụng ColorMatrix để làm tối nền (Dim)
+     * Scale bitmap blur (nhỏ, ~20% screen) lên full-screen và phủ tint.
+     *
+     * Dùng cho cả 2 trường hợp:
+     *   - Bitmap cache từ BlurEngine.blurBitmap
+     *   - Bitmap blur vừa tạo mới
+     *
+     * @return bitmap mới full-screen, hoặc null nếu lỗi. Caller phải recycle.
      */
-    private fun scaleAndDim(bitmap: Bitmap?, targetW: Int, targetH: Int): Bitmap? {
-        if (bitmap == null || bitmap.isRecycled) return null
+    private fun scaleWithTint(blurBitmap: Bitmap, targetW: Int, targetH: Int): Bitmap? {
+        return try {
+            val output = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(output)
 
-        val output = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(output)
+            val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
 
-        // Paint với bộ lọc chống răng cưa và lọc bitmap khi scale
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
-
-        // Tạo bộ lọc màu để giảm độ sáng (contrast 0.85f ~ giảm 15% độ sáng)
-        val cm = ColorMatrix()
-        val contrast = 0.80f
-        cm.set(
-            floatArrayOf(
-                contrast, 0f, 0f, 0f, 0f,
-                0f, contrast, 0f, 0f, 0f,
-                0f, 0f, contrast, 0f, 0f,
-                0f, 0f, 0f, 1f, 0f
+            // Áp dụng contrast + tint giống BlurController
+            val contrastValue = if (com.tool.tree.ThemeModeState.isDarkMode()) 0.9f else 1.2f
+            val offset = (1f - contrastValue) * 128f
+            val cm = ColorMatrix(
+                floatArrayOf(
+                    contrastValue, 0f, 0f, 0f, offset,
+                    0f, contrastValue, 0f, 0f, offset,
+                    0f, 0f, contrastValue, 0f, offset,
+                    0f, 0f, 0f, 1f, 0f
+                )
             )
-        )
-        paint.colorFilter = ColorMatrixColorFilter(cm)
+            paint.colorFilter = ColorMatrixColorFilter(cm)
 
-        // Vẽ ảnh từ vùng nguồn (nhỏ) ra vùng đích (toàn màn hình)
-        val src = Rect(0, 0, bitmap.width, bitmap.height)
-        val dst = Rect(0, 0, targetW, targetH)
-        canvas.drawBitmap(bitmap, src, dst, paint)
-
-        // Giải phóng bitmap tạm sau khi đã vẽ xong
-        if (!bitmap.isRecycled) {
-            bitmap.recycle()
+            canvas.drawBitmap(blurBitmap, 0f, 0f, targetW.toFloat(), targetH.toFloat(), paint)
+            output
+        } catch (e: OutOfMemoryError) {
+            null
+        } catch (e: Exception) {
+            null
         }
-
-        return output
     }
 
     /**
-     * Thuật toán StackBlur (Multi-pass box blur) - Tối ưu cho hiệu năng CPU
-     * Hỗ trợ hoàn hảo cho các thiết bị từ cũ đến mới.
+     * Blur screenshot bằng RenderScript thông qua BlurController.
+     *
+     * Thay vì dùng StackBlur CPU (bản cũ, hay fail), gọi trực tiếp vào
+     * BlurController để tận dụng:
+     *   - RenderScript GPU-accelerated (nhanh + ổn định hơn)
+     *   - RS context/script đã cache (không tốn thời gian tạo lại)
+     *   - Scale 20% + radius 16f (chất lượng cao hơn bản cũ)
+     *
+     * @return bitmap full-screen đã blur + tint, hoặc null. Caller phải recycle.
      */
-    private fun fastBlur(sentBitmap: Bitmap?, radius: Int): Bitmap? {
-        if (sentBitmap == null || sentBitmap.isRecycled || radius < 1) return null
+    private fun blurViaController(activity: Activity, screenshot: Bitmap, screenWidth: Int, screenHeight: Int): Bitmap? {
+        return try {
+            // Scale xuống 20% giống BlurController (nhanh + đủ chất lượng)
+            val scale = 0.20f
+            val width = max(round(screenshot.width * scale).toInt(), 1)
+            val height = max(round(screenshot.height * scale).toInt(), 1)
+            val scaled = Bitmap.createScaledBitmap(screenshot, width, height, true)
 
-        // FIX: getConfig() có thể null với bitmap dạng HARDWARE -> copy() sẽ ném exception
-        val config = sentBitmap.config ?: Bitmap.Config.ARGB_8888
-        val bitmap = sentBitmap.copy(config, true)
+            // Blur bằng RenderScript (BlurController.cacheBlurBitmap)
+            val blurred = BlurEngine.controller.cacheBlurBitmap(activity.applicationContext, scaled, 16f)
 
-        val w = bitmap.width
-        val h = bitmap.height
-        val pix = IntArray(w * h)
-        bitmap.getPixels(pix, 0, w, 0, 0, w, h)
+            // scaled đã dùng xong, recycle
+            if (!scaled.isRecycled) {
+                scaled.recycle()
+            }
 
-        val wm = w - 1
-        val hm = h - 1
-        val wh = w * h
-        val div = radius + radius + 1
+            if (blurred == null || blurred.isRecycled) return null
 
-        val r = IntArray(wh)
-        val g = IntArray(wh)
-        val b = IntArray(wh)
-        var rsum: Int
-        var gsum: Int
-        var bsum: Int
-        var x: Int
-        var y: Int
-        var i: Int
-        var p: Int
-        var yp: Int
-        var yi: Int
-        var yw: Int
-        val vmin = IntArray(max(w, h))
+            // Scale lên full-screen + tint
+            val result = scaleWithTint(blurred, screenWidth, screenHeight)
 
-        var divsum = (div + 1) shr 1
-        divsum *= divsum
-        val dv = IntArray(256 * divsum)
-        i = 0
-        while (i < 256 * divsum) {
-            dv[i] = (i / divsum)
-            i++
+            // blurred là bitmap trung gian, recycle (trừ khi nó được gán vào BlurEngine.blurBitmap bên trong controller)
+            // An toàn: chỉ recycle nếu không phải là bitmap đang được cache
+            if (blurred !== BlurEngine.blurBitmap && !blurred.isRecycled) {
+                blurred.recycle()
+            }
+
+            result
+        } catch (e: OutOfMemoryError) {
+            null
+        } catch (e: Exception) {
+            null
         }
-
-        yw = 0
-        yi = 0
-        val stack = Array(div) { IntArray(3) }
-        var stackpointer: Int
-        var stackstart: Int
-        lateinit var sir: IntArray
-        var rbs: Int
-        val r1 = radius + 1
-        var routsum: Int
-        var goutsum: Int
-        var boutsum: Int
-        var rinsum: Int
-        var ginsum: Int
-        var binsum: Int
-
-        y = 0
-        while (y < h) {
-            rinsum = 0; ginsum = 0; binsum = 0; routsum = 0; goutsum = 0; boutsum = 0; rsum = 0; gsum = 0; bsum = 0
-            i = -radius
-            while (i <= radius) {
-                p = pix[yi + min(wm, max(i, 0))]
-                sir = stack[i + radius]
-                sir[0] = (p and 0xff0000) shr 16
-                sir[1] = (p and 0x00ff00) shr 8
-                sir[2] = (p and 0x0000ff)
-                rbs = r1 - abs(i)
-                rsum += sir[0] * rbs
-                gsum += sir[1] * rbs
-                bsum += sir[2] * rbs
-                if (i > 0) {
-                    rinsum += sir[0]
-                    ginsum += sir[1]
-                    binsum += sir[2]
-                } else {
-                    routsum += sir[0]
-                    goutsum += sir[1]
-                    boutsum += sir[2]
-                }
-                i++
-            }
-            stackpointer = radius
-
-            x = 0
-            while (x < w) {
-                r[yi] = dv[rsum]
-                g[yi] = dv[gsum]
-                b[yi] = dv[bsum]
-                rsum -= routsum
-                gsum -= goutsum
-                bsum -= boutsum
-                stackstart = stackpointer - radius + div
-                sir = stack[stackstart % div]
-                routsum -= sir[0]
-                goutsum -= sir[1]
-                boutsum -= sir[2]
-                if (y == 0) vmin[x] = min(x + radius + 1, wm)
-                p = pix[yw + vmin[x]]
-                sir[0] = (p and 0xff0000) shr 16
-                sir[1] = (p and 0x00ff00) shr 8
-                sir[2] = (p and 0x0000ff)
-                rinsum += sir[0]
-                ginsum += sir[1]
-                binsum += sir[2]
-                rsum += rinsum
-                gsum += ginsum
-                bsum += binsum
-                stackpointer = (stackpointer + 1) % div
-                sir = stack[stackpointer % div]
-                routsum += sir[0]
-                goutsum += sir[1]
-                boutsum += sir[2]
-                rinsum -= sir[0]
-                ginsum -= sir[1]
-                binsum -= sir[2]
-                yi++
-                x++
-            }
-            yw += w
-            y++
-        }
-        x = 0
-        while (x < w) {
-            rinsum = 0; ginsum = 0; binsum = 0; routsum = 0; goutsum = 0; boutsum = 0; rsum = 0; gsum = 0; bsum = 0
-            yp = -radius * w
-            i = -radius
-            while (i <= radius) {
-                yi = max(0, yp) + x
-                sir = stack[i + radius]
-                sir[0] = r[yi]
-                sir[1] = g[yi]
-                sir[2] = b[yi]
-                rbs = r1 - abs(i)
-                rsum += r[yi] * rbs
-                gsum += g[yi] * rbs
-                bsum += b[yi] * rbs
-                if (i > 0) {
-                    rinsum += sir[0]
-                    ginsum += sir[1]
-                    binsum += sir[2]
-                } else {
-                    routsum += sir[0]
-                    goutsum += sir[1]
-                    boutsum += sir[2]
-                }
-                if (i < hm) yp += w
-                i++
-            }
-            yi = x
-            stackpointer = radius
-            y = 0
-            while (y < h) {
-                pix[yi] = (-0x1000000 and pix[yi]) or (dv[rsum] shl 16) or (dv[gsum] shl 8) or dv[bsum]
-                rsum -= routsum
-                gsum -= goutsum
-                bsum -= boutsum
-                stackstart = stackpointer - radius + div
-                sir = stack[stackstart % div]
-                routsum -= sir[0]
-                goutsum -= sir[1]
-                boutsum -= sir[2]
-                if (x == 0) vmin[y] = min(y + r1, hm) * w
-                p = x + vmin[y]
-                sir[0] = r[p]
-                sir[1] = g[p]
-                sir[2] = b[p]
-                rinsum += sir[0]
-                ginsum += sir[1]
-                binsum += sir[2]
-                rsum += rinsum
-                gsum += ginsum
-                bsum += binsum
-                stackpointer = (stackpointer + 1) % div
-                sir = stack[stackpointer]
-                routsum += sir[0]
-                goutsum += sir[1]
-                boutsum += sir[2]
-                rinsum -= sir[0]
-                ginsum -= sir[1]
-                binsum -= sir[2]
-                yi += w
-                y++
-            }
-            x++
-        }
-        bitmap.setPixels(pix, 0, w, 0, 0, w, h)
-        return bitmap
     }
 }

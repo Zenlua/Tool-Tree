@@ -96,6 +96,22 @@ class BlurController {
     }
 
     /**
+     * Làm mờ bitmap bất kỳ bằng RenderScript (công khai, dùng cho FastBlurUtility).
+     *
+     * Tận dụng RS context + script đã cache, nên gọi từ FastBlurUtility không tốn
+     * chi phí khởi tạo RenderScript.
+     *
+     * @param context Application context
+     * @param bitmap bitmap đầu vào (đã scale sẵn). Sẽ KHÔNG bị modify/recycle bởi hàm này.
+     * @param radius bán kính blur (建议 16f, tương đương BlurController.BLUR_RADIUS)
+     * @return bitmap mới đã blur (cùng kích thước với đầu vào), hoặc null nếu lỗi.
+     *         Caller phải recycle bitmap trả về khi không còn dùng.
+     */
+    fun cacheBlurBitmap(context: Context, bitmap: Bitmap, radius: Float): Bitmap? {
+        return blurBitmap(context, bitmap, radius)
+    }
+
+    /**
      * Điều chỉnh độ tương phản (Contrast) của Bitmap.
      * Tạo bitmap mới, KHÔNG sửa bitmap đầu vào.
      *
