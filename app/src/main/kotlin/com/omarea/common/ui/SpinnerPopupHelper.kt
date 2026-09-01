@@ -73,11 +73,7 @@ object SpinnerPopupHelper {
         background?.getPadding(bgPadding)
         val screenWidth = context.resources.displayMetrics.widthPixels
         val marginPx = dpToPx(context, EDGE_INSET_DP)
-        val maxWidth = if (alignRight) {
-            (screenWidth).coerceAtLeast(minWidthPx)
-        } else {
-            (screenWidth - marginPx).coerceAtLeast(minWidthPx)
-        }
+        val maxWidth = screenWidth.coerceAtLeast(minWidthPx)
 
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         var maxItemWidth = 0
