@@ -5,14 +5,12 @@ import android.graphics.Outline
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
-import android.text.TextUtils
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.LinearLayout
 import android.widget.ListPopupWindow
 import android.widget.ListView
-import android.widget.TextView
 
 /**
  * Tiện ích dùng chung cho các popup dạng Spinner bo góc (ListPopupWindow + nền bo góc
@@ -26,8 +24,6 @@ import android.widget.TextView
 object SpinnerPopupHelper {
 
     private const val EDGE_INSET_DP = 16f
-    private const val BOTTOM_INSET_DP = 8f
-    private const val ITEM_TEXT_MAX_LINES = 2
 
     private fun dividerHeightPx(context: Context): Int = dpToPx(context, 1f).coerceAtLeast(1)
 
@@ -78,13 +74,6 @@ object SpinnerPopupHelper {
         val marginPx = dpToPx(context, EDGE_INSET_DP)
         val maxWidth = screenWidth.coerceAtLeast(minWidthPx)
 
-        // Giới hạn tối đa ITEM_TEXT_MAX_LINES dòng cho mọi TextView trong item, quá số dòng
-        // này thì hiện dấu "..." - áp dụng TRƯỚC khi đo, để cả bước đo bề rộng lẫn bước đo
-        // chiều cao bên dưới đều phản ánh đúng nội dung đã bị cắt bớt.
-        for (itemView in itemViews) {
-            clampTextLines(itemView)
-        }
-
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         var maxItemWidth = 0
         for (itemView in itemViews) {
@@ -98,10 +87,7 @@ object SpinnerPopupHelper {
         val desiredWidth = contentWidth.coerceAtLeast(minWidthPx).coerceAtMost(maxWidth)
         popup.width = desiredWidth
 
-        // Đo lại chiều cao từng dòng ĐÚNG theo độ rộng thật sự sẽ hiển thị.
-        // Vì text đã bị clamp tối đa ITEM_TEXT_MAX_LINES dòng ở bước trên, kết quả đo
-        // ở đây cũng tự động bị giới hạn theo đúng số dòng đó (không cộng dư chiều cao
-        // cho phần nội dung bị "...").
+        // Đo lại chiều cao từng dòng ĐÚNG theo độ rộng thật sự sẽ hiển thị
         val rowWidthPx = View.MeasureSpec.makeMeasureSpec(
             (desiredWidth - bgPadding.left - bgPadding.right).coerceAtLeast(0),
             View.MeasureSpec.EXACTLY
@@ -119,8 +105,7 @@ object SpinnerPopupHelper {
 
         val screenHeight = context.resources.displayMetrics.heightPixels
         val topMarginPx = dpToPx(context, EDGE_INSET_DP)
-        val bottomMarginPx = dpToPx(context, BOTTOM_INSET_DP)
-        val maxHeight = (screenHeight - topMarginPx - bottomMarginPx).coerceAtLeast(0)
+        val maxHeight = (screenHeight - topMarginPx).coerceAtLeast(0)
 
         popup.height = (contentHeight + bgPadding.top + bgPadding.bottom).coerceAtMost(maxHeight)
 
@@ -141,24 +126,6 @@ object SpinnerPopupHelper {
         popup.horizontalOffset = offset
         if (applyVerticalOffset) {
             popup.verticalOffset = if (extraTopGapPx > 0) -extraTopGapPx else -anchor.height
-        }
-    }
-
-    /**
-     * Đệ quy toàn bộ cây view của 1 item, giới hạn mọi TextView tối đa
-     * ITEM_TEXT_MAX_LINES dòng, quá số dòng đó sẽ hiện "..." ở cuối.
-     * Nhờ áp dụng trước khi đo, chiều cao item tính ra ở applyWidthAndPosition
-     * sẽ luôn khớp với nội dung đã hiển thị (không bị tính dư cho phần bị cắt).
-     */
-    private fun clampTextLines(view: View) {
-        if (view is TextView) {
-            view.maxLines = ITEM_TEXT_MAX_LINES
-            view.ellipsize = TextUtils.TruncateAt.END
-        }
-        if (view is ViewGroup) {
-            for (i in 0 until view.childCount) {
-                clampTextLines(view.getChildAt(i))
-            }
         }
     }
 
