@@ -505,25 +505,32 @@ object DownloadTaskHelper {
     private fun registerNetworkCallback(
         context: Context,
         onNetworkChanged: () -> Unit
-    ): ConnectivityManager.NetworkCallback {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                onNetworkChanged()
+    ): ConnectivityManager.NetworkCallback? {
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val callback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    onNetworkChanged()
+                }
+                override fun onLost(network: Network) {
+                    onNetworkChanged()
+                }
             }
-            override fun onLost(network: Network) {
-                onNetworkChanged()
-            }
+            val request = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+            cm.registerNetworkCallback(request, callback)
+            networkCallbacks[context] = callback
+            callback
+        } catch (e: Exception) {
+            // Thiếu quyền ACCESS_NETWORK_STATE (hoặc bị OEM chặn) không được làm crash cả
+            // luồng tải về - đây chỉ là tính năng phụ (tự thử lại khi đổi mạng).
+            null
         }
-        val request = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .build()
-        cm.registerNetworkCallback(request, callback)
-        networkCallbacks[context] = callback
-        return callback
     }
 
-    private fun unregisterNetworkCallback(context: Context, callback: ConnectivityManager.NetworkCallback) {
+    private fun unregisterNetworkCallback(context: Context, callback: ConnectivityManager.NetworkCallback?) {
+        if (callback == null) return
         try {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             cm.unregisterNetworkCallback(callback)
