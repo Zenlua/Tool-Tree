@@ -22,6 +22,10 @@ class ListItemDownload(context: Context, config: DownloadNode) :
     var isBusy: Boolean = false
         private set
 
+    // Mở khoá nhấn giữ khi đang bận tải (để hiện dialog xác nhận huỷ) kể cả khi item không có
+    // key / không cho phép tạo shortcut - xem PageLayoutRender.onItemLongClickListener.
+    override fun allowLongClick(): Boolean = isBusy || super.allowLongClick()
+
     // Hành động khi bấm lại: có thể là tạm dừng, tiếp tục, hoặc huỷ (tuỳ ngữ cảnh)
     private var cancelAction: (() -> Unit)? = null
 

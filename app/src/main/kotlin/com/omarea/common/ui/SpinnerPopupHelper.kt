@@ -6,6 +6,7 @@ import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.ListPopupWindow
 import android.widget.ListView
@@ -33,6 +34,18 @@ object SpinnerPopupHelper {
     // cả khoảng hở mép màn hình lẫn inset của dải ngăn cách, để dải ngăn cách thẳng hàng
     // đúng theo lề chữ.
     private const val EDGE_INSET_DP = 16f
+
+    // Số dòng tối đa hiện cùng lúc trước khi phải cuộn - giữ bảng gọn/thấp thay vì cao gần
+    // hết màn hình khi danh sách nhiều mục. Đồng thời đây LÀ cách khắc phục lỗi dòng cuối bị
+    // "cụt" mất 1 phần chiều cao: nếu để popup.height mặc định WRAP_CONTENT, khi nội dung cao
+    // hơn khoảng trống còn lại trên màn hình, ListPopupWindow tự co xuống đúng bằng khoảng
+    // trống đó - thường KHÔNG tròn số dòng, hở ra đúng 1 dòng cuối bị hiện dở dang. Dòng dở
+    // dang này lại bị outline bo góc (applyRoundedClip) cắt thẳng theo hình chữ nhật bo góc
+    // của TOÀN BỘ listView, nên trông như bị "thiếu chiều cao"/vỡ hình. Ép chiều cao popup
+    // luôn là bội số nguyên của (chiều cao 1 dòng + divider) để không bao giờ hiện dòng dở.
+    private const val MAX_VISIBLE_ROWS = 6
+
+    private fun dividerHeightPx(context: Context): Int = dpToPx(context, 1f).coerceAtLeast(1)
 
     /**
      * Gọi SAU popup.show() - ListPopupWindow chỉ tạo ra listView thật sự sau khi show().
@@ -63,7 +76,7 @@ object SpinnerPopupHelper {
 
         val insetPx = dpToPx(context, EDGE_INSET_DP)
         listView.divider = baseDivider?.let { InsetDrawable(it, insetPx, 0, insetPx, 0) }
-        listView.dividerHeight = dpToPx(context, 1f).coerceAtLeast(1)
+        listView.dividerHeight = dividerHeightPx(context)
     }
 
     /**
@@ -76,6 +89,8 @@ object SpinnerPopupHelper {
      *     thêm - xem nhánh alignRight bên dưới, tránh cộng dồn 2 lần thành 32dp.
      *   - Chữ dài quá độ rộng tối đa sẽ tự xuống dòng (TextView trong kr_spinner_dropdown.xml
      *     không giới hạn số dòng), không cần xử lý riêng.
+     *   - Chiều cao popup luôn hiện TRỌN VẸN tối đa MAX_VISIBLE_ROWS dòng (không hiện dòng dở
+     *     dang bị cắt cụt) - xem giải thích ở MAX_VISIBLE_ROWS.
      *
      * @param alignRight true = neo sát mép phải màn hình (kiểu menu 3 chấm hệ thống, dùng cho
      *                   ActionPage); false = neo theo mép trái của anchor, chỉ lùi lại khi
@@ -110,6 +125,24 @@ object SpinnerPopupHelper {
         val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
         val desiredWidth = contentWidth.coerceAtLeast(minWidthPx).coerceAtMost(maxWidth)
         popup.width = desiredWidth
+
+        // Đo lại chiều cao từng dòng ĐÚNG theo độ rộng thật sự sẽ hiển thị (desiredWidth trừ
+        // padding nền) - không dùng lại số đo UNSPECIFIED ở trên vì ở độ rộng hẹp hơn, dòng
+        // chữ dài có thể tự xuống dòng và cao hơn số đo ban đầu (đo theo bề rộng vô hạn).
+        val rowWidthPx = View.MeasureSpec.makeMeasureSpec(
+            (desiredWidth - bgPadding.left - bgPadding.right).coerceAtLeast(0),
+            View.MeasureSpec.EXACTLY
+        )
+        val dividerPx = dividerHeightPx(context)
+        var capHeight = 0
+        for ((index, itemView) in itemViews.withIndex()) {
+            itemView.measure(rowWidthPx, unspecified)
+            if (index < MAX_VISIBLE_ROWS) {
+                capHeight += itemView.measuredHeight
+                if (index < MAX_VISIBLE_ROWS - 1 && index < itemViews.size - 1) capHeight += dividerPx
+            }
+        }
+        popup.height = if (itemViews.size > MAX_VISIBLE_ROWS) capHeight else ViewGroup.LayoutParams.WRAP_CONTENT
 
         val anchorLocation = IntArray(2)
         anchor.getLocationOnScreen(anchorLocation)

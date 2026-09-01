@@ -119,6 +119,8 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_download_execute_wait">Running script…</string>
     <string name="kr_download_execute_success">Success</string>
     <string name="kr_download_execute_fail">Failed</string>
+    <string name="kr_download_cancel_confirm_title">Cancel download?</string>
+    <string name="kr_download_cancel_confirm_message">The downloaded data will be discarded.</string>
     <string name="kr_color_picker">Select a color</string>
     <string name="kr_invalid_color">Invalid color value. Formats like #ff88aa00 or @color/name are supported</string>
     <string name="kr_expand_fullscreen">Expand to fullscreen editor</string>

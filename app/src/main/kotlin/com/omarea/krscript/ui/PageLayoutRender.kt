@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import com.tool.tree.R
+import com.omarea.common.ui.DialogHelper
 import com.omarea.krscript.downloader.DownloadTaskHelper
 import com.omarea.krscript.model.*
 
@@ -81,6 +82,17 @@ class PageLayoutRender(private val mContext: Context,
     private val onItemLongClickListener = object : ListItemClickable.OnLongClickListener {
         override fun onLongClick(listItemView: ListItemClickable) {
             val item = findItemByDynamicIndex(listItemView.index, itemConfigList)
+            // Nhấn giữ khi mục tải đang bận (đang tải / tạm dừng / đang chạy script) → hiện
+            // dialog xác nhận hủy, thay vì luồng "thêm shortcut" mặc định bên dưới.
+            if (item is DownloadNode && listItemView is ListItemDownload && listItemView.isBusy) {
+                DialogHelper.confirm(
+                    mContext,
+                    mContext.getString(R.string.kr_download_cancel_confirm_title),
+                    mContext.getString(R.string.kr_download_cancel_confirm_message),
+                    Runnable { DownloadTaskHelper.cancelByUrl(item.url) }
+                )
+                return
+            }
             if (item is ClickableNode) {
                 clickListener.onItemLongClick(item)
             }

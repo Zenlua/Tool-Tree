@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingLeft="16dp"
-    android:paddingTop="10dp"
+    android:paddingTop="8dp"
     android:paddingRight="16dp"
-    android:paddingBottom="10dp"
+    android:paddingBottom="8dp"
     style="@style/textTitle"
     android:textColor="?android:attr/textColorPrimary" />

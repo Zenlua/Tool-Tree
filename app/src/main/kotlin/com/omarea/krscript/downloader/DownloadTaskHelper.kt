@@ -269,7 +269,14 @@ object DownloadTaskHelper {
                 postMain { session.viewRef?.clearCancelAction() }
                 session.status = Status.COMPLETING
                 updateNotification(session, textOverride = context.getString(R.string.kr_download_execute_wait))
-                runPostScript(context, session)
+                // ShellHandlerBase kế thừa android.os.Handler, bắt buộc phải được tạo trên
+                // thread đã gọi Looper.prepare() (ví dụ main thread). runDownload() chạy trên
+                // Dispatchers.IO (appScope) nên phải chuyển sang Dispatchers.Main trước khi
+                // gọi runPostScript(), nếu không sẽ crash:
+                // "Can't create handler inside thread ... that has not called Looper.prepare()"
+                withContext(Dispatchers.Main) {
+                    runPostScript(context, session)
+                }
                 break
             }
         } finally {
@@ -508,11 +515,21 @@ object DownloadTaskHelper {
     ): ConnectivityManager.NetworkCallback? {
         return try {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            // registerNetworkCallback() luôn gọi onAvailable() NGAY LẬP TỨC cho mạng đang hoạt
+            // động tại thời điểm đăng ký, dù mạng không hề đổi (hành vi mặc định của Android) →
+            // nếu không bỏ qua, ngay khi vừa bấm tải sẽ bị báo nhầm "đổi mạng, đang thử lại".
+            // Bỏ qua callback đầu tiên này, chỉ coi các lần gọi SAU đó là đổi mạng thật sự.
+            var isFirstCallback = true
             val callback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
+                    if (isFirstCallback) {
+                        isFirstCallback = false
+                        return
+                    }
                     onNetworkChanged()
                 }
                 override fun onLost(network: Network) {
+                    isFirstCallback = false
                     onNetworkChanged()
                 }
             }

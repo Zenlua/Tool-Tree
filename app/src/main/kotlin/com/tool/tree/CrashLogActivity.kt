@@ -98,13 +98,19 @@ class CrashLogActivity : AppCompatActivity() {
         buttonRow.addView(copyBtn)
         buttonRow.addView(shareBtn)
 
-        // ===== SCROLL VIEW (VERTICAL + HORIZONTAL) =====
-        val verticalScroll = ScrollView(this)
-        verticalScroll.layoutParams = LinearLayout.LayoutParams(
+        // ===== SCROLL VIEW =====
+        // HorizontalScrollView BỌC NGOÀI (chiếm trọn phần còn lại của màn hình, kể cả vùng
+        // trống dưới chữ khi log ngắn) để vuốt ngang được ở BẤT KỲ đâu trong vùng này, không
+        // chỉ ở chỗ có chữ. ScrollView (dọc) nằm BÊN TRONG để cuộn dọc khi log dài.
+        // (Nếu để ScrollView bọc ngoài như cũ, chiều cao HorizontalScrollView sẽ tự co lại
+        // vừa đúng bằng chiều cao nội dung chữ -> vùng trống bên dưới nằm ngoài vùng chạm của
+        // nó, vuốt ngang ở đó không có tác dụng.)
+        val horizontalScroll = HorizontalScrollView(this)
+        horizontalScroll.layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
         )
 
-        val horizontalScroll = HorizontalScrollView(this)
+        val verticalScroll = ScrollView(this)
 
         val textView = TextView(this)
         textView.text = displayLog
@@ -115,11 +121,11 @@ class CrashLogActivity : AppCompatActivity() {
         textView.setHorizontallyScrolling(true)
         textView.isHorizontalScrollBarEnabled = true
 
-        horizontalScroll.addView(textView)
-        verticalScroll.addView(horizontalScroll)
+        verticalScroll.addView(textView)
+        horizontalScroll.addView(verticalScroll)
 
         root.addView(buttonRow)
-        root.addView(verticalScroll)
+        root.addView(horizontalScroll)
 
         if (truncated) {
             val notice = TextView(this)

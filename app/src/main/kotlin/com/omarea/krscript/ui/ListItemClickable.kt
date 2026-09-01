@@ -21,6 +21,13 @@ open class ListItemClickable(context: Context,
     // để tô màu kr_widget theo màu trung bình của icon này (null nếu item không có icon).
     protected var iconDrawable: android.graphics.drawable.Drawable? = null
 
+    // Điều kiện gốc để nhấn giữ mở dialog thêm shortcut (cần có key + chưa bị tắt allowShortcut).
+    private val allowShortcutConfig = this.key.isNotEmpty() && config.allowShortcut != false
+
+    // Cho phép lớp con (VD: ListItemDownload) mở khoá nhấn giữ trong các trường hợp khác
+    // (nhấn giữ để huỷ tải) kể cả khi item không có key / không cho tạo shortcut.
+    protected open fun allowLongClick(): Boolean = allowShortcutConfig
+
     fun setOnClickListener(onClickListener: OnClickListener): ListItemClickable {
         this.mOnClickListener = onClickListener
 
@@ -45,15 +52,18 @@ open class ListItemClickable(context: Context,
         this.layout.setOnClickListener {
             this.mOnClickListener?.onClick(this)
         }
-        if (this.key.isNotEmpty() && config.allowShortcut != false) {
-            this.layout.setOnLongClickListener {
+        // Luôn gắn listener (không chỉ khi có key) để lớp con có thể tự mở khoá nhấn giữ cho
+        // mục đích khác (VD: nhấn giữ để huỷ tải) qua allowLongClick(); hành vi mặc định (chỉ
+        // cho nhấn giữ khi có key + allowShortcut != false) không đổi với các item còn lại.
+        this.layout.setOnLongClickListener {
+            if (allowLongClick()) {
                 this.mOnLongClickListener?.onLongClick(this)
                 true
+            } else {
+                false
             }
-            shortcutIconView?.visibility = View.VISIBLE
-        } else {
-            shortcutIconView?.visibility = View.GONE
         }
+        shortcutIconView?.visibility = if (allowShortcutConfig) View.VISIBLE else View.GONE
         if (iconView != null) {
             iconView?.visibility = View.GONE
             if (config.iconPath.isNotEmpty()) {

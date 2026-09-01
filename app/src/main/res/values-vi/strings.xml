@@ -104,6 +104,8 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_download_execute_wait">Đang chạy script…</string>
     <string name="kr_download_execute_success">Thành công</string>
     <string name="kr_download_execute_fail">Thất bại</string>
+    <string name="kr_download_cancel_confirm_title">Hủy tải xuống?</string>
+    <string name="kr_download_cancel_confirm_message">Dữ liệu đã tải sẽ bị xoá bỏ.</string>
     <string name="kr_color_picker">Chọn màu</string>
     <string name="kr_invalid_color">Giá trị màu không hợp lệ. Hỗ trợ định dạng như #ff88aa00 hoặc @color/tên_màu</string>
     <string name="kr_expand_fullscreen">Mở rộng toàn màn hình</string>
