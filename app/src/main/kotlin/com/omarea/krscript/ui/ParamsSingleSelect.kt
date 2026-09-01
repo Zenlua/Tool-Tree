@@ -38,16 +38,6 @@ class ParamsSingleSelect(
         return if (selectedIndex > -1 && selectedIndex < options.size) options[selectedIndex].value ?: "" else ""
     }
 
-    private fun updateValueView(valueView: TextView, textView: TextView) {
-        if (selectedIndex > -1 && selectedIndex < options.size) {
-            valueView.text = options[(selectedIndex)].value
-            textView.text = options[(selectedIndex)].title
-        } else {
-            valueView.text = ""
-            textView.text = ""
-        }
-    }
-
     private fun updateAnchorText(anchor: TextView) {
         if (selectedIndex > -1 && selectedIndex < options.size) {
             anchor.text = options[selectedIndex].title
@@ -64,23 +54,6 @@ class ParamsSingleSelect(
         if (actionParamInfo.editable) {
             return renderEditable()
         }
-
-        if (options.size > 6) {
-            val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_single_select, null)
-            val textView = layout.findViewById<TextView>(R.id.kr_param_single_select)
-            val valueView = layout.findViewById<TextView>(R.id.kr_param_value).apply {
-                tag = actionParamInfo.name
-                updateValueView(this, textView)
-            }
-            textView.run {
-                setOnClickListener {
-                    openSingleSelectDialog(valueView, textView)
-                }
-            }
-
-            return layout
-        }
-
         return renderNonEditable()
     }
 
@@ -117,12 +90,15 @@ class ParamsSingleSelect(
         btn.isEnabled = enabled
 
         if (enabled) {
-            anchor.setOnClickListener {
-                openSingleSelectPopup(anchor, valueHolder)
+            val showOptions = {
+                if (options.size > 6) {
+                    openSingleSelectDialog(anchor, valueHolder)
+                } else {
+                    openSingleSelectPopup(anchor, valueHolder)
+                }
             }
-            btn.setOnClickListener {
-                openSingleSelectPopup(anchor, valueHolder)
-            }
+            anchor.setOnClickListener { showOptions() }
+            btn.setOnClickListener { showOptions() }
         }
 
         return layout
@@ -169,7 +145,7 @@ class ParamsSingleSelect(
         }
     }
 
-    private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {
+    private fun openSingleSelectDialog(anchor: TextView, valueHolder: TextView) {
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastOpenTime < 800) {
             return
@@ -183,9 +159,13 @@ class ParamsSingleSelect(
             }
         }), false, object : DialogItemChooser.Callback {
             override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
-                selectedIndex = status.indexOf(true)
-                updateValueView(valueView, textView)
-                onValueChanged?.invoke()
+                val confirmedIndex = status.indexOf(true)
+                if (confirmedIndex > -1 && confirmedIndex < options.size) {
+                    selectedIndex = confirmedIndex
+                    updateAnchorText(anchor)
+                    valueHolder.text = getValue()
+                    onValueChanged?.invoke()
+                }
             }
         }).show(context.supportFragmentManager, "params-single-select")
     }
