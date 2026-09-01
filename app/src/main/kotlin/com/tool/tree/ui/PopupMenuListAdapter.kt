@@ -48,6 +48,13 @@ class PopupMenuListAdapter(
     private val context: Context,
     private val rows: List<PopupMenuRow>
 ) : BaseAdapter() {
+    // [FIX xuống dòng] Cung cấp bề rộng nội dung THẬT của popup (đã trừ padding nền) để ép
+    // TextView tiêu đề tự bẻ dòng đúng bằng textView.maxWidth - không phó mặc cho
+    // ListPopupWindow tự đo/co giãn hàng, vì một số ROM tùy biến (MIUI/HyperOS...) đo sai
+    // khiến dòng dài bị cắt cụt thay vì tự xuống dòng. Được gán từ ActionPage.showListPopup()
+    // SAU khi đã biết popup.width (đọc lại mỗi lần getView() vì width chỉ chốt lúc show()).
+    var contentWidthProvider: (() -> Int)? = null
+
     // Màu tint cho icon menu (giống toolbar icon) - lazy init 1 lần
     private val defaultTint: ColorStateList? by lazy {
         val ta = context.obtainStyledAttributes(intArrayOf(R.attr.toolbarIconTint))
@@ -69,7 +76,23 @@ class PopupMenuListAdapter(
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.popup_menu_list_item, parent, false)
         val row = rows[position]
 
-        view.findViewById<TextView>(R.id.popup_item_title).text = row.title
+        val titleView = view.findViewById<TextView>(R.id.popup_item_title)
+        titleView.text = row.title
+
+        // [FIX xuống dòng] Ép maxWidth = bề rộng nội dung thật của popup trừ đi padding
+        // hàng (16dp x2) và cột icon (22dp + 14dp margin, luôn trừ dù icon có ẩn hay không -
+        // ước lượng an toàn, tránh tràn dòng). Chỉ set khi đã có provider và đo được > 0.
+        contentWidthProvider?.invoke()?.let { contentWidth ->
+            if (contentWidth > 0) {
+                val density = context.resources.displayMetrics.density
+                val rowPaddingPx = (16 * density * 2).toInt()
+                val iconColumnPx = ((22 + 14) * density).toInt()
+                val available = (contentWidth - rowPaddingPx - iconColumnPx).coerceAtLeast(0)
+                if (available > 0) {
+                    titleView.maxWidth = available
+                }
+            }
+        }
 
         val iconLeft = view.findViewById<ImageView>(R.id.popup_item_icon_left)
 

@@ -964,29 +964,9 @@ class ActionPage : AppCompatActivity() {
     ) {
         val selectedIndex = options.indexOfFirst { it.value == currentValue }.let { if (it < 0) 0 else it }
 
+        val adapter = ArrayAdapter(this, R.layout.kr_spinner_dropdown, R.id.text, options)
         val background = ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg)
         val popup = ListPopupWindow(this)
-
-        // Ép TextView tự xuống dòng đúng theo bề rộng THẬT của popup (trừ padding nền) bằng
-        // cách gán thẳng textView.maxWidth ở getView() - không phó mặc cho ListPopupWindow tự
-        // đo/co giãn hàng, vì một số ROM tùy biến (MIUI/HyperOS...) đo sai khiến dòng dài bị
-        // cắt cụt thay vì tự xuống dòng. maxWidth ép StaticLayout wrap đúng bất kể ROM.
-        val adapter = object : ArrayAdapter<SelectItem>(this, R.layout.kr_spinner_dropdown, R.id.text, options) {
-            override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
-                val view = super.getView(position, convertView, parent)
-                val text = view.findViewById<android.widget.TextView>(R.id.text)
-                val popupWidth = popup.width
-                if (popupWidth > 0) {
-                    val bgPadding = Rect()
-                    background?.getPadding(bgPadding)
-                    val available = (popupWidth - bgPadding.left - bgPadding.right
-                        - text.paddingLeft - text.paddingRight).coerceAtLeast(0)
-                    text.maxWidth = available
-                }
-                return view
-            }
-        }
-
         popup.anchorView = anchor
         popup.setAdapter(adapter)
         popup.setBackgroundDrawable(background)
@@ -1014,7 +994,6 @@ class ActionPage : AppCompatActivity() {
             extraTopGapPx = extraTopGapPx, applyVerticalOffset = true
         )
 
-
         popup.show()
         com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
         if (selectedIndex in options.indices) {
@@ -1034,6 +1013,14 @@ class ActionPage : AppCompatActivity() {
         val background = ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg)
 
         val popup = ListPopupWindow(this)
+        // [FIX xuống dòng] popup.width chỉ chốt giá trị thật SAU applyWidthAndPosition() bên
+        // dưới - provider đọc lại popup.width mỗi lần getView() được gọi (sau show()) nên
+        // luôn lấy đúng bề rộng cuối cùng, không phụ thuộc thứ tự khởi tạo.
+        adapter.contentWidthProvider = {
+            val bgPadding = Rect()
+            background?.getPadding(bgPadding)
+            (popup.width - bgPadding.left - bgPadding.right).coerceAtLeast(0)
+        }
         popup.anchorView = anchor
         popup.setAdapter(adapter)
         popup.setBackgroundDrawable(background)
