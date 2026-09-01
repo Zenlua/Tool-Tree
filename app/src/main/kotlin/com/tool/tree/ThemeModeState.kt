@@ -53,7 +53,15 @@ object ThemeModeState {
 
     fun switchTheme(activity: Activity, themeLevel: Int? = null): ThemeMode {
         val level = themeLevel ?: ThemeConfig(activity).getThemeMode()
-        
+
+        // Lưu lại trạng thái TRƯỚC khi tính toán lại, để bên dưới biết theme có thực sự
+        // đổi hay không - switchTheme() được gọi ở onCreate() của HẦU HẾT mọi Activity
+        // (mở trang mới bình thường, theme không đổi), không chỉ khi người dùng đổi theme
+        // trong Settings - clearCache() chỉ nên chạy đúng lúc theme đổi thật, không phải
+        // mỗi lần vào trang mới.
+        val previousIsDarkMode = themeMode.isDarkMode
+        val previousIsDirectBgMode = BlurEngine.isDirectBgMode
+
         val isSystemNight = (activity.resources.configuration.uiMode and 
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK) == 
                 android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -100,11 +108,19 @@ object ThemeModeState {
         
         if (level >= 3 && !blurDisabled) {
             BlurEngine.isPaused = false
-            // KHÔNG xóa blurBitmap cũ.
-            // Giữ lại bitmap hiện có để toolbar không bị flash (trong suốt → mờ)
-            // trong lúc background thread capture + blur wallpaper mới.
-            // BlurController.captureAndBlur() đã có cache check (file length/modified),
-            // nó sẽ skip nếu wallpaper chưa đổi và bitmap vẫn còn hiệu lực.
+
+            // Chỉ xoá cache khi theme THỰC SỰ đổi (dark/light hoặc bật/tắt directBg) - bitmap
+            // cache cũ đã bake sẵn contrast/tint theo theme CŨ (xem
+            // BlurController.adjustContrast - contrastValue phụ thuộc
+            // ThemeModeState.isDarkMode() tại thời điểm capture), giữ lại dùng tiếp sau khi
+            // đổi theme sẽ sai màu/độ tương phản cho tới khi capture mới xong. Các lần
+            // switchTheme() còn lại (mở trang mới bình thường, theme không đổi) giữ nguyên
+            // cache để trang mới hiện ảnh nền mờ ngay, không bị chớp (trong suốt → mờ).
+            val themeActuallyChanged = themeMode.isDarkMode != previousIsDarkMode ||
+                    BlurEngine.isDirectBgMode != previousIsDirectBgMode
+            if (themeActuallyChanged) {
+                com.omarea.common.ui.FastBlurUtility.clearCache()
+            }
 
             activity.window.decorView.post {
                 val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")

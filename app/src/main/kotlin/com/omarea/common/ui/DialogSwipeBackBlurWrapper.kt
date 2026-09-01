@@ -67,7 +67,7 @@ object DialogSwipeBackBlurWrapper {
         val blurBitmap = if (DialogHelper.disableBlurBg) {
             null
         } else {
-            FastBlurUtility.getBlurBackgroundDrawer(activity)
+            FastBlurUtility.getDialogBlurBackground(activity)
         } ?: return null
 
         val originalLayoutParams = realRoot.layoutParams

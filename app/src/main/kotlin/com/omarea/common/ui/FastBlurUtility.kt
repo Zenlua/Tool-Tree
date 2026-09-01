@@ -12,47 +12,68 @@ import kotlin.math.max
 import kotlin.math.round
 
 /**
- * Tiện ích tạo ảnh nền mờ cho Dialog.
+ * Tiện ích tạo ảnh nền mờ, dùng cho 2 tình huống RIÊNG BIỆT - KHÔNG dùng chung 1 pipeline
+ * như bản cũ, vì bản chất nguồn ảnh khác nhau:
  *
- * Ưu tiên lấy bitmap blur đã được cache bởi BlurController (RenderScript, chất lượng cao,
- * đã bao gồm wallpaper/contrast/tint) → chỉ cần scale lên full-screen, cực nhanh.
+ *   1. VÀO TRANG MỚI (getPageBlurBackground): trang mới chưa có nội dung gì để chụp, nền
+ *      mờ ở đây thực chất là ẢNH WALLPAPER đã được BlurController chụp/blur SẴN 1 lần khi
+ *      app khởi động / đổi theme (xem BlurController.captureAndBlur, cache trong
+ *      BlurEngine.blurBitmap). Chỉ cần scale bitmap cache đó lên full-screen + tint - CHỈ
+ *      dùng cache, KHÔNG tự chụp/blur lại (chụp lại mỗi lần mở trang sẽ rất chậm + không
+ *      đúng ý nghĩa "ảnh nền" tĩnh theo wallpaper).
  *
- * Fallback: nếu chưa có cache, chụp screenshot + blur bằng RenderScript (thông qua
- * BlurController.controller) thay vì StackBlur CPU cũ (thường bị fail trên một số thiết bị).
+ *   2. MỞ DIALOG (getDialogBlurBackground): dialog che lên NỘI DUNG THẬT đang hiển thị của
+ *      trang hiện tại (danh sách, text đang gõ dở, v.v...) - ảnh wallpaper cache ở trên
+ *      không phản ánh đúng những gì đang thấy trên màn hình. Vì vậy dialog LUÔN chụp
+ *      screenshot màn hình activity tại đúng thời điểm mở dialog rồi blur bằng RenderScript
+ *      (BlurController) - KHÔNG dùng lại cache wallpaper, đảm bảo nền mờ phía sau dialog
+ *      luôn khớp với nội dung thật đang hiển thị ngay trước đó.
  *
- * So sánh với bản cũ (StackBlur):
- *   - RenderScript: GPU-accelerated, ổn định hơn, blur mượt hơn
- *   - Ưu tiên cache: tránh chụp + blur lại mỗi lần mở dialog
- *   - Scale 20% + radius 16f: chất lượng blur cao hơn hẳn bản 15% + radius 10 cũ
- *   - Contrast thích ứng dark/light mode thay vì cố định 0.80f
+ * Cả 2 đều dùng chung RenderScript pipeline của BlurController (GPU-accelerated, ổn định)
+ * thay vì StackBlur CPU cũ, và cùng áp dụng contrast thích ứng dark/light mode qua tint.
+ *
+ * clearCache() phải được gọi khi đổi theme (dark/light hoặc đổi kiểu nền) - ảnh cache cũ đã
+ * bake sẵn contrast/tint theo theme CŨ, dùng tiếp sẽ bị sai màu/độ tương phản cho tới khi
+ * capture mới xong; xoá cache buộc trang mới phải chờ/for hiện bitmap mới thay vì thấy nhầm
+ * ảnh cũ.
  */
 object FastBlurUtility {
 
     /**
-     * Tạo ảnh nền mờ full-screen cho Dialog.
+     * Ảnh nền mờ cho TRANG MỚI (activity/fragment mới mở) - CHỈ lấy từ cache wallpaper đã
+     * blur sẵn (BlurEngine.blurBitmap), KHÔNG tự chụp/blur lại.
      *
-     * Pipeline:
-     *   1. Nếu BlurEngine.blurBitmap đã có (BlurController đã xử lý trước đó) →
-     *      scale lên full-screen + tint → trả về ngay (không cần chụp/blur lại).
-     *   2. Nếu chưa có → chụp screenshot → blur bằng RenderScript (BlurController) →
-     *      tint → trả về.
-     *
-     * @return bitmap full-screen đã blur + tint, hoặc null nếu thất bại.
-     *         Caller phải recycle bitmap khi không còn dùng.
+     * @return bitmap full-screen đã blur + tint, hoặc null nếu cache chưa sẵn sàng (ví dụ
+     *         BlurController vẫn đang capture nền ở background thread - trang nên tạm hiện
+     *         nền trống rồi tự cập nhật khi BlurEngine.blurBitmap có giá trị, xem
+     *         BlurPreDrawListener). Caller phải recycle bitmap khi không còn dùng.
      */
     @JvmStatic
-    fun getBlurBackgroundDrawer(activity: Activity): Bitmap? {
+    fun getPageBlurBackground(activity: Activity): Bitmap? {
         val screenWidth = activity.resources.displayMetrics.widthPixels
         val screenHeight = activity.resources.displayMetrics.heightPixels
         if (screenWidth <= 0 || screenHeight <= 0) return null
 
-        // ─── Ưu tiên 1: Dùng blur bitmap đã cache bởi BlurController ───
         val cachedBlur = BlurEngine.blurBitmap
-        if (cachedBlur != null && !cachedBlur.isRecycled) {
-            return scaleWithTint(cachedBlur, screenWidth, screenHeight)
-        }
+        if (cachedBlur == null || cachedBlur.isRecycled) return null
 
-        // ─── Ưu tiên 2: Chụp màn hình + blur bằng RenderScript ───
+        return scaleWithTint(cachedBlur, screenWidth, screenHeight)
+    }
+
+    /**
+     * Ảnh nền mờ cho DIALOG - LUÔN chụp screenshot màn hình activity hiện tại rồi blur bằng
+     * RenderScript, KHÔNG dùng cache wallpaper (BlurEngine.blurBitmap), để nền mờ phía sau
+     * dialog khớp đúng nội dung thật đang hiển thị ngay trước khi dialog mở.
+     *
+     * @return bitmap full-screen đã blur + tint, hoặc null nếu chụp/blur thất bại.
+     *         Caller phải recycle bitmap khi không còn dùng.
+     */
+    @JvmStatic
+    fun getDialogBlurBackground(activity: Activity): Bitmap? {
+        val screenWidth = activity.resources.displayMetrics.widthPixels
+        val screenHeight = activity.resources.displayMetrics.heightPixels
+        if (screenWidth <= 0 || screenHeight <= 0) return null
+
         val screenshot = takeScreenShot(activity)
         if (screenshot == null || screenshot.isRecycled) return null
 
@@ -62,6 +83,22 @@ object FastBlurUtility {
             screenshot.recycle()
         }
         return result
+    }
+
+    /**
+     * Xoá cache blur wallpaper (BlurEngine.blurBitmap) - gọi khi đổi theme (dark/light,
+     * hoặc bật/tắt directbg) để tránh getPageBlurBackground() trả về ảnh đã bake contrast/
+     * tint theo theme CŨ trong lúc chờ BlurController capture xong bản mới.
+     *
+     * An toàn gọi nhiều lần / gọi khi cache đang null.
+     */
+    @JvmStatic
+    fun clearCache() {
+        val cached = BlurEngine.blurBitmap
+        if (cached != null && !cached.isRecycled) {
+            cached.recycle()
+        }
+        BlurEngine.blurBitmap = null
     }
 
     /**
