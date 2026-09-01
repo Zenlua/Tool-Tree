@@ -989,7 +989,7 @@ class ActionPage : AppCompatActivity() {
                 findViewById<android.widget.TextView>(R.id.text).text = option.toString()
             }
         }
-        val minWidthPx = (resources.displayMetrics.density * 220).toInt()
+        val minWidthPx = (resources.displayMetrics.density * 200).toInt()
         SpinnerPopupHelper.applyWidthAndPosition(
             popup, anchor, itemViews, background, minWidthPx, alignRight = true,
             extraTopGapPx = extraTopGapPx, applyVerticalOffset = true
@@ -1025,7 +1025,7 @@ class ActionPage : AppCompatActivity() {
 
         val parent = anchor.parent as? android.view.ViewGroup
         val itemViews = rows.indices.map { adapter.getView(it, null, parent) }
-        val minWidthPx = (resources.displayMetrics.density * 220).toInt()
+        val minWidthPx = (resources.displayMetrics.density * 200).toInt()
         SpinnerPopupHelper.applyWidthAndPosition(
             popup, anchor, itemViews, background, minWidthPx, alignRight = true,
             extraTopGapPx = extraTopGapPx, applyVerticalOffset = true
