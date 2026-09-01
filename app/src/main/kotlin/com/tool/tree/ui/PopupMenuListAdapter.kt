@@ -132,9 +132,9 @@ class PopupMenuListAdapter(
             }
         }
 
-        // Đường kẻ ngăn cách giữa các mục - ẩn ở dòng CUỐI CÙNG.
-        view.findViewById<View>(R.id.popup_item_divider).visibility =
-            if (position == rows.size - 1) View.GONE else View.VISIBLE
+        // // Đường kẻ ngăn cách giữa các mục - ẩn ở dòng CUỐI CÙNG.
+        // view.findViewById<View>(R.id.popup_item_divider).visibility =
+            // if (position == rows.size - 1) View.GONE else View.VISIBLE
 
         return view
     }
