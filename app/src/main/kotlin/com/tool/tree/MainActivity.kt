@@ -449,7 +449,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
-                popup, themeSelector, itemViews, background, themeSelector.width, alignRight = false
+                popup, themeSelector, itemViews, background, (resources.displayMetrics.density * 220).toInt(), alignRight = false
             )
             popup.show()
             com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
