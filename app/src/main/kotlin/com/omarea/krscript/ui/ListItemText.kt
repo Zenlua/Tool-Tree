@@ -6,7 +6,7 @@ import android.widget.TextView
 import com.tool.tree.R
 import com.omarea.krscript.model.TextNode
 
-class ListItemText(private val context: Context,
+class ListItemText(context: Context,
                    layoutId: Int,
                    config: TextNode) : ListItemView(context, layoutId, config) {
 

@@ -992,7 +992,7 @@ class ActionPage : AppCompatActivity() {
         applyPopupWidthAndPosition(popup, anchor, measureMaxItemWidth(itemViews), background, extraTopGapPx)
 
         popup.show()
-        applyRoundedClip(popup)
+        com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
         if (selectedIndex in options.indices) {
             popup.listView?.setSelection(selectedIndex)
         }
@@ -1035,17 +1035,6 @@ class ActionPage : AppCompatActivity() {
         popup.verticalOffset = if (extraTopGapPx > 0) -extraTopGapPx else -anchor.height
     }
 
-    private fun applyRoundedClip(popup: ListPopupWindow) {
-        val listView = popup.listView ?: return
-        val radiusPx = resources.getDimension(R.dimen.kr_spinner_popup_radius)
-        listView.clipToOutline = true
-        listView.outlineProvider = object : android.view.ViewOutlineProvider() {
-            override fun getOutline(view: View, outline: android.graphics.Outline) {
-                outline.setRoundRect(0, 0, view.width, view.height, radiusPx)
-            }
-        }
-    }
-
     // Popup List Item - dùng chung cho menu "⋮" và FAB nhiều item.
     private fun showListPopup(anchor: View, rows: List<PopupMenuRow>, extraTopGapPx: Int = 0) {
         if (rows.isEmpty()) return
@@ -1068,7 +1057,7 @@ class ActionPage : AppCompatActivity() {
         applyPopupWidthAndPosition(popup, anchor, measureMaxItemWidth(itemViews), background, extraTopGapPx)
 
         popup.show()
-        applyRoundedClip(popup)
+        com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
     }
 
     // Popup chọn khi FAB có nhiều item - neo tại FAB, chọn xong chạy như bấm thẳng.

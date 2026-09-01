@@ -18,7 +18,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.ListPopupWindow
+import android.widget.ListPopupWindow
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayout
@@ -433,6 +433,7 @@ class MainActivity : AppCompatActivity() {
             val popup = ListPopupWindow(this)
             popup.anchorView = themeSelector
             popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_dropdown, themeNames))
+            popup.setBackgroundDrawable(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg))
             popup.setOnItemClickListener { _, _, position, _ ->
                 themeConfig.setThemeMode(position)
                 themeSelector.text = themeNames[position]
@@ -442,6 +443,7 @@ class MainActivity : AppCompatActivity() {
             }
             popup.width = 500
             popup.show()
+            com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
         }
 
         layout.findViewById<CheckBox>(R.id.notification_ui).apply {

@@ -163,6 +163,7 @@ class ParamsSingleSelect(
         applyPopupWidthAndPosition(popup, anchor, background)
 
         popup.show()
+        com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, context.resources.getDimension(R.dimen.kr_spinner_popup_radius))
         if (selectedIndex > -1 && selectedIndex < options.size) {
             popup.listView?.setSelection(selectedIndex)
         }

@@ -6,4 +6,4 @@
     android:paddingBottom="8dp"
     android:layout_height="wrap_content"
     android:textColor="?android:attr/textColorPrimary"
-    android:textSize="15dp" />
+    style="@style/textTitle" />

@@ -30,7 +30,6 @@
             android:layout_weight="1"
             android:singleLine="true"
             android:ellipsize="end"
-            android:textSize="15dp"
             style="@style/textTitle"
             android:textColor="?android:attr/textColorPrimary" />
     </LinearLayout>
