@@ -433,7 +433,8 @@ class MainActivity : AppCompatActivity() {
             val popup = ListPopupWindow(this)
             popup.anchorView = themeSelector
             popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_dropdown, themeNames))
-            popup.setBackgroundDrawable(androidx.core.content.ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg))
+            val background = androidx.core.content.ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg)
+            popup.setBackgroundDrawable(background)
             popup.setOnItemClickListener { _, _, position, _ ->
                 themeConfig.setThemeMode(position)
                 themeSelector.text = themeNames[position]
@@ -441,7 +442,15 @@ class MainActivity : AppCompatActivity() {
                 ThemeModeState.switchTheme(this)
                 recreate()
             }
-            popup.width = 500
+            val inflater = LayoutInflater.from(this)
+            val itemViews = themeNames.map { name ->
+                inflater.inflate(R.layout.kr_spinner_dropdown, themeSelector.parent as? android.view.ViewGroup, false).apply {
+                    findViewById<TextView>(R.id.text).text = name
+                }
+            }
+            com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+                popup, themeSelector, itemViews, background, themeSelector.width, alignRight = false
+            )
             popup.show()
             com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
         }

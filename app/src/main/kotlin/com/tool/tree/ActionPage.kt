@@ -2,7 +2,6 @@ package com.tool.tree
 
 import android.app.ActivityManager
 import android.content.Intent
-import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -989,7 +988,11 @@ class ActionPage : AppCompatActivity() {
                 findViewById<android.widget.TextView>(R.id.text).text = option.toString()
             }
         }
-        applyPopupWidthAndPosition(popup, anchor, measureMaxItemWidth(itemViews), background, extraTopGapPx)
+        val minWidthPx = (resources.displayMetrics.density * 220).toInt()
+        com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+            popup, anchor, itemViews, background, minWidthPx, alignRight = true,
+            extraTopGapPx = extraTopGapPx, applyVerticalOffset = true
+        )
 
         popup.show()
         com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
@@ -998,42 +1001,9 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Đo bề rộng lớn nhất trong danh sách item đã inflate.
-    private fun measureMaxItemWidth(itemViews: List<View>): Int {
-        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        var maxItemWidth = 0
-        for (itemView in itemViews) {
-            itemView.measure(unspecified, unspecified)
-            if (itemView.measuredWidth > maxItemWidth) {
-                maxItemWidth = itemView.measuredWidth
-            }
-        }
-        return maxItemWidth
-    }
-
     // Đặt bề rộng popup theo nội dung, neo sát mép phải màn hình.
     // extraTopGapPx > 0 cho FAB: đẩy popup lên cao hơn để chừa khoảng hở.
-    private fun applyPopupWidthAndPosition(
-        popup: ListPopupWindow,
-        anchor: View,
-        maxItemWidth: Int,
-        background: android.graphics.drawable.Drawable?,
-        extraTopGapPx: Int = 0
-    ) {
-        val bgPadding = Rect()
-        background?.getPadding(bgPadding)
-        val screenWidth = resources.displayMetrics.widthPixels
-        val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
-        val minWidth = resources.displayMetrics.density * 220
-        val desiredWidth = contentWidth.coerceAtLeast(minWidth.toInt()).coerceAtMost(screenWidth)
-        popup.width = desiredWidth
-
-        // Neo sát mép phải màn hình (giống menu 3 chấm hệ thống).
-        val anchorLocation = IntArray(2)
-        anchor.getLocationOnScreen(anchorLocation)
-        popup.horizontalOffset = (screenWidth - desiredWidth) - anchorLocation[0]
-        popup.verticalOffset = if (extraTopGapPx > 0) -extraTopGapPx else -anchor.height
-    }
+    // (xem SpinnerPopupHelper.applyWidthAndPosition - dùng chung với showListPopup bên dưới)
 
     // Popup List Item - dùng chung cho menu "⋮" và FAB nhiều item.
     private fun showListPopup(anchor: View, rows: List<PopupMenuRow>, extraTopGapPx: Int = 0) {
@@ -1054,7 +1024,11 @@ class ActionPage : AppCompatActivity() {
 
         val parent = anchor.parent as? android.view.ViewGroup
         val itemViews = rows.indices.map { adapter.getView(it, null, parent) }
-        applyPopupWidthAndPosition(popup, anchor, measureMaxItemWidth(itemViews), background, extraTopGapPx)
+        val minWidthPx = (resources.displayMetrics.density * 220).toInt()
+        com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+            popup, anchor, itemViews, background, minWidthPx, alignRight = true,
+            extraTopGapPx = extraTopGapPx, applyVerticalOffset = true
+        )
 
         popup.show()
         com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))

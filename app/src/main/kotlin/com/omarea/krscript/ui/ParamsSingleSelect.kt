@@ -3,7 +3,6 @@ package com.omarea.krscript.ui
 import android.text.Editable
 import android.text.TextWatcher
 import android.content.res.Configuration
-import android.graphics.Rect
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
@@ -160,42 +159,21 @@ class ParamsSingleSelect(
             popup.dismiss()
         }
 
-        applyPopupWidthAndPosition(popup, anchor, background)
+        val inflater = LayoutInflater.from(context)
+        val itemViews = options.map { item ->
+            inflater.inflate(R.layout.kr_spinner_dropdown, anchor.parent as? ViewGroup, false).apply {
+                findViewById<TextView>(R.id.text).text = item.title
+            }
+        }
+        com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+            popup, anchor, itemViews, background, anchor.width, alignRight = false
+        )
 
         popup.show()
         com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, context.resources.getDimension(R.dimen.kr_spinner_popup_radius))
         if (selectedIndex > -1 && selectedIndex < options.size) {
             popup.listView?.setSelection(selectedIndex)
         }
-    }
-
-    private fun applyPopupWidthAndPosition(popup: ListPopupWindow, anchor: TextView, background: android.graphics.drawable.Drawable?) {
-        val inflater = LayoutInflater.from(context)
-        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        val parent = anchor.parent as? ViewGroup
-
-        var maxItemWidth = 0
-        for (item in options) {
-            val itemView = inflater.inflate(R.layout.kr_spinner_dropdown, parent, false)
-            itemView.findViewById<TextView>(R.id.text).text = item.title
-            itemView.measure(unspecified, unspecified)
-            if (itemView.measuredWidth > maxItemWidth) {
-                maxItemWidth = itemView.measuredWidth
-            }
-        }
-
-        val bgPadding = Rect()
-        background?.getPadding(bgPadding)
-        val screenWidth = context.resources.displayMetrics.widthPixels
-        val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
-        val minWidth = anchor.width
-        val desiredWidth = contentWidth.coerceAtLeast(minWidth).coerceAtMost(screenWidth)
-        popup.width = desiredWidth
-
-        val anchorLocation = IntArray(2)
-        anchor.getLocationOnScreen(anchorLocation)
-        val overflow = (anchorLocation[0] + desiredWidth) - screenWidth
-        popup.horizontalOffset = if (overflow > 0) -overflow else 0
     }
 
     private fun openSingleSelectDialog(valueView: TextView, textView: TextView) {

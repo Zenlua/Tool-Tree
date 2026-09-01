@@ -1,6 +1,10 @@
 package com.omarea.common.ui
 
+import android.content.Context
 import android.graphics.Outline
+import android.graphics.Rect
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.InsetDrawable
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.ListPopupWindow
@@ -12,13 +16,23 @@ import android.widget.ListView
  *   - Clip nội dung popup (listView) theo đúng outline bo góc, để hiệu ứng ripple khi bấm
  *     item KHÔNG tràn ra ngoài phần bo góc (mặc định selector/ripple của item vẽ full
  *     rectangle, không biết gì về bo góc của nền popup bên ngoài).
+ *   - Ẩn thanh cuộn dọc của popup (chỉ ẩn thanh trượt, việc cuộn vẫn hoạt động bình thường).
  *   - Thêm dải ngăn cách mảnh (1dp) giữa các item, dùng đúng màu divider mặc định của
- *     theme hệ thống hiện tại (android:attr/listDivider) - tự đổi theo sáng/tối.
+ *     theme hệ thống hiện tại (android:attr/listDivider) - tự đổi theo sáng/tối - và
+ *     inset 2 bên bằng đúng padding ngang của text (EDGE_INSET_DP) để dải ngăn cách
+ *     "đi theo chữ" như 1 gạch chân, không dính sát vào khung popup.
+ *   - Tính độ rộng + vị trí popup: rộng tối thiểu theo nội dung/anchor, có thể mở rộng
+ *     tối đa nhưng luôn chừa EDGE_INSET_DP hở ở cả 2 mép màn hình (không dính sát màn hình).
  *
  * Dùng chung cho: ActionPage (menu "⋮", popup FAB, dropdown spinner), ParamsSingleSelect
  * (spinner trong form param dạng combobox), MainActivity (popup chọn theme).
  */
 object SpinnerPopupHelper {
+
+    // Khớp với padding ngang của TextView trong kr_spinner_dropdown.xml - dùng chung cho
+    // cả khoảng hở mép màn hình lẫn inset của dải ngăn cách, để dải ngăn cách thẳng hàng
+    // đúng theo lề chữ.
+    private const val EDGE_INSET_DP = 16f
 
     /**
      * Gọi SAU popup.show() - ListPopupWindow chỉ tạo ra listView thật sự sau khi show().
@@ -36,6 +50,7 @@ object SpinnerPopupHelper {
                 outline.setRoundRect(0, 0, view.width, view.height, radiusPx)
             }
         }
+        listView.isVerticalScrollBarEnabled = false
 
         applyDivider(listView)
     }
@@ -43,10 +58,77 @@ object SpinnerPopupHelper {
     private fun applyDivider(listView: ListView) {
         val context = listView.context
         val attrs = context.obtainStyledAttributes(intArrayOf(android.R.attr.listDivider))
-        val divider = attrs.getDrawable(0)
+        val baseDivider = attrs.getDrawable(0)
         attrs.recycle()
 
-        listView.divider = divider
-        listView.dividerHeight = (context.resources.displayMetrics.density * 1f).toInt().coerceAtLeast(1)
+        val insetPx = dpToPx(context, EDGE_INSET_DP)
+        listView.divider = baseDivider?.let { InsetDrawable(it, insetPx, 0, insetPx, 0) }
+        listView.dividerHeight = dpToPx(context, 1f).coerceAtLeast(1)
     }
+
+    /**
+     * Tính độ rộng popup theo nội dung (đo trước từ [itemViews]) và vị trí ngang, đảm bảo:
+     *   - Rộng tối thiểu [minWidthPx].
+     *   - Có thể mở rộng theo nội dung, nhưng KHÔNG bao giờ chạm mép màn hình - luôn chừa
+     *     EDGE_INSET_DP (16dp) hở ở CẢ 2 bên.
+     *   - Chữ dài quá độ rộng tối đa sẽ tự xuống dòng (TextView trong kr_spinner_dropdown.xml
+     *     không giới hạn số dòng), không cần xử lý riêng.
+     *
+     * @param alignRight true = neo sát mép phải màn hình (kiểu menu 3 chấm hệ thống, dùng cho
+     *                   ActionPage); false = neo theo mép trái của anchor, chỉ lùi lại khi
+     *                   tràn mép màn hình (dùng cho spinner dạng combobox).
+     */
+    @JvmStatic
+    fun applyWidthAndPosition(
+        popup: ListPopupWindow,
+        anchor: View,
+        itemViews: List<View>,
+        background: Drawable?,
+        minWidthPx: Int,
+        alignRight: Boolean,
+        extraTopGapPx: Int = 0,
+        applyVerticalOffset: Boolean = false
+    ) {
+        val context = anchor.context
+        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        var maxItemWidth = 0
+        for (itemView in itemViews) {
+            itemView.measure(unspecified, unspecified)
+            if (itemView.measuredWidth > maxItemWidth) {
+                maxItemWidth = itemView.measuredWidth
+            }
+        }
+
+        val bgPadding = Rect()
+        background?.getPadding(bgPadding)
+        val screenWidth = context.resources.displayMetrics.widthPixels
+        val marginPx = dpToPx(context, EDGE_INSET_DP)
+        val maxWidth = (screenWidth - marginPx * 2).coerceAtLeast(minWidthPx)
+        val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
+        val desiredWidth = contentWidth.coerceAtLeast(minWidthPx).coerceAtMost(maxWidth)
+        popup.width = desiredWidth
+
+        val anchorLocation = IntArray(2)
+        anchor.getLocationOnScreen(anchorLocation)
+        val anchorX = anchorLocation[0]
+
+        var offset = if (alignRight) {
+            (screenWidth - marginPx - desiredWidth) - anchorX
+        } else {
+            val overflowRight = (anchorX + desiredWidth) - (screenWidth - marginPx)
+            if (overflowRight > 0) -overflowRight else 0
+        }
+        // Luôn đảm bảo mép trái popup không lọt vào trong khoảng hở marginPx, dù ở chế độ nào.
+        val leftEdge = anchorX + offset
+        if (leftEdge < marginPx) {
+            offset += (marginPx - leftEdge)
+        }
+        popup.horizontalOffset = offset
+        if (applyVerticalOffset) {
+            popup.verticalOffset = if (extraTopGapPx > 0) -extraTopGapPx else -anchor.height
+        }
+    }
+
+    private fun dpToPx(context: Context, dp: Float): Int =
+        (context.resources.displayMetrics.density * dp).toInt()
 }
