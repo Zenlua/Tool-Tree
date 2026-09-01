@@ -70,63 +70,60 @@ object SpinnerPopupHelper {
         val context = anchor.context
         val bgPadding = Rect()
         background?.getPadding(bgPadding)
-        val bgW = bgPadding.left + bgPadding.right
-        val bgH = bgPadding.top + bgPadding.bottom
         val screenWidth = context.resources.displayMetrics.widthPixels
         val marginPx = dpToPx(context, EDGE_INSET_DP)
+        val maxWidth = (screenWidth - marginPx * 2).coerceAtLeast(minWidthPx)
 
-        // --- Đo rộng từng item (UNSPECIFIED để tự co theo nội dung) ---
+        // Đo item với AT_MOST thay vì UNSPECIFIED: text quá dài sẽ xuống dòng
+        // thay vì ép popup kéo rộng theo 1 dòng duy nhất.
+        val maxContentWidth = (maxWidth - bgPadding.left - bgPadding.right).coerceAtLeast(0)
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(maxContentWidth, View.MeasureSpec.AT_MOST)
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         var maxItemWidth = 0
         for (itemView in itemViews) {
-            itemView.measure(unspecified, unspecified)
+            itemView.measure(widthSpec, unspecified)
             if (itemView.measuredWidth > maxItemWidth) {
                 maxItemWidth = itemView.measuredWidth
             }
         }
 
-        // --- Tính giới hạn TOÀN BỘ cửa sổ (nội dung + nền) ---
-        val maxTotalW = (screenWidth - marginPx * 2).coerceAtLeast(minWidthPx)
-        // Nội dung = toàn bộ trừ nền
-        val maxContentW = (maxTotalW - bgW).coerceAtLeast(0)
-        val minContentW = (minWidthPx - bgW).coerceAtLeast(0)
+        val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
+        val desiredWidth = contentWidth.coerceAtLeast(minWidthPx).coerceAtMost(maxWidth)
+        popup.width = desiredWidth
 
-        val desiredContentW = maxItemWidth
-            .coerceAtLeast(minContentW)
-            .coerceAtMost(maxContentW)
-
-        // Set CHỈ phần nội dung; PopupWindow tự cộng bgPadding cho cửa sổ
-        popup.width = desiredContentW
-
-        // --- Đo lại chiều cao theo độ rộng nội dung thật sự ---
-        val rowWidthSpec = View.MeasureSpec.makeMeasureSpec(
-            desiredContentW, View.MeasureSpec.EXACTLY
+        // Đo lại chiều cao từng dòng ĐÚNG theo độ rộng thật sự sẽ hiển thị
+        val rowWidthPx = View.MeasureSpec.makeMeasureSpec(
+            (desiredWidth - bgPadding.left - bgPadding.right).coerceAtLeast(0),
+            View.MeasureSpec.EXACTLY
         )
         val dividerPx = dividerHeightPx(context)
-
+        
+        // Lấy tối đa MAX_VISIBLE_ROWS dòng để tính chiều cao
         val visibleCount = itemViews.size.coerceAtMost(MAX_VISIBLE_ROWS)
         var contentHeight = 0
+
         for (i in 0 until visibleCount) {
             val itemView = itemViews[i]
-            itemView.measure(rowWidthSpec, unspecified)
+            itemView.measure(rowWidthPx, unspecified)
             contentHeight += itemView.measuredHeight
+            
+            // Cộng chiều cao divider giữa các dòng hiển thị
             if (i < visibleCount - 1) {
                 contentHeight += dividerPx
             }
         }
 
-        popup.height = contentHeight
+        // Bổ sung bgPadding.top + bgPadding.bottom để ListView không bị chèn ép diện tích
+        popup.height = contentHeight + bgPadding.top + bgPadding.bottom
 
-        // --- Tính vị trí (dùng tổng rộng = nội dung + nền) ---
-        val totalW = desiredContentW + bgW
         val anchorLocation = IntArray(2)
         anchor.getLocationOnScreen(anchorLocation)
         val anchorX = anchorLocation[0]
 
         var offset = if (alignRight) {
-            (screenWidth - totalW) - anchorX
+            (screenWidth - desiredWidth) - anchorX
         } else {
-            val overflowRight = (anchorX + totalW) - (screenWidth - marginPx)
+            val overflowRight = (anchorX + desiredWidth) - (screenWidth - marginPx)
             if (overflowRight > 0) -overflowRight else 0
         }
         val leftEdge = anchorX + offset
