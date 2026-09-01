@@ -68,20 +68,25 @@ object SpinnerPopupHelper {
         applyVerticalOffset: Boolean = false
     ) {
         val context = anchor.context
-        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        var maxItemWidth = 0
-        for (itemView in itemViews) {
-            itemView.measure(unspecified, unspecified)
-            if (itemView.measuredWidth > maxItemWidth) {
-                maxItemWidth = itemView.measuredWidth
-            }
-        }
-
         val bgPadding = Rect()
         background?.getPadding(bgPadding)
         val screenWidth = context.resources.displayMetrics.widthPixels
         val marginPx = dpToPx(context, EDGE_INSET_DP)
         val maxWidth = (screenWidth - marginPx * 2).coerceAtLeast(minWidthPx)
+
+        // Đo item với AT_MOST thay vì UNSPECIFIED: text quá dài sẽ xuống dòng
+        // thay vì ép popup kéo rộng theo 1 dòng duy nhất.
+        val maxContentWidth = (maxWidth - bgPadding.left - bgPadding.right).coerceAtLeast(0)
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(maxContentWidth, View.MeasureSpec.AT_MOST)
+        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        var maxItemWidth = 0
+        for (itemView in itemViews) {
+            itemView.measure(widthSpec, unspecified)
+            if (itemView.measuredWidth > maxItemWidth) {
+                maxItemWidth = itemView.measuredWidth
+            }
+        }
+
         val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
         val desiredWidth = contentWidth.coerceAtLeast(minWidthPx).coerceAtMost(maxWidth)
         popup.width = desiredWidth

@@ -165,8 +165,9 @@ class ParamsSingleSelect(
                 findViewById<TextView>(R.id.text).text = item.title
             }
         }
+        val minWidthPx = (context.resources.displayMetrics.density * 220).toInt()
         com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
-            popup, anchor, itemViews, background, anchor.width, alignRight = false
+            popup, anchor, itemViews, background, minWidthPx, alignRight = false
         )
 
         popup.show()
@@ -319,8 +320,9 @@ class ParamsSingleSelect(
                 findViewById<TextView>(R.id.text).text = item.title
             }
         }
+        val minWidthPx = (context.resources.displayMetrics.density * 220).toInt()
         com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
-            popup, editText, itemViews, background, editText.width, alignRight = false
+            popup, editText, itemViews, background, minWidthPx, alignRight = false
         )
 
         popup.show()

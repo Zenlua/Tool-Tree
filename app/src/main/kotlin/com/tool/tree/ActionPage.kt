@@ -477,7 +477,7 @@ class ActionPage : AppCompatActivity() {
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
             "file", "folder" -> menuItemChooseFile(menuOption)
-            "spinner" -> menuItemSpinner(menuOption, anchor)
+            "spinner" -> menuItemSpinner(menuOption, null)
             else -> {
                 if (menuOption.silent) {
                     menuItemExecuteSilent(menuOption)
@@ -990,7 +990,7 @@ class ActionPage : AppCompatActivity() {
         }
         val minWidthPx = (resources.displayMetrics.density * 220).toInt()
         com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
-            popup, anchor, itemViews, background, minWidthPx, alignRight = true,
+            popup, anchor, itemViews, background, minWidthPx, alignRight = false,
             extraTopGapPx = extraTopGapPx, applyVerticalOffset = true
         )
 
