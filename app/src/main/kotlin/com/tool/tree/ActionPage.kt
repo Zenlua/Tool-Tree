@@ -51,13 +51,8 @@ import kotlinx.coroutines.withContext
 
 class ActionPage : AppCompatActivity() {
     companion object {
-        // Icon fab lúc bấm "refresh"/"reload" (xem spinFabThenRecreate()) - lưu ở static (KHÔNG
-        // phải field instance) vì recreate() huỷ hẳn activity cũ rồi dựng instance HOÀN TOÀN
-        // MỚI, field instance thường sẽ mất; static field vẫn sống vì class chưa bị unload.
-        // != null nghĩa là "đang có 1 lượt xoay dở dang, đợi trang mới tải xong" - xem
-        // onCreateOptionsMenu()/stopFabSpinIfPending(). Luôn được set về null ngay khi tiêu thụ
-        // xong (tải xong HOẶC tải lỗi HOẶC activity đóng hẳn giữa chừng - xem handleLoadError()/
-        // onDestroy()) để không lỡ tay làm fab của 1 trang khác không liên quan tự xoay.
+        // Icon fab đang xoay chờ tải trang - static để sống qua recreate().
+        // != null = đang xoay, reset về null khi xong/lỗi/đóng trang.
         private var pendingSpinIcon: android.graphics.drawable.Drawable? = null
     }
 
@@ -72,11 +67,7 @@ class ActionPage : AppCompatActivity() {
 
     private lateinit var swipeBackHelper: SwipeBackHelper
 
-    // Ảnh preview (sharp/blurred) đang hiển thị phía sau lúc vuốt lùi - lưu lại instance field
-    // (thay vì chỉ val cục bộ trong onCreate) để onRetainCustomNonConfigurationInstance() có
-    // thể lấy ra và giữ nó sống sót qua các lần recreate() CỦA CHÍNH trang này (xoay màn hình,
-    // hoặc gọi recreate() thủ công như spinFabThenRecreate()/reloadPage/restartApp...) - xem
-    // giải thích chi tiết ở onDestroy().
+    // Ảnh preview vuốt lùi - lưu field để onRetainCustomNonConfigurationInstance() giữ qua recreate().
     private var swipePreview: SwipeBackPreviewCache.Preview? = null
 
     private val justClickedItemIds = HashSet<Int>()
@@ -86,22 +77,16 @@ class ActionPage : AppCompatActivity() {
     private val ACTION_FILE_PATH_CHOOSER_INNER = 65300
 
     private var menuOptions: ArrayList<PageMenuOption>? = null
-    // [[group.action]] menu = true: icon riêng luôn hiện trên toolbar - xem onCreateOptionsMenu()
+    // [[group.action]] menu=true: icon riêng trên toolbar.
     private var headerActions: ArrayList<ActionNode>? = null
-    // true sau khi đã tự mở dialog show=true 1 LẦN trong phiên mở trang hiện tại - tránh lặp
-    // lại mỗi khi trang reload (vd action khác gọi reload-page). Reset về false khi mở trang
-    // mới thật sự (activity mới), KHÔNG reset khi chỉ reload nội dung trang hiện tại.
+    // Tránh lặp auto-show mỗi lần reload; chỉ reset khi mở trang mới.
     private var autoShowTriggered = false
     private var menuCheckboxRefreshing = false
     private var checkboxRefreshJob: Job? = null
     private var loadPageJob: Job? = null
     private var spinnerLoadJob: Job? = null
     private var lockCheckJob: Job? = null
-    // true ngay khi checkPageLockThenLoad() đã BẮT ĐẦU chạy 1 lần cho phiên mở trang hiện tại -
-    // tránh chạy lại (và hiện chồng thêm dialog loading/lock) nếu onResume() gọi lại trong lúc
-    // vẫn đang đợi kết quả lockShell hoặc đang hiện dialog báo khoá (ví dụ activity resume lại
-    // do người dùng vừa quay lại từ 1 activity hệ thống nào đó trong lúc dialog còn hiện) - áp
-    // dụng cho cả nhánh gọi từ onEnterAnimationComplete() lẫn nhánh dự phòng trong onResume().
+    // Tránh chạy lại checkPageLock khi onResume() gọi lại trong lúc vẫn đang đợi.
     private var lockCheckStarted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,22 +107,13 @@ class ActionPage : AppCompatActivity() {
         binding = ActivityActionPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Ưu tiên lấy lại đúng cặp bitmap đã retain từ lần sống trước của CHÍNH activity này
-        // (xem onRetainCustomNonConfigurationInstance() ở dưới) - trường hợp onCreate() này
-        // chạy do recreate()/xoay màn hình chứ không phải do mở trang mới. Chỉ khi không có gì
-        // được retain (tức đây thực sự là lần mở trang đầu tiên) mới tiêu thụ
-        // SwipeBackPreviewCache - cache dùng 1 lần, chụp bởi OpenPageHelper NGAY TRƯỚC khi mở
-        // trang này từ trang cha.
+        // Lấy lại preview từ lần recreate trước (xoay màn hình), hoặc consume từ cache (mở trang mới).
         @Suppress("DEPRECATION")
         val retainedPreview = lastCustomNonConfigurationInstance as? SwipeBackPreviewCache.Preview
         swipePreview = retainedPreview ?: SwipeBackPreviewCache.consume()
         swipePreview?.let {
             binding.swipeBackPreviewSharp.setImageBitmap(it.sharp)
-            if (it.blurred != null) {
-                binding.swipeBackPreviewBlur.setImageBitmap(it.blurred)
-            } else {
-                binding.swipeBackPreviewBlur.setImageBitmap(it.sharp)
-            }
+            binding.swipeBackPreviewBlur.setImageBitmap(it.blurred ?: it.sharp)
         }
 
         swipeBackHelper = SwipeBackHelper(
@@ -148,10 +124,7 @@ class ActionPage : AppCompatActivity() {
                     val visibility = if (dragging) View.VISIBLE else View.GONE
                     binding.swipeBackPreviewBlur.visibility = visibility
                     binding.swipeBackPreviewSharp.visibility = visibility
-        
-                    if (!dragging) {
-                        binding.swipeBackPreviewSharp.alpha = 0f
-                    }
+                    if (!dragging) binding.swipeBackPreviewSharp.alpha = 0f
                 }
             },
             onDragProgress = { progress ->
@@ -166,10 +139,7 @@ class ActionPage : AppCompatActivity() {
         supportActionBar?.apply {
             setHomeButtonEnabled(true)
             setDisplayHomeAsUpEnabled(true)
-            // ActionBar dựng từ Toolbar (setSupportActionBar) KHÔNG đọc thuộc tính style
-            // homeAsUpIndicator/android:homeAsUpIndicator (thuộc tính đó chỉ áp dụng cho
-            // WindowActionBar gốc, mà app đã tắt windowActionBar=false) - phải set icon
-            // trực tiếp bằng code như dưới đây thì mới đổi được icon back.
+            // Phải set trực tiếp vì ActionBar từ Toolbar không đọc style homeAsUpIndicator.
             setHomeAsUpIndicator(R.drawable.ic_arrow_back)
         }
         toolbar.setNavigationOnClickListener { finish() }
@@ -216,10 +186,8 @@ class ActionPage : AppCompatActivity() {
             setResult(2)
             finish()
         } else {
-            // Thêm dòng này để gọi ngay lập tức khi Activity vừa được khởi tạo
             checkPageLockThenLoad()
         }
-        
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -261,19 +229,16 @@ class ActionPage : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val config = currentPageConfig ?: return false
         if (menuOptions == null) {
-            // Đã bỏ hẳn option-sh (script sinh menu động ở trang cha) - menu/fab giờ luôn đến
-            // thẳng từ config.pageMenuOptions, được PageConfigReader/PageConfigSh gán sẵn ngay
-            // khi đọc xong toml của CHÍNH trang này (xem loadPageConfig()).
+            // menu/fab đọc từ config.pageMenuOptions (gán sẵn lúc parse toml trang này).
             menuOptions = config.pageMenuOptions
         }
         if (headerActions == null) {
             headerActions = config.headerActions
         }
-    
+
         menu?.clear()
 
-        // [[group.action]] menu = true: khác các mục ở trên (luôn ẩn trong popup "⋮"), mục này
-        // LUÔN hiện như 1 icon riêng ngay trên toolbar (SHOW_AS_ACTION_ALWAYS) - cạnh nút "⋮".
+        // [[group.action]] menu=true: icon riêng trên toolbar.
         headerActions?.forEach { action ->
             val uniqueItemId = ("header:" + action.key).hashCode()
             val menuItem = menu?.add(Menu.NONE, uniqueItemId, Menu.NONE, action.title)
@@ -281,21 +246,13 @@ class ActionPage : AppCompatActivity() {
             menuItem?.icon = ContextCompat.getDrawable(this, R.drawable.ic_menu)
         }
 
-        // menu/fab giờ được đọc lại mỗi lần trang load/reload (cùng lúc với items, xem
-        // loadPageConfig()) thay vì cố định 1 lần từ trang cha như trước - nên phải ẩn fab
-        // trước, tránh còn sót fab của lần build cũ khi lần build mới không có mục fab nào.
+        // ẩn fab trước, tránh sót fab cũ khi lần build mới không có fab.
         binding.actionPageFab.visibility = View.GONE
 
         val fabOptions = ArrayList<PageMenuOption>()
         val overflowOptions = ArrayList<PageMenuOption>()
         menuOptions?.forEach { option ->
-            // type = "spinner" LUÔN hiện như 1 mục bình thường trong popup "⋮" (icon mũi tên
-            // dropdown bên phải, giống cách checkbox hiện dấu tích bên phải - xem
-            // PopupMenuListAdapter/buildPopupRow()) - kể cả khi mục này được khai báo trong
-            // [[fab]] (isFab = true). Trước đây spinner+isFab bị gộp chung vào fabOptions rồi
-            // resolveFabIcon() lại gắn icon dropdown lên thẳng nút FAB - sai vì FAB không có
-            // chỗ hiện tiêu đề đi kèm icon, khiến người dùng không biết đây là 1 dropdown chọn
-            // giá trị. Chỉ những type KHÁC spinner mới thực sự được phép làm fab.
+            // spinner luôn ở popup "⋮", không cho làm fab (FAB không hiện tiêu đề).
             if (option.isFab) {
                 fabOptions.add(option)
             } else {
@@ -303,54 +260,45 @@ class ActionPage : AppCompatActivity() {
             }
         }
         setupFab(fabOptions)
-        // Popup List Item mới cho menu "⋮" (thay hẳn cách cũ để mỗi option tự thêm 1 MenuItem
-        // native - chỉ còn 1 MenuItem duy nhất đóng vai trò nút mở popup, xem
-        // setupOverflowMenuButton()).
         setupOverflowMenuButton(menu, overflowOptions)
 
-        // Trang vẫn đang tải dở (đợi xong sau khi bấm "refresh"/"reload") - đè lên trạng thái
-        // fab vừa build ở trên (setupFab() dựa vào config, lúc này có thể chưa đọc xong toml).
+        // Đang xoay chờ tải -> đè lên fab vừa set.
         if (pendingSpinIcon != null) {
             startFabSpin()
         }
 
-        handler.post {
-            refreshCheckboxMenuStates()
-        }
-    
+        handler.post { refreshCheckboxMenuStates() }
+
         return true
     }
 
-    // Không còn onPrepareOptionsMenu() đồng bộ trạng thái tích - các mục checkbox giờ không
-    // còn là native MenuItem nào cả (xem setupOverflowMenuButton()/showOverflowMenuPopup()),
-    // nên chỉ cần đọc đúng option.checked hiện tại MỖI LẦN popup được mở (buildPopupRow()) là
-    // đủ, không cần cơ chế "chuẩn bị hiển thị" riêng như của native Menu nữa.
+    // Checkbox không còn là native MenuItem -> đọc trạng thái mỗi lần mở popup thay vì onPrepareOptionsMenu.
     private fun refreshCheckboxMenuStates() {
         val config = currentPageConfig ?: return
-    
+
         val checkboxOptions = menuOptions?.filter { option ->
             option.type == "checkbox" &&
                     option.checkedSh.isNotEmpty() &&
                     !justClickedItemIds.contains(option.key.hashCode())
         }.orEmpty()
-    
+
         if (checkboxOptions.isEmpty() || menuCheckboxRefreshing) return
-    
+
         menuCheckboxRefreshing = true
         checkboxRefreshJob?.cancel()
-    
+
         checkboxRefreshJob = lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val scripts = LinkedHashMap<String, String>()
                 checkboxOptions.forEachIndexed { index, option ->
                     scripts[index.toString()] = option.checkedSh
                 }
-    
+
                 val results = ScriptEnvironmen.executeMultipleResultRoot(this@ActionPage, scripts, config)
-    
+
                 withContext(Dispatchers.Main) {
                     if (isFinishing || isDestroyed) return@withContext
-    
+
                     var changed = false
                     checkboxOptions.forEachIndexed { index, option ->
                         val uniqueItemId = option.key.hashCode()
@@ -361,7 +309,7 @@ class ActionPage : AppCompatActivity() {
                             option.checked = newChecked
                         }
                     }
-    
+
                     if (changed) {
                         invalidateOptionsMenu()
                     }
@@ -376,11 +324,10 @@ class ActionPage : AppCompatActivity() {
 
     private fun setupFab(fabOptions: List<PageMenuOption>) {
         when (fabOptions.size) {
-            0 -> return // đã ẩn sẵn ở onCreateOptionsMenu
+            0 -> return
             1 -> addFab(fabOptions[0])
             else -> {
-                // Nhiều [[fab.items]] cùng lúc: 1 nút fab duy nhất, bấm vào mở popup danh sách
-                // để chọn item thực sự muốn chạy - xem showFabChooser().
+                // Nhiều item: 1 fab, bấm mở popup chọn.
                 binding.actionPageFab.apply {
                     visibility = View.VISIBLE
                     setOnClickListener { showFabChooser(fabOptions) }
@@ -398,37 +345,26 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Icon của nút fab: nếu chỉ có 1 item thì dùng icon của chính nó (như cũ). Nếu nhiều item
-    // cùng chung 1 icon-path thì vẫn tôn trọng icon đó; khác nhau thì dùng icon mặc định (dấu +)
-    // vì không có icon nào đại diện được cho tất cả các lựa chọn bên trong.
-    // Lưu ý: fabOptions không bao giờ chứa type = "spinner" nữa (xem onCreateOptionsMenu()) nên
-    // ở đây không còn cần xử lý riêng icon mũi tên dropdown cho fab.
+    // 1 item dùng icon riêng; 2+ item luôn dùng kr_fab.
     private fun resolveFabIcon(fabOptions: List<PageMenuOption>): android.graphics.drawable.Drawable? {
-        val distinctIconPaths = fabOptions.map { it.iconPath }.distinct()
-        val representative = if (distinctIconPaths.size == 1) fabOptions[0] else null
+        if (fabOptions.size >= 2) {
+            return ContextCompat.getDrawable(this, R.drawable.kr_fab)
+        }
 
-        val iconRes = if (representative != null &&
-            (representative.type == "file" || representative.type == "folder") &&
-            representative.iconPath.isEmpty()
-        ) {
+        val option = fabOptions[0]
+        val iconRes = if ((option.type == "file" || option.type == "folder") && option.iconPath.isEmpty()) {
             R.drawable.kr_folder
         } else {
             R.drawable.kr_fab
         }
-        val customIcon = if (representative != null && representative.iconPath.isNotEmpty()) {
-            IconPathAnalysis().loadLogo(this, representative, false)
+        val customIcon = if (option.iconPath.isNotEmpty()) {
+            IconPathAnalysis().loadLogo(this, option, false)
         } else null
 
         return customIcon ?: ContextCompat.getDrawable(this, iconRes)
     }
 
-    // Nút "⋮" trên toolbar - thay vì để native Menu tự vẽ submenu CHỈ CÓ CHỮ như trước (mỗi
-    // option = 1 MenuItem riêng), giờ chỉ thêm ĐÚNG 1 MenuItem duy nhất đóng vai trò nút mở
-    // popup List Item mới (showOverflowMenuPopup()). Dùng actionView (thay vì để hệ thống tự
-    // vẽ icon "⋮" mặc định) để có 1 View THẬT làm điểm neo cho ListPopupWindow - nếu không có
-    // actionView, MenuItem không có View nào để anchor popup vào đúng vị trí nút "⋮".
-    // Ẩn hẳn nút này nếu trang không có mục [[menu]] nào (overflowOptions rỗng), giống cách
-    // fab tự ẩn khi không có mục [[fab]] nào (xem setupFab()).
+    // Nút "⋮" trên toolbar - 1 MenuItem duy nhất làm neo cho ListPopupWindow.
     private fun setupOverflowMenuButton(menu: Menu?, overflowOptions: List<PageMenuOption>) {
         if (overflowOptions.isEmpty()) return
 
@@ -440,9 +376,7 @@ class ActionPage : AppCompatActivity() {
         menuItem?.actionView = button
     }
 
-    // Dựng nút "⋮" hoàn toàn bằng code (không dùng layout toolbar_more_action.xml), icon lấy
-    // thẳng từ ic_more_vert.xml (vector code, không phải ảnh) - giữ đúng kích thước/padding/
-    // background như layout cũ để không đổi giao diện.
+    // Dựng nút "⋮" bằng code, giữ kích thước/padding/background như layout cũ.
     private fun buildOverflowMenuButton(): ImageButton {
         val density = resources.displayMetrics.density
         val sizePx = (48 * density).toInt()
@@ -463,21 +397,12 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Popup List Item mới cho menu "⋮" - đọc lại danh sách row MỖI LẦN mở popup (buildPopupRow())
-    // nên luôn phản ánh đúng trạng thái checkbox mới nhất, không cần cơ chế đồng bộ riêng như
-    // onPrepareOptionsMenu() của native Menu trước đây.
+    // Đọc lại row mỗi lần mở popup để phản ánh đúng trạng thái checkbox mới nhất.
     private fun showOverflowMenuPopup(anchor: View, overflowOptions: List<PageMenuOption>) {
         showListPopup(anchor, overflowOptions.map { buildPopupRow(it, anchor) })
     }
 
-    // Dựng 1 dòng cho popup List Item mới từ 1 PageMenuOption - dùng chung cho CẢ popup menu
-    // "⋮" (showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item (showFabChooser()).
-    // Icon TRÁI: ưu tiên icon tuỳ chỉnh (icon-path của mục); nếu không có thì dùng icon mặc
-    // định theo loại mục (xem PopupRowTypeIcon): checkbox -> dấu tích, spinner -> kr_down,
-    // mục "mở trang nội bộ" -> kr_page, mục "mở link/html/activity ngoài" -> kr_link,
-    // mục "reset" (refresh/reload/restart/exit/finish/close/killapp) -> kr_refresh, mục
-    // "file" -> kr_file, mục "folder" -> kr_folder; các type còn lại (run/action...) ->
-    // icon kr_script.
+    // Dùng chung cho popup menu "⋮" và popup chọn FAB nhiều item.
     private fun buildPopupRow(option: PageMenuOption, anchor: View?): PopupMenuRow {
         val opensInternalPage = option.pageConfigSh.isNotEmpty() || option.pageConfigPath.isNotEmpty()
         val opensLink = option.link.isNotEmpty() || option.activity.isNotEmpty() ||
@@ -522,21 +447,14 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Mở dialog của 1 action menu=true - dùng lại NGUYÊN VẸN logic dialog params/confirm/
-    // warning của group.action (ActionListFragment.onActionClick).
     private fun openHeaderActionDialog(action: ActionNode) {
         val fragment = supportFragmentManager.findFragmentById(R.id.main_list) as? ActionListFragment ?: return
         fragment.onActionClick(action, Runnable {})
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Các mục [[menu]] (không phải header action) không còn là native MenuItem nào nữa -
-        // giờ luôn nằm trong popup List Item mới (xem setupOverflowMenuButton()/
-        // showOverflowMenuPopup()/buildPopupRow()), tự xử lý click ngay trong
-        // PopupMenuRow.onClick chứ không đi qua onOptionsItemSelected().
-        val targetItemId = item.itemId
-
-        val headerAction = headerActions?.find { ("header:" + it.key).hashCode() == targetItemId }
+        // [[menu]] không còn là native MenuItem -> xử lý trong popup, chỉ header action đi qua đây.
+        val headerAction = headerActions?.find { ("header:" + it.key).hashCode() == item.itemId }
         if (headerAction != null) {
             openHeaderActionDialog(headerAction)
             return true
@@ -544,10 +462,7 @@ class ActionPage : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    // anchor: view dùng làm điểm neo cho popup dạng "spinner" (xem menuItemSpinner()) - mặc
-    // định null nghĩa là dùng toolbar (trường hợp bấm từ menu 3 chấm). Khi gọi từ FAB
-    // (addFab()/showFabChooser()) truyền thẳng binding.actionPageFab vào để popup "spinner"
-    // đè lên đúng vị trí fab vừa bấm thay vì luôn hiện ở toolbar bất kể nguồn gọi.
+    // anchor: neo cho popup spinner (null = toolbar). Từ FAB truyền actionPageFab vào.
     private fun onMenuItemClick(menuOption: PageMenuOption, anchor: View? = null) {
         if (menuOption.link.isNotEmpty() || menuOption.activity.isNotEmpty() ||
             menuOption.onlineHtmlPage.isNotEmpty() || menuOption.pageConfigSh.isNotEmpty() ||
@@ -574,21 +489,13 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Gọi recreate() NGAY LẬP TỨC khi bấm mục type = "refresh"/"reload" ("Làm mới") - không đợi
-    // animation nào cả. Icon fab hiện tại được lưu lại (static, xem pendingSpinIcon ở companion
-    // object) để instance MỚI dựng lên biết cần tiếp tục xoay đúng icon đó - xem
-    // onCreateOptionsMenu()/startFabSpin(). Vòng xoay sẽ chạy vô hạn XUYÊN SUỐT qua activity mới
-    // cho tới khi trang thật sự tải xong hoàn toàn (hoặc lỗi) - xem stopFabSpinIfPending(),
-    // được gọi từ tryAutoShowActions()/handleLoadError().
+    // Lưu icon fab hiện tại rồi recreate() - instance mới sẽ tiếp tục xoay icon đó.
     private fun spinFabThenRecreate() {
         pendingSpinIcon = binding.actionPageFab.drawable
         recreate()
     }
 
-    // Ép fab hiện + xoay bằng icon đã lưu (pendingSpinIcon) - gọi lại mỗi lần
-    // onCreateOptionsMenu() build lại menu/fab trong lúc vẫn còn đang đợi trang tải xong, để đè
-    // lên trạng thái GONE/icon thật mà setupFab() vừa set theo config (config lúc này CÓ THỂ vẫn
-    // chưa đọc xong - xem loadPageConfig()).
+    // Ép fab hiện + xoay bằng pendingSpinIcon - đè lên trạng thái setupFab() vừa set.
     private fun startFabSpin() {
         val fab = binding.actionPageFab
         pendingSpinIcon?.let { fab.setImageDrawable(it) }
@@ -607,10 +514,7 @@ class ActionPage : AppCompatActivity() {
         fab.startAnimation(rotate)
     }
 
-    // Gọi ĐÚNG lúc nội dung trang đã render xong thật sự (tryAutoShowActions()) hoặc tải lỗi
-    // (handleLoadError()) - dừng xoay, cho phép bấm lại fab, rồi invalidateOptionsMenu() để
-    // onCreateOptionsMenu() build lại đúng trạng thái fab thật sự theo config vừa tải (có thể
-    // ẩn hẳn nếu trang không có mục fab nào).
+    // Dừng xoay fab, cho phép bấm lại, rebuild menu/fab theo config.
     private fun stopFabSpinIfPending() {
         if (pendingSpinIcon == null) return
         pendingSpinIcon = null
@@ -655,9 +559,7 @@ class ActionPage : AppCompatActivity() {
     private fun menuItemExecuteSilent(menuOption: PageMenuOption) {
         val config = currentPageConfig ?: return
         val extraParams = hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key)
-        // menuOption.script đã được gán sẵn handler dùng chung của nhóm [[menu]]/[[fab]] (nếu
-        // bản thân mục không tự khai báo script riêng) ngay lúc parse - page không còn handler
-        // riêng nữa (xem PageConfigReader.menuGroupOptionsToml()).
+        // script đã được gán handler chung của nhóm [[menu]]/[[fab]] lúc parse.
         val script = menuOption.script
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -683,13 +585,7 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Kiểm tra khoá của CHÍNH trang này (config.lockShell/config.locked) - gọi TỪ onResume()
-    // thay cho loadPageConfig(true) trực tiếp như trước. Khác với cách cũ (kiểm tra khoá ở
-    // trang CHA, TRƯỚC khi mở trang - xem ActionListFragment.onPageClick()/nodeUnlockedAsync()):
-    // giờ luôn VÀO TRANG NGAY (activity đã mở, toolbar/title đã hiện), rồi mới hiện dialog
-    // loading trong lúc chờ lockShell chạy xong. Nếu khoá, hiện dialog báo lỗi (thay vì toast)
-    // với nút OK - bấm OK mới thật sự thoát khỏi trang (finish()), thay vì tự thoát ngay lập
-    // tức không cho người dùng kịp đọc thông báo.
+    // Kiểm tra khoá trang, rồi load nội dung. Hiện dialog loading trong lúc chờ lockShell.
     private fun checkPageLockThenLoad() {
         if (lockCheckStarted) return
         lockCheckStarted = true
@@ -712,7 +608,6 @@ class ActionPage : AppCompatActivity() {
                 }
             }
         } else if (config.locked) {
-            // lock = "1|message" → khoá, hiện thông báo tuỳ chỉnh
             val msg = config.lockMessage.ifEmpty { getString(R.string.kr_lock_message) }
             showPageLockedDialog(msg)
         } else {
@@ -739,10 +634,7 @@ class ActionPage : AppCompatActivity() {
         val useProgressiveLoad = showLoading && config.process
 
         loadPageJob = lifecycleScope.launch(Dispatchers.IO) {
-            // Chế độ load tiến trình (progressive - hiện từng item dần) đã có sẵn thanh
-            // loadProgressBar ngay trong danh sách để báo đang tải, không cần thêm dialog che
-            // kín màn hình nữa -> chỉ hiện dialog cho chế độ load thường (mặc định, không bật
-            // process trong config trang)
+            // Progressive mode có thanh inline -> không cần dialog che kín.
             if (showLoading && !useProgressiveLoad) {
                 withContext(Dispatchers.Main) {
                     hideLoadProgress()
@@ -765,8 +657,6 @@ class ActionPage : AppCompatActivity() {
             if (useProgressiveLoad) {
                 withContext(Dispatchers.Main) {
                     progressiveFragment = beginProgressiveList()
-                    // Không có dialog ở chế độ này -> hiện luôn thanh progress inline ngay từ
-                    // đầu, thay vì đợi tới khi có item đầu tiên mới hiện như trước
                     loadProgressBar.apply {
                         isIndeterminate = true
                         visibility = View.VISIBLE
@@ -777,17 +667,9 @@ class ActionPage : AppCompatActivity() {
             val onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = if (useProgressiveLoad) {
                 { node, _, _ ->
                     if (node != null) {
-                        try {
-                            prewarmNodeImages(node)
-                        } catch (_: Exception) {
-                        }
+                        try { prewarmNodeImages(node) } catch (_: Exception) {}
                     }
-
-                    // ========== FIX: bỏ CountDownLatch.await(1000ms) blocking ==========
-                    // Trước đây dùng latch.await(1000ms) để đồng bộ IO thread -> Main thread
-                    // cho TỪNG item. Điều này gây block IO thread tối đa 1s/item, làm chậm toàn
-                    // bộ quá trình parse - VI PHẠM mục đích của progressive mode (hiện item
-                    // nhanh). Giờ chỉ post lên Main thread không chờ (fire-and-forget).
+                    // Post lên Main thread fire-and-forget (không block IO thread).
                     if (!isFinishing && !isDestroyed) {
                         handler.post {
                             if (!isFinishing && !isDestroyed) {
@@ -799,9 +681,6 @@ class ActionPage : AppCompatActivity() {
             } else null
 
             var items: ArrayList<NodeInfoBase>? = null
-            // [[menu]]/[[fab]] gom được TRONG LÚC parse toml của CHÍNH trang này (thay cho
-            // [[page.options]] cũ khai báo ở trang cha) - đọc cùng lúc, cùng 1 lượt với các
-            // mục nội dung (items) bên dưới, KHÔNG sớm hơn.
             var loadedMenuOptions: ArrayList<PageMenuOption>? = null
             var loadedHeaderActions: ArrayList<ActionNode>? = null
             var loadedAutoShowActions: ArrayList<ActionNode>? = null
@@ -830,11 +709,7 @@ class ActionPage : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 if (!isActive || isFinishing) return@withContext
 
-                // Trang có thể KHÔNG có mục nội dung nào (items rỗng) nhưng vẫn hợp lệ nếu có
-                // [[menu]]/[[fab]] - ví dụ trang chỉ dùng để hiện 1 fab hành động, không cần
-                // danh sách. Trước đây "items rỗng" luôn bị coi là lỗi tải trang (đóng luôn
-                // activity) vì menu/fab từng nằm ở trang CHA nên luôn tách biệt với items; giờ
-                // cả hai cùng đọc từ 1 file toml nên phải tính thêm điều kiện này.
+                // Trang rỗng vẫn hợp lệ nếu có menu/fab.
                 val hasMenuOrFab = loadedMenuOptions?.isNotEmpty() == true || loadedHeaderActions?.isNotEmpty() == true
                 if (items != null && (items.isNotEmpty() || hasMenuOrFab)) {
                     if (config.loadSuccess.isNotEmpty()) {
@@ -855,10 +730,7 @@ class ActionPage : AppCompatActivity() {
                     } else {
                         updateActionList(items, showLoading) { tryAutoShowActions() }
                     }
-                    // Menu 3 chấm + fab của trang chỉ thật sự sẵn sàng tới đây (vừa đọc xong
-                    // cùng lượt với items ở trên) - bỏ cache cũ (nếu có, vd sau reload) rồi yêu
-                    // cầu vẽ lại toolbar để onCreateOptionsMenu() build lại menu/fab theo dữ liệu
-                    // mới nhất của config.pageMenuOptions.
+                    // Menu/fab vừa đọc xong -> rebuild toolbar.
                     menuOptions = null
                     headerActions = null
                     invalidateOptionsMenu()
@@ -877,10 +749,7 @@ class ActionPage : AppCompatActivity() {
         when (node) {
             is TextNode -> {
                 node.rows.forEach { row ->
-                    try {
-                        iconPathAnalysis.loadtextPhoto(this, row, node.pageConfigDir)
-                    } catch (_: Exception) {
-                    }
+                    try { iconPathAnalysis.loadtextPhoto(this, row, node.pageConfigDir) } catch (_: Exception) {}
                 }
             }
             is GroupNode -> {
@@ -895,12 +764,7 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // [[group.action]] show=true: tự mở dialog ngay khi vào trang - CHỈ 1 LẦN trong phiên mở
-    // trang hiện tại (autoShowTriggered), không lặp lại khi trang tự reload (vd reload-page
-    // của action khác) - gọi ở đúng thời điểm nội dung trang đã render xong (onRendered/
-    // finishProgressiveList) để fragment.onActionClick() có UI sẵn sàng hiện dialog lên trên.
-    // Hoạt động với CẢ action còn nằm trong danh sách lẫn action đã chuyển ra icon toolbar
-    // (menu=true) - onActionClick() không quan tâm action có đang gắn vào view nào hay không.
+    // [[group.action]] show=true: tự mở dialog 1 lần khi vào trang (không lặp khi reload).
     private fun tryAutoShowActions() {
         stopFabSpinIfPending()
         if (autoShowTriggered) return
@@ -948,8 +812,6 @@ class ActionPage : AppCompatActivity() {
     }
 
     private fun handleLoadError(config: PageNode) {
-        // Trang sắp bị finish() ngay dưới - không cần invalidateOptionsMenu() nữa, chỉ cần dọn
-        // biến static để không ảnh hưởng tới các trang khác mở sau này.
         pendingSpinIcon = null
         if (config.loadFail.isNotEmpty()) {
             ScriptEnvironmen.executeResultRoot(this, config.loadFail, config)
@@ -983,15 +845,12 @@ class ActionPage : AppCompatActivity() {
                 menuOption.autoKill -> killApp()
                 menuOption.autoRestart -> restartApp()
             }
-
             if (menuOption.type == "checkbox") {
                 refreshCheckboxMenuStates()
             }
         }
 
-        // menuOption.script đã được gán sẵn handler dùng chung của nhóm [[menu]]/[[fab]] (nếu
-        // bản thân mục không tự khai báo script riêng) ngay lúc parse - page không còn handler
-        // riêng nữa (xem PageConfigReader.menuGroupOptionsToml()).
+        // script đã được gán handler chung của nhóm [[menu]]/[[fab]] lúc parse.
         val script = menuOption.script
         val dialog = DialogLogFragment.create(
             menuOption,
@@ -1035,10 +894,7 @@ class ActionPage : AppCompatActivity() {
         })
     }
 
-    // type = "spinner": tải danh sách lựa chọn (tĩnh option.options + động option.optionsSh)
-    // và giá trị đang chọn hiện tại (option.spinnerGetState) - gộp 1 round-trip shell giống
-    // ActionListFragment.pickerExecute() - rồi mở dropdown Spinner ngay tại vị trí vừa bấm
-    // (toolbar nếu chọn từ menu 3 chấm, hoặc FAB nếu chọn từ fab - xem tham số anchor).
+    // Tải danh sách spinner (tĩnh + động) rồi mở dropdown tại vị trí vừa bấm.
     private fun menuItemSpinner(menuOption: PageMenuOption, anchor: View? = null) {
         val config = currentPageConfig ?: return
         val resolvedAnchor = anchor ?: findViewById<View>(R.id.toolbar) ?: binding.root
@@ -1078,8 +934,7 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Giống ActionListFragment.parseOptionsResult(): mỗi dòng kết quả shell dạng "value|title"
-    // hoặc chỉ "value"; nếu options-sh rỗng/lỗi thì dùng lại danh sách tĩnh option.options.
+    // Giống ActionListFragment.parseOptionsResult(): "value|title" hoặc chỉ "value".
     private fun parseSpinnerOptions(menuOption: PageMenuOption, shellResult: String?): ArrayList<SelectItem>? {
         val result = shellResult ?: ""
         if (result == "error" || result == "null" || result.isEmpty()) {
@@ -1100,11 +955,7 @@ class ActionPage : AppCompatActivity() {
         return options
     }
 
-    // Hiện dropdown chọn giá trị kiểu Android Spinner (dùng ListPopupWindow, style y hệt
-    // ParamsSingleSelect.openSingleSelectPopup()) neo về góc phải toolbar - đè lên đúng vị trí
-    // menu vừa bấm thay vì tràn full chiều rộng màn hình (xem applyPopupWidthAndPosition).
-    // Chọn xong chạy script của menu item với tham số "state" = giá trị vừa chọn - giống hệt
-    // các loại menu item khác.
+    // Dropdown spinner neo góc phải, chọn xong chạy script với tham số state.
     private fun showSpinnerPopup(
         anchor: View,
         menuOption: PageMenuOption,
@@ -1131,16 +982,7 @@ class ActionPage : AppCompatActivity() {
             )
         }
 
-        // Mục "spinner" trong menu 3 chấm/toolbar trước đây neo cả popup theo CHIỀU RỘNG
-        // TOÀN BỘ toolbar (anchor.width.coerceAtLeast(400)) - vì toolbar gần như chiếm hết
-        // chiều ngang màn hình nên trông giống 1 danh sách full màn hình thay vì 1 popup nhỏ
-        // "đè lên" đúng chỗ menu vừa bấm. Giờ đo width theo NỘI DUNG thực tế (giống
-        // ParamsSingleSelect.applyPopupWidthAndPosition) rồi neo popup về SÁT GÓC PHẢI của
-        // anchor (nơi icon menu 3 chấm/fab thường nằm) bằng horizontalOffset âm, để popup hiện
-        // ra gọn, đúng cảm giác "đè lên vị trí menu cũ" thay vì tràn ngang cả toolbar.
-        // anchor == fab (menuItemSpinner được gọi từ addFab() với anchor = actionPageFab, xem
-        // onMenuItemClick()) nghĩa là popup cũng sẽ tự lật lên TRÊN fab giống showFabChooser() -
-        // cần chừa khoảng hở (fabPopupGap()) như nhau để không dính sát cạnh trên fab.
+        // FAB cần chừa khoảng hở phía trên, toolbar thì không.
         val extraTopGapPx = if (anchor === binding.actionPageFab) fabPopupGap() else 0
         val itemViews = options.map { option ->
             layoutInflater.inflate(R.layout.kr_spinner_dropdown, anchor.parent as? android.view.ViewGroup, false).apply {
@@ -1156,10 +998,7 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    // Đo bề rộng lớn nhất trong 1 danh sách item đã inflate (nhưng CHƯA đo) - dùng chung cho cả
-    // showSpinnerPopup() (item dạng text - kr_spinner_dropdown) LẪN showListPopup() (item dạng
-    // List Item có icon - popup_menu_list_item, xem PopupMenuListAdapter) để tính bề rộng popup
-    // theo đúng NỘI DUNG thực tế, xem applyPopupWidthAndPosition().
+    // Đo bề rộng lớn nhất trong danh sách item đã inflate.
     private fun measureMaxItemWidth(itemViews: List<View>): Int {
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         var maxItemWidth = 0
@@ -1172,13 +1011,8 @@ class ActionPage : AppCompatActivity() {
         return maxItemWidth
     }
 
-    // Dùng chung cho cả showSpinnerPopup() (neo ở toolbar/menu 3 chấm) LẪN showListPopup()
-    // (menu "⋮" kiểu List Item mới + popup chọn khi FAB nhiều item) - đặt bề rộng popup theo
-    // NỘI DUNG thực tế (thay vì tràn hết chiều ngang màn hình) rồi neo sát mép phải anchor.
-    // extraTopGapPx > 0 dùng riêng cho FAB (luôn nằm ở đáy màn hình - xem showFabChooser()):
-    // đẩy thêm popup lên CAO HƠN vị trí ListPopupWindow tự tính (nó đã tự lật lên trên anchor
-    // do không đủ chỗ hiện xuống dưới, nhưng mặc định lật sát liền cạnh trên của FAB, trông
-    // dính chùm) để chừa 1 khoảng hở giữa popup và FAB.
+    // Đặt bề rộng popup theo nội dung, neo sát mép phải màn hình.
+    // extraTopGapPx > 0 cho FAB: đẩy popup lên cao hơn để chừa khoảng hở.
     private fun applyPopupWidthAndPosition(
         popup: ListPopupWindow,
         anchor: View,
@@ -1190,12 +1024,11 @@ class ActionPage : AppCompatActivity() {
         background?.getPadding(bgPadding)
         val screenWidth = resources.displayMetrics.widthPixels
         val contentWidth = maxItemWidth + bgPadding.left + bgPadding.right
-        val minWidth = resources.displayMetrics.density * 220 // tối thiểu ~200dp cho dễ bấm
+        val minWidth = resources.displayMetrics.density * 220
         val desiredWidth = contentWidth.coerceAtLeast(minWidth.toInt()).coerceAtMost(screenWidth)
         popup.width = desiredWidth
 
-        // Neo sát mép phải MÀN HÌNH (giống menu 3 chấm hệ thống) thay vì căn phải
-        // theo anchor - popup luôn dính sát lề phải bất kể vị trí nút bấm.
+        // Neo sát mép phải màn hình (giống menu 3 chấm hệ thống).
         val anchorLocation = IntArray(2)
         anchor.getLocationOnScreen(anchorLocation)
         popup.horizontalOffset = (screenWidth - desiredWidth) - anchorLocation[0]
@@ -1212,13 +1045,8 @@ class ActionPage : AppCompatActivity() {
             }
         }
     }
-    
-    // Popup kiểu List Item mới (RecyclerView/ListView có icon trái/phải) - dùng chung cho CẢ
-    // popup menu "⋮" (showOverflowMenuPopup()) LẪN popup chọn khi FAB có nhiều item
-    // (showFabChooser()) để đồng bộ giao diện, thay cho ArrayAdapter chỉ có chữ trước đây. Vẫn
-    // giữ NGUYÊN VẸN cơ chế PopupWindow neo góc/tự lật lên trên khi không đủ chỗ như cũ
-    // (ListPopupWindow + applyPopupWidthAndPosition) - chỉ đổi adapter/nội dung bên trong từng
-    // dòng sang PopupMenuListAdapter (xem PopupMenuListAdapter.kt).
+
+    // Popup List Item - dùng chung cho menu "⋮" và FAB nhiều item.
     private fun showListPopup(anchor: View, rows: List<PopupMenuRow>, extraTopGapPx: Int = 0) {
         if (rows.isEmpty()) return
 
@@ -1243,21 +1071,14 @@ class ActionPage : AppCompatActivity() {
         applyRoundedClip(popup)
     }
 
-    // Danh sách chọn khi fab có nhiều item - popup nhỏ neo ngay tại nút fab, chọn xong chạy y
-    // hệt như bấm thẳng 1 fab đơn (onMenuItemClick). Cùng kiểu List Item + cùng nền
-    // kr_spinner_popup_bg với popup menu "⋮" (showOverflowMenuPopup()) để đồng bộ giao diện -
-    // xem showListPopup(). FAB luôn nằm sát đáy màn hình nên popup luôn tự lật lên TRÊN fab;
-    // nếu không có gì tách biệt, cạnh dưới popup dính liền cạnh trên fab trông rất chật, nên
-    // đẩy thêm 1 khoảng hở nhỏ (fabPopupGap) giữa 2 bên.
+    // Popup chọn khi FAB có nhiều item - neo tại FAB, chọn xong chạy như bấm thẳng.
     private fun showFabChooser(fabOptions: List<PageMenuOption>) {
         val anchor = binding.actionPageFab
         val rows = fabOptions.map { buildPopupRow(it, anchor) }
         showListPopup(anchor, rows, fabPopupGap())
     }
 
-    // Khoảng hở (~8dp) giữa popup và FAB - dùng chung cho showFabChooser() (chọn giữa nhiều
-    // fab item) LẪN showSpinnerPopup() khi anchor là fab (mục type="spinner" được gán làm fab) -
-    // xem applyPopupWidthAndPosition().
+    // ~8dp khoảng hở giữa popup và FAB.
     private fun fabPopupGap(): Int = (8 * resources.displayMetrics.density).toInt()
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
@@ -1287,10 +1108,7 @@ class ActionPage : AppCompatActivity() {
                     )
                 } else {
                     val mimeTypes = fileSelectedInterface.mimeType()
-                        ?.split(",")
-                        ?.map { it.trim() }
-                        ?.filter { it.isNotEmpty() }
-                        ?.toTypedArray()
+                        ?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.toTypedArray()
                         ?: emptyArray()
 
                     val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -1350,22 +1168,12 @@ class ActionPage : AppCompatActivity() {
         OpenPageHelper(this).openPage(pageNode)
     }
 
-
-    // Trả về cặp bitmap preview đang giữ để nó SỐNG SÓT qua đúng lần huỷ activity này (nếu
-    // activity sắp được dựng lại ngay - do xoay màn hình HOẶC do gọi recreate() thủ công, ví
-    // dụ spinFabThenRecreate()/menuOption.reloadPage/restartApp...). Android tự động trả lại
-    // đúng giá trị này qua lastCustomNonConfigurationInstance ở onCreate() kế tiếp CỦA CÙNG
-    // activity - xem đọc lại ở trên. Đây là cách duy nhất đáng tin cậy để không phải phụ
-    // thuộc lại vào SwipeBackPreviewCache (cache dùng 1 lần, đã bị tiêu thụ ngay từ lần mở
-    // trang đầu tiên nên KHÔNG còn gì để lấy lại ở các lần recreate() sau).
+    // Giữ preview sống qua recreate() của cùng activity.
     @Suppress("DEPRECATION")
     override fun onRetainCustomNonConfigurationInstance(): Any? = swipePreview
 
     override fun onDestroy() {
-        // isFinishing = true nghĩa là trang đóng HẲN (vd người dùng bấm back giữa lúc đang tải
-        // dở sau khi bấm refresh) - KHÔNG phải bị huỷ để dựng lại bởi chính recreate() của
-        // spinFabThenRecreate(). Phải dọn biến static ở đây, nếu không lần mở 1 trang KHÁC
-        // (không liên quan) sau này sẽ vô tình thấy pendingSpinIcon còn sót và tự xoay fab.
+        // Đóng hẳn (không phải recreate) -> dọn static để không ảnh hưởng trang khác.
         if (isFinishing) {
             pendingSpinIcon = null
         }
@@ -1373,13 +1181,7 @@ class ActionPage : AppCompatActivity() {
         lockCheckJob?.cancel()
         handler.removeCallbacksAndMessages(null)
         if (::swipeBackHelper.isInitialized) swipeBackHelper.release()
-        // CHỈ recycle bitmap khi trang thực sự đóng hẳn (isFinishing() true - người dùng bấm
-        // back/thoát trang, không còn activity nào dùng lại ảnh này nữa). Khi isFinishing() =
-        // false, activity đang bị huỷ để DỰNG LẠI ngay (recreate()/xoay màn hình) -
-        // onRetainCustomNonConfigurationInstance() ở trên đã giữ lại đúng object Preview
-        // (bitmap CHƯA recycle) để lần onCreate() kế tiếp dùng lại - nếu vẫn recycle() ở đây
-        // như trước, bitmap bị huỷ ngay trước khi instance mới kịp dùng lại, gây ra đúng lỗi
-        // "vuốt lùi bị mất ảnh phía sau" sau mỗi lần trang tự làm mới.
+        // Chỉ recycle bitmap khi đóng hẳn, không recycle khi recreate (xoay/reload).
         if (isFinishing && ::binding.isInitialized) {
             recycleImageViewBitmap(binding.swipeBackPreviewBlur)
             recycleImageViewBitmap(binding.swipeBackPreviewSharp)

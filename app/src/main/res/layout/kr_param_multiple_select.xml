@@ -27,15 +27,7 @@
         android:layout_height="0dp"
         android:maxLines="1"
         android:visibility="gone" />
-        
-    <View
-        android:layout_width="1dp"
-        android:layout_height="18dp"
-        android:layout_gravity="center_vertical"
-        android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
-        android:background="@drawable/kr_param_label" />
-        
+
     <TextView
         android:id="@+id/kr_param_count_text"
         android:maxWidth="30dp"
