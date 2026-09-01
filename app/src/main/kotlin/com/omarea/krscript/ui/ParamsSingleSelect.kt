@@ -17,6 +17,7 @@ import com.omarea.common.ui.DialogItemChooser
 import com.tool.tree.R
 import com.omarea.krscript.model.ActionParamInfo
 import com.tool.tree.ThemeModeState
+import com.tool.tree.ui.SpinnerPopupHelper
 
 class ParamsSingleSelect(
         private var actionParamInfo: ActionParamInfo,
@@ -166,12 +167,12 @@ class ParamsSingleSelect(
             }
         }
         val minWidthPx = (context.resources.displayMetrics.density * 220).toInt()
-        com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+        SpinnerPopupHelper.applyWidthAndPosition(
             popup, anchor, itemViews, background, minWidthPx, alignRight = false
         )
 
         popup.show()
-        com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, context.resources.getDimension(R.dimen.kr_spinner_popup_radius))
+        SpinnerPopupHelper.applyRoundedClip(popup, context.resources.getDimension(R.dimen.kr_spinner_popup_radius))
         if (selectedIndex > -1 && selectedIndex < options.size) {
             popup.listView?.setSelection(selectedIndex)
         }
@@ -321,12 +322,12 @@ class ParamsSingleSelect(
             }
         }
         val minWidthPx = (context.resources.displayMetrics.density * 220).toInt()
-        com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+        SpinnerPopupHelper.applyWidthAndPosition(
             popup, editText, itemViews, background, minWidthPx, alignRight = false
         )
 
         popup.show()
-        com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, context.resources.getDimension(R.dimen.kr_spinner_popup_radius))
+        SpinnerPopupHelper.applyRoundedClip(popup, context.resources.getDimension(R.dimen.kr_spinner_popup_radius))
         if (selectedIndex > -1 && selectedIndex < options.size) {
             popup.listView?.setSelection(selectedIndex)
         }

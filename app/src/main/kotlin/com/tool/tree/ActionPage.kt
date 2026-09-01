@@ -989,13 +989,13 @@ class ActionPage : AppCompatActivity() {
             }
         }
         val minWidthPx = (resources.displayMetrics.density * 220).toInt()
-        com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+        SpinnerPopupHelper.applyWidthAndPosition(
             popup, anchor, itemViews, background, minWidthPx, alignRight = true,
             extraTopGapPx = extraTopGapPx, applyVerticalOffset = true
         )
 
         popup.show()
-        com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
+        SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
         if (selectedIndex in options.indices) {
             popup.listView?.setSelection(selectedIndex)
         }
@@ -1025,13 +1025,13 @@ class ActionPage : AppCompatActivity() {
         val parent = anchor.parent as? android.view.ViewGroup
         val itemViews = rows.indices.map { adapter.getView(it, null, parent) }
         val minWidthPx = (resources.displayMetrics.density * 220).toInt()
-        com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+        SpinnerPopupHelper.applyWidthAndPosition(
             popup, anchor, itemViews, background, minWidthPx, alignRight = true,
             extraTopGapPx = extraTopGapPx, applyVerticalOffset = true
         )
 
         popup.show()
-        com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
+        SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
     }
 
     // Popup chọn khi FAB có nhiều item - neo tại FAB, chọn xong chạy như bấm thẳng.

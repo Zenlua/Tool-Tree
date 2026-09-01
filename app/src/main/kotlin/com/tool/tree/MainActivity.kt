@@ -448,11 +448,11 @@ class MainActivity : AppCompatActivity() {
                     findViewById<TextView>(R.id.text).text = name
                 }
             }
-            com.omarea.common.ui.SpinnerPopupHelper.applyWidthAndPosition(
+            SpinnerPopupHelper.applyWidthAndPosition(
                 popup, themeSelector, itemViews, background, themeSelector.width, alignRight = false
             )
             popup.show()
-            com.omarea.common.ui.SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
+            SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
         }
 
         layout.findViewById<CheckBox>(R.id.notification_ui).apply {
