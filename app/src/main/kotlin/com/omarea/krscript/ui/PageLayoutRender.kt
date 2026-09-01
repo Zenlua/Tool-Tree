@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import com.tool.tree.R
+import com.omarea.krscript.downloader.DownloadTaskHelper
 import com.omarea.krscript.model.*
 
 class PageLayoutRender(private val mContext: Context,
@@ -165,7 +166,12 @@ class PageLayoutRender(private val mContext: Context,
     }
 
     private fun createDownloadItem(node: DownloadNode): ListItemView {
-        return ListItemDownload(mContext, node)
+        val view = ListItemDownload(mContext, node)
+        // Re-bind view nếu có session đang hoạt động (trả lại trang không đóng tải)
+        DownloadTaskHelper.getSession(node.url)?.let { session ->
+            DownloadTaskHelper.bindView(session, view)
+        }
+        return view
     }
 
     private fun createItemGroup(node: GroupNode): ListItemGroup {

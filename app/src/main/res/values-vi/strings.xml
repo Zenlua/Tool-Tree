@@ -95,6 +95,12 @@ Nếu đồng ý hãy ấn vào nút xác nhận để tiếp tục."</string>
     <string name="kr_download_confirm">Tải tệp này?</string>
     <string name="kr_download_completed">Tải tệp thành công</string>
     <string name="kr_download_error">Tải tệp thất bại</string>
+    <string name="kr_download_paused">Tạm dừng tải</string>
+    <string name="kr_download_paused_tap">Đã tạm dừng – nhấn để tiếp tục</string>
+    <string name="kr_download_retrying">Mạng thay đổi, đang thử lại…</string>
+    <string name="kr_download_pause">Tạm dừng</string>
+    <string name="kr_download_resume">Tiếp tục</string>
+    <string name="kr_download_cancel">Hủy bỏ</string>
     <string name="kr_download_execute_wait">Đang chạy script…</string>
     <string name="kr_download_execute_success">Thành công</string>
     <string name="kr_download_execute_fail">Thất bại</string>

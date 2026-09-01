@@ -110,6 +110,12 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_download_confirm">Download the file?</string>
     <string name="kr_download_completed">File downloaded successfully</string>
     <string name="kr_download_error">Download failed</string>
+    <string name="kr_download_paused">Download paused</string>
+    <string name="kr_download_paused_tap">Paused – tap to resume</string>
+    <string name="kr_download_retrying">Network changed, retrying…</string>
+    <string name="kr_download_pause">Pause</string>
+    <string name="kr_download_resume">Resume</string>
+    <string name="kr_download_cancel">Cancel</string>
     <string name="kr_download_execute_wait">Running script…</string>
     <string name="kr_download_execute_success">Success</string>
     <string name="kr_download_execute_fail">Failed</string>

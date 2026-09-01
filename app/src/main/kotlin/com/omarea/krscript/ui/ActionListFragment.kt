@@ -434,11 +434,41 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         actionExecute(pickerNode, script, onExit, hashMapOf("state" to toValue))
     }
 
-    // [[download]]: tải file (tiến trình hiện ngay trong item qua ListItemDownload), sau đó tự
-    // chạy script (nếu có) với $state = đường dẫn file - xem DownloadTaskHelper. Bấm lại vào
-    // item TRONG LÚC ĐANG TẢI sẽ huỷ tải (xem ListItemDownload.cancelIfDownloading()); bấm khi
-    // đã chuyển sang giai đoạn chạy script thì bị bỏ qua (không huỷ được script đang chạy).
+    // [[download]]: tải file với hỗ trợ tạm dừng / tiếp tục (HTTP Range), thông báo notification,
+    // thử lại khi đổi mạng, không bị gián đoạn khi rời trang.
+    // Bấm lại: đang tải → tạm dừng; đang tạm dừng → tiếp tục; lỗi → tải lại từ đầu.
     override fun onDownloadClick(item: DownloadNode, listItemView: ListItemDownload, onCompleted: Runnable) {
+        val session = DownloadTaskHelper.getSession(item.url)
+        if (session != null) {
+            // Đã có session – xử lý theo trạng thái
+            when (session.status) {
+                DownloadTaskHelper.Status.DOWNLOADING -> {
+                    listItemView.cancelIfDownloading() // → sẽ gọi pause
+                    return
+                }
+                DownloadTaskHelper.Status.PAUSED -> {
+                    DownloadTaskHelper.resumeByUrl(requireContext(), item.url)
+                    return
+                }
+                DownloadTaskHelper.Status.ERROR -> {
+                    // Tải lại: xoá session cũ rồi bắt đầu mới
+                    DownloadTaskHelper.cancel(session)
+                    // fall through để tạo session mới
+                }
+                DownloadTaskHelper.Status.COMPLETING -> {
+                    // Đang chạy script, không làm gì
+                    return
+                }
+                DownloadTaskHelper.Status.COMPLETED -> {
+                    // Đã xong, reset để có thể tải lại
+                    DownloadTaskHelper.cancel(session)
+                }
+                DownloadTaskHelper.Status.IDLE -> {
+                    // Fall through
+                }
+            }
+        }
+
         if (listItemView.isBusy) {
             listItemView.cancelIfDownloading()
             return

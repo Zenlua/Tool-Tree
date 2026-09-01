@@ -3,7 +3,6 @@ package com.tool.tree
 import android.app.*
 import android.content.Intent
 import android.os.*
-import android.text.TextUtils
 import androidx.core.app.NotificationCompat
 import java.io.BufferedReader
 import java.io.File
@@ -11,11 +10,13 @@ import java.io.FileReader
 
 class DownloadService : Service() {
 
-    private val channelId = "download_channel"
-    private val notificationId = 1001
+    companion object {
+        private const val CHANNEL_ID = "download_channel"
+        // Notification IDs được truyền từ DownloadTaskHelper (2000-2999)
+    }
 
     private lateinit var manager: NotificationManager
-    private lateinit var builder: NotificationCompat.Builder
+    private var currentNotificationId: Int = 1001
     private var observer: FileObserver? = null
     private var lastProgress = -1
 
@@ -26,46 +27,57 @@ class DownloadService : Service() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId,
+                CHANNEL_ID,
                 getString(R.string.channel_name),
                 NotificationManager.IMPORTANCE_LOW
             )
             manager.createNotificationChannel(channel)
         }
-
-        builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setOnlyAlertOnce(true)
-            .setOngoing(true)
-            .setShowWhen(true)
-            .setUsesChronometer(false)
-            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            
-        builder.setContentTitle(getString(R.string.channel_name))
-
-        startForeground(notificationId, builder.build())
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
         intent ?: return START_NOT_STICKY
 
-        // STOP
+        // Lấy notification ID từ intent (DownloadTaskHelper truyền vào)
+        currentNotificationId = intent.getIntExtra("notificationId", 1001)
+
+        // STOP - xoá notification
         if (intent.getBooleanExtra("stop", false)) {
             stopWatching()
+            manager.cancel(currentNotificationId)
             stopForegroundCompat(remove = true)
             stopSelf()
             return START_NOT_STICKY
         }
 
-        // TITLE
-        var title = intent.getStringExtra("title")
-        if (title.isNullOrEmpty()) {
-            title = applicationInfo.loadLabel(packageManager).toString()
+        // ERROR - giữ notification, không ongoing, hiển thị lỗi
+        if (intent.getBooleanExtra("isError", false)) {
+            val title = intent.getStringExtra("title") ?: getString(R.string.channel_name)
+            val errorText = intent.getStringExtra("text") ?: getString(R.string.kr_download_error)
+            val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                .setContentTitle(title)
+                .setContentText(errorText)
+                .setOnlyAlertOnce(true)
+                .setOngoing(false)
+                .setAutoCancel(false) // Giữ notification lỗi
+                .setCategory(NotificationCompat.CATEGORY_ERROR)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            // Dừng foreground nhưng KHÔNG xoá notification
+            stopForegroundCompat(remove = false)
+            manager.notify(currentNotificationId, builder.build())
+            stopSelf()
+            return START_NOT_STICKY
         }
-        builder.setContentTitle(title)
+
+        // TITLE
+        val title = intent.getStringExtra("title")
+        val displayTitle = if (title.isNullOrEmpty()) {
+            applicationInfo.loadLabel(packageManager).toString()
+        } else {
+            title
+        }
 
         val customText = intent.getStringExtra("text")
 
@@ -73,61 +85,46 @@ class DownloadService : Service() {
         if (intent.hasExtra("progress")) {
             val progress = intent.getIntExtra("progress", 0)
             val max = intent.getIntExtra("max", 100)
-            updateProgress(progress, max, customText)
+            val builder = createProgressBuilder(displayTitle, progress, max, customText)
+            manager.notify(currentNotificationId, builder.build())
+            return START_NOT_STICKY
         }
 
-        // Theo dõi file
+        // Theo dõi file (tính năng cũ, giữ lại)
         intent.getStringExtra("path")?.let {
-            startWatching(it)
+            startWatching(it, displayTitle)
         }
 
-        if (!intent.hasExtra("progress")) {
-            manager.notify(notificationId, builder.build())
-        }
         return START_NOT_STICKY
     }
 
-    private fun updateProgress(progress: Int, max: Int, customText: String?) {
-        if (progress == lastProgress) return
-        lastProgress = progress
+    private fun createProgressBuilder(title: String, progress: Int, max: Int, customText: String?): NotificationCompat.Builder {
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setContentTitle(title)
+            .setOnlyAlertOnce(true)
+            .setOngoing(true)
+            .setShowWhen(true)
+            .setUsesChronometer(false)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+
         if (progress < 0 || max <= 0) {
             // Đang xử lý không xác định
             builder.setProgress(0, 0, true)
                 .setContentText(customText ?: getString(R.string.processing))
-    
-            manager.notify(notificationId, builder.build())
-            return
-        }
-    
-        val percent = ((progress * 100f) / max).toInt()
-        val text = customText ?: "$percent%"
-    
-        if (progress >= max) {
-            stopWatching()
-        
-            builder.setSmallIcon(android.R.drawable.stat_sys_download_done)
-                .setOngoing(false)
-                .setProgress(0, 0, false)
-                .setContentText(getString(R.string.completed))
-                .setCategory(NotificationCompat.CATEGORY_STATUS)
-        
-            manager.notify(notificationId, builder.build())
-        
-            stopForegroundCompat(remove = false)
-            stopSelf()
         } else {
-            builder.setSmallIcon(android.R.drawable.stat_sys_download)
-                .setOngoing(true)
-                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-                .setProgress(max, progress, false)
+            val percent = ((progress * 100f) / max).toInt()
+            val text = customText ?: "$percent%"
+            builder.setProgress(max, progress, false)
                 .setContentText(text)
-    
-            manager.notify(notificationId, builder.build())
         }
+
+        return builder
     }
 
-    private fun startWatching(filePath: String) {
-
+    private fun startWatching(filePath: String, title: String) {
         stopWatching()
 
         val file = File(filePath)
@@ -135,12 +132,12 @@ class DownloadService : Service() {
 
         observer = createFileObserver(parent, FileObserver.MODIFY or FileObserver.CREATE) { name ->
             if (name == file.name) {
-                readProgress(file)
+                readProgress(file, title)
             }
         }
 
         observer?.startWatching()
-        readProgress(file)
+        readProgress(file, title)
     }
 
     private fun createFileObserver(parent: File, mask: Int, onEvent: (String?) -> Unit): FileObserver {
@@ -176,28 +173,29 @@ class DownloadService : Service() {
         observer = null
     }
 
-    private fun readProgress(file: File) {
+    private fun readProgress(file: File, title: String) {
         try {
             BufferedReader(FileReader(file)).use { br ->
                 val line = br.readLine()?.trim() ?: return
 
-                when {
-                    line == "-1" -> updateProgress(-1, 0, null)
-
+                val builder = when {
+                    line == "-1" -> {
+                        createProgressBuilder(title, -1, 0, null)
+                    }
                     line.contains("/") -> {
                         val parts = line.split("/")
                         if (parts.size == 2) {
                             val p = parts[0].toIntOrNull() ?: return
                             val m = parts[1].toIntOrNull() ?: return
-                            updateProgress(p, m, null)
-                        }
+                            createProgressBuilder(title, p, m, null)
+                        } else return
                     }
-
                     else -> {
                         val p = line.toIntOrNull() ?: return
-                        updateProgress(p, 100, null)
+                        createProgressBuilder(title, p, 100, null)
                     }
                 }
+                manager.notify(currentNotificationId, builder.build())
             }
         } catch (_: Exception) {}
     }
