@@ -449,8 +449,9 @@ class MainActivity : AppCompatActivity() {
                     findViewById<TextView>(R.id.text).text = name
                 }
             }
+            val minWidthPx = (resources.displayMetrics.density * 300).toInt()
             SpinnerPopupHelper.applyWidthAndPosition(
-                popup, themeSelector, itemViews, background, themeSelector.width, alignRight = false
+                popup, themeSelector, itemViews, background, minWidthPx, alignRight = false
             )
             popup.show()
             SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
