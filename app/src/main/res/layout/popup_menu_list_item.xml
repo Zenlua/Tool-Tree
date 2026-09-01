@@ -10,16 +10,16 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:minHeight="35dp"
-        android:paddingLeft="16dp"
+        android:paddingLeft="10dp"
         android:paddingTop="10dp"
-        android:paddingRight="16dp"
+        android:paddingRight="10dp"
         android:paddingBottom="10dp">
 
         <ImageView
             android:id="@+id/popup_item_icon_left"
             android:layout_width="22dp"
             android:layout_height="22dp"
-            android:layout_marginEnd="14dp"
+            android:layout_marginEnd="10dp"
             android:scaleType="fitCenter"
             android:importantForAccessibility="no" />
 
@@ -32,12 +32,4 @@
             android:ellipsize="end"
             android:textColor="?android:attr/textColorPrimary" />
     </LinearLayout>
-
-    <View
-        android:id="@+id/popup_item_divider"
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:background="?android:attr/listDivider" />
 </LinearLayout>

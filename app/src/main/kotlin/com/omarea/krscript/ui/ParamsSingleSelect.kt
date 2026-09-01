@@ -87,6 +87,7 @@ class ParamsSingleSelect(
     private fun renderNonEditable(): View {
         val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_spinner_edit, null) as ViewGroup
         val anchor = layout.findViewById<EditText>(R.id.kr_param_spinner_edit)
+        val btn = layout.findViewById<View>(R.id.kr_param_spinner_btn)
 
         anchor.isFocusable = false
         anchor.isFocusableInTouchMode = false
@@ -113,9 +114,13 @@ class ParamsSingleSelect(
         val enabled = !actionParamInfo.readonly && options.isNotEmpty()
         anchor.isEnabled = enabled
         anchor.isClickable = enabled
+        btn.isEnabled = enabled
 
         if (enabled) {
             anchor.setOnClickListener {
+                openSingleSelectPopup(anchor, valueHolder)
+            }
+            btn.setOnClickListener {
                 openSingleSelectPopup(anchor, valueHolder)
             }
         }

@@ -33,6 +33,7 @@
         android:layout_height="match_parent">
         <ImageButton
             android:clickable="false"
+            android:duplicateParentState="true"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:layout_width="20dp"
@@ -41,6 +42,7 @@
             android:layout_marginStart="4dp"
             android:background="@android:color/transparent"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_arrow_dropdown" />
+            android:src="@drawable/ic_arrow_dropdown"
+            android:tint="@drawable/kr_param_spinner_arrow_tint" />
     </RelativeLayout>
 </LinearLayout>
