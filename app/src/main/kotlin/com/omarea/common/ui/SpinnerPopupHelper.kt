@@ -8,6 +8,7 @@ import android.graphics.drawable.InsetDrawable
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
+import android.widget.LinearLayout
 import android.widget.ListPopupWindow
 import android.widget.ListView
 
@@ -23,7 +24,7 @@ import android.widget.ListView
 object SpinnerPopupHelper {
 
     private const val EDGE_INSET_DP = 16f
-    private const val MAX_VISIBLE_ROWS = 6
+    private const val BOTTOM_INSET_DP = 8f
 
     private fun dividerHeightPx(context: Context): Int = dpToPx(context, 1f).coerceAtLeast(1)
 
@@ -74,16 +75,12 @@ object SpinnerPopupHelper {
         val marginPx = dpToPx(context, EDGE_INSET_DP)
         val maxWidth = (screenWidth - marginPx * 2).coerceAtLeast(minWidthPx)
 
-        // Đo item với AT_MOST thay vì UNSPECIFIED: text quá dài sẽ xuống dòng
-        // thay vì ép popup kéo rộng theo 1 dòng duy nhất.
-        val maxContentWidth = (maxWidth - bgPadding.left - bgPadding.right).coerceAtLeast(0)
-        val widthSpec = View.MeasureSpec.makeMeasureSpec(maxContentWidth, View.MeasureSpec.AT_MOST)
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         var maxItemWidth = 0
         for (itemView in itemViews) {
-            itemView.measure(widthSpec, unspecified)
-            if (itemView.measuredWidth > maxItemWidth) {
-                maxItemWidth = itemView.measuredWidth
+            val naturalWidth = measureNaturalWidth(itemView, unspecified)
+            if (naturalWidth > maxItemWidth) {
+                maxItemWidth = naturalWidth
             }
         }
 
@@ -97,24 +94,22 @@ object SpinnerPopupHelper {
             View.MeasureSpec.EXACTLY
         )
         val dividerPx = dividerHeightPx(context)
-        
-        // Lấy tối đa MAX_VISIBLE_ROWS dòng để tính chiều cao
-        val visibleCount = itemViews.size.coerceAtMost(MAX_VISIBLE_ROWS)
-        var contentHeight = 0
 
-        for (i in 0 until visibleCount) {
-            val itemView = itemViews[i]
+        var contentHeight = 0
+        for ((i, itemView) in itemViews.withIndex()) {
             itemView.measure(rowWidthPx, unspecified)
             contentHeight += itemView.measuredHeight
-            
-            // Cộng chiều cao divider giữa các dòng hiển thị
-            if (i < visibleCount - 1) {
+            if (i < itemViews.size - 1) {
                 contentHeight += dividerPx
             }
         }
 
-        // Bổ sung bgPadding.top + bgPadding.bottom để ListView không bị chèn ép diện tích
-        popup.height = contentHeight + bgPadding.top + bgPadding.bottom
+        val screenHeight = context.resources.displayMetrics.heightPixels
+        val topMarginPx = dpToPx(context, EDGE_INSET_DP)
+        val bottomMarginPx = dpToPx(context, BOTTOM_INSET_DP)
+        val maxHeight = (screenHeight - topMarginPx - bottomMarginPx).coerceAtLeast(0)
+
+        popup.height = (contentHeight + bgPadding.top + bgPadding.bottom).coerceAtMost(maxHeight)
 
         val anchorLocation = IntArray(2)
         anchor.getLocationOnScreen(anchorLocation)
@@ -133,6 +128,31 @@ object SpinnerPopupHelper {
         popup.horizontalOffset = offset
         if (applyVerticalOffset) {
             popup.verticalOffset = if (extraTopGapPx > 0) -extraTopGapPx else -anchor.height
+        }
+    }
+
+    private fun measureNaturalWidth(view: View, unspecified: Int): Int {
+        val relaxed = HashMap<View, Int>()
+        relaxWidths(view, relaxed)
+        view.measure(unspecified, unspecified)
+        val naturalWidth = view.measuredWidth
+        for ((relaxedView, originalWidth) in relaxed) {
+            relaxedView.layoutParams = relaxedView.layoutParams.apply { width = originalWidth }
+        }
+        return naturalWidth
+    }
+
+    private fun relaxWidths(view: View, relaxed: MutableMap<View, Int>) {
+        val lp = view.layoutParams
+        val isWeighted = lp is LinearLayout.LayoutParams && lp.weight > 0f
+        if (lp != null && (lp.width == ViewGroup.LayoutParams.MATCH_PARENT || isWeighted)) {
+            relaxed[view] = lp.width
+            lp.width = ViewGroup.LayoutParams.WRAP_CONTENT
+        }
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                relaxWidths(view.getChildAt(i), relaxed)
+            }
         }
     }
 
