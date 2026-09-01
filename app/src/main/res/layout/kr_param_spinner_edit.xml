@@ -1,16 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Layout cho param type="spinner" khi editable="true" - mô phỏng ĐÚNG cấu trúc hàng
-    của param type="file"/"folder" (kr_param_file.xml, xem ParamsFileChooserRender):
-    - EditText (kr_param_spinner_edit): ô nhập chiếm gần hết bề ngang, người dùng gõ tay
-      giá trị bất kỳ vào đây. Ô này mang TAG = tên param nên ActionParamsLayoutRender
-      quét đọc đúng giá trị khi bấm chạy action (giống cơ chế kr_param_file_path).
-    - Vạch ngăn dọc mảnh (kr_param_label) + nút mở danh sách (kr_param_spinner_btn)
-      bên phải: bấm vào mở dropdown (danh sách ngắn) hoặc DialogItemChooser (danh sách
-      dài). Chọn mục nào thì VALUE của mục đó được điền thẳng vào ô nhập (WYSIWYG).
-    Bản spinner thường (editable="false") vẫn dùng kr_param_spinner.xml /
-    kr_param_single_select.xml như cũ - layout này KHÔNG ảnh hưởng hành vi cũ.
--->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
