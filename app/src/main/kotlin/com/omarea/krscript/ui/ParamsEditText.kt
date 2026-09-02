@@ -1,5 +1,6 @@
 package com.omarea.krscript.ui
 
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
@@ -15,12 +16,12 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
 
     fun render(): View {
         val layout = LayoutInflater.from(context).inflate(R.layout.kr_param_text, null)
-        // Icon mở toàn màn hình: luôn hiện (không còn giới hạn theo số dòng nữa)
         val expandBtn = layout.findViewById<View>(R.id.kr_param_text_expand)
-        // Chụp lại vào biến local: bên trong `run{}` trên EditText, tên "context" sẽ bị
-        // shadow bởi View.getContext() (kiểu Context thường, không có supportFragmentManager),
-        // nên phải dùng activity riêng để mở DialogFragment.
         val activity = context
+
+        // Kiểm tra xem tham số có phải kiểu số hay không
+        val isNumber = actionParamInfo.type == "int" || actionParamInfo.type == "number"
+        val paramFilter = ParamInfoFilter(actionParamInfo)
 
         layout.findViewById<EditText>(R.id.kr_param_text).run {
             tag = actionParamInfo.name
@@ -29,22 +30,28 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
             else if (actionParamInfo.value != null) {
                 setText(actionParamInfo.value)
             }
-            filters = arrayOf(ParamInfoFilter(actionParamInfo))
+            filters = arrayOf(paramFilter)
+            
+            // Thiết lập inputType cho EditText ban đầu
+            if (isNumber) {
+                inputType = if (actionParamInfo.type == "int") {
+                    InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED
+                } else {
+                    InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL or InputType.TYPE_NUMBER_FLAG_SIGNED
+                }
+            }
+
             isEnabled = !actionParamInfo.readonly
             if (actionParamInfo.placeholder.isNotEmpty()) {
                 hint = actionParamInfo.placeholder
             } else if (
-                    (actionParamInfo.type == "int" || actionParamInfo.type == "number")
-                    &&
-                    (actionParamInfo.min != Int.MIN_VALUE || actionParamInfo.max != Int.MAX_VALUE)
+                    isNumber && (actionParamInfo.min != Int.MIN_VALUE || actionParamInfo.max != Int.MAX_VALUE)
             ) {
                 hint = "${actionParamInfo.min} ~ ${actionParamInfo.max}"
             }
 
             expandBtn.setOnClickListener {
                 val editText = this
-                // Tiêu đề dialog: ghép title + label (nếu có), giống cách getFieldTips() ghép
-                // title/label ở nơi khác trong codebase; nếu không có title/label thì dùng placeholder.
                 val titleParts = listOfNotNull(
                         actionParamInfo.title?.ifEmpty { null },
                         actionParamInfo.label?.ifEmpty { null }
@@ -53,6 +60,17 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
                     titleParts.joinToString(" ")
                 } else {
                     null
+                }
+
+                // Chọn inputType tương ứng cho dialog
+                val dialogInputType = if (isNumber) {
+                    if (actionParamInfo.type == "int") {
+                        InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED
+                    } else {
+                        InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL or InputType.TYPE_NUMBER_FLAG_SIGNED
+                    }
+                } else {
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
                 }
 
                 DialogTextEditor(
@@ -65,7 +83,11 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
                                 editText.setSelection(editText.text?.length ?: 0)
                             }
                         }
-                ).show(activity.supportFragmentManager, "params-text-editor")
+                ).apply {
+                    // Truyền inputType và filters vào DialogTextEditor
+                    setInputType(dialogInputType)
+                    setFilters(arrayOf(paramFilter))
+                }.show(activity.supportFragmentManager, "params-text-editor")
             }
         }
 
