@@ -490,7 +490,17 @@ class DialogHelper {
                 val blurBitmap = if (disableBlurBg) {
                     null
                 } else {
-                    FastBlurUtility.getDialogBlurBackground(activity)
+                    FastBlurUtility.getDialogBlurBackground(activity) ?: if (wallpaperMode) {
+                        // Chụp screenshot cho dialog thất bại (getDialogBlurBackground trả null,
+                        // ví dụ decorView chưa có width/height hoặc lỗi khi vẽ) - nhưng theme
+                        // hiện tại là theme hình nền (wallpaperMode) nên vẫn còn ảnh wallpaper
+                        // đã blur sẵn trong cache (BlurEngine.blurBitmap). Dùng tạm ảnh đó thay
+                        // vì rơi thẳng xuống màu nền đặc bên dưới, giữ đúng cảm giác "nền hình
+                        // ảnh mờ" của theme thay vì đổi hẳn sang màu phẳng.
+                        FastBlurUtility.getPageBlurBackground(activity)
+                    } else {
+                        null
+                    }
                 }
                 if (blurBitmap != null) {
                     setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
