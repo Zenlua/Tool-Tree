@@ -239,9 +239,9 @@ class DownloadService : Service() {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setStyle(NotificationCompat.BigTextStyle().bigText(displayText))
 
-        if (largeIcon != null) {
-            builder.setLargeIcon(largeIcon)
-        }
+        // if (largeIcon != null) {
+            // builder.setLargeIcon(largeIcon)
+        // }
 
         if (hasBar) {
             builder.setProgress(max, progress, false)
