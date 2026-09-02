@@ -31,6 +31,7 @@ import com.tool.tree.ui.SpinnerPopupHelper
 import com.omarea.common.model.SelectItem
 import com.omarea.common.shared.FilePathResolver
 import com.omarea.common.ui.DialogHelper
+import com.omarea.common.ui.DialogItemChooser
 import com.omarea.common.ui.ProgressBarDialog
 import com.omarea.krscript.TryOpenActivity
 import com.omarea.krscript.config.IconPathAnalysis
@@ -964,6 +965,8 @@ class ActionPage : AppCompatActivity() {
     }
 
     // Dropdown spinner neo góc phải, chọn xong chạy script với tham số state.
+    // Quá 6 mục thì mở dialog toàn màn hình (giống ParamsSingleSelect) thay vì popup nhỏ,
+    // để danh sách dài không bị tràn/khó cuộn trong popup.
     private fun showSpinnerPopup(
         anchor: View,
         menuOption: PageMenuOption,
@@ -971,6 +974,11 @@ class ActionPage : AppCompatActivity() {
         currentValue: String?
     ) {
         val selectedIndex = options.indexOfFirst { it.value == currentValue }.let { if (it < 0) 0 else it }
+
+        if (options.size > 6) {
+            showSpinnerDialog(menuOption, options, selectedIndex)
+            return
+        }
 
         val adapter = ArrayAdapter(this, R.layout.kr_spinner_dropdown, R.id.text, options)
         val background = ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg)
@@ -1008,6 +1016,31 @@ class ActionPage : AppCompatActivity() {
         if (selectedIndex in options.indices) {
             popup.listView?.setSelection(selectedIndex)
         }
+    }
+
+    // Dialog toàn màn hình cho spinner có nhiều hơn 6 mục.
+    private fun showSpinnerDialog(
+        menuOption: PageMenuOption,
+        options: ArrayList<SelectItem>,
+        selectedIndex: Int
+    ) {
+        val darkMode = ThemeModeState.getThemeMode().isDarkMode
+        DialogItemChooser(darkMode, ArrayList(options.mapIndexed { index, item ->
+            SelectItem().apply {
+                title = item.title
+                selected = index == selectedIndex
+            }
+        }), false, object : DialogItemChooser.Callback {
+            override fun onConfirm(selected: List<SelectItem>, status: BooleanArray) {
+                val confirmedIndex = status.indexOf(true)
+                val option = options.getOrNull(confirmedIndex) ?: return
+                val value = option.value ?: option.title ?: ""
+                menuItemExecute(
+                    menuOption,
+                    hashMapOf("state" to value, "menu_id" to menuOption.key)
+                )
+            }
+        }).show(supportFragmentManager, "action-page-spinner")
     }
 
     // Đặt bề rộng popup theo nội dung, neo sát mép phải màn hình.

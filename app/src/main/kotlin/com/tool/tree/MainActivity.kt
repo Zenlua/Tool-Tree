@@ -449,7 +449,7 @@ class MainActivity : AppCompatActivity() {
                     findViewById<TextView>(R.id.text).text = name
                 }
             }
-            val minWidthPx = (resources.displayMetrics.density * 300).toInt()
+            val minWidthPx = (resources.displayMetrics.density * 220).toInt()
             SpinnerPopupHelper.applyWidthAndPosition(
                 popup, themeSelector, itemViews, background, minWidthPx, alignRight = false
             )
