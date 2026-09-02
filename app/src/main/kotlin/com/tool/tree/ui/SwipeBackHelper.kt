@@ -12,6 +12,7 @@ import android.view.ViewConfiguration
 import android.view.ViewOutlineProvider
 import android.view.animation.DecelerateInterpolator
 import com.omarea.common.ui.BlurEngine
+import com.tool.tree.ThemeModeState
 import kotlin.math.abs
 
 class SwipeBackHelper(
@@ -214,7 +215,10 @@ class SwipeBackHelper(
             addUpdateListener { applyProgress(it.animatedValue as Float) }
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
-                    BlurEngine.isPaused = false
+                    // Khôi phục theo đúng theme hiện tại, không ép về false vô điều kiện -
+                    // nếu không, ở theme 0/2 (không blur), blur bitmap cũ còn sót trong cache
+                    // sẽ hiện lại mỗi lần chuyển trang xong.
+                    BlurEngine.isPaused = !ThemeModeState.isBlurActive()
                     val isStale = dragSessionId != sessionAtStart
                     if (target == 0f && !isStale) {
                         contentView.translationX = 0f

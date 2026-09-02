@@ -22,8 +22,17 @@ object ThemeModeState {
 
     private var themeMode: ThemeMode = ThemeMode()
 
+    // Phản ánh đúng "theme hiện tại có nên hiện blur hay không" (level >= 3 và blur
+    // không bị tắt qua file dissblur) - dùng để các nơi khác (vd SwipeBackHelper) khôi
+    // phục lại BlurEngine.isPaused đúng theo theme hiện tại, thay vì hardcode false.
+    @Volatile
+    private var blurActive: Boolean = false
+
     @JvmStatic
     fun isDarkMode(): Boolean = themeMode.isDarkMode
+
+    @JvmStatic
+    fun isBlurActive(): Boolean = blurActive
 
     private fun isBlurDisabled(activity: Activity): Boolean {
         val file = File(activity.filesDir, "home/usr/log/dissblur")
@@ -105,7 +114,8 @@ object ThemeModeState {
         ScriptEnvironmen.updateDarkMode(activity, themeMode.isDarkMode)
 
         BlurEngine.isDirectBgMode = (level >= 3 && directBg && !blurDisabled)
-        
+        blurActive = (level >= 3 && !blurDisabled)
+
         if (level >= 3 && !blurDisabled) {
             BlurEngine.isPaused = false
 
