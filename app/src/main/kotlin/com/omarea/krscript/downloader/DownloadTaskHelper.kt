@@ -3,6 +3,11 @@ package com.omarea.krscript.downloader
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.AnimationDrawable
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -13,6 +18,7 @@ import android.text.SpannableString
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.tool.tree.DownloadService
 import com.tool.tree.R
+import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.DownloadNode
 import com.omarea.krscript.model.ShellHandlerBase
@@ -25,18 +31,10 @@ import java.net.URL
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-// Xử lý cho loại mục [[download]]: tải file qua HTTP(S) với hỗ trợ:// - Tạm dừng / tiếp tục (HTTP Range / partial content)
-// - Thử lại 1 lần khi chuyển đổi mạng
-// - Thông báo notification trong suốt quá trình tải (qua DownloadService)
-// - Tải không bị gián đoạn khi rời trang (dùng appScope, không lifecycleScope)
-// - Tự động xoá notification khi tải xong, giữ notification khi lỗi
-//
-// Bấm lại item: đang tải → tạm dừng; đang tạm dừng → tiếp tục; lỗi → tải lại.
 object DownloadTaskHelper {
     private const val STATUS_HOLD_MS = 900L
     private const val TAG = "DownloadTaskHelper"
 
-    // ────────────── Session ──────────────
     enum class Status { IDLE, DOWNLOADING, PAUSED, COMPLETING, COMPLETED, ERROR }
 
     class Session(
@@ -45,7 +43,6 @@ object DownloadTaskHelper {
         val destFile: File,
         val title: String,
         val item: DownloadNode,
-        // Application context để gửi notification ngay cả khi không có view
         val appContext: Context,
         var downloaded: Long = 0L,
         var total: Long = -1L,
@@ -56,44 +53,32 @@ object DownloadTaskHelper {
         var job: Job? = null,
         var onFinished: (() -> Unit)? = null
     ) {
-        // Weak ref tới view – có thể null nếu trang không hiển thị
         @Volatile var viewRef: ListItemDownload? = null
             private set
 
         fun bindView(v: ListItemDownload?) { viewRef = v }
     }
 
-    // Application-level scope – không bị hủy khi fragment/page bị destroy
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    // Danh sách session đang hoạt động, keyed bởi URL
     private val sessions = ConcurrentHashMap<String, Session>()
-    // Ghi nhớ file đã tải THÀNH CÔNG lần gần nhất cho mỗi URL (kể cả sau khi session đã bị
-    // dọn khỏi `sessions`), để lần bấm sau nếu file vẫn còn thì chỉ chạy lại script,
-    // không tải lại từ mạng.
     private val completedFiles = ConcurrentHashMap<String, File>()
 
-    // Trả về session đang hoạt động cho URL (nếu có)
     fun getSession(url: String): Session? = sessions[url]
 
-    // ────────────── Bắt đầu tải mới ──────────────
     fun start(
         context: Context,
-        scope: LifecycleCoroutineScope,  // chỉ dùng ban đầu để trigger qua UI thread
+        scope: LifecycleCoroutineScope,
         item: DownloadNode,
         view: ListItemDownload,
         onFinished: () -> Unit
     ) {
-        // Nếu đã có session cho URL này → re-bind view và không tạo mới
         val existing = sessions[item.url]
         if (existing != null && existing.status != Status.COMPLETED && existing.status != Status.ERROR) {
             bindView(existing, view)
             return
         }
-        // Xoá session cũ đã kết thúc
         existing?.let { sessions.remove(item.url) }
 
-        // Nếu URL này đã từng tải THÀNH CÔNG trước đó và file vẫn còn tồn tại → lần bấm này
-        // chỉ chạy lại script (setState), không tải lại từ mạng.
         val cachedFile = completedFiles[item.url]
         if (cachedFile != null && cachedFile.exists() && cachedFile.length() > 0L) {
             val session = Session(
@@ -109,7 +94,6 @@ object DownloadTaskHelper {
                 onFinished = onFinished
             )
             sessions[item.url] = session
-            // bindView() tự markBusy() + hiện nhãn "đang chạy script" (xoay vòng tròn)
             bindView(session, view)
             postMain { runScriptOnly(context, session) }
             return
@@ -140,7 +124,6 @@ object DownloadTaskHelper {
         }
     }
 
-    // ────────────── Tạm dừng ──────────────
     fun pause(session: Session) {
         if (session.status != Status.DOWNLOADING) return
         session.status = Status.PAUSED
@@ -154,7 +137,6 @@ object DownloadTaskHelper {
         updateNotification(session, textOverride = session.appContext.getString(R.string.kr_download_paused_tap))
     }
 
-    // ────────────── Tiếp tục ──────────────
     fun resume(context: Context, session: Session) {
         if (session.status != Status.PAUSED) return
         session.status = Status.DOWNLOADING
@@ -163,7 +145,6 @@ object DownloadTaskHelper {
         }
     }
 
-    // ────────────── Hủy hoàn toàn ──────────────
     fun cancel(session: Session) {
         session.status = Status.IDLE
         session.job?.cancel()
@@ -181,7 +162,6 @@ object DownloadTaskHelper {
         }
     }
 
-    // ────────────── Re-bind view khi quay lại trang ──────────────
     fun bindView(session: Session, view: ListItemDownload) {
         postMain {
             session.bindView(view)
@@ -196,7 +176,6 @@ object DownloadTaskHelper {
                 }
                 Status.COMPLETING -> {
                     view.markBusy {}
-                    // spin = true (mặc định): vẫn xoay vòng tròn tiến trình trong lúc chạy script
                     view.showStatusLabel(view.context.getString(R.string.kr_download_execute_wait))
                 }
                 Status.COMPLETED -> {
@@ -205,7 +184,6 @@ object DownloadTaskHelper {
                 }
                 Status.ERROR -> {
                     view.showStatusLabel(view.context.getString(R.string.kr_download_error) + ": " + (session.error ?: ""), spin = false)
-                    // Giữ trạng thái lỗi – không gọi finishBusy()
                 }
                 Status.IDLE -> {
                     view.restoreDesc()
@@ -215,15 +193,12 @@ object DownloadTaskHelper {
         }
     }
 
-    // ────────────── Core download logic ──────────────
     @SuppressLint("MissingPermission")
     private suspend fun runDownload(context: Context, session: Session) {
         session.status = Status.DOWNLOADING
         postMain { session.viewRef?.markBusy { pause(session) } }
-        // Luôn hiện thông báo tải về khi bắt đầu
         startNotification(session)
 
-        // Đăng ký lắng nghe chuyển đổi mạng
         val networkCallback = registerNetworkCallback(context) {
             if (session.status == Status.DOWNLOADING && !session.retriedOnNetworkChange) {
                 session.retriedOnNetworkChange = true
@@ -234,7 +209,6 @@ object DownloadTaskHelper {
                     )
                 }
                 updateNotification(session, textOverride = context.getString(R.string.kr_download_retrying))
-                // Ngắt connection hiện tại để trigger retry trong vòng lặp
                 try { session.connection?.disconnect() } catch (_: Exception) {}
                 session.connection = null
             }
@@ -264,7 +238,6 @@ object DownloadTaskHelper {
                 if (session.status != Status.DOWNLOADING) break
 
                 if (error != null) {
-                    // Nếu chưa retry vì đổi mạng → thử lại 1 lần
                     if (!session.retriedOnNetworkChange && isNetworkRelatedError(error)) {
                         session.retriedOnNetworkChange = true
                         postMain {
@@ -274,32 +247,24 @@ object DownloadTaskHelper {
                             )
                         }
                         updateNotification(session, textOverride = context.getString(R.string.kr_download_retrying))
-                        delay(500) // chờ mạng ổn định
-                        continue // retry
+                        delay(500)
+                        continue
                     }
-                    // Lỗi thực sự
                     session.status = Status.ERROR
                     session.error = error
                     postMain {
                         session.viewRef?.let { v ->
                             v.clearCancelAction()
                             v.showStatusLabel(v.context.getString(R.string.kr_download_error) + ": " + error, spin = false)
-                            // KHÔNG gọi finishBusy() – giữ trạng thái lỗi trên item
                         }
                     }
                     updateNotificationError(session)
                     break
                 }
 
-                // Tải xong byte → chạy post-script
                 postMain { session.viewRef?.clearCancelAction() }
                 session.status = Status.COMPLETING
                 updateNotification(session, textOverride = context.getString(R.string.kr_download_execute_wait))
-                // ShellHandlerBase kế thừa android.os.Handler, bắt buộc phải được tạo trên
-                // thread đã gọi Looper.prepare() (ví dụ main thread). runDownload() chạy trên
-                // Dispatchers.IO (appScope) nên phải chuyển sang Dispatchers.Main trước khi
-                // gọi runPostScript(), nếu không sẽ crash:
-                // "Can't create handler inside thread ... that has not called Looper.prepare()"
                 withContext(Dispatchers.Main) {
                     runPostScript(context, session)
                 }
@@ -310,7 +275,6 @@ object DownloadTaskHelper {
         }
     }
 
-    // ────────────── HTTP download với hỗ trợ Range (resume) ──────────────
     private fun downloadToFile(
         url: String,
         destFile: File,
@@ -326,7 +290,6 @@ object DownloadTaskHelper {
                 instanceFollowRedirects = true
             }
 
-            // Hỗ trợ resume: nếu đã tải được phần nào, dùng Range header
             if (existingBytes > 0) {
                 connection.setRequestProperty("Range", "bytes=$existingBytes-")
             }
@@ -335,8 +298,6 @@ object DownloadTaskHelper {
             onConnectionOpened(connection)
 
             val responseCode = connection.responseCode
-            // 206 Partial Content = server hỗ trợ resume
-            // 200 OK = server không hỗ trợ range, tải lại từ đầu
             if (responseCode !in 200..299 && responseCode != 206) {
                 return "HTTP $responseCode"
             }
@@ -347,12 +308,10 @@ object DownloadTaskHelper {
             var append: Boolean
 
             if (responseCode == 206 && (acceptRanges == "bytes" || contentRange != null)) {
-                // Server hỗ trợ resume
                 append = true
                 total = parseTotalFromContentRange(contentRange)
                     ?: (connection.contentLengthLong + existingBytes)
             } else {
-                // Server trả 200 hoặc không hỗ trợ range → tải lại từ đầu
                 append = false
                 total = connection.contentLengthLong
             }
@@ -391,7 +350,6 @@ object DownloadTaskHelper {
         }
     }
 
-    // Parse tổng dung lượng từ header "Content-Range: bytes START-END/TOTAL"
     private fun parseTotalFromContentRange(contentRange: String?): Long? {
         if (contentRange == null) return null
         val slashIndex = contentRange.lastIndexOf('/')
@@ -399,7 +357,6 @@ object DownloadTaskHelper {
         return contentRange.substring(slashIndex + 1).trim().toLongOrNull()
     }
 
-    // Kiểm tra xem lỗi có liên quan mạng không
     private fun isNetworkRelatedError(error: String): Boolean {
         val lower = error.lowercase()
         return lower.contains("timeout")
@@ -412,8 +369,6 @@ object DownloadTaskHelper {
             || lower.contains("unknownhost")
     }
 
-    // ────────────── Chỉ chạy lại script, bỏ qua tải (dùng file đã tải thành công lần trước) ──────────────
-    // Phải được gọi trên main thread (ShellHandlerBase kế thừa android.os.Handler).
     @SuppressLint("MissingPermission")
     private fun runScriptOnly(context: Context, session: Session) {
         session.status = Status.COMPLETING
@@ -422,7 +377,6 @@ object DownloadTaskHelper {
         runPostScript(context, session)
     }
 
-    // ────────────── Post-script ──────────────
     private fun runPostScript(
         context: Context,
         session: Session
@@ -435,8 +389,6 @@ object DownloadTaskHelper {
         }
 
         postMain {
-            // spin = true (mặc định): vẫn xoay vòng tròn tiến trình trong lúc chạy script,
-            // trước đây spin = false khiến vòng tròn ẩn đi và không xoay lúc này.
             session.viewRef?.showStatusLabel(
                 session.viewRef?.context?.getString(R.string.kr_download_execute_wait)
                 ?: "Running script…"
@@ -461,11 +413,9 @@ object DownloadTaskHelper {
         ShellExecutor().execute(context, item, script, null, hashMapOf("state" to session.destFile.absolutePath), handler)
     }
 
-    // ────────────── Kết thúc session ──────────────
     private fun completeSession(context: Context, session: Session, success: Boolean) {
         if (success) {
             session.status = Status.COMPLETED
-            // Ghi nhớ file đã tải thành công để lần bấm sau chỉ chạy lại script.
             completedFiles[session.url] = session.destFile
             postMain {
                 session.viewRef?.let { v ->
@@ -474,9 +424,7 @@ object DownloadTaskHelper {
                 }
                 session.onFinished?.invoke()
             }
-            // Tự động xoá notification khi tải xong
             dismissNotification(session)
-            // Xoá session sau một khoảng thời gian
             appScope.launch {
                 delay(2000)
                 sessions.remove(session.url)
@@ -488,18 +436,35 @@ object DownloadTaskHelper {
                 session.viewRef?.let { v ->
                     v.clearCancelAction()
                     v.showStatusLabel(v.context.getString(R.string.kr_download_execute_fail), spin = false)
-                    // KHÔNG finishBusy() – giữ thông báo lỗi
                 }
             }
             updateNotificationError(session)
         }
     }
 
-    // ────────────── Notification ──────────────
     private const val NOTIFICATION_BASE_ID = 2000
 
     private fun notificationId(session: Session): Int {
         return NOTIFICATION_BASE_ID + session.id.hashCode().mod(1000)
+    }
+
+    private fun resolveLargeIcon(context: Context, item: DownloadNode): Bitmap {
+        val customIcon = if (item.iconPath.isNotEmpty()) IconPathAnalysis().loadIcon(context, item) else null
+        val drawable = customIcon ?: context.packageManager.getApplicationIcon(context.applicationInfo)
+        return drawableToBitmap(drawable)
+    }
+
+    private fun drawableToBitmap(drawable: Drawable): Bitmap {
+        val targetSize = 256
+        val frame = if (drawable is AnimationDrawable && drawable.numberOfFrames > 0) drawable.getFrame(0) else drawable
+        if (frame is BitmapDrawable && frame.bitmap != null) {
+            return Bitmap.createScaledBitmap(frame.bitmap, targetSize, targetSize, true)
+        }
+        val bitmap = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        frame.setBounds(0, 0, targetSize, targetSize)
+        frame.draw(canvas)
+        return bitmap
     }
 
     private fun startNotification(session: Session) {
@@ -510,6 +475,7 @@ object DownloadTaskHelper {
             putExtra("max", 100)
             putExtra("text", ctx.getString(R.string.kr_download_create_success))
             putExtra("notificationId", notificationId(session))
+            putExtra("largeIcon", resolveLargeIcon(ctx, session.item))
         }
         ctx.startForegroundService(intent)
     }
@@ -547,7 +513,6 @@ object DownloadTaskHelper {
         ctx.startForegroundService(intent)
     }
 
-    // ────────────── Network change listener ──────────────
     private val networkCallbacks = ConcurrentHashMap<Context, ConnectivityManager.NetworkCallback>()
 
     private fun registerNetworkCallback(
@@ -556,10 +521,6 @@ object DownloadTaskHelper {
     ): ConnectivityManager.NetworkCallback? {
         return try {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            // registerNetworkCallback() luôn gọi onAvailable() NGAY LẬP TỨC cho mạng đang hoạt
-            // động tại thời điểm đăng ký, dù mạng không hề đổi (hành vi mặc định của Android) →
-            // nếu không bỏ qua, ngay khi vừa bấm tải sẽ bị báo nhầm "đổi mạng, đang thử lại".
-            // Bỏ qua callback đầu tiên này, chỉ coi các lần gọi SAU đó là đổi mạng thật sự.
             var isFirstCallback = true
             val callback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
@@ -581,8 +542,6 @@ object DownloadTaskHelper {
             networkCallbacks[context] = callback
             callback
         } catch (e: Exception) {
-            // Thiếu quyền ACCESS_NETWORK_STATE (hoặc bị OEM chặn) không được làm crash cả
-            // luồng tải về - đây chỉ là tính năng phụ (tự thử lại khi đổi mạng).
             null
         }
     }
@@ -596,9 +555,12 @@ object DownloadTaskHelper {
         networkCallbacks.remove(context)
     }
 
-    // ────────────── Helpers ──────────────
     private fun postMain(action: () -> Unit) {
-        Handler(Looper.getMainLooper()).post(action)
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            action()
+        } else {
+            Handler(Looper.getMainLooper()).post(action)
+        }
     }
 
     private fun finishAfterDelay(view: ListItemDownload, onFinished: () -> Unit) {
@@ -615,22 +577,18 @@ object DownloadTaskHelper {
         return if (dot in 1 until name.length - 1) name.substring(dot) else ""
     }
 
-    // Gọi từ ActionListFragment để huỷ session theo URL
     fun cancelByUrl(url: String) {
         sessions[url]?.let { cancel(it) }
     }
 
-    // Gọi từ ActionListFragment để tạm dừng session theo URL
     fun pauseByUrl(url: String) {
         sessions[url]?.let { pause(it) }
     }
 
-    // Gọi từ ActionListFragment để tiếp tục session theo URL
     fun resumeByUrl(context: Context, url: String) {
         sessions[url]?.let { resume(context, it) }
     }
 
-    // Kiểm tra URL có session đang hoạt động không
     fun hasActiveSession(url: String): Boolean {
         val s = sessions[url] ?: return false
         return s.status == Status.DOWNLOADING || s.status == Status.PAUSED || s.status == Status.COMPLETING

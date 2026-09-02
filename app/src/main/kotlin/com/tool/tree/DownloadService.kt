@@ -3,6 +3,10 @@ package com.tool.tree
 import android.app.*
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.*
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
@@ -15,10 +19,11 @@ class DownloadService : Service() {
 
     companion object {
         private const val CHANNEL_ID = "download_channel"
-        // Notification IDs được truyền từ DownloadTaskHelper (2000-2999)
 
         private val messageHistory = ConcurrentHashMap<Int, MutableList<String>>()
         private const val MAX_HISTORY_ROWS = 12
+
+        private val largeIconCache = ConcurrentHashMap<Int, Bitmap>()
     }
 
     private lateinit var manager: NotificationManager
@@ -44,54 +49,43 @@ class DownloadService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent ?: return START_NOT_STICKY
 
-        // Lấy notification ID từ intent (DownloadTaskHelper truyền vào)
         currentNotificationId = intent.getIntExtra("notificationId", 1001)
 
-        // STOP - xoá notification
         if (intent.getBooleanExtra("stop", false)) {
-            // QUAN TRỌNG: mọi lệnh gọi tới service này đều đến từ
-            // Context.startForegroundService() (xem DownloadTaskHelper) - kể cả khi mục đích
-            // chỉ là DỪNG service. Android 8+ vẫn bắt buộc startForeground() phải được gọi
-            // trong vòng vài giây sau đó, nếu không hệ thống tự ném
-            // ForegroundServiceDidNotStartInTimeException và CRASH CẢ APP - dù ta không hề
-            // định giữ service chạy lâu. Gọi startForeground() rồi ngay lập tức
-            // stopForeground()+stopSelf() là cách an toàn để "trả nợ" hợp đồng này.
             startForegroundCompat(createProgressBuilder(
-                applicationInfo.loadLabel(packageManager).toString(), -1, 0, null
+                applicationInfo.loadLabel(packageManager).toString(), -1, 0, null, null
             ).build())
             stopWatching()
             manager.cancel(currentNotificationId)
             stopForegroundCompat(remove = true)
             messageHistory.remove(currentNotificationId)
+            largeIconCache.remove(currentNotificationId)
             stopSelf()
             return START_NOT_STICKY
         }
 
-        // ERROR - giữ notification, không ongoing, hiển thị lỗi
         if (intent.getBooleanExtra("isError", false)) {
             val title = intent.getStringExtra("title") ?: getString(R.string.channel_name)
             val errorText = intent.getStringExtra("text") ?: getString(R.string.kr_download_error)
             val builder = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                .setLargeIcon(resolveLargeIcon(intent))
                 .setContentTitle(title)
                 .setContentText(errorText)
                 .setOnlyAlertOnce(true)
                 .setOngoing(false)
-                .setAutoCancel(false) // Giữ notification lỗi
+                .setAutoCancel(false)
                 .setCategory(NotificationCompat.CATEGORY_ERROR)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setStyle(buildMessagingStyle(title, errorText, addAsNewMessage = true))
-            // Cùng lý do như nhánh "stop" ở trên: phải vào foreground trước rồi mới thoát.
             startForegroundCompat(builder.build())
-            // Dừng foreground nhưng KHÔNG xoá notification
             stopForegroundCompat(remove = false)
             manager.notify(currentNotificationId, builder.build())
             stopSelf()
             return START_NOT_STICKY
         }
 
-        // TITLE
         val title = intent.getStringExtra("title")
         val displayTitle = if (title.isNullOrEmpty()) {
             applicationInfo.loadLabel(packageManager).toString()
@@ -101,42 +95,22 @@ class DownloadService : Service() {
 
         val customText = intent.getStringExtra("text")
 
-        // Progress từ intent
         if (intent.hasExtra("progress")) {
             val progress = intent.getIntExtra("progress", 0)
             val max = intent.getIntExtra("max", 100)
-            val builder = createProgressBuilder(displayTitle, progress, max, customText)
-            // QUAN TRỌNG: đây là dòng thật sự đưa service vào trạng thái foreground mà
-            // startForegroundService() đòi hỏi - bản cũ chỉ gọi manager.notify() (thông báo
-            // thường), KHÔNG đưa service vào foreground. Thiếu dòng này, trong vòng vài giây
-            // kể từ lần startForegroundService() đầu tiên, Android sẽ tự crash app bằng
-            // ForegroundServiceDidNotStartInTimeException - và vì app chết ngay lúc đó, thông
-            // báo "đang tải" (setOngoing(true)) vừa hiện sẽ bị TREO VĨNH VIỄN vì không còn ai
-            // sống để cập nhật nó sang lỗi hay xoá nó đi.
+            val builder = createProgressBuilder(displayTitle, progress, max, customText, resolveLargeIcon(intent))
             startForegroundCompat(builder.build())
             return START_NOT_STICKY
         }
 
-        // Theo dõi file (tính năng cũ, giữ lại)
         intent.getStringExtra("path")?.let {
-            // Cùng lý do trên: phải vào foreground trước khi bắt đầu theo dõi file.
-            startForegroundCompat(createProgressBuilder(displayTitle, -1, 0, null).build())
+            startForegroundCompat(createProgressBuilder(displayTitle, -1, 0, null, resolveLargeIcon(intent)).build())
             startWatching(it, displayTitle)
         }
 
         return START_NOT_STICKY
     }
 
-    /**
-     * Gọi startForeground() thật sự (không chỉ manager.notify()) - đây là lệnh "trả nợ" hợp
-     * đồng startForegroundService(), bắt buộc trên Android 8+ để tránh
-     * ForegroundServiceDidNotStartInTimeException. Trên Android 10+ (Q), truyền kèm
-     * foregroundServiceType để khớp với foregroundServiceType="dataSync" đã khai trong
-     * manifest - bắt buộc trên Android 14+, nếu không sẽ bị
-     * MissingForegroundServiceTypeException/InvalidForegroundServiceTypeException.
-     * An toàn gọi lại nhiều lần (mỗi lần cập nhật tiến độ) - Android chỉ cập nhật notification,
-     * không lỗi gì khi service đã ở trạng thái foreground từ trước.
-     */
     private fun startForegroundCompat(notification: Notification) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(currentNotificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
@@ -165,7 +139,35 @@ class DownloadService : Service() {
         return messagingStyle
     }
 
-    private fun createProgressBuilder(title: String, progress: Int, max: Int, customText: String?): NotificationCompat.Builder {
+    private fun resolveLargeIcon(intent: Intent): Bitmap {
+        val fromIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra("largeIcon", Bitmap::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra("largeIcon") as? Bitmap
+        }
+        if (fromIntent != null) {
+            largeIconCache[currentNotificationId] = fromIntent
+            return fromIntent
+        }
+        return largeIconCache[currentNotificationId] ?: drawableToBitmap(packageManager.getApplicationIcon(applicationInfo)).also {
+            largeIconCache[currentNotificationId] = it
+        }
+    }
+
+    private fun drawableToBitmap(drawable: Drawable): Bitmap {
+        val targetSize = 256
+        if (drawable is BitmapDrawable && drawable.bitmap != null) {
+            return Bitmap.createScaledBitmap(drawable.bitmap, targetSize, targetSize, true)
+        }
+        val bitmap = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, targetSize, targetSize)
+        drawable.draw(canvas)
+        return bitmap
+    }
+
+    private fun createProgressBuilder(title: String, progress: Int, max: Int, customText: String?, largeIcon: Bitmap?): NotificationCompat.Builder {
         val isEvent = customText != null
         val displayText = if (progress < 0 || max <= 0) {
             customText ?: getString(R.string.processing)
@@ -186,6 +188,10 @@ class DownloadService : Service() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setStyle(buildMessagingStyle(title, displayText, addAsNewMessage = isEvent))
+
+        if (largeIcon != null) {
+            builder.setLargeIcon(largeIcon)
+        }
 
         if (progress < 0 || max <= 0) {
             builder.setProgress(0, 0, true)
@@ -250,21 +256,26 @@ class DownloadService : Service() {
             BufferedReader(FileReader(file)).use { br ->
                 val line = br.readLine()?.trim() ?: return
 
+                val largeIcon = largeIconCache[currentNotificationId]
+                    ?: drawableToBitmap(packageManager.getApplicationIcon(applicationInfo)).also {
+                        largeIconCache[currentNotificationId] = it
+                    }
+
                 val builder = when {
                     line == "-1" -> {
-                        createProgressBuilder(title, -1, 0, null)
+                        createProgressBuilder(title, -1, 0, null, largeIcon)
                     }
                     line.contains("/") -> {
                         val parts = line.split("/")
                         if (parts.size == 2) {
                             val p = parts[0].toIntOrNull() ?: return
                             val m = parts[1].toIntOrNull() ?: return
-                            createProgressBuilder(title, p, m, null)
+                            createProgressBuilder(title, p, m, null, largeIcon)
                         } else return
                     }
                     else -> {
                         val p = line.toIntOrNull() ?: return
-                        createProgressBuilder(title, p, 100, null)
+                        createProgressBuilder(title, p, 100, null, largeIcon)
                     }
                 }
                 manager.notify(currentNotificationId, builder.build())
