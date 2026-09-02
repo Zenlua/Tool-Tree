@@ -835,8 +835,13 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             labelView.compoundDrawables.forEach { it?.mutate()?.alpha = alphaInt }
         }
 
-        // Khoá tương tác vẫn áp dụng cho cả row như cũ (không chỉ riêng input).
-        setEnabledRecursively(row, enabled)
+        // ========== FIX: khoá isEnabled cả row làm title/label bị xám theo ==========
+        // TextView.isEnabled=false tự đổi màu chữ sang trạng thái "disabled" của
+        // ColorStateList (thường nhạt/xám hơn dù KHÔNG đụng alpha) - kr_param_title/
+        // kr_param_label không hề gắn click listener nên khoá isEnabled ở đó không chặn
+        // được tương tác gì, chỉ gây tác dụng phụ làm chúng trông mờ. Chỉ khoá đúng phạm
+        // vi kr_param_input (nơi thực sự có control tương tác được).
+        setEnabledRecursively(dimTarget, enabled)
     }
 
     private fun findCompoundButton(view: View): CompoundButton? {
