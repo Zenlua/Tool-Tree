@@ -67,6 +67,10 @@ object DownloadTaskHelper {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     // Danh sách session đang hoạt động, keyed bởi URL
     private val sessions = ConcurrentHashMap<String, Session>()
+    // Ghi nhớ file đã tải THÀNH CÔNG lần gần nhất cho mỗi URL (kể cả sau khi session đã bị
+    // dọn khỏi `sessions`), để lần bấm sau nếu file vẫn còn thì chỉ chạy lại script,
+    // không tải lại từ mạng.
+    private val completedFiles = ConcurrentHashMap<String, File>()
 
     // Trả về session đang hoạt động cho URL (nếu có)
     fun getSession(url: String): Session? = sessions[url]
@@ -87,6 +91,29 @@ object DownloadTaskHelper {
         }
         // Xoá session cũ đã kết thúc
         existing?.let { sessions.remove(item.url) }
+
+        // Nếu URL này đã từng tải THÀNH CÔNG trước đó và file vẫn còn tồn tại → lần bấm này
+        // chỉ chạy lại script (setState), không tải lại từ mạng.
+        val cachedFile = completedFiles[item.url]
+        if (cachedFile != null && cachedFile.exists() && cachedFile.length() > 0L) {
+            val session = Session(
+                id = UUID.randomUUID().toString(),
+                url = item.url,
+                destFile = cachedFile,
+                title = item.title.ifEmpty { item.url.substringAfterLast('/').substringBefore('?') },
+                item = item,
+                appContext = context.applicationContext,
+                downloaded = cachedFile.length(),
+                total = cachedFile.length(),
+                status = Status.COMPLETING,
+                onFinished = onFinished
+            )
+            sessions[item.url] = session
+            // bindView() tự markBusy() + hiện nhãn "đang chạy script" (xoay vòng tròn)
+            bindView(session, view)
+            postMain { runScriptOnly(context, session) }
+            return
+        }
 
         val destFile = try {
             File(context.cacheDir, "kr_download_" + UUID.randomUUID().toString().replace("-", "") + guessSuffix(item.url))
@@ -143,6 +170,7 @@ object DownloadTaskHelper {
         try { session.connection?.disconnect() } catch (_: Exception) {}
         session.connection = null
         session.destFile.delete()
+        completedFiles.remove(session.url)
         sessions.remove(session.url)
         dismissNotification(session)
         postMain {
@@ -168,7 +196,8 @@ object DownloadTaskHelper {
                 }
                 Status.COMPLETING -> {
                     view.markBusy {}
-                    view.showStatusLabel(view.context.getString(R.string.kr_download_execute_wait), spin = false)
+                    // spin = true (mặc định): vẫn xoay vòng tròn tiến trình trong lúc chạy script
+                    view.showStatusLabel(view.context.getString(R.string.kr_download_execute_wait))
                 }
                 Status.COMPLETED -> {
                     view.showStatusLabel(view.context.getString(R.string.kr_download_execute_success))
@@ -383,6 +412,16 @@ object DownloadTaskHelper {
             || lower.contains("unknownhost")
     }
 
+    // ────────────── Chỉ chạy lại script, bỏ qua tải (dùng file đã tải thành công lần trước) ──────────────
+    // Phải được gọi trên main thread (ShellHandlerBase kế thừa android.os.Handler).
+    @SuppressLint("MissingPermission")
+    private fun runScriptOnly(context: Context, session: Session) {
+        session.status = Status.COMPLETING
+        startNotification(session)
+        updateNotification(session, textOverride = context.getString(R.string.kr_download_execute_wait))
+        runPostScript(context, session)
+    }
+
     // ────────────── Post-script ──────────────
     private fun runPostScript(
         context: Context,
@@ -396,10 +435,11 @@ object DownloadTaskHelper {
         }
 
         postMain {
+            // spin = true (mặc định): vẫn xoay vòng tròn tiến trình trong lúc chạy script,
+            // trước đây spin = false khiến vòng tròn ẩn đi và không xoay lúc này.
             session.viewRef?.showStatusLabel(
                 session.viewRef?.context?.getString(R.string.kr_download_execute_wait)
-                ?: "Running script…",
-                spin = false
+                ?: "Running script…"
             )
         }
 
@@ -425,6 +465,8 @@ object DownloadTaskHelper {
     private fun completeSession(context: Context, session: Session, success: Boolean) {
         if (success) {
             session.status = Status.COMPLETED
+            // Ghi nhớ file đã tải thành công để lần bấm sau chỉ chạy lại script.
+            completedFiles[session.url] = session.destFile
             postMain {
                 session.viewRef?.let { v ->
                     v.showStatusLabel(v.context.getString(R.string.kr_download_execute_success))
