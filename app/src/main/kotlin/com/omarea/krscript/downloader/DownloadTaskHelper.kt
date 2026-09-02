@@ -51,7 +51,10 @@ object DownloadTaskHelper {
         var retriedOnNetworkChange: Boolean = false,
         var connection: HttpURLConnection? = null,
         var job: Job? = null,
-        var onFinished: (() -> Unit)? = null
+        var onFinished: (() -> Unit)? = null,
+        var lastProgressTimestampMs: Long = 0L,
+        var lastProgressBytes: Long = 0L,
+        var speedBytesPerSecond: Double = 0.0
     ) {
         @Volatile var viewRef: ListItemDownload? = null
             private set
@@ -140,6 +143,8 @@ object DownloadTaskHelper {
     fun resume(context: Context, session: Session) {
         if (session.status != Status.PAUSED) return
         session.status = Status.DOWNLOADING
+        session.lastProgressTimestampMs = 0L
+        session.speedBytesPerSecond = 0.0
         session.job = appScope.launch {
             runDownload(context, session)
         }
@@ -168,7 +173,7 @@ object DownloadTaskHelper {
             when (session.status) {
                 Status.DOWNLOADING -> {
                     view.markBusy { pause(session) }
-                    view.updateDownloadProgress(session.downloaded, session.total)
+                    view.updateDownloadProgress(session.downloaded, session.total, session.speedBytesPerSecond)
                 }
                 Status.PAUSED -> {
                     view.markBusy { resume(view.context, session) }
@@ -222,12 +227,26 @@ object DownloadTaskHelper {
                     existingBytes = session.downloaded,
                     onConnectionOpened = { conn -> session.connection = conn },
                     onProgress = { downloaded, total ->
+                        val now = System.currentTimeMillis()
+                        if (session.lastProgressTimestampMs > 0L) {
+                            val elapsedMs = now - session.lastProgressTimestampMs
+                            if (elapsedMs > 0) {
+                                val instantSpeed = (downloaded - session.lastProgressBytes) * 1000.0 / elapsedMs
+                                session.speedBytesPerSecond = if (session.speedBytesPerSecond <= 0.0) {
+                                    instantSpeed
+                                } else {
+                                    session.speedBytesPerSecond * 0.7 + instantSpeed * 0.3
+                                }
+                            }
+                        }
+                        session.lastProgressTimestampMs = now
+                        session.lastProgressBytes = downloaded
                         session.downloaded = downloaded
                         session.total = total
                         postMain {
                             val v = session.viewRef
                             if (v != null && session.status == Status.DOWNLOADING) {
-                                v.updateDownloadProgress(downloaded, total)
+                                v.updateDownloadProgress(downloaded, total, session.speedBytesPerSecond)
                             }
                         }
                         updateNotification(session)
@@ -248,6 +267,7 @@ object DownloadTaskHelper {
                         }
                         updateNotification(session, textOverride = context.getString(R.string.kr_download_retrying))
                         delay(500)
+                        session.lastProgressTimestampMs = 0L
                         continue
                     }
                     session.status = Status.ERROR
@@ -489,6 +509,11 @@ object DownloadTaskHelper {
             putExtra("max", 100)
             putExtra("text", textOverride)
             putExtra("notificationId", notificationId(session))
+            if (textOverride == null) {
+                putExtra("downloadedBytes", session.downloaded)
+                putExtra("totalBytes", session.total)
+                putExtra("speedBps", session.speedBytesPerSecond)
+            }
         }
         ctx.startForegroundService(intent)
     }

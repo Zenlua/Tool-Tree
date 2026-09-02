@@ -98,7 +98,13 @@ class DownloadService : Service() {
         if (intent.hasExtra("progress")) {
             val progress = intent.getIntExtra("progress", 0)
             val max = intent.getIntExtra("max", 100)
-            val builder = createProgressBuilder(displayTitle, progress, max, customText, resolveLargeIcon(intent))
+            val downloadedBytes = intent.getLongExtra("downloadedBytes", -1L)
+            val totalBytes = intent.getLongExtra("totalBytes", -1L)
+            val speedBps = intent.getDoubleExtra("speedBps", 0.0)
+            val builder = createProgressBuilder(
+                displayTitle, progress, max, customText, resolveLargeIcon(intent),
+                downloadedBytes, totalBytes, speedBps
+            )
             startForegroundCompat(builder.build())
             return START_NOT_STICKY
         }
@@ -155,6 +161,30 @@ class DownloadService : Service() {
         }
     }
 
+    private fun buildProgressText(percent: Int, downloadedBytes: Long, totalBytes: Long, speedBps: Double): String {
+        if (downloadedBytes < 0) return "$percent%"
+        val sizePart = if (totalBytes > 0) {
+            "${formatBytes(downloadedBytes)} / ${formatBytes(totalBytes)}"
+        } else {
+            formatBytes(downloadedBytes)
+        }
+        return "$percent% • $sizePart • ${formatSpeed(speedBps)}"
+    }
+
+    private fun formatBytes(bytes: Long): String {
+        if (bytes < 1024) return "$bytes B"
+        val kb = bytes / 1024.0
+        if (kb < 1024) return String.format("%.0f KB", kb)
+        val mb = kb / 1024.0
+        if (mb < 1024) return String.format("%.1f MB", mb)
+        return String.format("%.2f GB", mb / 1024.0)
+    }
+
+    private fun formatSpeed(speedBps: Double): String {
+        val mbps = speedBps / (1024.0 * 1024.0)
+        return if (mbps >= 0.1) String.format("%.1f MB/s", mbps) else String.format("%.0f KB/s", speedBps / 1024.0)
+    }
+
     private fun drawableToBitmap(drawable: Drawable): Bitmap {
         val targetSize = 256
         if (drawable is BitmapDrawable && drawable.bitmap != null) {
@@ -167,13 +197,22 @@ class DownloadService : Service() {
         return bitmap
     }
 
-    private fun createProgressBuilder(title: String, progress: Int, max: Int, customText: String?, largeIcon: Bitmap?): NotificationCompat.Builder {
+    private fun createProgressBuilder(
+        title: String,
+        progress: Int,
+        max: Int,
+        customText: String?,
+        largeIcon: Bitmap?,
+        downloadedBytes: Long = -1L,
+        totalBytes: Long = -1L,
+        speedBps: Double = 0.0
+    ): NotificationCompat.Builder {
         val isEvent = customText != null
         val displayText = if (progress < 0 || max <= 0) {
             customText ?: getString(R.string.processing)
         } else {
             val percent = ((progress * 100f) / max).toInt()
-            customText ?: "$percent%"
+            customText ?: buildProgressText(percent, downloadedBytes, totalBytes, speedBps)
         }
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)

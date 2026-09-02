@@ -15,18 +15,13 @@ class ListItemDownload(context: Context, config: DownloadNode) :
     private val rowsView = layout.findViewById<TextView?>(R.id.kr_rows)
     private val rowsPhotoView = layout.findViewById<ImageView?>(R.id.kr_rows_photo)
 
-    // desc tĩnh ban đầu (config.desc) - lưu lại lúc khởi tạo để khôi phục khi huỷ
     private val originalDesc = config.desc
 
-    // true trong suốt lúc đang tải HOẶC đang chạy script hoặc đang tạm dừng
     var isBusy: Boolean = false
         private set
 
-    // Mở khoá nhấn giữ khi đang bận tải (để hiện dialog xác nhận huỷ) kể cả khi item không có
-    // key / không cho phép tạo shortcut - xem PageLayoutRender.onItemLongClickListener.
     override fun allowLongClick(): Boolean = isBusy || super.allowLongClick()
 
-    // Hành động khi bấm lại: có thể là tạm dừng, tiếp tục, hoặc huỷ (tuỳ ngữ cảnh)
     private var cancelAction: (() -> Unit)? = null
 
     init {
@@ -35,7 +30,6 @@ class ListItemDownload(context: Context, config: DownloadNode) :
         RowsRenderHelper.bind(context, rowsView, rowsPhotoView, config.rows, config)
     }
 
-    // Gọi ngay khi bắt đầu 1 phiên tải mới - khoá item lại, hiện vòng tròn tiến trình
     fun markBusy(onCancel: () -> Unit) {
         isBusy = true
         cancelAction = onCancel
@@ -44,10 +38,9 @@ class ListItemDownload(context: Context, config: DownloadNode) :
         ringView?.setIndeterminate(true)
     }
 
-    // Cập nhật tiến trình tải theo byte.
-    fun updateDownloadProgress(downloaded: Long, total: Long) {
+    fun updateDownloadProgress(downloaded: Long, total: Long, speedBytesPerSecond: Double = 0.0) {
         if (downloaded > 0) {
-            desc = formatProgress(downloaded, total)
+            desc = formatProgress(downloaded, total, speedBytesPerSecond)
         }
         if (total > 0) {
             ringView?.setIndeterminate(false)
@@ -57,13 +50,10 @@ class ListItemDownload(context: Context, config: DownloadNode) :
         }
     }
 
-    // Gọi khi việc TẢI kết thúc (dù xong, lỗi, hay chuẩn bị chạy script)
     fun clearCancelAction() {
         cancelAction = null
     }
 
-    // Người dùng bấm vào item trong lúc item đang bận.
-    // Trả về true nếu đã gọi action (tạm dừng / tiếp tục / huỷ).
     fun cancelIfDownloading(): Boolean {
         val action = cancelAction ?: return false
         cancelAction = null
@@ -71,7 +61,6 @@ class ListItemDownload(context: Context, config: DownloadNode) :
         return true
     }
 
-    // Hiện 1 nhãn trạng thái thay cho desc dạng %.
     fun showStatusLabel(label: String, spin: Boolean = true) {
         desc = label
         if (spin) {
@@ -84,13 +73,10 @@ class ListItemDownload(context: Context, config: DownloadNode) :
         }
     }
 
-    // Khôi phục lại desc gốc (như lúc chưa bấm tải)
     fun restoreDesc() {
         desc = originalDesc
     }
 
-    // Kết thúc phiên (thành công hoặc bị huỷ) - mở khoá lại, ẩn vòng tròn, hiện lại icon.
-    // KHÔNG gọi hàm này khi đang ở trạng thái lỗi – cần giữ hiển thị lỗi.
     fun finishBusy() {
         isBusy = false
         cancelAction = null
@@ -99,9 +85,15 @@ class ListItemDownload(context: Context, config: DownloadNode) :
     }
 
     companion object {
-        fun formatProgress(downloaded: Long, total: Long): String {
-            val d = formatBytes(downloaded)
-            return if (total > 0) "$d / ${formatBytes(total)}" else d
+        fun formatProgress(downloaded: Long, total: Long, speedBytesPerSecond: Double = 0.0): String {
+            val sizePart = if (total > 0) "${formatBytes(downloaded)} / ${formatBytes(total)}" else formatBytes(downloaded)
+            val speedPart = formatSpeed(speedBytesPerSecond)
+            return if (total > 0) {
+                val percent = (downloaded * 100 / total).toInt()
+                "$percent% • $sizePart • $speedPart"
+            } else {
+                "$sizePart • $speedPart"
+            }
         }
 
         private fun formatBytes(bytes: Long): String {
@@ -111,6 +103,12 @@ class ListItemDownload(context: Context, config: DownloadNode) :
             val mb = kb / 1024.0
             if (mb < 1024) return String.format("%.1f MB", mb)
             return String.format("%.2f GB", mb / 1024.0)
+        }
+
+        private fun formatSpeed(speedBytesPerSecond: Double): String {
+            if (speedBytesPerSecond <= 0.0) return "-- KB/s"
+            val mbps = speedBytesPerSecond / (1024.0 * 1024.0)
+            return if (mbps >= 0.1) String.format("%.1f MB/s", mbps) else String.format("%.0f KB/s", speedBytesPerSecond / 1024.0)
         }
     }
 }
