@@ -46,7 +46,9 @@ class ListItemDownload(context: Context, config: DownloadNode) :
 
     // Cập nhật tiến trình tải theo byte.
     fun updateDownloadProgress(downloaded: Long, total: Long) {
-        desc = formatProgress(downloaded, total)
+        if (downloaded > 0) {
+            desc = formatProgress(downloaded, total)
+        }
         if (total > 0) {
             ringView?.setIndeterminate(false)
             ringView?.setProgress(downloaded * 100f / total)
@@ -70,9 +72,16 @@ class ListItemDownload(context: Context, config: DownloadNode) :
     }
 
     // Hiện 1 nhãn trạng thái thay cho desc dạng %.
-    fun showStatusLabel(label: String) {
+    fun showStatusLabel(label: String, spin: Boolean = true) {
         desc = label
-        ringView?.setIndeterminate(true)
+        if (spin) {
+            widgetView?.visibility = View.GONE
+            ringView?.visibility = View.VISIBLE
+            ringView?.setIndeterminate(true)
+        } else {
+            ringView?.visibility = View.GONE
+            widgetView?.visibility = View.VISIBLE
+        }
     }
 
     // Khôi phục lại desc gốc (như lúc chưa bấm tải)

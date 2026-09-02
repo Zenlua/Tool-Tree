@@ -5,15 +5,20 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.*
 import androidx.core.app.NotificationCompat
+import androidx.core.app.Person
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
+import java.util.concurrent.ConcurrentHashMap
 
 class DownloadService : Service() {
 
     companion object {
         private const val CHANNEL_ID = "download_channel"
         // Notification IDs được truyền từ DownloadTaskHelper (2000-2999)
+
+        private val messageHistory = ConcurrentHashMap<Int, MutableList<String>>()
+        private const val MAX_HISTORY_ROWS = 12
     }
 
     private lateinit var manager: NotificationManager
@@ -57,6 +62,7 @@ class DownloadService : Service() {
             stopWatching()
             manager.cancel(currentNotificationId)
             stopForegroundCompat(remove = true)
+            messageHistory.remove(currentNotificationId)
             stopSelf()
             return START_NOT_STICKY
         }
@@ -75,6 +81,7 @@ class DownloadService : Service() {
                 .setCategory(NotificationCompat.CATEGORY_ERROR)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setStyle(buildMessagingStyle(title, errorText, addAsNewMessage = true))
             // Cùng lý do như nhánh "stop" ở trên: phải vào foreground trước rồi mới thoát.
             startForegroundCompat(builder.build())
             // Dừng foreground nhưng KHÔNG xoá notification
@@ -138,10 +145,39 @@ class DownloadService : Service() {
         }
     }
 
+    private fun buildMessagingStyle(title: String, line: String, addAsNewMessage: Boolean): NotificationCompat.MessagingStyle {
+        val rows = messageHistory.getOrPut(currentNotificationId) { java.util.Collections.synchronizedList(ArrayList()) }
+        synchronized(rows) {
+            if (addAsNewMessage) {
+                rows.add(line)
+                while (rows.size > MAX_HISTORY_ROWS) rows.removeAt(0)
+            } else if (rows.isEmpty()) {
+                rows.add(line)
+            }
+        }
+
+        val person = Person.Builder().setName(title).build()
+        val messagingStyle = NotificationCompat.MessagingStyle(person)
+        val snapshot = synchronized(rows) { rows.toList() }
+        snapshot.forEach { row ->
+            messagingStyle.addMessage(row, System.currentTimeMillis(), person)
+        }
+        return messagingStyle
+    }
+
     private fun createProgressBuilder(title: String, progress: Int, max: Int, customText: String?): NotificationCompat.Builder {
+        val isEvent = customText != null
+        val displayText = if (progress < 0 || max <= 0) {
+            customText ?: getString(R.string.processing)
+        } else {
+            val percent = ((progress * 100f) / max).toInt()
+            customText ?: "$percent%"
+        }
+
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setContentTitle(title)
+            .setContentText(displayText)
             .setOnlyAlertOnce(true)
             .setOngoing(true)
             .setShowWhen(true)
@@ -149,16 +185,12 @@ class DownloadService : Service() {
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setStyle(buildMessagingStyle(title, displayText, addAsNewMessage = isEvent))
 
         if (progress < 0 || max <= 0) {
-            // Đang xử lý không xác định
             builder.setProgress(0, 0, true)
-                .setContentText(customText ?: getString(R.string.processing))
         } else {
-            val percent = ((progress * 100f) / max).toInt()
-            val text = customText ?: "$percent%"
             builder.setProgress(max, progress, false)
-                .setContentText(text)
         }
 
         return builder

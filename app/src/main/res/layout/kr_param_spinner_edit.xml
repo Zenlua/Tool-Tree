@@ -14,7 +14,8 @@
         android:textColor="?android:attr/textColorPrimary"
         android:background="@android:color/transparent"
         android:textSize="14dp"
-        android:maxLines="1"
+        android:maxLines="2"
+        android:ellipsize="end"
         android:hint="@string/kr_please_select"
         android:breakStrategy="simple" />
 
@@ -39,10 +40,10 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
             android:background="@android:color/transparent"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_arrow_dropdown"
+            android:src="@drawable/kr_down"
             android:tint="@drawable/kr_param_spinner_arrow_tint" />
     </RelativeLayout>
 </LinearLayout>

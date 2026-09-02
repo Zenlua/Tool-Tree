@@ -91,7 +91,7 @@ object DownloadTaskHelper {
         val destFile = try {
             File(context.cacheDir, "kr_download_" + UUID.randomUUID().toString().replace("-", "") + guessSuffix(item.url))
         } catch (ex: Exception) {
-            view.showStatusLabel(context.getString(R.string.kr_download_error))
+            view.showStatusLabel(context.getString(R.string.kr_download_error), spin = false)
             finishAfterDelay(view, onFinished)
             return
         }
@@ -122,9 +122,9 @@ object DownloadTaskHelper {
         } catch (_: Exception) {}
         session.connection = null
         postMain {
-            session.viewRef?.showStatusLabel(session.viewRef?.context?.getString(R.string.kr_download_paused_tap) ?: "Paused")
+            session.viewRef?.showStatusLabel(session.viewRef?.context?.getString(R.string.kr_download_paused_tap) ?: "Paused", spin = false)
         }
-        updateNotification(session)
+        updateNotification(session, textOverride = session.appContext.getString(R.string.kr_download_paused_tap))
     }
 
     // ────────────── Tiếp tục ──────────────
@@ -160,26 +160,22 @@ object DownloadTaskHelper {
             when (session.status) {
                 Status.DOWNLOADING -> {
                     view.markBusy { pause(session) }
-                    if (session.total > 0) {
-                        view.updateDownloadProgress(session.downloaded, session.total)
-                    } else {
-                        view.showStatusLabel(view.context.getString(R.string.kr_download_execute_wait))
-                    }
+                    view.updateDownloadProgress(session.downloaded, session.total)
                 }
                 Status.PAUSED -> {
                     view.markBusy { resume(view.context, session) }
-                    view.showStatusLabel(view.context.getString(R.string.kr_download_paused_tap))
+                    view.showStatusLabel(view.context.getString(R.string.kr_download_paused_tap), spin = false)
                 }
                 Status.COMPLETING -> {
                     view.markBusy {}
-                    view.showStatusLabel(view.context.getString(R.string.kr_download_execute_wait))
+                    view.showStatusLabel(view.context.getString(R.string.kr_download_execute_wait), spin = false)
                 }
                 Status.COMPLETED -> {
                     view.showStatusLabel(view.context.getString(R.string.kr_download_execute_success))
                     view.finishBusy()
                 }
                 Status.ERROR -> {
-                    view.showStatusLabel(view.context.getString(R.string.kr_download_error) + ": " + (session.error ?: ""))
+                    view.showStatusLabel(view.context.getString(R.string.kr_download_error) + ": " + (session.error ?: ""), spin = false)
                     // Giữ trạng thái lỗi – không gọi finishBusy()
                 }
                 Status.IDLE -> {
@@ -236,6 +232,7 @@ object DownloadTaskHelper {
                 )
 
                 if (session.status == Status.PAUSED) break
+                if (session.status != Status.DOWNLOADING) break
 
                 if (error != null) {
                     // Nếu chưa retry vì đổi mạng → thử lại 1 lần
@@ -257,7 +254,7 @@ object DownloadTaskHelper {
                     postMain {
                         session.viewRef?.let { v ->
                             v.clearCancelAction()
-                            v.showStatusLabel(v.context.getString(R.string.kr_download_error) + ": " + error)
+                            v.showStatusLabel(v.context.getString(R.string.kr_download_error) + ": " + error, spin = false)
                             // KHÔNG gọi finishBusy() – giữ trạng thái lỗi trên item
                         }
                     }
@@ -401,7 +398,8 @@ object DownloadTaskHelper {
         postMain {
             session.viewRef?.showStatusLabel(
                 session.viewRef?.context?.getString(R.string.kr_download_execute_wait)
-                ?: "Running script…"
+                ?: "Running script…",
+                spin = false
             )
         }
 
@@ -447,7 +445,7 @@ object DownloadTaskHelper {
             postMain {
                 session.viewRef?.let { v ->
                     v.clearCancelAction()
-                    v.showStatusLabel(v.context.getString(R.string.kr_download_execute_fail))
+                    v.showStatusLabel(v.context.getString(R.string.kr_download_execute_fail), spin = false)
                     // KHÔNG finishBusy() – giữ thông báo lỗi
                 }
             }
@@ -468,6 +466,7 @@ object DownloadTaskHelper {
             putExtra("title", session.title)
             putExtra("progress", 0)
             putExtra("max", 100)
+            putExtra("text", ctx.getString(R.string.kr_download_create_success))
             putExtra("notificationId", notificationId(session))
         }
         ctx.startForegroundService(intent)

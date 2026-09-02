@@ -50,10 +50,10 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
             android:background="@android:color/transparent"
             android:scaleType="centerInside"
             android:src="@drawable/kr_folder"
-            android:tint="@android:color/darker_gray" />
+            android:tint="@drawable/kr_param_spinner_arrow_tint" />
     </RelativeLayout>
 </LinearLayout>
