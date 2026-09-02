@@ -798,17 +798,21 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
     // đang mở; animate = false (mặc định): set tức thời - dùng lúc khởi tạo layout.
     private fun setRowInteractive(row: View, enabled: Boolean, animate: Boolean = false) {
         val targetAlpha = if (enabled) 1f else 0.9f
+        // Chỉ mờ phần kr_param_input (widget lựa chọn/icon/checkbox/switch thật sự) -
+        // KHÔNG mờ title/label/desc, để các phần đó luôn hiện rõ dù param bị khoá.
+        val dimTarget = row.findViewById<View>(R.id.kr_param_input) ?: row
         if (animate) {
-            row.animate().cancel()
-            row.animate()
+            dimTarget.animate().cancel()
+            dimTarget.animate()
                 .alpha(targetAlpha)
                 .setDuration(ROW_ANIM_DURATION_MS)
                 .setInterpolator(standardMotionInterpolator())
                 .start()
         } else {
-            row.animate().cancel()
-            row.alpha = targetAlpha
+            dimTarget.animate().cancel()
+            dimTarget.alpha = targetAlpha
         }
+        // Khoá tương tác vẫn áp dụng cho cả row như cũ (không chỉ riêng input).
         setEnabledRecursively(row, enabled)
     }
 
