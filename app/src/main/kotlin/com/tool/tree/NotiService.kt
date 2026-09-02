@@ -189,7 +189,7 @@ class NotiService : Service() {
      * nếu không có sẽ lấy icon của App và ép về kích thước 200x200.
      */
     private fun getAvatarBitmap(intent: Intent): Bitmap {
-        val targetSize = 256
+        val targetSize = 200
         var bitmap: Bitmap? = null
 
         // 1. Lấy từ extra dạng Bitmap direct

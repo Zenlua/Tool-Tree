@@ -131,11 +131,15 @@ class DownloadService : Service() {
             if (addAsNewMessage) {
                 rows.add(line)
                 while (rows.size > MAX_HISTORY_ROWS) rows.removeAt(0)
-            } else if (rows.isEmpty()) {
-                rows.add(line)
+            } else {
+                if (rows.isEmpty()) {
+                    rows.add(line)
+                } else {
+                    rows[rows.size - 1] = line
+                }
             }
         }
-
+    
         val person = Person.Builder().setName(title).build()
         val messagingStyle = NotificationCompat.MessagingStyle(person)
         val snapshot = synchronized(rows) { rows.toList() }
@@ -213,19 +217,16 @@ class DownloadService : Service() {
         totalBytes: Long = -1L,
         speedBps: Double = 0.0
     ): NotificationCompat.Builder {
-        // Progress notifications must NOT use MessagingStyle: that style overrides
-        // setContentText() and hides the progress bar, which froze the text at the
-        // last event line (e.g. "File download started"). Use plain content + BigText
-        // so percent / size / speed and the progress bar are always visible.
         val hasBar = progress >= 0 && max > 0
         val percent = if (hasBar) ((progress * 100f) / max).toInt() else -1
+        
         val displayText = when {
             customText != null -> customText
             hasBar -> buildProgressText(percent, downloadedBytes, totalBytes, speedBps)
             downloadedBytes >= 0 -> buildProgressText(-1, downloadedBytes, totalBytes, speedBps)
             else -> getString(R.string.processing)
         }
-
+    
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setContentTitle(title)
@@ -237,18 +238,12 @@ class DownloadService : Service() {
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(displayText))
-
-        // if (largeIcon != null) {
-            // builder.setLargeIcon(largeIcon)
-        // }
-
-        if (hasBar) {
-            builder.setProgress(max, progress, false)
-        } else {
-            builder.setProgress(0, 0, true)
+            .setStyle(buildMessagingStyle(title, displayText, addAsNewMessage = false))
+    
+        if (largeIcon != null) {
+            builder.setLargeIcon(largeIcon)
         }
-
+        
         return builder
     }
 
@@ -335,3 +330,4 @@ class DownloadService : Service() {
 
     override fun onBind(intent: Intent?) = null
 }
+
