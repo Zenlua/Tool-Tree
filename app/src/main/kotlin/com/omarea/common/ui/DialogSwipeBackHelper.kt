@@ -9,8 +9,10 @@ import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.ViewGroup
 import android.view.Window
 import android.view.animation.DecelerateInterpolator
+import android.widget.AbsSeekBar
 import kotlin.math.abs
 
 /**
@@ -107,7 +109,10 @@ class DialogSwipeBackHelper(
             MotionEvent.ACTION_DOWN -> {
                 val isIdle = settleAnimator?.isRunning != true &&
                     contentView.translationX == 0f
-                candidate = isIdle
+                // Chạm xuống ngay trên 1 SeekBar (ví dụ kr_param_seekbar.xml) -> nhường hẳn cả
+                // phiên chạm này cho SeekBar, không "ứng viên" cho cử chỉ vuốt lùi nữa, tránh
+                // vừa kéo thanh trượt vừa bị hiểu nhầm thành vuốt đóng dialog.
+                candidate = isIdle && !isTouchOnSeekBar(contentView, ev.rawX, ev.rawY)
                 dragging = false
                 draggingLeft = false
                 downX = ev.rawX
@@ -202,6 +207,33 @@ class DialogSwipeBackHelper(
     private fun recycleTracker() {
         velocityTracker?.recycle()
         velocityTracker = null
+    }
+
+    /**
+     * Dò đệ quy trong cây view của dialog: điểm chạm (rawX, rawY) có rơi vào 1 SeekBar
+     * (android.widget.SeekBar/AbsSeekBar - ví dụ id kr_param_seekbar trong kr_param_seekbar.xml)
+     * đang hiển thị và có thể tương tác hay không. Dùng toạ độ màn hình (getLocationOnScreen)
+     * để so khớp trực tiếp với MotionEvent.rawX/rawY, không phụ thuộc việc view đó nằm sâu bao
+     * nhiêu lớp trong contentView.
+     */
+    private fun isTouchOnSeekBar(view: View, rawX: Float, rawY: Float): Boolean {
+        if (view.visibility != View.VISIBLE) return false
+        if (view is AbsSeekBar) {
+            if (!view.isEnabled) return false
+            val location = IntArray(2)
+            view.getLocationOnScreen(location)
+            val left = location[0]
+            val top = location[1]
+            val right = left + view.width
+            val bottom = top + view.height
+            return rawX >= left && rawX <= right && rawY >= top && rawY <= bottom
+        }
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                if (isTouchOnSeekBar(view.getChildAt(i), rawX, rawY)) return true
+            }
+        }
+        return false
     }
 
     private fun applyProgress(dx: Float) {

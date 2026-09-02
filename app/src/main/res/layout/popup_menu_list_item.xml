@@ -10,16 +10,13 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:minHeight="35dp"
-        android:paddingLeft="10dp"
-        android:paddingTop="10dp"
-        android:paddingRight="10dp"
-        android:paddingBottom="10dp">
+        android:padding="12dp">
 
         <ImageView
             android:id="@+id/popup_item_icon_left"
             android:layout_width="22dp"
             android:layout_height="22dp"
-            android:layout_marginEnd="10dp"
+            android:layout_marginEnd="12dp"
             android:scaleType="fitCenter"
             android:importantForAccessibility="no" />
 
