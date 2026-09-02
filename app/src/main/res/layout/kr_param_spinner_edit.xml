@@ -34,7 +34,7 @@
         android:layout_height="match_parent">
         <ImageButton
             android:clickable="false"
-            android:duplicateParentState="true"
+            android:focusable="false"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:layout_width="20dp"
