@@ -19,11 +19,17 @@ import androidx.core.graphics.drawable.toDrawable
  * kéo, contentView trượt đi nhưng lớp blur phía dưới đứng yên tuyệt đối -> phần "lộ ra" luôn là
  * CHÍNH tấm ảnh blur tĩnh đó, không phải cửa sổ Activity thật.
  *
- * Cách sửa ở đây: đưa ảnh blur vào LÀM 1 VIEW CON (ImageView) chung 1 FrameLayout với nội dung
- * dialog, thay vì đặt làm nền Window. Window được set nền TRONG SUỐT. Khi DialogSwipeBackHelper
- * translate FrameLayout này, cả khối "blur + nội dung" trượt cùng nhau - phần trống lộ ra bên
- * trái chính là Activity thật đang render phía dưới (khác Window, do hệ thống tự compositing),
- * không phải lại thấy cùng 1 tấm ảnh blur như trước.
+ * Cách sửa ở đây: đưa ảnh blur vào LÀM NỀN CỐ ĐỊNH của 1 outer FrameLayout đứng yên (không bị
+ * DialogSwipeBackHelper translate), còn nội dung dialog thật (realRoot) được bọc trong 1 inner
+ * FrameLayout riêng - CHỈ inner này mới được truyền làm swipeTarget/contentView cho
+ * DialogSwipeBackHelper. Nhờ vậy lúc kéo, ảnh blur đứng yên tại chỗ như 1 phông nền cố định,
+ * còn khối nội dung dialog trượt ngay bên trên nó (giống hệt cách ActionPage/SwipeBackHelper xử
+ * lý ảnh preview - xem swipe_back_preview_blur/sharp trong activity_action_page.xml: 2 lớp đó
+ * cũng đứng yên, chỉ swipe_foreground phía trên di chuyển).
+ *
+ * (Trước đây từng thử để ảnh blur trượt CÙNG khối nội dung, để phần lộ ra lúc kéo là chính cửa
+ * sổ Activity thật phía sau - nhưng cách đó khiến ảnh blur bị "kéo đi theo" ngón tay, không còn
+ * cảm giác là 1 phông nền cố định nữa. Giờ quay lại để ảnh blur đứng yên như mô tả ở trên.)
  *
  * QUAN TRỌNG (bài học từ lần sửa trước bị lỗi bố cục dialog nhỏ + ô nhập văn bản): wrapper PHẢI
  * được chèn vào android.R.id.content (khung nội dung gốc của CHÍNH window đó) - KHÔNG được chèn
@@ -43,18 +49,18 @@ import androidx.core.graphics.drawable.toDrawable
  * con duy nhất dù là Dialog thường (DialogFullScreen - view con đó chính là content thật) hay
  * AlertDialog (view con đó là TOÀN BỘ khung chrome của AlertDialog, ví dụ parentPanel). Cách sửa:
  * lấy nguyên View con DUY NHẤT đó ra (giữ nguyên layoutParams/gravity gốc của nó, không đụng
- * vào), bọc nó + ảnh blur vào 1 wrapper match_parent, rồi gắn wrapper thẳng vào
- * android.R.id.content (match_parent thật, không còn phụ thuộc panel chrome nào cả) - khung
- * chrome AlertDialog/DialogFullScreen bên trong wrapper vẫn tự đo/căn giữa y hệt lúc trước,
- * không bị ảnh hưởng gì bởi ảnh blur nằm cùng cấp với nó.
+ * vào), bọc nó vào 1 inner FrameLayout match_parent (đây mới là phần bị kéo trượt), rồi đặt
+ * inner đó cùng ảnh blur vào chung 1 outer FrameLayout match_parent, gắn thẳng outer vào
+ * android.R.id.content - khung chrome AlertDialog/DialogFullScreen bên trong vẫn tự đo/căn giữa
+ * y hệt lúc trước, không bị ảnh hưởng gì bởi ảnh blur nằm cùng cấp với inner.
  *
- * @return FrameLayout mới (đã re-parent view con của android.R.id.content vào bên trong) để dùng
- * làm swipeTarget khi gọi DialogSwipeBackHelper.bind(dialog, wrapper, ...) - kéo wrapper này
- * nghĩa là kéo TOÀN BỘ dialog (kể cả khung chrome AlertDialog nếu có) + ảnh blur cùng lúc, như 1
- * khối duy nhất. Trả về null nếu không bọc được (không lấy được ảnh blur - ví dụ
- * DialogHelper.disableBlurBg = true, hoặc OOM, hoặc android.R.id.content chưa có view con nào -
- * xem view.post() ở nơi gọi) - bên gọi nên tự fallback lại DialogHelper.setWindowBlurBg() + bind
- * thẳng view gốc như hành vi cũ.
+ * @return inner FrameLayout (đã re-parent view con của android.R.id.content vào bên trong) để
+ * dùng làm swipeTarget khi gọi DialogSwipeBackHelper.bind(dialog, wrapper, ...) - kéo view này
+ * nghĩa là chỉ kéo nội dung dialog (kể cả khung chrome AlertDialog nếu có), ảnh blur ở outer
+ * phía dưới đứng yên không di chuyển theo. Trả về null nếu không bọc được (không lấy được ảnh
+ * blur - ví dụ DialogHelper.disableBlurBg = true, hoặc OOM, hoặc android.R.id.content chưa có
+ * view con nào - xem view.post() ở nơi gọi) - bên gọi nên tự fallback lại
+ * DialogHelper.setWindowBlurBg() + bind thẳng view gốc như hành vi cũ.
  */
 object DialogSwipeBackBlurWrapper {
     fun wrap(activity: Activity, window: Window): View? {
@@ -72,8 +78,8 @@ object DialogSwipeBackBlurWrapper {
 
         val originalLayoutParams = realRoot.layoutParams
 
-        // Window tự nó phải trong suốt - phần trống lộ ra lúc kéo phải là Activity thật phía
-        // dưới, không phải 1 màu nền cố định nào khác.
+        // Window tự nó phải trong suốt - phần trống lộ ra lúc kéo phải là ảnh blur (đứng yên),
+        // không phải 1 màu nền cố định nào khác.
         window.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
         contentRoot.removeView(realRoot)
@@ -83,19 +89,26 @@ object DialogSwipeBackBlurWrapper {
             scaleType = ImageView.ScaleType.FIT_XY
         }
 
-        val wrapper = FrameLayout(activity)
-        wrapper.addView(blurImage, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        // inner: CHỈ chứa nội dung dialog thật - đây là view duy nhất sẽ bị
+        // DialogSwipeBackHelper translate lúc kéo.
+        val inner = FrameLayout(activity)
         // Giữ NGUYÊN originalLayoutParams (kích thước + gravity gốc - ví dụ wrap_content +
-        // gravity=center_vertical của khung AlertDialog nhỏ) cho realRoot bên trong wrapper - chỉ
+        // gravity=center_vertical của khung AlertDialog nhỏ) cho realRoot bên trong inner - chỉ
         // đổi PARENT của nó, không đụng vào cách nó tự đo/căn giữa (xem giải thích ở doc comment
         // của class).
-        wrapper.addView(realRoot, originalLayoutParams)
+        inner.addView(realRoot, originalLayoutParams)
 
-        // wrapper thì LUÔN match_parent khi gắn vào android.R.id.content - vì contentRoot ở đây
+        // outer: đứng yên tuyệt đối, không được truyền cho DialogSwipeBackHelper - chỉ làm phông
+        // nền cố định (ảnh blur) + khung chứa inner đang trượt phía trên.
+        val outer = FrameLayout(activity)
+        outer.addView(blurImage, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        outer.addView(inner, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+
+        // outer thì LUÔN match_parent khi gắn vào android.R.id.content - vì contentRoot ở đây
         // CHẮC CHẮN là match_parent thật (khung nội dung gốc của window), không như cha trực tiếp
         // cũ của contentView (có thể là 1 panel wrap_content lồng sâu bên trong AlertDialog).
-        contentRoot.addView(wrapper, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        contentRoot.addView(outer, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
 
-        return wrapper
+        return inner
     }
 }
