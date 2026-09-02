@@ -437,21 +437,6 @@ class DialogHelper {
             return ThemeModeState.isDarkMode()
         }
 
-        /**
-         * Dialog full-screen (DialogFullScreen, kr_dialog_params khi isLongList) có Window RIÊNG,
-         * KHÔNG tự "thừa hưởng" cờ edge-to-edge mà ThemeModeState.applyWindowFlags() đã set cho
-         * Window của Activity - nếu không tự gọi lại ở đây, status bar/navigation bar của dialog
-         * sẽ không được vẽ xuyên qua (mất hiệu ứng mờ) dù các style dialog_full_screen (light/dark)
-         * và kr_full_screen_dialog (light/dark) đã khai statusBarColor/navigationBarColor =
-         * transparent (chỉ khai màu, không tự bật e-t-e thật sự).
-         *
-         * LƯU Ý: bật setDecorFitsSystemWindows(false) đồng nghĩa hệ thống KHÔNG còn tự chừa chỗ
-         * cho status bar/navigation bar nữa - nội dung dialog sẽ tự vẽ tràn lên đè cả 2 thanh đó
-         * nếu không tự pad lại. Truyền contentView (root view thật sự của dialog, ví dụ view của
-         * DialogFullScreen hoặc dialogView của kr_dialog_params) để hàm này tự lắng nghe
-         * WindowInsets và CỘNG THÊM đúng phần bị che (systemBars) vào padding GỐC đã khai sẵn ở
-         * layout/style (vd dialogRoot padding=12dp) - không ghi đè mất padding cũ.
-         */
         fun applyEdgeToEdge(window: Window, darkMode: Boolean, contentView: View? = null) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.TRANSPARENT
@@ -491,12 +476,6 @@ class DialogHelper {
                     null
                 } else {
                     FastBlurUtility.getDialogBlurBackground(activity) ?: if (wallpaperMode) {
-                        // Chụp screenshot cho dialog thất bại (getDialogBlurBackground trả null,
-                        // ví dụ decorView chưa có width/height hoặc lỗi khi vẽ) - nhưng theme
-                        // hiện tại là theme hình nền (wallpaperMode) nên vẫn còn ảnh wallpaper
-                        // đã blur sẵn trong cache (BlurEngine.blurBitmap). Dùng tạm ảnh đó thay
-                        // vì rơi thẳng xuống màu nền đặc bên dưới, giữ đúng cảm giác "nền hình
-                        // ảnh mờ" của theme thay vì đổi hẳn sang màu phẳng.
                         FastBlurUtility.getPageBlurBackground(activity)
                     } else {
                         null
