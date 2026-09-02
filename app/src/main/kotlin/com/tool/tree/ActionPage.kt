@@ -71,6 +71,9 @@ class ActionPage : AppCompatActivity() {
     private var swipePreview: SwipeBackPreviewCache.Preview? = null
 
     private val justClickedItemIds = HashSet<Int>()
+    private val justClickedRemovalRunnables = HashMap<Int, Runnable>()
+
+    private fun checkboxItemId(option: PageMenuOption): Int = System.identityHashCode(option)
 
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
     private val ACTION_FILE_PATH_CHOOSER = 65400
@@ -279,7 +282,7 @@ class ActionPage : AppCompatActivity() {
         val checkboxOptions = menuOptions?.filter { option ->
             option.type == "checkbox" &&
                     option.checkedSh.isNotEmpty() &&
-                    !justClickedItemIds.contains(option.key.hashCode())
+                    !justClickedItemIds.contains(checkboxItemId(option))
         }.orEmpty()
 
         if (checkboxOptions.isEmpty() || menuCheckboxRefreshing) return
@@ -301,7 +304,7 @@ class ActionPage : AppCompatActivity() {
 
                     var changed = false
                     checkboxOptions.forEachIndexed { index, option ->
-                        val uniqueItemId = option.key.hashCode()
+                        val uniqueItemId = checkboxItemId(option)
                         if (!justClickedItemIds.contains(uniqueItemId)) {
                             val result = results[index.toString()]?.trim() ?: ""
                             val newChecked = result == "1" || result.equals("true", ignoreCase = true)
@@ -437,11 +440,16 @@ class ActionPage : AppCompatActivity() {
             if (option.type == "checkbox") {
                 option.checked = !option.checked
 
-                val uniqueItemId = option.key.hashCode()
+                val uniqueItemId = checkboxItemId(option)
                 justClickedItemIds.add(uniqueItemId)
-                handler.postDelayed({
+
+                justClickedRemovalRunnables.remove(uniqueItemId)?.let { handler.removeCallbacks(it) }
+                val removalRunnable = Runnable {
                     justClickedItemIds.remove(uniqueItemId)
-                }, 1500)
+                    justClickedRemovalRunnables.remove(uniqueItemId)
+                }
+                justClickedRemovalRunnables[uniqueItemId] = removalRunnable
+                handler.postDelayed(removalRunnable, 1500)
             }
             onMenuItemClick(option, anchor)
         }
