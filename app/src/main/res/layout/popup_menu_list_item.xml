@@ -27,7 +27,7 @@
             android:layout_weight="1"
             android:textSize="14sp"
             android:singleLine="true"
-            android:ellipsize="end"
+            android:ellipsize="marquee"
             android:textColor="?android:attr/textColorPrimary" />
     </LinearLayout>
     

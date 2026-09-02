@@ -11,7 +11,7 @@
 <item android:state_enabled="false">
     <shape>
         <stroke android:width="8dp" android:color="@android:color/transparent" />
-        <solid android:color="#44888888" />
+        <solid android:color="?attr/colorPirm" />
         <corners android:radius="10dp" />
         <size android:width="20dp" android:height="20dp" />
     </shape>
