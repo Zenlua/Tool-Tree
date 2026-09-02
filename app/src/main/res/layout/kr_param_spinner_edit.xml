@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
@@ -11,39 +12,39 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
-        android:textColor="?android:attr/textColorPrimary"
         android:background="@android:color/transparent"
-        android:textSize="14dp"
-        android:maxLines="2"
+        android:breakStrategy="simple"
         android:ellipsize="end"
         android:hint="@string/kr_please_select"
-        android:breakStrategy="simple" />
+        android:maxLines="2"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="14sp" />
 
     <View
         android:layout_width="1dp"
         android:layout_height="18dp"
         android:layout_gravity="center_vertical"
         android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
+        android:layout_marginEnd="1dp"
         android:background="@drawable/kr_param_label" />
 
-    <RelativeLayout
+    <FrameLayout
         android:id="@+id/kr_param_spinner_btn"
-        android:layout_width="30dp"
-        android:minHeight="40dp"
-        android:layout_height="match_parent">
-        <ImageButton
-            android:clickable="false"
-            android:focusable="false"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_gravity="center_vertical"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_gravity="center_vertical|end"
             android:layout_marginEnd="4dp"
             android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
             android:scaleType="centerInside"
             android:src="@drawable/kr_down"
-            android:tint="@drawable/kr_param_spinner_arrow_tint" />
-    </RelativeLayout>
+            app:tint="@drawable/kr_param_spinner_arrow_tint" />
+    </FrameLayout>
 </LinearLayout>

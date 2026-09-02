@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
@@ -7,19 +8,19 @@
 
     <TextView
         android:id="@+id/kr_param_app_name"
-        android:minHeight="35dp"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
+        android:breakStrategy="simple"
+        android:ellipsize="marquee"
         android:gravity="center_vertical"
         android:hint="@string/kr_please_choose_app"
-        android:ellipsize="marquee"
-        android:singleLine="true"
         android:marqueeRepeatLimit="marquee_forever"
+        android:minHeight="35dp"
+        android:singleLine="true"
         android:textColor="?android:textColorPrimary"
-        android:textSize="15dp"
-        android:breakStrategy="simple" />
+        android:textSize="15sp" />
 
     <TextView
         android:id="@+id/kr_param_app_package"
@@ -33,26 +34,26 @@
         android:layout_height="18dp"
         android:layout_gravity="center_vertical"
         android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
+        android:layout_marginEnd="0dp"
         android:background="@drawable/kr_param_label" />
 
-    <RelativeLayout
+    <FrameLayout
         android:id="@+id/kr_param_app_btn"
-        android:layout_width="30dp"
-        android:minHeight="40dp"
-        android:layout_height="match_parent">
-        <ImageButton
-            android:clickable="false"
-            android:focusable="false"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_gravity="center_vertical"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center_vertical|end"
             android:layout_marginEnd="4dp"
             android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
             android:scaleType="centerInside"
             android:src="@drawable/kr_app"
-            android:tint="@drawable/kr_param_spinner_arrow_tint" />
-    </RelativeLayout>
+            app:tint="@drawable/kr_param_spinner_arrow_tint" />
+    </FrameLayout>
 </LinearLayout>

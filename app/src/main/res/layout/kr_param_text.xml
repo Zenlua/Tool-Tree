@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
@@ -7,44 +8,46 @@
 
     <EditText
         android:id="@+id/kr_param_text"
-        android:minHeight="35dp"
-        android:background="@android:color/transparent"
-        android:textSize="15sp"
-        android:padding="0dp"
-        android:text=""
-        android:maxLines="2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:layout_gravity="center_vertical"
-        android:breakStrategy="simple" />
+        android:layout_weight="1"
+        android:background="@android:color/transparent"
+        android:breakStrategy="simple"
+        android:maxLines="2"
+        android:minHeight="35dp"
+        android:padding="0dp"
+        android:text=""
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="15sp" />
 
     <View
         android:layout_width="1dp"
         android:layout_height="18dp"
         android:layout_gravity="center_vertical"
         android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
+        android:layout_marginEnd="0dp"
         android:background="@drawable/kr_param_label" />
 
     <!-- Luôn hiện, bấm vào để mở toàn màn hình chỉnh sửa -->
-    <RelativeLayout
+    <FrameLayout
         android:id="@+id/kr_param_text_expand"
-        android:layout_width="30dp"
-        android:minHeight="40dp"
-        android:layout_height="match_parent">
-        <ImageButton
-            android:clickable="false"
-            android:focusable="false"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_gravity="center_vertical"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_gravity="center_vertical|end"
             android:background="@android:color/transparent"
-            android:scaleType="centerInside"
+            android:clickable="false"
             android:contentDescription="@string/kr_expand_fullscreen"
+            android:focusable="false"
+            android:scaleType="centerInside"
+            android:layout_marginEnd="2dp"
             android:src="@drawable/ic_expand_fullscreen"
-            android:tint="@drawable/kr_param_spinner_arrow_tint" />
-    </RelativeLayout>
+            app:tint="@drawable/kr_param_spinner_arrow_tint" />
+    </FrameLayout>
 </LinearLayout>
