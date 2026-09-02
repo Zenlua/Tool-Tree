@@ -52,7 +52,7 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
                 val dialogTitle = if (titleParts.isNotEmpty()) {
                     titleParts.joinToString(" ")
                 } else {
-                    actionParamInfo.placeholder.ifEmpty { null }
+                    null
                 }
 
                 DialogTextEditor(
