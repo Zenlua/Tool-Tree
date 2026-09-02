@@ -74,7 +74,7 @@ class ParamsFileChooserRender(
             setEditTextReadOnly(pathView)
         }
 
-        btn.setOnClickListener {
+        val openChooser = {
             fileChooser?.openFileChooser(object : FileSelectedInterface {
                 override fun onFileSelected(path: String?) {
                     if (path.isNullOrEmpty()) {
@@ -124,6 +124,11 @@ class ParamsFileChooserRender(
                     return actionParamInfo.pathHome.ifEmpty { null }
                 }
             })
+        }
+
+        btn.setOnClickListener { openChooser() }
+        if (!actionParamInfo.editable) {
+            pathView.setOnClickListener { openChooser() }
         }
 
         if (actionParamInfo.valueFromShell != null) {
