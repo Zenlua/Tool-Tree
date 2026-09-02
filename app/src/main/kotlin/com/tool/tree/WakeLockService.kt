@@ -185,7 +185,7 @@ class WakeLockService : Service() {
     }
 
     private fun drawableToBitmap(drawable: Drawable?): Bitmap {
-        val targetSize = 200
+        val targetSize = 256
         if (drawable == null) {
             return Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888)
         }
