@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap
 object DownloadTaskHelper {
     private const val STATUS_HOLD_MS = 900L
     private const val TAG = "DownloadTaskHelper"
+    private const val NOTIFY_MIN_INTERVAL_MS = 400L
 
     enum class Status { IDLE, DOWNLOADING, PAUSED, COMPLETING, COMPLETED, ERROR }
 
@@ -54,7 +55,8 @@ object DownloadTaskHelper {
         var onFinished: (() -> Unit)? = null,
         var lastProgressTimestampMs: Long = 0L,
         var lastProgressBytes: Long = 0L,
-        var speedBytesPerSecond: Double = 0.0
+        var speedBytesPerSecond: Double = 0.0,
+        var lastNotifyTimestampMs: Long = 0L
     ) {
         @Volatile var viewRef: ListItemDownload? = null
             private set
@@ -249,7 +251,13 @@ object DownloadTaskHelper {
                                 v.updateDownloadProgress(downloaded, total, session.speedBytesPerSecond)
                             }
                         }
-                        updateNotification(session)
+                        // Throttle service starts: onProgress fires every 32KB and each
+                        // updateNotification() restarts the foreground service, which
+                        // floods the main thread on fast connections.
+                        if (now - session.lastNotifyTimestampMs >= NOTIFY_MIN_INTERVAL_MS) {
+                            session.lastNotifyTimestampMs = now
+                            updateNotification(session)
+                        }
                     }
                 )
 

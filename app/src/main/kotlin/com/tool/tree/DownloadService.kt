@@ -162,13 +162,19 @@ class DownloadService : Service() {
     }
 
     private fun buildProgressText(percent: Int, downloadedBytes: Long, totalBytes: Long, speedBps: Double): String {
-        if (downloadedBytes < 0) return "$percent%"
-        val sizePart = if (totalBytes > 0) {
-            "${formatBytes(downloadedBytes)} / ${formatBytes(totalBytes)}"
-        } else {
-            formatBytes(downloadedBytes)
+        val parts = ArrayList<String>(3)
+        if (percent >= 0) parts.add("$percent%")
+        if (downloadedBytes >= 0) {
+            parts.add(
+                if (totalBytes > 0) {
+                    "${formatBytes(downloadedBytes)} / ${formatBytes(totalBytes)}"
+                } else {
+                    formatBytes(downloadedBytes)
+                }
+            )
         }
-        return "$percent% • $sizePart • ${formatSpeed(speedBps)}"
+        if (speedBps > 0) parts.add(formatSpeed(speedBps))
+        return if (parts.isEmpty()) getString(R.string.processing) else parts.joinToString(" • ")
     }
 
     private fun formatBytes(bytes: Long): String {
@@ -207,12 +213,17 @@ class DownloadService : Service() {
         totalBytes: Long = -1L,
         speedBps: Double = 0.0
     ): NotificationCompat.Builder {
-        val isEvent = customText != null
-        val displayText = if (progress < 0 || max <= 0) {
-            customText ?: getString(R.string.processing)
-        } else {
-            val percent = ((progress * 100f) / max).toInt()
-            customText ?: buildProgressText(percent, downloadedBytes, totalBytes, speedBps)
+        // Progress notifications must NOT use MessagingStyle: that style overrides
+        // setContentText() and hides the progress bar, which froze the text at the
+        // last event line (e.g. "File download started"). Use plain content + BigText
+        // so percent / size / speed and the progress bar are always visible.
+        val hasBar = progress >= 0 && max > 0
+        val percent = if (hasBar) ((progress * 100f) / max).toInt() else -1
+        val displayText = when {
+            customText != null -> customText
+            hasBar -> buildProgressText(percent, downloadedBytes, totalBytes, speedBps)
+            downloadedBytes >= 0 -> buildProgressText(-1, downloadedBytes, totalBytes, speedBps)
+            else -> getString(R.string.processing)
         }
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
@@ -226,16 +237,16 @@ class DownloadService : Service() {
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setStyle(buildMessagingStyle(title, displayText, addAsNewMessage = isEvent))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(displayText))
 
         if (largeIcon != null) {
             builder.setLargeIcon(largeIcon)
         }
 
-        if (progress < 0 || max <= 0) {
-            builder.setProgress(0, 0, true)
-        } else {
+        if (hasBar) {
             builder.setProgress(max, progress, false)
+        } else {
+            builder.setProgress(0, 0, true)
         }
 
         return builder
