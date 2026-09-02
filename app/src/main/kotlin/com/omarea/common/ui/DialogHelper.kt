@@ -384,37 +384,18 @@ class DialogHelper {
             }).setView(view).setCancelable(cancelable).create()
 
             if (context is Activity) {
-                // Tính & set nền blur TRƯỚC khi show() để không có khung hình nào
-                // dialog hiện ra mà chưa có nền mờ (tránh nháy mờ/rõ). Nếu cancelable, ngay sau
-                // show() sẽ thử "nâng cấp" lên bản blur trượt cùng nội dung + bind vuốt lùi (xem
-                // dưới) - bản tĩnh này chỉ còn là fallback lúc đó.
                 dialog.window?.run {
                     setWindowBlurBg(this, context)
                     decorView.run {
-                        systemUiVisibility = context.window.decorView.systemUiVisibility // View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                        systemUiVisibility = context.window.decorView.systemUiVisibility
                     }
                     if (useBlur) {
-                        // Mặc định (decorFitsSystemWindows=true) window CHỈ trải nội dung ra tới
-                        // mép status/navigation bar - android.R.id.content bị hệ thống tự cộng
-                        // padding = kích thước 2 thanh đó. Ảnh blur (match_parent bên trong
-                        // wrapper, xem DialogSwipeBackBlurWrapper.wrap()) vì vậy cũng bị thu hẹp
-                        // theo, để lộ 2 dải KHÔNG blur ở trên/dưới màn hình. Gọi
-                        // applyEdgeToEdge() (contentView=null - KHÔNG cộng padding bù insets cho
-                        // dialogView nhỏ, nó vốn đã canh giữa, không cần né status/nav bar) để
-                        // window vẽ tràn viền thật, cho ảnh blur phủ kín toàn màn hình.
                         applyEdgeToEdge(this, isNightMode(context))
                     }
                 }
                 dialog.show()
 
                 if (useBlur && cancelable) {
-                    // Mọi dialog dùng nền blur (customDialog là nơi DUY NHẤT gọi setWindowBlurBg
-                    // ở trên) đều được vuốt sang phải để đóng, dùng chung cơ chế với
-                    // DialogFullScreen/kr_dialog_params (xem DialogFullScreen.bindSwipeToDismiss())
-                    // - không cancelable thì giữ nguyên nền blur tĩnh, không có vuốt lùi. Chỉ áp
-                    // dụng khi useBlur=true (theme custom_alert_dialog, window phủ toàn màn hình
-                    // trong suốt) - nhánh useBlur=false dùng theme AlertDialog nổi mặc định
-                    // (windowIsFloating=true), không hợp với hiệu ứng "trượt lộ nền phía sau".
                     val swipeBinding = DialogFullScreen.bindSwipeToDismiss(context, dialog) { dialog.dismiss() }
                     if (swipeBinding != null) {
                         dialog.setOnDismissListener { swipeBinding.release(dialog) }
@@ -467,45 +448,41 @@ class DialogHelper {
                 ViewCompat.requestApplyInsets(contentView)
             }
         }
-
-        // Trong setWindowBlurBg
+        
         fun setWindowBlurBg(window: Window, activity: Activity) {
-            val wallpaperMode = activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0
             window.run {
-                val blurBitmap = if (disableBlurBg) {
-                    null
-                } else {
-                    FastBlurUtility.getDialogBlurBackground(activity) ?: if (wallpaperMode) {
-                        FastBlurUtility.getPageBlurBackground(activity)
-                    } else {
-                        null
-                    }
+                val dialogBlur = if (!disableBlurBg) FastBlurUtility.getDialogBlurBackground(activity) else null
+                if (dialogBlur != null) {
+                    setBackgroundDrawable(dialogBlur.toDrawable(activity.resources))
+                    return
                 }
-                if (blurBitmap != null) {
-                    setBackgroundDrawable(blurBitmap.toDrawable(activity.resources))
-                } else {
-                    try {
-                        val bg = getWindowBackground(activity)
-                        if (bg == Color.TRANSPARENT) {
-                            if (isFloating) {
-                                setBackgroundDrawable(bg.toDrawable())
-                                setDimAmount(0.8f)
-                                return
-                            } else {
-                                val d = if (wallpaperMode || isNightMode(context)) {
-                                    Color.argb(255, 18, 18, 18).toDrawable()
-                                } else {
-                                    Color.argb(255, 245, 245, 245).toDrawable()
-                                }
-                                setBackgroundDrawable(d)
-                            }
-                        } else {
-                            setBackgroundDrawable(bg.toDrawable())
+                val wallpaperMode = activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0
+                val backgroundDrawable = try {
+                    val bg = getWindowBackground(activity)
+                    when {
+                        bg != Color.TRANSPARENT -> bg.toDrawable()
+                        isFloating -> {
+                            setDimAmount(0.8f)
+                            bg.toDrawable()
                         }
-                    } catch (_: Exception) {
-                        setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+                        else -> {
+                            val pageBlur = if (!disableBlurBg && wallpaperMode) {
+                                FastBlurUtility.getPageBlurBackground(activity)
+                            } else null
+                            pageBlur?.toDrawable(activity.resources) ?: run {
+                                val color = if (wallpaperMode || isNightMode(context)) {
+                                    Color.argb(255, 18, 18, 18)
+                                } else {
+                                    Color.argb(255, 245, 245, 245)
+                                }
+                                color.toDrawable()
+                            }
+                        }
                     }
+                } catch (_: Exception) {
+                    Color.TRANSPARENT.toDrawable()
                 }
+                setBackgroundDrawable(backgroundDrawable)
             }
         }
     }
