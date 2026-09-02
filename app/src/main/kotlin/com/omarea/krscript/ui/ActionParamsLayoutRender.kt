@@ -798,10 +798,24 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
     // đang mở; animate = false (mặc định): set tức thời - dùng lúc khởi tạo layout.
     private fun setRowInteractive(row: View, enabled: Boolean, animate: Boolean = false) {
         val targetAlpha = if (enabled) 1f else 0.9f
+        val alphaInt = (targetAlpha * 255).toInt()
+
         // Chỉ mờ phần kr_param_input (widget lựa chọn/icon/checkbox/switch thật sự) -
         // KHÔNG mờ title/label/desc, để các phần đó luôn hiện rõ dù param bị khoá.
         val dimTarget = row.findViewById<View>(R.id.kr_param_input) ?: row
-        if (animate) {
+
+        // ========== FIX: CompoundButton (CheckBox/Switch) chỉ mờ ICON, giữ chữ nhãn rõ ==========
+        // CheckBox/Switch là 1 view gộp chung icon + chữ nhãn (đặt qua .text vì kr_param_label
+        // bị ẩn với các type này - xem hideLabelTypes) - nếu mờ cả view như các loại khác thì
+        // chữ nhãn cũng mờ theo, trái yêu cầu "chỉ mờ nút checkbox/gạt, chỗ khác vẫn rõ". Tìm
+        // CompoundButton bên trong kr_param_input, chỉ chỉnh alpha của buttonDrawable (icon),
+        // không đụng tới view.alpha/màu chữ.
+        val compoundButton = findCompoundButton(dimTarget)
+        if (compoundButton != null) {
+            compoundButton.buttonDrawable = compoundButton.buttonDrawable?.mutate()?.also {
+                it.alpha = alphaInt
+            }
+        } else if (animate) {
             dimTarget.animate().cancel()
             dimTarget.animate()
                 .alpha(targetAlpha)
@@ -812,8 +826,27 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
             dimTarget.animate().cancel()
             dimTarget.alpha = targetAlpha
         }
+
+        // ========== FIX: icon vạch dọc bên phải kr_param_label không mờ theo ==========
+        // Icon này là compound drawable (app:drawableRightCompat) gắn thẳng vào TextView
+        // kr_param_label - nằm NGOÀI kr_param_input nên không được dimTarget ở trên xử lý.
+        // Chỉnh alpha riêng cho đúng drawable này, không đụng tới màu/alpha của chữ nhãn.
+        row.findViewById<TextView>(R.id.kr_param_label)?.let { labelView ->
+            labelView.compoundDrawables.forEach { it?.mutate()?.alpha = alphaInt }
+        }
+
         // Khoá tương tác vẫn áp dụng cho cả row như cũ (không chỉ riêng input).
         setEnabledRecursively(row, enabled)
+    }
+
+    private fun findCompoundButton(view: View): CompoundButton? {
+        if (view is CompoundButton) return view
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                findCompoundButton(view.getChildAt(i))?.let { return it }
+            }
+        }
+        return null
     }
 
     private fun setEnabledRecursively(view: View, enabled: Boolean) {
