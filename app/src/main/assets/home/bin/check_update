@@ -35,9 +35,11 @@ if checkonline; then
     fi
 
     if [ -f $TMP/update ] && [ "$1" == "boot" ]; then
-        notiservice \
+        showbanner \
         -t "$update_text" \
         -m "$update_text_6" \
+        -p top \
+        -g 10 \
         -i "$ETC/icon/update.png" \
         -s "taive '$url_dowload' '$TMP/Tool-Tree.apk' 2>&1 && openfile '$TMP/Tool-Tree.apk' || killtree '$load_text_2'"
     fi
