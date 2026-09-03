@@ -4,7 +4,7 @@
 show_sett() {
   echo '
   [[group]]
-  [[group.action]]
+  [[action]]
   shell = "hidden"
   reload = true
   menu = true
@@ -21,7 +21,7 @@ show_sett() {
   fi
   """
 
-  [[group.action.params]]
+  [[action.params]]
   name = "Name"
   desc = "'$config_text_1'"
   label = "'$setting_text_3'"
@@ -34,7 +34,7 @@ show_sett() {
 
 show_apkset() {
   echo '
-  [[group.action]]
+  [[action]]
   icon = "'$urlicon'/folder_apk.png"
   shell = "hidden"
   reload = "true"
@@ -52,14 +52,14 @@ show_apkset() {
     fi
   """
 
-  [[group.action.params]]
+  [[action.params]]
   name = "Name"
   desc = "'$config_text_1'"
   label = "'$setting_text_3'"
   options-sh = "findfile for $APK"
   value-sh = "glog PTAH"
 
-  [[group.action.params]]
+  [[action.params]]
   name = "Folder"
   desc = "'$config_text_2'"
   value-sh = "glog PTAD"
@@ -71,7 +71,7 @@ show_apkset() {
 
 shell_bash() {
   echo '[[group]]
-  [[group.editor]]
+  [[editor]]
   title = "'$home_text_5'"
   desc = "'$more_text_9'"
   file = "home/usr/run_'$1'.bash"
@@ -83,7 +83,7 @@ shell_bash() {
 inforkk() {
 echo '
   [[group]]
-  [[group.text.rows]]
+  [[text.rows]]
   text = "'$infor_text' × '$system_text'"
   size = 16
   bold = true
@@ -91,7 +91,7 @@ echo '
   line-height = 1.3
   margin-top = 6
   
-  [[group.text.rows]]
+  [[text.rows]]
   size = 13
   text = "'$root_text':"
   bold = true
@@ -99,13 +99,13 @@ echo '
   line-height = 1.3
   break = true
   
-  [[group.text.rows]]
+  [[text.rows]]
   bold = true
   size = 13
   color = "#0dbda2"
   text = "'${ROOT^}'"
   
-  [[group.text.rows]]
+  [[text.rows]]
   text = "'$device_text':"
   break = true
   size = 13
@@ -113,13 +113,13 @@ echo '
   line-height = 1.3
   icon = "'$urlicon'/1smart.png"
   
-  [[group.text.rows]]
+  [[text.rows]]
   bold = true
   size = 13
   color = "#0dbda2"
   text = "'$ANDROID_BRAND' - '$ANDROID_DEVICE'"
   
-  [[group.text.rows]]
+  [[text.rows]]
   text = "'$operating_system':"
   break = true
   size = 13
@@ -127,13 +127,13 @@ echo '
   line-height = 1.3
   icon = "'$urlicon'/1android.png"
   
-  [[group.text.rows]]
+  [[text.rows]]
   bold = true
   size = 13
   color = "#0dbda2"
   text = "Android '$ANDROID_RELEASE' - SDK '$API'"
   
-  [[group.text.rows]]
+  [[text.rows]]
   text = "'$microprocessors':"
   break = true
   size = 13
@@ -141,7 +141,7 @@ echo '
   line-height = 1.3
   icon = "'$urlicon'/1cpu.png"
   
-  [[group.text.rows]]
+  [[text.rows]]
   bold = true
   size = 13
   color = "#0dbda2"
@@ -175,28 +175,28 @@ Home() {
   
   echo '
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$setting_text'"
   desc = "'$home_text_1'"
   icon = "'$urlicon'/settings.png"
   config-sh = "'$ETC'/tool-tree.bash Info"
 
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$editor_rom'"
   desc = "'$home_text_2'"
   icon = "'$urlicon'/utilities.png"
   config-sh = "'$ETC'/tool-tree.bash Utilities"
 
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$tools_text'"
   desc = "'$home_text_3'"
   icon = "'$urlicon'/tools.png"
   config-sh = "'$ETC'/tool-tree.bash Root"
 
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$addon_text'"
   desc = "'$home_text_4'"
   icon = "'$urlicon'/addon.png"
@@ -212,14 +212,14 @@ More() {
   
   echo '
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$setting_text'"
   desc = "'$home_text_1'"
   icon = "'$urlicon'/settings.png"
   config-sh = "'$ETC'/tool-tree.bash Info"
 
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$editor_apk'"
   desc = "'$more_text_6'"
   icon = "'$urlicon'/apk_utility.png"
@@ -227,14 +227,14 @@ More() {
   lock = "[ -f $LOG/javaww ] && echo \"'$boot_text_1'\" || echo 0"
 
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$utilities_text'"
   desc = "'$more_text_7'"
   icon = "'$urlicon'/tool_apk.png"
   config-sh = "'$ETC'/tool-tree.bash Troot"
 
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$plugin_text'"
   desc = "'$more_text_8'"
   icon = "'$urlicon'/apk_addon.png"
@@ -249,7 +249,7 @@ Info() {
   echo '
   
   [[group]]
-  [[group.menu]]
+  [[menu]]
     handler = """
     if [ "$menu_id" == "v1" ]; then
     echo "am:[start -a android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -d package:com.tool.tree]"
@@ -260,23 +260,23 @@ Info() {
     fi
   """
   
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v1"
     title = "'$permis_text_1'"
     silent = true
 
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v2"
     title = "'$permis_text_4'"
     silent = true
 
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v3"
     title = "'$setting_text_5'"
     silent = true
   
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$setting_text_1'"
   desc = "'$setting_text_2'"
   icon = "'$urlicon'/info.png"
@@ -284,21 +284,21 @@ Info() {
   process = true
   
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$setting_text_3'"
   desc = "'$setting_text_4'"
   icon = "'$urlicon'/project.png"
   config-sh = "'$ETC'/tool-tree.bash Project"
     
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$setting_text_7'"
   desc = "'$setting_text_8'"
   icon = "'$urlicon'/feature.png"
   config-sh = "'$ETC'/tool-tree.bash Feature"
   
   [[group]]
-  [[group.picker]]
+  [[picker]]
   title = "'$permis_text_2'"
   desc = "'$permis_text_5'"
   icon = "'$urlicon'/language.png"
@@ -329,7 +329,7 @@ Info() {
   """
 
   [[group]]
-  [[group.editor]]
+  [[editor]]
   id = "shella"
   title = "'$home_text_5'"
   desc = "'$home_text_6'"
@@ -355,7 +355,7 @@ Update() {
   fi
   echo '
   [[group]]
-  [[group.menu]]
+  [[menu]]
   handler = """
     if [ "$menu_id" == "share" ]; then
       echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
@@ -378,7 +378,7 @@ Update() {
     fi
   """
   
-    [[group.menu.items]]
+    [[menu.items]]
     title = "'$google_translate_text'"
     get = "glog gg_trans_ver"
     reload = true
@@ -392,40 +392,40 @@ Update() {
       fi
     """
     
-    [[group.menu.items]]
+    [[menu.items]]
     key = "share"
     title = "'$share_text'"
     silent = true
     
-    [[group.menu.items]]
+    [[menu.items]]
     key = "beta"
     title = "'$download_text' beta"
     
-    [[group.menu.items]]
+    [[menu.items]]
     key = "data"
     auto-kill = true
     silent = true
     title = "'$reset_data_text'"
     
-    [[group.fab]]
-    [[group.fab.items]]
+    [[fab]]
+    [[fab.items]]
     type = "refresh"
     icon = "'$ETC'/icon/Loading.png"
     
-  [[group.page]]
+  [[page]]
   title = "'$author_text'"
   icon = "'$urlicon'/like.png"
   html = "https://zenlua.github.io/Tool-Tree/website/Information.html"
   process = true
 
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$update_text_5'"
   icon = "'$urlicon'/website.png"
   link = "https://zenlua.github.io/Tool-Tree"
 
   [[group]]
-  [[group.download]]
+  [[download]]
   title = "'$update_text'"
   desc = "'$sizes_text': '$(cat $TEMP/size 2>/dev/null)'"
   icon = "'$urlicon'/update.png"
@@ -433,9 +433,9 @@ Update() {
   url = "'$url_dowload'"
   script = "openfile \"$state\""
 
-  [[group.text]]
+  [[text]]
   desc-sh = "cat $TEMP/'$link_vers' 2>/dev/null"
-  [[group.text.rows]]
+  [[text.rows]]
   photo = "'$ETC'/icon/tool-tree.jpg"
   '
 
@@ -446,14 +446,14 @@ Project() {
   echo '
   [[group]]
 
-  [[group.menu]]
-  [[group.menu.items]]
+  [[menu]]
+  [[menu.items]]
   type = "refresh"
   title = "'$refresh_text'"
   
 
   [[group]]
-  [[group.action]]
+  [[action]]
   shell = "hidden"
   reload = true
   title = "'$folder_text'"
@@ -465,7 +465,7 @@ Project() {
   fi
   """
   
-  [[group.action.params]]
+  [[action.params]]
   name = "FOLDER"
   label = "'$folder_text'"
   desc = "'$config_text_2'"
@@ -473,7 +473,7 @@ Project() {
   type = "folder"
   required = true
     
-  [[group.action]]
+  [[action]]
   title = "'$project_text_3'"
   icon = "'$urlicon'/cleanup.png"
   warn = "'$project_text_4'"
@@ -485,14 +485,14 @@ Project() {
     done
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "dels"
     label = "'$option_text'"
     options-sh = "findfile folders $SDH/$PTSH; findfile folders $APK/$PTAH"
     multiple = true
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$customize_tools_text'"
   icon = "'$urlicon'/list_tool.png"
   shell = "hidden"
@@ -506,42 +506,42 @@ Project() {
     slog re_tool_f2fs "$re_tool_f2fs"
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "un_tool_ext4"
     title = "'$tool_unpack_text' ext4"
     label = "'$option_text'"
     value-sh = "glog un_tool_ext4 0"
     options-sh = "echo -e \"0|imgextractor\n1|imgkit_scuti\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "un_tool_erofs"
     title = "'$tool_unpack_text' erofs"
     label = "'$option_text'"
     value-sh = "glog un_tool_erofs"
     options-sh = "echo -e \"0|extract.erofs\n1|imgkit_scuti\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "un_tool_f2fs"
     title = "'$tool_unpack_text' f2fs"
     label = "'$option_text'"
     value-sh = "glog un_tool_f2fs 0"
     options-sh = "echo -e \"0|extract.f2fs\n1|imgkit_scuti\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "re_tool_ext4"
     title = "'$tool_repack_text' ext4"
     label = "'$option_text'"
     value-sh = "glog re_tool_ext4 1"
     options-sh = "echo -e \"0|make_ext4fs\n1|mke2fs+e2fsdroid\n2|imgkit_scuti\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "re_tool_erofs"
     title = "'$tool_repack_text' erofs"
     label = "'$option_text'"
     value-sh = "glog re_tool_erofs"
     options-sh = "echo -e \"0|mkfs.erofs\n1|imgkit_scuti\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "re_tool_f2fs"
     title = "'$tool_repack_text' f2fs"
     label = "'$option_text'"
@@ -559,7 +559,7 @@ Project() {
   fi
   '
   vbload+='
-  [[group.action.params]]
+  [[action.params]]
   name = "name_'$namept'"
   type = "number"
   placeholder = "0"
@@ -570,7 +570,7 @@ Project() {
   
   if [ -n "$(ls -1d "$SDH/$PTSH"/* 2>/dev/null | grep -vE '/(raw|config)')" ]; then
   echo '[[group]]
-  [[group.action]]
+  [[action]]
   title = "'$custom_size'"
   warn = "'$custom_size_desc'"
   icon = "'$urlicon'/size_icon.png"
@@ -588,13 +588,13 @@ Project() {
 Feature() {
   echo '
   [[group]]
-  [[group.menu]]
-    [[group.menu.items]]
+  [[menu]]
+    [[menu.items]]
     link = "https://aistudio.google.com/api-keys"
     title = "'$generate_text' Gemini API"
     silent = true
     
-  [[group.switch]]
+  [[switch]]
   title = "'$project_text_5'"
   icon = "'$urlicon'/set_home.png"
   shell = "hidden"
@@ -602,7 +602,7 @@ Feature() {
   get = "glog Tset"
   set = "slog Tset $state"
 
-  [[group.switch]]
+  [[switch]]
   title = "'$project_text_7'"
   icon = "'$urlicon'/icon_off.png"
   shell = "hidden"
@@ -610,7 +610,7 @@ Feature() {
   get = "glog Ticon"
   set = "slog Ticon $state"
 
-  [[group.switch]]
+  [[switch]]
   title = "'$project_text_6'"
   icon = "'$urlicon'/shell_off.png"
   shell = "hidden"
@@ -619,21 +619,21 @@ Feature() {
   set = "slog shellc $state"
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$project_text_10'"
   icon = "'$urlicon'/java.png"
   warn = "'$project_text_9'"
   shell = "hidden"
   script = "slog ramoccupied \"$ramoccupied\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "ramoccupied"
     label = "'$option_text'"
     value-sh = "glog ramoccupied 4096"
     options-sh = "echo -e \"512\n1024\n2048\n3072\n4096\n5120\n6144\n7168\n8192\""
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$project_text_12'"
   icon = "'$urlicon'/cpu.png"
   warn = "'$project_text_13'"
@@ -641,14 +641,14 @@ Feature() {
   support = "command -v taskset &>/dev/null && echo 1"
   script = "slog use_cpu \"$use_cpus\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "use_cpus"
     label = "'$option_text'"
     value-sh = "glog use_cpu"
     options-sh = "seq 1 $(nproc --all)"
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$project_text_14'"
   icon = "'$urlicon'/background.png"
   warn = "'$project_text_15'"
@@ -663,19 +663,19 @@ Feature() {
     set_permis "$ETC/wallpaper.jpg" &>/dev/null
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "dissblur"
     label = "'$dissblur_text'"
     type = "switch"
     value-sh = "glog dissblur"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "directbg"
     label = "'$directbg_text'"
     type = "switch"
     value-sh = "glog directbg"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "uri_change_background"
     type = "file"
     suffix = "jpg"
@@ -683,7 +683,7 @@ Feature() {
     value-sh = "glog uri_change_background"
   
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$api_key_text'"
   warn = "'$note_genmini_text'"
   icon = "'$urlicon'/apikey.png"
@@ -693,14 +693,14 @@ Feature() {
     [ -z "$models_genmini" ] && slog -d models_genmini || slog models_genmini "$models_genmini"
     [ -z "$api_genmini" ] || slog api_genmini "$(tokenenc "$api_genmini")"
   """
-    [[group.action.params]]
+    [[action.params]]
     name = "api_genmini"
     title = "Gemini API"
     placeholder = "*******************"
     type = "text"
     desc-sh = "transai -c 2>&1 | trans -b"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "models_genmini"
     placeholder = "gemini-3.5-flash-lite"
     title = "Models Gemini"
@@ -712,7 +712,7 @@ Feature() {
 Root() {
   echo '
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$mount_text_1'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/mount.png"
@@ -733,14 +733,14 @@ Root() {
     echo "'$save_text' $SDH/raw"
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "IMG_NAME"
     desc = "'$mount_text_2'"
     options-sh = "findfile 3 $PTSD | grep -E \"(f2fs)|(ext)|(erofs)\""
     required = true
     multiple = true
 
-  [[group.action]]
+  [[action]]
   title = "'$umount_text_1'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/umount.png"
@@ -759,7 +759,7 @@ Root() {
     echo "'$umount_text_2'"
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "IMG_NAME"
     desc = "'$umount_text_3'"
     options-sh = "findfile 4 $SDH/raw"
@@ -767,7 +767,7 @@ Root() {
     multiple = true
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$backup_text_1'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/backup.png"
@@ -791,7 +791,7 @@ Root() {
     echo "'$save_text' $Extract"
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "IMG"
     label = "IMAGE"
     desc = "'$backup_text_2 $PTSD'"
@@ -799,7 +799,7 @@ Root() {
     required = true
     multiple = true
 
-  [[group.action]]
+  [[action]]
   title = "'$flash_text_1'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/flash.png"
@@ -843,7 +843,7 @@ Root() {
     echo "'$flash_text_12'"
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "CQ"
     label = "'$flash_text_2'"
     type = "checkbox"
@@ -853,7 +853,7 @@ Root() {
     depend-cascade = false
     depend-readonly = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "CQ1"
     label = "'$flash_text_3'"
     type = "checkbox"
@@ -863,7 +863,7 @@ Root() {
     depend-cascade = false
     depend-readonly = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "IMG"
     title = "'$flash_text_4'"
     desc = "'$flash_text_5'"
@@ -871,7 +871,7 @@ Root() {
     options-sh = "search_image"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "Brush_in"
     title = "'$flash_text_6'"
     desc = "'$flash_text_7'"
@@ -885,7 +885,7 @@ Root() {
 Troot() {
   echo '
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$dexopt_app_text'"
   summary = "'$show_root_text'"
   icon = "'$urlicon'/dexopt_app.png"
@@ -904,19 +904,19 @@ Troot() {
     fi
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "name_dex_list"
     label = "'$option_text'"
     value = "speed-profile"
     options-sh = "echo -e \"everything\nspeed\nspeed-profile\nverify\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "bools"
     label = "'$dexopt_app_text_2'"
     desc = "'$dexopt_app_text_3'"
     type = "checkbox"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "apps"
     desc = "'$dexopt_app_text_1'"
     type = "app"
@@ -924,7 +924,7 @@ Troot() {
     multiple = true
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$backups_text_2'"
   icon = "'$urlicon'/backup_apk.png"
   warn = "'$backups_text_1'"
@@ -952,7 +952,7 @@ Troot() {
     done
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "Sapp"
     label = "'$backups_text_3'"
     type = "app"
@@ -965,7 +965,7 @@ Generate() {
   show_sett
   echo '
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$generate_text' Payload"
   icon = "'$urlicon'/build_payload.png"
   script = """
@@ -978,13 +978,13 @@ Generate() {
   checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "payload_switch"
     label = "'$payload_text_3'"
     type = "switch"
     value-sh = "glog payload_switch"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "payload_super_size"
     label = "'$sizes_text'"
     desc = "'$default_text': 11GB, '$payload_text_4'"
@@ -996,7 +996,7 @@ Generate() {
     depend-mode = "hide"
     depend-readonly = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "payload_super_group"
     label = "'$super_text_5'"
     desc = "'$super_text_6', '$payload_text_4'"
@@ -1007,13 +1007,13 @@ Generate() {
     depend-mode = "hide"
     depend-readonly = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "sign_payload"
     label = "'$sign_text'"
     value-sh = "glog sign_payload testkey"
     options-sh = "findfile file $ETC/key/2048 .pem | sed \"s|.pem||\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "IMAGES"
     desc = "'$payload_text_2'"
     options-sh = "findfile 11 $PTSD"
@@ -1021,7 +1021,7 @@ Generate() {
     multiple = true
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$generate_text' Amlogic"
   icon = "'$urlicon'/build_amlogic.png"
   script = """
@@ -1055,25 +1055,25 @@ Generate() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "amlogic_boolbox"
     label = "'$deleted_project_text'"
     type = "checkbox"
     value-sh = "glog amlogic_boolbox"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "amlogic_ver"
     label = "'$version_text'"
     value-sh = "glog amlogic_ver v2"
     options-sh = "echo -e \"v2\nv1\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "amlogic_align"
     label = "'$alignment_text'"
     value-sh = "glog amlogic_align 8"
     options-sh = "echo -e \"4|4\n8|8 (Android 11+)\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FOLDER"
     desc = "'$builds_text_1'"
     options-sh = "findfile file $PTSD platform.conf | sed \"s|/platform.conf||\""
@@ -1092,7 +1092,7 @@ Utilities() {
   
   if [ -f "$patchrom" ]; then
   vdbfbfsn='
-  [[group.menu.items]]
+  [[menu.items]]
   title = "Patch ROM"
   config-sh = "'${patchrom%/*}'/index.bash home"
   '
@@ -1102,7 +1102,7 @@ Utilities() {
   
   echo '
   [[group]]
-  [[group.menu]]
+  [[menu]]
   handler = """
   if [ "$menu_id" == "v1" ]; then
   echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTSD#$SDCARD_PATH}]"
@@ -1111,23 +1111,23 @@ Utilities() {
   fi
   """
   
-    [[group.menu.items]]
+    [[menu.items]]
     title = "'$setting_text' - '$setting_text_3'"
     config-sh = "'$ETC'/tool-tree.bash Project"
     '"$vdbfbfsn"'
     
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v1"
     title = "'$open_activity_text' ROM"
     silent = true
     
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v2"
     title = "'$open_activity_text' (data-root)"
     silent = true
   
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$decompile_text'"
   desc = "'$desc_rom'"
   icon = "'$urlicon'/decom.png"
@@ -1148,19 +1148,19 @@ Utilities() {
   checktime
   """
   
-    [[group.action.params]]
+    [[action.params]]
     name = "cboxk"
     label = "'$deleted_file_text'"
     type = "checkbox"
     value-sh = "glog dkhdh"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "nounpak"
     label = "'$decode_text_1'"
     type = "switch"
     value-sh = "glog dkjdj"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "xoa_oat_boot"
     label = "'$xoaoat_text_1'"
     type = "switch"
@@ -1170,7 +1170,7 @@ Utilities() {
     depend-mode = "hide"
     depend-readonly = true
     
-    [[group.action.params]]
+    [[action.params]]
     name = "text_oat_boot"
     type = "text"
     value-sh = "glog text_oat_boot \"fsv_meta,oat,vdex,odex,prof,bprof\""
@@ -1179,7 +1179,7 @@ Utilities() {
     depend-mode = "show"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "vavb"
     label = "'$builds_text_8'"
     type = "switch"
@@ -1188,7 +1188,7 @@ Utilities() {
     depend-mode = "hide"
     depend-readonly = true
     
-    [[group.action.params]]
+    [[action.params]]
     name = "pcvbmeta"
     label = "'$patch_text' vbmeta"
     value-sh = "glog pcvbmeta 0"
@@ -1198,14 +1198,14 @@ Utilities() {
     depend-mode = "hide"
     depend-readonly = true
     
-    [[group.action.params]]
+    [[action.params]]
     name = "IMAGES"
     desc = "'$input_file_text': br, dat, img, zst, zstd, bin, zip"
     options-sh = "findfile 2 $PTSD"
     required = true
     multiple = true
   
-  [[group.action]]
+  [[action]]
   title = "'$build_text'"
   desc = "'$desc_rom1'"
   icon = "'$urlicon'/build.png"
@@ -1228,13 +1228,13 @@ Utilities() {
   checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "boolbox"
     label = "'$deleted_project_text'"
     type = "checkbox"
     value-sh = "glog boolboxdjh"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "IMAGES"
     title = "'$list_partition_text'"
     desc = "'$builds_text_1'"
@@ -1242,7 +1242,7 @@ Utilities() {
     required = true
     multiple = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "dinh_dang"
     label = "'$build_text'"
     desc = "'$builds_text_2'"
@@ -1253,7 +1253,7 @@ Utilities() {
     depend-mode = "show"
     depend-default = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "on_f2fs_nen"
     label = "'$lall_nen_f2fs_text'"
     desc = "'$nen_f2fs_text'"
@@ -1264,7 +1264,7 @@ Utilities() {
     depend-mode = "show"
     depend-default = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "dang_nen"
     label = "'$option_text'"
     desc = "'$builds_text_3'"
@@ -1276,7 +1276,7 @@ Utilities() {
     depend-logic = "priority"
     depend-default = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "muc_nen"
     label = "'$builds_text_4'"
     desc = "'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22"
@@ -1289,7 +1289,7 @@ Utilities() {
     depend-mode = "hide"
     depend-logic = "priority"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "format_imgs"
     label = "'$convert_text'"
     desc = "'$convert_img_text'"
@@ -1302,7 +1302,7 @@ Utilities() {
     echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\nzstd|File.img.zstd\nzst|File.img.zst\ndat|File.new.dat\nbr|File.new.dat.br"
     """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "nen_br"
     label = "'$builds_text_4'"
     desc = "'$convert_text_2'"
@@ -1315,7 +1315,7 @@ Utilities() {
     depend-value = "raw,sparse,File.new.dat"
     depend-mode = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "build_times"
     label = "'$time_text'"
     desc = "'$build_time_text_1': '$time_riviu'"
@@ -1327,7 +1327,7 @@ Utilities() {
     depend-mode = "show"
     depend-readonly = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "offfscontex"
     label = "'$patch_text_fscontex'"
     desc = "'$patch_text_fsdesc'"
@@ -1338,7 +1338,7 @@ Utilities() {
     depend-mode = "show"
     depend-readonly = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "build_size"
     label = "'$sizes_text'"
     desc = "'$builds_text_7'"
@@ -1352,7 +1352,7 @@ Utilities() {
     depend-default = "hide"
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$convert_text'"
   icon = "'$urlicon'/convert_file.png"
   script = """
@@ -1367,13 +1367,13 @@ Utilities() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "cboxk"
     label = "'$deleted_file_text'"
     type = "checkbox"
     value-sh = "glog cboxksbhd"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "format_img"
     label = "'$option_text'"
     value-sh = "glog format_img raw"
@@ -1382,7 +1382,7 @@ Utilities() {
     echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\ndat|File.new.dat\nbr|File.new.dat.br\nzstd|File.img.zstd\nzst|File.img.zst\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz"
     """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "nen_br"
     label = "'$builds_text_4'"
     desc = "'$convert_text_2'"
@@ -1396,7 +1396,7 @@ Utilities() {
     depend-mode = "hide"
     depend-readonly = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "IMAGES"
     desc = "'$input_file_text': br, dat, zstd, img"
     options-sh = "findfile 1 $PTSD"
@@ -1404,7 +1404,7 @@ Utilities() {
     multiple = true
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$build_text' Super"
   icon = "'$urlicon'/build_super.png"
   script = """
@@ -1417,19 +1417,19 @@ Utilities() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "type"
     label = "'$super_text_2'"
     value-sh = "glog typeheh VAB"
     options-sh = "echo -e \"A|a_only\nAB|ab\nVAB|virtual_ab\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "from"
     label = "'$super_text_3'"
     value-sh = "glog fromdjfh raw"
     options-sh = "echo -e \"raw\nsparse\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "super_size"
     label = "'$sizes_text'"
     desc = "'$default_text': 8.5GB"
@@ -1438,7 +1438,7 @@ Utilities() {
     value-sh = "glog super_sizedj 8.5"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "super_group"
     label = "'$super_text_5'"
     desc = "'$super_text_6'"
@@ -1446,14 +1446,14 @@ Utilities() {
     placeholder = "qti_dynamic_partitions"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "IMAGES"
     desc = "'$super_text_7'"
     options-sh = "findfile 3 $PTSD"
     required = true
     multiple = true
     
-  [[group.action]]
+  [[action]]
   title = "'$super_split_text_1'"
   icon = "'$urlicon'/super_split.png"
   script = """
@@ -1486,13 +1486,13 @@ Utilities() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "cboxk"
     label = "'$deleted_file_text'"
     type = "checkbox"
     value-sh = "glog cboxkshg"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "slipdhhe"
     label = "'$number_text'"
     title = "'$split_number_desc'"
@@ -1502,20 +1502,20 @@ Utilities() {
     value-sh = "glog slipdhhe 9"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "khoi_dau_dem"
     label = "'$split_number_label'"
     type = "switch"
     value-sh = "glog khoi_dau_dem 0"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "IMAGES"
     label = "'$option_text'"
     title = "'$super_split_text_3'"
     options-sh = "findfile 7 $PTSD"
     required = true
   
-  [[group.action]]
+  [[action]]
   title = "'$super_merge_text_1'"
   icon = "'$urlicon'/super_merge.png"
   script = """
@@ -1529,13 +1529,13 @@ Utilities() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "silence"
     label = "'$deleted_file_text'"
     type = "checkbox"
     value-sh = "glog silence 1"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "MERGE"
     desc = "'$super_merge_text_3'"
     options-sh = "findfile 5 $PTSD | sort -n -t . -k 3"
@@ -1543,7 +1543,7 @@ Utilities() {
     multiple = true
   
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$synthetic_text'"
   icon = "'$urlicon'/generate.png"
   config-sh = "'$ETC'/tool-tree.bash Generate"
@@ -1562,14 +1562,14 @@ Apex() {
 
   echo '
   [[group]]
-    [[group.menu]]
+    [[menu]]
     handler = """
     if [ "$menu_id" == "v1" ]; then
         [ "$(glog hide_show_apex)" == 1 ] && slog hide_show_apex 0 || slog hide_show_apex 1
     fi
   """
   
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v1"
     type = "checkbox"
     title = "'$folder_text' APK"
@@ -1577,7 +1577,7 @@ Apex() {
     silent = true
     reload = true
     
-  [[group.action]]
+  [[action]]
   title = "'$decompile_text'"
   desc = "'$desc_apkd'"
   icon = "'$urlicon'/decom.png"
@@ -1592,14 +1592,14 @@ Apex() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     desc = "'$apex_text_2'"
     options-sh = "findfile 12 $PTAD"
     required = true
     multiple = true
 
-  [[group.action]]
+  [[action]]
   title = "'$build_text'"
   desc = "'$desc_apkd1'"
   icon = "'$urlicon'/build.png"
@@ -1616,26 +1616,26 @@ Apex() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "gobo_apex"
     label = "'$deleted_project_text'"
     type = "checkbox"
     value-sh = "glog gobo_apex"
 
-    [[group.action.params]]
+    [[action.params]]
     title = "'$apex_text_1'"
     name = "nen_apex"
     label = "'$option_text'"
     value-sh = "glog nen_apex auto"
     options-sh = "echo -e \"auto|'$default_text'\n0|'$off_text'\n1|'$on_text'\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "SIGNS"
     label = "'$sign_text'"
     value-sh = "glog signs_apex testkey"
     options-sh = "findfile file $ETC/key/4096 .pem | sed \"s|.pem||\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     desc = "'$builds_text_1'"
     options-sh = "findfile forapex $APK/$PTAH"
@@ -1657,7 +1657,7 @@ Utiliapk() {
 
   echo '
   [[group]]
-  [[group.menu]]
+  [[menu]]
   handler = """
     if [ "$menu_id" == "v1" ]; then
     [ "$(glog hide_show2)" == 1 ] && slog hide_show2 0 || slog hide_show2 1
@@ -1687,7 +1687,7 @@ Utiliapk() {
     fi
   """
   
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v1"
     type = "checkbox"
     title = "'$input_folder_text'"
@@ -1695,37 +1695,37 @@ Utiliapk() {
     silent = true
     reload = true
 
-    [[group.menu.items]]
+    [[menu.items]]
     key = "b2"
     type = "default"
     title = "'$framework_auto_text'"
 
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v2"
     type = "file"
     title = "'$more_text_3'"
     suffix = "zip"
     auto-off = true
 
-    [[group.menu.items]]
+    [[menu.items]]
     key = "b4"
     type = "file"
     title = "'$more_text_10' framework"
     suffix = "apk"
 
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v4"
     type = "default"
     title = "'$open_activity_text' APK"
     silent = true
 
-    [[group.menu.items]]
+    [[menu.items]]
     key = "v5"
     type = "default"
     title = "'$open_activity_text' (data-root)"
     silent = true
     
-  [[group.action]]
+  [[action]]
   title = "'$decompile_text'"
   desc = "'$desc_apks'"
   icon = "'$urlicon'/decom.png"
@@ -1752,14 +1752,14 @@ Utiliapk() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "tooldecom"
     title = "'$customize_tools_text'"
     label = "'$tools_text'"
     value-sh = "glog tooldecom apkeditor"
     options-sh = "echo -e \"apkeditor|Apkeditor\napktool|Apktool\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "mutiresk"
     title = "'$decom_apk_text_11'"
     label = "'$option_text'"
@@ -1769,7 +1769,7 @@ Utiliapk() {
     depend-value = "apkeditor"
     depend-mode = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "type_apk"
     title = "'$decom_apk_text_11'"
     label = "'$option_text'"
@@ -1779,7 +1779,7 @@ Utiliapk() {
     depend-mode = "hide"
     options-sh = "echo -e \"raw|'$decom_apk_text_3'\nxml|'$default_text'\nreso|'$decom_apk_text_10'\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "dexlibk"
     title = "'$decom_apk_text_12'"
     label = "'$option_text'"
@@ -1789,7 +1789,7 @@ Utiliapk() {
     depend-value = "apkeditor"
     depend-mode = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "dexlib"
     title = "'$decom_apk_text_12'"
     label = "'$option_text'"
@@ -1799,7 +1799,7 @@ Utiliapk() {
     depend-value = "apktool"
     depend-mode = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "xoa_debug_info"
     label = "'$decom_apk_text_7'"
     type = "switch"
@@ -1810,7 +1810,7 @@ Utiliapk() {
     depend-cascade = false
     depend-readonly = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "redivdd"
     label = "'$decom_apk_text_14'"
     type = "switch"
@@ -1821,7 +1821,7 @@ Utiliapk() {
     depend-cascade = false
     depend-readonly = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "dex_methods"
     label = "'$number_text'"
     type = "number"
@@ -1833,7 +1833,7 @@ Utiliapk() {
     depend-mode = "show"
     depend-default = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     title = "'$decom_apk_text_9'"
     desc = "'$input_file_text': apk, apks, apkm, xapk, jar, zip"
@@ -1841,7 +1841,7 @@ Utiliapk() {
     required = true
     multiple = true
 
-  [[group.action]]
+  [[action]]
   title = "'$build_text'"
   desc = "'$desc_apks1'"
   icon = "'$urlicon'/build.png"
@@ -1866,25 +1866,25 @@ Utiliapk() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "xoatm"
     label = "'$deleted_project_text'"
     type = "bool"
     value-sh = "glog xoatm 0"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "sign"
     label = "'$sign_text'"
     value-sh = "glog sign default"
     options-sh = "findfile file $ETC/key .pk8 | sed \"s|.pk8||\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "sstring"
     label = "'$build_apk_text_1'"
     type = "switch"
     value-sh = "glog sstring 1"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "copysign"
     label = "'$decom_apk_text_13'"
     type = "switch"
@@ -1894,14 +1894,14 @@ Utiliapk() {
     depend-mode = "show"
     depend-default = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "comlib"
     label = "'$addlang_text_2'"
     desc = "'$addlang_text_3'"
     value-sh = "glog comlib manifest"
     options-sh = "echo -e \"manifest|'$default_text'\ntrue|'$on_text'\nfalse|'$off_text'\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FOLDER"
     desc = "'$builds_text_1'"
     options-sh = "findfile forapk $APK/$PTAH"
@@ -1909,13 +1909,13 @@ Utiliapk() {
     multiple = true
 
   [[group]]
-  [[group.page]]
+  [[page]]
   title = "'$apex_text'"
   icon = "'$urlicon'/apex.png"
   config-sh = "'$ETC'/tool-tree.bash Apex"
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$distur_apk_text_2'"
   icon = "'$urlicon'/apk_distur.png"
   warn = "'$distur_apk_text_1'"
@@ -1930,13 +1930,13 @@ Utiliapk() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     options-sh = "findfile 10 $PTAD"
     required = true
     multiple = true
 
-  [[group.action]]
+  [[action]]
   title = "'$apk_restore_text_2'"
   icon = "'$urlicon'/apk_restore.png"
   warn = "'$apk_restore_text_1'"
@@ -1951,14 +1951,14 @@ Utiliapk() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     options-sh = "findfile 10 $PTAD"
     required = true
     multiple = true
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$apk_mager_text_2'"
   icon = "'$urlicon'/merge_apk.png"
   warn = "'$apk_mager_text_1'"
@@ -1973,14 +1973,14 @@ Utiliapk() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     options-sh = "findfile 9 $PTAD | grep -E \"(apks)|(apkm)|(xapk)\""
     required = true
     multiple = true
 
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$restore_apk_text_3'"
   icon = "'$urlicon'/restore_sign.png"
   script = """
@@ -1994,14 +1994,14 @@ Utiliapk() {
     rm -fr "$TMP/signatures_dir"
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     title = "'$restore_apk_text_1'"
     value-sh = "glog apk_restore_sign"
     options-sh = "findfile 10 $PTAD"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE2"
     title = "'$restore_apk_text_2'"
     value-sh = "glog apk_restore_sign2"
@@ -2021,13 +2021,13 @@ Addon() {
   echo '
   [[group]]
   
-    [[group.menu]]
-    [[group.menu.items]]
+    [[menu]]
+    [[menu.items]]
     title = "'$download_text'"
     link = "https://zenlua.github.io/Tool-Tree/website/'$linkweb'"
     silent = true
     
-    [[group.menu.items]]
+    [[menu.items]]
     title = "'$customize_text'"
     get = "glog show_setting_add"
     reload = true
@@ -2041,12 +2041,12 @@ Addon() {
     fi
     """
     
-    [[group.fab]]
+    [[fab]]
     handler = """
     [ "$menu_id" == "file" ] && installadd "$file" "'$PATHADD'"
     """
     
-    [[group.fab.items]]
+    [[fab.items]]
     key = "file"
     type = "file"
     title = "'$input_add_text'"
@@ -2057,7 +2057,7 @@ Addon() {
   Download() {
     if [ "$url" ]; then
     echo '[[group]]
-    [[group.download]]
+    [[download]]
     '$croot_add'
     warn = "'$use_network_text'"
     icon = "'$icon_vb'"
@@ -2070,7 +2070,7 @@ Addon() {
     """'
       if [ "$(glog show_setting_add)" == 1 ]; then
         echo '
-        [[group.download.rows]]
+        [[download.rows]]
         toggle = "checkbox"
         text = "'$hide_add_text'"
         get = "[ -f '$dirvad'/hide ] && echo 1"
@@ -2104,7 +2104,7 @@ Addon() {
     fi
   
     if [ "$(glog show_setting_add)" == 1 ]; then
-      hinde_add='[[group.page.rows]]
+      hinde_add='[[page.rows]]
       toggle = "checkbox"
       text = "'$hide_add_text'"
       get = "[ -f '$dirvad'/hide ] && echo 1"
@@ -2120,7 +2120,7 @@ Addon() {
       '
       
       [ -f "$dirvad/nodelete" ] || delete_add='
-      [[group.page.rows]]
+      [[page.rows]]
       toggle = "switch"
       text = "'$deleted_text'"
       get = "[ -f '$dirvad'/delete ] && echo 1"
@@ -2138,7 +2138,7 @@ Addon() {
       # Danh sách Add-on
       echo '
       [[group]]
-      [[group.page]]
+      [[page]]
       title = "'$name'"
       desc = "'$sum_vb'"
       icon = "'$icon_vb'"

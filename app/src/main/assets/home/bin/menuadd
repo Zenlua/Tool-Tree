@@ -10,8 +10,8 @@ source "$fileprop" 2>/dev/null
 if [ "$google_text" ]; then
 echo '
   [[group]]
-  [[group.menu]]
-    [[group.menu.items]]
+  [[menu]]
+    [[menu.items]]
     title = "'$google_translate_text'"
     box = "glog auto_trans_text_'$id'"
     reload = true
@@ -28,7 +28,7 @@ echo '
       slog auto_trans_text_'$id' 1
       fi
     """
-    [[group.menu.items]]
+    [[menu.items]]
     title = "Gemini"
     box = "glog transai_text_'$id'"
     reload = true
@@ -51,8 +51,8 @@ fi
 [ -f "$1/pin" ] && pin_text_add="$unpin_text" || pin_text_add="$pin_text"
 echo '
   [[group]]
-  [[group.menu]]
-    [[group.menu.items]]
+  [[menu]]
+    [[menu.items]]
     title = "'$pin_text_add'"
     auto-finish = true
     silent = true

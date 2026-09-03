@@ -46,4 +46,4 @@ root=false
 
 - There are many things that are difficult to say that can only be found out by yourself.
 
-- [See details](https://zenlua.github.io/Tool-Tree/website/toml.html)
+- [See details](https://zenlua.github.io/Tool-Tree/website/Toml.html)

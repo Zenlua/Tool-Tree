@@ -25,11 +25,12 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
     val autoShowActions: ArrayList<ActionNode> get() = lastReader?.autoShowActions ?: ArrayList()
 
     // Nhận diện nội dung TOML inline khi dòng 1 hoặc dòng 2 (bỏ qua dòng trống) là
-    // header bắt đầu bằng từ khoá "group" - vd: [[group]], [[group.action]] ...
-    // (chỉ khớp đúng "group" để tránh nhận nhầm output lỗi/không liên quan của script).
+    // header bắt đầu bằng "[[toml]]" (marker đánh dấu inline TOML, tuỳ chọn - dùng khi
+    // nội dung không mở đầu bằng [[group]], vd chỉ có [[action]]/[[page]] đứng lẻ) hoặc
+    // "[[group]]" như cũ (chỉ khớp đúng để tránh nhận nhầm output lỗi/không liên quan).
     private fun looksLikeInlineToml(result: String): Boolean {
         val firstLines = result.lineSequence().map { it.trim() }.filter { it.isNotEmpty() }.take(2).toList()
-        return firstLines.any { it.startsWith("[[group]]") || it.startsWith("[[group.") }
+        return firstLines.any { it.startsWith("[[toml]]") || it.startsWith("[[group]]") }
     }
 
     private fun pageConfigShError(content: String) {
@@ -58,7 +59,7 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
                 }
             } else if (looksLikeInlineToml(result)) {
                 // Nội dung TOML trả về trực tiếp (không phải đường dẫn file):
-                // nhận diện qua header [[group]]/[[group. ...]] ở dòng 1 hoặc dòng 2.
+                // nhận diện qua header [[toml]] hoặc [[group]] ở dòng 1 hoặc dòng 2.
                 val inputStream = ByteArrayInputStream(result.toByteArray())
                 val reader = PageConfigReader(activity, inputStream)
                 lastReader = reader

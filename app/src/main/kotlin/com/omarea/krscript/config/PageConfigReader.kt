@@ -167,6 +167,11 @@ class PageConfigReader {
         pendingBoolShells.clear()
     }
 
+    // "group" vẫn là container như cũ. Từ bản bỏ dot-notation: tất cả loại con
+    // (text/switch/.../fab) đều là mảng PHẲNG ở gốc tài liệu, không còn lồng kiểu [[group.action]] -
+    // được gán vào [[group]] gần nhất phía trước theo thứ tự dòng, xem tomlChildren().
+    // ("[[toml]]" chỉ là marker nhận diện inline TOML ở PageConfigSh.kt, không phải type ở đây -
+    // nếu xuất hiện trong tài liệu, parser bỏ qua vô hại vì không nằm trong danh sách dưới.)
     private val tomlNodeTypeOrder = listOf("group", "text", "switch", "picker", "action", "page", "download", "editor", "resource", "menu", "fab")
 
     private val collectedMenuOptions = ArrayList<PageMenuOption>()
@@ -292,11 +297,10 @@ class PageConfigReader {
         }
     }
 
-    // mục và không cần field `order`.
+    // mục và không cần field `order`. Kể từ bản bỏ dot-notation, hàm này chỉ gọi 1 LẦN DUY NHẤT
+    // ở gốc tài liệu (không còn đệ quy theo group như trước) - xem vòng lặp gán currentGroup bên dưới.
     private fun tomlChildren(parent: TomlTable, onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)? = null): ArrayList<NodeInfoBase> {
-        class Entry(val line: Int, val seq: Int, val type: String, val table: TomlTable) {
-            var node: NodeInfoBase? = null
-        }
+        class Entry(val line: Int, val seq: Int, val type: String, val table: TomlTable)
 
         val entries = ArrayList<Entry>()
         var seq = 0
@@ -309,36 +313,49 @@ class PageConfigReader {
         }
         val sortedEntries = entries.sortedWith(compareBy({ it.line }, { it.seq }))
 
-        if (onNodeReady == null) {
-            for (entry in entries) {
-                entry.node = tomlBuildNode(entry.type, entry.table)
-            }
-            return ArrayList(sortedEntries.mapNotNull { it.node })
-        }
-
         val total = sortedEntries.size
         var done = 0
-        val result = ArrayList<NodeInfoBase>(total)
+        val result = ArrayList<NodeInfoBase>()
+        // [[group]] gần nhất đã gặp theo thứ tự dòng - các loại con (action/text/...) phía sau,
+        // trước [[group]] kế tiếp, được gán làm con của group này thay vì dot-notation lồng nhau.
+        // Mục nằm trước [[group]] đầu tiên (nếu có) được thêm thẳng vào kết quả (không group).
+        var currentGroup: GroupNode? = null
+        // true khi đang ở trong 1 [[group]] có support=false -> bỏ hết các mục con của nó
+        var groupHidden = false
+
         for (entry in sortedEntries) {
-            val node = tomlBuildNode(entry.type, entry.table)
+            if (entry.type == "group") {
+                val group = groupNodeToml(entry.table)
+                done++
+                if (group.supported) {
+                    currentGroup = group
+                    groupHidden = false
+                    result.add(group)
+                    onNodeReady?.invoke(group, done, total)
+                } else {
+                    currentGroup = null
+                    groupHidden = true
+                    onNodeReady?.invoke(null, done, total)
+                }
+                continue
+            }
+
             done++
-            if (node != null) result.add(node)
-            onNodeReady.invoke(node, done, total)
+            if (groupHidden) {
+                onNodeReady?.invoke(null, done, total)
+                continue
+            }
+            val node = tomlBuildNode(entry.type, entry.table)
+            if (node != null) {
+                currentGroup?.children?.add(node) ?: result.add(node)
+            }
+            onNodeReady?.invoke(node, done, total)
         }
         return result
     }
 
     private fun tomlBuildNode(type: String, table: TomlTable): NodeInfoBase? {
         return when (type) {
-            "group" -> {
-                val group = groupNodeToml(table)
-                if (!group.supported) {
-                    null
-                } else {
-                    group.children.addAll(tomlChildren(table))
-                    group
-                }
-            }
             "page" -> pageNodeToml(table)
             "action" -> {
                 val action = actionNodeToml(table)
