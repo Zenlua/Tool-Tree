@@ -21,9 +21,9 @@ fi
 
 # Thực thi công cụ tải
 case "$FLAG" in
-    -#) curl -# --retry 2 --retry-delay 2 -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
-    -s) curl -s --retry 2 --retry-delay 2 -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
+    -#) curl -# --connect-timeout 20 --retry 2 --retry-delay 2 -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
+    -s) curl -s --connect-timeout 20 --retry 2 --retry-delay 2 -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
     -a) axel -q -o "$SAVE_PATH" "$1" ;;
     -w) wget --header "$WEBS" --no-check-certificate -O "$SAVE_PATH" "$1" ;;
-     *) curl --retry 2 --retry-delay 2 -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
+     *) curl --connect-timeout 20 --retry 2 --retry-delay 2 -L -H "$WEBS" "$1" -o "$SAVE_PATH" ;;
 esac
