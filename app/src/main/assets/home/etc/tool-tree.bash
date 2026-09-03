@@ -224,7 +224,7 @@ More() {
   desc = "'$more_text_6'"
   icon = "'$urlicon'/apk_utility.png"
   config-sh = "'$ETC'/tool-tree.bash Utiliapk"
-  lock = "[ -f $LOG/javaww ] && echo \"'$boot_text_1'\" || echo 0"
+  lock = "[ -f $HOME/check_unpack ] && echo \"'$boot_text_1'\" || echo 0"
 
   [[group]]
   [[page]]
