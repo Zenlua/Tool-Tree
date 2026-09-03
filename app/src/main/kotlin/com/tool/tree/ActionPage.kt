@@ -698,15 +698,7 @@ class ActionPage : AppCompatActivity() {
             var loadedAutoShowActions: ArrayList<ActionNode>? = null
             if (config.pageConfigSh.isNotEmpty()) {
                 val shReader = PageConfigSh(this@ActionPage, config.pageConfigSh, config)
-                // useProgressiveLoad: hiện từng khối [[group]]/[[menu]]/... ngay khi shell vừa
-                // xuất xong khối đó, không đợi các lệnh chạy sau (vd sleep) - xem
-                // PageConfigSh.executeStreaming(). Không streaming khi không progressive vì
-                // không có lợi ích (vẫn phải đợi build xong cả trang mới hiện gì cả).
-                items = if (useProgressiveLoad) {
-                    shReader.executeStreaming(onNodeReady)
-                } else {
-                    shReader.execute(onNodeReady)
-                }
+                items = shReader.execute(onNodeReady)
                 loadedMenuOptions = shReader.pageMenuOptions
                 loadedHeaderActions = shReader.headerActions
                 loadedAutoShowActions = shReader.autoShowActions
