@@ -55,8 +55,9 @@
 
     <TextView
         android:id="@+id/kr_param_desc"
-        android:paddingHorizontal="10dp"
+        android:drawablePadding="4dp"
         style="@style/textSmall"
+        app:drawableStartCompat="@drawable/kr_param_desc"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 </LinearLayout>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/dialogRoot"
     android:clickable="true"
     android:focusable="true"
@@ -23,6 +24,8 @@
 
         <TextView
             android:id="@+id/warn"
+            app:drawableStartCompat="@drawable/kr_param_title"
+            android:drawablePaddingStart="4dp"
             style="@style/dialogWarn" />
 
         <TextView
