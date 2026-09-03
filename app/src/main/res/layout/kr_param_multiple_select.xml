@@ -34,7 +34,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="4dp"
+        android:layout_marginEnd="6dp"
         android:textColor="?android:colorAccent"
         android:textStyle="bold" />
 </LinearLayout>
