@@ -3,37 +3,32 @@
 
 show_sett() {
   echo '
+  [[group]]
   [[group.action]]
-  icon = "'$urlicon'/folder_rom.png"
   shell = "hidden"
-  reload = "true"
+  reload = true
+  menu = true
   title = "'$input_folder_text'"
-  summary = "'$path_text': '${PTSD/$SDCARD_PATH/\/sdcard}'"
+  desc = "'$path_text': '$PTSD'"
   script = """
-    if [ ! -d "$Folder" ] || [ ! -d "$SDH/${Folder##*/}" ]; then
-    slog PTSD "$Folder"
-    slog PTSH "${Folder##*/}"
-    mkdir -p "$SDH/${Folder##*/}" "$Folder/out"
-    elif [ -d "$SDH/$Name" ]; then
+  if [ ! -d "$SDC/$Name" ] || [ ! -d "$SDH/$Name" ]; then
+    slog PTSD "$SDC/$Name"
+    slog PTSH "$Name"
+    mkdir -p "$SDH/$Name" "$SDC/$Name/out"
+  elif [ -d "$SDH/$Name" ]; then
     slog PTSH "$Name"
     slog PTSD "$SDC/$Name"
-    fi
+  fi
   """
 
   [[group.action.params]]
   name = "Name"
   desc = "'$config_text_1'"
   label = "'$setting_text_3'"
+  title = "'$projects_text'"
   options-sh = "findfile for $SDH"
   value-sh = "glog PTSH"
-
-  [[group.action.params]]
-  name = "Folder"
-  desc = "'$config_text_2'"
-  value-sh = "glog PTSD"
-  type = "folder"
-  editable = "true"
-  required = "true"
+  editable = true
 '
 }
 
@@ -43,6 +38,7 @@ show_apkset() {
   icon = "'$urlicon'/folder_apk.png"
   shell = "hidden"
   reload = "true"
+  menu = true
   title = "'$input_folder_text'"
   summary = "'$path_text': '${PTAD/$SDCARD_PATH/\/sdcard}'"
   script = """
@@ -446,13 +442,6 @@ Update() {
 }
 
 Project() {
-  mkdir -p $PTSD/out &>/dev/null &
-  mkdir -p $PTAD/out &>/dev/null &
-
-  # Thêm group
-  echo "[[group]]"
-  show_sett
-  show_apkset
 
   echo '
   [[group]]
@@ -461,6 +450,28 @@ Project() {
   [[group.menu.items]]
   type = "refresh"
   title = "'$refresh_text'"
+  
+
+  [[group]]
+  [[group.action]]
+  shell = "hidden"
+  reload = true
+  title = "'$folder_text'"
+  desc = "'$path_text': '$SDC'"
+  script = """
+  if [ ! -d "$FOLDER" ]; then
+  slog SDC "$FOLDER"
+  mkdir -p "$FOLDER"
+  fi
+  """
+  
+  [[group.action.params]]
+  name = "FOLDER"
+  label = "'$folder_text'"
+  desc = "'$config_text_2'"
+  value-sh = "glog SDC"
+  type = "folder"
+  required = true
     
   [[group.action]]
   title = "'$project_text_3'"
@@ -950,40 +961,21 @@ Troot() {
 }
 
 Generate() {
-    # Thêm ẩn
-    if [ "$(glog hide_show_generate)" == 1 ]; then
-    echo "[[group]]"
-    show_sett
-    fi
 
+  show_sett
   echo '
   [[group]]
-  [[group.menu]]
-    [[group.menu.items]]
-    type = "checkbox"
-    title = "'$input_folder_text'"
-    get = "glog hide_show_generate"
-    silent = true
-    reload = true
-    script = """
-    if [ "$(glog hide_show_generate)" == 1 ]; then
-    slog hide_show_generate 0
-    else
-    slog hide_show_generate 1
-    fi
-    """
-    
   [[group.action]]
   title = "'$generate_text' Payload"
   icon = "'$urlicon'/build_payload.png"
   script = """
-    slog sign_payload "$sign_payload"
-    slog payload_switch "$payload_switch"
-    slog payload_super_size "$payload_super_size"
-    slog payload_super_group "$payload_super_group"
-    payload_repack -m "$IMAGES" -i "$PTSD" -s "$sign_payload" -w "$payload_switch" -e "$payload_super_size" -g "$payload_super_group"
-    echo
-    checktime
+  slog sign_payload "$sign_payload"
+  slog payload_switch "$payload_switch"
+  slog payload_super_size "$payload_super_size"
+  slog payload_super_group "$payload_super_group"
+  payload_repack -m "$IMAGES" -i "$PTSD" -s "$sign_payload" -w "$payload_switch" -e "$payload_super_size" -g "$payload_super_group"
+  echo
+  checktime
   """
 
     [[group.action.params]]
@@ -1091,103 +1083,83 @@ Generate() {
 }
 
 Utilities() {
-    [ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null &
-    time_riviu="$(date -d "@`glog build_times 1230768000`")"
 
-    if [ "$(glog hide_show 1)" == 1 ]; then
-        echo "[[group]]"
-        show_sett
-    else
-        desc_rom="$path_text: ${PTSD/$SDCARD_PATH/\/sdcard}"
-        desc_rom1="$projects_text: $PTSH"
-    fi
-
-  if [ -f "$AON/patch_rom/Add-on.bash" ]; then
+  mkdir -p $PTSD/out &>/dev/null &
+  time_riviu="$(date -d "@`glog build_times 1230768000`")"
+  desc_rom="$path_text: ${PTSD/$SDCARD_PATH/\/sdcard}"
+  desc_rom1="$projects_text: $PTSH"
+  patchrom="$AON/patch_rom/Add-on.bash"
+  
+  if [ -f "$patchrom" ]; then
   vdbfbfsn='
   [[group.menu.items]]
-  key = "v4"
-  type = "checkbox"
   title = "Patch ROM"
-  get = "glog hide_show_patch_rom"
-  silent = true
-  reload = true'
+  config-sh = "'${patchrom%/*}'/index.bash home"
+  '
   fi
-
+  
+  show_sett
+  
   echo '
   [[group]]
   [[group.menu]]
-    handler = """
-    if [ "$menu_id" == "v1" ]; then
-    [ "$(glog hide_show)" == 1 ] && slog hide_show 0 || slog hide_show 1
-    elif [ "$menu_id" == "v4" ]; then
-      if [ "$(glog hide_show_patch_rom)" == 1 ]; then
-      slog hide_show_patch_rom 0
-      else
-      slog hide_show_patch_rom 1
-      fi
-    elif [ "$menu_id" == "v2" ]; then
-    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTSD#$SDCARD_PATH}]"
-    elif [ "$menu_id" == "v3" ]; then
-    echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$SDH/$PTSH]"
-    fi
+  handler = """
+  if [ "$menu_id" == "v1" ]; then
+  echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/external_files${PTSD#$SDCARD_PATH}]"
+  elif [ "$menu_id" == "v2" ]; then
+  echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$SDH/$PTSH]"
+  fi
   """
-    [[group.menu.items]]
-    key = "v1"
-    type = "checkbox"
-    title = "'$input_folder_text'"
-    get = "glog hide_show"
-    silent = true
-    reload = true
-    '"$vdbfbfsn"'
-
-    [[group.menu.items]]
-    key = "v2"
-    title = "'$open_activity_text' ROM"
-    silent = true
-
-    [[group.menu.items]]
-    key = "v3"
-    title = "'$open_activity_text' (data-root)"
-    silent = true
-
+  
     [[group.menu.items]]
     title = "'$setting_text' - '$setting_text_3'"
     config-sh = "'$ETC'/tool-tree.bash Project"
+    '"$vdbfbfsn"'
     
+    [[group.menu.items]]
+    key = "v1"
+    title = "'$open_activity_text' ROM"
+    silent = true
+    
+    [[group.menu.items]]
+    key = "v2"
+    title = "'$open_activity_text' (data-root)"
+    silent = true
+  
   [[group]]
   [[group.action]]
   title = "'$decompile_text'"
   desc = "'$desc_rom'"
   icon = "'$urlicon'/decom.png"
   script = """
-    slog vavbbgdf "$vavb"
-    slog xoa_oat_boot "$xoa_oat_boot"
-    slog dkjdj "$nounpak"
-    slog pcvbmeta "$pcvbmeta"
-    slog dkhdh "$cboxk"
-    slog text_oat_boot "$text_oat_boot"
-    for vkl in $IMAGES; do
-    if [ -f "$PTSD/${vkl#*=}" ]; then
-    unpack_img -i "$PTSD/${vkl#*=}" -p "${vkl%%=*}" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
-    else
-    unpack_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
-    fi
-    done
-    checktime
+  slog vavbbgdf "$vavb"
+  slog xoa_oat_boot "$xoa_oat_boot"
+  slog dkjdj "$nounpak"
+  slog pcvbmeta "$pcvbmeta"
+  slog dkhdh "$cboxk"
+  slog text_oat_boot "$text_oat_boot"
+  for vkl in $IMAGES; do
+  if [ -f "$PTSD/${vkl#*=}" ]; then
+  unpack_img -i "$PTSD/${vkl#*=}" -p "${vkl%%=*}" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
+  else
+  unpack_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
+  fi
+  done
+  checktime
   """
-
+  
     [[group.action.params]]
     name = "cboxk"
     label = "'$deleted_file_text'"
     type = "checkbox"
     value-sh = "glog dkhdh"
-
+    
     [[group.action.params]]
     name = "nounpak"
     label = "'$decode_text_1'"
     type = "switch"
     value-sh = "glog dkjdj"
-
+    
     [[group.action.params]]
     name = "xoa_oat_boot"
     label = "'$xoaoat_text_1'"
@@ -1197,16 +1169,16 @@ Utilities() {
     depend-value = "1"
     depend-mode = "hide"
     depend-readonly = true
-
+    
     [[group.action.params]]
     name = "text_oat_boot"
     type = "text"
-    value-sh = "glog text_oat_boot \"oat,vdex,odex,prof,bprof,fsv_meta\""
+    value-sh = "glog text_oat_boot \"fsv_meta,oat,vdex,odex,prof,bprof\""
     depend-on = "xoa_oat_boot"
     depend-value = "1"
     depend-mode = "show"
     depend-default = "hide"
-
+    
     [[group.action.params]]
     name = "vavb"
     label = "'$builds_text_8'"
@@ -1215,7 +1187,7 @@ Utilities() {
     depend-value = "1"
     depend-mode = "hide"
     depend-readonly = true
-
+    
     [[group.action.params]]
     name = "pcvbmeta"
     label = "'$patch_text' vbmeta"
@@ -1232,28 +1204,28 @@ Utilities() {
     options-sh = "findfile 2 $PTSD"
     required = true
     multiple = true
-
+  
   [[group.action]]
   title = "'$build_text'"
   desc = "'$desc_rom1'"
   icon = "'$urlicon'/build.png"
   script = """
-    slog dang_nen "$dang_nen"
-    slog on_f2fs_nen "$on_f2fs_nen"
-    slog format_imgs "$format_imgs"
-    slog boolboxdjh "$boolbox"
-    slog dinh_dang "$dinh_dang"
-    slog build_size "$build_size"
-    slog offfscontex "$offfscontex"
-    slog muc_nen "$muc_nen"
-    slog nen_br "$nen_br"
-    slog build_times "$build_times"
-    for vkl in $IMAGES; do
-        repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD/out" -n "$dang_nen" -l "$muc_nen" -k "$dinh_dang" -s "$build_size" -d "$boolbox" -c "$format_imgs" -p "$offfscontex"
-    done
-    echo "'$save_text' $PTSD/out"
-    echo
-    checktime
+  slog dang_nen "$dang_nen"
+  slog on_f2fs_nen "$on_f2fs_nen"
+  slog format_imgs "$format_imgs"
+  slog boolboxdjh "$boolbox"
+  slog dinh_dang "$dinh_dang"
+  slog build_size "$build_size"
+  slog offfscontex "$offfscontex"
+  slog muc_nen "$muc_nen"
+  slog nen_br "$nen_br"
+  slog build_times "$build_times"
+  for vkl in $IMAGES; do
+  repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD/out" -n "$dang_nen" -l "$muc_nen" -k "$dinh_dang" -s "$build_size" -d "$boolbox" -c "$format_imgs" -p "$offfscontex"
+  done
+  echo "'$save_text' $PTSD/out"
+  echo
+  checktime
   """
 
     [[group.action.params]]
@@ -1576,17 +1548,6 @@ Utilities() {
   icon = "'$urlicon'/generate.png"
   config-sh = "'$ETC'/tool-tree.bash Generate"
   '
-
-  if [ "$(glog hide_show_patch_rom 1)" == 1 ] && [ -f "$AON/patch_rom/Add-on.bash" ]; then
-  dirvad="$AON/patch_rom"
-  echo '
-  [[group]]
-  [[group.page]]
-  title = "Patch ROM"
-  icon = "'$dirvad'/icon.png"
-  config-sh = "'$dirvad'/index.bash home"
-  '
-  fi
   
 }
 

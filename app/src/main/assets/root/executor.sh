@@ -41,16 +41,17 @@ export AOK="$HOME/ZAPK"
 export TMPDIR="$HOME/tmp"
 export LIB="$HOME/lib"
 export TMP="$TMPDIR"
-export SDC="$SDCARD_PATH/TREE"
 export JAVA_HOME="$TERMUX"
 export PIP_ROOT_USER_ACTION=ignore
 export COLORTERM=truecolor
 export PATH="$BIN:$TERMUX/bin:$TERMUX/py:$PATH"
 export TERM=xterm-256color
+
 # export LD_LIBRARY_PATH="$LIB"
-export PTSD="$(glog PTSD $SDC/ROM 2>/dev/null)"; # $PTSD
+export SDC="$(glog SDC $SDCARD_PATH/TREE 2>/dev/null)";
+export PTSD="$(glog PTSD $SDC/ROM 2>/dev/null)";
 export PTSH="$(glog PTSH ROM 2>/dev/null)"; # $SDH/$PTSH
-export PTAD="$(glog PTAD $SDC/APK 2>/dev/null)"; # $PTAD
+export PTAD="$(glog PTAD $SDC/APK 2>/dev/null)";
 export PTAH="$(glog PTAH APK 2>/dev/null)"; # $APK/$PTAH
 
 # Không giới hạn ngang
