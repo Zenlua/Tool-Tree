@@ -60,13 +60,14 @@ class BannerSwipeDismissHelper(
                 dragging = false
                 velocityTracker?.recycle()
                 velocityTracker = VelocityTracker.obtain().apply { addMovement(event) }
-                // Trả về false ở ACTION_DOWN để các View con clickable (nút Xác nhận/Hủy bỏ)
-                // vẫn nhận touch bình thường nếu ngón tay đặt đúng lên chúng -- ViewGroup
-                // (target) chỉ thực sự nhận được chuỗi sự kiện tiếp theo (MOVE/UP) khi touch
-                // bắt đầu ở vùng KHÔNG có View con nào clickable "giành" mất (icon/tiêu
-                // đề/nội dung), đúng hành vi dispatch touch mặc định của Android nên không cần
-                // tự chặn gì thêm ở đây.
-                return false
+                // Trả về true ở ACTION_DOWN để target được đăng ký làm touch target với
+                // ViewGroup cha -- nếu trả false thì Android sẽ KHÔNG chuyển tiếp
+                // MOVE/UP của cùng cử chỉ tới target nữa, khiến không thể vuốt được. Việc
+                // này KHÔNG ảnh hưởng tới các nút clickable bên trong (Xác nhận/Hủy bỏ):
+                // khi ngón tay đặt đúng lên chúng, ViewGroup luôn ưu tiên cho nút con tự
+                // xử lý trước qua vòng dispatch-tới-con, handleTouch() chỉ thực sự được
+                // gọi (fallback) khi điểm chạm KHÔNG rơi vào nút nào.
+                return true
             }
             MotionEvent.ACTION_MOVE -> {
                 velocityTracker?.addMovement(event)

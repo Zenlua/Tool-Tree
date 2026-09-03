@@ -60,8 +60,8 @@ class BannerReceiver : BroadcastReceiver() {
         }
         val icon = intent.getStringExtra("icon")
         val script = intent.getStringExtra("script")
-        val confirm = intent.getStringExtra("confirm")
-        val cancel = intent.getStringExtra("cancel")
+        val confirm = intent.getStringExtra("confirm")?.let { StringResRef.resolve(context, it) }
+        val cancel = intent.getStringExtra("cancel")?.let { StringResRef.resolve(context, it) }
         val countdown = intent.getIntExtra("countdown", 5)
 
         BannerNotificationManager.show(
