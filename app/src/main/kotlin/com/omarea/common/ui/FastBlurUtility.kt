@@ -1,19 +1,22 @@
 package com.omarea.common.ui
 
 import android.app.Activity
+import android.app.WallpaperManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.drawable.BitmapDrawable
 import android.view.View
+import java.io.File
 import kotlin.math.max
 import kotlin.math.round
 
 /**
- * Tiện ích tạo ảnh nền mờ, dùng cho 2 tình huống RIÊNG BIỆT - KHÔNG dùng chung 1 pipeline
- * như bản cũ, vì bản chất nguồn ảnh khác nhau:
+ * Tiện ích tạo ảnh nền mờ. Có 2 nguồn ảnh khác nhau nên KHÔNG dùng chung 1 pipeline:
  *
  *   1. VÀO TRANG MỚI (getPageBlurBackground): trang mới chưa có nội dung gì để chụp, nền
  *      mờ ở đây thực chất là ẢNH WALLPAPER đã được BlurController chụp/blur SẴN 1 lần khi
@@ -22,14 +25,20 @@ import kotlin.math.round
  *      dùng cache, KHÔNG tự chụp/blur lại (chụp lại mỗi lần mở trang sẽ rất chậm + không
  *      đúng ý nghĩa "ảnh nền" tĩnh theo wallpaper).
  *
+ *      Nếu cache chưa sẵn sàng (đang chụp async ở nơi khác) thì DialogHelper.setWindowBlurBg
+ *      dùng tiếp getWallpaperBlurBackground() (lấy wallpaper + blur ngay tại chỗ) rồi tới
+ *      getWallpaperRawBackground() (lấy wallpaper gốc, không blur) làm các tầng dự phòng,
+ *      trước khi rơi xuống màu đặc.
+ *
  *   2. MỞ DIALOG (getDialogBlurBackground): dialog che lên NỘI DUNG THẬT đang hiển thị của
  *      trang hiện tại (danh sách, text đang gõ dở, v.v...) - ảnh wallpaper cache ở trên
  *      không phản ánh đúng những gì đang thấy trên màn hình. Vì vậy dialog LUÔN chụp
  *      screenshot màn hình activity tại đúng thời điểm mở dialog rồi blur bằng RenderScript
  *      (BlurController) - KHÔNG dùng lại cache wallpaper, đảm bảo nền mờ phía sau dialog
- *      luôn khớp với nội dung thật đang hiển thị ngay trước đó.
+ *      luôn khớp với nội dung thật đang hiển thị ngay trước đó. Chỉ dùng khi KHÔNG ở chế độ
+ *      live wallpaper (xem DialogHelper.setWindowBlurBg).
  *
- * Cả 2 đều dùng chung RenderScript pipeline của BlurController (GPU-accelerated, ổn định)
+ * Tất cả đều dùng chung RenderScript pipeline của BlurController (GPU-accelerated, ổn định)
  * thay vì StackBlur CPU cũ, và cùng áp dụng contrast thích ứng dark/light mode qua tint.
  *
  * clearCache() phải được gọi khi đổi theme (dark/light hoặc đổi kiểu nền) - ảnh cache cũ đã
@@ -83,6 +92,81 @@ object FastBlurUtility {
             screenshot.recycle()
         }
         return result
+    }
+
+    /**
+     * Tầng dự phòng #2 khi ở chế độ wallpaper: cache (BlurEngine.blurBitmap) chưa sẵn sàng
+     * (đang chụp async ở BlurController) - lấy trực tiếp ảnh wallpaper (file tùy chỉnh hoặc
+     * hệ thống) rồi blur NGAY tại chỗ, đồng bộ. KHÔNG ghi vào BlurEngine.blurBitmap (tránh
+     * xung đột với luồng capture async đang chạy song song).
+     *
+     * @return bitmap full-screen đã blur + tint, hoặc null nếu lấy/blur thất bại.
+     *         Caller phải recycle bitmap khi không còn dùng.
+     */
+    @JvmStatic
+    fun getWallpaperBlurBackground(activity: Activity): Bitmap? {
+        val screenWidth = activity.resources.displayMetrics.widthPixels
+        val screenHeight = activity.resources.displayMetrics.heightPixels
+        if (screenWidth <= 0 || screenHeight <= 0) return null
+
+        val loaded = loadWallpaperSource(activity) ?: return null
+        val (source, ownsSource) = loaded
+        return try {
+            blurViaController(activity, source, screenWidth, screenHeight)
+        } finally {
+            if (ownsSource && !source.isRecycled) {
+                source.recycle()
+            }
+        }
+    }
+
+    /**
+     * Tầng dự phòng #3 khi ở chế độ wallpaper: cả getWallpaperBlurBackground() cũng thất bại
+     * (ví dụ RenderScript lỗi) - lấy ảnh wallpaper gốc, scale full-screen + tint nhưng KHÔNG
+     * blur, còn hơn phải dùng màu đặc.
+     *
+     * @return bitmap full-screen đã tint (không blur), hoặc null nếu lấy ảnh thất bại.
+     *         Caller phải recycle bitmap khi không còn dùng.
+     */
+    @JvmStatic
+    fun getWallpaperRawBackground(activity: Activity): Bitmap? {
+        val screenWidth = activity.resources.displayMetrics.widthPixels
+        val screenHeight = activity.resources.displayMetrics.heightPixels
+        if (screenWidth <= 0 || screenHeight <= 0) return null
+
+        val loaded = loadWallpaperSource(activity) ?: return null
+        val (source, ownsSource) = loaded
+        return try {
+            scaleWithTint(source, screenWidth, screenHeight)
+        } finally {
+            if (ownsSource && !source.isRecycled) {
+                source.recycle()
+            }
+        }
+    }
+
+    /**
+     * Lấy nguồn ảnh wallpaper: file tùy chỉnh nếu có, không thì ảnh wallpaper hệ thống.
+     *
+     * @return cặp (bitmap, ownsSource) - ownsSource = true nếu bitmap do ta tự decode (phải
+     *         recycle sau khi dùng xong), false nếu là bitmap hệ thống (KHÔNG được recycle,
+     *         thuộc quyền quản lý của WallpaperManager). Null nếu không lấy được ảnh nào.
+     */
+    private fun loadWallpaperSource(activity: Activity): Pair<Bitmap, Boolean>? {
+        return try {
+            val customWallpaperFile = File(activity.filesDir, "home/etc/wallpaper.jpg")
+            if (customWallpaperFile.exists()) {
+                val bitmap = BitmapFactory.decodeFile(customWallpaperFile.absolutePath) ?: return null
+                bitmap to true
+            } else {
+                val wm = WallpaperManager.getInstance(activity)
+                wm.forgetLoadedWallpaper()
+                val drawable = wm.drawable
+                if (drawable is BitmapDrawable) drawable.bitmap to false else null
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /**

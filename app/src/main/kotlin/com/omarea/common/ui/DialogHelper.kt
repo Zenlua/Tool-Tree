@@ -451,12 +451,17 @@ class DialogHelper {
         
         fun setWindowBlurBg(window: Window, activity: Activity) {
             window.run {
-                val dialogBlur = if (!disableBlurBg) FastBlurUtility.getDialogBlurBackground(activity) else null
+                val wallpaperMode = activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0
+
+                // Live wallpaper được hệ thống vẽ ở surface riêng, ngoài cây View của activity -
+                // screenshot decorView không chứa ảnh nền thật (chỉ có UI, phần nền trống/đen),
+                // nên bỏ qua bước chụp và dùng thẳng cache đã chụp đúng qua WallpaperManager
+                // (getPageBlurBackground ở nhánh dưới).
+                val dialogBlur = if (!disableBlurBg && !wallpaperMode) FastBlurUtility.getDialogBlurBackground(activity) else null
                 if (dialogBlur != null) {
                     setBackgroundDrawable(dialogBlur.toDrawable(activity.resources))
                     return
                 }
-                val wallpaperMode = activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER != 0
                 val backgroundDrawable = try {
                     val bg = getWindowBackground(activity)
                     when {
@@ -466,10 +471,23 @@ class DialogHelper {
                             bg.toDrawable()
                         }
                         else -> {
+                            // Chế độ ảnh nền (wallpaperMode): 3 tầng dự phòng theo thứ tự ưu
+                            // tiên, trước khi rơi xuống màu đặc.
+                            // 1. Ảnh đã chụp + blur sẵn trong cache (nhanh nhất).
                             val pageBlur = if (!disableBlurBg && wallpaperMode) {
                                 FastBlurUtility.getPageBlurBackground(activity)
                             } else null
-                            pageBlur?.toDrawable(activity.resources) ?: run {
+                            // 2. Cache chưa sẵn sàng (đang chụp async nơi khác) -> tự lấy ảnh
+                            // nền + blur ngay tại chỗ.
+                            val freshBlur = pageBlur ?: if (!disableBlurBg && wallpaperMode) {
+                                FastBlurUtility.getWallpaperBlurBackground(activity)
+                            } else null
+                            // 3. Blur cũng lỗi -> dùng ảnh nền gốc (không blur), còn hơn màu đặc.
+                            val finalBlur = freshBlur ?: if (!disableBlurBg && wallpaperMode) {
+                                FastBlurUtility.getWallpaperRawBackground(activity)
+                            } else null
+                            finalBlur?.toDrawable(activity.resources) ?: run {
+                                // 4. Cuối cùng: màu đặc.
                                 val color = if (wallpaperMode || isNightMode(context)) {
                                     Color.argb(255, 18, 18, 18)
                                 } else {
