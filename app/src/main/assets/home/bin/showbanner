@@ -6,6 +6,10 @@ echo
 echo "-y|--type: info, warning, success, error"
 echo "-i|--icon: path/icon.png, kr_shortcut_logo"
 echo "-p|--position: top, bottom"
+echo "-s|--script: 'echo 1'"
+echo "-c|--confirm: confirm"
+echo "-n|--cancel: cancel"
+echo "-s|--countdown: 5"
 }
 
 if [[ $# -eq 0 || "$1" != -* ]]; then
@@ -13,7 +17,8 @@ show_help >&2
 exit 1
 fi
 
-TYPE=""; ICON=""; TITLE=""; MESSAGE=""; POSITION=""; AMON="";
+TYPE= ICON= TITLE= MESSAGE= POSITION= AMON=
+SCRIPT= CONFIRM= CANCEL=
 while [ $# -gt 0 ]; do
   case "$1" in
     -y|--type)
@@ -34,6 +39,22 @@ while [ $# -gt 0 ]; do
       ;;
     -m|--message)
       MESSAGE="$2"
+      shift 2
+      ;;
+    -s|--script)
+      SCRIPT="$2"
+      shift 2
+      ;;
+    -c|--confirm)
+      CONFIRM="$2"
+      shift 2
+      ;;
+    -n|--cancel)
+      CANCEL="$2"
+      shift 2
+      ;;
+    -s|--countdown)
+      COUNTDOWN="$2"
       shift 2
       ;;
     -a|--am)
@@ -58,6 +79,10 @@ CMDs="broadcast -n com.tool.tree/com.tool.tree.BannerReceiver -a com.tool.tree.b
 [ "$POSITION" ] && CMDs+="--es position \"$POSITION\" "
 [ "$TITLE" ] && CMDs+="--es title \"$TITLE\" "
 [ "$MESSAGE" ] && CMDs+="--es text \"$MESSAGE\" "
+[ "$SCRIPT" ] && CMDs+="--es script \"$SCRIPT\" "
+[ "$CONFIRM" ] && CMDs+="--es confirm \"$CONFIRM\" "
+[ "$CANCEL" ] && CMDs+="--es cancel \"$CANCEL\" "
+[ "$COUNTDOWN" ] && CMDs+="--ei countdown \"$COUNTDOWN\" "
 
 if [ "$AMON" == 1 ] || [ -z "$shell_progres" ]; then
     eval "am $CMDs" &>/dev/null
