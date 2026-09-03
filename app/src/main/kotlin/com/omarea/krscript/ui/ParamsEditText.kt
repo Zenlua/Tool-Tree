@@ -19,7 +19,6 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
         val expandBtn = layout.findViewById<View>(R.id.kr_param_text_expand)
         val activity = context
 
-        // Kiểm tra xem tham số có phải kiểu số hay không
         val isNumber = actionParamInfo.type == "int" || actionParamInfo.type == "number"
         val paramFilter = ParamInfoFilter(actionParamInfo)
 
@@ -32,7 +31,6 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
             }
             filters = arrayOf(paramFilter)
             
-            // Thiết lập inputType cho EditText ban đầu
             if (isNumber) {
                 inputType = if (actionParamInfo.type == "int") {
                     InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED
@@ -42,12 +40,16 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
             }
 
             isEnabled = !actionParamInfo.readonly
-            if (actionParamInfo.placeholder.isNotEmpty()) {
-                hint = actionParamInfo.placeholder
-            } else if (
-                    isNumber && (actionParamInfo.min != Int.MIN_VALUE || actionParamInfo.max != Int.MAX_VALUE)
-            ) {
-                hint = "${actionParamInfo.min} ~ ${actionParamInfo.max}"
+
+            // Xác định placeholder
+            val placeholderText = when {
+                actionParamInfo.placeholder.isNotEmpty() -> actionParamInfo.placeholder
+                isNumber && (actionParamInfo.min != Int.MIN_VALUE || actionParamInfo.max != Int.MAX_VALUE) -> "${actionParamInfo.min} ~ ${actionParamInfo.max}"
+                else -> null
+            }
+            
+            if (!placeholderText.isNullOrEmpty()) {
+                hint = placeholderText
             }
 
             expandBtn.setOnClickListener {
@@ -62,7 +64,6 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
                     null
                 }
 
-                // Chọn inputType tương ứng cho dialog
                 val dialogInputType = if (isNumber) {
                     if (actionParamInfo.type == "int") {
                         InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED
@@ -84,9 +85,10 @@ class ParamsEditText(private var actionParamInfo: ActionParamInfo, private var c
                             }
                         }
                 ).apply {
-                    // Truyền inputType và filters vào DialogTextEditor
                     setInputType(dialogInputType)
                     setFilters(arrayOf(paramFilter))
+                    // Truyền placeholder/hint lấy từ EditText gốc vào Dialog
+                    setHint(editText.hint)
                 }.show(activity.supportFragmentManager, "params-text-editor")
             }
         }
