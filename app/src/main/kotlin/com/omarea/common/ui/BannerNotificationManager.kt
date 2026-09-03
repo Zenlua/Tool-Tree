@@ -7,51 +7,75 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
+import com.omarea.common.shell.ShellExecutor
 import com.tool.tree.R
 
 enum class BannerType { INFO, SUCCESS, WARNING, ERROR }
 enum class BannerPosition { TOP, BOTTOM }
 
 /**
- * Hiện 1 banner thông báo đè lên trên cùng của Activity đang foreground -- KỂ CẢ khi
- * đang có Dialog mở (ví dụ ProgressBarDialog).
+ * Hiện 1 banner thông báo đè lên trên cùng của Activity đang foreground.
  *
- * Kỹ thuật: dùng chính cơ chế của Toast (custom view Toast, type cửa sổ TYPE_TOAST) thay vì
- * tự add view vào content của Activity/Dialog. Lý do: Dialog là 1 Window riêng, kích thước
- * chỉ vừa đủ khung dialog (không phải full màn hình), nên add view thường vào bên trong nó
- * sẽ bị bó hẹp/cắt theo đúng khung dialog nhỏ đó. TYPE_TOAST là loại cửa sổ đặc biệt của hệ
- * thống luôn nổi trên mọi Dialog/Activity của app (đây cũng chính là lý do ToastReceiver có
- * sẵn của bạn luôn hiện được dù đang có dialog hay không).
+ * Kỹ thuật: add thẳng view banner vào content view (android.R.id.content) của Activity
+ * đang foreground (lấy qua CurrentActivityHolder), thay vì dùng Toast. Lý do đổi từ Toast:
+ * Toast KHÔNG nhận sự kiện chạm nên không thể bấm được nút Xác nhận/Hủy bỏ khi banner có
+ * kèm script cần chạy. Không cần thêm quyền gì mới so với trước.
  *
- * Đánh đổi: cửa sổ Toast KHÔNG nhận sự kiện chạm (không bấm tắt sớm được), và không thể tùy
- * chỉnh thời gian hiển thị (Android giới hạn cứng ở mức LENGTH_LONG ~3.5s cho mọi Toast).
+ * Nhược điểm so với Toast: nếu Activity đang hiện 1 Dialog full màn hình che content view
+ * thì banner có thể bị Dialog đó che lên trên (Toast trước đây không bị vấn đề này vì luôn
+ * nổi ở window riêng). Đổi lại banner giờ nhận được sự kiện chạm.
+ *
+ * Mọi banner (kể cả không có script) đều tự ẩn sau [countdownSeconds] giây, mặc định 5s.
  *
  * Gọi từ shell: am broadcast -a <applicationId>.broadcast.BANNER --es text "..." --es type "success" --es position "bottom"
+ * Gọi kèm script cần xác nhận trước khi chạy:
+ *   am broadcast -a <applicationId>.broadcast.BANNER --es text "Cập nhật script mới, chạy ngay?" \
+ *       --es script "sh /sdcard/Download/update.sh" --es confirm "Chạy" --es cancel "Bỏ qua" --ei countdown 5
  */
 object BannerNotificationManager {
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    // Thời gian hiển thị thực tế của Toast.LENGTH_LONG do hệ thống quy định, dùng để giãn cách
-    // các banner trong hàng đợi, tránh cái sau ghi đè ngay lên cái trước.
-    private const val TOAST_LONG_DURATION_MS = 3500L
+    // Fallback an toàn nếu countdownSeconds <= 0 (tránh banner treo mãi không tự ẩn), KHÔNG
+    // còn là thời lượng chính dùng cho banner nữa (xem countdownSeconds trong show()).
+    private const val FALLBACK_DURATION_MS = 3500L
+
 
     private data class BannerRequest(
         val title: String?,
         val message: String,
         val type: BannerType,
         val position: BannerPosition,
-        val icon: String?
+        val icon: String?,
+        val script: String?,
+        val confirmText: String?,
+        val cancelText: String?,
+        val countdownSeconds: Int
     )
 
     private val queue = ArrayDeque<BannerRequest>()
     private var isShowing = false
 
+    // View banner đang hiện trên màn hình (nếu có) + Runnable đếm ngược đang chạy của nó,
+    // dùng để có thể gỡ bỏ đúng lúc khi người dùng bấm nút hoặc khi hết giờ đếm ngược.
+    private var currentView: View? = null
+    private var countdownRunnable: Runnable? = null
+
     /**
      * @param icon Tên resource drawable/mipmap tùy chỉnh (vd "ic_my_icon"). Nếu bỏ trống hoặc
      * không tìm thấy resource tương ứng, mặc định dùng icon của chính app.
+     * @param script Lệnh/script sẽ được chạy (bằng đúng quyền hiện có của app, KHÔNG tự xin
+     * root) khi người dùng bấm nút Xác nhận. Khi khác null/rỗng, banner sẽ tự hiện thêm 2 nút
+     * Xác nhận/Hủy bỏ; hết [countdownSeconds] giây mà chưa bấm gì thì coi như Hủy bỏ (KHÔNG
+     * chạy script). Bỏ trống (mặc định) thì banner hiện như bình thường, không có nút.
+     * @param confirmText / cancelText nhãn tùy chỉnh cho 2 nút (chỉ có ý nghĩa khi [script]
+     * khác null/rỗng); bỏ trống thì dùng nhãn mặc định "Xác nhận"/"Hủy bỏ".
+     * @param countdownSeconds số giây trước khi banner tự ẩn, mặc định 5 giây. Áp dụng cho CẢ
+     * 2 chế độ: có [script] thì hết giờ = tự Hủy bỏ, không có [script] thì hết giờ = tự ẩn
+     * banner như bình thường.
      * @param onNoActivity gọi khi không có Activity nào đang foreground (app ở background),
      * dùng để nơi gọi có thể fallback sang Toast thường hoặc bỏ qua.
      */
@@ -61,6 +85,10 @@ object BannerNotificationManager {
         type: BannerType = BannerType.INFO,
         position: BannerPosition = BannerPosition.BOTTOM,
         icon: String? = null,
+        script: String? = null,
+        confirmText: String? = null,
+        cancelText: String? = null,
+        countdownSeconds: Int = 5,
         onNoActivity: (() -> Unit)? = null
     ) {
         if (CurrentActivityHolder.get() == null) {
@@ -68,7 +96,9 @@ object BannerNotificationManager {
             return
         }
         mainHandler.post {
-            queue.addLast(BannerRequest(title, message, type, position, icon))
+            queue.addLast(
+                BannerRequest(title, message, type, position, icon, script, confirmText, cancelText, countdownSeconds)
+            )
             if (!isShowing) showNext()
         }
     }
@@ -93,12 +123,16 @@ object BannerNotificationManager {
     }
 
     private fun showOn(activity: Activity, req: BannerRequest) {
-        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, null, false)
+        val contentParent = activity.window.decorView.findViewById<ViewGroup>(android.R.id.content)
+        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, contentParent, false)
 
         val bannerRoot = view.findViewById<View>(R.id.banner_root)
         val icon = view.findViewById<ImageView>(R.id.banner_icon)
         val titleView = view.findViewById<TextView>(R.id.banner_title)
         val messageView = view.findViewById<TextView>(R.id.banner_message)
+        val actionsRow = view.findViewById<View>(R.id.banner_actions)
+        val confirmBtn = view.findViewById<TextView>(R.id.banner_btn_confirm)
+        val cancelBtn = view.findViewById<TextView>(R.id.banner_btn_cancel)
 
         val colorRes = when (req.type) {
             BannerType.INFO -> R.color.banner_info
@@ -120,25 +154,101 @@ object BannerNotificationManager {
         messageView.text = req.message
 
         val density = activity.resources.displayMetrics.density
-
-        val toast = Toast(activity.applicationContext)
-        toast.duration = Toast.LENGTH_LONG
-        @Suppress("DEPRECATION")
-        toast.view = view
-
+        val layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        )
         when (req.position) {
-            BannerPosition.TOP -> toast.setGravity(
-                Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, (62 * density).toInt()
-            )
-            BannerPosition.BOTTOM -> toast.setGravity(
-                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, (81 * density).toInt()
-            )
+            BannerPosition.TOP -> {
+                layoutParams.gravity = Gravity.TOP
+                layoutParams.topMargin = (62 * density).toInt()
+            }
+            BannerPosition.BOTTOM -> {
+                layoutParams.gravity = Gravity.BOTTOM
+                layoutParams.bottomMargin = (81 * density).toInt()
+            }
         }
-        toast.show()
 
-        // Toast tự ẩn theo thời lượng hệ thống quy định (LENGTH_LONG), chỉ cần đợi tương ứng
-        // rồi xử lý banner tiếp theo trong hàng đợi (nếu có).
-        mainHandler.postDelayed({ showNext() }, TOAST_LONG_DURATION_MS)
+        currentView = view
+        contentParent.addView(view, layoutParams)
+
+        val script = req.script
+        if (!script.isNullOrEmpty()) {
+            // Có script kèm theo -> hiện 2 nút Xác nhận/Hủy bỏ + đếm ngược, không tự ẩn theo
+            // thời lượng cố định như banner thường.
+            actionsRow.visibility = View.VISIBLE
+            cancelBtn.text = if (!req.cancelText.isNullOrEmpty()) req.cancelText else activity.getString(R.string.kr_banner_cancel)
+            val confirmLabel = if (!req.confirmText.isNullOrEmpty()) req.confirmText else activity.getString(R.string.kr_banner_confirm)
+
+            var remaining = if (req.countdownSeconds > 0) req.countdownSeconds else 0
+            fun updateConfirmLabel() {
+                confirmBtn.text = if (remaining > 0) "$confirmLabel (${remaining}s)" else confirmLabel
+            }
+            updateConfirmLabel()
+
+            val tick = object : Runnable {
+                override fun run() {
+                    remaining--
+                    if (remaining <= 0) {
+                        // Hết giờ mà chưa bấm gì -> tự Hủy bỏ, KHÔNG chạy script.
+                        dismissCurrent()
+                        showNext()
+                    } else {
+                        updateConfirmLabel()
+                        mainHandler.postDelayed(this, 1000L)
+                    }
+                }
+            }
+            countdownRunnable = tick
+            if (remaining > 0) {
+                mainHandler.postDelayed(tick, 1000L)
+            }
+
+            confirmBtn.setOnClickListener {
+                dismissCurrent()
+                runScript(script)
+                showNext()
+            }
+            cancelBtn.setOnClickListener {
+                dismissCurrent()
+                showNext()
+            }
+        } else {
+            actionsRow.visibility = View.GONE
+            // Không có script -> banner thường, tự ẩn sau [countdownSeconds] giây (mặc định
+            // 5s, dùng chung tham số countdown với chế độ có nút Xác nhận/Hủy bỏ).
+            val autoDismissMs = if (req.countdownSeconds > 0) req.countdownSeconds * 1000L else FALLBACK_DURATION_MS
+            mainHandler.postDelayed({
+                dismissCurrent()
+                showNext()
+            }, autoDismissMs)
+        }
+    }
+
+    private fun dismissCurrent() {
+        countdownRunnable?.let { mainHandler.removeCallbacks(it) }
+        countdownRunnable = null
+        val view = currentView ?: return
+        currentView = null
+        (view.parent as? ViewGroup)?.removeView(view)
+    }
+
+    /**
+     * Chạy [script] bằng đúng quyền hiện có của app (process "sh" thường, KHÔNG tự xin root
+     * qua "su") trên 1 thread nền, không chặn main thread và không quan tâm kết quả trả về.
+     */
+    private fun runScript(script: String) {
+        Thread {
+            try {
+                val process = ShellExecutor.getRuntime()
+                process.outputStream.bufferedWriter().use { writer ->
+                    writer.write(script)
+                    writer.write("\nexit\n")
+                    writer.flush()
+                }
+                process.waitFor()
+            } catch (e: Exception) {
+            }
+        }.apply { isDaemon = true }.start()
     }
 
     /**

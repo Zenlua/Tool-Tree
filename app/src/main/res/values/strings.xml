@@ -109,6 +109,8 @@ If you agree, press the confirm button to continue."</string>
     <string name="kr_download_create_success">File download started</string>
     <string name="kr_download_confirm">Download the file?</string>
     <string name="kr_download_completed">File downloaded successfully</string>
+    <string name="kr_banner_confirm">Confirm</string>
+    <string name="kr_banner_cancel">Cancel</string>
     <string name="kr_download_error">Download failed</string>
     <string name="kr_download_paused">Download paused</string>
     <string name="kr_download_paused_tap">Paused – tap to resume</string>

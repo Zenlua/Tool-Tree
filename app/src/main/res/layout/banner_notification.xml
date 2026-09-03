@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Lưu ý: view này được dùng làm Toast.view (xem BannerNotificationManager.kt).
-    Toast KHÔNG đặt view vào trong 1 ViewGroup cha khi hiển thị, nên các thuộc tính
-    layout_margin... trên view gốc sẽ bị bỏ qua hoàn toàn. Vì vậy phải dùng 1 FrameLayout
-    ngoài cùng với padding (padding luôn có tác dụng, không phụ thuộc parent) để tạo
-    khoảng cách với mép màn hình, thay vì đặt margin trực tiếp lên banner_root.
+    View này được add trực tiếp vào content view của Activity đang foreground
+    (xem BannerNotificationManager.kt) để có thể nhận sự kiện chạm cho 2 nút
+    Xác nhận/Hủy bỏ bên dưới. Toast không hỗ trợ việc này.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -56,6 +54,45 @@
                 android:textColor="@android:color/white"
                 android:textSize="14sp"
                 android:maxLines="4" />
+
+            <LinearLayout
+                android:id="@+id/banner_actions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/banner_btn_cancel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/banner_btn_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/banner_btn_confirm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/banner_btn_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:textSize="13sp" />
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>
