@@ -10,6 +10,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import com.omarea.krscript.NotiShellTaskLauncher
@@ -269,9 +270,12 @@ object BannerNotificationManager {
                 val tick = object : Runnable {
                     override fun run() {
                         if (remainingSeconds() <= 0) {
-                            // Hết giờ mà chưa bấm gì -> tự Hủy bỏ, KHÔNG chạy script.
-                            dismissCurrent()
-                            showNext()
+                            // Hết giờ mà chưa bấm gì -> tự Hủy bỏ, KHÔNG chạy script, có hiệu
+                            // ứng bay ra phải giống lúc người dùng tự vuốt để hủy.
+                            animateAutoDismiss(bannerRoot) {
+                                dismissCurrent()
+                                showNext()
+                            }
                         } else {
                             updateConfirmLabel()
                             mainHandler.postDelayed(this, 1000L)
@@ -301,8 +305,11 @@ object BannerNotificationManager {
             }
             val delay = (deadlineElapsedMs!! - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
             val dismiss = Runnable {
-                dismissCurrent()
-                showNext()
+                // Tự ẩn hết giờ -> có hiệu ứng bay ra phải giống lúc người dùng tự vuốt để hủy.
+                animateAutoDismiss(bannerRoot) {
+                    dismissCurrent()
+                    showNext()
+                }
             }
             pendingRunnable = dismiss
             mainHandler.postDelayed(dismiss, delay)
@@ -326,6 +333,24 @@ object BannerNotificationManager {
         } catch (e: Exception) {
             // View có thể đã bị hệ thống tự gỡ trước đó (vd Activity bị destroy) -> bỏ qua.
         }
+    }
+
+    /**
+     * Hiệu ứng bay ra bên phải + mờ dần khi banner TỰ hủy do hết giờ (đếm ngược) -- dùng lại
+     * đúng công thức của BannerSwipeDismissHelper.flyOutAndDismiss() (cùng khoảng cách bay,
+     * cùng thời lượng/interpolator) để cảm giác nhất quán với khi người dùng tự vuốt để hủy.
+     * Chỉ áp dụng cho tự hủy theo thời gian -- bấm nút "Hủy bỏ"/"Xác nhận" vẫn gỡ ngay như cũ.
+     */
+    private fun animateAutoDismiss(bannerRoot: View, onEnd: () -> Unit) {
+        val screenWidthPx = bannerRoot.resources.displayMetrics.widthPixels
+        val distance = (bannerRoot.width + screenWidthPx).toFloat()
+        bannerRoot.animate()
+            .translationX(distance)
+            .alpha(0f)
+            .setDuration(180L)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction { onEnd() }
+            .start()
     }
 
     private fun dismissCurrent() {
