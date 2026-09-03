@@ -5,14 +5,17 @@ import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
-import com.omarea.common.shell.ShellExecutor
+import com.omarea.krscript.NotiShellTaskLauncher
+import com.omarea.krscript.model.RunnableNode
 import com.tool.tree.R
+import java.lang.ref.WeakReference
 
 enum class BannerType { INFO, SUCCESS, WARNING, ERROR }
 enum class BannerPosition { TOP, BOTTOM }
@@ -31,6 +34,18 @@ enum class BannerPosition { TOP, BOTTOM }
  * nhận/Hủy bỏ khi banner có kèm script cần chạy.
  *
  * Mọi banner (kể cả không có script) đều tự ẩn sau [countdownSeconds] giây, mặc định 5s.
+ *
+ * Banner đang hiện sẽ TỰ ĐỘNG dời sang cửa sổ Activity mới nếu người dùng chuyển Activity
+ * trong lúc đang hiện (xem CurrentActivityHolder.addListener + migrateIfNeeded) -- giữ
+ * nguyên nội dung và thời gian đếm ngược còn lại, thay vì bị che/mất theo Activity cũ.
+ *
+ * Có thể vuốt sang trái/phải trên thân banner để hủy ngay (xem BannerSwipeDismissHelper) --
+ * coi như bấm nút Hủy bỏ, KHÔNG chạy script kèm theo (nếu có).
+ *
+ * Khi bấm Xác nhận chạy [script]: KHÔNG chạy âm thầm nữa mà chuyển hẳn sang cơ chế thông báo
+ * log/tiến trình thật của hệ thống, giống hệt nút "btn_execute" trên thông báo ở
+ * NotiService.kt -- gọi NotiShellTaskLauncher.startTask() để BgTaskThread.ServiceShellHandler
+ * quản lý 1 Notification riêng (tự cập nhật log/tiến trình, có nút hủy/copy log).
  *
  * Gọi từ shell: am broadcast -a <applicationId>.broadcast.BANNER --es text "..." --es type "success" --es position "bottom"
  * Gọi kèm script cần xác nhận trước khi chạy:
@@ -60,19 +75,44 @@ object BannerNotificationManager {
     private val queue = ArrayDeque<BannerRequest>()
     private var isShowing = false
 
-    // View banner đang hiện trên màn hình (nếu có) + WindowManager quản lý nó + Runnable đếm
-    // ngược đang chạy, dùng để có thể gỡ bỏ đúng lúc khi người dùng bấm nút hoặc hết giờ.
+    // View banner đang hiện trên màn hình (nếu có) + WindowManager quản lý nó + Runnable đang
+    // chờ chạy (tick đếm ngược HOẶC tự ẩn), dùng để có thể gỡ bỏ đúng lúc khi người dùng bấm
+    // nút / hết giờ / cần dời banner sang Activity khác.
     private var currentView: View? = null
     private var currentWindowManager: WindowManager? = null
-    private var countdownRunnable: Runnable? = null
+    private var pendingRunnable: Runnable? = null
+
+    // request đang hiển thị + Activity mà nó đang gắn vào -- lưu lại để khi Activity foreground
+    // đổi (xem migrateIfNeeded), có đủ dữ liệu dựng lại y nguyên banner trên Activity mới.
+    private var activeRequest: BannerRequest? = null
+    private var activeActivity: WeakReference<Activity>? = null
+
+    // Mốc tuyệt đối (SystemClock.elapsedRealtime, không phụ thuộc Activity/đồng hồ hệ thống)
+    // banner sẽ tự ẩn -- null nghĩa là không tự ẩn theo giờ (chỉ xảy ra ở chế độ có script khi
+    // countdownSeconds<=0, banner treo tới khi người dùng bấm nút). Tính 1 LẦN lúc banner MỚI
+    // hiện, và KHÔNG đổi khi banner được dời sang Activity khác (migrateIfNeeded) -- nhờ vậy
+    // thời gian đếm ngược còn lại luôn đúng, không bị reset về từ đầu mỗi lần dời.
+    private var deadlineElapsedMs: Long? = null
+
+    init {
+        // Banner đang hiện (sub-window gắn cứng vào token cửa sổ của 1 Activity) sẽ bị che/mất
+        // hẳn nếu người dùng chuyển sang Activity khác (Activity mới là 1 cửa sổ top-level
+        // riêng, che phủ toàn bộ cây cửa sổ Activity cũ). Đăng ký nghe sự kiện đổi Activity
+        // foreground để tự "dời" banner sang cửa sổ mới thay vì để nó biến mất.
+        CurrentActivityHolder.addListener { newActivity ->
+            mainHandler.post { migrateIfNeeded(newActivity) }
+        }
+    }
 
     /**
      * @param icon Tên resource drawable/mipmap tùy chỉnh (vd "ic_my_icon"). Nếu bỏ trống hoặc
      * không tìm thấy resource tương ứng, mặc định dùng icon của chính app.
-     * @param script Lệnh/script sẽ được chạy (bằng đúng quyền hiện có của app, KHÔNG tự xin
-     * root) khi người dùng bấm nút Xác nhận. Khi khác null/rỗng, banner sẽ tự hiện thêm 2 nút
-     * Xác nhận/Hủy bỏ; hết [countdownSeconds] giây mà chưa bấm gì thì coi như Hủy bỏ (KHÔNG
-     * chạy script). Bỏ trống (mặc định) thì banner hiện như bình thường, không có nút.
+     * @param script Lệnh/script sẽ được chạy khi người dùng bấm nút Xác nhận -- log/tiến trình
+     * hiện qua 1 Notification thật của hệ thống (xem [runScript]), dùng chung quyền root/non-root
+     * hiện có của app như mọi nơi khác trong app đang chạy script (KHÔNG tự bật/tắt riêng cho
+     * banner). Khi khác null/rỗng, banner sẽ tự hiện thêm 2 nút Xác nhận/Hủy bỏ; hết
+     * [countdownSeconds] giây mà chưa bấm gì thì coi như Hủy bỏ (KHÔNG chạy script). Bỏ trống
+     * (mặc định) thì banner hiện như bình thường, không có nút.
      * @param confirmText / cancelText nhãn tùy chỉnh cho 2 nút (chỉ có ý nghĩa khi [script]
      * khác null/rỗng); bỏ trống thì dùng nhãn mặc định "Xác nhận"/"Hủy bỏ".
      * @param countdownSeconds số giây trước khi banner tự ẩn, mặc định 5 giây. Áp dụng cho CẢ
@@ -124,7 +164,7 @@ object BannerNotificationManager {
         }
     }
 
-    private fun showOn(activity: Activity, req: BannerRequest) {
+    private fun showOn(activity: Activity, req: BannerRequest, reuseDeadline: Boolean = false) {
         val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, null, false)
 
         val bannerRoot = view.findViewById<View>(R.id.banner_root)
@@ -145,6 +185,13 @@ object BannerNotificationManager {
             activity.resources.getColor(colorRes, activity.theme)
         )
         icon.setImageDrawable(resolveIcon(activity, req.icon))
+
+        // Vuốt ngang thân banner (bannerRoot, KHÔNG phải view gốc trong suốt) để hủy -- coi
+        // như bấm nút Hủy bỏ, không chạy script kèm theo (nếu có).
+        BannerSwipeDismissHelper(activity, bannerRoot) {
+            dismissCurrent()
+            showNext()
+        }
 
         if (!req.title.isNullOrEmpty()) {
             titleView.text = req.title
@@ -184,6 +231,8 @@ object BannerNotificationManager {
 
         currentView = view
         currentWindowManager = windowManager
+        activeRequest = req
+        activeActivity = WeakReference(activity)
         windowManager.addView(view, layoutParams)
 
         val script = req.script
@@ -194,33 +243,48 @@ object BannerNotificationManager {
             cancelBtn.text = if (!req.cancelText.isNullOrEmpty()) req.cancelText else activity.getString(R.string.kr_banner_cancel)
             val confirmLabel = if (!req.confirmText.isNullOrEmpty()) req.confirmText else activity.getString(R.string.kr_banner_confirm)
 
-            var remaining = if (req.countdownSeconds > 0) req.countdownSeconds else 0
+            if (!reuseDeadline) {
+                deadlineElapsedMs = if (req.countdownSeconds > 0) {
+                    SystemClock.elapsedRealtime() + req.countdownSeconds * 1000L
+                } else {
+                    null
+                }
+            }
+
+            // Tính số giây còn lại từ mốc deadline tuyệt đối thay vì đếm lùi 1 biến cục bộ --
+            // nhờ vậy dù banner bị dời sang Activity khác (view/Runnable cũ bị huỷ, tick mới
+            // được lập lại) thì số giây hiện ra vẫn đúng, không bị reset.
+            fun remainingSeconds(): Int {
+                val deadline = deadlineElapsedMs ?: return 0
+                val ms = deadline - SystemClock.elapsedRealtime()
+                return if (ms > 0) ((ms + 999) / 1000).toInt() else 0
+            }
             fun updateConfirmLabel() {
+                val remaining = remainingSeconds()
                 confirmBtn.text = if (remaining > 0) "$confirmLabel (${remaining}s)" else confirmLabel
             }
             updateConfirmLabel()
 
-            val tick = object : Runnable {
-                override fun run() {
-                    remaining--
-                    if (remaining <= 0) {
-                        // Hết giờ mà chưa bấm gì -> tự Hủy bỏ, KHÔNG chạy script.
-                        dismissCurrent()
-                        showNext()
-                    } else {
-                        updateConfirmLabel()
-                        mainHandler.postDelayed(this, 1000L)
+            if (deadlineElapsedMs != null) {
+                val tick = object : Runnable {
+                    override fun run() {
+                        if (remainingSeconds() <= 0) {
+                            // Hết giờ mà chưa bấm gì -> tự Hủy bỏ, KHÔNG chạy script.
+                            dismissCurrent()
+                            showNext()
+                        } else {
+                            updateConfirmLabel()
+                            mainHandler.postDelayed(this, 1000L)
+                        }
                     }
                 }
-            }
-            countdownRunnable = tick
-            if (remaining > 0) {
+                pendingRunnable = tick
                 mainHandler.postDelayed(tick, 1000L)
             }
 
             confirmBtn.setOnClickListener {
                 dismissCurrent()
-                runScript(script)
+                runScript(activity, req, script)
                 showNext()
             }
             cancelBtn.setOnClickListener {
@@ -231,17 +295,28 @@ object BannerNotificationManager {
             actionsRow.visibility = View.GONE
             // Không có script -> banner thường, tự ẩn sau [countdownSeconds] giây (mặc định
             // 5s, dùng chung tham số countdown với chế độ có nút Xác nhận/Hủy bỏ).
-            val autoDismissMs = if (req.countdownSeconds > 0) req.countdownSeconds * 1000L else FALLBACK_DURATION_MS
-            mainHandler.postDelayed({
+            if (!reuseDeadline) {
+                val autoDismissMs = if (req.countdownSeconds > 0) req.countdownSeconds * 1000L else FALLBACK_DURATION_MS
+                deadlineElapsedMs = SystemClock.elapsedRealtime() + autoDismissMs
+            }
+            val delay = (deadlineElapsedMs!! - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+            val dismiss = Runnable {
                 dismissCurrent()
                 showNext()
-            }, autoDismissMs)
+            }
+            pendingRunnable = dismiss
+            mainHandler.postDelayed(dismiss, delay)
         }
     }
 
-    private fun dismissCurrent() {
-        countdownRunnable?.let { mainHandler.removeCallbacks(it) }
-        countdownRunnable = null
+    /**
+     * Gỡ banner khỏi cửa sổ hiện tại (nếu có) và huỷ Runnable đang chờ, nhưng GIỮ NGUYÊN
+     * [activeRequest]/[deadlineElapsedMs] -- dùng khi cần dời banner sang Activity khác
+     * (xem [migrateIfNeeded]), khác với [dismissCurrent] (kết thúc hẳn banner).
+     */
+    private fun detachView() {
+        pendingRunnable?.let { mainHandler.removeCallbacks(it) }
+        pendingRunnable = null
         val view = currentView ?: return
         val windowManager = currentWindowManager
         currentView = null
@@ -253,23 +328,48 @@ object BannerNotificationManager {
         }
     }
 
+    private fun dismissCurrent() {
+        detachView()
+        activeRequest = null
+        activeActivity = null
+        deadlineElapsedMs = null
+    }
+
     /**
-     * Chạy [script] bằng đúng quyền hiện có của app (process "sh" thường, KHÔNG tự xin root
-     * qua "su") trên 1 thread nền, không chặn main thread và không quan tâm kết quả trả về.
+     * Activity foreground vừa đổi (CurrentActivityHolder) trong lúc banner đang hiện -> gỡ
+     * khỏi cửa sổ Activity cũ (đã/sắp bị che hoặc bị huỷ), dựng lại y nguyên nội dung trên
+     * cửa sổ Activity mới, [deadlineElapsedMs] giữ nguyên nên thời gian đếm ngược còn lại
+     * không bị reset.
      */
-    private fun runScript(script: String) {
-        Thread {
-            try {
-                val process = ShellExecutor.getRuntime()
-                process.outputStream.bufferedWriter().use { writer ->
-                    writer.write(script)
-                    writer.write("\nexit\n")
-                    writer.flush()
-                }
-                process.waitFor()
-            } catch (e: Exception) {
-            }
-        }.apply { isDaemon = true }.start()
+    private fun migrateIfNeeded(newActivity: Activity) {
+        val req = activeRequest ?: return
+        if (currentView == null) return
+        val prevActivity = activeActivity?.get()
+        if (prevActivity === newActivity) return
+        detachView()
+        try {
+            showOn(newActivity, req, reuseDeadline = true)
+        } catch (e: Exception) {
+            dismissCurrent()
+            showNext()
+        }
+    }
+
+    /**
+     * Chạy [script] khi người dùng bấm Xác nhận trên banner -- KHÔNG còn chạy âm thầm trên 1
+     * Thread riêng như trước (chạy xong/lỗi cũng không ai biết) nữa, mà chuyển hẳn log/tiến
+     * trình sang 1 Notification thật của hệ thống, dùng đúng cơ chế NotiService.kt đang dùng
+     * cho nút "btn_execute": NotiShellTaskLauncher.startTask() -> tạo 1
+     * BgTaskThread.ServiceShellHandler quản lý riêng 1 Notification (tự cập nhật nội dung log
+     * theo MessagingStyle + progress, kèm nút hủy/copy log) cho đúng script này.
+     */
+    private fun runScript(activity: Activity, req: BannerRequest, script: String) {
+        val nodeInfo = RunnableNode("").apply {
+            title = if (!req.title.isNullOrEmpty()) req.title else req.message
+            shell = RunnableNode.shellModeBgTask
+            interruptable = true
+        }
+        NotiShellTaskLauncher.startTask(activity.applicationContext, script, nodeInfo)
     }
 
     /**

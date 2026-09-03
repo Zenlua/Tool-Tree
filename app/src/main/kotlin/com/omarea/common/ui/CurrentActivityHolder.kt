@@ -13,10 +13,25 @@ import java.lang.ref.WeakReference
 object CurrentActivityHolder : Application.ActivityLifecycleCallbacks {
     private var current: WeakReference<Activity>? = null
 
+    // Danh sách nơi muốn được báo mỗi khi Activity foreground thay đổi (vd
+    // BannerNotificationManager cần biết để "dời" banner đang hiện sang Activity mới thay vì
+    // để nó bị che/mất theo Activity cũ). CopyOnWriteArrayList vì add/remove hiếm, đọc (duyệt
+    // trong onActivityResumed) thường xuyên và có thể từ nhiều luồng.
+    private val listeners = java.util.concurrent.CopyOnWriteArrayList<(Activity) -> Unit>()
+
     fun get(): Activity? = current?.get()?.takeIf { !it.isFinishing && !it.isDestroyed }
+
+    fun addListener(listener: (Activity) -> Unit) {
+        listeners.add(listener)
+    }
+
+    fun removeListener(listener: (Activity) -> Unit) {
+        listeners.remove(listener)
+    }
 
     override fun onActivityResumed(activity: Activity) {
         current = WeakReference(activity)
+        listeners.forEach { it(activity) }
     }
 
     override fun onActivityPaused(activity: Activity) {
