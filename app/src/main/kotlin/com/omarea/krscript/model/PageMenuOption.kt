@@ -41,11 +41,13 @@ class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) 
     // còn fallback nào khác (page không còn handler riêng nữa).
     var script: String = ""
 
-    // ========== TÍNH NĂNG MỚI: type = "spinner" ==========
+    // ========== type = "spinner" ==========
     // Mục menu dạng dropdown chọn giá trị (giống Android Spinner/ParamsSingleSelect) thay vì
     // chạy thẳng script khi bấm. Bấm vào mục sẽ hiện popup dạng Spinner ngay tại toolbar, chọn
     // xong mới chạy "script" với tham số "state" = giá trị vừa chọn (xem
-    // ActionPage.menuItemSpinner()/showSpinnerPopup()).
+    // ActionPage.menuItemSpinner()/showSpinnerPopup()/showSpinnerDialog()).
+    // silent = true: bước chạy script sau khi chọn sẽ chạy ẩn ở nền (không mở dialog log),
+    // giống hành vi silent của các loại menu khác - xem ActionPage.menuItemExecuteSilent().
 
     // Danh sách lựa chọn khai báo tĩnh qua [[menu.items.options]] (title/value) - xem
     // PageConfigReader.pageMenuOptionToml()/selectItemToml().

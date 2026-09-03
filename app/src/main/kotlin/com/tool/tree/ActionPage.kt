@@ -565,14 +565,17 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    private fun menuItemExecuteSilent(menuOption: PageMenuOption) {
+    // params mặc định = hành vi cũ (state/menu_id = key). Spinner truyền state = giá trị vừa chọn.
+    private fun menuItemExecuteSilent(
+        menuOption: PageMenuOption,
+        params: HashMap<String, String> = hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key)
+    ) {
         val config = currentPageConfig ?: return
-        val extraParams = hashMapOf("state" to menuOption.key, "menu_id" to menuOption.key)
         // script đã được gán handler chung của nhóm [[menu]]/[[fab]] lúc parse.
         val script = menuOption.script
 
         lifecycleScope.launch(Dispatchers.IO) {
-           val output = ScriptEnvironmen.executeResultRoot(this@ActionPage, script, config, extraParams)
+           val output = ScriptEnvironmen.executeResultRoot(this@ActionPage, script, config, params)
 
             if (!isActive) return@launch
 
@@ -992,10 +995,13 @@ class ActionPage : AppCompatActivity() {
             popup.dismiss()
             val selected = options.getOrNull(position) ?: return@setOnItemClickListener
             val value = selected.value ?: selected.title ?: ""
-            menuItemExecute(
-                menuOption,
-                hashMapOf("state" to value, "menu_id" to menuOption.key)
-            )
+            val params = hashMapOf("state" to value, "menu_id" to menuOption.key)
+            // silent = true -> chạy ẩn ở nền, không mở dialog log.
+            if (menuOption.silent) {
+                menuItemExecuteSilent(menuOption, params)
+            } else {
+                menuItemExecute(menuOption, params)
+            }
         }
 
         // FAB cần chừa khoảng hở phía trên, toolbar thì không.
@@ -1035,10 +1041,13 @@ class ActionPage : AppCompatActivity() {
                 val confirmedIndex = status.indexOf(true)
                 val option = options.getOrNull(confirmedIndex) ?: return
                 val value = option.value ?: option.title ?: ""
-                menuItemExecute(
-                    menuOption,
-                    hashMapOf("state" to value, "menu_id" to menuOption.key)
-                )
+                val params = hashMapOf("state" to value, "menu_id" to menuOption.key)
+                // silent = true -> chạy ẩn ở nền, không mở dialog log.
+                if (menuOption.silent) {
+                    menuItemExecuteSilent(menuOption, params)
+                } else {
+                    menuItemExecute(menuOption, params)
+                }
             }
         }).show(supportFragmentManager, "action-page-spinner")
     }
