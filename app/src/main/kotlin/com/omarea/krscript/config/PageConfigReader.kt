@@ -323,15 +323,24 @@ class PageConfigReader {
         // true khi đang ở trong 1 [[group]] có support=false -> bỏ hết các mục con của nó
         var groupHidden = false
 
+        // Chỉ báo group qua onNodeReady SAU KHI đã gom xong children (ngay trước khi sang
+        // [[group]] kế tiếp hoặc hết danh sách) - xem closeCurrentGroup(). Con thuộc group không
+        // còn báo riêng (chỉ báo tiến độ, node=null) - trước đây báo group rỗng NGAY LÚC TẠO rồi
+        // báo thêm từng con riêng khiến trang process=true (progressive) vẽ trùng: con vừa hiện
+        // rời vừa hiện bọc trong group. Mục KHÔNG thuộc group nào vẫn báo như cũ.
+        fun closeCurrentGroup(doneNow: Int) {
+            currentGroup?.let { onNodeReady?.invoke(it, doneNow, total) }
+        }
+
         for (entry in sortedEntries) {
             if (entry.type == "group") {
+                closeCurrentGroup(done)
                 val group = groupNodeToml(entry.table)
                 done++
                 if (group.supported) {
                     currentGroup = group
                     groupHidden = false
                     result.add(group)
-                    onNodeReady?.invoke(group, done, total)
                 } else {
                     currentGroup = null
                     groupHidden = true
@@ -346,11 +355,15 @@ class PageConfigReader {
                 continue
             }
             val node = tomlBuildNode(entry.type, entry.table)
-            if (node != null) {
-                currentGroup?.children?.add(node) ?: result.add(node)
+            if (currentGroup != null) {
+                node?.let { currentGroup!!.children.add(it) }
+                onNodeReady?.invoke(null, done, total)
+            } else {
+                node?.let { result.add(it) }
+                onNodeReady?.invoke(node, done, total)
             }
-            onNodeReady?.invoke(node, done, total)
         }
+        closeCurrentGroup(done)
         return result
     }
 

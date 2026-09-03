@@ -357,25 +357,25 @@ Update() {
   [[group]]
   [[menu]]
   handler = """
-    if [ "$menu_id" == "share" ]; then
-      echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
-    elif [ "$menu_id" == "data" ]; then
-      slog boot_ver_code 1
-      slog sum_onl_plugin 1
-      slog sum_moduls 1
-    elif [ "$menu_id" == "beta" ]; then
-      echo "'$update_text_3'"
+  if [ "$menu_id" == "share" ]; then
+    echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
+  elif [ "$menu_id" == "data" ]; then
+    slog boot_ver_code 1
+    slog sum_onl_plugin 1
+    slog sum_moduls 1
+  elif [ "$menu_id" == "beta" ]; then
+    echo "'$update_text_3'"
+    echo
+    if [ -f "$TMP/Tool-Tree.apk" ]; then
+      openfile "$TMP/Tool-Tree.apk"
+      exit
+      else
+      taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
+      openfile "$TMP/Tool-Tree.apk"
       echo
-      if [ -f "$TMP/Tool-Tree.apk" ]; then
-        openfile "$TMP/Tool-Tree.apk"
-        exit
-        else
-        taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
-        openfile "$TMP/Tool-Tree.apk"
-        echo
-        echo "'$save_text' $TMP/Tool-Tree.apk"
-      fi
+      echo "'$save_text' $TMP/Tool-Tree.apk"
     fi
+  fi
   """
   
     [[menu.items]]
@@ -385,11 +385,11 @@ Update() {
     silent = true
     type = "checkbox"
     script = """
-      if [ "$(glog gg_trans_ver)" == 1 ]; then
-      slog gg_trans_ver 0
-      else
-      slog gg_trans_ver 1
-      fi
+    if [ "$(glog gg_trans_ver)" == 1 ]; then
+    slog gg_trans_ver 0
+    else
+    slog gg_trans_ver 1
+    fi
     """
     
     [[menu.items]]
@@ -407,11 +407,13 @@ Update() {
     silent = true
     title = "'$reset_data_text'"
     
-    [[fab]]
-    [[fab.items]]
-    type = "refresh"
-    icon = "'$ETC'/icon/Loading.png"
-    
+  [[group]]
+  [[fab]]
+  [[fab.items]]
+  type = "refresh"
+  icon = "'$ETC'/icon/Loading.png"
+  
+  [[group]]
   [[page]]
   title = "'$author_text'"
   icon = "'$urlicon'/like.png"
@@ -445,13 +447,11 @@ Project() {
 
   echo '
   [[group]]
-
   [[menu]]
   [[menu.items]]
   type = "refresh"
   title = "'$refresh_text'"
   
-
   [[group]]
   [[action]]
   shell = "hidden"
@@ -484,7 +484,7 @@ Project() {
     rm -fr "$vl"
     done
   """
-
+  
     [[action.params]]
     name = "dels"
     label = "'$option_text'"
@@ -505,7 +505,7 @@ Project() {
     slog re_tool_erofs "$re_tool_erofs"
     slog re_tool_f2fs "$re_tool_f2fs"
   """
-
+  
     [[action.params]]
     name = "un_tool_ext4"
     title = "'$tool_unpack_text' ext4"
@@ -569,7 +569,8 @@ Project() {
   done
   
   if [ -n "$(ls -1d "$SDH/$PTSH"/* 2>/dev/null | grep -vE '/(raw|config)')" ]; then
-  echo '[[group]]
+  echo '
+  [[group]]
   [[action]]
   title = "'$custom_size'"
   warn = "'$custom_size_desc'"
@@ -589,11 +590,12 @@ Feature() {
   echo '
   [[group]]
   [[menu]]
-    [[menu.items]]
-    link = "https://aistudio.google.com/api-keys"
-    title = "'$generate_text' Gemini API"
-    silent = true
-    
+  [[menu.items]]
+  link = "https://aistudio.google.com/api-keys"
+  title = "'$generate_text' Gemini API"
+  silent = true
+  
+  [[group]]
   [[switch]]
   title = "'$project_text_5'"
   icon = "'$urlicon'/set_home.png"
@@ -640,7 +642,7 @@ Feature() {
   shell = "hidden"
   support = "command -v taskset &>/dev/null && echo 1"
   script = "slog use_cpu \"$use_cpus\""
-
+  
     [[action.params]]
     name = "use_cpus"
     label = "'$option_text'"
@@ -655,12 +657,12 @@ Feature() {
   shell = "hidden"
   auto-restart = true
   script = """
-    slog dissblur "$dissblur"
-    slog directbg "$directbg"
-    slog uri_change_background "$uri_change_background"
-    [ -f "$uri_change_background" ] && cp -f "$uri_change_background" "$ETC/wallpaper.jpg"
-    [ -z "$uri_change_background" ] && rm -f "$ETC/wallpaper.jpg"
-    set_permis "$ETC/wallpaper.jpg" &>/dev/null
+  slog dissblur "$dissblur"
+  slog directbg "$directbg"
+  slog uri_change_background "$uri_change_background"
+  [ -f "$uri_change_background" ] && cp -f "$uri_change_background" "$ETC/wallpaper.jpg"
+  [ -z "$uri_change_background" ] && rm -f "$ETC/wallpaper.jpg"
+  set_permis "$ETC/wallpaper.jpg" &>/dev/null
   """
 
     [[action.params]]
@@ -2019,8 +2021,7 @@ Addon() {
   fi
   
   echo '
-  [[group]]
-  
+    [[group]]
     [[menu]]
     [[menu.items]]
     title = "'$download_text'"
@@ -2040,7 +2041,7 @@ Addon() {
     slog show_setting_add 1
     fi
     """
-    
+    [[group]]
     [[fab]]
     handler = """
     [ "$menu_id" == "file" ] && installadd "$file" "'$PATHADD'"
