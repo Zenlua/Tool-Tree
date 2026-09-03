@@ -89,6 +89,11 @@ class DialogLogFragment : DialogFragment() {
     private var wrapEnabled = true
     private var noWrapContainer: HorizontalScrollView? = null
 
+    // Window đã push vào TopWindowHolder (xem onStart/onDestroyView) -- lưu lại tham chiếu
+    // riêng để pop đúng window lúc đóng, không dựa vào dialog?.window (có thể đã null lúc
+    // onDestroyView chạy).
+    private var attachedWindow: android.view.Window? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -1351,6 +1356,19 @@ class DialogLogFragment : DialogFragment() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Dialog này dùng theme windowIsFloating=false (full-screen) nên tự tách thành 1 lớp
+        // cửa sổ riêng, nằm TRÊN cửa sổ gốc của Activity. Banner (BannerNotificationManager)
+        // vốn chỉ biết gắn vào token cửa sổ Activity (CurrentActivityHolder) nên bị dialog
+        // full-screen này che mất. Đăng ký window hiện tại vào TopWindowHolder để banner biết
+        // cần gắn vào token nào mới thực sự nổi lên trên cùng.
+        dialog?.window?.let { window ->
+            attachedWindow = window
+            com.omarea.common.ui.TopWindowHolder.push(window)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         dialog?.setOnKeyListener { _, keyCode, event ->
@@ -1373,6 +1391,8 @@ class DialogLogFragment : DialogFragment() {
     }
 
     override fun onDestroyView() {
+        attachedWindow?.let { com.omarea.common.ui.TopWindowHolder.pop(it) }
+        attachedWindow = null
         currentHandler?.release()
         currentHandler = null
         AnsiColorParser.reset()

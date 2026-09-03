@@ -163,9 +163,14 @@ object BannerNotificationManager {
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
         )
-        // Bắt buộc phải có token của Activity thì mới add được sub-window kiểu
-        // TYPE_APPLICATION_ATTACHED_DIALOG (không cần quyền SYSTEM_ALERT_WINDOW).
-        layoutParams.token = activity.window.decorView.windowToken
+        // Ưu tiên gắn vào token của window đang thực sự ở trên cùng (vd 1 dialog full-screen
+        // kiểu DialogLogFragment, xem TopWindowHolder) -- loại dialog windowIsFloating=false
+        // tự tách thành 1 lớp cửa sổ riêng nằm TRÊN cửa sổ Activity, nên nếu vẫn gắn vào token
+        // cửa sổ Activity gốc như cũ thì banner sẽ bị dialog đó che mất. Không có dialog nào
+        // kiểu này đang mở thì fallback về token cửa sổ Activity như trước (không cần quyền
+        // SYSTEM_ALERT_WINDOW trong cả 2 trường hợp).
+        val anchorWindow = TopWindowHolder.current() ?: activity.window
+        layoutParams.token = anchorWindow.decorView.windowToken
         when (req.position) {
             BannerPosition.TOP -> {
                 layoutParams.gravity = Gravity.TOP
