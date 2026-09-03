@@ -36,6 +36,15 @@ class PageConfigReader {
         this.parentDir = parentDir ?: ""
     }
 
+    // Dùng cho luồng streaming (PageConfigSh.executeStreaming(), trang process=true): không
+    // đọc file/stream nào ở đây - chỉ parse từng khối TOML rời rạc qua readConfigTomlBlock()
+    // ngay khi shell vừa xuất xong khối đó. Tất cả khối của CÙNG 1 trang phải parse tuần tự
+    // trên CÙNG 1 instance để gom đúng pageMenuOptions/headerActions/autoShowActions.
+    constructor(context: Context, parentDir: String?) {
+        this.context = context
+        this.parentDir = parentDir ?: ""
+    }
+
     constructor(context: Context, pageConfigStream: InputStream) {
         this.context = context
         this.pageConfigStream = pageConfigStream
@@ -275,6 +284,41 @@ class PageConfigReader {
             Log.e("KrConfig Fail！", "" + ex.message)
             null
         }
+    }
+
+    // Parse MỘT khối TOML top-level rời rạc (vd toàn bộ "[[group]] ... [[group.action]] ...",
+    // hoặc "[[menu]] ...") - dùng cho luồng streaming khi process=true, ngay khi shell vừa
+    // xuất xong khối này (xem PageConfigSh.executeStreaming()). Dùng chung collectedMenuOptions/
+    // pendingSwitchStates... của instance này nên các khối của 1 trang phải gọi hàm này tuần
+    // tự, đúng thứ tự xuất hiện trong output shell.
+    // Khối lỗi cú pháp KHÔNG làm hỏng các khối khác: trả về 1 item báo lỗi tại đúng vị trí
+    // thay vì null/throw ra ngoài.
+    fun readConfigTomlBlock(blockText: String): List<NodeInfoBase> {
+        if (blockText.isBlank()) return emptyList()
+        return try {
+            val result = Toml.parse(blockText)
+            if (result.hasErrors()) {
+                val message = result.errors().joinToString("\n") { it.toString() }
+                Log.e("KrConfig Fail！", message)
+                listOf(buildErrorNode(message))
+            } else {
+                val nodes = tomlChildren(result)
+                resolvePendingStates()
+                nodes
+            }
+        } catch (ex: Exception) {
+            Log.e("KrConfig Fail！", "" + ex.message)
+            listOf(buildErrorNode(ex.message ?: ex.toString()))
+        }
+    }
+
+    private fun buildErrorNode(message: String): NodeInfoBase {
+        val node = TextNode(pageConfigAbsPath)
+        val row = TextNode.TextRow()
+        row.text = context.getString(com.tool.tree.R.string.kr_page_sh_invalid) + "\n" + message
+        row.color = "#D32F2F".toColorInt()
+        node.rows.add(row)
+        return node
     }
 
     private fun tomlEntryLine(parent: TomlTable, key: String, index: Int): Int? {
