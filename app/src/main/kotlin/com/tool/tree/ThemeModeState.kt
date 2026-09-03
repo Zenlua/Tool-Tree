@@ -28,6 +28,17 @@ object ThemeModeState {
     @Volatile
     private var blurActive: Boolean = false
 
+    // Đánh dấu "đang ở chế độ ảnh nền" (level 3/4/5, KHÔNG bật directBg) - bao gồm CẢ ảnh
+    // tĩnh (file tùy chỉnh / wallpaper hệ thống tĩnh) LẪN live wallpaper. Khác với cờ hệ
+    // thống FLAG_SHOW_WALLPAPER (chỉ được set khi là live wallpaper, xem
+    // applyWallpaperMode) - DialogHelper.setWindowBlurBg cần biến RIÊNG này để biết có nên
+    // chạy 3 tầng dự phòng ảnh nền hay không, thay vì đọc nhầm FLAG_SHOW_WALLPAPER.
+    @Volatile
+    private var imageBackgroundMode: Boolean = false
+
+    @JvmStatic
+    fun isImageBackgroundMode(): Boolean = imageBackgroundMode
+
     @JvmStatic
     fun isDarkMode(): Boolean = themeMode.isDarkMode
 
@@ -83,16 +94,19 @@ object ThemeModeState {
                 themeMode.isDarkMode = isSystemNight
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                 activity.setTheme(if (isSystemNight) R.style.AppThemeDark else R.style.AppTheme)
+                imageBackgroundMode = false
             }
             1 -> {
                 themeMode.isDarkMode = true
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 activity.setTheme(R.style.AppThemeDark)
+                imageBackgroundMode = false
             }
             2 -> {
                 themeMode.isDarkMode = false
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                 activity.setTheme(R.style.AppTheme)
+                imageBackgroundMode = false
             }
             3 -> {
                 themeMode.isDarkMode = isSystemNight
@@ -160,6 +174,10 @@ object ThemeModeState {
     private fun applyWallpaperMode(activity: Activity, isNight: Boolean, directBg: Boolean = false) {
         activity.setTheme(if (isNight) R.style.AppThemeWallpaper else R.style.AppThemeWallpaperLight)
         val window = activity.window
+
+        // directBg = true -> nền màu phẳng (ColorDrawable), không phải ảnh -> không tính là
+        // "chế độ ảnh nền". Ngược lại (kể cả ảnh tĩnh lẫn live wallpaper) đều tính là ảnh nền.
+        imageBackgroundMode = !directBg
 
         window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
 
