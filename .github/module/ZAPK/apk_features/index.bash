@@ -9,7 +9,7 @@ echo '
 [[group]]
 title = "'$google_text'"
 
-  [[group.action]]
+  [[action]]
   title = "'$transai_text_1'"
   desc = "'$transai_text_2'"
   script = """
@@ -20,13 +20,13 @@ title = "'$google_text'"
     fi
   fi
   """
-  [[group.action.params]]
+  [[action.params]]
     name = "FILE"
     type = "file"
     required = "true"
 
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$check_ufs_text'"
   summary = "'$text_root'"
   lock = """
@@ -37,7 +37,7 @@ title = "'$google_text'"
   """
 
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$fs_text_2'"
   desc = "'$text_rr'"
   summary = "'$text_root'"
@@ -63,13 +63,13 @@ title = "'$google_text'"
 
 [[group]]
 
-  [[group.page]]
+  [[page]]
   html = "https://zenlua.github.io/Tool-Tree/website/web/terminal.html"
   title = "Web Terminal"
 
 [[group]]
 
-  [[group.page]]
+  [[page]]
   html = "https://zenlua.github.io/Tool-Tree/website/web/manager.html"
   title = "Web Manager"
 '

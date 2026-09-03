@@ -6,13 +6,13 @@ echo '
 [[group]]
   title = "'$project_text': '$PTSH'"
 
-  [[group.action]]
+  [[action]]
   title = "'$desc_patch_prop'"
   warn = """'"$desc_patch_prop_long"'"""
   reload = true
   script = "'$pathsh' sprop_pris"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_pris"
     label = "'$select_text'"
     desc = "'$string_text_2': vendor, system, system_ext, product"
@@ -21,14 +21,14 @@ echo '
     required = true
 
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$quick_custom_text'"
   summary = "Xiaomi"
   warn = "'$warn_delete_gms'"
   reload = true
   script = "'$pathsh' custom_patch"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "device_features"
     label = "'$label_device_features'"
     desc = "'$string_text_2': product"
@@ -36,7 +36,7 @@ echo '
     value-sh = "'$pathsh' get_patch_1"
     readonly = "'$pathsh' get_patch_1"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "delete_gms"
     label = "'$label_delete_gms'"
     desc = "'$string_text_2': product"
@@ -44,7 +44,7 @@ echo '
     value-sh = "'$pathsh' get_patch_2"
     readonly = "'$pathsh' get_patch_2"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "xeu_toolbox"
     label = "'$label_xeu_toolbox'"
     desc = "'$string_text_2': system_ext"
@@ -53,7 +53,7 @@ echo '
     readonly = "'$pathsh' check_xeu"
 
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$label_rw_rom'"
   summary = "Xiaomi"
   warn = "'$warn_delete_gms'"
@@ -61,7 +61,7 @@ echo '
   auto-off = true
   script = "'$pathsh' rw_rom_ext"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "diss_ovelsy"
     label = "'$diss_ovelsy_text'"
     desc = "'$string_text_2': vendor"
@@ -69,7 +69,7 @@ echo '
     value-sh = "'$pathsh' get_rw_rom_1"
     readonly = "'$pathsh' get_rw_rom_1"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "diss_ovelsy_boot"
     label = "'$diss_ovelsy_text'"
     desc = "'$string_text_2': vendor_boot"
@@ -77,7 +77,7 @@ echo '
     value-sh = "'$pathsh' get_rw_rom_2"
     readonly = "'$pathsh' get_rw_rom_2"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "move_pangu"
     label = "'$move_pangu_text'"
     desc = "'$string_text_2': product, system"
@@ -85,7 +85,7 @@ echo '
     value-sh = "'$pathsh' get_rw_rom_3"
     readonly = "'$pathsh' get_rw_rom_3"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "move_miext"
     label = "'$move_miext_text'"
     desc = "'$string_text_2': mi_ext, system, product, system_ext"
@@ -94,7 +94,7 @@ echo '
     readonly = "'$pathsh' get_rw_rom_4"
 
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$cover_app_text_1'"
   warn = "'$cover_app_text_2'"
   script = """
@@ -102,7 +102,7 @@ echo '
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "cover_data_app"
     type = "text"
     options-sh = "'$pathsh' search_apk | sort"
@@ -110,14 +110,14 @@ echo '
     multiple = true
 
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$title_delete'"
   script = """
     slog del_app_patch "$del_app_patch"
     '$pathsh' del_app "$del_app_patch"
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "del_app_patch"
     type = "text"
     desc = "'$text_del_file'"
@@ -148,8 +148,8 @@ home() {
   [[group]]
   title = "'$google_text'"
 
-  [[group.menu]]
-  [[group.menu.items]]
+  [[menu]]
+  [[menu.items]]
   type = "default"
   auto-finish = true
   title = "@string/update_text"
@@ -157,7 +157,7 @@ home() {
   '$MPAT'/index.bash update_addon
   """
   
-  [[group.page]]
+  [[page]]
   title = "'$title_quick'"
   summary = "'$project_text': '$PTSH'"
   config-sh = "'$MPAT'/index.bash infor"
@@ -165,7 +165,7 @@ home() {
 [[group]]
   title = "'$reminder_notes'"
 
-  [[group.action]]
+  [[action]]
   title = "'$title_framework_patch'"
   warn = "'$warning_notes_text'"
   summary = "Android 12+"
@@ -175,7 +175,7 @@ home() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
@@ -184,7 +184,7 @@ home() {
     required = true
     multiple = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_apksign"
     label = "'$label_fix_apksign'"
     desc = "'$required_files_text': framework.jar, services.jar, miui-services.jar"
@@ -196,7 +196,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "tool_box"
     label = "'$label_fix_toolbox'"
     desc = "'$required_files_text': framework.jar, services.jar"
@@ -208,7 +208,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_enforce"
     label = "'$label_fix_enforce'"
     desc = "'$required_files_text': miui-services.jar"
@@ -220,7 +220,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-  [[group.action]]
+  [[action]]
   title = "'$title_cn_global'"
   warn = "'$warning_notes_text'"
   summary = "Xiaomi, Android 12+"
@@ -230,7 +230,7 @@ home() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
@@ -239,7 +239,7 @@ home() {
     required = true
     multiple = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_noti"
     label = "'$label_fix_noti'"
     desc = "'$required_files_text': miui-framework.jar, miui-services.jar, PowerKeeper.apk, MiuiSystemUI.apk"
@@ -251,7 +251,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "settings_infor"
     label = "'$global_mod_text_1'"
     desc = "'$required_files_text': Settings.apk"
@@ -263,7 +263,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "settings_show"
     label = "'$global_mod_text_2'"
     desc = "'$required_files_text': Settings.apk"
@@ -275,7 +275,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "settings_icons"
     label = "'$global_mod_text_3'"
     desc = "'$required_files_text': Settings.apk"
@@ -287,7 +287,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "sceen_lock"
     label = "'$global_mod_text_6'"
     desc = "'$required_files_text': MiuiSystemUI.apk"
@@ -299,7 +299,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "dark_show"
     label = "'$global_mod_text_4'"
     desc = "'$required_files_text': miui-services.jar"
@@ -311,7 +311,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "open_app"
     label = "'$open_app_text'"
     desc = "'$required_files_text': miui-services.jar"
@@ -323,7 +323,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "font_fix"
     label = "'$global_mod_text_5'"
     desc = "'$required_files_text': miui-framework.jar"
@@ -335,7 +335,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
 
-  [[group.action]]
+  [[action]]
   title = "'$title_ime'"
   warn = "Note: MiuiSystemUI.apk (global),\n'$warning_notes_text'"
   summary = "Xiaomi"
@@ -349,7 +349,7 @@ home() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
@@ -358,7 +358,7 @@ home() {
     required = true
     multiple = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "ime_app"
     desc = "'$desc_ime_app'"
     placeholder = "com.google.android.inputmethod.latin"
@@ -366,13 +366,13 @@ home() {
     value-sh = "glog ime_app"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "app_ime"
     label = "'$install_text' LatinImeGoogle"
     desc = "'$string_text_2': product"
     type = "switch"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "ime_color"
     desc = "'$desc_color_light'"
     placeholder = "#f0f3f8"
@@ -380,7 +380,7 @@ home() {
     value-sh = "glog ime_color"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "ime_color_dark"
     desc = "'$desc_color_dark'"
     placeholder = "#1e1f21"
@@ -388,13 +388,13 @@ home() {
     value-sh = "glog ime_color_dark"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "ime_dimen"
     desc = "'$desc_dimen'"
     type = "text"
     value-sh = "glog ime_dimen"
 
-  [[group.action]]
+  [[action]]
   title = "'$title_many_patch'"
   warn = "'$warning_notes_text'"
   summary = "Xiaomi, Android 12+"
@@ -404,7 +404,7 @@ home() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
@@ -413,7 +413,7 @@ home() {
     required = true
     multiple = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_screen"
     label = "'$label_fix_screen'"
     desc = "'$required_files_text': miui-services.jar, services.jar"
@@ -425,7 +425,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_fps"
     label = "'$label_fix_fps'"
     desc = "'$required_files_text': PowerKeeper.apk"
@@ -437,7 +437,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_reset_theme"
     label = "'$label_fix_reset_theme'"
     desc = "'$required_files_text': miui-framework.jar"
@@ -449,7 +449,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_show_error"
     label = "'$label_fix_show_error'"
     desc = "'$required_files_text': services.jar"
@@ -461,7 +461,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_fpscam"
     label = "'$label_fix_fps_cam'"
     desc = "'$required_files_text': miui-services.jar"
@@ -473,7 +473,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_window"
     label = "'$label_fix_window'"
     desc = "'$required_files_text': miui-services.jar, miui-framework.jar"
@@ -485,7 +485,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "app_setup"
     label = "'$install_text' SetupWizard"
     desc = "'$required_files_text': miui-services.jar"
@@ -497,7 +497,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_data"
     label = "'$label_fix_data'"
     desc = "'$required_files_text': ExternalStorageProvider.apk"
@@ -509,7 +509,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-  [[group.action]]
+  [[action]]
   title = "'$title_app_patch'"
   warn = "'$warning_notes_text'"
   summary = "Xiaomi"
@@ -519,7 +519,7 @@ home() {
     checktime
   """
     
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     title = "'$list_file_text'"
     desc = "'$string_text_1': Project/'$PTSH', '$sdcard_text'"
@@ -528,7 +528,7 @@ home() {
     required = true
     multiple = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_themes"
     label = "'$label_fix_themes'"
     desc = "'$required_files_text': ThemeManager.apk"
@@ -540,7 +540,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_appvault"
     label = "'$label_fix_appvault'"
     desc = "'$required_files_text': PersonalAssistant.apk"
@@ -552,7 +552,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_thoit"
     label = "'$label_fix_thoit'"
     desc = "'$required_files_text': MIUIWeather.apk"
@@ -564,7 +564,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_joyose"
     label = "'$label_fix_joyose'"
     desc = "'$required_files_text': Joyose.apk"
@@ -576,7 +576,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_mapcn"
     label = "'$label_fix_mapcn'"
     desc = "'$required_files_text': MIUIGallery.apk"
@@ -588,7 +588,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_gmscn"
     label = "'$label_fix_gmscn'"
     desc = "'$required_files_text': Provision.apk"
@@ -600,7 +600,7 @@ home() {
     depend-sort = "true"
     depend-default = "hide"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_off_10s"
     label = "'$label_fix_off_10s'"
     desc = "'$required_files_text': SecurityCenter.apk"
@@ -613,7 +613,7 @@ home() {
     depend-default = "hide"
     
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'"$action_title"'"
   summary = "'"$action_desc"'"
   warn = "'"$action_warn"'"
@@ -627,7 +627,7 @@ home() {
     '$MPAT'/index.bash test_app "$kill_apk_list"
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "kill_apk_list"
     title = "'"$param1_title"'"
     label = "'"$param1_label"'"
@@ -636,13 +636,13 @@ home() {
     value-sh = "glog kill_apk_list"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "open_app"
     label = "'$open_app_text_2'"
     type = "switch"
     value-sh = "glog open_app_bool"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "dem_giay"
     label = "'"$param2_label"'"
     desc = "'"$param2_desc"'"
@@ -651,7 +651,7 @@ home() {
     max = 300
     value-sh = "glog dem_giay 60"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "kill_customize"
     label = "'"$param3_label"'"
     desc = "'"$param3_desc"'"
@@ -660,7 +660,7 @@ home() {
     value-sh = "glog kill_customize"
 
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$add_another_app_text'"
   summary = "Xiaomi"
   warn = "'$add_another_app_text_3'"
@@ -670,62 +670,62 @@ home() {
     checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "add_app"
     label = "InstallerX Revived"
     desc-on = "'$add_another_app_text_2'"
     desc = "'$string_text_2': (CN: product), (global: system)"
     type = "bool"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "add_app_2"
     label = "Safetycore"
     desc = "'$string_text_2': product"
     type = "bool"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "app_playstore"
     label = "Play Store"
     desc = "'$string_text_2': product"
     type = "bool"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "app_restore"
     label = "Google Restore"
     desc = "'$string_text_2': product"
     type = "bool"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "app_velvet"
     label = "Google, Gemini"
     desc = "'$string_text_2': product"
     type = "bool"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "app_auto"
     label = "AndroidAuto"
     desc = "'$string_text_2': product"
     type = "bool"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "app_tts"
     label = "Google TTS"
     desc = "'$string_text_2': product"
     type = "bool"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "app_carrier"
     label = "Carrier Servicesi"
     desc = "'$string_text_2': product"
     type = "bool"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "app_gps"
     label = "LocationHistory"
     desc = "'$string_text_2': product"
     type = "bool"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "app_monet"
     label = "ThemePicker"
     desc = "'$string_text_2': system_ext"
@@ -733,12 +733,12 @@ home() {
     
     
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$title_boot_patch'"
   warn = "'$title_boot_patch2', '$title_boot_patch3_desc'"
   script = "'$pathsh' patch_boot \"$FOLDER\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FOLDER"
     title = "'$decrypted_partition_text'"
     label = "'$select_text'"
@@ -746,13 +746,13 @@ home() {
     options-sh = "findfile 0 $SDH/$PTSH | grep boot"
     required = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_fake_lock"
     label = "'$title_boot_patch3'"
     desc = ""
     type = "bool"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "fix_diselinux"
     label = "'$title_boot_patch4'"
     options-sh = "echo -e \"0|'$default_text'\n1|enforcing\n2|permissive\n3|disabled\""

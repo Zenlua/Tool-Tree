@@ -8,15 +8,15 @@ echo '
 [[group]]
   title = "'$google_text'"
   
-  [[group.menu]]
-  [[group.menu.items]]
+  [[menu]]
+  [[menu.items]]
   type = "default"
   title = "@string/update_text"
   script = """
   MPAT='$MPAT' '$MPAT'/index.bash jadx_install
   """
   
-  [[group.action]]
+  [[action]]
   title = "Jadx"
   desc = "'$view_source_text_11'"
   warn = "'$view_source_text_10'"
@@ -30,18 +30,18 @@ echo '
   checktime
   """
     
-    [[group.action.params]]
+    [[action.params]]
     name = "no_res"
     title = "'$view_source_text_9'"
     label = "'$view_source_text_8'"
     type = "switch"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "no_dex"
     label = "'$view_source_text_7'"
     type = "switch"
     
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     title = "'$view_source_text_6'"
     desc = "'$view_source_text_5': apk, dex, jar, class, smali, zip, aar, arsc, aab, xapk, apkm"

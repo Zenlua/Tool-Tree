@@ -6,7 +6,7 @@ menuadd "$MPAT"
 echo '
 [[group]]
 title = "'$google_text'"
-  [[group.action]]
+  [[action]]
   title = "'$mage_name_text'"
   desc = "'$merge_partition_text'"
   script = """
@@ -15,12 +15,12 @@ title = "'$google_text'"
     MPAT="'$MPAT'" '$MPAT'/bin/combine_img $silence $dang_file "$MUTIIMG" "$IMAGE"
     checktime
   """
-  [[group.action.params]]
+  [[action.params]]
     name = "silence"
     label = "'$delete_text'"
     type = "checkbox"
     value-sh = "glog silencekd"
-  [[group.action.params]]
+  [[action.params]]
     name = "dang_file"
     title = "'$merge_partition_1'"
     label = "'$select_text'"
@@ -28,13 +28,13 @@ title = "'$google_text'"
     options-sh = """
     echo -e "0|'$default_text'\n1|erofs\n2|ext4\n3|'$pack_img_text'"
     """
-  [[group.action.params]]
+  [[action.params]]
     name = "MUTIIMG"
     desc = "'$merge_partition_3'"
     label = "'$select_text'"
     options-sh = "findfile 6 $PTSD"
     required = "true"
-  [[group.action.params]]
+  [[action.params]]
     name = "IMAGE"
     desc = "'$merge_partition_5'"
     label = "'$select_text'"
@@ -43,7 +43,7 @@ title = "'$google_text'"
     findfile 3 $PTSD | sed "/^system\\./d"
     """
 [[group]]
-  [[group.action]]
+  [[action]]
   warn = "'$oat_text_1'"
   title = "'$oat_text_3'"
   desc = "'$oat_text_4'"
@@ -55,29 +55,29 @@ title = "'$google_text'"
     slog framework_switch "$framework_switch"
     '$MPAT'/bin/dex2oat
   """
-  [[group.action.params]]
+  [[action.params]]
     name = "PTSH"
     title = "'$config_text_1'"
     label = "'$setting_text_3'"
     options-sh = "findfile for $SDH | grep -v raw"
     value-sh = "glog PTSH"
-  [[group.action.params]]
+  [[action.params]]
     name = "framework_switch"
     label = "'$oat_text_5'"
     type = "switch"
     value-sh = "glog framework_switch 1"
-  [[group.action.params]]
+  [[action.params]]
     name = "services_switch"
     label = "'$oat_text_6'"
     type = "switch"
     value-sh = "glog services_switch 1"
-  [[group.action.params]]
+  [[action.params]]
     name = "features_oat"
     label = "'$oat_text_7'"
     placeholder = "default"
     type = "text"
     value-sh = "glog features_oat default"
-  [[group.action.params]]
+  [[action.params]]
     name = "apps_apk_oat"
     desc = "'$oat_text_10'"
     label = "'$oat_text_8'"
@@ -86,14 +86,14 @@ title = "'$google_text'"
     options-sh = "'$MPAT'/bin/listapk"
     value-sh = "glog apps_apk_oat"
     multiple = "true"
-  [[group.action.params]]
+  [[action.params]]
     name = "secontex"
     desc = "'$oat_text_9'"
     placeholder = "PCL[]"
     type = "text"
     value-sh = "glog secontex"
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "Sign boot"
   desc = "Sign AVB 1.0 boot, vendor_boot"
   script = """
@@ -106,25 +106,25 @@ title = "'$google_text'"
     echo
     echo "'$save_text': $PTSD/out/$FILE"
   """
-  [[group.action.params]]
+  [[action.params]]
     name = "NAME"
     label = "'$name_text'"
     value-sh = "glog name_boot_key boot"
     type = "text"
     placeholder = "boot"
-  [[group.action.params]]
+  [[action.params]]
     name = "SIGN"
     value-sh = "glog sign_boot_key testkey"
     label = "'$sign_text'"
     options-sh = "findfile file $ETC/key x509.pem | sed \"s|.x509.pem||\""
-  [[group.action.params]]
+  [[action.params]]
     name = "FILE"
     desc = "'$input_text' .img, '$folder_text' '$PTSD'"
     options-sh = "cd $PTSD; ls *.img | grep boot"
     label = "'$select_text'"
     required = "true"
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "Protoc"
   desc = "'$protoc_text'"
   script = """
@@ -145,18 +145,18 @@ title = "'$google_text'"
   fi
   done
   """
-  [[group.action.params]]
+  [[action.params]]
     name = "LIST"
     label = "'$select_text'"
     options-sh = "echo -e \"Xml\nJson\""
-  [[group.action.params]]
+  [[action.params]]
     name = "FILE"
     desc = "'$input_text' .pb .json .xml, '$folder_text' '$PTSD'"
     multiple = "true"
     options-sh = "findfile file $PTSD \".pb|.json|.xml\""
     required = "true"
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "Mi Thermal"
   desc = "'$mi_thermal_text'"
   script = """
@@ -170,14 +170,14 @@ title = "'$google_text'"
   fi
   done
   """
-  [[group.action.params]]
+  [[action.params]]
     name = "FILE"
     desc = "'$input_text' .conf, .txt '$folder_text' '$PTSD'"
     multiple = "true"
     options-sh = "findfile file $PTSD \".conf|.txt\""
     required = "true"
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "Unpack splitapp"
   desc = "'$splitapp_desc_text'"
   script = """
@@ -189,13 +189,13 @@ title = "'$google_text'"
   echo "'$error_text' $FILE" >&2
   fi
   """
-  [[group.action.params]]
+  [[action.params]]
     name = "FILE"
     label = "'$select_text'"
     desc = "'$input_text' .APP, '$folder_text' '$PTSD'"
     options-sh = "findfile file $PTSD \".app|.APP\""
     required = "true"
-  [[group.action]]
+  [[action]]
   title = "Unpack pac"
   desc = "'$pac_desc_text'"
   script = """
@@ -207,7 +207,7 @@ title = "'$google_text'"
   echo "'$error_text' $FILE" >&2
   fi
   """
-  [[group.action.params]]
+  [[action.params]]
     name = "FILE"
     label = "'$select_text'"
     desc = "'$input_text' .pac, '$folder_text' '$PTSD'"

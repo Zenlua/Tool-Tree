@@ -8,7 +8,7 @@ echo '
 [[group]]
   title = "'$google_text'"
 
-  [[group.action]]
+  [[action]]
   title = "'$home_text_1'"
   desc = "'$home_text_2'"
   script = """
@@ -16,7 +16,7 @@ echo '
     MPAT='$MPAT' '$MPAT'/overlay.bash
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "overlay_folder"
     desc = "'$home_text_7'"
     type = "folder"
@@ -24,7 +24,7 @@ echo '
     required = true
     editable = true
 
-  [[group.action]]
+  [[action]]
   title = "'$home_text_3'"
   desc = "'$home_text_4'"
   script = """
@@ -33,7 +33,7 @@ echo '
     MPAT='$MPAT' '$MPAT'/extract.bash
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "extract_folder_lang"
     desc = "'$home_text_8'"
     type = "folder"
@@ -41,7 +41,7 @@ echo '
     required = true
     editable = true
 
-    [[group.action.params]]
+    [[action.params]]
     name = "extract_folder_lang_text"
     label = "'$home_text_5'"
     desc = "'$home_text_6'"

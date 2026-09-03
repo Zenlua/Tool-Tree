@@ -8,13 +8,13 @@ echo '
   [[group]]
   title = "'$google_text'"
   
-  [[group.fab]]
-  [[group.fab.items]]
+  [[fab]]
+  [[fab.items]]
   type = "refresh"
   style = "fab"
   icon = "'$ETC'/icon/Loading.png"
   
-  [[group.action]]
+  [[action]]
   warn = "'$lang_action_warn'"
   title = "'$lang_title'"
   summary = "'$lang_summary_path''$path_modun'"
@@ -53,7 +53,7 @@ echo '
   [ -f '$MPAT'/system.prop ] && cp -rf '$MPAT'/system.prop '$path_modun2'/system.prop
   set_permis -R -o 0:0 -c u:object_r:system_file:s0 '$path_modun2'/system
   """
-    [[group.action.params]]
+    [[action.params]]
     name = "uri_file_modun"
     value-sh = "glog uri_file_modun"
     path-home = "'$PTAD'"
@@ -61,7 +61,7 @@ echo '
     required = "required"
     type="file"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "uri_adb_moduls"
     desc = "'$lang_desc_adb'"
     placeholder = "/system_ext/priv-app/Settings/Settings.apk"
@@ -69,7 +69,7 @@ echo '
     type = "text"
 
   [[group]]
-  [[group.editor]]
+  [[editor]]
   title = "'$lang_desc_prop'"
   file = "'$MPAT'/system.prop"
   value = "ro.control_privapp_permissions=log"
@@ -77,13 +77,13 @@ echo '
   visible = "'$visisj'"
 
   [[group]]
-  [[group.editor]]
+  [[editor]]
   title = "'$lang_desc_service'"
   file = "'$MPAT'/service.sh"
   visible = "'$visisj'"
   
   [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$lang_del_tile'"
   visible = "'$visisj'"
   reload = "true"
@@ -94,7 +94,7 @@ echo '
   done
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "del_file_modun"
     desc = "'$lang_del_desc2' '$path_modun2'"
     value-sh = "glog del_file_modun"
@@ -104,7 +104,7 @@ echo '
     multiple = "true"
 
   [[group]]
-  [[group.switch]]
+  [[switch]]
   title = "@string/remove_text Module"
   get = "[ -f '$path_modun'/remove ] && echo 1"
   reload = "true"

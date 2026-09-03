@@ -7,8 +7,8 @@ echo '
 [[group]]
   title = "'$google_text'"
   
-  [[group.menu]]
-  [[group.menu.items]]
+  [[menu]]
+  [[menu.items]]
   type = "default"
   title = "@string/update_text"
   auto-off = true
@@ -19,17 +19,17 @@ echo '
   chmod 755 '$MPAT'/main.py
   """
   
-  [[group.fab]]
-  [[group.fab.items]]
+  [[fab]]
+  [[fab.items]]
   type = "refresh"
   style = "fab"
   icon = "'$ETC'/icon/Loading.png"
 
-  [[group.text]]
+  [[text]]
   summary-sh = "iw dev wlan0 link"
 
 [[group]]
-  [[group.picker]]
+  [[picker]]
   title = "'$wifi_text_1'"
   desc = "'$wifi_text_2'"
   reload = true
@@ -56,31 +56,31 @@ echo '
   """
 
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$STR_ADVANCED_CUSTOM'"
   reload = true
   shell = "hidden"
   script = "slog wifi_tool_customize \"$wifi_tool_customize\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "wifi_tool_customize"
     label = "'$STR_OPTION'"
     desc = "'$STR_ALL_ATTACK_METHODS'"
     value-sh = "glog wifi_tool_customize 0"
 
-      [[group.action.params.options]]
+      [[action.params.options]]
       val = "0"
       title = "'$STR_BASIC_ATTACK'"
 
-      [[group.action.params.options]]
+      [[action.params.options]]
       val = "1"
       title = "'$STR_PIN_DATABASE_ATTACK'"
 
-      [[group.action.params.options]]
+      [[action.params.options]]
       val = "2"
       title = "'$STR_WPS_PUSH_ATTACK'"
 
-  [[group.action]]
+  [[action]]
   title = "'$STR_INPUT_PIN'"
   summary-sh = "glog pin_number_wifi"
   warn = "'$STR_PIN_WARNING'"
@@ -88,7 +88,7 @@ echo '
   support = "echo '$number_wifi_pin'"
   script = "slog pin_number_wifi \"$pin_number_wifi\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "pin_number_wifi"
     label = "'$STR_PIN_CODE'"
     placeholder = "12345670"
@@ -96,7 +96,7 @@ echo '
     value-sh = "glog pin_number_wifi"
 
 [[group]]
-  [[group.action]]
+  [[action]]
   title = "'$wifi_text_5'"
   reload = true
   script = """

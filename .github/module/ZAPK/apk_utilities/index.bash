@@ -37,7 +37,7 @@ echo '[[group]]
   [[group]]
   title = "'$google_text'"
 
-    [[group.picker]]
+    [[picker]]
     shell = "hidden"
     reload = "true"
     options-sh = "'$MPAT'/index.bash search_pro"
@@ -50,7 +50,7 @@ echo '[[group]]
 
   [[group]]
 
-    [[group.action]]
+    [[action]]
     reload = "true"
     visible = "echo '$show_clean'"
     title = "'$clean_text_3'"
@@ -66,21 +66,21 @@ echo '[[group]]
     done
     """
 
-      [[group.action.params]]
+      [[action.params]]
       name = "LIST"
       title = "strings"
       desc = "'$clean_text_4'"
       multiple = "multiple"
       options-sh = "'$MPAT'/index.bash search_values"
 
-      [[group.action.params]]
+      [[action.params]]
       name = "LIST2"
       title = "arrays"
       desc = "'$clean_text_4'"
       multiple = "multiple"
       options-sh = "'$MPAT'/index.bash search_array"
 
-      [[group.action.params]]
+      [[action.params]]
       name = "LIST3"
       title = "plurals"
       desc = "'$clean_text_4'"

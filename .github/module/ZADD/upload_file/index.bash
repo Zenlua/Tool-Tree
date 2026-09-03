@@ -7,7 +7,7 @@ menuadd "$MPAT"
 echo '[[group]]
 title = "'$google_text'"
 
-  [[group.action]]
+  [[action]]
   title = "Upload Gofile"
   script = """
   set -o pipefail
@@ -25,13 +25,13 @@ title = "'$google_text'"
   fi
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     type = "file"
     required = "true"
     desc = "https://gofile.io"
 
-  [[group.action]]
+  [[action]]
   title = "Upload Pixeldrain"
   script = """
   set -o pipefail
@@ -50,13 +50,13 @@ title = "'$google_text'"
   fi
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "FILE"
     type = "file"
     required = "true"
     desc = "https://pixeldrain.com"
 
-    [[group.action.params]]
+    [[action.params]]
     name = "TEXT"
     label = "Token"
     desc = "Token: xxx-xxx-xxx-xxx-xxx"

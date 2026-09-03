@@ -7,14 +7,14 @@ echo '
 [[group]]
 title = "'$google_text'"
 
-  [[group.action]]
+  [[action]]
   shell = "hidden"
   reload = "true"
   title = "'$payload_text_1'"
   summary = "'$payload_text_2' http://...'$(glog url_text_payload | tail -c 25)'"
   script = "slog url_text_payload \"$url_text_payload\""
 
-    [[group.action.params]]
+    [[action.params]]
     name = "url_text_payload"
     placeholder = "https://web.com/rom-payload-ota.zip"
     value-sh = "glog url_text_payload"
@@ -23,7 +23,7 @@ title = "'$google_text'"
 
 [[group]]
 
-  [[group.action]]
+  [[action]]
   visible = "echo '$checkdjhrh'"
   reload = "true"
   title = "'$payload_text_3'"
@@ -40,7 +40,7 @@ title = "'$google_text'"
   checktime
   """
 
-    [[group.action.params]]
+    [[action.params]]
     name = "partition"
     desc = "'$payload_text_5'"
     multiple = "multiple"
