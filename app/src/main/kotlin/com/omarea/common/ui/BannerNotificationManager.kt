@@ -60,6 +60,8 @@ object BannerNotificationManager {
     // còn là thời lượng chính dùng cho banner nữa (xem countdownSeconds trong show()).
     private const val FALLBACK_DURATION_MS = 3500L
 
+    private const val ENTRANCE_DURATION_MS = 260L
+
 
     private data class BannerRequest(
         val title: String?,
@@ -70,7 +72,8 @@ object BannerNotificationManager {
         val script: String?,
         val confirmText: String?,
         val cancelText: String?,
-        val countdownSeconds: Int
+        val countdownSeconds: Int,
+        val colorHex: String?
     )
 
     private val queue = ArrayDeque<BannerRequest>()
@@ -132,6 +135,7 @@ object BannerNotificationManager {
         confirmText: String? = null,
         cancelText: String? = null,
         countdownSeconds: Int = 5,
+        colorHex: String? = null,
         onNoActivity: (() -> Unit)? = null
     ) {
         if (CurrentActivityHolder.get() == null) {
@@ -140,7 +144,7 @@ object BannerNotificationManager {
         }
         mainHandler.post {
             queue.addLast(
-                BannerRequest(title, message, type, position, icon, script, confirmText, cancelText, countdownSeconds)
+                BannerRequest(title, message, type, position, icon, script, confirmText, cancelText, countdownSeconds, colorHex)
             )
             if (!isShowing) showNext()
         }
@@ -176,15 +180,23 @@ object BannerNotificationManager {
         val confirmBtn = view.findViewById<TextView>(R.id.banner_btn_confirm)
         val cancelBtn = view.findViewById<TextView>(R.id.banner_btn_cancel)
 
-        val colorRes = when (req.type) {
-            BannerType.INFO -> R.color.banner_info
-            BannerType.SUCCESS -> R.color.banner_success
-            BannerType.WARNING -> R.color.banner_warning
-            BannerType.ERROR -> R.color.banner_error
+        val customColor = req.colorHex?.let {
+            try {
+                android.graphics.Color.parseColor(it)
+            } catch (e: IllegalArgumentException) {
+                null
+            }
         }
-        (bannerRoot.background?.mutate() as? GradientDrawable)?.setColor(
+        val resolvedColor = customColor ?: run {
+            val colorRes = when (req.type) {
+                BannerType.INFO -> R.color.banner_info
+                BannerType.SUCCESS -> R.color.banner_success
+                BannerType.WARNING -> R.color.banner_warning
+                BannerType.ERROR -> R.color.banner_error
+            }
             activity.resources.getColor(colorRes, activity.theme)
-        )
+        }
+        (bannerRoot.background?.mutate() as? GradientDrawable)?.setColor(resolvedColor)
         icon.setImageDrawable(resolveIcon(activity, req.icon))
 
         // Vuốt ngang thân banner (bannerRoot, KHÔNG phải view gốc trong suốt) để hủy -- coi
@@ -235,6 +247,9 @@ object BannerNotificationManager {
         activeRequest = req
         activeActivity = WeakReference(activity)
         windowManager.addView(view, layoutParams)
+        if (!reuseDeadline) {
+            playEntranceAnimation(bannerRoot)
+        }
 
         val script = req.script
         if (!script.isNullOrEmpty()) {
@@ -351,6 +366,28 @@ object BannerNotificationManager {
             .setInterpolator(DecelerateInterpolator())
             .withEndAction { onEnd() }
             .start()
+    }
+
+    /**
+     * Hiệu ứng banner mới xuất hiện trượt từ ngoài mép trái màn hình vào vị trí gốc. Đợi 1
+     * OnPreDrawListener để lấy đúng chiều rộng [bannerRoot] trước khi vẽ khung hình đầu tiên,
+     * tránh bị chớp/giật hình ở vị trí gốc rồi mới nhảy sang trái.
+     */
+    private fun playEntranceAnimation(bannerRoot: View) {
+        bannerRoot.viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                bannerRoot.viewTreeObserver.removeOnPreDrawListener(this)
+                val screenWidthPx = bannerRoot.resources.displayMetrics.widthPixels
+                val startDistance = (bannerRoot.width + screenWidthPx).toFloat()
+                bannerRoot.translationX = -startDistance
+                bannerRoot.animate()
+                    .translationX(0f)
+                    .setDuration(ENTRANCE_DURATION_MS)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+                return true
+            }
+        })
     }
 
     private fun dismissCurrent() {

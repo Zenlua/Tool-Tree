@@ -29,7 +29,9 @@ import com.omarea.krscript.config.StringResRef
  *     --es cancel "Bỏ qua" \
  *     --ei countdown 5
  *
- * Extra "type" nhận 1 trong: info (mặc định) | success | warning | error
+ * Extra "type" nhận 1 trong: info (mặc định) | success | warning | error, hoặc 1 mã màu hex
+ * tùy chỉnh dạng "#RRGGBB" / "#AARRGGBB" (vd "#ff00ff") để tự tô màu nền banner thay vì dùng
+ * màu theo type có sẵn.
  * Extra "position" nhận 1 trong: top (mặc định) | bottom
  * Extra "icon" (tùy chọn): có thể là
  *   - đường dẫn file ảnh trên máy, vd "/sdcard/Download/icon.png"
@@ -48,7 +50,9 @@ class BannerReceiver : BroadcastReceiver() {
         val rawText = intent.getStringExtra("text") ?: return
         val message = StringResRef.resolve(context, rawText)
         val title = intent.getStringExtra("title")?.let { StringResRef.resolve(context, it) }
-        val type = when (intent.getStringExtra("type")?.lowercase()) {
+        val typeExtra = intent.getStringExtra("type")
+        val colorHex = typeExtra?.takeIf { it.startsWith("#") }
+        val type = when (typeExtra?.lowercase()) {
             "success" -> BannerType.SUCCESS
             "warning" -> BannerType.WARNING
             "error" -> BannerType.ERROR
@@ -70,6 +74,7 @@ class BannerReceiver : BroadcastReceiver() {
             type = type,
             position = position,
             icon = icon,
+            colorHex = colorHex,
             script = script,
             confirmText = confirm,
             cancelText = cancel,
