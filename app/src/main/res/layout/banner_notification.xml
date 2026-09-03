@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    View này được add trực tiếp vào content view của Activity đang foreground
-    (xem BannerNotificationManager.kt) để có thể nhận sự kiện chạm cho 2 nút
-    Xác nhận/Hủy bỏ bên dưới. Toast không hỗ trợ việc này.
+    View này là root của 1 sub-window riêng, add bằng WindowManager (xem
+    BannerNotificationManager.kt). Không dùng Toast vì Toast không nhận được sự kiện
+    chạm cho 2 nút Xác nhận/Hủy bỏ bên dưới.
+    clipChildren/clipToPadding = false + paddingTop/Bottom để bóng đổ (elevation) của
+    banner_root không bị chính FrameLayout này cắt cụt.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:paddingStart="14dp"
-    android:paddingEnd="14dp">
+    android:paddingEnd="14dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
 
     <LinearLayout
         android:id="@+id/banner_root"

@@ -1,14 +1,14 @@
 package com.omarea.common.ui
 
 import android.app.Activity
+import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import com.omarea.common.shell.ShellExecutor
@@ -18,16 +18,17 @@ enum class BannerType { INFO, SUCCESS, WARNING, ERROR }
 enum class BannerPosition { TOP, BOTTOM }
 
 /**
- * Hiện 1 banner thông báo đè lên trên cùng của Activity đang foreground.
+ * Hiện 1 banner thông báo đè lên trên cùng của Activity đang foreground -- KỂ CẢ khi đang
+ * có Dialog mở (ví dụ cửa sổ xem log khi chạy script).
  *
- * Kỹ thuật: add thẳng view banner vào content view (android.R.id.content) của Activity
- * đang foreground (lấy qua CurrentActivityHolder), thay vì dùng Toast. Lý do đổi từ Toast:
- * Toast KHÔNG nhận sự kiện chạm nên không thể bấm được nút Xác nhận/Hủy bỏ khi banner có
- * kèm script cần chạy. Không cần thêm quyền gì mới so với trước.
+ * Kỹ thuật: add view banner như 1 sub-window riêng bằng WindowManager, gắn vào token cửa sổ
+ * của Activity đang foreground (lấy qua CurrentActivityHolder), dùng type
+ * TYPE_APPLICATION_ATTACHED_DIALOG -- đúng loại sub-window mà Dialog/AlertDialog cũng dùng,
+ * nên add SAU 1 Dialog đang mở thì banner sẽ nổi lên trên Dialog đó. Không cần thêm quyền gì
+ * mới (không phải SYSTEM_ALERT_WINDOW, chỉ cần token của chính Activity).
  *
- * Nhược điểm so với Toast: nếu Activity đang hiện 1 Dialog full màn hình che content view
- * thì banner có thể bị Dialog đó che lên trên (Toast trước đây không bị vấn đề này vì luôn
- * nổi ở window riêng). Đổi lại banner giờ nhận được sự kiện chạm.
+ * Lý do không dùng Toast: Toast KHÔNG nhận sự kiện chạm nên không thể bấm được nút Xác
+ * nhận/Hủy bỏ khi banner có kèm script cần chạy.
  *
  * Mọi banner (kể cả không có script) đều tự ẩn sau [countdownSeconds] giây, mặc định 5s.
  *
@@ -59,9 +60,10 @@ object BannerNotificationManager {
     private val queue = ArrayDeque<BannerRequest>()
     private var isShowing = false
 
-    // View banner đang hiện trên màn hình (nếu có) + Runnable đếm ngược đang chạy của nó,
-    // dùng để có thể gỡ bỏ đúng lúc khi người dùng bấm nút hoặc khi hết giờ đếm ngược.
+    // View banner đang hiện trên màn hình (nếu có) + WindowManager quản lý nó + Runnable đếm
+    // ngược đang chạy, dùng để có thể gỡ bỏ đúng lúc khi người dùng bấm nút hoặc hết giờ.
     private var currentView: View? = null
+    private var currentWindowManager: WindowManager? = null
     private var countdownRunnable: Runnable? = null
 
     /**
@@ -123,8 +125,7 @@ object BannerNotificationManager {
     }
 
     private fun showOn(activity: Activity, req: BannerRequest) {
-        val contentParent = activity.window.decorView.findViewById<ViewGroup>(android.R.id.content)
-        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, contentParent, false)
+        val view = LayoutInflater.from(activity).inflate(R.layout.banner_notification, null, false)
 
         val bannerRoot = view.findViewById<View>(R.id.banner_root)
         val icon = view.findViewById<ImageView>(R.id.banner_icon)
@@ -154,22 +155,31 @@ object BannerNotificationManager {
         messageView.text = req.message
 
         val density = activity.resources.displayMetrics.density
-        val layoutParams = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        val windowManager = activity.windowManager
+        val layoutParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+            PixelFormat.TRANSLUCENT
         )
+        // Bắt buộc phải có token của Activity thì mới add được sub-window kiểu
+        // TYPE_APPLICATION_ATTACHED_DIALOG (không cần quyền SYSTEM_ALERT_WINDOW).
+        layoutParams.token = activity.window.decorView.windowToken
         when (req.position) {
             BannerPosition.TOP -> {
                 layoutParams.gravity = Gravity.TOP
-                layoutParams.topMargin = (62 * density).toInt()
+                layoutParams.y = (62 * density).toInt()
             }
             BannerPosition.BOTTOM -> {
                 layoutParams.gravity = Gravity.BOTTOM
-                layoutParams.bottomMargin = (81 * density).toInt()
+                layoutParams.y = (81 * density).toInt()
             }
         }
 
         currentView = view
-        contentParent.addView(view, layoutParams)
+        currentWindowManager = windowManager
+        windowManager.addView(view, layoutParams)
 
         val script = req.script
         if (!script.isNullOrEmpty()) {
@@ -228,8 +238,14 @@ object BannerNotificationManager {
         countdownRunnable?.let { mainHandler.removeCallbacks(it) }
         countdownRunnable = null
         val view = currentView ?: return
+        val windowManager = currentWindowManager
         currentView = null
-        (view.parent as? ViewGroup)?.removeView(view)
+        currentWindowManager = null
+        try {
+            windowManager?.removeViewImmediate(view)
+        } catch (e: Exception) {
+            // View có thể đã bị hệ thống tự gỡ trước đó (vd Activity bị destroy) -> bỏ qua.
+        }
     }
 
     /**
