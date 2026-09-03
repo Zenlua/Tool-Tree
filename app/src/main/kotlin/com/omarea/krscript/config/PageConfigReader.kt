@@ -22,6 +22,15 @@ import org.tomlj.TomlTable
  * Created by Hello on 2018/04/01.
  */
 class PageConfigReader {
+    companion object {
+        // Header TOML ở TOP-LEVEL (vd "[[group]]", "[[menu]]"...) - phân biệt với header lồng
+        // bên trong như "[[group.action]]" (có dấu chấm, không khớp regex này). Dùng để tách 1
+        // tài liệu/luồng TOML thành từng khối độc lập, để 1 khối lỗi cú pháp không làm hỏng cả
+        // tài liệu - xem readConfigTomlSplit()/readConfigTomlBlock() và
+        // PageConfigSh.executeStreaming() (dùng chung regex này).
+        val TOP_LEVEL_HEADER_REGEX = Regex("^\\[\\[(group|text|switch|picker|action|page|download|editor|resource|menu|fab)]]$")
+    }
+
     private var context: Context
     private var pageConfig: String = ""
 
@@ -268,29 +277,70 @@ class PageConfigReader {
             val result = Toml.parse(rawText)
             if (result.hasErrors()) {
                 val message = result.errors().joinToString("\n") { it.toString() }
-                Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(context, "Failed to parse configuration file (toml)\n$message", Toast.LENGTH_LONG).show()
-                }
                 Log.e("KrConfig Fail！", message)
-                return null
+                // Không huỷ cả trang vì 1 chỗ lỗi cú pháp: tách theo từng khối top-level rồi
+                // parse độc lập, khối nào lỗi chỉ hiện 1 mục báo lỗi tại đúng vị trí, các khối
+                // hợp lệ khác vẫn hiển thị bình thường - xem readConfigTomlSplit().
+                return readConfigTomlSplit(rawText, onNodeReady, message)
             }
             val nodes = tomlChildren(result, onNodeReady)
             resolvePendingStates()
             nodes
         } catch (ex: Exception) {
-            Handler(Looper.getMainLooper()).post {
-                Toast.makeText(context, "Failed to parse configuration file\n" + ex.message, Toast.LENGTH_LONG).show()
-            }
             Log.e("KrConfig Fail！", "" + ex.message)
-            null
+            readConfigTomlSplit(rawText, onNodeReady, ex.message ?: ex.toString())
         }
     }
 
+    // Tài liệu TOML gốc bị lỗi (Toml.parse() báo lỗi hoặc throw) -> tách rawText thành từng
+    // khối theo header top-level ("[[group]]", "[[menu]]"...) rồi parse ĐỘC LẬP từng khối qua
+    // readConfigTomlBlock(). Khối nào lỗi chỉ hiện 1 mục báo lỗi tại đúng vị trí của nó, các
+    // khối hợp lệ khác (group/text/switch/...) vẫn hiển thị bình thường thay vì cả trang bị
+    // huỷ. Nếu tài liệu không tách được khối nào cả (sai định dạng hoàn toàn, không phải lỗi ở
+    // 1 chỗ) thì mới báo lỗi tổng qua Toast, giữ đúng hành vi cũ cho trường hợp đó.
+    private fun readConfigTomlSplit(
+        rawText: String,
+        onNodeReady: ((NodeInfoBase?, Int, Int) -> Unit)?,
+        wholeDocErrorMessage: String
+    ): ArrayList<NodeInfoBase> {
+        val nodes = ArrayList<NodeInfoBase>()
+        var currentBlock: StringBuilder? = null
+        var blockStarted = false
+
+        fun flush(blockText: String) {
+            for (node in readConfigTomlBlock(blockText)) {
+                nodes.add(node)
+                onNodeReady?.invoke(node, nodes.size, -1)
+            }
+        }
+
+        for (line in rawText.lineSequence()) {
+            val trimmed = line.trim()
+            if (TOP_LEVEL_HEADER_REGEX.matches(trimmed)) {
+                currentBlock?.let { if (it.isNotBlank()) flush(it.toString()) }
+                currentBlock = StringBuilder(line).append("\n")
+                blockStarted = true
+            } else if (blockStarted) {
+                currentBlock?.append(line)?.append("\n")
+            }
+        }
+        currentBlock?.let { if (it.isNotBlank()) flush(it.toString()) }
+
+        if (!blockStarted) {
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, "Failed to parse configuration file (toml)\n$wholeDocErrorMessage", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        return nodes
+    }
+
     // Parse MỘT khối TOML top-level rời rạc (vd toàn bộ "[[group]] ... [[group.action]] ...",
-    // hoặc "[[menu]] ...") - dùng cho luồng streaming khi process=true, ngay khi shell vừa
-    // xuất xong khối này (xem PageConfigSh.executeStreaming()). Dùng chung collectedMenuOptions/
-    // pendingSwitchStates... của instance này nên các khối của 1 trang phải gọi hàm này tuần
-    // tự, đúng thứ tự xuất hiện trong output shell.
+    // hoặc "[[menu]] ..."). Dùng bởi 2 nơi:
+    //  - PageConfigSh.executeStreaming() (process=true): ngay khi shell vừa xuất xong 1 khối.
+    //  - readConfigTomlSplit() (process=false, khi cả tài liệu bị lỗi): cô lập từng khối.
+    // Dùng chung collectedMenuOptions/pendingSwitchStates... của instance này nên các khối của
+    // 1 trang phải gọi hàm này tuần tự, đúng thứ tự xuất hiện trong tài liệu/output shell.
     // Khối lỗi cú pháp KHÔNG làm hỏng các khối khác: trả về 1 item báo lỗi tại đúng vị trí
     // thay vì null/throw ra ngoài.
     fun readConfigTomlBlock(blockText: String): List<NodeInfoBase> {
