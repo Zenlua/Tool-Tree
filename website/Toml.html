@@ -26,6 +26,7 @@ html, body {
 }
 body{
   margin:0;
+  padding-top: 57px; /* ĐÃ SỬA: Đẩy toàn bộ nội dung xuống dưới để không bị thanh menu che khuất */
   background:var(--bg);
   color:var(--fg);
   font-family:var(--sans);
@@ -38,9 +39,11 @@ a{color:var(--accent);text-decoration:none;}
 a:hover{text-decoration:underline;}
 
 .topbar{
-  position:sticky;
+  position:fixed; /* ĐÃ SỬA: Chuyển từ sticky sang fixed để ghim cứng tuyệt đối */
   top:0;
-  z-index:50;
+  left:0;
+  right:0;
+  z-index:100; /* ĐÃ SỬA: Tăng z-index để luôn nằm trên sidebar, overlay và mọi nội dung khác */
   background:var(--bg-elev);
   border-bottom:1px solid var(--border);
   padding:10px 24px;
@@ -49,6 +52,8 @@ a:hover{text-decoration:underline;}
   gap:16px;
   box-shadow:var(--shadow);
   width:100%;
+  height:57px; /* ĐÃ SỬA: Cố định chiều cao khớp với padding-top của body và top của sidebar */
+  box-sizing:border-box; /* ĐÃ SỬA: Đảm bảo padding không làm tăng chiều cao tổng vượt quá 57px */
 }
 .topbar .logo{font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;}
 .topbar .logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));}
@@ -384,7 +389,7 @@ The parser lives in <code>com.omarea.krscript.config.PageConfigReader</code> and
 
 <p>A TOML configuration file describes <strong>the node tree of a page</strong>: each page is a list of <em>nodes</em>
 (group, action, switch, picker, text, page, editor, download, resource, menu, fab) displayed in the order they appear in the file.
-Nodes can be nested (e.g. <code>[[action]]</code> is an action inside a group) to build a hierarchical tree.</p>
+All nodes are declared <strong>flat</strong> at the top level of the document (dot-notation nesting like <code>[[group.action]]</code> has been removed) - a node that follows a <code>[[group]]</code> (and precedes the next one) automatically becomes a child of that group.</p>
 </section>
 
 <section id="rules">
@@ -400,7 +405,7 @@ Nodes can be nested (e.g. <code>[[action]]</code> is an action inside a group) t
 <div class="tbl-container">
 <table class="tbl">
 <tr><th>Table name</th><th>Node type</th><th>Description</th></tr>
-<tr><td><code>group</code></td><td>Container</td><td>Holds child nodes; can be nested</td></tr>
+<tr><td><code>group</code></td><td>Container</td><td>Holds child nodes - the flat entries declared after it become its children (no nesting)</td></tr>
 <tr><td><code>page</code></td><td>Sub-page</td><td>Opens another page when clicked</td></tr>
 <tr><td><code>action</code></td><td>Action</td><td>Runs a shell script</td></tr>
 <tr><td><code>switch</code></td><td>Toggle</td><td>On/off switch with get/set shell</td></tr>
@@ -414,8 +419,24 @@ Nodes can be nested (e.g. <code>[[action]]</code> is an action inside a group) t
 </table>
 </div>
 
-<h3>2.3. Nesting = dotted path</h3>
-<p>A child node of a group is declared using the dotted path <code>[[type]]</code> (or <code>[[subgroup.type]]</code> for deeper nesting). Child nodes always belong to the most recently declared group above them in the file.</p>
+<h3>2.3. Group children = nearest preceding [[group]] (dot-notation removed)</h3>
+<p>All node types are declared as <strong>flat <code>[[type]]</code> entries at the top level</strong> of the document - the dotted <code>[[group.action]]</code> / <code>[[subgroup.type]]</code> style is <strong>no longer supported</strong>. A child node simply belongs to the most recently declared <code>[[group]]</code> above it in the file; the parser walks the document once, in line order, and assigns each entry to the current group.</p>
+<pre><code>[[group]]
+title = "CPU"
+
+[[switch]]        # child of group "CPU"
+...
+
+[[action]]        # also a child of group "CPU"
+...
+
+[[group]]
+title = "Battery"
+
+[[switch]]        # child of group "Battery"
+...</code></pre>
+<div class="callout danger"><strong>Deprecated:</strong> entries nested via dotted paths such as <code>[[group.action]]</code> are <strong>silently ignored</strong> - the parser only reads node tables at the top level of the document (<code>tomlChildren()</code> is called exactly once, on the root table, and is no longer recursive per group).</div>
+<div class="callout tip"><strong>Reserved name:</strong> <code>[[toml]]</code> is not a node type. It is only a marker used to recognize inline TOML output from <code>config-sh</code> (see <a href="#page">section 6</a>). If it appears in a file, the parser skips it harmlessly.</div>
 
 <h3>2.4. Display order = position in file</h3>
 <p>Display order is always <strong>top-to-bottom</strong> by the position of the <code>[[name]]</code> entry in the file, regardless of node type (group, action, page, text, switch ...) - even when types are <strong>interleaved</strong> (e.g. an action, then a page, then another action). The position is read directly from the <code>tomlj</code> API, so there is no need for an <code>order</code> field.</p>
@@ -432,7 +453,7 @@ Nodes can be nested (e.g. <code>[[action]]</code> is an action inside a group) t
 </table>
 </div>
 <p>Example: <code>readonly = "test -f /sdcard/lock &amp;&amp; echo 1"</code> - the parser runs that command, and if it returns <code>"1"</code> then readonly = true.</p>
-<div class="callout warn"><strong>Note:</strong> <code>resolveBoolOrShell</code> does NOT run immediately during page parsing for <code>readonly</code>/<code>support</code> of action or <code>checked</code> of switch - these are queued into <em>pending states</em> and batched at the end (see <a href="#pending-states">section 20</a>).</div>
+<div class="callout warn"><strong>Note:</strong> where the shell result only decides <em>layout</em> (<code>support</code>/<code>visible</code> of nodes and params, <code>show</code> of actions), the script runs immediately during parsing. Deferred fields - switch/picker/toggle <code>get</code>, row <code>support</code>, and all <code>*-sh</code> dynamic strings (title-sh, desc-sh, summary-sh, warn-sh) - are queued into <em>pending states</em> and batched at the end (see <a href="#pending-states">section 20</a>).</div>
 
 <h3>2.6. String resource references</h3>
 <p>Any text field (<code>title</code>, <code>desc</code>, <code>summary</code> ...) may include a reference to the app's string resources via <code>@string/name</code> or <code>@string:name</code>. The parser resolves these automatically. If the resource is not found, the original string is kept.</p>
@@ -442,7 +463,7 @@ Nodes can be nested (e.g. <code>[[action]]</code> is an action inside a group) t
 <h2>3. Node type overview</h2>
 <p>Quick reference for all node types. Click a name to jump to its detailed section.</p>
 <div class="toc-grid">
-<a class="toc-card" href="#group"><div class="tc-name">[[group]]</div><div class="tc-desc">Container holding child nodes; nestable</div></a>
+<a class="toc-card" href="#group"><div class="tc-name">[[group]]</div><div class="tc-desc">Container - the flat entries following it become its children</div></a>
 <a class="toc-card" href="#page"><div class="tc-name">[[page]]</div><div class="tc-desc">Sub-page - opens a new page (file/config-sh)</div></a>
 <a class="toc-card" href="#action"><div class="tc-name">[[action]]</div><div class="tc-desc">Action - runs a shell script, may have params/rows</div></a>
 <a class="toc-card" href="#action-params"><div class="tc-name">[[action.params]]</div><div class="tc-desc">Input parameters for an action (text/file/seekbar...)</div></a>
@@ -485,16 +506,17 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">logo</td><td>logo-path</td><td class="field-type">String</td><td>Large icon used when creating a shortcut (different from small <code>icon</code>)</td></tr>
 <tr><td class="field-name">photo</td><td>photo-path</td><td class="field-type">String</td><td>Large image shown in the detail dialog</td></tr>
 <tr><td class="field-name">photo-real-size</td><td>photo-original-size</td><td class="field-type">Bool</td><td>true: show image at its real size, no stretching</td></tr>
-<tr><td class="field-name">photo-gif-num</td><td>gif-num</td><td class="field-type">Int</td><td>&gt;0: image is an animated GIF (photo_1.png, photo_2.png...)</td></tr>
-<tr><td class="field-name">photo-gif-time</td><td>gif-time</td><td class="field-type">Int</td><td>Time per frame (ms; default 300)</td></tr>
-<tr><td class="field-name">photo-gif-autoplay</td><td>gif-autoplay</td><td class="field-type">Bool</td><td>true (default): auto-play the GIF</td></tr>
-<tr><td class="field-name">photo-gif-loop</td><td>photo-gif-loop-count</td><td class="field-type">Int</td><td>Loop count (0 = infinite)</td></tr>
-<tr><td class="field-name">icon-gif-num</td><td>-</td><td class="field-type">Int</td><td>Same as photo-gif-num but for the small icon</td></tr>
-<tr><td class="field-name">icon-gif-time</td><td>-</td><td class="field-type">Int</td><td>Time per frame for the icon</td></tr>
-<tr><td class="field-name">icon-gif-autoplay</td><td>-</td><td class="field-type">Bool</td><td>Auto-play icon GIF</td></tr>
+<tr><td class="field-name">photo-gif-num</td><td>gif-num, gif_num</td><td class="field-type">Int</td><td>&gt;0: image is an animated GIF (photo_1.png, photo_2.png...)</td></tr>
+<tr><td class="field-name">photo-gif-time</td><td>gif-time, gif_time</td><td class="field-type">Int</td><td>Time per frame (ms; default 300)</td></tr>
+<tr><td class="field-name">photo-gif-autoplay</td><td>gif-autoplay, gif_autoplay</td><td class="field-type">Bool</td><td>true (default): auto-play the GIF</td></tr>
+<tr><td class="field-name">photo-gif-loop</td><td>photo-gif-loop-count, gif-loop, gif-loop-count, gif_loop_count</td><td class="field-type">Int</td><td>Loop count (0 = infinite)</td></tr>
+<tr><td class="field-name">icon-gif-num</td><td>icon-gif_num</td><td class="field-type">Int</td><td>Same as photo-gif-num but for the small icon</td></tr>
+<tr><td class="field-name">icon-gif-time</td><td>icon-gif_time</td><td class="field-type">Int</td><td>Time per frame for the icon</td></tr>
+<tr><td class="field-name">icon-gif-autoplay</td><td>icon-gif_autoplay</td><td class="field-type">Bool</td><td>Auto-play icon GIF</td></tr>
 <tr><td class="field-name">icon-gif-loop</td><td>icon-gif-loop-count</td><td class="field-type">Int</td><td>Loop count for the icon GIF</td></tr>
 <tr><td class="field-name">bg</td><td>bg-path</td><td class="field-type">String</td><td>Background image for the item/dialog</td></tr>
-<tr><td class="field-name">lock</td><td>lock-state, locked</td><td class="field-type">Bool</td><td>true: lock this item (no interaction allowed)</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td>Lock the item (no interaction allowed). <code>true</code>/<code>1</code> = locked; or the format <code>"state|message"</code>, e.g. <code>lock = "1|Requires root"</code> - the message is shown when the user clicks the locked item</td></tr>
+<tr><td class="field-name">lock-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that checks the lock state dynamically (returns <code>"1"</code> = locked)</td></tr>
 <tr><td class="field-name">min-sdk</td><td>sdk-min</td><td class="field-type">Int</td><td>Minimum Android SDK version</td></tr>
 <tr><td class="field-name">max-sdk</td><td>sdk-max</td><td class="field-type">Int</td><td>Maximum Android SDK version (default 100)</td></tr>
 <tr><td class="field-name">target-sdk</td><td>sdk-target</td><td class="field-type">Int</td><td>Target Android SDK version</td></tr>
@@ -517,9 +539,9 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">need-input</td><td>needs-input, require-input</td><td class="field-type">Bool</td><td>Script uses <code>read</code> to receive keyboard input</td></tr>
 <tr><td class="field-name">reload-page</td><td>-</td><td class="field-type">Bool</td><td>Reload the whole page after running</td></tr>
 <tr><td class="field-name">reload</td><td>-</td><td class="field-type">Bool|String</td><td><code>true</code> = reload page; or a comma-separated list of block IDs to refresh only those blocks</td></tr>
-<tr><td class="field-name">shell</td><td>-</td><td class="field-type">String</td><td>Shell script content (alias of <code>script</code> for actions)</td></tr>
-<tr><td class="field-name">bg-task</td><td>background-task, async-task</td><td class="field-type">Bool</td><td>Run in background (no log dialog)</td></tr>
-<tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Script to set state (for switch/picker - see dedicated sections)</td></tr>
+<tr><td class="field-name">shell</td><td>-</td><td class="field-type">String</td><td>Interaction mode, NOT the script content: <code>default</code> (log dialog) / <code>bg-task</code> (background, no dialog) / <code>hidden</code>. Use <code>script</code> to declare the script itself</td></tr>
+<tr><td class="field-name">bg-task</td><td>background-task, async-task</td><td class="field-type">Bool</td><td>Run in background (no log dialog) - equivalent to <code>shell = "bg-task"</code></td></tr>
+<tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Main script for <code>action</code>/<code>download</code>; set-state script for <code>switch</code>/<code>picker</code> (receives <code>$state</code>)</td></tr>
 </table>
 </div>
 <div class="callout tip"><strong>Refreshing the page:</strong> use <code>reload-page = true</code> or <code>reload = true</code> to make the app reload the whole page after a script finishes (e.g. after toggling a switch, to refresh the summary). To refresh only specific blocks (e.g. only the affected switches), use <code>reload = "id1,id2"</code>.</div>
@@ -536,7 +558,7 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">title</td><td>-</td><td class="field-type">String</td><td>""</td><td>Group title (displayed uppercase, grey)</td></tr>
 <tr><td class="field-name">title-sh</td><td>-</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script that produces title</td></tr>
 <tr><td class="field-name">key</td><td>index, id</td><td class="field-type">String</td><td>auto</td><td>Unique ID</td></tr>
-<tr><td class="field-name">support</td><td>visible</td><td class="field-type">Bool|Shell</td><td>true</td><td>Hide/show the entire group. Accepts shell too!</td></tr>
+<tr><td class="field-name">support</td><td>visible</td><td class="field-type">Bool|Shell</td><td>true</td><td>Hide/show the group - a hidden group ALSO hides all of its children (every entry until the next <code>[[group]]</code> is skipped, their shells are not run). Accepts shell too!</td></tr>
 </table>
 </div>
 
@@ -556,9 +578,9 @@ All text fields accept <code>@string/...</code> references.</p>
 </div>
 </div></div>
 
-<h3>5.3. Multi-level nesting</h3>
-<p>Groups can be nested inside other groups to build deep trees:</p>
-<div class="callout warn">The parser supports arbitrary nesting depth, but in practice don't go beyond 3 levels - it becomes hard to read and maintain.</div>
+<h3>5.3. Grouping rules (no nesting)</h3>
+<p>Since dot-notation was removed, groups can no longer be nested inside each other. Every <code>[[group]]</code> is a top-level sibling: declaring a new <code>[[group]]</code> closes the previous one, and all following entries belong to the new group. Entries declared before the first <code>[[group]]</code> are rendered directly on the page without a group header.</p>
+<div class="callout warn">Groups also don't support inline <code>resource-file</code>/<code>resource-dir</code> fields (see <a href="#resource">section 15</a>) and have no <code>desc</code>/<code>summary</code> - a group is just a title + its children.</div>
 </section>
 
 <section id="page">
@@ -579,7 +601,8 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">load-ok</td><td>load-success</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script run if load succeeds</td></tr>
 <tr><td class="field-name">load-fail</td><td>load-error</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script run if load fails</td></tr>
 <tr><td class="field-name">process</td><td>-</td><td class="field-type">Bool</td><td><span class="badge new">new</span> true: show items one by one as they build (with progress bar) instead of waiting (see <a href="#process">section 21</a>)</td></tr>
-<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Shell to check the lock state</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td>Static lock: <code>true</code>/<code>1</code> or the <code>"1|message"</code> format</td></tr>
+<tr><td class="field-name">lock-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check the lock state (returns <code>"1"</code> = locked)</td></tr>
 <tr><td class="field-name">rows</td><td>-</td><td class="field-type">Array</td><td>Rich-text rows shown below the page (see <a href="#text-rows">section 12</a>)</td></tr>
 </table>
 </div>
@@ -592,7 +615,7 @@ All text fields accept <code>@string/...</code> references.</p>
   <div class="d-item"><div class="d-icon">&#9881;</div><div class="d-content"><div class="d-title2">Advanced settings</div><div class="d-desc">Open external config file</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
 </div>
 </div></div>
-<div class="callout tip"><code>config-sh</code> returns <strong>one of two things</strong>: either a .toml file path (ending with <code>.toml</code>), or inline TOML content (whose first or second non-empty line starts with <code>[[group]]</code> or <code>[[</code>). The parser auto-detects - see <code>PageConfigSh.looksLikeInlineToml()</code>.</div>
+<div class="callout tip"><code>config-sh</code> returns <strong>one of two things</strong>: either a .toml file path (output ending with <code>.toml</code>), or inline TOML content. Inline TOML is recognized when the 1st or 2nd non-empty line of the output starts with <code>[[group]]</code> or the reserved marker <code>[[toml]]</code> - see <code>PageConfigSh.looksLikeInlineToml()</code>. Anything else shows an error toast.</div>
 </section>
 
 <section id="action">
@@ -604,7 +627,8 @@ All text fields accept <code>@string/...</code> references.</p>
 <table class="tbl">
 <tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
 <tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td><span class="badge req">required</span> Main shell script. Receives <code>$param_name</code> env vars from params</td></tr>
-<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock. If it returns <code>"1"</code>, the action is locked (not clickable)</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td>Static lock: <code>true</code>/<code>1</code> or the <code>"1|message"</code> format. When locked, the action is not clickable</td></tr>
+<tr><td class="field-name">lock-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock dynamically (returns <code>"1"</code> = locked)</td></tr>
 <tr><td class="field-name">menu</td><td>-</td><td class="field-type">Bool</td><td><span class="badge new">new</span> true: action does NOT appear in the list; instead appears as its own icon on the toolbar</td></tr>
 <tr><td class="field-name">show</td><td>-</td><td class="field-type">Bool|Shell</td><td><span class="badge new">new</span> true (or shell): auto-open this action's dialog when entering the page (only once)</td></tr>
 <tr><td class="field-name">params</td><td>-</td><td class="field-type">Array</td><td>List of input parameters - see <a href="#action-params">section 8</a></td></tr>
@@ -656,11 +680,12 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">placeholder</td><td>-</td><td class="field-type">String</td><td>Hint when empty</td></tr>
 <tr><td class="field-name">placeholder-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces placeholder</td></tr>
 <tr><td class="field-name">required</td><td>-</td><td class="field-type">Bool</td><td>Required input</td></tr>
-<tr><td class="field-name">readonly</td><td>-</td><td class="field-type">Bool|Shell</td><td>Read-only (no editing). Accepts shell too!</td></tr>
+<tr><td class="field-name">readonly</td><td>-</td><td class="field-type">Bool|Shell</td><td>Read-only (no editing). <code>true</code>/<code>1</code>/<code>readonly</code> = read-only, <code>false</code>/<code>0</code>/<code>empty</code> = editable; any other string is stored as a shell (<code>readonlySh</code>) evaluated later</td></tr>
 <tr><td class="field-name">maxlength</td><td>-</td><td class="field-type">Int</td><td>Max character count (type=text)</td></tr>
 <tr><td class="field-name">min</td><td>-</td><td class="field-type">Int</td><td>Minimum value (seekbar)</td></tr>
 <tr><td class="field-name">max</td><td>-</td><td class="field-type">Int</td><td>Maximum value (seekbar). Default <code>Int.MAX_VALUE</code></td></tr>
 <tr><td class="field-name">options</td><td>-</td><td class="field-type">Array</td><td>List of choices (spinner/single-select/multi-select)</td></tr>
+<tr><td class="field-name">items</td><td>-</td><td class="field-type">Array of String</td><td>Shorthand choice list - each entry is <code>"value|title"</code> or just <code>"value"</code>. Takes priority over <code>options</code> tables when both are declared</td></tr>
 <tr><td class="field-name">options-sh</td><td>option-sh, options-su</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options dynamically</td></tr>
 <tr><td class="field-name">multiple</td><td>-</td><td class="field-type">Bool</td><td>Allow multiple files/options</td></tr>
 <tr><td class="field-name">separator</td><td>-</td><td class="field-type">String</td><td>Value separator (multi). Default <code>\n</code></td></tr>
@@ -713,9 +738,10 @@ All text fields accept <code>@string/...</code> references.</p>
 <div class="tbl-container">
 <table class="tbl">
 <tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
-<tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to read state. Returning <code>"1"</code>/<code>"true"</code> = ON</td></tr>
-<tr><td class="field-name">set</td><td>setstate, script</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to set state. Receives <code>$state</code> = "1"/"0"</td></tr>
-<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock</td></tr>
+<tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to read state. Returning <code>"1"</code>/<code>"true"</code> = ON. If omitted, the switch always shows OFF</td></tr>
+<tr><td class="field-name">set</td><td>setstate</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to set state. Receives <code>$state</code> = "1"/"0"</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td>Static lock: <code>true</code>/<code>1</code> or the <code>"1|message"</code> format</td></tr>
+<tr><td class="field-name">lock-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock dynamically (returns <code>"1"</code> = locked)</td></tr>
 <tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">+ all fields of RunnableNode, ClickableNode, NodeInfoBase</td></tr>
 </table>
 </div>
@@ -749,12 +775,13 @@ All text fields accept <code>@string/...</code> references.</p>
 <table class="tbl">
 <tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
 <tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to read the current value</td></tr>
-<tr><td class="field-name">set</td><td>setstate, script</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to set the value. Receives <code>$state</code></td></tr>
+<tr><td class="field-name">set</td><td>setstate</td><td class="field-type">String</td><td><span class="badge req">required</span> Script to set the value. Receives <code>$state</code></td></tr>
 <tr><td class="field-name">options</td><td>-</td><td class="field-type">Array</td><td>Static options list - <code>[[picker.options]]</code> with <code>title</code>/<code>value</code></td></tr>
 <tr><td class="field-name">option-sh</td><td>options-sh, options-su</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options dynamically. Each line <code>value|title</code> or just <code>value</code></td></tr>
 <tr><td class="field-name">multiple</td><td>-</td><td class="field-type">Bool</td><td>Allow selecting multiple values</td></tr>
 <tr><td class="field-name">separator</td><td>-</td><td class="field-type">String</td><td>Separator for multi-select values (default <code>\n</code>)</td></tr>
-<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td>Static lock: <code>true</code>/<code>1</code> or the <code>"1|message"</code> format</td></tr>
+<tr><td class="field-name">lock-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock dynamically (returns <code>"1"</code> = locked)</td></tr>
 <tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">+ all fields of RunnableNode, ClickableNode, NodeInfoBase</td></tr>
 </table>
 </div>
@@ -817,12 +844,12 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">bold</td><td>b</td><td class="field-type">Bool</td><td>false</td><td>Bold</td></tr>
 <tr><td class="field-name">italic</td><td>i</td><td class="field-type">Bool</td><td>false</td><td>Italic</td></tr>
 <tr><td class="field-name">underline</td><td>u</td><td class="field-type">Bool</td><td>false</td><td>Underline</td></tr>
-<tr><td class="field-name">strikethrough</td><td>line-through, del</td><td class="field-type">Bool</td><td>false</td><td>Strikethrough</td></tr>
+<tr><td class="field-name">strikethrough</td><td>line-through, delete-line, del</td><td class="field-type">Bool</td><td>false</td><td>Strikethrough</td></tr>
 <tr><td class="field-name">monospace</td><td>mono, code</td><td class="field-type">Bool</td><td>false</td><td>Monospace font (for code/log)</td></tr>
 <tr><td class="field-name">letter-spacing</td><td>letterspacing, spacing</td><td class="field-type">Float</td><td>0</td><td>Letter spacing (em units)</td></tr>
 <tr><td class="field-name">line-height</td><td>lineheight, row-height</td><td class="field-type">Float</td><td>0</td><td>Line height multiplier (1.5 = +50%)</td></tr>
-<tr><td class="field-name">margin-top</td><td>spacing-top</td><td class="field-type">Int</td><td>0</td><td>Top margin (dp)</td></tr>
-<tr><td class="field-name">margin-bottom</td><td>spacing-bottom</td><td class="field-type">Int</td><td>0</td><td>Bottom margin (dp)</td></tr>
+<tr><td class="field-name">margin-top</td><td>spacing-top, top-margin</td><td class="field-type">Int</td><td>0</td><td>Top margin (dp)</td></tr>
+<tr><td class="field-name">margin-bottom</td><td>spacing-bottom, bottom-margin</td><td class="field-type">Int</td><td>0</td><td>Bottom margin (dp)</td></tr>
 <tr><td class="field-name">alpha</td><td>opacity</td><td class="field-type">Float</td><td>-1</td><td>Opacity 0.0-1.0 or 0-255</td></tr>
 <tr><td class="field-name">foreground</td><td>color</td><td class="field-type">String</td><td>-1</td><td>Text color (e.g. <code>#FF0000</code>)</td></tr>
 <tr><td class="field-name">bg</td><td>background, bgcolor</td><td class="field-type">String</td><td>-1</td><td>Background color</td></tr>
@@ -837,14 +864,14 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">photo-gif-num</td><td>gif-num</td><td class="field-type">Int</td><td>0</td><td>&gt;0: image is animated (photo_1.png...)</td></tr>
 <tr><td class="field-name">photo-gif-time</td><td>gif-time</td><td class="field-type">Int</td><td>300</td><td>Time per frame (ms)</td></tr>
 <tr><td class="field-name">photo-gif-autoplay</td><td>gif-autoplay</td><td class="field-type">Bool</td><td>true</td><td>Auto-play the GIF</td></tr>
-<tr><td class="field-name">photo-gif-loop</td><td>photo-gif-loop-count</td><td class="field-type">Int</td><td>0</td><td>Loop count (0=infinite)</td></tr>
+<tr><td class="field-name">photo-gif-loop</td><td>photo-gif-loop-count, gif-loop, gif-loop-count</td><td class="field-type">Int</td><td>0</td><td>Loop count (0=infinite)</td></tr>
 <tr><td class="field-name">icon</td><td>icon-path</td><td class="field-type">String</td><td>""</td><td><span class="badge new">new</span> INLINE small icon (same line, different from photo)</td></tr>
 <tr><td class="field-name">icon-position</td><td>icon-pos</td><td class="field-type">String</td><td>before</td><td><code>before</code> / <code>after</code> the text</td></tr>
 <tr><td class="field-name">icon-size</td><td>-</td><td class="field-type">Int</td><td>0</td><td>Icon size (dp)</td></tr>
 <tr><td class="field-name">script</td><td>run</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script to run when the row is clicked</td></tr>
 <tr><td class="field-name">toggle</td><td>toggle-type</td><td class="field-type">String</td><td>""</td><td><code>checkbox</code>/<code>switch</code> = show a small toggle next to the row</td></tr>
-<tr><td class="field-name">checked</td><td>checked-sh, check</td><td class="field-type">Bool|Shell</td><td>false</td><td>Toggle state. Accepts shell too!</td></tr>
-<tr><td class="field-name">onchange-sh</td><td>on-change-sh, toggle-sh, set-sh</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script to run when the user toggles (receives <code>$state</code>)</td></tr>
+<tr><td class="field-name">get</td><td>getstate</td><td class="field-type">Bool|Shell</td><td>false</td><td>Toggle initial state. A shell returning exactly <code>"1"</code> = checked (queued into pending states - see <a href="#pending-states">section 20</a>)</td></tr>
+<tr><td class="field-name">set</td><td>setstate</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script run when the user toggles (receives <code>$state</code> = "1"/"0")</td></tr>
 <tr><td class="field-name">support</td><td>visible</td><td class="field-type">Bool|Shell</td><td>true</td><td>Hide/show the row</td></tr>
 </table>
 </div>
@@ -869,7 +896,7 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
-<div class="callout warn"><code>sh</code> for a row runs IMMEDIATELY during page parse (synchronous, not pending). <code>checked</code> when shell is QUEUED into <code>pendingRowCheckedStates</code> and batched at the end - like switch/picker.</div>
+<div class="callout warn"><code>sh</code> of a row is NOT queued into the pending-state system - it is left to the UI layer and evaluated when the row is rendered. <code>get</code> with a shell value IS queued into <code>pendingRowCheckedStates</code> and batched at the end - like switch/picker.</div>
 </section>
 
 <section id="editor">
@@ -920,7 +947,8 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
 <tr><td class="field-name">url</td><td>-</td><td class="field-type">String</td><td><span class="badge req">required</span> URL (http/https) to download. Only static URLs are supported - no <code>url-sh</code></td></tr>
 <tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Script run after download. Receives <code>$state</code> = path of downloaded file</td></tr>
-<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock</td></tr>
+<tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td>Static lock: <code>true</code>/<code>1</code> or the <code>"1|message"</code> format</td></tr>
+<tr><td class="field-name">lock-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock dynamically (returns <code>"1"</code> = locked)</td></tr>
 <tr><td class="field-name">rows</td><td>-</td><td class="field-type">Array</td><td>Rich-text rows shown below the item - see <a href="#text-rows">section 12</a></td></tr>
 <tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">+ all RunnableNode fields: confirm, warn, reload, auto-finish...</td></tr>
 </table>
@@ -948,7 +976,7 @@ All text fields accept <code>@string/...</code> references.</p>
 <h2>15. [[resource]] - Extract assets</h2>
 <p><code>[[resource]]</code> is an <strong>invisible</strong> node (it returns <code>null</code> after initialization). It only extracts assets from the APK to storage (typically <code>/data/data/&lt;pkg&gt;/files/...</code> or cache). This is how to ship script files, images, etc. from the APK to outside so shell can call them.</p>
 
-<p>You can also put <code>resource-file</code>/<code>resource-dir</code> fields directly inside <code>[[group]]</code>/<code>[[action]]</code>/<code>[[page]]</code>/<code>[[switch]]</code>/<code>[[picker]]</code>/<code>[[text]]</code> - no need to declare a separate <code>[[resource]]</code> entry.</p>
+<p>You can also put <code>resource-file</code>/<code>resource-dir</code> fields directly inside <code>[[page]]</code>/<code>[[action]]</code>/<code>[[switch]]</code>/<code>[[picker]]</code>/<code>[[text]]</code> - no need to declare a separate <code>[[resource]]</code> entry. (Not available on <code>[[group]]</code>.)</p>
 
 <h3>15.1. Fields</h3>
 <div class="tbl-container">
@@ -959,7 +987,7 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">resources</td><td>-</td><td class="field-type">Array</td><td>List of more complex resources - each entry is a table with <code>file</code> and/or <code>dir</code></td></tr>
 </table>
 </div>
-<div class="callout tip"><code>ExtractAssets.extractResource()</code> and <code>extractResources()</code> check if the file already exists before re-extracting. To avoid re-extracting on every run, use <code>support = "test -f ..."</code> to only extract when needed.</div>
+<div class="callout tip">Extraction is de-duplicated in memory (per app process): each asset name is written only once, repeated declarations reuse the first extracted path. Note that for a node carrying <code>resource-*</code> fields, <code>support = false</code> skips the whole node - its resources are not extracted either.</div>
 </section>
 
 <section id="menu-fab">
@@ -970,7 +998,7 @@ All text fields accept <code>@string/...</code> references.</p>
 <p>A <code>[[menu]]</code> or <code>[[fab]]</code> block is a <strong>container</strong>, NOT a single entry:</p>
 <ul>
 <li><code>handler</code> (or <code>handler-sh</code>): the DEFAULT script that runs when clicking a child item, if that item does not declare its own <code>script</code></li>
-<li><code>[[...items]]</code>: the list of items shown in the menu/fab - each item uses the same fields as the old <code>[[page.options]]</code> (type/style/suffix/mime/path-home/multiple/box/silent/link/activity/html/config/config-sh/script/title...)</li>
+<li><code>[[...items]]</code>: the list of items shown in the menu/fab - each item uses the same fields as the old <code>[[page.options]]</code> (type/style/suffix/mime/path-home/multiple/get/silent/link/activity/html/config/config-sh/script/title...)</li>
 </ul>
 
 <h3>16.2. Item fields (inside menu/fab)</h3>
@@ -979,8 +1007,9 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
 <tr><td class="field-name">title</td><td>text</td><td class="field-type">String</td><td>Title</td></tr>
 <tr><td class="field-name">type</td><td>-</td><td class="field-type">String</td><td><code>refresh</code>/<code>finish</code>/<code>file</code>/<code>folder</code>/<code>spinner</code>/<code>checkbox</code>...</td></tr>
+<tr><td class="field-name">style</td><td>-</td><td class="field-type">String</td><td>Set to <code>fab</code> to render this item as a floating action button (useful inside <code>[[menu]]</code>)</td></tr>
 <tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Script to run on click. If empty, uses the group's <code>handler</code></td></tr>
-<tr><td class="field-name">box</td><td>visible, check</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check the tick (type=checkbox)</td></tr>
+<tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td><span class="badge shell">shell</span> (type=checkbox) script that decides the tick; (type=spinner) script that reads the current selection for highlighting. Re-run every time the menu opens</td></tr>
 <tr><td class="field-name">silent</td><td>hidden</td><td class="field-type">Bool</td><td>true: run silently in background (no log)</td></tr>
 <tr><td class="field-name">link</td><td>href</td><td class="field-type">String</td><td>URL</td></tr>
 <tr><td class="field-name">activity</td><td>a, intent</td><td class="field-type">String</td><td>Intent</td></tr>
@@ -992,8 +1021,7 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">path-home</td><td>home-path</td><td class="field-type">String</td><td>Initial directory (file picker)</td></tr>
 <tr><td class="field-name">multiple</td><td>-</td><td class="field-type">Bool</td><td>Allow multiple file selection</td></tr>
 <tr><td class="field-name">options</td><td>-</td><td class="field-type">Array</td><td>(type=spinner) Choice list</td></tr>
-<tr><td class="field-name">option-sh</td><td>options-sh, options-su</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options</td></tr>
-<tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td><span class="badge shell">shell</span> (type=spinner) Script to read the currently selected value</td></tr>
+<tr><td class="field-name">option-sh</td><td>options-sh, options-su</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options. Each line <code>value|title</code> or just <code>value</code></td></tr>
 <tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">+ RunnableNode, ClickableNode, NodeInfoBase fields</td></tr>
 </table>
 </div>
@@ -1021,17 +1049,17 @@ All text fields accept <code>@string/...</code> references.</p>
 <div class="tbl-container">
 <table class="tbl">
 <tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr>
-<tr><td class="field-name">depend-on</td><td class="field-type">String</td><td>null</td><td>Name(s) of parent param(s), separated by <code>|</code>. E.g. <code>"mode|cam"</code></td></tr>
+<tr><td class="field-name">depend-on</td><td class="field-type">String</td><td>null</td><td>Name(s) of parent param(s), separated by <code>|</code>. E.g. <code>"mode|cam"</code>. Alias: <code>depend</code></td></tr>
 <tr><td class="field-name">depend-value</td><td class="field-type">String</td><td>null</td><td>Required matching value for each parent. Parents separated by <code>|</code>; within one parent: accepted values OR-separated by comma <code>,</code>. E.g. <code>"a|b,c"</code></td></tr>
 <tr><td class="field-name">depend-mode</td><td class="field-type">String</td><td>"show"</td><td><code>"show"</code>: show when matched (default). <code>"hide"</code>: hide when matched. Can be declared per-parent, separated by <code>|</code>: <code>"show|hide"</code></td></tr>
-<tr><td class="field-name">depend-logic</td><td class="field-type">String</td><td>"and"</td><td>How to combine multiple parents: <code>and</code> / <code>priority</code> (= or LTR) / <code>priority-rtl</code> (= or RTL) / <code>xor</code> / <code>nand</code></td></tr>
+<tr><td class="field-name">depend-logic</td><td class="field-type">String</td><td>"and"</td><td>How to combine multiple parents: <code>and</code> / <code>priority</code> (= or LTR) / <code>priority-rtl</code> (= or RTL) / <code>xor</code> / <code>nand</code>. Alias: <code>depend-priority</code></td></tr>
 <tr><td class="field-name">depend-default</td><td class="field-type">String</td><td>"show"</td><td>Default value when NO condition matches: <code>"show"</code> or <code>"hide"</code></td></tr>
-<tr><td class="field-name">depend-initial</td><td class="field-type">String</td><td>"auto"</td><td>Initial state before any evaluation: <code>"auto"</code> / <code>"show"</code> / <code>"hide"</code></td></tr>
+<tr><td class="field-name">depend-initial</td><td class="field-type">String</td><td>"auto"</td><td>Initial state before any evaluation: <code>"auto"</code> / <code>"show"</code> / <code>"hide"</code>. Alias: <code>depend-initial-state</code></td></tr>
 <tr><td class="field-name">depend-negate</td><td class="field-type">Bool</td><td>false</td><td>Invert ALL conditions (NOT logic)</td></tr>
 <tr><td class="field-name">depend-threshold</td><td class="field-type">Int</td><td>-1</td><td>Only for <code>and</code>: % of conditions that must match (0-100). E.g. <code>67</code> = at least 2/3</td></tr>
 <tr><td class="field-name">depend-include-hidden</td><td class="field-type">Bool</td><td>true</td><td>true: hidden param still included in result. false: skip hidden param</td></tr>
 <tr><td class="field-name">depend-cascade</td><td class="field-type">Bool</td><td>true</td><td>true: parent hidden =&gt; child hidden too. false: only visible parents are used</td></tr>
-<tr><td class="field-name">depend-onchange</td><td class="field-type">String</td><td>null</td><td>Shell callback name run when this param's hide/show state changes</td></tr>
+<tr><td class="field-name">depend-onchange</td><td class="field-type">String</td><td>null</td><td>Shell callback name run when this param's hide/show state changes. Aliases: <code>depend-on-change</code>, <code>depend-callback</code></td></tr>
 <tr><td class="field-name">depend-readonly</td><td class="field-type">Bool</td><td>false</td><td><span class="badge new">new</span> true: don't hide - just <em>dim</em> and lock interaction</td></tr>
 <tr><td class="field-name">depend-sort</td><td class="field-type">Bool</td><td>false</td><td><span class="badge new">new</span> true: move locked params to the bottom (only effective when depend-readonly=true)</td></tr>
 </table>
@@ -1081,7 +1109,7 @@ All text fields accept <code>@string/...</code> references.</p>
 <div class="tbl-container">
 <table class="tbl">
 <tr><th>Field</th><th>Applies to</th><th>Description</th></tr>
-<tr><td class="field-name">title-sh</td><td>Node, param, option, row</td><td>Produce title dynamically</td></tr>
+<tr><td class="field-name">title-sh</td><td>Node, param, option</td><td>Produce title dynamically</td></tr>
 <tr><td class="field-name">desc-sh</td><td>Node, param</td><td>Produce desc dynamically</td></tr>
 <tr><td class="field-name">summary-sh</td><td>Node</td><td>Produce summary dynamically</td></tr>
 <tr><td class="field-name">warn-sh / warning-sh</td><td>RunnableNode</td><td>Produce warning dynamically</td></tr>
@@ -1090,9 +1118,10 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">desc-on-sh</td><td>ActionParamInfo (type=bool)</td><td>Produce desc-on dynamically</td></tr>
 <tr><td class="field-name">value-sh</td><td>ActionParamInfo, EditorNode</td><td>Fetch current value</td></tr>
 <tr><td class="field-name">options-sh / option-sh / options-su</td><td>PickerNode, ActionParamInfo, PageMenuOption</td><td>Produce options list dynamically</td></tr>
-<tr><td class="field-name">get / getstate</td><td>SwitchNode, PickerNode, PageMenuOption(spinner)</td><td>Read current state (batched via pending states at parse time)</td></tr>
-<tr><td class="field-name">set / setstate / script</td><td>SwitchNode, PickerNode, ActionNode, DownloadNode, EditorNode, PageMenuOption</td><td>Set new state on user interaction</td></tr>
-<tr><td class="field-name">lock / lock-state</td><td>ClickableNode, PageNode, PageMenuOption</td><td>Check lock state</td></tr>
+<tr><td class="field-name">get / getstate</td><td>SwitchNode, PickerNode, PageMenuOption (checkbox/spinner), TextRow (toggle)</td><td>Read current state (batched via pending states at parse time)</td></tr>
+<tr><td class="field-name">set / setstate / script</td><td>ActionNode, SwitchNode, PickerNode, DownloadNode, PageMenuOption, TextRow (toggle)</td><td>Set new state on user interaction</td></tr>
+<tr><td class="field-name">lock / lock-state</td><td>ClickableNode, PageNode, PageMenuOption</td><td>Check lock state (static, or "state|message" format)</td></tr>
+<tr><td class="field-name">lock-sh</td><td>ClickableNode (page, action, switch, picker, download, editor)</td><td>Check lock state dynamically (returns "1" = locked)</td></tr>
 <tr><td class="field-name">support / visible</td><td>All nodes, row, param</td><td>Hide/show (accepts shell too)</td></tr>
 </table>
 </div>
@@ -1100,17 +1129,28 @@ All text fields accept <code>@string/...</code> references.</p>
 
 <section id="bool-or-shell">
 <h2>19. resolveBoolOrShell</h2>
-<p>The <code>resolveBoolOrShell()</code> function parses fields that can take either a static boolean or a shell command. If the string evaluates to <code>"true"</code> or <code>"1"</code>, it resolves to <code>true</code>. For non-boolean strings, it executes the shell script in the background; if the command output equals <code>"1"</code>, it returns <code>true</code>, otherwise <code>false</code>.</p>
+<p>The <code>resolveBoolOrShell()</code> function parses fields that can take either a static boolean or a shell command. If the string evaluates to <code>"true"</code> or <code>"1"</code>, it resolves to <code>true</code>. For non-boolean strings, it executes the script immediately via the root shell during parsing; if the command output equals <code>"1"</code>, it returns <code>true</code>, otherwise <code>false</code>.</p>
 </section>
 
 <section id="pending-states">
 <h2>20. Pending states</h2>
-<p>To maximize performance when parsing large configuration files, dynamic shell evaluations for nodes (such as <code>get</code> scripts for switches or lock checks) are queued into pending state batches rather than executed synchronously one by one. Once reading finishes, all pending states run asynchronously to update node UI values in a single pass.</p>
+<p>To maximize performance when parsing large configuration files, the parser does not run every dynamic shell evaluation synchronously. Five queues collect the deferred work while parsing:</p>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Queue</th><th>Collected from</th><th>Result applied to</th></tr>
+<tr><td><code>pendingSwitchStates</code></td><td>switch <code>get</code></td><td><code>checked</code> = true when output is "1"/"true" (and not "error")</td></tr>
+<tr><td><code>pendingPickerStates</code></td><td>picker <code>get</code></td><td>current <code>value</code></td></tr>
+<tr><td><code>pendingRowCheckedStates</code></td><td>row <code>get</code> (toggle)</td><td>row <code>checked</code> = (output trimmed == "1")</td></tr>
+<tr><td><code>pendingRowVisibleStates</code></td><td>row <code>support</code> (non-boolean value)</td><td>row removed from its list when output != "1"</td></tr>
+<tr><td><code>pendingDynamicStrings</code></td><td><code>title-sh</code>/<code>desc-sh</code>/<code>summary-sh</code> of nodes, <code>warn-sh</code> of runnable nodes, <code>title-sh</code> of picker/param options</td><td>replaces the static string</td></tr>
+</table>
+</div>
+<p>After the whole document is parsed, <code>resolvePendingStates()</code> submits ALL collected scripts in a single batch via <code>ScriptEnvironmen.executeMultipleResultRoot()</code> - one shell round-trip instead of N - and then distributes the results to each node before the page is displayed.</p>
 </section>
 
 <section id="process">
 <h2>21. process = true</h2>
-<p>Setting <code>process = true</code> on a <code>[[page]]</code> instructs the rendering engine to build and render child nodes progressively on the UI as they are parsed, accompanied by a linear progress indicator, rather than holding display until the entire tree has loaded.</p>
+<p>Setting <code>process = true</code> on a <code>[[page]]</code> instructs the rendering engine to build and render child nodes progressively on the UI as they are parsed, accompanied by a linear progress indicator, rather than holding display until the entire tree has loaded. Note that a <code>[[group]]</code> is emitted to the UI only after ALL of its children have been collected (group + children appear together), while items outside any group are emitted one by one as soon as they are parsed.</p>
 </section>
 
 <section id="lifecycle">
@@ -1121,7 +1161,15 @@ All text fields accept <code>@string/...</code> references.</p>
 <section id="example">
 <h2>23. Full example</h2>
 <p>A representative TOML configuration showcasing groups, actions, parameters, switches, and rich text rows:</p>
-<pre><code>[[group]]
+<pre><code># Top-level item (declared before the first [[group]]) - shown without a group header
+[[text]]
+title = "NOTICE"
+
+[[text.rows]]
+text = "Every entry below belongs to the nearest [[group]] above it"
+italic = true
+
+[[group]]
 title = "System Performance"
 
 [[switch]]
@@ -1129,10 +1177,12 @@ title = "Performance Mode"
 desc = "Enable performance governor"
 get = "getprop sys.perf.mode"
 set = "setprop sys.perf.mode $state"
+lock-sh = "[ -f /data/adb/.perf-ready ] &amp;&amp; echo 1"
 
 [[action]]
 title = "Set CPU Frequency"
 script = "echo $freq &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"
+reload = "perf-mode"
 
 [[action.params]]
 name = "freq"
@@ -1146,6 +1196,41 @@ value = "1800000"
 [[action.params.options]]
 title = "Mode 2"
 value = "2200000"
+
+[[action.rows]]
+text = "Applies to CPU0 only"
+italic = true
+
+[[group]]
+title = "Maintenance"
+
+[[action]]
+title = "Clear cache"
+confirm = true
+warn = "Cache will be wiped!"
+script = "sync; echo 3 &gt; /proc/sys/vm/drop_caches"
+auto-off = true
+
+# Page menu (3-dot) and FAB - collected wherever they appear
+[[menu]]
+handler = "echo Menu: $key"
+
+[[menu.items]]
+title = "Refresh"
+type = "refresh"
+
+[[menu.items]]
+title = "Performance Mode"
+type = "checkbox"
+get = "getprop sys.perf.mode"
+script = "setprop sys.perf.mode $state"
+
+[[fab]]
+[[fab.items]]
+title = "Flash zip"
+type = "file"
+suffix = "zip"
+script = "sh $state"
 </code></pre>
 </section>
 
@@ -1153,7 +1238,8 @@ value = "2200000"
 <h2>24. Tips &amp; pitfalls</h2>
 <ul>
   <li>Always use double brackets <code>[[node]]</code> across all declarations to prevent TOML table array parser exceptions.</li>
-  <li>Keep nesting structures under 3 levels deep to maintain responsive UI performance and code clarity.</li>
+  <li>Groups are flat - never use dotted <code>[[group.action]]</code> nesting (those children are silently ignored). Declare children flat, right after their <code>[[group]]</code>.</li>
+  <li><code>[[toml]]</code> is a reserved marker for inline-TOML detection (<code>config-sh</code>) - do not use it as a node table name.</li>
   <li>Use selective refresh via <code>reload = "id1,id2"</code> instead of reloading the entire page after action execution.</li>
 </ul>
 </section>
