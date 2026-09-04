@@ -238,14 +238,14 @@ object FastBlurUtility {
             val isDark = com.tool.tree.ThemeModeState.isDarkMode()
             val contrastValue = if (isDark) 0.9f else 1.2f
             val dimValue = if (isDark) 0.8f else 0.7f
-            val scale = contrastValue * dimValue
+            val scale = contrastValue
             val offset = (1f - scale) * 128f
             val cm = ColorMatrix(
                 floatArrayOf(
                     scale, 0f, 0f, 0f, offset,
                     0f, scale, 0f, 0f, offset,
                     0f, 0f, scale, 0f, offset,
-                    0f, 0f, 0f, 1f, 0f
+                    0f, 0f, 0f, dimValue, 0f
                 )
             )
             paint.colorFilter = ColorMatrixColorFilter(cm)
