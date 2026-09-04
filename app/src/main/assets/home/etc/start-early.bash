@@ -14,9 +14,9 @@ if checkonline; then
     timeout 20 taive -s 'https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/Version.md' $TEMP/Version.md
 
     if [[ -f $TEMP/Version.md ]] && [[ "$(glog sum_ver_boot)" != "$(checksum $TEMP/Version.md)" ]]; then
-        sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=7 {printf "Version:%s", $0}' > $TEMP/version.txt
-        transai -b "$(cat $TEMP/version.txt)" > $TEMP/version_trans.txt
-        slog sum_ver_boot "$(checksum $TEMP/Version.md)"
+    sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=7 {printf "Version:%s", $0}' > $TEMP/version.txt
+    transai -b "$(cat $TEMP/version.txt)" > $TEMP/version_trans.txt
+    slog sum_ver_boot "$(checksum $TEMP/Version.md)"
     fi
 fi
 } &
@@ -25,64 +25,35 @@ check_update boot &
 
 {
 # Cấp quyền tự động nếu đã root
-if [ "$ROT" == 1 ]; then
-    chown -R 0:0 $HOME/.cache
+chown -R 0:0 $HOME/.cache
 
-    # Tạo link home
-    if [ ! -e /data/local/TOOL ]; then
-      set_permis -R /data/local/TOOL
-      ln -sf $APK /data/local/TOOL
-    fi
-    if [ ! -e /data/local/TREE ]; then
-      set_permis -R /data/local/TREE
-      ln -sf $SDH /data/local/TREE
-    fi
-
-    # Thêm không giới hạn tiết kiệm pin
-    dumpsys deviceidle whitelist +$PACKAGE_NAME &>/dev/null
-    am set-inactive --user 0 $PACKAGE_NAME false &>/dev/null
-    am set-standby-bucket $PACKAGE_NAME active &>/dev/null
-    am set-bg-restriction-level --user 0 $PACKAGE_NAME unrestricted
-    am unfreeze --sticky $PACKAGE_NAME &>/dev/null
-    cmd appops set $PACKAGE_NAME RUN_IN_BACKGROUND allow
-    cmd appops set $PACKAGE_NAME RUN_ANY_IN_BACKGROUND allow
-    cmd appops set $PACKAGE_NAME WAKE_LOCK allow
-
-    # Cấp quyền ở MIUI, HyperOS
-    cmd appops set $PACKAGE_NAME 10022 allow
-    cmd appops set $PACKAGE_NAME GET_USAGE_STATS allow
-    [ "$API" -ge 30 ] && cmd appops set $PACKAGE_NAME QUERY_ALL_PACKAGES allow
-
-    # Phím tắt màn hình chính
-    cmd appops set $PACKAGE_NAME 10017 allow
-
-    # Loaded sẵn danh sách img
-    search_image &>/dev/null
-else
-rish -c "
-    # Tạo link home
-    if [ ! -e /data/local/TOOL ]; then
-      set_permis -R /data/local/TOOL
-      ln -sf $APK /data/local/TOOL
-    fi
-    if [ ! -e /data/local/TREE ]; then
-      set_permis -R /data/local/TREE
-      ln -sf $SDH /data/local/TREE
-    fi
-    dumpsys deviceidle whitelist +$PACKAGE_NAME &>/dev/null
-    am set-inactive --user 0 $PACKAGE_NAME false &>/dev/null
-    am set-standby-bucket $PACKAGE_NAME active &>/dev/null
-    am set-bg-restriction-level --user 0 $PACKAGE_NAME unrestricted
-    am unfreeze --sticky $PACKAGE_NAME &>/dev/null
-    cmd appops set $PACKAGE_NAME RUN_IN_BACKGROUND allow
-    cmd appops set $PACKAGE_NAME RUN_ANY_IN_BACKGROUND allow
-    cmd appops set $PACKAGE_NAME WAKE_LOCK allow
-    cmd appops set $PACKAGE_NAME 10022 allow
-    cmd appops set $PACKAGE_NAME GET_USAGE_STATS allow
-    [ "$API" -ge 30 ] && cmd appops set $PACKAGE_NAME QUERY_ALL_PACKAGES allow
-    cmd appops set $PACKAGE_NAME 10017 allow
-"
+# Tạo link home
+if [ ! -e /data/local/TOOL ]; then
+  set_permis -R /data/local/TOOL
+  ln -sf $APK /data/local/TOOL
 fi
+if [ ! -e /data/local/TREE ]; then
+  set_permis -R /data/local/TREE
+  ln -sf $SDH /data/local/TREE
+fi
+
+# Thêm không giới hạn tiết kiệm pin
+dumpsys deviceidle whitelist +$PACKAGE_NAME &>/dev/null
+am set-inactive --user 0 $PACKAGE_NAME false &>/dev/null
+am set-standby-bucket $PACKAGE_NAME active &>/dev/null
+am set-bg-restriction-level --user 0 $PACKAGE_NAME unrestricted
+am unfreeze --sticky $PACKAGE_NAME &>/dev/null
+cmd appops set $PACKAGE_NAME RUN_IN_BACKGROUND allow
+cmd appops set $PACKAGE_NAME RUN_ANY_IN_BACKGROUND allow
+cmd appops set $PACKAGE_NAME WAKE_LOCK allow
+# Cấp quyền ở MIUI, HyperOS
+cmd appops set $PACKAGE_NAME 10022 allow
+cmd appops set $PACKAGE_NAME GET_USAGE_STATS allow
+[ "$API" -ge 30 ] && cmd appops set $PACKAGE_NAME QUERY_ALL_PACKAGES allow
+# Phím tắt màn hình chính
+cmd appops set $PACKAGE_NAME 10017 allow
+# Loaded sẵn danh sách img
+search_image &>/dev/null
 } &
 
 {
