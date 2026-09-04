@@ -10,6 +10,7 @@ source "$fileprop" 2>/dev/null
 if [ "$google_text" ]; then
 echo '
   [[group]]
+  [[menu]]
   [[menu.items]]
   title = "Gemini"
   box = "glog transai_text_'$id'"
@@ -17,11 +18,11 @@ echo '
   silent = true
   type = "checkbox"
   script = """
-    if [ "$(glog transai_text_'$id')" == 1 ]; then
-    slog transai_text_'$id' 0
-    else
-    transai -c && slog transai_text_'$id' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
-    fi
+  if [ "$(glog transai_text_'$id')" == 1 ]; then
+  slog transai_text_'$id' 0
+  else
+  transai -c && slog transai_text_'$id' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
+  fi
   """
   '
 fi
@@ -30,16 +31,16 @@ fi
 echo '
   [[group]]
   [[menu]]
-    [[menu.items]]
-    title = "'$pin_text_add'"
-    auto-finish = true
-    silent = true
-    script = """
-    if [ -f "'$1'/pin" ]; then
-    rm -f "'$1'/pin"
-    else
-    echo > "'$1'/pin"
-    fi
-    """
+  [[menu.items]]
+  title = "'$pin_text_add'"
+  auto-finish = true
+  silent = true
+  script = """
+  if [ -f "'$1'/pin" ]; then
+  rm -f "'$1'/pin"
+  else
+  echo > "'$1'/pin"
+  fi
+  """
   '
 fi
