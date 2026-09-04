@@ -13,7 +13,7 @@ echo '
   [[menu]]
   [[menu.items]]
   title = "Gemini"
-  box = "glog transai_text_'$id'"
+  get = "glog transai_text_'$id'"
   reload = true
   silent = true
   type = "checkbox"
@@ -33,7 +33,9 @@ echo '
   [[menu]]
   [[menu.items]]
   title = "'$pin_text_add'"
+  get = "[ -f '$1'/pin ] && echo 1"
   auto-finish = true
+  type = "checkbox"
   silent = true
   script = """
   if [ -f "'$1'/pin" ]; then

@@ -156,7 +156,6 @@ echo '
   [ -d $PTSD/out ] && mkdir -p $PTSD/out &>/dev/null
   # Dịch ngôn ngữ
   if [[ "$1" == "Home" || "$1" == "More" ]]; then
-  slog -d show_setting_add
   auto_trans &>/dev/null
   fi
 ) &
@@ -342,6 +341,12 @@ Update() {
   if [ -f $TMP/update ]; then
   url_dowload="$(cat $TMP/update 2>/dev/null)"
   show_update=1
+  desc_xx="$sizes_text: $(cat $TMP/size 2>/dev/null)"
+  title_xx="$update_text"
+  elif [ "$(glog gg_beta)" == 1 ]; then
+  url_dowload="https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk"
+  title_xx="$download_text"
+  show_update=1
   fi
   if [ "$(glog gg_trans_ver 1)" == 1 ] && [ -f $TEMP/version_trans.txt ]; then
   link_vers="version_trans.txt"
@@ -358,23 +363,11 @@ Update() {
     slog boot_ver_code 1
     slog sum_onl_plugin 1
     slog sum_moduls 1
-  elif [ "$menu_id" == "beta" ]; then
-    echo "'$update_text_3'"
-    echo
-    if [ -f "$TMP/Tool-Tree.apk" ]; then
-      openfile "$TMP/Tool-Tree.apk"
-      exit
-      else
-      taive "https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk" "$TMP/Tool-Tree.apk" 2>&1
-      openfile "$TMP/Tool-Tree.apk"
-      echo
-      echo "'$save_text' $TMP/Tool-Tree.apk"
-    fi
   fi
   """
   
     [[menu.items]]
-    title = "'$google_translate_text'"
+    title = "Gemini"
     get = "glog gg_trans_ver"
     reload = true
     silent = true
@@ -393,8 +386,12 @@ Update() {
     silent = true
     
     [[menu.items]]
-    key = "beta"
     title = "'$download_text' beta"
+    get = "glog gg_beta"
+    reload = true
+    silent = true
+    type = "checkbox"
+    script = "slog gg_beta $state"
     
     [[menu.items]]
     key = "data"
@@ -413,7 +410,6 @@ Update() {
   title = "'$author_text'"
   icon = "'$urlicon'/like.png"
   html = "https://zenlua.github.io/Tool-Tree/website/Information.html"
-  process = true
 
   [[group]]
   [[page]]
@@ -422,13 +418,22 @@ Update() {
   link = "https://zenlua.github.io/Tool-Tree"
 
   [[group]]
+  [[page]]
+  title = "Telegram"
+  icon = "'$urlicon'/telegram.png"
+  link = "https://t.me/tooltree"
+
+  [[group]]
   [[download]]
-  title = "'$update_text'"
-  desc = "'$sizes_text': '$(cat $TMP/size 2>/dev/null)'"
+  title = "'$title_xx'"
+  desc = "'$desc_xx'"
   icon = "'$urlicon'/update.png"
   support = "'$show_update'"
   url = "'$url_dowload'"
-  script = "openfile \"$state\""
+  script = """
+  openfile "$state"
+  slog -d gg_beta
+  """
 
   [[text]]
   desc-sh = "cat $TEMP/'$link_vers' 2>/dev/null"
@@ -685,7 +690,6 @@ Feature() {
   title = "'$api_key_text'"
   warn = "'$note_genmini_text'"
   icon = "'$urlicon'/apikey.png"
-  reload = true
   shell = "hidden"
   script = """
     [ -z "$models_genmini" ] && slog -d models_genmini || slog models_genmini "$models_genmini"

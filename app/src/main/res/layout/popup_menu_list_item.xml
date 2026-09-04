@@ -16,7 +16,7 @@
             android:id="@+id/popup_item_icon_left"
             android:layout_width="22dp"
             android:layout_height="22dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="10dp"
             android:scaleType="fitCenter"
             android:importantForAccessibility="no" />
 
