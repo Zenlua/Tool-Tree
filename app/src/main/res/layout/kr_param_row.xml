@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:contentDescription="@null"
-            android:layout_marginVertical="4dp"
+            android:layout_marginVertical="3dp"
             android:adjustViewBounds="true"
             android:src="@drawable/kr_param_title" />
 
@@ -77,7 +77,7 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_marginVertical="4dp"
+            android:layout_marginVertical="3dp"
             android:adjustViewBounds="true"
             android:src="@drawable/kr_param_desc"
             android:contentDescription="@null" />
