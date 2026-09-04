@@ -707,7 +707,9 @@ Feature() {
     name = "models_genmini"
     placeholder = "gemini-3.5-flash-lite"
     title = "Models Gemini"
-    type = "text"
+    editable = true
+    label = "Models"
+    items = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
     value-sh = "glog models_genmini \"gemini-3.5-flash-lite\""
   '
 }
