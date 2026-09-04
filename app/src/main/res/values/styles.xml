@@ -48,6 +48,30 @@
         <item name="toolbarIconTint">@android:color/white</item>
     </style>
 
+    <style name="AppThemeWallpaperLight" parent="AppTheme">
+        <item name="android:navigationBarColor">@color/cardBgLightTransparent</item>
+        <item name="android:statusBarColor">@color/cardBgLightTransparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:colorForegroundInverse">@color/cardBgLightTransparent</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="cardBg">@color/cardBgLightTransparent</item>
+    </style>
+
+    <style name="AppThemeWallpaper" parent="AppThemeDark">
+        <item name="android:navigationBarColor">@color/cardBgDarkTransparent</item>
+        <item name="android:statusBarColor">@color/cardBgDarkTransparent</item>
+        <item name="android:colorForegroundInverse">@color/cardBgDarkTransparent</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="cardBg">@color/cardBgDarkTransparent</item>
+    </style>
+
+    <style name="textTitle" parent="@style/TextAppearance.AppCompat.Title">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">14dp</item>
+        <item name="android:breakStrategy">simple</item>
+    </style>
+
     <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="titleTextColor">?android:textColorPrimary</item>
         <item name="subtitleTextColor">?android:textColorSecondary</item>
@@ -78,6 +102,7 @@
     <style name="textSmall">
         <item name="android:textColor">?android:attr/textColorSecondary</item>
         <item name="android:textSize">12sp</item>
+        <item name="android:breakStrategy">simple</item>
     </style>
 
     <style name="activityAnim">
@@ -294,6 +319,7 @@
         <item name="android:paddingTop">16dp</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:breakStrategy">simple</item>
     </style>
 
     <style name="dialogDesc" parent="@style/textSmall">
@@ -302,12 +328,14 @@
         <item name="android:paddingTop">8dp</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:breakStrategy">simple</item>
     </style>
 
     <style name="dialogWarn" parent="@style/textSmall">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_weight">1</item>
+        <item name="android:breakStrategy">simple</item>
     </style>
     
     <style name="dialogWarnContainer">
@@ -320,7 +348,8 @@
         <item name="android:padding">10dp</item>
     </style>
     
-    <style name="dialog_full_screen" parent="Theme.AppCompat.Dialog">
+    <style name="dialog_full_screen">
+        <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">false</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
@@ -333,13 +362,17 @@
     </style>
 
     <style name="dialog_full_screen_light" parent="@style/dialog_full_screen">
-        <item name="android:windowBackground">@android:color/background_light</item>
-        <item name="android:statusBarColor">@android:color/background_light</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="dialog_full_screen_dark" parent="@style/dialog_full_screen">
-        <item name="android:windowBackground">@android:color/background_dark</item>
-        <item name="android:statusBarColor">@android:color/background_dark</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
     
     <style name="kr_action_button" parent="@style/Widget.AppCompat.ActionButton">
@@ -352,7 +385,8 @@
         <item name="android:gravity">center_vertical</item>
     </style>
 
-    <style name="kr_full_screen_dialog" parent="Theme.AppCompat.Dialog">
+    <style name="kr_full_screen_dialog">
+        <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">false</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
@@ -365,12 +399,16 @@
     </style>
 
     <style name="kr_full_screen_dialog_light" parent="@style/kr_full_screen_dialog">
-        <item name="android:windowBackground">@android:color/background_light</item>
-        <item name="android:statusBarColor">@android:color/background_light</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="kr_full_screen_dialog_dark" parent="@style/kr_full_screen_dialog">
-        <item name="android:windowBackground">@android:color/background_dark</item>
-        <item name="android:statusBarColor">@android:color/background_dark</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>
