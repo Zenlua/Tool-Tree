@@ -429,7 +429,7 @@ Update() {
   [[group]]
   [[download]]
   title = "'$update_text'"
-  desc = "'$sizes_text': '$(cat $TEMP/size 2>/dev/null)'"
+  desc = "'$sizes_text': '$(cat $TMP/size 2>/dev/null)'"
   icon = "'$urlicon'/update.png"
   support = "'$show_update'"
   url = "'$url_dowload'"
@@ -467,6 +467,7 @@ Project() {
   
   [[action.params]]
   name = "FOLDER"
+  icon = "'$urlicon'/folder_rom.png"
   label = "'$folder_text'"
   desc = "'$config_text_2'"
   value-sh = "glog SDC"
