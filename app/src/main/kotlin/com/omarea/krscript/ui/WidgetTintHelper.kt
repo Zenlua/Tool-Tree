@@ -9,34 +9,44 @@ import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import android.widget.ImageView
 
-// Tự động tô màu cho kr_widget theo icon chính (chỉ áp dụng khi có icon):
 object WidgetTintHelper {
 
     fun applyTint(context: Context, widgetView: ImageView?, iconDrawable: Drawable?) {
         widgetView ?: return
 
-        // Nếu không có icon (iconDrawable == null), xóa màu tô và giữ màu gốc
+        // 1. KHÔNG có icon -> Trả về màu gốc mặc định của layout (không tô tint)
         if (iconDrawable == null) {
             widgetView.imageTintList = null
             return
         }
 
-        // Nếu có icon, tiến hành trích xuất màu trung bình
+        // 2. CÓ icon -> Trích xuất màu trung bình và tăng độ sáng tươi
         val rawColor = extractAverageColor(iconDrawable) ?: resolveAccentColor(context)
         val brightColor = maximizeBrightness(rawColor)
         
         widgetView.imageTintList = ColorStateList.valueOf(brightColor)
     }
 
+    /**
+     * Tăng độ sáng lên 100% (Value = 1.0f).
+     * Đảm bảo Saturation ở mức phù hợp (>= 0.4f) để khi tăng sáng màu không bị biến thành trắng tinh.
+     */
     private fun maximizeBrightness(color: Int): Int {
         val hsv = FloatArray(3)
         Color.colorToHSV(color, hsv)
-        
-        if (hsv[1] < 0.15f) {
-            hsv[1] = 0.25f
+
+        // hsv[0]: Hue (sắc độ)
+        // hsv[1]: Saturation (độ bão hòa màu 0.0 -> 1.0)
+        // hsv[2]: Value (độ sáng 0.0 -> 1.0)
+
+        hsv[2] = 1.0f // Đẩy độ sáng lên tối đa
+
+        // Nếu độ bão hòa quá thấp (màu gốc hơi xám/nhạt), nâng nhẹ Saturation
+        // để màu tô cho widget vẫn giữ được sắc tố rõ ràng thay vì ra màu trắng
+        if (hsv[1] < 0.4f) {
+            hsv[1] = 0.5f
         }
-        hsv[2] = 1.0f
-        
+
         return Color.HSVToColor(hsv)
     }
 
@@ -75,7 +85,7 @@ object WidgetTintHelper {
                 counted++
             }
         }
-        
+
         bitmap.recycle()
 
         if (counted == 0) return null
