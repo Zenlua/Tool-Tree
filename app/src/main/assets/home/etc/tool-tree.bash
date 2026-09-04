@@ -345,7 +345,7 @@ Update() {
   title_xx="$update_text"
   elif [ "$(glog gg_beta)" == 1 ]; then
   url_dowload="https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk"
-  title_xx="$download_text"
+  title_xx="$download_text beta"
   show_update=1
   fi
   if [ "$(glog gg_trans_ver 1)" == 1 ] && [ -f $TEMP/version_trans.txt ]; then
