@@ -14,34 +14,17 @@ object WidgetTintHelper {
     fun applyTint(context: Context, widgetView: ImageView?, iconDrawable: Drawable?) {
         widgetView ?: return
 
-        // 1. Trích xuất màu chủ đạo (trả về null nếu iconDrawable == null)
-        val rawColor = extractAverageColor(iconDrawable)
-        val accentColor = resolveAccentColor(context)
-        
-        // 2. Tăng độ sáng an toàn (không bị biến thành màu trắng)
-        val finalColor = maximizeBrightnessSafe(rawColor ?: accentColor, accentColor)
-
-        widgetView.imageTintList = ColorStateList.valueOf(finalColor)
-    }
-
-    /**
-     * Tăng độ sáng nhưng chống cháy thành màu trắng tinh:
-     * - Nếu màu có sắc tố (Saturation >= 15%): Giữ nguyên tông màu, nâng sáng lên 0.95f.
-     * - Nếu màu là xám/đen/trắng (Saturation < 15%): Lấy màu Accent của app thế vào.
-     */
-    private fun maximizeBrightnessSafe(color: Int, fallbackAccent: Int): Int {
-        val hsv = FloatArray(3)
-        Color.colorToHSV(color, hsv)
-
-        // Nếu màu trích xuất bị mất sắc tố (đen, xám, trắng) -> Dùng màu Accent
-        if (hsv[1] < 0.15f) {
-            Color.colorToHSV(fallbackAccent, hsv)
+        // 1. Không có icon -> Tô màu Accent mặc định
+        if (iconDrawable == null) {
+            widgetView.imageTintList = ColorStateList.valueOf(resolveAccentColor(context))
+            return
         }
 
-        // Đẩy độ sáng lên 0.95f
-        hsv[2] = 0.95f
+        // 2. Trích xuất đúng màu chủ đạo THỰC TẾ có trong icon
+        val dominantColor = extractDominantColor(iconDrawable) ?: resolveAccentColor(context)
 
-        return Color.HSVToColor(hsv)
+        // Phủ nguyên bản màu trích xuất được (không bóp méo HSV, không đổi độ sáng)
+        widgetView.imageTintList = ColorStateList.valueOf(dominantColor)
     }
 
     private fun resolveAccentColor(context: Context): Int {
@@ -51,12 +34,15 @@ object WidgetTintHelper {
     }
 
     /**
-     * Lấy màu trung bình của Icon, chấp nhận Drawable? nullable.
+     * Tìm màu chủ đạo có mặt thực tế trong Icon:
+     * - Gom nhóm màu (Quantization) để đếm tần suất pixel.
+     * - Ưu tiên các màu đặc trưng (Saturated) có diện tích lớn trong icon.
+     * - Tuyệt đối KHÔNG cộng trung bình RGB để tránh tạo màu lạ.
      */
-    private fun extractAverageColor(drawable: Drawable?): Int? {
+    private fun extractDominantColor(drawable: Drawable?): Int? {
         drawable ?: return null
 
-        val sampleSize = 16
+        val sampleSize = 24
         val bitmap = try {
             Bitmap.createBitmap(sampleSize, sampleSize, Bitmap.Config.ARGB_8888)
         } catch (e: Exception) {
@@ -69,36 +55,37 @@ object WidgetTintHelper {
         drawable.draw(canvas)
         drawable.bounds = oldBounds
 
-        var totalR = 0L
-        var totalG = 0L
-        var totalB = 0L
-        var counted = 0
-
+        val colorScores = HashMap<Int, Float>()
         val hsv = FloatArray(3)
 
         for (x in 0 until sampleSize) {
             for (y in 0 until sampleSize) {
                 val pixel = bitmap.getPixel(x, y)
-                
-                // Lọc pixel trong suốt
+
+                // Bỏ qua pixel trong suốt
                 if (Color.alpha(pixel) < 50) continue
 
                 Color.colorToHSV(pixel, hsv)
-                
-                // Bỏ qua pixel trắng nền (Saturation < 0.1 & Value > 0.9) và pixel quá tối (Value < 0.1)
-                if (hsv[1] < 0.1f && hsv[2] > 0.9f) continue
-                if (hsv[2] < 0.1f) continue
+                val sat = hsv[1]
+                val valVal = hsv[2]
 
-                totalR += Color.red(pixel)
-                totalG += Color.green(pixel)
-                totalB += Color.blue(pixel)
-                counted++
+                // Làm tròn màu (bước 16) để nhóm các điểm ảnh có tông màu gần giống nhau
+                val r = (Color.red(pixel) shr 4) shl 4
+                val g = (Color.green(pixel) shr 4) shl 4
+                val b = (Color.blue(pixel) shr 4) shl 4
+                val quantizedColor = Color.rgb(r, g, b)
+
+                // Tính điểm: Màu xuất hiện nhiều + có sắc tố rõ ràng sẽ được ưu tiên cao nhất
+                val weight = 1.0f + (sat * 2.0f) + (if (valVal > 0.15f && valVal < 0.95f) 0.5f else 0.0f)
+
+                val currentScore = colorScores[quantizedColor] ?: 0f
+                colorScores[quantizedColor] = currentScore + weight
             }
         }
 
         bitmap.recycle()
 
-        if (counted == 0) return null
-        return Color.rgb((totalR / counted).toInt(), (totalG / counted).toInt(), (totalB / counted).toInt())
+        // Trả về màu thực tế trong icon đạt điểm cao nhất
+        return colorScores.maxByOrNull { it.value }?.key
     }
 }
