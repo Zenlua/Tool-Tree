@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import android.webkit.*
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -25,14 +24,13 @@ import com.omarea.common.ui.ThemeMode
 import com.omarea.krscript.WebViewInjector
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.tool.tree.databinding.ActivityActionPageOnlineBinding
-import com.tool.tree.ui.ViewSnapshotOverlay
 
 class ActionPageOnline : AppCompatActivity() {
     private lateinit var themeMode: ThemeMode
     private lateinit var binding: ActivityActionPageOnlineBinding
     private val loadProgressBar by lazy { findViewById<ProgressBar>(R.id.page_load_progress) }
     private var fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface? = null
-    private var backSnapshotOverlay: View? = null
+    private var skipInterceptForBackNav = false
     private val ACTION_FILE_PATH_CHOOSER = 65400
     private val MENU_OPEN_BROWSER = 1001
 
@@ -62,7 +60,7 @@ class ActionPageOnline : AppCompatActivity() {
 
         onBackPressedDispatcher.addCallback(this) {
             if (binding.krOnlineWebview.canGoBack()) {
-                showBackSnapshotOverlay()
+                skipInterceptForBackNav = true
                 binding.krOnlineWebview.goBack()
             } else {
                 finish()
@@ -70,16 +68,6 @@ class ActionPageOnline : AppCompatActivity() {
         }
 
         loadIntentData()
-    }
-
-    // Chụp ảnh trang hiện tại rồi phủ đè lên WebView - giữ nguyên giao diện cũ cho tới khi
-    // trang trước đó tải xong hẳn (gỡ ở onPageFinished), tránh nháy văn bản thô lúc WebView
-    // tải lại trang từ mạng (nhiều site set no-cache nên goBack() vẫn phải load lại qua mạng).
-    private fun showBackSnapshotOverlay() {
-        val webview = binding.krOnlineWebview
-        val parent = webview.parent as? ViewGroup ?: return
-        val bitmap = ViewSnapshotOverlay.capture(webview) ?: return
-        backSnapshotOverlay = ViewSnapshotOverlay.show(parent, webview, bitmap)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -194,16 +182,16 @@ class ActionPageOnline : AppCompatActivity() {
                 super.onPageFinished(view, url)
                 loadProgressBar.visibility = View.GONE
                 view?.title?.let { setTitle(it) }
-                (binding.krOnlineWebview.parent as? ViewGroup)?.let {
-                    ViewSnapshotOverlay.remove(it, backSnapshotOverlay)
-                }
-                backSnapshotOverlay = null
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 loadProgressBar.isIndeterminate = true
                 loadProgressBar.visibility = View.VISIBLE
+                // Lưới an toàn: nếu WebView phục hồi hẳn từ cache nội bộ (không gọi tới
+                // shouldInterceptRequest lần nào) thì cờ vẫn phải tắt ở đây, tránh lỡ bỏ qua
+                // interception của 1 điều hướng khác sau này.
+                skipInterceptForBackNav = false
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -233,6 +221,14 @@ class ActionPageOnline : AppCompatActivity() {
                 if (request.isForMainFrame != true) return null
                 if (requestUrl.scheme?.startsWith("http") != true) return null
                 if (request.method != "GET") return null
+
+                // Đang back (goBack()) - để WebView tự phục hồi trang trước từ cache/lịch sử
+                // của chính nó thay vì ép fetch lại thủ công qua mạng, tránh chậm/nháy hình
+                // không cần thiết. Chỉ bỏ qua đúng 1 lần cho điều hướng back này.
+                if (skipInterceptForBackNav) {
+                    skipInterceptForBackNav = false
+                    return null
+                }
 
                 return try {
                     val connection = (java.net.URL(requestUrl.toString()).openConnection() as java.net.HttpURLConnection).apply {
