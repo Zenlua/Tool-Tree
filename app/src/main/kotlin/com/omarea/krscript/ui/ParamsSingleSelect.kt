@@ -117,7 +117,7 @@ class ParamsSingleSelect(
         val popup = ListPopupWindow(context)
         popup.anchorView = anchor
         popup.setAdapter(adapter)
-        popup.setBackgroundDrawable(SpinnerPopupHelper.buildPopupBackground(context, popup, background, context.resources.getDimension(R.dimen.kr_spinner_popup_radius)))
+        popup.setBackgroundDrawable(background)
         popup.isModal = true
         popup.setOnItemClickListener { _, _, position, _ ->
             selectedIndex = position
@@ -237,7 +237,7 @@ class ParamsSingleSelect(
         val popup = ListPopupWindow(context)
         popup.anchorView = editText
         popup.setAdapter(adapter)
-        popup.setBackgroundDrawable(SpinnerPopupHelper.buildPopupBackground(context, popup, background, context.resources.getDimension(R.dimen.kr_spinner_popup_radius)))
+        popup.setBackgroundDrawable(background)
         popup.isModal = true
         popup.setOnItemClickListener { _, _, position, _ ->
             selectedIndex = position

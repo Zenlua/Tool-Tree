@@ -435,7 +435,7 @@ class MainActivity : AppCompatActivity() {
             popup.anchorView = themeSelector
             popup.setAdapter(ArrayAdapter(this, R.layout.kr_spinner_dropdown, themeNames))
             val background = androidx.core.content.ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg)
-            popup.setBackgroundDrawable(SpinnerPopupHelper.buildPopupBackground(this, popup, background, resources.getDimension(R.dimen.kr_spinner_popup_radius)))
+            popup.setBackgroundDrawable(background)
             popup.setOnItemClickListener { _, _, position, _ ->
                 themeConfig.setThemeMode(position)
                 themeSelector.text = themeNames[position]
