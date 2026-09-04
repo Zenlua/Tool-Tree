@@ -14,12 +14,6 @@ object WidgetTintHelper {
     fun applyTint(context: Context, widgetView: ImageView?, iconDrawable: Drawable?) {
         widgetView ?: return
 
-        // 1. Không có icon -> Giữ nguyên màu gốc mặc định của Widget (không tăng sáng / không tô tint)
-        if (iconDrawable == null) {
-            widgetView.imageTintList = null
-            return
-        }
-
         // 2. Có icon -> Trích xuất màu chủ đạo
         val rawColor = extractAverageColor(iconDrawable)
         val accentColor = resolveAccentColor(context)
