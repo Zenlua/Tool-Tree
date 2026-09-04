@@ -29,7 +29,7 @@ title = "'$google_text'"
   title = "'$payload_text_3'"
   summary = "'$payload_text_4' '$PTSD'"
   script = """
-  echo "Downloading..." | trans -b
+  echo "Downloading..."
   echo
   for vv in $partition; do
       '$MPAT'/payload.bash $vv
