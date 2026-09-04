@@ -421,13 +421,13 @@ Update() {
   [[page]]
   title = "'$update_text_5'"
   icon = "'$urlicon'/website.png"
-  link = "https://zenlua.github.io/Tool-Tree"
+  html = "https://zenlua.github.io/Tool-Tree"
 
   [[group]]
   [[page]]
   title = "Telegram"
   icon = "'$urlicon'/telegram.png"
-  link = "https://t.me/tooltree"
+  html = "https://t.me/tooltree"
 
   [[group]]
   [[download]]
