@@ -456,6 +456,7 @@ Project() {
   [[action]]
   shell = "hidden"
   reload = true
+  icon = "'$urlicon'/folder_rom.png"
   title = "'$folder_text'"
   desc = "'$path_text': '$SDC'"
   script = """
@@ -467,7 +468,6 @@ Project() {
   
   [[action.params]]
   name = "FOLDER"
-  icon = "'$urlicon'/folder_rom.png"
   label = "'$folder_text'"
   desc = "'$config_text_2'"
   value-sh = "glog SDC"
