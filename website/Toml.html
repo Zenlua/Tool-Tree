@@ -384,7 +384,7 @@ The parser lives in <code>com.omarea.krscript.config.PageConfigReader</code> and
 
 <p>A TOML configuration file describes <strong>the node tree of a page</strong>: each page is a list of <em>nodes</em>
 (group, action, switch, picker, text, page, editor, download, resource, menu, fab) displayed in the order they appear in the file.
-Nodes can be nested (e.g. <code>[[group.action]]</code> is an action inside a group) to build a hierarchical tree.</p>
+Nodes can be nested (e.g. <code>[[action]]</code> is an action inside a group) to build a hierarchical tree.</p>
 </section>
 
 <section id="rules">
@@ -415,7 +415,7 @@ Nodes can be nested (e.g. <code>[[group.action]]</code> is an action inside a gr
 </div>
 
 <h3>2.3. Nesting = dotted path</h3>
-<p>A child node of a group is declared using the dotted path <code>[[group.type]]</code> (or <code>[[group.subgroup.type]]</code> for deeper nesting). Child nodes always belong to the most recently declared group above them in the file.</p>
+<p>A child node of a group is declared using the dotted path <code>[[type]]</code> (or <code>[[subgroup.type]]</code> for deeper nesting). Child nodes always belong to the most recently declared group above them in the file.</p>
 
 <h3>2.4. Display order = position in file</h3>
 <p>Display order is always <strong>top-to-bottom</strong> by the position of the <code>[[name]]</code> entry in the file, regardless of node type (group, action, page, text, switch ...) - even when types are <strong>interleaved</strong> (e.g. an action, then a page, then another action). The position is read directly from the <code>tomlj</code> API, so there is no need for an <code>order</code> field.</p>
@@ -592,7 +592,7 @@ All text fields accept <code>@string/...</code> references.</p>
   <div class="d-item"><div class="d-icon">&#9881;</div><div class="d-content"><div class="d-title2">Advanced settings</div><div class="d-desc">Open external config file</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
 </div>
 </div></div>
-<div class="callout tip"><code>config-sh</code> returns <strong>one of two things</strong>: either a .toml file path (ending with <code>.toml</code>), or inline TOML content (whose first or second non-empty line starts with <code>[[group]]</code> or <code>[[group.</code>). The parser auto-detects - see <code>PageConfigSh.looksLikeInlineToml()</code>.</div>
+<div class="callout tip"><code>config-sh</code> returns <strong>one of two things</strong>: either a .toml file path (ending with <code>.toml</code>), or inline TOML content (whose first or second non-empty line starts with <code>[[group]]</code> or <code>[[</code>). The parser auto-detects - see <code>PageConfigSh.looksLikeInlineToml()</code>.</div>
 </section>
 
 <section id="action">
@@ -806,7 +806,7 @@ All text fields accept <code>@string/...</code> references.</p>
 
 <section id="text-rows">
 <h2>12. [[text.rows]] - Rich text row</h2>
-<p>This is the <strong>most common</strong> display component: used in <code>[[text]]</code>, <code>[[action]]</code>, <code>[[page]]</code>, <code>[[download]]</code> and <code>[[group.action.params-rows]]</code>. Each row is a single line of text that can have style, icon, toggle, photo, etc.</p>
+<p>This is the <strong>most common</strong> display component: used in <code>[[text]]</code>, <code>[[action]]</code>, <code>[[page]]</code>, <code>[[download]]</code> and <code>[[action.params-rows]]</code>. Each row is a single line of text that can have style, icon, toggle, photo, etc.</p>
 
 <h3>12.1. Row fields</h3>
 <div class="tbl-container">
@@ -1124,26 +1124,26 @@ All text fields accept <code>@string/...</code> references.</p>
 <pre><code>[[group]]
 title = "System Performance"
 
-[[group.switch]]
+[[switch]]
 title = "Performance Mode"
 desc = "Enable performance governor"
 get = "getprop sys.perf.mode"
 set = "setprop sys.perf.mode $state"
 
-[[group.action]]
+[[action]]
 title = "Set CPU Frequency"
 script = "echo $freq &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"
 
-[[group.action.params]]
+[[action.params]]
 name = "freq"
 title = "Frequency (kHz)"
 type = "spinner"
 
-[[group.action.params.options]]
+[[action.params.options]]
 title = "Mode 1"
 value = "1800000"
 
-[[group.action.params.options]]
+[[action.params.options]]
 title = "Mode 2"
 value = "2200000"
 </code></pre>
