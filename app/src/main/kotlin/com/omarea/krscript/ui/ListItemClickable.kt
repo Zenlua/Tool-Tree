@@ -1,6 +1,7 @@
 package com.omarea.krscript.ui
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
@@ -8,35 +9,32 @@ import com.tool.tree.R
 import com.omarea.krscript.config.IconPathAnalysis
 import com.omarea.krscript.model.ClickableNode
 
-open class ListItemClickable(context: Context,
-                             layoutId: Int,
-                             config: ClickableNode) : ListItemView(context, layoutId, config) {
+open class ListItemClickable(
+    context: Context,
+    layoutId: Int,
+    config: ClickableNode
+) : ListItemView(context, layoutId, config) {
+
     protected var mOnClickListener: OnClickListener? = null
     protected var mOnLongClickListener: OnLongClickListener? = null
-    protected var shortcutIconView = layout.findViewById<View?>(R.id.kr_shortcut_icon)
-    protected var iconView = layout.findViewById<ImageView?>(R.id.kr_icon)
-    protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon)
-    protected var extraBgView = layout.findViewById<ImageView?>(R.id.kr_extra_bg)
-    // Icon chính (kr_icon) đã nạp từ config.iconPath, nếu có - dùng cho WidgetTintHelper
-    // để tô màu kr_widget theo màu trung bình của icon này (null nếu item không có icon).
-    protected var iconDrawable: android.graphics.drawable.Drawable? = null
+    protected var shortcutIconView: View? = layout.findViewById(R.id.kr_shortcut_icon)
+    protected var iconView: ImageView? = layout.findViewById(R.id.kr_icon)
+    protected var extraIconView: ImageView? = layout.findViewById(R.id.kr_extra_icon)
+    protected var extraBgView: ImageView? = layout.findViewById(R.id.kr_extra_bg)
+    
+    protected var iconDrawable: Drawable? = null
 
-    // Điều kiện gốc để nhấn giữ mở dialog thêm shortcut (cần có key + chưa bị tắt allowShortcut).
     private val allowShortcutConfig = this.key.isNotEmpty() && config.allowShortcut != false
 
-    // Cho phép lớp con (VD: ListItemDownload) mở khoá nhấn giữ trong các trường hợp khác
-    // (nhấn giữ để huỷ tải) kể cả khi item không có key / không cho tạo shortcut.
     protected open fun allowLongClick(): Boolean = allowShortcutConfig
 
     fun setOnClickListener(onClickListener: OnClickListener): ListItemClickable {
         this.mOnClickListener = onClickListener
-
         return this
     }
 
     fun setOnLongClickListener(onLongClickListener: OnLongClickListener): ListItemClickable {
         this.mOnLongClickListener = onLongClickListener
-
         return this
     }
 
@@ -52,9 +50,7 @@ open class ListItemClickable(context: Context,
         this.layout.setOnClickListener {
             this.mOnClickListener?.onClick(this)
         }
-        // Luôn gắn listener (không chỉ khi có key) để lớp con có thể tự mở khoá nhấn giữ cho
-        // mục đích khác (VD: nhấn giữ để huỷ tải) qua allowLongClick(); hành vi mặc định (chỉ
-        // cho nhấn giữ khi có key + allowShortcut != false) không đổi với các item còn lại.
+        
         this.layout.setOnLongClickListener {
             if (allowLongClick()) {
                 this.mOnLongClickListener?.onLongClick(this)
@@ -63,75 +59,73 @@ open class ListItemClickable(context: Context,
                 false
             }
         }
+
         shortcutIconView?.visibility = if (allowShortcutConfig) View.VISIBLE else View.GONE
-        if (iconView != null) {
-            iconView?.visibility = View.GONE
+
+        // Tái sử dụng 1 instance duy nhất để load tài nguyên
+        val analyzer = IconPathAnalysis()
+
+        iconView?.let { view ->
+            view.visibility = View.GONE
             if (config.iconPath.isNotEmpty()) {
-                IconPathAnalysis().loadIcon(context, config)?.run {
-                    iconDrawable = this
-                    iconView?.setImageDrawable(this)
-                    iconView?.visibility = View.VISIBLE
-                    GifPlaybackHelper.bind(iconView, config.iconGifAutoplay, config.iconGifLoopCount)
+                analyzer.loadIcon(context, config)?.let { drawable ->
+                    iconDrawable = drawable
+                    view.setImageDrawable(drawable)
+                    view.visibility = View.VISIBLE
+                    GifPlaybackHelper.bind(view, config.iconGifAutoplay, config.iconGifLoopCount)
                 }
             }
         }
-        if (extraIconView != null) {
-            extraIconView?.visibility = View.GONE
+
+        extraIconView?.let { view ->
+            view.visibility = View.GONE
             if (config.photoPath.isNotEmpty()) {
-                IconPathAnalysis().loadPhoto(context, config)?.run {
-                    extraIconView?.setImageDrawable(this)
-                    extraIconView?.visibility = View.VISIBLE
-                    applyPhotoRealSize(extraIconView, config.photoRealSize)
-                    GifPlaybackHelper.bind(extraIconView, config.photoGifAutoplay, config.photoGifLoopCount)
+                analyzer.loadPhoto(context, config)?.let { drawable ->
+                    view.setImageDrawable(drawable)
+                    view.visibility = View.VISIBLE
+                    applyPhotoRealSize(view, config.photoRealSize)
+                    GifPlaybackHelper.bind(view, config.photoGifAutoplay, config.photoGifLoopCount)
                 }
             }
         }
-        if (extraBgView != null) {
-            extraBgView?.visibility = View.GONE
+
+        extraBgView?.let { view ->
+            view.visibility = View.GONE
             if (config.bgPath.isNotEmpty()) {
-                IconPathAnalysis().loadBg(context, config)?.run {
-                    extraBgView?.setImageDrawable(this)
-                    extraBgView?.visibility = View.VISIBLE
+                analyzer.loadBg(context, config)?.let { drawable ->
+                    view.setImageDrawable(drawable)
+                    view.visibility = View.VISIBLE
                 }
             }
         }
     }
 
-    // Nếu photoRealSize = true: hiện ảnh đúng kích thước thật (không phóng to full chiều ngang),
-    // căn giữa theo chiều ngang; ảnh lớn hơn khung chứa sẽ được thu nhỏ vừa khung (không bị tràn/méo).
     private fun applyPhotoRealSize(imageView: ImageView?, realSize: Boolean) {
         imageView ?: return
-        val params = imageView.layoutParams ?: return
+        val params = imageView.layoutParams as? RelativeLayout.LayoutParams ?: return
         val maxSize = imageView.context.resources.displayMetrics.widthPixels
-    
+
         if (realSize) {
             imageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
             imageView.adjustViewBounds = true
             imageView.maxWidth = maxSize
             imageView.maxHeight = maxSize
-            
-            // Cố định chiều rộng và chiều cao bằng nhau (khung vuông bằng chiều rộng màn hình)
+
             params.width = maxSize
             params.height = maxSize
-            
-            if (params is RelativeLayout.LayoutParams) {
-                params.addRule(RelativeLayout.CENTER_HORIZONTAL)
-            }
-            imageView.layoutParams = params
+            params.addRule(RelativeLayout.CENTER_HORIZONTAL)
         } else {
             imageView.scaleType = ImageView.ScaleType.FIT_CENTER
             imageView.adjustViewBounds = true
             imageView.maxWidth = Int.MAX_VALUE
             imageView.maxHeight = Int.MAX_VALUE
-            
+
             params.width = RelativeLayout.LayoutParams.MATCH_PARENT
             params.height = RelativeLayout.LayoutParams.WRAP_CONTENT
-            
-            if (params is RelativeLayout.LayoutParams) {
-                params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0)
-            }
-            imageView.layoutParams = params
+            params.removeRule(RelativeLayout.CENTER_HORIZONTAL)
         }
+        
+        imageView.layoutParams = params
     }
 
     interface OnClickListener {
