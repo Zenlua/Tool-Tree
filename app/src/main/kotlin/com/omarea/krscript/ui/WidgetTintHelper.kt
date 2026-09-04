@@ -14,11 +14,11 @@ object WidgetTintHelper {
     fun applyTint(context: Context, widgetView: ImageView?, iconDrawable: Drawable?) {
         widgetView ?: return
 
-        // 2. Có icon -> Trích xuất màu chủ đạo
+        // 1. Trích xuất màu chủ đạo (trả về null nếu iconDrawable == null)
         val rawColor = extractAverageColor(iconDrawable)
         val accentColor = resolveAccentColor(context)
         
-        // Tăng độ sáng an toàn (không bị biến thành màu trắng)
+        // 2. Tăng độ sáng an toàn (không bị biến thành màu trắng)
         val finalColor = maximizeBrightnessSafe(rawColor ?: accentColor, accentColor)
 
         widgetView.imageTintList = ColorStateList.valueOf(finalColor)
@@ -26,23 +26,19 @@ object WidgetTintHelper {
 
     /**
      * Tăng độ sáng nhưng chống cháy thành màu trắng tinh:
-     * - Nếu màu có sắc tố (Saturation >= 15%): Giữ nguyên tông màu, nâng sáng lên 0.9f.
+     * - Nếu màu có sắc tố (Saturation >= 15%): Giữ nguyên tông màu, nâng sáng lên 0.95f.
      * - Nếu màu là xám/đen/trắng (Saturation < 15%): Lấy màu Accent của app thế vào.
      */
     private fun maximizeBrightnessSafe(color: Int, fallbackAccent: Int): Int {
         val hsv = FloatArray(3)
         Color.colorToHSV(color, hsv)
 
-        // hsv[0]: Hue (sắc độ 0..360)
-        // hsv[1]: Saturation (độ bão hòa 0..1)
-        // hsv[2]: Value (độ sáng 0..1)
-
-        // Nếu màu trích xuất bị mất sắc tố (đen, xám, trắng) -> Dùng màu Accent để tránh biến thành màu trắng
+        // Nếu màu trích xuất bị mất sắc tố (đen, xám, trắng) -> Dùng màu Accent
         if (hsv[1] < 0.15f) {
             Color.colorToHSV(fallbackAccent, hsv)
         }
 
-        // Đẩy độ sáng lên 0.95f (sáng tươi nhưng không bị mất màu)
+        // Đẩy độ sáng lên 0.95f
         hsv[2] = 0.95f
 
         return Color.HSVToColor(hsv)
@@ -55,9 +51,11 @@ object WidgetTintHelper {
     }
 
     /**
-     * Lấy màu trung bình của Icon, tự động LỌC BỎ các pixel mờ, pixel trắng nền và pixel quá tối.
+     * Lấy màu trung bình của Icon, chấp nhận Drawable? nullable.
      */
-    private fun extractAverageColor(drawable: Drawable): Int? {
+    private fun extractAverageColor(drawable: Drawable?): Int? {
+        drawable ?: return null
+
         val sampleSize = 16
         val bitmap = try {
             Bitmap.createBitmap(sampleSize, sampleSize, Bitmap.Config.ARGB_8888)
@@ -87,8 +85,7 @@ object WidgetTintHelper {
 
                 Color.colorToHSV(pixel, hsv)
                 
-                // Bỏ qua các pixel trắng nền (Saturation < 0.1 & Value > 0.9) 
-                // và pixel đen/tối (Value < 0.1) để không làm xỉn/trắng màu trung bình
+                // Bỏ qua pixel trắng nền (Saturation < 0.1 & Value > 0.9) và pixel quá tối (Value < 0.1)
                 if (hsv[1] < 0.1f && hsv[2] > 0.9f) continue
                 if (hsv[2] < 0.1f) continue
 
