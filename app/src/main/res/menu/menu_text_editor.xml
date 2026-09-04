@@ -30,18 +30,11 @@
         android:title="@string/editor_save"
         app:showAsAction="always" />
 
-    <item
-        android:id="@+id/editor_menu_wrap"
-        android:checkable="true"
-        android:orderInCategory="5"
-        android:title="@string/editor_toggle_wrap"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/editor_menu_monospace"
-        android:checkable="true"
-        android:checked="true"
-        android:orderInCategory="6"
-        android:title="@string/editor_toggle_monospace"
-        app:showAsAction="never" />
+    <!-- editor_toggle_wrap / editor_toggle_monospace: KHÔNG khai báo ở đây nữa - trước đây
+         showAsAction="never" khiến 2 mục này rơi vào overflow MẶC ĐỊNH của hệ thống (giao
+         diện khác hẳn popup "⋮" ở ActionPage/MainActivity). Giờ dùng chung 1 nút "⋮" tự dựng
+         bằng code (SpinnerPopupHelper.buildOverflowMenuButton) + popup tự dựng
+         (SpinnerPopupHelper.showListPopup, có nền kính mờ) - xem
+         TextEditorActivity.setupOverflowMenuButton() - để đồng bộ giao diện với các popup
+         menu khác trong app. -->
 </menu>

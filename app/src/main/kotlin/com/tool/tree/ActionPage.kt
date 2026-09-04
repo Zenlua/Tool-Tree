@@ -7,14 +7,12 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.ImageButton
 import android.widget.ListPopupWindow
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -22,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.tool.tree.ui.PopupMenuListAdapter
 import com.tool.tree.ui.PopupMenuRow
 import com.tool.tree.ui.PopupRowTypeIcon
 import com.tool.tree.ui.SwipeBackHelper
@@ -375,35 +372,14 @@ class ActionPage : AppCompatActivity() {
         val menuItem = menu?.add(Menu.NONE, Menu.NONE, Menu.NONE, getString(R.string.kr_more_options))
         menuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
 
-        val button = buildOverflowMenuButton()
+        val button = SpinnerPopupHelper.buildOverflowMenuButton(this, getString(R.string.kr_more_options))
         button.setOnClickListener { showOverflowMenuPopup(button, overflowOptions) }
         menuItem?.actionView = button
     }
 
-    // Dựng nút "⋮" bằng code, giữ kích thước/padding/background như layout cũ.
-    private fun buildOverflowMenuButton(): ImageButton {
-        val density = resources.displayMetrics.density
-        val sizePx = (48 * density).toInt()
-        val paddingPx = (12 * density).toInt()
-
-        val backgroundResId = TypedValue().let {
-            theme.resolveAttribute(android.R.attr.actionBarItemBackground, it, true)
-            it.resourceId
-        }
-
-        return ImageButton(this).apply {
-            layoutParams = ViewGroup.LayoutParams(sizePx, sizePx)
-            setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
-            if (backgroundResId != 0) setBackgroundResource(backgroundResId)
-            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-            setImageResource(R.drawable.ic_more_vert)
-            contentDescription = getString(R.string.kr_more_options)
-        }
-    }
-
     // Đọc lại row mỗi lần mở popup để phản ánh đúng trạng thái checkbox mới nhất.
     private fun showOverflowMenuPopup(anchor: View, overflowOptions: List<PageMenuOption>) {
-        showListPopup(anchor, overflowOptions.map { buildPopupRow(it, anchor) })
+        SpinnerPopupHelper.showListPopup(this, anchor, overflowOptions.map { buildPopupRow(it, anchor) })
     }
 
     // Dùng chung cho popup menu "⋮" và popup chọn FAB nhiều item.
@@ -989,7 +965,7 @@ class ActionPage : AppCompatActivity() {
         val popup = ListPopupWindow(this)
         popup.anchorView = anchor
         popup.setAdapter(adapter)
-        popup.setBackgroundDrawable(background)
+        popup.setBackgroundDrawable(SpinnerPopupHelper.buildPopupBackground(this, popup, background, resources.getDimension(R.dimen.kr_spinner_popup_radius)))
         popup.isModal = true
         popup.setOnItemClickListener { _, _, position, _ ->
             popup.dismiss()
@@ -1054,42 +1030,13 @@ class ActionPage : AppCompatActivity() {
 
     // Đặt bề rộng popup theo nội dung, neo sát mép phải màn hình.
     // extraTopGapPx > 0 cho FAB: đẩy popup lên cao hơn để chừa khoảng hở.
-    // (xem SpinnerPopupHelper.applyWidthAndPosition - dùng chung với showListPopup bên dưới)
-
-    // Popup List Item - dùng chung cho menu "⋮" và FAB nhiều item.
-    private fun showListPopup(anchor: View, rows: List<PopupMenuRow>, extraTopGapPx: Int = 0) {
-        if (rows.isEmpty()) return
-
-        val adapter = PopupMenuListAdapter(this, rows)
-        val background = ContextCompat.getDrawable(this, R.drawable.kr_spinner_popup_bg)
-
-        val popup = ListPopupWindow(this)
-        popup.anchorView = anchor
-        popup.setAdapter(adapter)
-        popup.setBackgroundDrawable(background)
-        popup.isModal = true
-        popup.setOnItemClickListener { _, _, position, _ ->
-            popup.dismiss()
-            rows.getOrNull(position)?.onClick?.invoke()
-        }
-
-        val parent = anchor.parent as? android.view.ViewGroup
-        val itemViews = rows.indices.map { adapter.getView(it, null, parent) }
-        val minWidthPx = (resources.displayMetrics.density * 200).toInt()
-        SpinnerPopupHelper.applyWidthAndPosition(
-            popup, anchor, itemViews, background, minWidthPx, alignRight = true,
-            extraTopGapPx = extraTopGapPx, applyVerticalOffset = true
-        )
-
-        popup.show()
-        SpinnerPopupHelper.applyRoundedClip(popup, resources.getDimension(R.dimen.kr_spinner_popup_radius))
-    }
+    // (xem SpinnerPopupHelper.applyWidthAndPosition / SpinnerPopupHelper.showListPopup)
 
     // Popup chọn khi FAB có nhiều item - neo tại FAB, chọn xong chạy như bấm thẳng.
     private fun showFabChooser(fabOptions: List<PageMenuOption>) {
         val anchor = binding.actionPageFab
         val rows = fabOptions.map { buildPopupRow(it, anchor) }
-        showListPopup(anchor, rows, fabPopupGap())
+        SpinnerPopupHelper.showListPopup(this, anchor, rows, fabPopupGap())
     }
 
     // ~8dp khoảng hở giữa popup và FAB.

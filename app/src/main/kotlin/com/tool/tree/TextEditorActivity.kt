@@ -35,6 +35,9 @@ import com.omarea.krscript.model.ActionNode
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.ui.DialogLogFragment
 import com.tool.tree.databinding.ActivityTextEditorBinding
+import com.tool.tree.ui.PopupMenuRow
+import com.tool.tree.ui.PopupRowTypeIcon
+import com.tool.tree.ui.SpinnerPopupHelper
 import com.tool.tree.ui.SyntaxHighlighter
 import com.tool.tree.ui.SyntaxHighlighterFactory
 import kotlinx.coroutines.Dispatchers
@@ -840,8 +843,6 @@ class TextEditorActivity : AppCompatActivity() {
         redoMenuItem = menu.findItem(R.id.editor_menu_redo)
         saveMenuItem = menu.findItem(R.id.editor_menu_save)
 
-        menu.findItem(R.id.editor_menu_wrap)?.isChecked = wrapEnabled
-        menu.findItem(R.id.editor_menu_monospace)?.isChecked = monospaceEnabled
         menu.findItem(R.id.editor_menu_run)?.isVisible = !readonlyMode && runnableInterpreter() != null
 
         if (readonlyMode) {
@@ -850,8 +851,47 @@ class TextEditorActivity : AppCompatActivity() {
             menu.findItem(R.id.editor_menu_redo)?.isVisible = false
         }
 
+        setupOverflowMenuButton(menu)
         refreshToolbarButtons()
         return true
+    }
+
+    // Nút "⋮" cho 2 tuỳ chọn "xuống dòng" / "chữ đều" - dùng chung
+    // SpinnerPopupHelper.buildOverflowMenuButton() + showListPopup() với ActionPage /
+    // MainActivity, để có CÙNG giao diện (nền bo góc + kính mờ) thay vì overflow mặc định
+    // của hệ thống như trước đây.
+    private fun setupOverflowMenuButton(menu: Menu) {
+        val menuItem = menu.add(Menu.NONE, Menu.NONE, Menu.NONE, getString(R.string.kr_more_options))
+        menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+
+        val button = SpinnerPopupHelper.buildOverflowMenuButton(this, getString(R.string.kr_more_options))
+        button.setOnClickListener { showEditorOverflowPopup(button) }
+        menuItem.actionView = button
+    }
+
+    // Đọc lại row mỗi lần mở popup để phản ánh đúng trạng thái checkbox mới nhất.
+    private fun showEditorOverflowPopup(anchor: View) {
+        val rows = listOf(
+            PopupMenuRow(
+                title = getString(R.string.editor_toggle_wrap),
+                leftIcon = null,
+                typeIcon = PopupRowTypeIcon.CHECKBOX,
+                checked = wrapEnabled
+            ) {
+                wrapEnabled = !wrapEnabled
+                applyWrapState()
+            },
+            PopupMenuRow(
+                title = getString(R.string.editor_toggle_monospace),
+                leftIcon = null,
+                typeIcon = PopupRowTypeIcon.CHECKBOX,
+                checked = monospaceEnabled
+            ) {
+                monospaceEnabled = !monospaceEnabled
+                applyMonospaceState()
+            }
+        )
+        SpinnerPopupHelper.showListPopup(this, anchor, rows)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -870,18 +910,6 @@ class TextEditorActivity : AppCompatActivity() {
             }
             R.id.editor_menu_save -> {
                 saveFile()
-                true
-            }
-            R.id.editor_menu_wrap -> {
-                wrapEnabled = !wrapEnabled
-                item.isChecked = wrapEnabled
-                applyWrapState()
-                true
-            }
-            R.id.editor_menu_monospace -> {
-                monospaceEnabled = !monospaceEnabled
-                item.isChecked = monospaceEnabled
-                applyMonospaceState()
                 true
             }
             android.R.id.home -> {
