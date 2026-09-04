@@ -247,9 +247,11 @@ object BannerNotificationManager {
         activeRequest = req
         activeActivity = WeakReference(activity)
         windowManager.addView(view, layoutParams)
-        if (!reuseDeadline) {
-            playEntranceAnimation(bannerRoot)
-        }
+        // Luôn chạy hiệu ứng trượt vào từ trái mỗi khi banner được add vào 1 cửa sổ mới -- kể
+        // cả khi đây là dựng lại trên Activity mới do người dùng chuyển trang (migrateIfNeeded,
+        // reuseDeadline=true), không chỉ lúc hiện lần đầu. Hiệu ứng rời trang (auto dismiss /
+        // vuốt để hủy) không đổi, vẫn giữ nguyên như cũ.
+        playEntranceAnimation(bannerRoot)
 
         val script = req.script
         if (!script.isNullOrEmpty()) {

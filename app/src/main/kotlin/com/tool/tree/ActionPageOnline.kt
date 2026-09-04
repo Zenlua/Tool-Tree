@@ -202,6 +202,55 @@ class ActionPageOnline : AppCompatActivity() {
                     super.shouldOverrideUrlLoading(view, request)
                 }
             }
+
+            // Chỉ can thiệp request HTML gốc (main frame) qua http/https: tự fetch rồi ép luôn
+            // trả về Content-Type "text/html" nếu server báo thiếu/mập mờ (rỗng hoặc
+            // "text/plain") - đây chính là nguyên nhân WebView đôi lúc tự hiện nguyên trang dưới
+            // dạng văn bản thô thay vì render, hoặc tự bật hộp thoại tải về (setDownloadListener)
+            // thay vì hiển thị. KHÔNG đụng tới file:// (mở bằng file vẫn load như cũ), KHÔNG đụng
+            // tài nguyên phụ (ảnh/css/js/xhr) hay request không phải GET (form submit...) để tránh
+            // ảnh hưởng ngoài ý muốn - các trường hợp đó fallback về hành vi mặc định của WebView.
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                val requestUrl = request?.url ?: return null
+                if (request.isForMainFrame != true) return null
+                if (requestUrl.scheme?.startsWith("http") != true) return null
+                if (request.method != "GET") return null
+
+                return try {
+                    val connection = (java.net.URL(requestUrl.toString()).openConnection() as java.net.HttpURLConnection).apply {
+                        instanceFollowRedirects = true
+                        connectTimeout = 15000
+                        readTimeout = 15000
+                        request.requestHeaders.forEach { (key, value) -> setRequestProperty(key, value) }
+                        CookieManager.getInstance().getCookie(requestUrl.toString())?.let {
+                            setRequestProperty("Cookie", it)
+                        }
+                    }
+                    connection.connect()
+
+                    // Giữ lại cookie server set qua request thủ công này để không mất session so
+                    // với việc để WebView tự tải như trước.
+                    connection.headerFields["Set-Cookie"]?.forEach {
+                        CookieManager.getInstance().setCookie(requestUrl.toString(), it)
+                    }
+
+                    val declaredType = connection.contentType ?: ""
+                    // Chỉ ép về "text/html" khi kiểu khai báo mập mờ (rỗng/text/plain) - kiểu tải
+                    // về thật sự (pdf/apk/zip/octet-stream...) vẫn giữ nguyên, không can thiệp.
+                    val ambiguous = declaredType.isEmpty() ||
+                        declaredType.substringBefore(";").trim().equals("text/plain", ignoreCase = true)
+                    if (!ambiguous) {
+                        connection.disconnect()
+                        return null
+                    }
+                    val charset = Regex("charset=([^;]+)", RegexOption.IGNORE_CASE)
+                        .find(declaredType)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotEmpty() } ?: "utf-8"
+
+                    WebResourceResponse("text/html", charset, connection.inputStream)
+                } catch (_: Exception) {
+                    null
+                }
+            }
         }
 
         webViewInjector.inject(this, url?.startsWith("file:///android_asset") == true)

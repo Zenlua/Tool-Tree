@@ -365,7 +365,21 @@ Update() {
     slog sum_moduls 1
   fi
   """
-  
+    
+    [[menu.items]]
+    title = "'$download_text' beta"
+    get = "glog gg_beta"
+    reload = true
+    silent = true
+    type = "checkbox"
+    script = """
+    if [ "$(glog gg_beta)" == 1 ]; then
+    slog gg_beta 0
+    else
+    slog gg_beta 1
+    fi
+    """
+    
     [[menu.items]]
     title = "Gemini"
     get = "glog gg_trans_ver"
@@ -384,20 +398,6 @@ Update() {
     key = "share"
     title = "'$share_text'"
     silent = true
-    
-    [[menu.items]]
-    title = "'$download_text' beta"
-    get = "glog gg_beta"
-    reload = true
-    silent = true
-    type = "checkbox"
-    script = """
-    if [ "$(glog gg_beta)" == 1 ]; then
-    slog gg_beta 0
-    else
-    slog gg_beta 1
-    fi
-    """
     
     [[menu.items]]
     key = "data"
