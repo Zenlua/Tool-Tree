@@ -391,7 +391,13 @@ Update() {
     reload = true
     silent = true
     type = "checkbox"
-    script = "slog gg_beta $state"
+    script = """
+    if [ "$(glog gg_beta)" == 1 ]; then
+    slog gg_beta 0
+    else
+    slog gg_beta 1
+    fi
+    """
     
     [[menu.items]]
     key = "data"
