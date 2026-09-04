@@ -694,13 +694,22 @@ Feature() {
   [[group]]
   [[action]]
   title = "'$api_key_text'"
-  warn = "'$note_genmini_text'"
   icon = "'$urlicon'/apikey.png"
   shell = "hidden"
   script = """
     [ -z "$models_genmini" ] && slog -d models_genmini || slog models_genmini "$models_genmini"
     [ -z "$api_genmini" ] || slog api_genmini "$(tokenenc "$api_genmini")"
   """
+  
+  [[action.params-rows]]
+  text = "'$note_genmini_text':"
+  line = true
+  
+  [[action.params-rows]]
+  text = "'$generate_text' Gemini API"
+  link = "https://aistudio.google.com/api-keys"
+  underline = true
+  
     [[action.params]]
     name = "api_genmini"
     title = "Gemini API"
@@ -716,6 +725,8 @@ Feature() {
     label = "Models"
     items = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
     value-sh = "glog models_genmini \"gemini-3.5-flash-lite\""
+    
+
   '
 }
 
