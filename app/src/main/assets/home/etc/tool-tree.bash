@@ -24,7 +24,7 @@ show_sett() {
   [[action.params]]
   name = "Name"
   desc = "'$config_text_1'"
-  label = "'$setting_text_3'"
+  label = "'$option_text'"
   title = "'$projects_text'"
   options-sh = "findfile for $SDH"
   value-sh = "glog PTSH"
@@ -1099,6 +1099,7 @@ Utilities() {
   vdbfbfsn='
   [[menu.items]]
   title = "Patch ROM"
+  icon-path = "'${patchrom%/*}'/patch.png"
   config-sh = "'${patchrom%/*}'/index.bash home"
   '
   fi
@@ -1131,283 +1132,6 @@ Utilities() {
     title = "'$open_activity_text' (data-root)"
     silent = true
   
-  [[group]]
-  [[action]]
-  title = "'$decompile_text'"
-  desc = "'$desc_rom'"
-  icon = "'$urlicon'/decom.png"
-  script = """
-  slog vavbbgdf "$vavb"
-  slog xoa_oat_boot "$xoa_oat_boot"
-  slog dkjdj "$nounpak"
-  slog pcvbmeta "$pcvbmeta"
-  slog dkhdh "$cboxk"
-  slog text_oat_boot "$text_oat_boot"
-  for vkl in $IMAGES; do
-  if [ -f "$PTSD/${vkl#*=}" ]; then
-  unpack_img -i "$PTSD/${vkl#*=}" -p "${vkl%%=*}" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
-  else
-  unpack_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
-  fi
-  done
-  checktime
-  """
-  
-    [[action.params]]
-    name = "cboxk"
-    label = "'$deleted_file_text'"
-    type = "checkbox"
-    value-sh = "glog dkhdh"
-    
-    [[action.params]]
-    name = "nounpak"
-    label = "'$decode_text_1'"
-    type = "switch"
-    value-sh = "glog dkjdj"
-    
-    [[action.params]]
-    name = "xoa_oat_boot"
-    label = "'$xoaoat_text_1'"
-    type = "switch"
-    value-sh = "glog xoa_oat_boot"
-    depend-on = "nounpak"
-    depend-value = "1"
-    depend-mode = "hide"
-    depend-readonly = true
-    
-    [[action.params]]
-    name = "text_oat_boot"
-    type = "text"
-    value-sh = "glog text_oat_boot \"fsv_meta,oat,vdex,odex,prof,bprof\""
-    depend-on = "xoa_oat_boot"
-    depend-value = "1"
-    depend-mode = "show"
-    depend-default = "hide"
-    
-    [[action.params]]
-    name = "vavb"
-    label = "'$builds_text_8'"
-    type = "switch"
-    depend-on = "nounpak"
-    depend-value = "1"
-    depend-mode = "hide"
-    depend-readonly = true
-    
-    [[action.params]]
-    name = "pcvbmeta"
-    label = "'$patch_text' vbmeta"
-    value-sh = "glog pcvbmeta 0"
-    options-sh = "echo -e \"0|'$default_text'\n1|'$disable_text' dm-verity\n2|'$disable_text' Verification\n3|'$disable_text' dm-verity + Verification\""
-    depend-on = "nounpak"
-    depend-value = "1"
-    depend-mode = "hide"
-    depend-readonly = true
-    
-    [[action.params]]
-    name = "IMAGES"
-    desc = "'$input_file_text': br, dat, img, zst, zstd, bin, zip"
-    options-sh = "findfile 2 $PTSD"
-    required = true
-    multiple = true
-  
-  [[action]]
-  title = "'$build_text'"
-  desc = "'$desc_rom1'"
-  icon = "'$urlicon'/build.png"
-  script = """
-  slog dang_nen "$dang_nen"
-  slog on_f2fs_nen "$on_f2fs_nen"
-  slog format_imgs "$format_imgs"
-  slog boolboxdjh "$boolbox"
-  slog dinh_dang "$dinh_dang"
-  slog build_size "$build_size"
-  slog offfscontex "$offfscontex"
-  slog muc_nen "$muc_nen"
-  slog nen_br "$nen_br"
-  slog build_times "$build_times"
-  for vkl in $IMAGES; do
-  repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD/out" -n "$dang_nen" -l "$muc_nen" -k "$dinh_dang" -s "$build_size" -d "$boolbox" -c "$format_imgs" -p "$offfscontex"
-  done
-  echo "'$save_text' $PTSD/out"
-  echo
-  checktime
-  """
-
-    [[action.params]]
-    name = "boolbox"
-    label = "'$deleted_project_text'"
-    type = "checkbox"
-    value-sh = "glog boolboxdjh"
-
-    [[action.params]]
-    name = "IMAGES"
-    title = "'$list_partition_text'"
-    desc = "'$builds_text_1'"
-    options-sh = "findfile 0 $SDH/$PTSH"
-    required = true
-    multiple = true
-
-    [[action.params]]
-    name = "dinh_dang"
-    label = "'$build_text'"
-    desc = "'$builds_text_2'"
-    value-sh = "glog dinh_dang 0"
-    options-sh = "echo -e \"0|'$default_text'\n1|RO (EROFS)\n2|RW (EXT4)\n3|RO (F2FS)\n4|RW (F2FS)\""
-    depend-on = "IMAGES"
-    depend-value = "(erofs),(ext),(f2fs)"
-    depend-mode = "show"
-    depend-default = "hide"
-
-    [[action.params]]
-    name = "on_f2fs_nen"
-    label = "'$lall_nen_f2fs_text'"
-    desc = "'$nen_f2fs_text'"
-    type = "switch"
-    value-sh = "glog on_f2fs_nen 0"
-    depend-on = "dinh_dang"
-    depend-value = "(F2FS)"
-    depend-mode = "show"
-    depend-default = "hide"
-
-    [[action.params]]
-    name = "dang_nen"
-    label = "'$option_text'"
-    desc = "'$builds_text_3'"
-    value-sh = "glog dang_nen lz4hc"
-    options-sh = "echo -e \"lz4hc\nlz4\nlzma\ndeflate\nzstd\""
-    depend-on = "dinh_dang|dinh_dang|IMAGES"
-    depend-value = "EROFS|EXT4,F2FS|(erofs)"
-    depend-mode = "show|hide|show"
-    depend-logic = "priority"
-    depend-default = "hide"
-
-    [[action.params]]
-    name = "muc_nen"
-    label = "'$builds_text_4'"
-    desc = "'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22"
-    type = "seekbar"
-    min = 0
-    max = 22
-    value-sh = "glog muc_nen 8"
-    depend-on = "dang_nen"
-    depend-value = "lz4"
-    depend-mode = "hide"
-    depend-logic = "priority"
-
-    [[action.params]]
-    name = "format_imgs"
-    label = "'$convert_text'"
-    desc = "'$convert_img_text'"
-    value-sh = "glog format_imgs raw"
-    depend-on = "IMAGES"
-    depend-value = "(erofs),(ext),(f2fs)"
-    depend-mode = "show"
-    depend-readonly = true
-    options-sh = """
-    echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\nzstd|File.img.zstd\nzst|File.img.zst\ndat|File.new.dat\nbr|File.new.dat.br"
-    """
-
-    [[action.params]]
-    name = "nen_br"
-    label = "'$builds_text_4'"
-    desc = "'$convert_text_2'"
-    type = "seekbar"
-    min = 0
-    max = 22
-    value-sh = "glog nen_br 4"
-    required = true
-    depend-on = "format_imgs"
-    depend-value = "raw,sparse,File.new.dat"
-    depend-mode = "hide"
-
-    [[action.params]]
-    name = "build_times"
-    label = "'$time_text'"
-    desc = "'$build_time_text_1': '$time_riviu'"
-    type = "number"
-    value-sh = "glog build_times"
-    required = true
-    depend-on = "IMAGES"
-    depend-value = "(erofs),(ext),(f2fs)"
-    depend-mode = "show"
-    depend-readonly = true
-
-    [[action.params]]
-    name = "offfscontex"
-    label = "'$patch_text_fscontex'"
-    desc = "'$patch_text_fsdesc'"
-    type = "switch"
-    value-sh = "glog offfscontex 1"
-    depend-on = "IMAGES"
-    depend-value = "(erofs),(ext),(f2fs)"
-    depend-mode = "show"
-    depend-readonly = true
-
-    [[action.params]]
-    name = "build_size"
-    label = "'$sizes_text'"
-    desc = "'$builds_text_7'"
-    type = "number"
-    value-sh = "glog build_size 0"
-    required = true
-    depend-on = "dinh_dang|dinh_dang|IMAGES"
-    depend-value = "EROFS|EXT4,F2FS|(ext),(f2fs)"
-    depend-mode = "hide|show|show"
-    depend-logic = "priority"
-    depend-default = "hide"
-
-  [[group]]
-  [[action]]
-  title = "'$convert_text'"
-  icon = "'$urlicon'/convert_file.png"
-  script = """
-    slog format_img "$format_img"
-    slog nen_br "$nen_br"
-    slog cboxksbhd "$cboxk"
-    for vinput in $IMAGES; do
-    cover_img -i "$PTSD/$vinput" -o "$PTSD/out" -c $format_img -l $nen_br -d $cboxk
-    done
-    echo "'$save_text' $PTSD/out"
-    echo
-    checktime
-  """
-
-    [[action.params]]
-    name = "cboxk"
-    label = "'$deleted_file_text'"
-    type = "checkbox"
-    value-sh = "glog cboxksbhd"
-
-    [[action.params]]
-    name = "format_img"
-    label = "'$option_text'"
-    value-sh = "glog format_img raw"
-    required = true
-    options-sh = """
-    echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\ndat|File.new.dat\nbr|File.new.dat.br\nzstd|File.img.zstd\nzst|File.img.zst\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz"
-    """
-
-    [[action.params]]
-    name = "nen_br"
-    label = "'$builds_text_4'"
-    desc = "'$convert_text_2'"
-    type = "seekbar"
-    min = 0
-    max = 22
-    value-sh = "glog nen_br 4"
-    required = true
-    depend-on = "format_img"
-    depend-value = "raw,sparse,File.new.dat"
-    depend-mode = "hide"
-    depend-readonly = true
-
-    [[action.params]]
-    name = "IMAGES"
-    desc = "'$input_file_text': br, dat, zstd, img"
-    options-sh = "findfile 1 $PTSD"
-    required = true
-    multiple = true
-
   [[group]]
   [[action]]
   title = "'$build_text' Super"
@@ -1546,6 +1270,283 @@ Utilities() {
     options-sh = "findfile 5 $PTSD | sort -n -t . -k 3"
     required = true
     multiple = true
+  
+  [[group]]
+  [[action]]
+  title = "'$convert_text'"
+  icon = "'$urlicon'/convert_file.png"
+  script = """
+    slog format_img "$format_img"
+    slog nen_br "$nen_br"
+    slog cboxksbhd "$cboxk"
+    for vinput in $IMAGES; do
+    cover_img -i "$PTSD/$vinput" -o "$PTSD/out" -c $format_img -l $nen_br -d $cboxk
+    done
+    echo "'$save_text' $PTSD/out"
+    echo
+    checktime
+  """
+
+    [[action.params]]
+    name = "cboxk"
+    label = "'$deleted_file_text'"
+    type = "checkbox"
+    value-sh = "glog cboxksbhd"
+
+    [[action.params]]
+    name = "format_img"
+    label = "'$option_text'"
+    value-sh = "glog format_img raw"
+    required = true
+    options-sh = """
+    echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\ndat|File.new.dat\nbr|File.new.dat.br\nzstd|File.img.zstd\nzst|File.img.zst\nlzma|File.img.lzma\nlz4|File.img.lz4\nxz|File.img.xz\ngz|File.img.gz"
+    """
+
+    [[action.params]]
+    name = "nen_br"
+    label = "'$builds_text_4'"
+    desc = "'$convert_text_2'"
+    type = "seekbar"
+    min = 0
+    max = 22
+    value-sh = "glog nen_br 4"
+    required = true
+    depend-on = "format_img"
+    depend-value = "raw,sparse,File.new.dat"
+    depend-mode = "hide"
+    depend-readonly = true
+
+    [[action.params]]
+    name = "IMAGES"
+    desc = "'$input_file_text': br, dat, zstd, img"
+    options-sh = "findfile 1 $PTSD"
+    required = true
+    multiple = true
+
+  [[group]]
+  [[action]]
+  title = "'$decompile_text'"
+  desc = "'$desc_rom'"
+  icon = "'$urlicon'/decom.png"
+  script = """
+  slog vavbbgdf "$vavb"
+  slog xoa_oat_boot "$xoa_oat_boot"
+  slog dkjdj "$nounpak"
+  slog pcvbmeta "$pcvbmeta"
+  slog dkhdh "$cboxk"
+  slog text_oat_boot "$text_oat_boot"
+  for vkl in $IMAGES; do
+  if [ -f "$PTSD/${vkl#*=}" ]; then
+  unpack_img -i "$PTSD/${vkl#*=}" -p "${vkl%%=*}" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
+  else
+  unpack_img -i "$PTSD/$vkl" -o "$SDH/$PTSH" -n $nounpak -d $cboxk -r $xoa_oat_boot -a $vavb -m $pcvbmeta
+  fi
+  done
+  checktime
+  """
+  
+    [[action.params]]
+    name = "cboxk"
+    label = "'$deleted_file_text'"
+    type = "checkbox"
+    value-sh = "glog dkhdh"
+    
+    [[action.params]]
+    name = "nounpak"
+    label = "'$decode_text_1'"
+    type = "switch"
+    value-sh = "glog dkjdj"
+    
+    [[action.params]]
+    name = "xoa_oat_boot"
+    label = "'$xoaoat_text_1'"
+    type = "switch"
+    value-sh = "glog xoa_oat_boot"
+    depend-on = "nounpak"
+    depend-value = "1"
+    depend-mode = "hide"
+    depend-readonly = true
+    
+    [[action.params]]
+    name = "text_oat_boot"
+    type = "text"
+    value-sh = "glog text_oat_boot \"fsv_meta,oat,vdex,odex,prof,bprof\""
+    depend-on = "xoa_oat_boot"
+    depend-value = "1"
+    depend-mode = "show"
+    depend-default = "hide"
+    
+    [[action.params]]
+    name = "vavb"
+    label = "'$builds_text_8'"
+    type = "switch"
+    depend-on = "nounpak"
+    depend-value = "1"
+    depend-mode = "hide"
+    depend-readonly = true
+    
+    [[action.params]]
+    name = "pcvbmeta"
+    label = "'$patch_text' vbmeta"
+    value-sh = "glog pcvbmeta 0"
+    options-sh = "echo -e \"0|'$default_text'\n1|'$disable_text' dm-verity\n2|'$disable_text' Verification\n3|'$disable_text' dm-verity + Verification\""
+    depend-on = "nounpak"
+    depend-value = "1"
+    depend-mode = "hide"
+    depend-readonly = true
+    
+    [[action.params]]
+    name = "IMAGES"
+    desc = "'$input_file_text': br, dat, img, zst, zstd, bin, zip"
+    options-sh = "findfile 2 $PTSD"
+    required = true
+    multiple = true
+  
+  [[action]]
+  title = "'$build_text'"
+  desc = "'$desc_rom1'"
+  icon = "'$urlicon'/build.png"
+  script = """
+  slog dang_nen "$dang_nen"
+  slog on_f2fs_nen "$on_f2fs_nen"
+  slog format_imgs "$format_imgs"
+  slog boolboxdjh "$boolbox"
+  slog dinh_dang "$dinh_dang"
+  slog build_size "$build_size"
+  slog offfscontex "$offfscontex"
+  slog muc_nen "$muc_nen"
+  slog nen_br "$nen_br"
+  slog build_times "$build_times"
+  for vkl in $IMAGES; do
+  repack_img -i "$SDH/$PTSH/$vkl" -o "$PTSD/out" -n "$dang_nen" -l "$muc_nen" -k "$dinh_dang" -s "$build_size" -d "$boolbox" -c "$format_imgs" -p "$offfscontex"
+  done
+  echo "'$save_text' $PTSD/out"
+  echo
+  checktime
+  """
+  
+    [[action.params]]
+    name = "boolbox"
+    label = "'$deleted_project_text'"
+    type = "checkbox"
+    value-sh = "glog boolboxdjh"
+
+    [[action.params]]
+    name = "IMAGES"
+    title = "'$list_partition_text'"
+    desc = "'$builds_text_1'"
+    options-sh = "findfile 0 $SDH/$PTSH"
+    required = true
+    multiple = true
+
+    [[action.params]]
+    name = "dinh_dang"
+    label = "'$build_text'"
+    desc = "'$builds_text_2'"
+    value-sh = "glog dinh_dang 0"
+    options-sh = "echo -e \"0|'$default_text'\n1|RO (EROFS)\n2|RW (EXT4)\n3|RO (F2FS)\n4|RW (F2FS)\""
+    depend-on = "IMAGES"
+    depend-value = "(erofs),(ext),(f2fs)"
+    depend-mode = "show"
+    depend-default = "hide"
+
+    [[action.params]]
+    name = "on_f2fs_nen"
+    label = "'$lall_nen_f2fs_text'"
+    desc = "'$nen_f2fs_text'"
+    type = "switch"
+    value-sh = "glog on_f2fs_nen 0"
+    depend-on = "dinh_dang"
+    depend-value = "(F2FS)"
+    depend-mode = "show"
+    depend-default = "hide"
+
+    [[action.params]]
+    name = "dang_nen"
+    label = "'$option_text'"
+    desc = "'$builds_text_3'"
+    value-sh = "glog dang_nen lz4hc"
+    options-sh = "echo -e \"lz4hc\nlz4\nlzma\ndeflate\nzstd\""
+    depend-on = "dinh_dang|dinh_dang|IMAGES"
+    depend-value = "EROFS|EXT4,F2FS|(erofs)"
+    depend-mode = "show|hide|show"
+    depend-logic = "priority"
+    depend-default = "hide"
+
+    [[action.params]]
+    name = "muc_nen"
+    label = "'$builds_text_4'"
+    desc = "'$builds_text_6': lz4: 0, lz4hc: 0-12, deflate,lzma: 0-9, zstd: 0-22"
+    type = "seekbar"
+    min = 0
+    max = 22
+    value-sh = "glog muc_nen 8"
+    depend-on = "dang_nen"
+    depend-value = "lz4"
+    depend-mode = "hide"
+    depend-logic = "priority"
+
+    [[action.params]]
+    name = "format_imgs"
+    label = "'$convert_text'"
+    desc = "'$convert_img_text'"
+    value-sh = "glog format_imgs raw"
+    depend-on = "IMAGES"
+    depend-value = "(erofs),(ext),(f2fs)"
+    depend-mode = "show"
+    depend-readonly = true
+    options-sh = """
+    echo -e "raw|File.img (raw)\nsparse|File.img (sparse)\nzstd|File.img.zstd\nzst|File.img.zst\ndat|File.new.dat\nbr|File.new.dat.br"
+    """
+
+    [[action.params]]
+    name = "nen_br"
+    label = "'$builds_text_4'"
+    desc = "'$convert_text_2'"
+    type = "seekbar"
+    min = 0
+    max = 22
+    value-sh = "glog nen_br 4"
+    required = true
+    depend-on = "format_imgs"
+    depend-value = "raw,sparse,File.new.dat"
+    depend-mode = "hide"
+
+    [[action.params]]
+    name = "build_times"
+    label = "'$time_text'"
+    desc = "'$build_time_text_1': '$time_riviu'"
+    type = "number"
+    value-sh = "glog build_times"
+    required = true
+    depend-on = "IMAGES"
+    depend-value = "(erofs),(ext),(f2fs)"
+    depend-mode = "show"
+    depend-readonly = true
+
+    [[action.params]]
+    name = "offfscontex"
+    label = "'$patch_text_fscontex'"
+    desc = "'$patch_text_fsdesc'"
+    type = "switch"
+    value-sh = "glog offfscontex 1"
+    depend-on = "IMAGES"
+    depend-value = "(erofs),(ext),(f2fs)"
+    depend-mode = "show"
+    depend-readonly = true
+
+    [[action.params]]
+    name = "build_size"
+    label = "'$sizes_text'"
+    desc = "'$builds_text_7'"
+    type = "number"
+    value-sh = "glog build_size 0"
+    required = true
+    depend-on = "dinh_dang|dinh_dang|IMAGES"
+    depend-value = "EROFS|EXT4,F2FS|(ext),(f2fs)"
+    depend-mode = "hide|show|show"
+    depend-logic = "priority"
+    depend-default = "hide"
   
   [[group]]
   [[page]]
