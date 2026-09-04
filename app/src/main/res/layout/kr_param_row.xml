@@ -7,15 +7,29 @@
     android:gravity="center_vertical"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/kr_param_title"
-        style="@style/textSmallTitle"
+  <LinearLayout
+        android:id="@+id/kr_param_title_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:drawablePadding="4dp"
-        android:textColor="?android:attr/textColorSecondary"
-        app:drawableStartCompat="@drawable/kr_param_title"
-        android:breakStrategy="simple" />
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitXY"
+            android:src="@drawable/kr_param_title" />
+
+        <TextView
+            android:id="@+id/kr_param_title"
+            style="@style/textSmallTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:breakStrategy="simple"
+            android:paddingStart="4dp"
+            android:textColor="?android:attr/textColorSecondary" />
+    </LinearLayout>
 
     <LinearLayout
         android:paddingHorizontal="10dp"
@@ -53,11 +67,26 @@
             android:layout_weight="1" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/kr_param_desc"
-        android:drawablePadding="4dp"
-        style="@style/textSmall"
-        app:drawableStartCompat="@drawable/kr_param_desc"
+    <LinearLayout
+        android:id="@+id/kr_param_desc_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+    
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
+            android:src="@drawable/kr_param_desc"
+            android:contentDescription="@null" />
+    
+        <TextView
+            android:id="@+id/kr_param_desc"
+            style="@style/textSmall"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="4dp" />
+    </LinearLayout>
+
 </LinearLayout>

@@ -840,7 +840,7 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         if (!actionParamInfo.title.isNullOrEmpty()) {
             layout.findViewById<TextView>(R.id.kr_param_title).text = actionParamInfo.title
         } else {
-            layout.findViewById<TextView>(R.id.kr_param_title).visibility = View.GONE
+            layout.findViewById<TextView>(R.id.kr_param_title_layout).visibility = View.GONE
         }
 
         if ((!actionParamInfo.label.isNullOrEmpty()) && !hideLabelTypes.contains(actionParamInfo.type)) {
@@ -854,7 +854,7 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
         if (!actionParamInfo.desc.isNullOrEmpty()) {
             layout.findViewById<TextView>(R.id.kr_param_desc).text = actionParamInfo.desc
         } else {
-            layout.findViewById<TextView>(R.id.kr_param_desc).visibility = View.GONE
+            layout.findViewById<TextView>(R.id.kr_param_desc_layout).visibility = View.GONE
         }
 
         layout.findViewById<FrameLayout>(R.id.kr_param_input).addView(inputView)
