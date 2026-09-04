@@ -42,11 +42,11 @@ show_apkset() {
   title = "'$input_folder_text'"
   desc = "'$path_text': '$PTAD'"
   script = """
-  if [ ! -d "$SDC/$Name" ] || [ ! -d "$SDH/$Name" ]; then
+  if [ ! -d "$SDC/$Name" ] || [ ! -d "$APK/$Name" ]; then
     slog PTAD "$SDC/$Name"
     slog PTAH "$Name"
-    mkdir -p "$SDH/$Name" "$SDC/$Name/out"
-  elif [ -d "$SDH/$Name" ]; then
+    mkdir -p "$APK/$Name" "$SDC/$Name/out"
+  elif [ -d "$APK/$Name" ]; then
     slog PTAH "$Name"
     slog PTAD "$SDC/$Name"
   fi
