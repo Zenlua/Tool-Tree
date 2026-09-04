@@ -853,7 +853,7 @@ class TextEditorActivity : AppCompatActivity() {
 
         // Nút "⋮" tự dựng - cùng icon/kích thước/vị trí như overflow mặc định cũ,
         // chỉ đổi nền popup bên trong sang kiểu bo góc giống ActionPage.
-        val overflowItem = menu.add(Menu.NONE, Menu.NONE, Menu.NONE, getString(R.string.kr_more_options))
+        val overflowItem = menu.add(Menu.NONE, Menu.NONE, 5, getString(R.string.kr_more_options))
         overflowItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
         val overflowButton = OverflowMenuPopup.buildButton(this)
         overflowButton.setOnClickListener { showEditorOverflowPopup(overflowButton) }
