@@ -34,38 +34,32 @@ show_sett() {
 
 show_apkset() {
   echo '
+  [[group]]
   [[action]]
-  icon = "'$urlicon'/folder_apk.png"
   shell = "hidden"
-  reload = "true"
+  reload = true
   menu = true
   title = "'$input_folder_text'"
-  summary = "'$path_text': '${PTAD/$SDCARD_PATH/\/sdcard}'"
+  desc = "'$path_text': '$PTAD'"
   script = """
-    if [ ! -d "$Folder" ] || [ ! -d "$APK/${Folder##*/}" ]; then
-    slog PTAD "$Folder"
-    slog PTAH "${Folder##*/}"
-    mkdir -p "$APK/${Folder##*/}" "$Folder/out"
-    elif [ -d "$APK/$Name" ]; then
+  if [ ! -d "$SDC/$Name" ] || [ ! -d "$SDH/$Name" ]; then
+    slog PTAD "$SDC/$Name"
+    slog PTAH "$Name"
+    mkdir -p "$SDH/$Name" "$SDC/$Name/out"
+  elif [ -d "$SDH/$Name" ]; then
     slog PTAH "$Name"
     slog PTAD "$SDC/$Name"
-    fi
+  fi
   """
 
   [[action.params]]
   name = "Name"
   desc = "'$config_text_1'"
-  label = "'$setting_text_3'"
+  label = "'$option_text'"
+  title = "'$projects_text'"
   options-sh = "findfile for $APK"
   value-sh = "glog PTAH"
-
-  [[action.params]]
-  name = "Folder"
-  desc = "'$config_text_2'"
-  value-sh = "glog PTAD"
-  type = "folder"
-  editable = "true"
-  required = "true"
+  editable = true
   '
 }
 
