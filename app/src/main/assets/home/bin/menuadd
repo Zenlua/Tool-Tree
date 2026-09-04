@@ -10,41 +10,19 @@ source "$fileprop" 2>/dev/null
 if [ "$google_text" ]; then
 echo '
   [[group]]
-  [[menu]]
-    [[menu.items]]
-    title = "'$google_translate_text'"
-    box = "glog auto_trans_text_'$id'"
-    reload = true
-    silent = true
-    type = "checkbox"
-    script = """
-      if [ "$(glog auto_trans_text_'$id')" == 1 ]; then
-      slog auto_trans_text_'$id' 0
-      else
-      if [ "$(glog transai_text_'$id')" == 1 ]; then
-      rm -fr '$1'/auto.sh
-      slog transai_text_'$id' 0
-      fi
-      slog auto_trans_text_'$id' 1
-      fi
-    """
-    [[menu.items]]
-    title = "Gemini"
-    box = "glog transai_text_'$id'"
-    reload = true
-    silent = true
-    type = "checkbox"
-    script = """
-      if [ "$(glog transai_text_'$id')" == 1 ]; then
-      slog transai_text_'$id' 0
-      else
-      if [ "$(glog auto_trans_text_'$id')" == 1 ]; then
-      rm -fr '$1'/auto.sh
-      slog auto_trans_text_'$id' 0
-      fi
-      transai -c && slog transai_text_'$id' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1 | trans -b)" -y error
-      fi
-    """
+  [[menu.items]]
+  title = "Gemini"
+  box = "glog transai_text_'$id'"
+  reload = true
+  silent = true
+  type = "checkbox"
+  script = """
+    if [ "$(glog transai_text_'$id')" == 1 ]; then
+    slog transai_text_'$id' 0
+    else
+    transai -c && slog transai_text_'$id' 1 || showbanner -t "Gemini" -m "$(transai -c 2>&1)" -y error
+    fi
+  """
   '
 fi
 

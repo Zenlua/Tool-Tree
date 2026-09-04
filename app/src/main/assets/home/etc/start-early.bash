@@ -15,7 +15,7 @@ if checkonline; then
 
     if [[ -f $TEMP/Version.md ]] && [[ "$(glog sum_ver_boot)" != "$(checksum $TEMP/Version.md)" ]]; then
         sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=7 {printf "Version:%s", $0}' > $TEMP/version.txt
-        cat $TEMP/version.txt | trans -b > $TEMP/version_trans.txt
+        cat $TEMP/version.txt | transai > $TEMP/version_trans.txt
         slog sum_ver_boot "$(checksum $TEMP/Version.md)"
     fi
 fi

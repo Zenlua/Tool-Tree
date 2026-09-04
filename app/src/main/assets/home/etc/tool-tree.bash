@@ -303,16 +303,11 @@ Info() {
   desc = "'$permis_text_5'"
   icon = "'$urlicon'/language.png"
   option-sh = """
-  echo -e "|'$default_text'\nauto|'$google_translate_text'\nai|Gemini\nen|English\nvi|Việt nam\nru|Русский\nhu|Hungarian\nid|Indonesia\nes|Spanish"
+  echo -e "|'$default_text'\nai|Gemini\nen|English\nvi|Việt nam\nru|Русский\nhu|Hungarian\nid|Indonesia\nes|Spanish"
   """
   get = "glog language_kkts"
   set = """
-    if [ "$state" == "auto" ]; then
-      slog language_kkts "$state"
-      auto_trans
-      echo "exit:[restart]"
-      exit
-    elif [ "$state" == "ai" ]; then
+    if [ "$state" == "ai" ]; then
       if transai -c; then
         slog language_kkts "$state"
         auto_trans
@@ -701,7 +696,7 @@ Feature() {
     title = "Gemini API"
     placeholder = "*******************"
     type = "text"
-    desc-sh = "transai -c 2>&1 | trans -b"
+    desc-sh = "transai -c 2>&1"
     
     [[action.params]]
     name = "models_genmini"
