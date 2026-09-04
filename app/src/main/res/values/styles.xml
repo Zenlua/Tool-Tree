@@ -65,13 +65,6 @@
         <item name="cardBg">@color/cardBgDarkTransparent</item>
     </style>
 
-    <style name="textTitle" parent="@style/TextAppearance.AppCompat.Title">
-        <item name="android:textColor">?android:attr/textColorPrimary</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">14dp</item>
-        <item name="android:breakStrategy">simple</item>
-    </style>
-
     <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="titleTextColor">?android:textColorPrimary</item>
         <item name="subtitleTextColor">?android:textColorSecondary</item>
@@ -93,10 +86,11 @@
         <item name="popupMenuStyle">@style/AppPopupMenuStyle</item>
     </style>
 
-    <style name="textTitle">
+    <style name="textTitle" parent="@style/TextAppearance.AppCompat.Title">
         <item name="android:textColor">?android:attr/textColorPrimary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">14dp</item>
+        <item name="android:breakStrategy">simple</item>
     </style>
 
     <style name="textSmall">
