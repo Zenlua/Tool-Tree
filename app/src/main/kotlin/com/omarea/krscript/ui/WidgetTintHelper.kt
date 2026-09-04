@@ -8,46 +8,60 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import android.widget.ImageView
+import androidx.core.graphics.ColorUtils
 
 object WidgetTintHelper {
 
     fun applyTint(context: Context, widgetView: ImageView?, iconDrawable: Drawable?) {
         widgetView ?: return
 
-        // 1. Không có icon -> Trả về null để giữ màu phủ mặc định gốc trong XML
+        val defaultAccent = resolveAccentColor(context)
+
+        // 1. Không có icon -> Tô màu Accent mặc định
         if (iconDrawable == null) {
-            widgetView.imageTintList = null
+            widgetView.imageTintList = ColorStateList.valueOf(defaultAccent)
             return
         }
 
-        // 2. Trích xuất màu chủ đạo thực tế có trong icon
-        val dominantColor = extractDominantColor(iconDrawable)
+        // 2. Trích xuất Top 3 màu chủ đạo nhất từ icon
+        val topColors = extractTopColors(iconDrawable, topN = 3)
 
-        if (dominantColor == null) {
-            widgetView.imageTintList = null
-            return
+        // 3. Trộn các màu theo đúng tỷ lệ trọng số xuất hiện
+        val blendedColor = if (topColors.isNotEmpty()) {
+            blendMultipleColors(topColors)
+        } else {
+            defaultAccent
         }
 
-        // 3. Tăng nhẹ độ sáng nếu màu bị tối
-        val brightColor = brightenColor(dominantColor)
+        // 4. Nâng nhẹ độ sáng nếu màu trộn bị quá tối
+        val finalColor = brightenColor(blendedColor)
 
-        widgetView.imageTintList = ColorStateList.valueOf(brightColor)
+        widgetView.imageTintList = ColorStateList.valueOf(finalColor)
     }
 
     /**
-     * Nâng nhẹ độ sáng (Value trong HSV) lên ngưỡng tối thiểu (0.8f)
-     * giúp widget tươi sáng hơn mà không làm thay đổi hay bóp méo tông màu gốc.
+     * Trộn danh sách nhiều màu lại với nhau dựa trên tỷ lệ điểm trọng số
      */
-    private fun brightenColor(color: Int): Int {
-        val hsv = FloatArray(3)
-        Color.colorToHSV(color, hsv)
+    private fun blendMultipleColors(colorsWithScores: List<Pair<Int, Float>>): Int {
+        if (colorsWithScores.isEmpty()) return Color.BLACK
+        if (colorsWithScores.size == 1) return colorsWithScores[0].first
 
-        // Nếu màu quá tối (Value < 0.8f), nâng nhẹ lên 0.8f
-        if (hsv[2] < 0.9f) {
-            hsv[2] = 0.9f
+        var currentColor = colorsWithScores[0].first
+        var currentScore = colorsWithScores[0].second
+
+        for (i in 1 until colorsWithScores.size) {
+            val nextColor = colorsWithScores[i].first
+            val nextScore = colorsWithScores[i].second
+            val totalScore = currentScore + nextScore
+
+            // Tỷ lệ màu tiếp theo chiếm trong tổng tích lũy
+            val ratio = if (totalScore > 0f) nextScore / totalScore else 0.5f
+            
+            currentColor = ColorUtils.blendARGB(currentColor, nextColor, ratio)
+            currentScore = totalScore
         }
 
-        return Color.HSVToColor(hsv)
+        return currentColor
     }
 
     private fun resolveAccentColor(context: Context): Int {
@@ -56,20 +70,28 @@ object WidgetTintHelper {
         return typedValue.data
     }
 
+    private fun brightenColor(color: Int): Int {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+
+        if (hsv[2] < 0.9f) {
+            hsv[2] = 0.9f
+        }
+
+        return Color.HSVToColor(hsv)
+    }
+
     /**
-     * Tìm màu chủ đạo có mặt thực tế trong Icon:
-     * - Gom nhóm màu (Quantization) để đếm tần suất pixel.
-     * - Ưu tiên các màu đặc trưng (Saturated) có diện tích lớn trong icon.
-     * - Tuyệt đối KHÔNG cộng trung bình RGB để tránh tạo màu lạ.
+     * Trích xuất Top N màu xuất hiện nhiều & đặc trưng nhất cùng điểm số
      */
-    private fun extractDominantColor(drawable: Drawable?): Int? {
-        drawable ?: return null
+    private fun extractTopColors(drawable: Drawable?, topN: Int = 3): List<Pair<Int, Float>> {
+        drawable ?: return emptyList()
 
         val sampleSize = 24
         val bitmap = try {
             Bitmap.createBitmap(sampleSize, sampleSize, Bitmap.Config.ARGB_8888)
         } catch (e: Exception) {
-            return null
+            return emptyList()
         }
 
         val canvas = Canvas(bitmap)
@@ -85,20 +107,18 @@ object WidgetTintHelper {
             for (y in 0 until sampleSize) {
                 val pixel = bitmap.getPixel(x, y)
 
-                // Bỏ qua pixel trong suốt
                 if (Color.alpha(pixel) < 50) continue
 
                 Color.colorToHSV(pixel, hsv)
                 val sat = hsv[1]
                 val valVal = hsv[2]
 
-                // Làm tròn màu (bước 16) để nhóm các điểm ảnh có tông màu gần giống nhau
+                // Nhóm các màu gần giống nhau
                 val r = (Color.red(pixel) shr 4) shl 4
                 val g = (Color.green(pixel) shr 4) shl 4
                 val b = (Color.blue(pixel) shr 4) shl 4
                 val quantizedColor = Color.rgb(r, g, b)
 
-                // Tính điểm: Màu xuất hiện nhiều + có sắc tố rõ ràng sẽ được ưu tiên cao nhất
                 val weight = 1.0f + (sat * 2.0f) + (if (valVal > 0.15f && valVal < 0.95f) 0.5f else 0.0f)
 
                 val currentScore = colorScores[quantizedColor] ?: 0f
@@ -108,7 +128,10 @@ object WidgetTintHelper {
 
         bitmap.recycle()
 
-        // Trả về màu thực tế trong icon đạt điểm cao nhất
-        return colorScores.maxByOrNull { it.value }?.key
+        // Lấy Top N màu có điểm trọng số cao nhất
+        return colorScores.entries
+            .sortedByDescending { it.value }
+            .take(topN)
+            .map { Pair(it.key, it.value) }
     }
 }
