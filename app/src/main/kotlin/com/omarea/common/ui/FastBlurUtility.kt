@@ -236,16 +236,18 @@ object FastBlurUtility {
 
             // Áp dụng contrast + tint giống BlurController
             val isDark = com.tool.tree.ThemeModeState.isDarkMode()
-            val contrastValue = if (isDark) 0.9f else 1.2f
-            val dimValue = if (isDark) 0.8f else 0.7f
-            val scale = contrastValue
-            val offset = (1f - scale) * 128f
+            // val contrastValue = if (isDark) 0.9f else 1.2f
+            // val dimValue = if (isDark) 0.8f else 0.7f
+            // val scale = contrastValue * dimValue
+            // val offset = (1f - scale) * 128f
+            val scale = if (isDark) 0.8f else 1.1f
+            val offset = if (isDark) 0f else (1f - 1.1f) * 128f // -12.8f
             val cm = ColorMatrix(
                 floatArrayOf(
                     scale, 0f, 0f, 0f, offset,
                     0f, scale, 0f, 0f, offset,
                     0f, 0f, scale, 0f, offset,
-                    0f, 0f, 0f, dimValue, 0f
+                    0f, 0f, 0f, 1f, 0f
                 )
             )
             paint.colorFilter = ColorMatrixColorFilter(cm)
