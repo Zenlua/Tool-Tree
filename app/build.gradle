@@ -5,6 +5,7 @@ android {
     namespace "com.tool.tree"
     buildFeatures {
         viewBinding = true
+        aidl = true
     }
     kotlin {
         jvmToolchain(17)
@@ -17,7 +18,7 @@ android {
     }
     defaultConfig {
         resourceConfigurations += ['vi', 'ru', 'hu', 'es', 'id']
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 28
         versionCode Integer.parseInt(new java.text.SimpleDateFormat("yyMMddHH").format(new Date()))
         // versionCode 26021101
@@ -69,6 +70,8 @@ dependencies {
     implementation "androidx.webkit:webkit:1.15.0"
     implementation "org.tomlj:tomlj:1.1.1"
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    implementation "dev.rikka.shizuku:api:13.1.5"
+    implementation "dev.rikka.shizuku:provider:13.1.5"
 }
 repositories {
     google()

@@ -9,6 +9,7 @@ import android.provider.Settings
 import com.omarea.common.shared.FileWrite
 import com.omarea.common.shell.KeepShell
 import com.omarea.common.shell.KeepShellPublic
+import com.omarea.common.shell.ShellSession
 import com.omarea.common.shell.ShellTranslation
 import com.omarea.krscript.FileOwner
 import com.omarea.krscript.model.NodeInfoBase
@@ -31,7 +32,7 @@ object ScriptEnvironmen {
     private var environmentPath = ""
     private var TOOKIT_DIR = ""
     private var rooted = false
-    private var privateShell: KeepShell? = null
+    private var privateShell: ShellSession? = null
     private var shellTranslation: ShellTranslation? = null
 
     // Template gốc của executor.sh (chưa thay thế biến), lưu lại để có thể build lại

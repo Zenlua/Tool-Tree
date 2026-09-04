@@ -23,6 +23,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.omarea.common.shell.KeepShellPublic
 import com.omarea.common.shell.ShellExecutor
+import com.omarea.common.shell.shizuku.ShizukuShellManager
 import com.omarea.common.ui.DialogHelper
 import com.omarea.krscript.config.StringResRef
 import com.omarea.krscript.executor.ScriptEnvironmen
@@ -210,6 +211,11 @@ class SplashActivity : AppCompatActivity() {
 
     // =================== LOGIC ROOT & KHỞI CHẠY ===================
 
+    // Mức ưu tiên nguồn thực thi: su > Shizuku > sh thường. checkRoot() thử su trước (như cũ);
+    // nếu không có su mới thử Shizuku - CHỦ ĐỘNG xin quyền (hiện popup hệ thống) ngay bước khởi
+    // động này (sau khi người dùng đã bấm xác nhận ở showAgreementDialog()/hasRequiredPermissions
+    // phía trên), không cần màn Cài đặt riêng. Nếu Shizuku chưa cài hoặc người dùng từ chối/không
+    // thao tác (hết 30s) thì giữ nguyên hành vi cũ (KeepShell tự fallback sh nếu không có su).
     @Synchronized
     private fun checkRootAndStart() {
         if (started) return
@@ -217,6 +223,14 @@ class SplashActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             hasRoot = KeepShellPublic.checkRoot()
+            if (!hasRoot && ShizukuShellManager.isInstalled()) {
+                ShizukuShellManager.requestPermissionAndAwait(this@SplashActivity)
+                val shizukuSession = ShizukuShellManager.tryUseGrantedSession(this@SplashActivity)
+                if (shizukuSession != null) {
+                    KeepShellPublic.useSession(shizukuSession)
+                    hasRoot = shizukuSession.checkRoot()
+                }
+            }
             withContext(Dispatchers.Main) {
                 startToFinish()
             }

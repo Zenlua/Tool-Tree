@@ -15,18 +15,18 @@ import java.util.concurrent.locks.ReentrantLock
 /**
  * Created by Hello on 2018/01/23.
  */
-class KeepShell(private var rootMode: Boolean = true) {
+class KeepShell(private var rootMode: Boolean = true) : ShellSession {
     private var p: Process? = null
     private var out: OutputStream? = null
     private var reader: BufferedReader? = null
     private var currentIsIdle = true // 是否处于闲置状态
-    val isIdle: Boolean
+    override val isIdle: Boolean
         get() {
             return currentIsIdle
         }
 
     //尝试退出命令行程序
-    fun tryExit() {
+    override fun tryExit() {
         try {
             if (out != null)
                 out!!.close()
@@ -50,7 +50,7 @@ class KeepShell(private var rootMode: Boolean = true) {
     private val LOCK_TIMEOUT = 10000L
     private var enterLockTime = 0L
 
-    fun checkRoot(): Boolean {
+    override fun checkRoot(): Boolean {
         val isRoot = doCmdSync("id -u").trim() == "0"
         if (!isRoot && rootMode) tryExit()
         return isRoot
@@ -91,7 +91,7 @@ class KeepShell(private var rootMode: Boolean = true) {
     private val endTagBytes = "\necho '$endTag'\n".toByteArray(Charset.defaultCharset())
 
     //执行脚本
-    fun doCmdSync(cmd: String): String {
+    override fun doCmdSync(cmd: String): String {
         if (mLock.isLocked && enterLockTime > 0 && System.currentTimeMillis() - enterLockTime > LOCK_TIMEOUT) {
             tryExit()
             Log.e("doCmdSync-Lock", "Thread wait timeout ${System.currentTimeMillis()} - $enterLockTime > $LOCK_TIMEOUT")
@@ -146,7 +146,7 @@ class KeepShell(private var rootMode: Boolean = true) {
     }
 
     // 执行脚本，并对结果进行ResourceID翻译
-    fun doCmdSync(shellCommand: String, shellTranslation: ShellTranslation): String {
+    override fun doCmdSync(shellCommand: String, shellTranslation: ShellTranslation): String {
         val rows = doCmdSync(shellCommand).split("\n")
         return if (rows.isNotEmpty()) {
             shellTranslation.resolveRows(rows)
