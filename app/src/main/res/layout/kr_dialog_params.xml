@@ -21,6 +21,8 @@
 
         <TextView
             android:id="@+id/warn"
+            app:drawableStartCompat="@drawable/kr_param_warn"
+            android:drawablePadding="4dp"
             style="@style/dialogWarn" />
 
         <TextView
