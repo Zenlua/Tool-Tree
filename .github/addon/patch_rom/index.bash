@@ -152,9 +152,10 @@ home() {
   [[download]]
   title = "'$latest_update_text'"
   auto-finish = true
+  icon = "'$MPAT'/icon.png"
   support = "[ -f '$MPAT'/update ] && echo 1"
   url-sh = "cat '$MPAT'/update"
-  script = "installadd $state '${MPAT%/*}'"
+  script = "installadd $state '${MPAT%/*}'; rm -f '$MPAT'/update"
 
     [[download.rows]]
     sh = "cat '$MPAT'/changelog.txt"
