@@ -274,7 +274,6 @@ Info() {
   desc = "'$setting_text_2'"
   icon = "'$urlicon'/info.png"
   config-sh = "'$ETC'/tool-tree.bash Update"
-  process = true
   
   [[group]]
   [[page]]
@@ -342,8 +341,17 @@ Update() {
   title_xx="$download_text beta"
   show_update=1
   fi
-  if [ "$(glog gg_trans_ver 1)" == 1 ] && [ -f $TEMP/version_trans.txt ]; then
-  link_vers="version_trans.txt"
+  if [ "$(glog gg_trans_ver)" == 1 ]; then
+    link_vers="version_trans.txt"
+    shum_vers="$(checksum $TEMP/version.txt)"
+    if [[ "$shum_vers" != "$(glog shum_vers)" ]]; then
+      transai "$(cat $TEMP/version.txt)" > $TEMP/$link_vers
+      if [ -z "$(cat $TEMP/$link_vers)" ]; then
+      link_vers="version.txt"
+      else
+      slog shum_vers "$shum_vers"
+      fi
+    fi
   else
   link_vers="version.txt"
   fi
