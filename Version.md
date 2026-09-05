@@ -7,6 +7,7 @@
 + Change to the new UI
 + Code optimization
 + You should delete all data when updating the app
++ Fix error logs
 
 **Version: 1.5.9 (17-8-2026)**
 
