@@ -847,7 +847,7 @@ class PageConfigReader {
         }
         tomlGet(table, "icon-size")?.let { row.iconSize = it.trim().toIntOrNull() ?: row.iconSize }
         tomlGet(table, "script", "run")?.let { row.onClickScript = it }
-        tomlGet(table, "sh")?.let { row.dynamicTextSh = it }
+        tomlGet(table, "sh", "text-sh")?.let { row.dynamicTextSh = it }
         // Toggle nhỏ (checkbox / switch) lồng trong dòng text
         tomlGet(table, "toggle", "toggle-type")?.let {
             val t = it.trim().lowercase(getDefault())

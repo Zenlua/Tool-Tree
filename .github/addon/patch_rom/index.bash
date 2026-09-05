@@ -148,13 +148,17 @@ home() {
   echo '
   [[group]]
   title = "'$google_text'"
+  
   [[download]]
   title = "'$latest_update_text'"
-  desc-sh = "cat '$MPAT'/changelog.txt"
   auto-finish = true
   support = "[ -f '$MPAT'/update ] && echo 1"
   url-sh = "cat '$MPAT'/update"
   script = "installadd $state '${MPAT%/*}'"
+
+    [[download.rows]]
+    sh = "cat '$MPAT'/changelog.txt"
+    line = true
 
   [[group]]
   [[page]]

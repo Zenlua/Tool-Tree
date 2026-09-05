@@ -996,7 +996,7 @@ italic = true
 <table class="tbl">
 <tr><th>Field</th><th>Alias</th><th>Type</th><th>Default</th><th>Description</th></tr>
 <tr><td class="field-name">text</td><td>-</td><td class="field-type">String</td><td>""</td><td>Text content</td></tr>
-<tr><td class="field-name">sh</td><td>-</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script that produces text dynamically</td></tr>
+<tr><td class="field-name">sh</td><td>text-sh</td><td class="field-type">String</td><td>""</td><td><span class="badge shell">shell</span> Script that produces text dynamically</td></tr>
 <tr><td class="field-name">bold</td><td>b</td><td class="field-type">Bool</td><td>false</td><td>Bold</td></tr>
 <tr><td class="field-name">italic</td><td>i</td><td class="field-type">Bool</td><td>false</td><td>Italic</td></tr>
 <tr><td class="field-name">underline</td><td>u</td><td class="field-type">Bool</td><td>false</td><td>Underline</td></tr>
@@ -1089,7 +1089,7 @@ toggle = "switch"
 get = "settings get global heads_up_notifications_enabled"
 set = "settings put global heads_up_notifications_enabled $state"
 </code></pre>
-<div class="callout warn"><code>sh</code> of a row is NOT queued into the pending-state system - it is left to the UI layer and evaluated when the row is rendered. <code>get</code> with a shell value IS queued into <code>pendingRowCheckedStates</code> and batched at the end - like switch/picker.</div>
+<div class="callout warn"><code>sh</code> (alias <code>text-sh</code>) of a row is NOT queued into the pending-state system - it is left to the UI layer and evaluated when the row is rendered. <code>get</code> with a shell value IS queued into <code>pendingRowCheckedStates</code> and batched at the end - like switch/picker.</div>
 </section>
 
 <section id="editor">
@@ -1180,7 +1180,6 @@ title = "Download update"
 url = "https://example.com/update.zip"
 script = "unzip -o $state -d /sdcard/update &amp;&amp; echo Update installed"
 </code></pre>
-<div class="callout danger">The parser does NOT support <code>url-sh</code> (script generating URL dynamically). The URL must be a constant in the TOML file.</div>
 </section>
 
 <section id="resource">

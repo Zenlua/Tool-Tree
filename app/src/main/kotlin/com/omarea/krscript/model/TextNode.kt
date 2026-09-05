@@ -49,7 +49,7 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var activity: String = ""
         // 文本内容
         internal var text: String = ""
-        // 动态获取文本内容的脚本
+        // Script lấy text động (khai báo bằng "sh" hoặc "text-sh" trong TOML)
         internal var dynamicTextSh: String = ""
         // 点击后执行的脚本
         internal var onClickScript: String = ""
