@@ -354,7 +354,7 @@ Update() {
     fi
   fi
   if [ -z "$link_vers" ]; then
-  [ -f $TEMP/version_trans.txt ] && link_vers="version_trans.txt" || link_vers="version.txt"
+  link_vers="version.txt"
   fi
   } &>/dev/null
   echo '
