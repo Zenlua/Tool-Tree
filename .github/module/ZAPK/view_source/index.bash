@@ -8,6 +8,13 @@ echo '
   [[group]]
   title = "'$google_text'"
   
+  [[menu]]
+  [[menu.items]]
+  title = "'$view_source_text_16'"
+  reload = true
+  silent = true
+  script = "rm -fr $BIN/jadx"
+    
   [[download]]
   title = "'$view_source_text_14' jadx"
   desc = "'$view_source_text_15'"
