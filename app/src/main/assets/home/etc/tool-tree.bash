@@ -1154,145 +1154,6 @@ Utilities() {
   
   [[group]]
   [[action]]
-  title = "'$build_text' Super"
-  icon = "'$urlicon'/build_super.png"
-  script = """
-    slog typeheh "$type"
-    slog fromdjfh "$from"
-    slog super_sizedj "$super_size"
-    slog super_group "$super_group"
-    repack_super -m "$IMAGES" -g "$super_group" -s "$super_size" -f "$from" -t "$type" -i "$PTSD"
-    echo
-    checktime
-  """
-
-    [[action.params]]
-    name = "type"
-    label = "'$super_text_2'"
-    value-sh = "glog typeheh VAB"
-    options-sh = "echo -e \"A|a_only\nAB|ab\nVAB|virtual_ab\""
-
-    [[action.params]]
-    name = "from"
-    label = "'$super_text_3'"
-    value-sh = "glog fromdjfh raw"
-    options-sh = "echo -e \"raw\nsparse\""
-
-    [[action.params]]
-    name = "super_size"
-    label = "'$sizes_text'"
-    desc = "'$default_text': 8.5GB"
-    type = "number"
-    placeholder = "8.5"
-    value-sh = "glog super_sizedj 8.5"
-    required = true
-
-    [[action.params]]
-    name = "super_group"
-    label = "'$super_text_5'"
-    desc = "'$super_text_6'"
-    value-sh = "glog super_group qti_dynamic_partitions"
-    placeholder = "qti_dynamic_partitions"
-    required = true
-
-    [[action.params]]
-    name = "IMAGES"
-    desc = "'$super_text_7'"
-    options-sh = "findfile 3 $PTSD"
-    required = true
-    multiple = true
-    
-  [[action]]
-  title = "'$super_split_text_1'"
-  icon = "'$urlicon'/super_split.png"
-  script = """
-    slog cboxkshg "$cboxk"
-    slog slipdhhe "$slipdhhe"
-    slog khoi_dau_dem "$khoi_dau_dem"
-    echo "'$super_split_text_4' ${IMAGES}..."
-    echo
-    if [ $(checktype "$PTSD/$IMAGES") == "sparse" ]; then
-    simg2img "$PTSD/$IMAGES"
-    fi
-    size_super_mb=$(($(stat -c %s "$PTSD/$IMAGES") / 1048576))
-    chunk_size_mb=$((size_super_mb / slipdhhe))
-    echo "${size_super_mb}M ÷ $slipdhhe = ${chunk_size_mb}M"
-    echo
-    chunk_split -s .cache.%02d -B 4K -C "$chunk_size_mb"M "$PTSD/$IMAGES"
-    [ "$khoi_dau_dem" == 1 ] && sonum=1 || sonum=0
-    cd "$PTSD"
-    for vcd in ${IMAGES}.cache.*; do
-    if [ -f "$vcd" ]; then
-    echo "$vcd ➠ ${IMAGES}.$sonum"
-    mv "$vcd" "out/${IMAGES}.$sonum"
-    sonum=$((sonum + 1))
-    fi
-    done
-    echo
-    [ "$cboxk" == 0 ] || rm -fr "$PTSD/$IMAGES"
-    echo "'$save_text' $PTSD/out"
-    echo
-    checktime
-  """
-
-    [[action.params]]
-    name = "cboxk"
-    label = "'$deleted_file_text'"
-    type = "checkbox"
-    value-sh = "glog cboxkshg"
-
-    [[action.params]]
-    name = "slipdhhe"
-    label = "'$number_text'"
-    title = "'$split_number_desc'"
-    type = "number"
-    min = 2
-    max = 50
-    value-sh = "glog slipdhhe 9"
-    required = true
-
-    [[action.params]]
-    name = "khoi_dau_dem"
-    label = "'$split_number_label'"
-    type = "switch"
-    value-sh = "glog khoi_dau_dem 0"
-
-    [[action.params]]
-    name = "IMAGES"
-    label = "'$option_text'"
-    title = "'$super_split_text_3'"
-    options-sh = "findfile 7 $PTSD"
-    required = true
-  
-  [[action]]
-  title = "'$super_merge_text_1'"
-  icon = "'$urlicon'/super_merge.png"
-  script = """
-    slog silence $silence
-    echo "'$super_merge_text_2'..."
-    simg2img $MERGE "$PTSD/super.img" || killtree "Error" "$PTSD/super.img"
-    [ "$silence" == 0 ] || rm -fr $MERGE
-    echo
-    echo "'$save_text' $PTSD/super.img"
-    echo
-    checktime
-  """
-
-    [[action.params]]
-    name = "silence"
-    label = "'$deleted_file_text'"
-    type = "checkbox"
-    value-sh = "glog silence 1"
-
-    [[action.params]]
-    name = "MERGE"
-    desc = "'$super_merge_text_3'"
-    options-sh = "findfile 5 $PTSD | sort -n -t . -k 3"
-    required = true
-    multiple = true
-  
-  [[group]]
-  [[action]]
   title = "'$convert_text'"
   icon = "'$urlicon'/convert_file.png"
   script = """
@@ -1567,6 +1428,146 @@ Utilities() {
     depend-mode = "hide|show|show"
     depend-logic = "priority"
     depend-default = "hide"
+  
+  [[group]]
+  [[action]]
+  title = "'$build_text' Super"
+  icon = "'$urlicon'/build_super.png"
+  script = """
+    slog typeheh "$type"
+    slog fromdjfh "$from"
+    slog super_sizedj "$super_size"
+    slog super_group "$super_group"
+    repack_super -m "$IMAGES" -g "$super_group" -s "$super_size" -f "$from" -t "$type" -i "$PTSD"
+    echo
+    checktime
+  """
+
+    [[action.params]]
+    name = "type"
+    label = "'$super_text_2'"
+    value-sh = "glog typeheh VAB"
+    options-sh = "echo -e \"A|a_only\nAB|ab\nVAB|virtual_ab\""
+
+    [[action.params]]
+    name = "from"
+    label = "'$super_text_3'"
+    value-sh = "glog fromdjfh raw"
+    options-sh = "echo -e \"raw\nsparse\""
+
+    [[action.params]]
+    name = "super_size"
+    label = "'$sizes_text'"
+    desc = "'$default_text': 8.5GB"
+    type = "number"
+    placeholder = "8.5"
+    value-sh = "glog super_sizedj 8.5"
+    required = true
+
+    [[action.params]]
+    name = "super_group"
+    label = "'$super_text_5'"
+    desc = "'$super_text_6'"
+    value-sh = "glog super_group qti_dynamic_partitions"
+    placeholder = "qti_dynamic_partitions"
+    required = true
+
+    [[action.params]]
+    name = "IMAGES"
+    desc = "'$super_text_7'"
+    options-sh = "findfile 3 $PTSD"
+    required = true
+    multiple = true
+    
+  [[group]]
+  [[action]]
+  title = "'$super_split_text_1'"
+  icon = "'$urlicon'/super_split.png"
+  script = """
+    slog cboxkshg "$cboxk"
+    slog slipdhhe "$slipdhhe"
+    slog khoi_dau_dem "$khoi_dau_dem"
+    echo "'$super_split_text_4' ${IMAGES}..."
+    echo
+    if [ $(checktype "$PTSD/$IMAGES") == "sparse" ]; then
+    simg2img "$PTSD/$IMAGES"
+    fi
+    size_super_mb=$(($(stat -c %s "$PTSD/$IMAGES") / 1048576))
+    chunk_size_mb=$((size_super_mb / slipdhhe))
+    echo "${size_super_mb}M ÷ $slipdhhe = ${chunk_size_mb}M"
+    echo
+    chunk_split -s .cache.%02d -B 4K -C "$chunk_size_mb"M "$PTSD/$IMAGES"
+    [ "$khoi_dau_dem" == 1 ] && sonum=1 || sonum=0
+    cd "$PTSD"
+    for vcd in ${IMAGES}.cache.*; do
+    if [ -f "$vcd" ]; then
+    echo "$vcd ➠ ${IMAGES}.$sonum"
+    mv "$vcd" "out/${IMAGES}.$sonum"
+    sonum=$((sonum + 1))
+    fi
+    done
+    echo
+    [ "$cboxk" == 0 ] || rm -fr "$PTSD/$IMAGES"
+    echo "'$save_text' $PTSD/out"
+    echo
+    checktime
+  """
+
+    [[action.params]]
+    name = "cboxk"
+    label = "'$deleted_file_text'"
+    type = "checkbox"
+    value-sh = "glog cboxkshg"
+
+    [[action.params]]
+    name = "slipdhhe"
+    label = "'$number_text'"
+    title = "'$split_number_desc'"
+    type = "number"
+    min = 2
+    max = 50
+    value-sh = "glog slipdhhe 9"
+    required = true
+
+    [[action.params]]
+    name = "khoi_dau_dem"
+    label = "'$split_number_label'"
+    type = "switch"
+    value-sh = "glog khoi_dau_dem 0"
+
+    [[action.params]]
+    name = "IMAGES"
+    label = "'$option_text'"
+    title = "'$super_split_text_3'"
+    options-sh = "findfile 7 $PTSD"
+    required = true
+  
+  [[action]]
+  title = "'$super_merge_text_1'"
+  icon = "'$urlicon'/super_merge.png"
+  script = """
+    slog silence $silence
+    echo "'$super_merge_text_2'..."
+    simg2img $MERGE "$PTSD/super.img" || killtree "Error" "$PTSD/super.img"
+    [ "$silence" == 0 ] || rm -fr $MERGE
+    echo
+    echo "'$save_text' $PTSD/super.img"
+    echo
+    checktime
+  """
+
+    [[action.params]]
+    name = "silence"
+    label = "'$deleted_file_text'"
+    type = "checkbox"
+    value-sh = "glog silence 1"
+
+    [[action.params]]
+    name = "MERGE"
+    desc = "'$super_merge_text_3'"
+    options-sh = "findfile 5 $PTSD | sort -n -t . -k 3"
+    required = true
+    multiple = true
   
   [[group]]
   [[page]]
