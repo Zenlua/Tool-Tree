@@ -8,11 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.Settings
 import android.util.TypedValue
 import android.animation.ObjectAnimator
 import android.view.animation.LinearInterpolator
@@ -46,7 +43,6 @@ class SplashActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySplashBinding
     private val REQUEST_CODE_PERMISSIONS = 1001
-    private val REQUEST_CODE_MANAGE_ALL_FILES = 1002
 
     private var hasRoot = false
     private var started = false
@@ -110,42 +106,37 @@ class SplashActivity : AppCompatActivity() {
         ).setCancelable(false)
     }
 
+    // App target SDK 28 (thấp) - theo tài liệu Android, yêu cầu dùng READ_MEDIA_IMAGES/VIDEO chỉ
+    // áp dụng cho app TARGET API 33+ (targetSdkVersion), không phải dựa vào Android của máy. Vì
+    // vậy luôn xin READ/WRITE_EXTERNAL_STORAGE kiểu cũ, hoạt động bình thường trên mọi bản Android
+    // hiện tại kể cả 13+ (không cần nhánh riêng cho Tiramisu nữa).
     private fun hasRequiredPermissions(): Boolean {
-        val permissions = mutableListOf<String>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
-            permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
-        } else {
-            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        }
+        val permissions = listOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
         return permissions.all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
     }
 
     private fun requestRequiredPermissions() {
-        val permissions = mutableListOf<String>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
-            permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
-        } else {
-            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        }
-        ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_CODE_PERMISSIONS)
+        val permissions = arrayOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE_PERMISSIONS)
     }
 
+    // Nếu đã có quyền đọc/ghi bộ nhớ kiểu cũ (WRITE_EXTERNAL_STORAGE) và app đang target SDK
+    // <=28 thì Android KHÔNG ép "scoped storage" (cờ FORCE_ENABLE_SCOPED_STORAGE mặc định tắt
+    // cho các app này, kể cả chạy trên Android 11+) - quyền cũ đó vẫn cho đọc/ghi toàn bộ bộ nhớ
+    // như bình thường. Không xin thêm "All Files Access" (MANAGE_EXTERNAL_STORAGE) nữa - đã bỏ
+    // hẳn theo yêu cầu, không còn màn hình/permission đó trong app.
     private fun checkPermissionsNextStep() {
         // Khởi tạo kênh thông báo đúng 1 lần duy nhất ở lần cài đặt đầu tiên
         startWakeLockServiceOnce()
-
-        // Nếu là Android 11+ và chưa có quyền "All Files Access"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            requestManageAllFilesPermission()
-        } else {
-            checkRootAndStart()
-        }
+        checkRootAndStart()
     }
 
     /**
@@ -180,19 +171,6 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    @Suppress("DEPRECATION")
-    private fun requestManageAllFilesPermission() {
-        try {
-            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                data = Uri.parse("package:$packageName")
-            }
-            startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES)
-        } catch (e: Exception) {
-            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-            startActivityForResult(intent, REQUEST_CODE_MANAGE_ALL_FILES)
-        }
-    }
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
@@ -200,13 +178,6 @@ class SplashActivity : AppCompatActivity() {
             } else finish()
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_MANAGE_ALL_FILES) {
-            checkRootAndStart()
-        }
     }
 
     // =================== LOGIC ROOT & KHỞI CHẠY ===================
