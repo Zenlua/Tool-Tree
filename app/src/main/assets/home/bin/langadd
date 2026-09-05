@@ -6,7 +6,8 @@ fileprop="$1/Add-on.bash"
 # Thoát
 if [ -d "$1" ] && [ -f "$fileprop" ]; then
   source "$fileprop" 2>/dev/null
-  google_text='';
+  google_text=
+  MPAT="$1"
   else
   exit 1
 fi

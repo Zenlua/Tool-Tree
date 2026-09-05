@@ -5,21 +5,22 @@
 home() {
 menuadd "$MPAT"
 echo '
-[[group]]
+  [[group]]
   title = "'$google_text'"
   
-  [[menu]]
-  [[menu.items]]
-  type = "default"
-  title = "@string/update_text"
-  script = """
-  MPAT='$MPAT' '$MPAT'/index.bash jadx_install
-  """
-  
+  [[download]]
+  title = "'$view_source_text_14' jadx"
+  desc = "'$view_source_text_15'"
+  support = "[ -f $BIN/jadx ] || echo 1"
+  url-sh = "MPAT='$MPAT' '$MPAT'/index.bash jadx_link"
+  script = "MPAT='$MPAT' '$MPAT'/index.bash jadx_install $state"
+
+  [[group]]
   [[action]]
   title = "Jadx"
   desc = "'$view_source_text_11'"
   warn = "'$view_source_text_10'"
+  support = "[ -f $BIN/jadx ] && echo 1"
   script = """
   [ "$no_res" == 1 ] && no_res_v="-r"
   [ "$no_dex" == 1 ] && no_dex_v="-s"
@@ -51,35 +52,19 @@ echo '
   '
 }
 
-jadx_install(){
-echo "$view_source_text_1"
-echo
-websums="$(xem https://api.github.com/repos/skylot/jadx/releases/latest)"
-sumon="$(echo "$websums" | jq -r '.assets[0].digest // empty' | cut -d: -f2)"
-url_dowload="$(echo "$websums" | jq -r ".assets[0].browser_download_url // empty")"
-if [[ "$sumon" ]] && [[ "$sumon" != "$(glog sum_jadx_online)" ]]; then
-taive -# "$url_dowload" "$TMP/Jadx.zip" 2>&1
-  if [[ "$sumon" == "$(checksum "$TMP/Jadx.zip")" ]]; then
-  unzip -oj "$TMP/Jadx.zip" bin/jadx -d "$BIN" || killtree "Error unpack"
-  unzip -oj "$TMP/Jadx.zip" lib/*.jar -d "$LIB" || killtree "Error unpack"
-  sed -i "s|#!/usr/bin/env sh|#!/data/data/com.tool.tree/files/home/bin/bash|" "$BIN/jadx"
-  chmod 755 "$BIN/jadx"
-  slog sum_jadx_online "$sumon"
-  rm -rf "$TMP/Jadx.zip"
-  echo
-  echo "$view_source_text_2"
-  else
-  echo "$view_source_text_3"
-  fi
-else
-  echo "$view_source_text_4"
-fi
+jadx_link(){
+xem "https://api.github.com/repos/skylot/jadx/releases/latest" | jq -r ".assets[0].browser_download_url // empty"
 }
 
-if [ ! -f "$BIN/jadx" ]; then
-showtoast "$view_source_text_1"
-jadx_install &>/dev/null
+jadx_install(){
+if [ -f "$1" ]; then
+unzip -oj "$1" bin/jadx -d "$BIN" || killtree "Error unpack jadx"
+unzip -oj "$1" lib/*.jar -d "$LIB" || killtree "Error unpack jar"
+sed -i "s|#!/usr/bin/env sh|#!/data/data/com.tool.tree/files/home/bin/bash|" "$BIN/jadx"
+chmod 755 "$BIN/jadx"
+rm -rf "$1"
 fi
+}
 
 # Ngôn ngữ & Google dịch
 source langadd "$MPAT"
