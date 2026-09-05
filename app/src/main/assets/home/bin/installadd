@@ -1,38 +1,38 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
-# Kakathic
 
+# Kakathic
 source language 2>/dev/null
 
 if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
-echo "installadd [file.add|http://file.add] folder_ouput"
-exit
+  echo "installadd [file.add|http://file.add] folder_ouput" >&2
+  exit 1
 fi
 
 echo "${more_text_4} $1"
 echo
 
 if [ -f "$1" ]; then
-loadmd="$(7z x "$1" Add-on.bash -so 2>/dev/null)"
-    if [ -z "$loadmd" ]; then
-    echo "Add-on incompatibility error !" >&2
-    exit 1
-    fi
+  loadmd="$(7z x "$1" Add-on.bash -so 2>/dev/null)"
+  if [ -z "$loadmd" ]; then
+  echo "Add-on incompatibility error !" >&2
+  exit 1
+  fi
 else
-file_random="Add-on_$RANDOM.add"
-taive -# "$1" "$TMP/$file_random" 2>&1
-loadmd="$(7z x "$TMP/$file_random" Add-on.bash -so 2>/dev/null)"
-    if [ -z "$loadmd" ]; then
-    echo "Download add-on error !" >&2
-    exit 1
-    fi
+  file_random="Add-on_$RANDOM.add"
+  taive -# "$1" "$TMP/$file_random" 2>&1
+  loadmd="$(7z x "$TMP/$file_random" Add-on.bash -so 2>/dev/null)"
+  if [ -z "$loadmd" ]; then
+  echo "Download add-on error !" >&2
+  exit 1
+  fi
 fi
 
-# Load string
+# Load string add-on
 eval "$loadmd"
 
 if [ -z "$id" ]; then
-echo "ID not found in addon.prop" >&2
-exit 1
+  echo "ID not found in addon.prop" >&2
+  exit 1
 fi
 
 echo
@@ -51,19 +51,20 @@ echo "$addon_text_3"
 echo
 
 if [ -f "$1" ]; then
-    7z x "$1" -o"$2/$id" -y &>$TMP/unpack_add-on.log
-    slog "sumcek_$id" "$(checksum "$1")"
+  7z x "$1" -o"$2/$id" -y &>$TMP/unpack_add-on.log
+  slog "sumcek_$id" "$(checksum "$1")"
 else
-    7z x "$TMP/$file_random" -o"$2/$id" -y &>$TMP/unpack_add-on.log
-    slog "sumcek_$id" "$(checksum "$TMP/$file_random")"
-    rm -f "$TMP/$file_random"
+  7z x "$TMP/$file_random" -o"$2/$id" -y &>$TMP/unpack_add-on.log
+  slog "sumcek_$id" "$(checksum "$TMP/$file_random")"
+  rm -f "$TMP/$file_random"
 fi
 
-chmod -R 755 "$2/$id"
+chmod -R 755 "$2/$id" 2>/dev/null
+rm -f "$2/$id/update" 2>/dev/null
 
 if [ -f "$2/$id/install.bash" ]; then
-    MPAT="$2/$id" "$2/$id/install.bash"
-    rm -fr "$2/$id/install.bash"
+  MPAT="$2/$id" "$2/$id/install.bash"
+  rm -fr "$2/$id/install.bash"
 fi
 
 echo "$flash_text_12"
