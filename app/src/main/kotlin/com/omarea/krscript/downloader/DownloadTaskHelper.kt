@@ -431,7 +431,8 @@ object DownloadTaskHelper {
             }
             override fun onExit(msg: Any?) {
                 val success = errorRows.isEmpty()
-                completeSession(context, session, success)
+                val errorText = if (success) null else synchronized(errorRows) { errorRows.joinToString("\n") }
+                completeSession(context, session, success, errorText)
             }
             override fun onStart(forceStop: Runnable?) {}
             override fun onStart(msg: Any?) {}
@@ -441,7 +442,11 @@ object DownloadTaskHelper {
         ShellExecutor().execute(context, item, script, null, hashMapOf("state" to session.destFile.absolutePath), handler)
     }
 
-    private fun completeSession(context: Context, session: Session, success: Boolean) {
+    // success=false ở đây LUÔN là lỗi SCRIPT (chạy sau khi tải xong), khác với lỗi TẢI (network,
+    // xử lý riêng trong runDownload() -> updateNotificationError()). Theo yêu cầu: lỗi script chỉ
+    // hiện ở UI item (desc) trong trang, KHÔNG đẩy ra thông báo hệ thống - notification chỉ dành
+    // cho lỗi tải.
+    private fun completeSession(context: Context, session: Session, success: Boolean, errorText: String? = null) {
         if (success) {
             session.status = Status.COMPLETED
             completedFiles[session.url] = session.destFile
@@ -459,14 +464,15 @@ object DownloadTaskHelper {
             }
         } else {
             session.status = Status.ERROR
-            session.error = "Script failed"
+            session.error = errorText?.takeIf { it.isNotBlank() } ?: "Script failed"
             postMain {
                 session.viewRef?.let { v ->
                     v.clearCancelAction()
-                    v.showStatusLabel(v.context.getString(R.string.kr_download_execute_fail), spin = false)
+                    v.showStatusLabel(v.context.getString(R.string.kr_download_execute_fail) + ": " + session.error, spin = false)
                 }
             }
-            updateNotificationError(session)
+            // Không gọi updateNotificationError() ở đây - lỗi script chỉ hiện trong UI item.
+            dismissNotification(session)
         }
     }
 
@@ -495,6 +501,12 @@ object DownloadTaskHelper {
         return bitmap
     }
 
+    // DownloadService giờ chỉ là Service thường (giống NotiService), gọi notify() trực tiếp,
+    // không còn startForeground - nên phải dùng startService(), KHÔNG được dùng
+    // startForegroundService() (nếu dùng startForegroundService() mà Service không gọi
+    // startForeground() trong onStartCommand() thì Android sẽ crash app với
+    // ForegroundServiceDidNotStartInTimeException). Đổi lại: tải file khi app bị đưa xuống nền
+    // có thể bị hệ thống dừng giữa chừng (không còn được bảo vệ như foreground service).
     private fun startNotification(session: Session) {
         val ctx = session.appContext
         val intent = Intent(ctx, DownloadService::class.java).apply {
@@ -505,7 +517,7 @@ object DownloadTaskHelper {
             putExtra("notificationId", notificationId(session))
             putExtra("largeIcon", resolveLargeIcon(ctx, session.item))
         }
-        ctx.startForegroundService(intent)
+        ctx.startService(intent)
     }
 
     private fun updateNotification(session: Session, textOverride: String? = null) {
@@ -523,7 +535,7 @@ object DownloadTaskHelper {
                 putExtra("speedBps", session.speedBytesPerSecond)
             }
         }
-        ctx.startForegroundService(intent)
+        ctx.startService(intent)
     }
 
     private fun updateNotificationError(session: Session) {
@@ -534,7 +546,7 @@ object DownloadTaskHelper {
             putExtra("notificationId", notificationId(session))
             putExtra("isError", true)
         }
-        ctx.startForegroundService(intent)
+        ctx.startService(intent)
     }
 
     private fun dismissNotification(session: Session) {
@@ -543,7 +555,7 @@ object DownloadTaskHelper {
             putExtra("stop", true)
             putExtra("notificationId", notificationId(session))
         }
-        ctx.startForegroundService(intent)
+        ctx.startService(intent)
     }
 
     private val networkCallbacks = ConcurrentHashMap<Context, ConnectivityManager.NetworkCallback>()
