@@ -1569,31 +1569,13 @@ Utilities() {
 }
 
 Apex() {
-    if [ "$(glog hide_show_apex)" == 1 ]; then
-    echo "[[group]]"
-    show_apkset
-    else
-    desc_apkd="$path_text: ${PTAD/$SDCARD_PATH/\/sdcard}"
-    desc_apkd1="$projects_text: $PTAH"
-    fi
+
+  desc_apkd="$path_text: ${PTAD/$SDCARD_PATH/\/sdcard}"
+  desc_apkd1="$projects_text: $PTAH"
+  show_apkset
 
   echo '
   [[group]]
-    [[menu]]
-    handler = """
-    if [ "$menu_id" == "v1" ]; then
-        [ "$(glog hide_show_apex)" == 1 ] && slog hide_show_apex 0 || slog hide_show_apex 1
-    fi
-  """
-  
-    [[menu.items]]
-    key = "v1"
-    type = "checkbox"
-    title = "'$folder_text' APK"
-    get = "glog hide_show_apex"
-    silent = true
-    reload = true
-    
   [[action]]
   title = "'$decompile_text'"
   desc = "'$desc_apkd'"
@@ -1662,23 +1644,17 @@ Apex() {
 }
 
 Utiliapk() {
-    [ -d $PTAD/out ] && mkdir -p $PTAD/out &>/dev/null &
 
-    if [ "$(glog hide_show2 1)" == 1 ]; then
-    echo "[[group]]"
-    show_apkset
-    else
-    desc_apks="$path_text: ${PTAD/$SDCARD_PATH/\/sdcard}"
-    desc_apks1="$projects_text: $PTAH"
-    fi
-
+  mkdir -p $PTAD/out &>/dev/null &
+  desc_apks="$path_text: ${PTAD/$SDCARD_PATH/\/sdcard}"
+  desc_apks1="$projects_text: $PTAH"
+  show_apkset
+  
   echo '
   [[group]]
   [[menu]]
   handler = """
-    if [ "$menu_id" == "v1" ]; then
-    [ "$(glog hide_show2)" == 1 ] && slog hide_show2 0 || slog hide_show2 1
-    elif [ "$menu_id" == "b2" ]; then
+    if [ "$menu_id" == "b2" ]; then
     echo "Looking for system apk..."
     for mm in $(pm list package -s | cut -f2 -d:); do
     cggdccg="$(pm path $mm | cut -f2 -d:)"
@@ -1703,14 +1679,6 @@ Utiliapk() {
     echo "am:[start -a android.intent.action.SEND -t */* -d content://'$PACKAGE_NAME'.provider/root$APK/$PTAH]"
     fi
   """
-  
-    [[menu.items]]
-    key = "v1"
-    type = "checkbox"
-    title = "'$input_folder_text'"
-    get = "glog hide_show2"
-    silent = true
-    reload = true
 
     [[menu.items]]
     key = "b2"
