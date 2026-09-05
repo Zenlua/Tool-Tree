@@ -217,6 +217,10 @@ a:hover{text-decoration:underline;}
 .badge.shell{background:rgba(245,158,11,.15);color:var(--orange);}
 .badge.alias{background:rgba(139,92,246,.15);color:var(--purple);}
 
+mark.search-hit{background:var(--orange);color:#1a1a1a;padding:0 1px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.05);}
+mark.search-hit.current{background:var(--accent);color:#fff;}
+.search-no-result{padding:24px;text-align:center;color:var(--fg-muted);font-size:14px;}
+
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 
 .kv-list{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;font-size:13px;}
@@ -340,7 +344,7 @@ footer {
   </button>
   <div>TOML Guide</div>
   <div class="spacer"></div>
-  <input type="text" class="search" id="search" placeholder="Search section / field..." />
+  <input type="text" class="search" id="search" placeholder="Search section / field..." autocomplete="off" />
 </div>
 <div id="sidebarOverlay" class="sidebar-overlay"></div>
 <div class="layout">
@@ -372,10 +376,11 @@ footer {
   <a href="#pending-states">20. Pending states</a>
   <a href="#process">21. process = true</a>
   <a href="#lifecycle">22. Page lifecycle</a>
+  <a href="#control-sequences">23. Script output control sequences</a>
 
   <h3>Practice</h3>
-  <a href="#example">23. Full example</a>
-  <a href="#tips">24. Tips &amp; pitfalls</a>
+  <a href="#example">24. Full example</a>
+  <a href="#tips">25. Tips &amp; pitfalls</a>
 </aside>
 <main class="main">
 
@@ -457,6 +462,15 @@ title = "Battery"
 
 <h3>2.6. String resource references</h3>
 <p>Any text field (<code>title</code>, <code>desc</code>, <code>summary</code> ...) may include a reference to the app's string resources via <code>@string/name</code> or <code>@string:name</code>. The parser resolves these automatically. If the resource is not found, the original string is kept.</p>
+<pre><code>[[group]]
+title = "@string/group_battery_title"
+
+[[switch]]
+title = "@string/switch_fast_charge_title"
+desc = "@string:switch_fast_charge_desc"
+get = "getprop sys.fastcharge"
+set = "setprop sys.fastcharge $state"</code></pre>
+<div class="callout tip">Both <code>@string/name</code> and <code>@string:name</code> point to the same resource lookup - use whichever separator you prefer, they are interchangeable.</div>
 </section>
 
 <section id="overview">
@@ -577,6 +591,26 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
+<pre><code>[[group]]
+title = "CPU"
+
+[[action]]
+title = "Optimize CPU"
+desc = "Set governor to performance"
+script = "echo performance &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+
+[[picker]]
+title = "Governor"
+get = "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+set = "echo $state &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+
+[[group]]
+title = "Memory"
+
+[[action]]
+title = "Clear cache"
+script = "sync; echo 3 &gt; /proc/sys/vm/drop_caches"
+</code></pre>
 
 <h3>5.3. Grouping rules (no nesting)</h3>
 <p>Since dot-notation was removed, groups can no longer be nested inside each other. Every <code>[[group]]</code> is a top-level sibling: declaring a new <code>[[group]]</code> closes the previous one, and all following entries belong to the new group. Entries declared before the first <code>[[group]]</code> are rendered directly on the page without a group header.</p>
@@ -615,6 +649,16 @@ All text fields accept <code>@string/...</code> references.</p>
   <div class="d-item"><div class="d-icon">&#9881;</div><div class="d-content"><div class="d-title2">Advanced settings</div><div class="d-desc">Open external config file</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
 </div>
 </div></div>
+<pre><code>[[page]]
+title = "App list"
+desc = "Manage installed apps"
+config = "pages/app_list.toml"
+
+[[page]]
+title = "Advanced settings"
+desc = "Open external config file"
+config = "/sdcard/Tool-Tree/advanced.toml"
+</code></pre>
 <div class="callout tip"><code>config-sh</code> returns <strong>one of two things</strong>: either a .toml file path (output ending with <code>.toml</code>), or inline TOML content. Inline TOML is recognized when the 1st or 2nd non-empty line of the output starts with <code>[[group]]</code> or the reserved marker <code>[[toml]]</code> - see <code>PageConfigSh.looksLikeInlineToml()</code>. Anything else shows an error toast.</div>
 </section>
 
@@ -654,6 +698,21 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
+<pre><code>[[action]]
+title = "Optimize CPU"
+desc = "Set governor to performance"
+menu = true
+key = "optimize_cpu"
+script = "echo performance &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+
+[[action]]
+title = "Clear cache"
+desc = "Clear system cache"
+confirm = true
+warn = "This will clear all app caches"
+script = "sync; echo 3 &gt; /proc/sys/vm/drop_caches"
+auto-off = true
+</code></pre>
 <div class="callout tip"><code>menu = true</code> and <code>show = true</code> are <strong>independent</strong>: an action can be both on the toolbar (menu=true) and auto-open its dialog (show=true). When an action moves to the toolbar (menu=true), an unset key falls back to <code>title</code> to use as the Menu itemId.</div>
 </section>
 
@@ -725,6 +784,49 @@ All text fields accept <code>@string/...</code> references.</p>
   <div class="d-item"><div class="d-content"><div class="d-title2">Config file</div></div><div class="d-trail"><span class="d-chevron">&rsaquo;</span></div></div>
 </div>
 </div></div>
+<pre><code>[[action]]
+title = "Set CPU max freq"
+script = """
+for cpu in /sys/devices/system/cpu/cpu*/cpufreq; do
+  [ "$all_cpus" = "0" ] &amp;&amp; [ "$cpu" != "/sys/devices/system/cpu/cpu0/cpufreq" ] &amp;&amp; continue
+  echo $freq &gt; "$cpu/scaling_max_freq"
+  echo $gov &gt; "$cpu/scaling_governor"
+done
+"""
+
+[[action.params]]
+name = "freq"
+title = "Frequency (kHz)"
+desc = "Enter max frequency"
+type = "text"
+value = "2400000"
+
+[[action.params]]
+name = "gov"
+title = "Governor"
+type = "spinner"
+value = "performance"
+
+[[action.params.options]]
+title = "Performance"
+value = "performance"
+
+[[action.params.options]]
+title = "Powersave"
+value = "powersave"
+
+[[action.params]]
+name = "all_cpus"
+title = "Apply to all CPUs"
+type = "switch"
+value = "1"
+
+[[action.params]]
+name = "cfg"
+title = "Config file"
+type = "file"
+suffix = "conf"
+</code></pre>
 
 <h3>8.4. Dependencies (depend-*)</h3>
 <p>A param can be hidden/shown (or switched to readonly) based on the value of another param. This is a large feature - see <a href="#depend">section 17</a> for details.</p>
@@ -763,6 +865,20 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
+<pre><code>[[group]]
+title = "Display"
+
+[[switch]]
+title = "Dark mode"
+desc = "Enable dark UI"
+get = "cmd uimode night get | grep -q yes &amp;&amp; echo 1"
+set = "cmd uimode night $([ \"$state\" = \"1\" ] &amp;&amp; echo yes || echo no)"
+
+[[switch]]
+title = "Auto brightness"
+get = "settings get system screen_brightness_mode"
+set = "settings put system screen_brightness_mode $state"
+</code></pre>
 <div class="callout tip">The parser does NOT run <code>get</code> immediately when parsing each switch. Instead, all <code>get</code> scripts of switches/pickers are <strong>queued into pendingSwitchStates</strong> and run <strong>exactly once</strong> at the end of <code>readConfigToml()</code> via <code>resolvePendingStates()</code> - reducing N shell round-trips to 1 (see <a href="#pending-states">section 20</a>).</div>
 </section>
 
@@ -800,6 +916,25 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
+<pre><code>[[picker]]
+title = "Governor"
+get = "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+set = "echo $state &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+
+[[picker.options]]
+title = "Performance"
+value = "performance"
+
+[[picker.options]]
+title = "Powersave"
+value = "powersave"
+
+[[picker]]
+title = "Max freq"
+get = "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"
+set = "echo $state &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"
+option-sh = "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | tr ' ' '\\n'"
+</code></pre>
 <div class="callout warn">When a picker has both static <code>[[picker.options]]</code> and dynamic <code>option-sh</code>, the final list is the <strong>union of both</strong> (static options first, dynamic options appended after running the shell).</div>
 </section>
 
@@ -829,6 +964,27 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
+<pre><code>[[text]]
+title = "Notice"
+
+[[text.rows]]
+text = "CAUTION"
+bold = true
+
+[[text.rows]]
+text = "The actions below may affect the system."
+
+[[text.rows]]
+line = true
+
+[[text.rows]]
+text = "  $ run backup --full"
+monospace = true
+
+[[text.rows]]
+text = "See more at: example.com/docs"
+italic = true
+</code></pre>
 </section>
 
 <section id="text-rows">
@@ -896,6 +1052,43 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
+<pre><code>[[text]]
+title = "Device info"
+
+[[text.rows]]
+text = "Device info"
+bold = true
+
+[[text.rows]]
+line = true
+
+[[text.rows]]
+text = "Model: Pixel 7"
+
+[[text.rows]]
+text = "Android: 14"
+
+[[text.rows]]
+text = "ro.build.fingerprint=google/raven/..."
+monospace = true
+
+[[text.rows]]
+line = true
+
+[[text.rows]]
+text = "Updated 2024-08-26"
+align = "center"
+italic = true
+
+[[text.rows]]
+line = true
+
+[[text.rows]]
+text = "Show notifications"
+toggle = "switch"
+get = "settings get global heads_up_notifications_enabled"
+set = "settings put global heads_up_notifications_enabled $state"
+</code></pre>
 <div class="callout warn"><code>sh</code> of a row is NOT queued into the pending-state system - it is left to the UI layer and evaluated when the row is rendered. <code>get</code> with a shell value IS queued into <code>pendingRowCheckedStates</code> and batched at the end - like switch/picker.</div>
 </section>
 
@@ -934,18 +1127,31 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
+<pre><code>[[editor]]
+title = "Edit build.prop"
+desc = "/system/build.prop"
+file = "/system/build.prop"
+readonly = "test -w /system/build.prop || echo 1"
+
+[[editor]]
+title = "Create new script"
+desc = "/sdcard/myscript.sh"
+file = "/sdcard/myscript.sh"
+value = "#!/system/bin/sh\necho hello"
+</code></pre>
 <div class="callout warn"><code>value</code> is only written when the file <strong>does not exist</strong>. If the file already exists, <code>value</code>/<code>value-sh</code> are ignored - the existing file content is preserved.</div>
 </section>
 
 <section id="download">
 <h2>14. [[download]] - Download a file via HTTP</h2>
-<p><code>[[download]]</code> is a new node type that displays download progress <strong>directly in the item</strong> (no separate dialog). When download completes, it runs the <code>script</code> with the env var <code>$state</code> = path of the downloaded file (cached, random name).</p>
+<p><code>[[download]]</code> is a new node type that displays download progress <strong>directly in the item</strong> (no separate dialog). When download completes, it runs the <code>script</code> with the env var <code>$state</code> = path of the downloaded file (cached, random name). The URL can be static (<code>url</code>) and/or dynamic (<code>url-sh</code>).</p>
 
 <h3>14.1. Download fields</h3>
 <div class="tbl-container">
 <table class="tbl">
 <tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
-<tr><td class="field-name">url</td><td>-</td><td class="field-type">String</td><td><span class="badge req">required</span> URL (http/https) to download. Only static URLs are supported - no <code>url-sh</code></td></tr>
+<tr><td class="field-name">url</td><td>-</td><td class="field-type">String</td><td>Static URL (http/https) to download. Required if <code>url-sh</code> is not set</td></tr>
+<tr><td class="field-name">url-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that returns the URL to download. Runs <strong>once</strong>, the first time the item is tapped - the result is cached into <code>url</code> for the rest of that page visit (pause/resume/retry reuse the cached value, the script is not re-run). Required if <code>url</code> is not set; if both are set, the result of <code>url-sh</code> overwrites <code>url</code> on that first tap</td></tr>
 <tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Script run after download. Receives <code>$state</code> = path of downloaded file</td></tr>
 <tr><td class="field-name">lock</td><td>lock-state</td><td class="field-type">String</td><td>Static lock: <code>true</code>/<code>1</code> or the <code>"1|message"</code> format</td></tr>
 <tr><td class="field-name">lock-sh</td><td>-</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script to check lock dynamically (returns <code>"1"</code> = locked)</td></tr>
@@ -969,6 +1175,11 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
+<pre><code>[[download]]
+title = "Download update"
+url = "https://example.com/update.zip"
+script = "unzip -o $state -d /sdcard/update &amp;&amp; echo Update installed"
+</code></pre>
 <div class="callout danger">The parser does NOT support <code>url-sh</code> (script generating URL dynamically). The URL must be a constant in the TOML file.</div>
 </section>
 
@@ -987,6 +1198,18 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">resources</td><td>-</td><td class="field-type">Array</td><td>List of more complex resources - each entry is a table with <code>file</code> and/or <code>dir</code></td></tr>
 </table>
 </div>
+<pre><code>[[resource]]
+resource-file = "busybox"
+
+[[resource]]
+resource-dir = "scripts"
+
+# Or inline on the node that needs it - no separate [[resource]] entry required:
+[[action]]
+title = "Run bundled script"
+resource-file = "run.sh"
+script = "sh /data/data/com.tool.tree/files/run.sh"
+</code></pre>
 <div class="callout tip">Extraction is de-duplicated in memory (per app process): each asset name is written only once, repeated declarations reuse the first extracted path. Note that for a node carrying <code>resource-*</code> fields, <code>support = false</code> skips the whole node - its resources are not extracted either.</div>
 </section>
 
@@ -1029,6 +1252,18 @@ All text fields accept <code>@string/...</code> references.</p>
 <h3>16.3. Demo</h3>
 <div class="demo-block"><div class="demo-label">Demo (Android UI)</div><div class="demo-frame">
 <div class="d-toolbar"><span class="d-back">&lt;</span><span class="d-title">CPU</span><span class="d-menu">&#8942;</span></div>
+<div class="d-body">
+  <div class="d-item">
+    <div class="d-icon">&#9889;</div>
+    <div class="d-content"><div class="d-title2">Performance mode</div><div class="d-desc">Enable performance governor</div></div>
+    <div class="d-switch"></div>
+  </div>
+  <div class="d-item">
+    <div class="d-icon">&#128293;</div>
+    <div class="d-content"><div class="d-title2">Clear cache</div><div class="d-desc">Free up temporary files</div></div>
+    <div class="d-trail"><span class="d-chevron">&rsaquo;</span></div>
+  </div>
+</div>
 <div class="d-menu-popup">
   <div class="d-mi">Refresh</div>
   <div class="d-mi"><span class="d-check">&#10003;</span> Show module</div>
@@ -1039,6 +1274,53 @@ All text fields accept <code>@string/...</code> references.</p>
 <div class="d-fab">+</div>
 </div></div>
 <div class="callout tip"><code>[[menu]]</code>/<code>[[fab]]</code> do NOT appear in the page's content list - they only show on the toolbar or as a floating button. The parser merges all items from <code>[[menu]]</code>/<code>[[fab]]</code> blocks (declared anywhere - top-level or inside a group) into <strong>one shared list</strong> for the whole page.</div>
+<pre><code># Regular page content
+[[switch]]
+title = "Performance mode"
+desc = "Enable performance governor"
+get = "getprop sys.perf.mode"
+set = "setprop sys.perf.mode $state"
+
+[[action]]
+title = "Clear cache"
+script = "sync; echo 3 &gt; /proc/sys/vm/drop_caches"
+
+# Toolbar overflow menu (3-dot icon) - not part of the page content list above
+[[menu]]
+handler = "echo Menu: $key"
+
+[[menu.items]]
+title = "Refresh"
+type = "refresh"
+
+[[menu.items]]
+title = "Show module"
+type = "checkbox"
+get = "test -f /data/adb/modules/my_module/disable || echo 1"
+script = "touch /data/adb/modules/my_module/disable"
+
+[[menu.items]]
+title = "Select governor"
+type = "spinner"
+options = ["performance|Performance", "powersave|Power saving", "schedutil|Balanced"]
+script = "echo $state &gt; /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+
+[[menu.items]]
+title = "View log"
+config = "logcat.toml"
+
+[[menu.items]]
+title = "Open in browser"
+link = "https://example.com"
+
+# Floating action button - also not part of the page content list
+[[fab]]
+[[fab.items]]
+title = "Add rule"
+type = "file"
+suffix = "toml"
+script = "sh $state"
+</code></pre>
 </section>
 
 <section id="depend">
@@ -1083,6 +1365,44 @@ All text fields accept <code>@string/...</code> references.</p>
   </div>
 </div>
 </div></div>
+<pre><code>[[action]]
+title = "Backup"
+script = """
+if [ "$mode" = "file" ]; then
+  cp "$src_file" /sdcard/backup/
+else
+  cp -r "$dst_folder" /sdcard/backup/
+fi
+"""
+
+[[action.params]]
+name = "mode"
+title = "Backup mode"
+type = "spinner"
+value = "file"
+
+[[action.params.options]]
+title = "Single file"
+value = "file"
+
+[[action.params.options]]
+title = "Whole folder"
+value = "folder"
+
+[[action.params]]
+name = "src_file"
+title = "Source file"
+type = "file"
+depend-on = "mode"
+depend-value = "file"
+
+[[action.params]]
+name = "dst_folder"
+title = "Destination folder"
+type = "folder"
+depend-on = "mode"
+depend-value = "folder"
+</code></pre>
 <div class="callout warn"><code>depend-sort = true</code> only works when <code>depend-readonly = true</code>. If you declare <code>depend-sort = true</code> without <code>depend-readonly</code>, the parser forces it to <strong>false</strong> - because sort only makes sense for items "locked in place" (still visible, just dimmed), not for fully hidden items (View.GONE has no slot to "move down").</div>
 
 <h3>17.3. depend-logic reference</h3>
@@ -1122,6 +1442,7 @@ All text fields accept <code>@string/...</code> references.</p>
 <tr><td class="field-name">set / setstate / script</td><td>ActionNode, SwitchNode, PickerNode, DownloadNode, PageMenuOption, TextRow (toggle)</td><td>Set new state on user interaction</td></tr>
 <tr><td class="field-name">lock / lock-state</td><td>ClickableNode, PageNode, PageMenuOption</td><td>Check lock state (static, or "state|message" format)</td></tr>
 <tr><td class="field-name">lock-sh</td><td>ClickableNode (page, action, switch, picker, download, editor)</td><td>Check lock state dynamically (returns "1" = locked)</td></tr>
+<tr><td class="field-name">url-sh</td><td>DownloadNode</td><td>Produce download URL dynamically - runs once on first tap, cached into <code>url</code> for the rest of that page visit</td></tr>
 <tr><td class="field-name">support / visible</td><td>All nodes, row, param</td><td>Hide/show (accepts shell too)</td></tr>
 </table>
 </div>
@@ -1158,8 +1479,108 @@ All text fields accept <code>@string/...</code> references.</p>
 <p>Sub-pages trigger lifecycle callbacks during initialization and reading. <code>before-load</code> executes before parsing begins, followed by <code>after-load</code> upon parsing completion. Dependent on the parse status, <code>load-ok</code> or <code>load-fail</code> shell scripts execute accordingly.</p>
 </section>
 
+<section id="control-sequences">
+<h2>23. Script output control sequences</h2>
+<p>While a <code>script</code> (from <code>[[action]]</code>, <code>[[switch]]</code>, <code>[[download]]</code> ...) is running, its log dialog is not just a plain text viewer. If a running script <code>echo</code>s a line matching one of the special tags below, the log dialog intercepts that line (it is <strong>not</strong> printed as normal output) and performs a UI action instead. This lets a shell script drive dialogs, prompts, progress bars, and even control the app process itself, without leaving the log screen.</p>
+<div class="callout tip">All tags follow the same pattern: <code>tagname:[content]</code>, printed on its own line via <code>echo</code>. They only work while the log dialog is open and reading the script's live output.</div>
+
+<h3>23.1. exit:[kill] / exit:[restart]</h3>
+<p>Terminates the app process from inside a running script. <code>exit:[kill]</code> simply kills the app process; <code>exit:[restart]</code> relaunches the app first and then kills the old process, giving the effect of a full app restart.</p>
+<pre><code>[[action]]
+title = "Apply and restart app"
+confirm = true
+warn = "The app will restart to apply changes"
+script = """
+setprop persist.sys.my_tweak 1
+echo "exit:[restart]"
+"""</code></pre>
+<div class="callout warn"><strong>Note:</strong> everything printed by the script <em>after</em> the <code>exit:[...]</code> line is never processed - the process is torn down as soon as the tag is detected.</div>
+
+<h3>23.2. choose:[value1|Label1,value2|Label2,...]</h3>
+<p>Pauses the script and renders a row of buttons directly in the log dialog. Each option is <code>value|Label</code> (the <code>|Label</code> part is optional - if omitted, the value itself is used as the label). When the user taps one, its <code>value</code> is written back to the script's standard input, and the script resumes.</p>
+<pre><code>[[action]]
+title = "Set governor"
+script = """
+echo "choose:[performance|Performance,powersave|Power saving,schedutil|Balanced]"
+read governor
+echo "userspace" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null
+for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+  echo "$governor" > "$cpu"
+done
+echo "Governor set to: $governor"
+"""</code></pre>
+
+<h3>23.3. pick:[values] / pickv:[values] / pickh:[values]</h3>
+<p>Same idea as <code>choose:[...]</code> (comma-separated <code>value|Label</code> list, sent back via stdin on tap), but rendered as tappable links inline in the log text rather than as separate buttons. <code>pickv:[...]</code> (or plain <code>pick:[...]</code>) stacks the choices vertically; <code>pickh:[...]</code> lays them out horizontally.</p>
+<pre><code>[[action]]
+title = "Choose log level"
+script = """
+echo "Select a verbosity level:"
+echo "pickh:[1|Low,2|Medium,3|High]"
+read level
+echo "Verbosity set to level $level"
+"""</code></pre>
+
+<h3>23.4. input:[prompt]</h3>
+<p>Shows a text input field in the log dialog with <code>prompt</code> as its hint. Whatever the user types and submits is written back to the script's standard input, letting the script keep going with free-form text instead of a fixed list of choices.</p>
+<pre><code>[[action]]
+title = "Rename backup"
+script = """
+echo "input:[Enter a name for this backup]"
+read name
+mv /sdcard/backup/last.zip "/sdcard/backup/${name}.zip"
+echo "Saved as ${name}.zip"
+"""</code></pre>
+
+<h3>23.5. progress:[current/total]</h3>
+<p>Drives the progress bar shown at the top of the log dialog. Echo this repeatedly while a long-running task advances. <code>current = -1</code> switches the bar to indeterminate (spinning) mode; <code>current &gt;= total</code> hides the bar (task finished).</p>
+<pre><code>[[action]]
+title = "Copy large folder"
+script = """
+echo "progress:[-1/100]"
+total=$(ls /sdcard/source | wc -l)
+i=0
+for f in /sdcard/source/*; do
+  cp "$f" /sdcard/target/
+  i=$((i+1))
+  echo "progress:[$i/$total]"
+done
+echo "progress:[$total/$total]"
+echo "Done: $i files copied"
+"""</code></pre>
+
+<h3>23.6. am:[...] (send an Android Intent)</h3>
+<p>Sends an Android Intent directly from a shell script, without needing a separate <code>am start</code> binary call wired up elsewhere. Supported sub-commands are <code>start</code>, <code>startservice</code>, <code>foregroundservice</code>, and <code>broadcast</code>, using the same <code>-a</code>/<code>-d</code>/<code>-n</code> flags as the standard Android <code>am</code> command line tool, plus typed extras.</p>
+<div class="tbl-container">
+<table class="tbl">
+<tr><th>Extra flag</th><th>Type</th></tr>
+<tr><td><code>--es key value</code></td><td>String</td></tr>
+<tr><td><code>--ei key value</code></td><td>Int</td></tr>
+<tr><td><code>--ez key value</code></td><td>Boolean</td></tr>
+<tr><td><code>--el key value</code></td><td>Long</td></tr>
+<tr><td><code>--ef key value</code></td><td>Float</td></tr>
+<tr><td><code>--ed key value</code></td><td>Double</td></tr>
+<tr><td><code>--eu key value</code></td><td>Uri</td></tr>
+<tr><td><code>--esa key v1 v2</code></td><td>String[]</td></tr>
+<tr><td><code>--eia key v1 v2</code></td><td>Int[]</td></tr>
+</table>
+</div>
+<pre><code>[[action]]
+title = "Open developer options"
+script = """
+echo "am:[start -a android.settings.APPLICATION_DEVELOPMENT_SETTINGS]"
+"""
+
+[[action]]
+title = "Broadcast a custom event"
+script = """
+echo "am:[broadcast -a com.example.MY_ACTION --es status ok --ei code 200]"
+"""</code></pre>
+<div class="callout tip">Echo <code>am:[help]</code> from any script to print the full command/extras syntax straight into the log dialog - handy for testing without leaving the app.</div>
+</section>
+
 <section id="example">
-<h2>23. Full example</h2>
+<h2>24. Full example</h2>
 <p>A representative TOML configuration showcasing groups, actions, parameters, switches, and rich text rows:</p>
 <pre><code># Top-level item (declared before the first [[group]]) - shown without a group header
 [[text]]
@@ -1235,7 +1656,7 @@ script = "sh $state"
 </section>
 
 <section id="tips">
-<h2>24. Tips &amp; pitfalls</h2>
+<h2>25. Tips &amp; pitfalls</h2>
 <ul>
   <li>Always use double brackets <code>[[node]]</code> across all declarations to prevent TOML table array parser exceptions.</li>
   <li>Groups are flat - never use dotted <code>[[group.action]]</code> nesting (those children are silently ignored). Declare children flat, right after their <code>[[group]]</code>.</li>
@@ -1306,20 +1727,125 @@ script = "sh $state"
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // Live search functionality
+  // Live search functionality - highlights matches and hides sections with no match
   const searchInput = document.getElementById('search');
   if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase().trim();
-      const sections = document.querySelectorAll('main section');
-      sections.forEach(section => {
-        if (!query) {
-          section.style.display = '';
-          return;
-        }
-        const text = section.textContent.toLowerCase();
-        section.style.display = text.includes(query) ? '' : 'none';
+    const mainEl = document.querySelector('main.main');
+    const mainSections = Array.from(document.querySelectorAll('main section'));
+    let noResultEl = null;
+    let debounceTimer = null;
+
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function clearHighlights(root) {
+      root.querySelectorAll('mark.search-hit').forEach(mark => {
+        const parent = mark.parentNode;
+        if (!parent) return;
+        parent.replaceChild(document.createTextNode(mark.textContent), mark);
+        parent.normalize();
       });
+    }
+
+    function highlightText(root, query) {
+      const regex = new RegExp('(' + escapeRegExp(query) + ')', 'gi');
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          if (!node.nodeValue || !regex.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
+          regex.lastIndex = 0;
+          const tag = node.parentNode && node.parentNode.nodeName;
+          if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK') return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      const nodes = [];
+      let n;
+      while ((n = walker.nextNode())) nodes.push(n);
+
+      nodes.forEach(node => {
+        regex.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let lastIndex = 0;
+        let match;
+        while ((match = regex.exec(node.nodeValue)) !== null) {
+          if (match.index > lastIndex) {
+            frag.appendChild(document.createTextNode(node.nodeValue.slice(lastIndex, match.index)));
+          }
+          const mark = document.createElement('mark');
+          mark.className = 'search-hit';
+          mark.textContent = match[0];
+          frag.appendChild(mark);
+          lastIndex = match.index + match[0].length;
+          if (match[0].length === 0) regex.lastIndex++;
+        }
+        frag.appendChild(document.createTextNode(node.nodeValue.slice(lastIndex)));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    function showNoResult(show) {
+      if (show) {
+        if (!noResultEl) {
+          noResultEl = document.createElement('div');
+          noResultEl.className = 'search-no-result';
+          noResultEl.textContent = 'No matching section found.';
+          mainEl.appendChild(noResultEl);
+        }
+      } else if (noResultEl) {
+        noResultEl.remove();
+        noResultEl = null;
+      }
+    }
+
+    function runSearch(rawQuery) {
+      const query = rawQuery.trim();
+
+      mainSections.forEach(section => clearHighlights(section));
+
+      if (!query) {
+        mainSections.forEach(section => { section.style.display = ''; });
+        showNoResult(false);
+        return;
+      }
+
+      const lowerQuery = query.toLowerCase();
+      let firstMatchSection = null;
+      let matchCount = 0;
+
+      mainSections.forEach(section => {
+        const hasMatch = section.textContent.toLowerCase().includes(lowerQuery);
+        section.style.display = hasMatch ? '' : 'none';
+        if (hasMatch) {
+          highlightText(section, query);
+          matchCount++;
+          if (!firstMatchSection) firstMatchSection = section;
+        }
+      });
+
+      showNoResult(matchCount === 0);
+
+      if (firstMatchSection) {
+        const firstMark = firstMatchSection.querySelector('mark.search-hit');
+        if (firstMark) {
+          firstMark.classList.add('current');
+          firstMark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
+
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      const value = e.target.value;
+      debounceTimer = setTimeout(() => runSearch(value), 150);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        runSearch('');
+        searchInput.blur();
+      }
     });
   }
 </script>

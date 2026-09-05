@@ -438,6 +438,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
     // thử lại khi đổi mạng, không bị gián đoạn khi rời trang.
     // Bấm lại: đang tải → tạm dừng; đang tạm dừng → tiếp tục; lỗi → tải lại từ đầu.
     override fun onDownloadClick(item: DownloadNode, listItemView: ListItemDownload, onCompleted: Runnable) {
+        if (item.urlSh.isNotEmpty() && !item.urlResolved) {
+            resolveDownloadUrlThenClick(item, listItemView, onCompleted)
+            return
+        }
+
         val session = DownloadTaskHelper.getSession(item.url)
         if (session != null) {
             // Đã có session – xử lý theo trạng thái
@@ -481,6 +486,33 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
                 DialogHelper.warning(requireActivity(), item.title, item.warning, { downloadExecute(item, listItemView, onCompleted) })
             } else {
                 downloadExecute(item, listItemView, onCompleted)
+            }
+        }
+    }
+
+    // Chạy "url-sh" ĐÚNG 1 LẦN cho mỗi instance DownloadNode (xem urlResolved), cache kết quả
+    // vào item.url rồi gọi lại onDownloadClick() bình thường - các lần bấm sau (pause/resume/tải
+    // lại) dùng thẳng item.url đã cache, không chạy lại shell.
+    private fun resolveDownloadUrlThenClick(item: DownloadNode, listItemView: ListItemDownload, onCompleted: Runnable) {
+        val progressBar = activity?.findViewById<android.widget.ProgressBar>(R.id.page_load_progress)
+        progressBar?.apply {
+            isIndeterminate = true
+            visibility = View.VISIBLE
+        }
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val resolved = ScriptEnvironmen.executeResultRoot(requireContext(), item.urlSh, item).trim()
+            withContext(Dispatchers.Main) {
+                progressBar?.visibility = View.GONE
+                if (!isAdded) return@withContext
+                item.urlResolved = true
+                if (resolved.isNotEmpty()) {
+                    item.url = resolved
+                }
+                if (item.url.isEmpty()) {
+                    Toast.makeText(context, getString(R.string.kr_download_create_fail), Toast.LENGTH_SHORT).show()
+                    return@withContext
+                }
+                onDownloadClick(item, listItemView, onCompleted)
             }
         }
     }

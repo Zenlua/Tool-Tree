@@ -649,11 +649,13 @@ class PageConfigReader {
     private fun downloadNodeToml(table: TomlTable): DownloadNode? {
         val node = runnableNodeToml(DownloadNode(pageConfigAbsPath), table) as DownloadNode? ?: return null
         tomlGet(table, "url")?.let { node.url = it.trim() }
+        tomlGet(table, "url-sh")?.let { node.urlSh = it.trim() }
         tomlGet(table, "script", "set", "setstate")?.let { node.setState = it.trim() }
         tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, node) }
         tomlGet(table, "lock-sh")?.let { node.lockShell = it.trim() }
         if (node.setState == null) node.setState = ""
-        if (node.url.isEmpty()) return null
+        // Cần ít nhất 1 trong 2: url tĩnh hoặc url-sh (chạy shell lúc bấm tải).
+        if (node.url.isEmpty() && node.urlSh.isEmpty()) return null
 
         for (rowTable in tomlEntries(table, "rows")) {
             textRowToml(node.rows, rowTable)

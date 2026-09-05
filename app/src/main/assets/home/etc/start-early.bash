@@ -11,8 +11,7 @@ rm -fr $TEMP/documents $TEMP/kr_download_* $TEMP/WebView $START_DIR/icons/*
 if checkonline; then
     # Tải về nhật ký
     echo -e "Download the log and the latest version..."
-    timeout 20 taive -s 'https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/Version.md' $TEMP/Version.md
-
+    taive -s 'https://raw.githubusercontent.com/Zenlua/Tool-Tree/refs/heads/main/Version.md' $TEMP/Version.md
     if [[ -f $TEMP/Version.md ]] && [[ "$(glog sum_ver_boot)" != "$(checksum $TEMP/Version.md)" ]]; then
     sed -e 's|\*\*||g' -e 's|+|•|g' $TEMP/Version.md | awk 'BEGIN{RS="Version:"} NR>=2 && NR<=7 {printf "Version:%s", $0}' > $TEMP/version.txt
     slog sum_ver_boot "$(checksum $TEMP/Version.md)"
