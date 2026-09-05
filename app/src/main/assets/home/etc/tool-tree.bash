@@ -339,7 +339,7 @@ Update() {
   desc_xx="$sizes_text: $(cat $TMP/size)"
   title_xx="$update_text"
   elif [ "$(glog gg_beta)" == 1 ]; then
-  url_dowload="https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk"
+  url_dowload="https://github.com/Kakathic/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk"
   title_xx="$download_text beta"
   show_update=1
   fi
@@ -362,7 +362,7 @@ Update() {
   [[menu]]
   handler = """
   if [ "$menu_id" == "share" ]; then
-    echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://zenlua.github.io/Tool-Tree]"
+    echo "am:[start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT https://Kakathic.github.io/Tool-Tree]"
   elif [ "$menu_id" == "data" ]; then
     slog boot_ver_code 1
     slog sum_onl_plugin 1
@@ -419,13 +419,13 @@ Update() {
   [[page]]
   title = "'$author_text'"
   icon = "'$urlicon'/like.png"
-  html = "https://zenlua.github.io/Tool-Tree/website/Information.html"
+  html = "https://Kakathic.github.io/Tool-Tree/website/Information.html"
 
   [[group]]
   [[page]]
   title = "'$update_text_5'"
   icon = "'$urlicon'/website.png"
-  html = "https://zenlua.github.io/Tool-Tree"
+  html = "https://Kakathic.github.io/Tool-Tree"
 
   [[group]]
   [[page]]
@@ -2024,7 +2024,7 @@ Addon() {
     [[menu]]
     [[menu.items]]
     title = "'$download_text'"
-    link = "https://zenlua.github.io/Tool-Tree/website/'$linkweb'"
+    link = "https://Kakathic.github.io/Tool-Tree/website/'$linkweb'"
     silent = true
     
     [[menu.items]]

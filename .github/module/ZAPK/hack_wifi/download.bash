@@ -7,4 +7,4 @@ description="Wi-Fi hacking tool"
 version=1.0
 versionCode=101
 root=true
-url=https://github.com/Zenlua/Tool-Tree/releases/download/V1/hack_wifi_$versionCode.add
+url=https://github.com/Kakathic/Tool-Tree/releases/download/V1/hack_wifi_$versionCode.add

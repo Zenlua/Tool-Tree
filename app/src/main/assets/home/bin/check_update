@@ -1,7 +1,7 @@
 if checkonline; then
 
     source language 2>/dev/null
-    link_url="https://api.github.com/repos/Zenlua/Tool-Tree/releases"
+    link_url="https://api.github.com/repos/Kakathic/Tool-Tree/releases"
 
     if [ "$(unzip -qp "$PATH_APK" assets/beta 2>/dev/null)" == 1 ]; then
         websums="$(xem $link_url/tags/beta)"

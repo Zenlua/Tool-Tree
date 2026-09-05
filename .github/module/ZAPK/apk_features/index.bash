@@ -64,13 +64,13 @@ title = "'$google_text'"
 [[group]]
 
   [[page]]
-  html = "https://zenlua.github.io/Tool-Tree/website/web/terminal.html"
+  html = "https://Kakathic.github.io/Tool-Tree/website/web/terminal.html"
   title = "Web Terminal"
 
 [[group]]
 
   [[page]]
-  html = "https://zenlua.github.io/Tool-Tree/website/web/manager.html"
+  html = "https://Kakathic.github.io/Tool-Tree/website/web/manager.html"
   title = "Web Manager"
 '
 }

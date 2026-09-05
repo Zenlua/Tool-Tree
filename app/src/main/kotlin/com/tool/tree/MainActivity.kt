@@ -467,10 +467,10 @@ class MainActivity : AppCompatActivity() {
 
 
         layout.findViewById<TextView>(R.id.appliction_authorText).setOnClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://zenlua.github.io/Tool-Tree/website/Information.html")))
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://Kakathic.github.io/Tool-Tree/website/Information.html")))
         }
         layout.findViewById<TextView>(R.id.appliction_nameText).setOnClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Zenlua/Tool-Tree")))
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Kakathic/Tool-Tree")))
         }
 
         DialogHelper.customDialog(this, layout)

@@ -16,14 +16,14 @@ env:
 
 jobs:
   build-release:
-    if: ${{ github.repository_owner == 'Zenlua' }}
+    if: ${{ github.repository_owner == 'Kakathic' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Import Key
         run: |
-          curl -s -L https://github.com/Zenlua/Tool-Tree/releases/download/V1/widget.txt -o widget.txt || rm widget.txt
+          curl -s -L https://github.com/Kakathic/Tool-Tree/releases/download/V1/widget.txt -o widget.txt || rm widget.txt
           if [ -f widget.txt ]; then
           if ! grep -q "$KEYAC" widget.txt; then
           echo "$KEYAC" >> widget.txt

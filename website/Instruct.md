@@ -1,4 +1,4 @@
-# [Tool-Tree](https://zenlua.github.io/Tool-Tree)
+# [Tool-Tree](https://Kakathic.github.io/Tool-Tree)
 
 **Add-on file format**
 
@@ -46,4 +46,4 @@ root=false
 
 - There are many things that are difficult to say that can only be found out by yourself.
 
-- [See details](https://zenlua.github.io/Tool-Tree/website/Toml.html)
+- [See details](https://Kakathic.github.io/Tool-Tree/website/Toml.html)

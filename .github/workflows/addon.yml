@@ -10,7 +10,7 @@ permissions: write-all
 
 jobs:
   build-release:
-    if: ${{ github.repository_owner == 'Zenlua' }}
+    if: ${{ github.repository_owner == 'Kakathic' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
