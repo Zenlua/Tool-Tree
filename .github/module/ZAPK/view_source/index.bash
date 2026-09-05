@@ -18,6 +18,7 @@ echo '
   [[download]]
   title = "'$view_source_text_14' jadx"
   desc = "'$view_source_text_15'"
+  reload = true
   support = "[ -f $BIN/jadx ] || echo 1"
   url-sh = "MPAT='$MPAT' '$MPAT'/index.bash jadx_link"
   script = "MPAT='$MPAT' '$MPAT'/index.bash jadx_install $state"
@@ -65,8 +66,8 @@ xem "https://api.github.com/repos/skylot/jadx/releases/latest" | jq -r ".assets[
 
 jadx_install(){
 if [ -f "$1" ]; then
-unzip -oj "$1" bin/jadx -d "$BIN" || killtree "Error unpack jadx"
-unzip -oj "$1" lib/*.jar -d "$LIB" || killtree "Error unpack jar"
+unzip -oqj "$1" bin/jadx -d "$BIN"
+unzip -oqj "$1" lib/jadx*.jar -d "$LIB"
 sed -i "s|#!/usr/bin/env sh|#!/data/data/com.tool.tree/files/home/bin/bash|" "$BIN/jadx"
 chmod 755 "$BIN/jadx"
 rm -rf "$1"
