@@ -1,10 +1,8 @@
 #!/data/data/com.tool.tree/files/home/bin/bash
-
 if [ "$1" == '-b' ]; then
   backup_text=1
   shift
 fi
-
 if [[ "$1" = "-h" || "$1" = "--help" ]]; then
     echo "Usage:"
     echo "  trans -b \"hello world\""
@@ -12,33 +10,20 @@ if [[ "$1" = "-h" || "$1" = "--help" ]]; then
     exit 1
 fi
 shift
-
-# ---- LẤY TEXT (giữ newline) ----
 if [ "$#" -gt 0 ]; then
     TEXT="$*"
 else
     TEXT="$(timeout 5 cat)"
 fi
-
 [ -z "$TEXT" ] && exit 0
-
-# ---- GỌI API ----
 RESULT="$(curl -s -G -L \
-  "https://translate.googleapis.com/translate_a/single" \
-  --data-urlencode "client=gtx" \
-  --data-urlencode "sl=auto" \
-  --data-urlencode "tl=$LANGUAGE-$COUNTRY" \
-  --data-urlencode "dt=t" \
-  --data-urlencode "q=${TEXT}"
+  "https://api.mymemory.translated.net/get" \
+  --data-urlencode "q=${TEXT}" \
+  --data-urlencode "langpair=en|$LANGUAGE"
 )"
-
-# ---- TRÍCH KẾT QUẢ ----
-OUT="$(echo "$RESULT" | jq -r '(.[0]? | map(.[0]?) | join("")) // ""' 2>/dev/null)"
-
-# ---- FALLBACK ----
+OUT="$(echo "$RESULT" | jq -r '.responseData.translatedText? // ""' 2>/dev/null)"
 if [ -z "$OUT" ]; then
     [ "$backup_text" == 1 ] && printf '%s\n' "$TEXT"
     exit 0
 fi
-
 printf '%s\n' "$OUT"

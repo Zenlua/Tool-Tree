@@ -7,8 +7,8 @@ current_line=1
 total_lines=$(wc -l < "$file_input")
 model_ai="glog models_genmini"
 
-if [ "$total_lines" -gt 22000 ]; then
-  echo "The file is too large (22,000 lines) and will be blocked." >&2
+if [ "$total_lines" -gt 50000 ]; then
+  echo "The file is too large (50000 lines) and will be blocked." >&2
   exit 1
 fi
 

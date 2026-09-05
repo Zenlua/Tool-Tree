@@ -329,13 +329,14 @@ Info() {
 }
 
 Update() {
+  {
   if [ ! -f $TMP/update ]; then
-  check_update &>/dev/null
+  check_update
   fi
   if [ -f $TMP/update ]; then
-  url_dowload="$(cat $TMP/update 2>/dev/null)"
+  url_dowload="$(cat $TMP/update)"
   show_update=1
-  desc_xx="$sizes_text: $(cat $TMP/size 2>/dev/null)"
+  desc_xx="$sizes_text: $(cat $TMP/size)"
   title_xx="$update_text"
   elif [ "$(glog gg_beta)" == 1 ]; then
   url_dowload="https://github.com/Zenlua/Tool-Tree/releases/download/beta/Tool-Tree-beta.apk"
@@ -343,19 +344,19 @@ Update() {
   show_update=1
   fi
   if [ "$(glog gg_trans_ver)" == 1 ]; then
-    link_vers="version_trans.txt"
+    link_vers="version_transai.txt"
     shum_vers="$(checksum $TEMP/version.txt)"
     if [[ "$shum_vers" != "$(glog shum_vers)" ]]; then
       transai "$(cat $TEMP/version.txt)" > $TEMP/$link_vers
-      if [ -z "$(cat $TEMP/$link_vers)" ]; then
-      link_vers="version.txt"
-      else
+      if [ -n "$(cat $TEMP/$link_vers)" ]; then
       slog shum_vers "$shum_vers"
       fi
     fi
-  else
-  link_vers="version.txt"
   fi
+  if [ -z "$link_vers" ]; then
+  [ -f $TEMP/version_trans.txt ] && link_vers="version_trans.txt" || link_vers="version.txt"
+  fi
+  } &>/dev/null
   echo '
   [[group]]
   [[menu]]
