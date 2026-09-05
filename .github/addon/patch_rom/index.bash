@@ -146,9 +146,15 @@ home() {
   
   menuadd "$MPAT"
   echo '
+  [[toml]]
+  
+  [[menu]]
+  [[menu.items]]
+  title = "Change log"
+  script = "cat '$MPAT'/changelog.txt | trans -b"
+  
   [[group]]
   title = "'$google_text'"
-  
   [[download]]
   title = "'$latest_update_text'"
   auto-finish = true
@@ -156,10 +162,6 @@ home() {
   support = "[ -f '$MPAT'/update ] && echo 1"
   url-sh = "cat '$MPAT'/update"
   script = "installadd $state '${MPAT%/*}'"
-
-    [[download.rows]]
-    sh = "cat '$MPAT'/changelog.txt"
-    line = true
 
   [[group]]
   [[page]]
@@ -761,6 +763,7 @@ home() {
     name = "fix_diselinux"
     label = "'$title_boot_patch4'"
     options-sh = "echo -e \"0|'$default_text'\n1|enforcing\n2|permissive\n3|disabled\""
+    
 '
 }
 
