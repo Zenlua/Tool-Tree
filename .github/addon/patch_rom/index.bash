@@ -152,7 +152,7 @@ home() {
   title = "'$latest_update_text'"
   desc-sh = "cat '$MPAT'/changelog.txt"
   auto-finish = true
-  support = "[ -f '$MPAT'/update ] || echo 1"
+  support = "[ -f '$MPAT'/update ] && echo 1"
   url-sh = "cat '$MPAT'/update"
   script = "installadd $state '${MPAT%/*}'"
 
