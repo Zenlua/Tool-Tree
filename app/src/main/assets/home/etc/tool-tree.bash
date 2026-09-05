@@ -1720,6 +1720,13 @@ Utiliapk() {
     title = "'$open_activity_text' (data-root)"
     silent = true
     
+  [[group]]
+  [[page]]
+  title = "'$apex_text'"
+  icon = "'$urlicon'/apex.png"
+  config-sh = "'$ETC'/tool-tree.bash Apex"
+  
+  [[group]]
   [[action]]
   title = "'$decompile_text'"
   desc = "'$desc_apks'"
@@ -1904,11 +1911,28 @@ Utiliapk() {
     multiple = true
 
   [[group]]
-  [[page]]
-  title = "'$apex_text'"
-  icon = "'$urlicon'/apex.png"
-  config-sh = "'$ETC'/tool-tree.bash Apex"
+  [[action]]
+  title = "'$apk_mager_text_2'"
+  icon = "'$urlicon'/merge_apk.png"
+  warn = "'$apk_mager_text_1'"
+  script = """
+    IFS=$'"'\n'"'
+    for v in $FILE; do
+        echo "'$more_text_4' $FILE"
+        echo
+        apkeditor m -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -u -e "1,/__/d"
+        echo
+    done
+    checktime
+  """
 
+    [[action.params]]
+    name = "FILE"
+    options-sh = "findfile 9 $PTAD | grep -E \"(apks)|(apkm)|(xapk)\""
+    desc = "'$desc_apks'"
+    required = true
+    multiple = true
+    
   [[group]]
   [[action]]
   title = "'$distur_apk_text_2'"
@@ -1928,6 +1952,7 @@ Utiliapk() {
     [[action.params]]
     name = "FILE"
     options-sh = "findfile 10 $PTAD"
+    desc = "'$desc_apks'"
     required = true
     multiple = true
 
@@ -1949,28 +1974,7 @@ Utiliapk() {
     [[action.params]]
     name = "FILE"
     options-sh = "findfile 10 $PTAD"
-    required = true
-    multiple = true
-
-  [[group]]
-  [[action]]
-  title = "'$apk_mager_text_2'"
-  icon = "'$urlicon'/merge_apk.png"
-  warn = "'$apk_mager_text_1'"
-  script = """
-    IFS=$'"'\n'"'
-    for v in $FILE; do
-        echo "'$more_text_4' $FILE"
-        echo
-        apkeditor m -f -i "$PTAD/$v" -o "$PTAD/out/$v" 2>&1 | sed -u -e "1,/__/d"
-        echo
-    done
-    checktime
-  """
-
-    [[action.params]]
-    name = "FILE"
-    options-sh = "findfile 9 $PTAD | grep -E \"(apks)|(apkm)|(xapk)\""
+    desc = "'$desc_apks'"
     required = true
     multiple = true
 
@@ -1978,6 +1982,7 @@ Utiliapk() {
   [[action]]
   title = "'$restore_apk_text_3'"
   icon = "'$urlicon'/restore_sign.png"
+  warn = "'$desc_apks'"
   script = """
     slog apk_restore_sign "$FILE"
     slog apk_restore_sign2 "$FILE2"
