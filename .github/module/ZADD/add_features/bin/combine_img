@@ -3,7 +3,7 @@
 [[ -z "$1" ]] && exit 1
 
 # Ngôn ngữ mặc định
-source trans_add "$MPAT"
+source trans_add "${0%/*}"
 
 # Run code
 for v in $3 $4; do
@@ -28,7 +28,7 @@ echo "$merge_partition_4: $SDH/$PTSH"
 
 if [ "$dang_file" != 3 ];then
 echo
-repack_img -i "$SDH/$PTSH/system" -o "$MPAT/out" -k $dang_file -d $1 -p 1
+repack_img -i "$SDH/$PTSH/system" -o "${0%/*}/out" -k $dang_file -d $1 -p 1
 echo "$save_text $PTSD/out"
 fi
 echo

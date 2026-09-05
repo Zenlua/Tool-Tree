@@ -138,5 +138,5 @@ path_modun2="/data/adb/modules_update/Tool-Tree"
 [ -d $path_modun ] && visisj=1 || visisj=0
 
 # Ngôn ngữ & Google dịch
-source langadd "$MPAT"
+source langadd "${0%/*}"
 "$@"

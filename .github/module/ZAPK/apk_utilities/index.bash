@@ -94,5 +94,5 @@ path_clean="$(glog project_apk_clean)"
 [ "$(glog project_apk_clean)" ] && show_clean=1
 
 # Ngôn ngữ & Google dịch
-source langadd "$MPAT"
+source langadd "${0%/*}"
 "$@"

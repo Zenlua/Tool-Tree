@@ -33,7 +33,7 @@ title = "'$google_text'"
   [ "$ROT" == 0 ] && echo "'$fs_text_3'" || echo 0
   """
   script = """
-  MPAT="'$MPAT'" '$MPAT'/scrip/ufs.bash
+  '$MPAT'/scrip/ufs.bash
   """
 
 [[group]]
@@ -76,5 +76,5 @@ title = "'$google_text'"
 }
 
 # Ngôn ngữ & Google dịch
-source langadd "$MPAT"
+source langadd "${0%/*}"
 "$@"

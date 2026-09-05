@@ -2,7 +2,7 @@
 # kakathic
 
 # Ngôn ngữ mặc định
-source langadd "$MPAT"
+source langadd "${0%/*}"
 
 bDeviceLifeTimeEstA=""
 

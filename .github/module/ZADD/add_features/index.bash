@@ -12,7 +12,7 @@ title = "'$google_text'"
   script = """
     slog silencekd "$silence"
     slog dang_filehd "$dang_file"
-    MPAT="'$MPAT'" '$MPAT'/bin/combine_img $silence $dang_file "$MUTIIMG" "$IMAGE"
+    '$MPAT'/bin/combine_img $silence $dang_file "$MUTIIMG" "$IMAGE"
     checktime
   """
   [[action.params]]
@@ -217,5 +217,5 @@ title = "'$google_text'"
 }
 
 # Ngôn ngữ & Google dịch
-source langadd "$MPAT"
+source langadd "${0%/*}"
 "$@"

@@ -119,5 +119,5 @@ fi
 [ "$(glog wifi_tool_customize)" == 1 ] && number_wifi_pin=1
 
 # Ngôn ngữ và Google dịch
-source langadd "$MPAT"
+source langadd "${0%/*}"
 "$@"

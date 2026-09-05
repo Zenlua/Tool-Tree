@@ -20,8 +20,8 @@ echo '
   desc = "'$view_source_text_15'"
   reload = true
   support = "[ -f $BIN/jadx ] || echo 1"
-  url-sh = "MPAT='$MPAT' '$MPAT'/index.bash jadx_link"
-  script = "MPAT='$MPAT' '$MPAT'/index.bash jadx_install $state"
+  url-sh = "'$MPAT'/index.bash jadx_link"
+  script = "'$MPAT'/index.bash jadx_install $state"
 
   [[group]]
   [[action]]
@@ -75,5 +75,5 @@ fi
 }
 
 # Ngôn ngữ & Google dịch
-source langadd "$MPAT"
+source langadd "${0%/*}"
 "$@"

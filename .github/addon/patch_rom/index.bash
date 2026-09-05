@@ -128,9 +128,10 @@ echo '
 }
 
 home() {
-  [ -z "$google_text" ] && google_text="$version_text: $version"
 
+  [ -z "$google_text" ] && google_text="$version_text: $version"
   # Điền dữ liệu mặc định
+
   (
   if [ -z "$(glog ime_color_dark)" ]; then
     slog ime_dimen '<dimen name="input_method_seek_bar_margin">6.5999756dp</dimen>
@@ -147,16 +148,15 @@ home() {
   echo '
   [[group]]
   title = "'$google_text'"
-
-  [[menu]]
-  [[menu.items]]
-  type = "default"
+  [[download]]
+  title = "'$latest_update_text'"
+  desc-sh = "cat '$MPAT'/changelog.txt"
   auto-finish = true
-  title = "@string/update_text"
-  script = """
-  '$MPAT'/index.bash update_addon
-  """
-  
+  support = "[ -f '$MPAT'/update ] || echo 1"
+  url-sh = "cat '$MPAT'/update"
+  script = "installadd $state '${MPAT%/*}'"
+
+  [[group]]
   [[page]]
   title = "'$title_quick'"
   summary = "'$project_text': '$PTSH'"
@@ -825,32 +825,12 @@ test_app() {
   [ -d $TMP/app ] && rm -fr $TMP/app
 }
 
-# check update add-on
-update_addon() {
-  if checkonline; then
-    echo "$check_update_text_1"
-    echo
-    source "$MPAT/download.bash"
-    sumcek="$(xem https://api.github.com/repos/Kakathic/Tool-Tree/releases/tags/V1 | jq -r --arg name "${url##*/}" '.assets[] | select(.name == $name) | .digest' | cut -d: -f2)"
-    if [[ "$sumcek" != "$(glog sumcek_patch_rom)" ]]; then
-      installadd "$url" "${MPAT%/*}" 2>&1 || { echo "$check_update_text_2" >&2; exit 1; }
-      echo
-      [ -f $MPAT/changelog.txt ] && cat $MPAT/changelog.txt
-    else
-      echo "$check_update_text_3"
-      echo
-      [ -f $MPAT/changelog.txt ] && cat $MPAT/changelog.txt
-    fi
-  else
-    echo "$network_text" >&2
-  fi
-}
+# Ngôn ngữ và Google dịch
+source langadd "${0%/*}"
 
-MPAT="${0%/*}"
 # Lưu biến
 sdcard_text="${PTAD/$SDCARD_PATH/\/sdcard}"
 pathsh="$MPAT/patch-rom"
 
-# Ngôn ngữ và Google dịch
-source langadd "$MPAT"
+# index
 "$@"

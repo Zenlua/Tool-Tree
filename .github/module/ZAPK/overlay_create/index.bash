@@ -13,7 +13,7 @@ echo '
   desc = "'$home_text_2'"
   script = """
     slog overlay_folder "$overlay_folder"
-    MPAT='$MPAT' '$MPAT'/overlay.bash
+    '$MPAT'/overlay.bash
   """
 
     [[action.params]]
@@ -30,7 +30,7 @@ echo '
   script = """
     slog extract_folder_lang "$extract_folder_lang"
     slog extract_folder_lang_text "$extract_folder_lang_text"
-    MPAT='$MPAT' '$MPAT'/extract.bash
+    '$MPAT'/extract.bash
   """
 
     [[action.params]]
@@ -52,5 +52,5 @@ echo '
 }
 
 # Ngôn ngữ & Google dịch
-source langadd "$MPAT"
+source langadd "${0%/*}"
 "$@"

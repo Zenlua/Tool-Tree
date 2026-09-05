@@ -2,7 +2,7 @@
 # kakathic
 
 # Ngôn ngữ & Google dịch
-source langadd "$MPAT"
+source langadd "${0%/*}"
 
 [ -d "$overlay_folder" ] || killtree "$overlay_text_1"
 
