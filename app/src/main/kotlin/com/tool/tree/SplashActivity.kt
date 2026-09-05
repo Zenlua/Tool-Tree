@@ -55,29 +55,23 @@ class SplashActivity : AppCompatActivity() {
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Ép TMPDIR trỏ về cache dir riêng của app (luôn ghi được, kể cả non-root) để tránh
-        // lỗi "Permission denied" khi script dùng `source`/mktemp/ghi file tạm mà TMPDIR mặc
-        // định của hệ thống (thường /data/local/tmp) app không có quyền ghi.
         ShellExecutor.setTmpDir(cacheDir.absolutePath)
 
-        // 1. Kiểm tra nếu script đã chạy hoặc đang chạy thì load tabs rồi vào Home
         if (ScriptEnvironmen.isInited() && isTaskRoot &&
             !intent.getBooleanExtra("force_reset", false)) {
             loadTabsThenHome()
             return
         }
 
-        // 2. Logic khởi đầu: Tách biệt "Đồng ý điều khoản" và "Quyền hệ thống"
-        if (!hasAgreed()) {
-            // Nếu chưa từng đồng ý điều khoản, hiện Dialog đầu tiên
+        // Bỏ cờ agreed_permissions tách rời (Session: Sep 5, 2026): trước đây dialog chỉ hiện
+        // đúng 1 lần dựa vào cờ SharedPreferences, nên khi quyền bộ nhớ bị thu hồi sau đó thì
+        // code nhảy thẳng qua requestRequiredPermissions() mà không hiện dialog nữa. Giờ dùng
+        // thẳng hasRequiredPermissions() làm điều kiện duy nhất -> hễ chưa có quyền là luôn
+        // hiện dialog trước, bất kể trước đó đã từng cấp/đồng ý hay chưa.
+        if (!hasRequiredPermissions()) {
             showAgreementDialog()
         } else {
-            // Đã đồng ý điều khoản rồi, chỉ kiểm tra quyền Android
-            if (hasRequiredPermissions()) {
-                checkPermissionsNextStep()
-            } else {
-                requestRequiredPermissions()
-            }
+            checkPermissionsNextStep()
         }
 
         logoAnimator = ObjectAnimator.ofFloat(binding.startLogoXml, "rotation", 0f, 360f).apply {
@@ -89,27 +83,18 @@ class SplashActivity : AppCompatActivity() {
 
     }
 
-    // =================== LOGIC XỬ LÝ QUYỀN ===================
-
     private fun showAgreementDialog() {
         DialogHelper.warning(
             this,
             getString(R.string.permission_dialog_title),
             getString(R.string.permission_dialog_message),
-            Runnable { 
-                // Quan trọng: Lưu trạng thái đồng ý ngay khi nhấn nút
-                saveAgreement() 
-                // Sau đó mới đi xin quyền hệ thống
-                requestRequiredPermissions() 
+            Runnable {
+                requestRequiredPermissions()
             },
             Runnable { finish() }
         ).setCancelable(false)
     }
 
-    // App target SDK 28 (thấp) - theo tài liệu Android, yêu cầu dùng READ_MEDIA_IMAGES/VIDEO chỉ
-    // áp dụng cho app TARGET API 33+ (targetSdkVersion), không phải dựa vào Android của máy. Vì
-    // vậy luôn xin READ/WRITE_EXTERNAL_STORAGE kiểu cũ, hoạt động bình thường trên mọi bản Android
-    // hiện tại kể cả 13+ (không cần nhánh riêng cho Tiramisu nữa).
     private fun hasRequiredPermissions(): Boolean {
         val permissions = listOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -128,21 +113,11 @@ class SplashActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE_PERMISSIONS)
     }
 
-    // Nếu đã có quyền đọc/ghi bộ nhớ kiểu cũ (WRITE_EXTERNAL_STORAGE) và app đang target SDK
-    // <=28 thì Android KHÔNG ép "scoped storage" (cờ FORCE_ENABLE_SCOPED_STORAGE mặc định tắt
-    // cho các app này, kể cả chạy trên Android 11+) - quyền cũ đó vẫn cho đọc/ghi toàn bộ bộ nhớ
-    // như bình thường. Không xin thêm "All Files Access" (MANAGE_EXTERNAL_STORAGE) nữa - đã bỏ
-    // hẳn theo yêu cầu, không còn màn hình/permission đó trong app.
     private fun checkPermissionsNextStep() {
-        // Khởi tạo kênh thông báo đúng 1 lần duy nhất ở lần cài đặt đầu tiên
         startWakeLockServiceOnce()
         checkRootAndStart()
     }
 
-    /**
-     * Tạo Notification Channel trực tiếp với hệ thống 1 lần duy nhất ở lần đầu cài đặt.
-     * Lưu lại trạng thái vào SharedPreferences để không gọi lại ở các lần sau.
-     */
     private fun startWakeLockServiceOnce() {
         val prefs = getSharedPreferences("kr-script-config", MODE_PRIVATE)
         if (!prefs.getBoolean("wakelock_service_started_once", false)) {
@@ -151,9 +126,6 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Đăng ký NotificationChannel chuẩn cho WakeLockService mà KHÔNG cần start Service
-     */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -180,13 +152,6 @@ class SplashActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    // =================== LOGIC ROOT & KHỞI CHẠY ===================
-
-    // Mức ưu tiên nguồn thực thi: su > Shizuku > sh thường. checkRoot() thử su trước (như cũ);
-    // nếu không có su mới thử Shizuku - CHỦ ĐỘNG xin quyền (hiện popup hệ thống) ngay bước khởi
-    // động này (sau khi người dùng đã bấm xác nhận ở showAgreementDialog()/hasRequiredPermissions
-    // phía trên), không cần màn Cài đặt riêng. Nếu Shizuku chưa cài hoặc người dùng từ chối/không
-    // thao tác (hết 30s) thì giữ nguyên hành vi cũ (KeepShell tự fallback sh nếu không có su).
     @Synchronized
     private fun checkRootAndStart() {
         if (started) return
@@ -219,20 +184,9 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    private fun hasAgreed(): Boolean =
-        getSharedPreferences("kr-script-config", MODE_PRIVATE).getBoolean("agreed_permissions", false)
-
-    private fun saveAgreement() {
-        getSharedPreferences("kr-script-config", MODE_PRIVATE)
-            .edit()
-            .putBoolean("agreed_permissions", true)
-            .apply()
-    }
-
     private fun loadTabsThenHome() {
         lifecycleScope.launch(Dispatchers.IO) {
             val config = KrScriptConfig()
-            // Đảm bảo config đã init (có thể đã init từ lần trước nhưng không sao)
             config.init(this@SplashActivity)
 
             val favorites = getItems(config.getFavoriteConfig())
