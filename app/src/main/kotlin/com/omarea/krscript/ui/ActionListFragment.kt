@@ -443,7 +443,10 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             return
         }
 
-        val session = DownloadTaskHelper.getSession(item.url)
+        // Chỉ tra session theo url khi KHÔNG rỗng - tránh đụng nhầm session của mục khác (xem
+        // PageLayoutRender.createDownloadItem() - cùng nguyên nhân: url = "" mặc định khi
+        // url-sh chưa resolve xong).
+        val session = if (item.url.isNotBlank()) DownloadTaskHelper.getSession(item.url) else null
         if (session != null) {
             // Đã có session – xử lý theo trạng thái
             when (session.status) {
@@ -490,9 +493,11 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         }
     }
 
-    // Chạy "url-sh" ĐÚNG 1 LẦN cho mỗi instance DownloadNode (xem urlResolved), cache kết quả
-    // vào item.url rồi gọi lại onDownloadClick() bình thường - các lần bấm sau (pause/resume/tải
-    // lại) dùng thẳng item.url đã cache, không chạy lại shell.
+    // Chạy "url-sh" cho mỗi lần bấm CHO TỚI KHI thành công (xem urlResolved) - cache kết quả
+    // vào item.url rồi gọi lại onDownloadClick() bình thường - các lần bấm sau khi ĐÃ resolve
+    // thành công (pause/resume/tải lại) dùng thẳng item.url đã cache, không chạy lại shell.
+    // Nếu script thất bại (trả rỗng), KHÔNG đánh dấu urlResolved - để người dùng bấm lại thử tiếp
+    // (vd do lỗi mạng/quyền root tạm thời), tránh mục tải bị "kẹt" vĩnh viễn.
     private fun resolveDownloadUrlThenClick(item: DownloadNode, listItemView: ListItemDownload, onCompleted: Runnable) {
         val progressBar = activity?.findViewById<android.widget.ProgressBar>(R.id.page_load_progress)
         progressBar?.apply {
@@ -504,14 +509,12 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             withContext(Dispatchers.Main) {
                 progressBar?.visibility = View.GONE
                 if (!isAdded) return@withContext
-                item.urlResolved = true
-                if (resolved.isNotEmpty()) {
-                    item.url = resolved
-                }
-                if (item.url.isEmpty()) {
+                if (resolved.isEmpty()) {
                     Toast.makeText(context, getString(R.string.kr_download_create_fail), Toast.LENGTH_SHORT).show()
                     return@withContext
                 }
+                item.url = resolved
+                item.urlResolved = true
                 onDownloadClick(item, listItemView, onCompleted)
             }
         }
