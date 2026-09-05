@@ -1220,8 +1220,17 @@ script = "sh /data/data/com.tool.tree/files/run.sh"
 <p>A <code>[[menu]]</code> or <code>[[fab]]</code> block is a <strong>container</strong>, NOT a single entry:</p>
 <ul>
 <li><code>handler</code> (or <code>handler-sh</code>): the DEFAULT script that runs when clicking a child item, if that item does not declare its own <code>script</code></li>
-<li><code>[[...items]]</code>: the list of items shown in the menu/fab - each item uses the same fields as the old <code>[[page.options]]</code> (type/style/suffix/mime/path-home/multiple/get/silent/link/activity/html/config/config-sh/script/title...)</li>
+<li><code>icon</code> (or <code>icon-path</code>): <span class="badge new">new</span> custom icon for the container itself (NOT an item) - see below</li>
+<li><code>[[...items]]</code>: the list of items shown in the menu/fab - each item uses the same fields as the old <code>[[page.options]]</code> (type/style/suffix/mime/path-home/multiple/get/silent/link/activity/html/config/config-sh/script/title/icon...)</li>
 </ul>
+<div class="callout tip">
+<code>icon</code>/<code>icon-path</code> on the container itself:
+<ul>
+<li>On <code>[[menu]]</code>: replaces the default 3-dot toolbar icon. Always <strong>force-tinted</strong> to the toolbar icon color (same tint applied to every custom icon in the popup list) - the image itself can be any color/shape, it will be recolored to match the theme.</li>
+<li>On <code>[[fab]]</code>: default icon for the floating button, used when the (single) item does not set its own <code>icon</code>. If <code>[[fab]]</code> has 2+ items, this is the icon shown before the item picker opens (each item's own icon is only used when there is exactly 1 item). NOT tinted - drawn as-is like a normal FAB icon.</li>
+<li>If <code>[[menu]]</code>/<code>[[fab]]</code> is declared more than once on the same page, only the <strong>first</strong> non-empty <code>icon</code> found is used.</li>
+</ul>
+</div>
 
 <h3>16.2. Item fields (inside menu/fab)</h3>
 <div class="tbl-container">
@@ -1287,6 +1296,7 @@ script = "sync; echo 3 &gt; /proc/sys/vm/drop_caches"
 # Toolbar overflow menu (3-dot icon) - not part of the page content list above
 [[menu]]
 handler = "echo Menu: $key"
+icon = "menu_icon.png"
 
 [[menu.items]]
 title = "Refresh"

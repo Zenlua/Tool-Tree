@@ -26,6 +26,14 @@ class PageNode(currentConfigXml: String) : ClickableNode(currentConfigXml) {
     // lúc với pageMenuOptions (xem ActionPage.loadPageConfig()).
     var headerActions: ArrayList<ActionNode>? = null
     var autoShowActions: ArrayList<ActionNode>? = null
+    // Icon khai báo TRỰC TIẾP ở cấp container [[menu]]/[[fab]] (field "icon"/"icon-path", KHÔNG
+    // phải trong "items") - gán cùng lúc với pageMenuOptions (xem ActionPage.loadPageConfig()).
+    // menuIconNode: icon thay cho nút "⋮" mặc định trên toolbar (LUÔN bị ép tint theo màu icon
+    // toolbar, giống mọi icon custom khác trong menu - xem ActionPage.buildOverflowMenuButton()).
+    // fabIconNode: icon mặc định cho nút FAB khi item không tự set icon riêng (hoặc fab có nhiều
+    // item) - xem ActionPage.resolveFabIcon().
+    var menuIconNode: ClickableNode? = null
+    var fabIconNode: ClickableNode? = null
     // ĐÃ BỎ pageHandlerSh (handler-sh) khỏi page - page giờ chỉ dùng để MỞ TRANG cho nhanh
     // (link/activity/config/config-sh), không còn kiêm nhiệm làm handler mặc định cho menu/fab
     // nữa. Handler mặc định cho từng nhóm giờ khai báo NGAY TRONG [[menu]]/[[fab]] của trang

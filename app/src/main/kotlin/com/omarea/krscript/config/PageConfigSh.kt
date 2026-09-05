@@ -7,6 +7,7 @@ import android.widget.Toast
 import com.tool.tree.R
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.omarea.krscript.model.ActionNode
+import com.omarea.krscript.model.ClickableNode
 import com.omarea.krscript.model.NodeInfoBase
 import com.omarea.krscript.model.PageMenuOption
 import com.omarea.krscript.model.PageNode
@@ -23,6 +24,10 @@ class PageConfigSh(private var activity: Activity, private var pageConfigSh: Str
     val pageMenuOptions: ArrayList<PageMenuOption> get() = lastReader?.pageMenuOptions ?: ArrayList()
     val headerActions: ArrayList<ActionNode> get() = lastReader?.headerActions ?: ArrayList()
     val autoShowActions: ArrayList<ActionNode> get() = lastReader?.autoShowActions ?: ArrayList()
+    // Icon container-level của [[menu]]/[[fab]] (field "icon"/"icon-path" ở NGOÀI "items") - xem
+    // PageConfigReader.menuIcon/fabIcon.
+    val menuIcon: ClickableNode? get() = lastReader?.menuIcon
+    val fabIcon: ClickableNode? get() = lastReader?.fabIcon
 
     // Nhận diện nội dung TOML inline khi dòng 1 hoặc dòng 2 (bỏ qua dòng trống) là
     // header bắt đầu bằng "[[toml]]" (marker đánh dấu inline TOML, tuỳ chọn - dùng khi

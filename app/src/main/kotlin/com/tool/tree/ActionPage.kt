@@ -263,8 +263,8 @@ class ActionPage : AppCompatActivity() {
                 overflowOptions.add(option)
             }
         }
-        setupFab(fabOptions)
-        setupOverflowMenuButton(menu, overflowOptions)
+        setupFab(fabOptions, config.fabIconNode)
+        setupOverflowMenuButton(menu, overflowOptions, config.menuIconNode)
 
         // Đang xoay chờ tải -> đè lên fab vừa set.
         if (pendingSpinIcon != null) {
@@ -326,62 +326,80 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    private fun setupFab(fabOptions: List<PageMenuOption>) {
+    // fabIconNode: icon container-level khai báo TRỰC TIẾP trong [[fab]] (field "icon"/
+    // "icon-path", KHÔNG phải trong "items") - dùng làm fallback khi item không tự set icon
+    // riêng, xem resolveFabIcon().
+    private fun setupFab(fabOptions: List<PageMenuOption>, fabIconNode: ClickableNode?) {
         when (fabOptions.size) {
             0 -> return
-            1 -> addFab(fabOptions[0])
+            1 -> addFab(fabOptions[0], fabIconNode)
             else -> {
                 // Nhiều item: 1 fab, bấm mở popup chọn.
                 binding.actionPageFab.apply {
                     visibility = View.VISIBLE
                     setOnClickListener { showFabChooser(fabOptions) }
-                    setImageDrawable(resolveFabIcon(fabOptions))
+                    setImageDrawable(resolveFabIcon(fabOptions, fabIconNode))
                 }
             }
         }
     }
 
-    private fun addFab(menuOption: PageMenuOption) {
+    private fun addFab(menuOption: PageMenuOption, fabIconNode: ClickableNode?) {
         binding.actionPageFab.apply {
             visibility = View.VISIBLE
             setOnClickListener { onMenuItemClick(menuOption, this) }
-            setImageDrawable(resolveFabIcon(listOf(menuOption)))
+            setImageDrawable(resolveFabIcon(listOf(menuOption), fabIconNode))
         }
     }
 
-    // 1 item dùng icon riêng; 2+ item luôn dùng kr_fab.
-    private fun resolveFabIcon(fabOptions: List<PageMenuOption>): android.graphics.drawable.Drawable? {
-        if (fabOptions.size >= 2) {
-            return ContextCompat.getDrawable(this, R.drawable.kr_fab)
+    // Thứ tự ưu tiên: icon riêng của item (2+ item luôn bỏ qua, dùng chung 1 icon) -> icon
+    // container-level khai báo trong [[fab]] (fabIconNode) -> icon mặc định theo type/kr_fab.
+    private fun resolveFabIcon(fabOptions: List<PageMenuOption>, fabIconNode: ClickableNode?): android.graphics.drawable.Drawable? {
+        if (fabOptions.size == 1) {
+            val option = fabOptions[0]
+            if (option.iconPath.isNotEmpty()) {
+                IconPathAnalysis().loadLogo(this, option, false)?.let { return it }
+            }
         }
 
-        val option = fabOptions[0]
-        val iconRes = if ((option.type == "file" || option.type == "folder") && option.iconPath.isEmpty()) {
-            R.drawable.kr_folder
+        fabIconNode?.let { IconPathAnalysis().loadLogo(this, it, false) }?.let { return it }
+
+        val iconRes = if (fabOptions.size == 1) {
+            val option = fabOptions[0]
+            if ((option.type == "file" || option.type == "folder")) R.drawable.kr_folder else R.drawable.kr_fab
         } else {
             R.drawable.kr_fab
         }
-        val customIcon = if (option.iconPath.isNotEmpty()) {
-            IconPathAnalysis().loadLogo(this, option, false)
-        } else null
-
-        return customIcon ?: ContextCompat.getDrawable(this, iconRes)
+        return ContextCompat.getDrawable(this, iconRes)
     }
 
-    // Nút "⋮" trên toolbar - 1 MenuItem duy nhất làm neo cho ListPopupWindow.
-    private fun setupOverflowMenuButton(menu: Menu?, overflowOptions: List<PageMenuOption>) {
+    // menuIconNode: icon container-level khai báo TRỰC TIẾP trong [[menu]] (field "icon"/
+    // "icon-path", KHÔNG phải trong "items") - thay cho icon "⋮" mặc định nếu có.
+    private fun setupOverflowMenuButton(menu: Menu?, overflowOptions: List<PageMenuOption>, menuIconNode: ClickableNode?) {
         if (overflowOptions.isEmpty()) return
 
         val menuItem = menu?.add(Menu.NONE, Menu.NONE, Menu.NONE, getString(R.string.kr_more_options))
         menuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
 
-        val button = buildOverflowMenuButton()
+        val button = buildOverflowMenuButton(menuIconNode)
         button.setOnClickListener { showOverflowMenuPopup(button, overflowOptions) }
         menuItem?.actionView = button
     }
 
-    // Dựng nút "⋮" bằng code, giữ kích thước/padding/background như layout cũ.
-    private fun buildOverflowMenuButton(): ImageButton {
+    // Màu tint dùng chung cho icon trên toolbar (đè lên icon custom từ icon-path, vì ảnh người
+    // dùng tự chọn thường không có sẵn tint như vector drawable mặc định) - xem PopupMenuListAdapter.
+    private val toolbarIconTint: android.content.res.ColorStateList? by lazy {
+        val ta = obtainStyledAttributes(intArrayOf(R.attr.toolbarIconTint))
+        val tint = ta.getColorStateList(0)
+        ta.recycle()
+        tint
+    }
+
+    // Dựng nút "⋮" bằng code, giữ kích thước/padding/background như layout cũ. Nếu có icon
+    // riêng (menuIconNode, khai báo trong [[menu]]) thì dùng thay cho icon 3 chấm mặc định -
+    // LUÔN ép tint theo màu icon toolbar (icon người dùng tự chọn không đảm bảo hợp với theme
+    // sáng/tối như icon vector mặc định đã có sẵn android:tint).
+    private fun buildOverflowMenuButton(menuIconNode: ClickableNode?): ImageButton {
         val density = resources.displayMetrics.density
         val sizePx = (48 * density).toInt()
         val paddingPx = (12 * density).toInt()
@@ -391,12 +409,19 @@ class ActionPage : AppCompatActivity() {
             it.resourceId
         }
 
+        val customIcon = menuIconNode?.takeIf { it.iconPath.isNotEmpty() }?.let { IconPathAnalysis().loadIcon(this, it) }
+
         return ImageButton(this).apply {
             layoutParams = ViewGroup.LayoutParams(sizePx, sizePx)
             setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
             if (backgroundResId != 0) setBackgroundResource(backgroundResId)
             scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-            setImageResource(R.drawable.ic_more_vert)
+            if (customIcon != null) {
+                setImageDrawable(customIcon)
+                imageTintList = toolbarIconTint
+            } else {
+                setImageResource(R.drawable.ic_more_vert)
+            }
             contentDescription = getString(R.string.kr_more_options)
         }
     }
@@ -696,12 +721,16 @@ class ActionPage : AppCompatActivity() {
             var loadedMenuOptions: ArrayList<PageMenuOption>? = null
             var loadedHeaderActions: ArrayList<ActionNode>? = null
             var loadedAutoShowActions: ArrayList<ActionNode>? = null
+            var loadedMenuIcon: ClickableNode? = null
+            var loadedFabIcon: ClickableNode? = null
             if (config.pageConfigSh.isNotEmpty()) {
                 val shReader = PageConfigSh(this@ActionPage, config.pageConfigSh, config)
                 items = shReader.execute(onNodeReady)
                 loadedMenuOptions = shReader.pageMenuOptions
                 loadedHeaderActions = shReader.headerActions
                 loadedAutoShowActions = shReader.autoShowActions
+                loadedMenuIcon = shReader.menuIcon
+                loadedFabIcon = shReader.fabIcon
             }
             if (items == null && config.pageConfigPath.isNotEmpty()) {
                 val reader = PageConfigReader(applicationContext, config.pageConfigPath, config.pageConfigDir)
@@ -709,10 +738,14 @@ class ActionPage : AppCompatActivity() {
                 loadedMenuOptions = reader.pageMenuOptions
                 loadedHeaderActions = reader.headerActions
                 loadedAutoShowActions = reader.autoShowActions
+                loadedMenuIcon = reader.menuIcon
+                loadedFabIcon = reader.fabIcon
             }
             config.pageMenuOptions = loadedMenuOptions
             config.headerActions = loadedHeaderActions
             config.autoShowActions = loadedAutoShowActions
+            config.menuIconNode = loadedMenuIcon
+            config.fabIconNode = loadedFabIcon
 
             if (config.afterRead.isNotEmpty()) {
                 ScriptEnvironmen.executeResultRoot(this@ActionPage, config.afterRead, config)

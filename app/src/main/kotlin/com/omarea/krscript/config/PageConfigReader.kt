@@ -188,8 +188,28 @@ class PageConfigReader {
     /** Danh sách group.action có show = true, gom được sau khi đọc xong toàn bộ trang. */
     val autoShowActions: ArrayList<ActionNode> get() = collectedAutoShowActions
 
+    // Icon khai báo TRỰC TIẾP ở cấp container [[menu]]/[[fab]] (field "icon"/"icon-path", KHÔNG
+    // phải trong "items") - dùng làm icon mặc định cho nút "⋮"/FAB khi không muốn/không cần set
+    // icon riêng cho từng item. Bọc trong ClickableNode chỉ để giữ đúng "pageConfigDir" (thư mục
+    // của CHÍNH trang đang đọc) phục vụ IconPathAnalysis resolve đường dẫn tương đối - giống hệt
+    // cách pageMenuOptionToml() làm với icon của từng item. Trang có thể khai [[menu]]/[[fab]]
+    // nhiều lần (gộp chung) nên chỉ giữ giá trị KHAI BÁO ĐẦU TIÊN, tránh lần khai báo sau (không
+    // set icon) vô tình xoá icon đã có.
+    private var collectedMenuIcon: ClickableNode? = null
+    private var collectedFabIcon: ClickableNode? = null
+    val menuIcon: ClickableNode? get() = collectedMenuIcon
+    val fabIcon: ClickableNode? get() = collectedFabIcon
+
     private fun menuGroupOptionsToml(table: TomlTable, isFab: Boolean): ArrayList<PageMenuOption> {
         val handler = tomlGet(table, "handler", "handler-sh").orEmpty()
+        tomlGet(table, "icon", "icon-path")?.trim()?.takeIf { it.isNotEmpty() }?.let { path ->
+            val holder = ClickableNode(pageConfigAbsPath).apply { iconPath = path }
+            if (isFab) {
+                if (collectedFabIcon == null) collectedFabIcon = holder
+            } else {
+                if (collectedMenuIcon == null) collectedMenuIcon = holder
+            }
+        }
         val result = ArrayList<PageMenuOption>()
         for (itemTable in tomlEntries(table, "items")) {
             val option = pageMenuOptionToml(itemTable) ?: continue
