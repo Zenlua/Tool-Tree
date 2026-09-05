@@ -2,6 +2,11 @@
 
 + **[Download](https://github.com/Zenlua/Tool-Tree/releases/latest)**
 
+**Version: 1.6.0 (5-9-2026)**
+
++ Change to the new UI
++ Code optimization
+
 **Version: 1.5.9 (17-8-2026)**
 
 + Added support for armv8l
