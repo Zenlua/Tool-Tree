@@ -122,8 +122,8 @@ class BlurController {
             bitmap.width, bitmap.height,
             bitmap.config ?: Bitmap.Config.ARGB_8888
         )
-        // val offset = (1f - contrast) * 128f
-        val offset = if (ThemeModeState.isDarkMode()) 0f else (1f - 1.1f) * 128f // -12.8f
+        val offset = (1f - contrast) * 128f
+        // val offset = if (ThemeModeState.isDarkMode()) 0f else (1f - 1.1f) * 128f // -12.8f
         val cm = ColorMatrix(
             floatArrayOf(
                 contrast, 0f, 0f, 0f, offset,
