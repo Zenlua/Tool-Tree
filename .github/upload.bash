@@ -30,6 +30,7 @@ if echo "$list_file" | grep -q "Addon_"; then
         mv "$file_name" "Add/${id}_$versionCode.7z"
         mkdir -p Up/$id
         echo -e "$download" > Up/$id/download.bash
+        echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') $id: First upload: approved" | tee -a addon.log
       fi
     else
       echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') $id: Ignored because the file was larger than 10MB" | tee -a addon.log
