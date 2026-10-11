@@ -2,9 +2,10 @@
 
 mkdir -p Up Add
 curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/UZE.zip" -o "UZE.zip"
-curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
+#curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
 
 unzip -o UZE.zip -d Up
+ls -1d Up
 getp(){ grep -m1 "$1=" | cut -d= -f2 | sed 's|"||g'; }
 list_file="$(curl -sS -u ":$UP_TOKEN" https://pixeldrain.com/api/user/files)"
 
@@ -36,7 +37,7 @@ if echo "$list_file" | grep -q "Addon_"; then
       echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') | $id: Ignored because the file was larger than 10MB" | tee -a addon.log
     fi
     # Xoá add-on
-    curl -sS -X DELETE -u ":$UP_TOKEN" "https://pixeldrain.com/api/file/$vc"
+    curl -sS -X DELETE -u ":$UP_TOKEN" "https://pixeldrain.com/api/file/$vc" >/dev/null
     file_size= file_name=
   done
 fi
@@ -49,7 +50,7 @@ if echo "$list_file" | grep -q "Delete_"; then
   list_addonl="$(echo "$list_file" | jq --arg kw "Delete_" -r '.files[] | select(.name | startswith($kw)) | .id // empty')"
   for vc in $list_addonl; do
     file_name="$(echo "$list_file" | jq --arg kw "$vc" -r '.files[] | select(.id | startswith($kw)) | .name // empty')"
-    curl -sSLf -u ":$UP_TOKEN" -o "$file_name" "https://pixeldrain.com/api/file/$vc"
+    curl -sSLf -u ":$UP_TOKEN" -o "$file_name" "https://pixeldrain.com/api/file/$vc" >/dev/null
     shum256ss="$(cat $file_name | getp shum256)"
     idss="$(cat $file_name | getp id)"
     name_add_onl="$(curl -sSGL "https://api.github.com/repos/Kakathic/Tool-Tree/releases/tags/V1.0.2" | jq -r --arg name "$idss" '.assets[]? | select(.name | startswith($name)) | .name // empty')"
@@ -64,7 +65,7 @@ if echo "$list_file" | grep -q "Delete_"; then
       echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') | $idss: No add-on found, or mismatched shum code: not approved" | tee -a addon.log
     fi
     # Xoá add-on
-    curl -sS -X DELETE -u ":$UP_TOKEN" "https://pixeldrain.com/api/file/$vc"
+    curl -sS -X DELETE -u ":$UP_TOKEN" "https://pixeldrain.com/api/file/$vc" >/dev/null
     file_name= name_add_onl= idss= shum256ss=
   done
 fi
