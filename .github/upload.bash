@@ -85,5 +85,6 @@ fi
 
 (
 cd Up
+mkdir -p test
 zip -r UZE.zip *
 )
