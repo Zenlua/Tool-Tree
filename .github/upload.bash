@@ -2,10 +2,10 @@
 
 mkdir -p Up Add
 curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/UZE.zip" -o "UZE.zip"
-#curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
+curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
 
 unzip -o UZE.zip -d Up
-ls -1d Up
+ls -1d Up/*
 getp(){ grep -m1 "$1=" | cut -d= -f2 | sed 's|"||g'; }
 list_file="$(curl -sS -u ":$UP_TOKEN" https://pixeldrain.com/api/user/files)"
 
