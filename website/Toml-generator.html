@@ -1181,7 +1181,7 @@ function mfItemBlock(container, r) {
       + (r.reload ? `\nreload = true` : '')
     : '';
   const silentLine = runnable && r.silent ? `\nsilent = true` : '';
-  const fabSpinLine = runnable && container === 'fab' && r.fabSpin ? `\nfab-spin = true` : '';
+  const fabSpinLine = (runnable || t === 'refresh' || t === 'reload') && container === 'fab' && r.fabSpin ? `\nfab-spin = true` : '';
   let extra = '', tail = '';
   if (t === 'action') {
     extra += mfRunLine(r);
@@ -1729,7 +1729,7 @@ function mfCardHtml(r, idx) {
   if (runnable) cells.push(cell('script', 'script', r.script, t === 'file' ? 'sh $file' : t === 'folder' ? 'sh $folder' : t === 'spinner' ? 'echo $state' : 'echo $menu_id'));
   cells.push(mfShCell('icon — item icon ({HOME}/{ICON} ok)', 'icon', r.icon, r.iconSh, r.iconShOn, '{ICON}/item.png', idx));
   if (runnable) cells.push(chk('silent — no log dialog', 'silent', r.silent));
-  if (runnable && r.style === 'fab') cells.push(chk('fab-spin — spin the FAB icon while the script runs', 'fabSpin', r.fabSpin));
+  if ((runnable || t === 'refresh' || t === 'reload') && r.style === 'fab') cells.push(chk('fab-spin — spin the FAB icon while the script runs / page reloads (only spins when checked)', 'fabSpin', r.fabSpin));
   if (targetType) cells.push(`<div class="param-cell" style="grid-column:1/-1;"><label style="color:var(--fg-muted);">navigation target</label><div class="hint" style="margin-top:0;">This target opens immediately; runnable fields are not used for <code>${esc(t)}</code> items.</div></div>`);
   if (noRunType) cells.push(`<div class="param-cell" style="grid-column:1/-1;"><label style="color:var(--fg-muted);">system action</label><div class="hint" style="margin-top:0;">This type is handled directly by the page and does not run a script.</div></div>`);
   return `<div class="param-card">

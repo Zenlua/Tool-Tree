@@ -63,6 +63,7 @@ import kotlinx.coroutines.yield
 class ActionPage : AppCompatActivity(), RowRunProgressHost {
     companion object {
         private var pendingSpinIcon: android.graphics.drawable.Drawable? = null
+        private var pendingSpinEnabled = false
         private const val CHECKBOX_REFRESH_DEBOUNCE_MS = 1000L
         private const val SKELETON_AFTER_DIALOG_MAX = 1
         private const val SKELETON_FIRST_FRAME_DELAY_MS = 48L
@@ -282,7 +283,7 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
         setupOverflowMenuButton(menu, overflowOptions, config.menuIconNode)
 
         if (pendingSpinIcon != null) {
-            startFabSpin()
+            if (pendingSpinEnabled) startFabSpin()
         } else {
             fabRunSpinResume()
         }
@@ -513,7 +514,7 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
         }
 
         when (menuOption.type) {
-            "refresh", "reload" -> triggerPageRecreate()
+            "refresh", "reload" -> triggerPageRecreate(menuOption.isFab && menuOption.fabSpin)
             "restart" -> restartApp()
             "exit", "finish", "close" -> finish()
             "killapp" -> killApp()
@@ -624,11 +625,12 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
         }
     }
 
-    private fun triggerPageRecreate() {
+    private fun triggerPageRecreate(spin: Boolean = false) {
         if (pendingSpinIcon != null) {
             return
         }
         pendingSpinIcon = binding.actionPageFab.drawable
+        pendingSpinEnabled = spin
         recreate()
     }
 
@@ -653,6 +655,7 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
     private fun stopFabSpinIfPending() {
         if (pendingSpinIcon == null) return
         pendingSpinIcon = null
+        pendingSpinEnabled = false
         if (::binding.isInitialized) {
             binding.actionPageFab.apply {
                 clearAnimation()
@@ -745,7 +748,7 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
                 if (!activityReplaced) fabRunSpinStop(menuOption)
                 when {
                     menuOption.autoFinish -> finish()
-                    menuOption.reloadPage -> triggerPageRecreate()
+                    menuOption.reloadPage -> triggerPageRecreate(menuOption.isFab && menuOption.fabSpin)
                     menuOption.autoKill -> killApp()
                     menuOption.autoRestart -> restartApp()
                 }
@@ -1092,7 +1095,7 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
             val activityReplaced = menuOption.autoFinish || menuOption.reloadPage || menuOption.autoKill || menuOption.autoRestart
             when {
                 menuOption.autoFinish -> finish()
-                menuOption.reloadPage -> triggerPageRecreate()
+                menuOption.reloadPage -> triggerPageRecreate(menuOption.isFab && menuOption.fabSpin)
                 menuOption.autoKill -> killApp()
                 menuOption.autoRestart -> restartApp()
             }
