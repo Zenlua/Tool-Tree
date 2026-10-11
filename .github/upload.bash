@@ -2,7 +2,7 @@
 
 mkdir -p Up Add
 curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/UZE.zip" -o "UZE.zip"
-#curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
+curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
 
 unzip -o UZE.zip -d Up
 getp(){ grep -m1 "$1=" | cut -d= -f2 | sed 's|"||g'; }
