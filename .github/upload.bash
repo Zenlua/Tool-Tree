@@ -60,12 +60,25 @@ if echo "$list_file" | grep -q "Delete_"; then
       for vv in $name_add_onl; do
       gh release delete-asset V1.0.2 "$vv"
       done
-      else
-      echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') | $idss: Mismatch shum: not approved" | tee -a addon.log
+    else
+      echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') | $idss: No add-on found, or mismatched shum code: not approved" | tee -a addon.log
     fi
     # Xoá add-on
     curl -sS -X DELETE -u ":$UP_TOKEN" "https://pixeldrain.com/api/file/$vc"
     file_name= name_add_onl= idss= shum256ss=
+  done
+fi
+
+# Ép buộc xoá
+if [ -n "$KEYAC" ]; then
+  for vb in $KEYAC; do
+  name_add_onl22="$(curl -sSGL "https://api.github.com/repos/Kakathic/Tool-Tree/releases/tags/V1.0.2" | jq -r --arg name "$vb" '.assets[]? | select(.name | startswith($name)) | .name // empty')"
+  rm -fr "Up/$vb"
+  for vn in $name_add_onl22; do
+  gh release delete-asset V1.0.2 "$vn"
+  done
+  echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') | $vb: Add-on has been removed by the admin" | tee -a addon.log
+  name_add_onl22=
   done
 fi
 

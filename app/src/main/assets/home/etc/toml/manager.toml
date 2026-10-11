@@ -10,9 +10,17 @@ link = "https://kakathic.github.io/Tool-Tree/website/Toml.html"
 title = "@gen_title"
 link = "https://kakathic.github.io/Tool-Tree/website/Toml-generator.html"
 [[menu.items]]
-title = "Lịch sử phê duyệt"
+title = "@approval_history_text"
 type = "action"
-script = "xem https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log"
+script = """
+  log_check="$(xem "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log")"
+  idss="$(glog id_add_on)"
+  if echo "$log_check" | grep -q "$idss:"; then
+  echo "$log_check" | grep "$idss:"
+  else
+  echo "$log_check"
+  fi
+"""
 
 [[group]]
 [[action]]

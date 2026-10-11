@@ -2,12 +2,18 @@ name: Upload add-on
 
 on:
   workflow_dispatch:
+    inputs:
+      KEYAC:
+        description: 'Import id'
+        required: false
+        default: ''
   schedule:
     - cron: '59 23 * * *'
 permissions: write-all
 env:
     UP_TOKEN: ${{ secrets.UP_TOKEN }}
     GH_TOKEN: ${{ github.token }}
+    KEYAC: ${{ inputs.KEYAC }}
 jobs:
   build-release:
     if: ${{ github.repository_owner == 'Kakathic' }}
