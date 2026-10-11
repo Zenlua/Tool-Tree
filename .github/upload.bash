@@ -53,9 +53,11 @@ if echo "$list_file" | grep -q "Delete_"; then
     curl -sSLf -u ":$UP_TOKEN" -o "$file_name" "https://pixeldrain.com/api/file/$vc" >/dev/null
     shum256ss="$(cat $file_name | getp shum256)"
     idss="$(cat $file_name | getp id)"
+    if [[ -f "Up/$idss/download.bash" ]]; then
     name_add_onl="$(curl -sSGL "https://api.github.com/repos/Kakathic/Tool-Tree/releases/tags/V1.0.2" | jq -r --arg name "$idss" '.assets[]? | select(.name | startswith($name)) | .name // empty')"
     . ./Up/$idss/download.bash
-    if [[ "$shum256" == "$shum256ss" ]] && [[ -f "Up/$idss/download.bash" ]]; then
+    fi
+    if [[ "$shum256" == "$shum256ss" ]]; then
       echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') | Add-on has been removed: $idss" | tee -a addon.log
       rm -fr "Up/$idss"
       for vv in $name_add_onl; do
