@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       KEYAC:
-        description: 'Import id'
+        description: 'Delete ID'
         required: false
         default: ''
   schedule:
-    - cron: '59 23 * * *'
+    - cron: '0 */12 * * *'
 permissions: write-all
 env:
     UP_TOKEN: ${{ secrets.UP_TOKEN }}
