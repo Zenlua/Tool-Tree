@@ -2,7 +2,7 @@
 
 mkdir -p Up Add
 curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/UZE.zip" -o "UZE.zip"
-curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
+#curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
 
 unzip -o UZE.zip -d Up
 getp(){ grep -m1 "$1=" | cut -d= -f2 | sed 's|"||g'; }
@@ -19,7 +19,7 @@ if echo "$list_file" | grep -q "Addon_"; then
       eval "$(7z x "$file_name" Add-on.bash -so 2>/dev/null)"
       download='id='$id'\nauthor="'$author'"\nname="'$name'"\ndescription="'$description'"\nversion="'$version'"\nversionCode='$versionCode'\nroot='$root'\nshum256="'$shum256'"\nurl=https://github.com/Kakathic/Tool-Tree/releases/download/V1.0.2/${id}_$versionCode.7z'
       if [ -d Up/$id ]; then
-        if [[ "$author" == "$(cat Up/$id/download.bash | getp author)" ]] && [[ "$shum256" != "$(cat Up/$id/download.bash | getp shum256)" ]]; then
+        if [[ "$author" == "$(cat Up/$id/download.bash | getp author)" ]] && [[ "$shum256" == "$(cat Up/$id/download.bash | getp shum256)" ]]; then
         mv "$file_name" "Add/${id}_$versionCode.7z"
         echo -e "$download" > Up/$id/download.bash
         echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') | $id: Update detected: approved" | tee -a addon.log
