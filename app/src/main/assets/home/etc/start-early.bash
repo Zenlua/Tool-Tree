@@ -26,8 +26,9 @@ fi
 taiveadd AOK.zip "$AOK"
 taiveadd AON.zip "$AON"
 taiveadd UPL.zip "$UPL"
+taiveadd UZE.zip "$UZE"
 # Cấp quyền 755 tự động
-set_permis $AON/*/* $AOK/*/* $UPL/*/* &>/dev/null
+set_permis $AON/*/* $AOK/*/* $UPL/*/* $UZE/*/* &>/dev/null
 } &
 
 {

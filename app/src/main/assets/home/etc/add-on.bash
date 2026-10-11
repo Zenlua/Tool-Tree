@@ -13,7 +13,7 @@ echo '
   [[menu]]
   [[menu.items]]
   title = "'$customize_text'"
-  get = "glog show_setting_add 1"
+  get = "glog show_setting_add"
   reload = true
   silent = true
   type = "checkbox"
@@ -30,14 +30,35 @@ echo '
   handler = """
   [ "$menu_id" == "file" ] && installadd "$file" "'$1'"
   """
-  
-  [[fab.items]]
-  key = "file"
-  type = "file"
-  title = "'$input_add_text'"
-  suffix = "add,zip,7z"
-  reload = true
-'
+  '
+  if [[ "$1" == "$UZE" ]]; then
+    echo '[[fab.items]]
+    silent = true
+    reload = true
+    icon = "{ICON}/Loading.png"
+    script = """
+    taiveadd(){
+    local urlgitv1="https://github.com/Kakathic/Tool-Tree/releases/download/V1"
+    local shum_add="$(get_shum V1 "$1")"
+    if [[ -n "$shum_add" ]] && [[ "$shum_add" != "$(glog "shum_add_${1%.*}")" ]]; then
+    taive -s "$urlgitv1/$1" "$TMP/$1"
+    unzip -o "$TMP/$1" -d "$2"
+    rm -fr "$TMP/$1"
+    slog "shum_add_${1%.*}" "$shum_add"
+    fi
+    }
+    taiveadd UZE.zip "$UZE"
+    """
+    '
+  else
+    echo '[[fab.items]]
+    key = "file"
+    type = "file"
+    title = "'$input_add_text'"
+    suffix = "add,zip,7z"
+    reload = true
+    '
+  fi
 
 Download() {
   if [ "$url" ]; then
