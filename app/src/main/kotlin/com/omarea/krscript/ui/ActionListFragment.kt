@@ -679,12 +679,36 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         return options
     }
 
+    private fun normalizeShellMode(value: String): String? = when (value.trim().lowercase()) {
+        "hidden" -> RunnableNode.shellModeHidden
+        "bg-task", "bg", "background" -> RunnableNode.shellModeBgTask
+        "default", "log", "dialog" -> RunnableNode.shellModeDefault
+        else -> null
+    }
+
+    private fun pickRule(list: List<String>, index: Int): String? =
+        if (list.size == 1) list[0] else list.getOrNull(index)
+
+    private fun resolveShellBy(nodeInfo: RunnableNode, params: HashMap<String, String>?): String {
+        val action = nodeInfo as? ActionNode ?: return nodeInfo.shell
+        if (params == null) return nodeInfo.shell
+        val count = maxOf(action.shellBy.size, action.shellValue.size, action.shellMode.size)
+        for (i in 0 until count) {
+            val key = pickRule(action.shellBy, i)?.takeIf { it.isNotEmpty() } ?: continue
+            val expected = (pickRule(action.shellValue, i) ?: continue).split(",").map { it.trim() }
+            val mode = normalizeShellMode(pickRule(action.shellMode, i) ?: continue) ?: continue
+            val actual = params[key]?.trim() ?: continue
+            if (actual in expected) return mode
+        }
+        return nodeInfo.shell
+    }
+
     var hiddenTaskRunning = false
     private fun actionExecute(nodeInfo: RunnableNode, script: String, onExit: Runnable, params: HashMap<String, String>?) {
         val context = requireContext()
         val onDismiss = Runnable { krScriptActionHandler?.onActionCompleted(nodeInfo) }
 
-        when (nodeInfo.shell) {
+        when (resolveShellBy(nodeInfo, params)) {
             RunnableNode.shellModeBgTask -> {
                 BgTaskThread.startTask(context, script, params, nodeInfo, onExit, onDismiss)
             }

@@ -11,4 +11,8 @@ class ActionNode(currentConfigXml: String) : RunnableNode(currentConfigXml){
     var menu: Boolean = false
 
     var show: Boolean = false
+
+    var shellBy: List<String> = emptyList()
+    var shellValue: List<String> = emptyList()
+    var shellMode: List<String> = emptyList()
 }

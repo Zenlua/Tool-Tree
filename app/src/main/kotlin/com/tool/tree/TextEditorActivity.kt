@@ -536,10 +536,11 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     private fun resolveAbsolutePath(dir: String, file: String): String {
-        if (file.startsWith("/")) return file
+        val expanded = file.replace("{HOME}", File(filesDir, "home").absolutePath)
+        if (expanded.startsWith("/")) return expanded
         val base = dir.ifBlank { FileWrite.getPrivateFileDir(applicationContext).orEmpty() }
-        if (base.isBlank()) return file
-        return File(base, file).absolutePath
+        if (base.isBlank()) return expanded
+        return File(base, expanded).absolutePath
     }
 
     private fun fileExtension() = File(absoluteFilePath).name.substringAfterLast('.', "").lowercase()

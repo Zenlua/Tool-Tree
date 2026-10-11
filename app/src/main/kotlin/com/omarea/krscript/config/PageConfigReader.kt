@@ -385,6 +385,12 @@ class PageConfigReader {
         option.key = if (seen == 0) baseKey else "$baseKey#$prefix${seen + 1}"
     }
 
+    private fun tomlPipeList(table: TomlTable, key: String): List<String> {
+        val raw = tomlGet(table, key) ?: return emptyList()
+        if (raw.isBlank()) return emptyList()
+        return raw.split("|").map { it.trim() }
+    }
+
     private fun tomlGet(table: TomlTable, vararg keys: String): String? {
         for (key in keys) {
             if (table.contains(key)) {
@@ -908,6 +914,9 @@ class PageConfigReader {
         tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, action) }
         tomlGet(table, "lock-sh")?.let { action.lockShell = it.trim() }
         if (action.setState == null) action.setState = ""
+        action.shellBy = tomlPipeList(table, "shell-by")
+        action.shellValue = tomlPipeList(table, "shell-value")
+        action.shellMode = tomlPipeList(table, "shell-mode")
 
         val paramTables = tomlEntries(table, "params")
         if (paramTables.isNotEmpty()) {

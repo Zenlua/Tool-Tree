@@ -700,6 +700,9 @@ script = "..."</code></pre>
 <tr><td class="field-name">reload</td><td>-</td><td class="field-type">Bool|String</td><td><code>true</code> = reload page; or a comma-separated list of block IDs to refresh only those blocks</td></tr>
 <tr><td class="field-name">shell</td><td>-</td><td class="field-type">String</td><td>Interaction mode, NOT the script content: <code>default</code> (log dialog) / <code>bg-task</code> (background, no dialog) / <code>hidden</code>. Use <code>script</code> to declare the script itself</td></tr>
 <tr><td class="field-name">bg-task</td><td>background-task, async-task</td><td class="field-type">Bool</td><td>Run in background (no log dialog) - equivalent to <code>shell = "bg-task"</code></td></tr>
+<tr><td class="field-name">shell-by</td><td>-</td><td class="field-type">String</td><td><code>[[action]]</code> only. <code>|</code>-separated list of <code>params</code> names to test, e.g. <code>"key1|key2"</code>. Rule <em>i</em> uses the <em>i</em>-th entry of <code>shell-by</code>, <code>shell-value</code> and <code>shell-mode</code>. A list with a single entry is shared by every rule</td></tr>
+<tr><td class="field-name">shell-value</td><td>-</td><td class="field-type">String</td><td><code>[[action]]</code> only. <code>|</code>-separated expected values, one per rule, e.g. <code>"1|2"</code>. Inside a rule, several accepted values are separated by <code>,</code>: <code>"2,3|4"</code> means rule 1 matches 2 or 3, rule 2 matches 4. A rule matches when the param named in <code>shell-by</code> equals any of its values (entries are trimmed; comparison is exact and case-sensitive; spaces inside a value are fine, <code>|</code> and <code>,</code> are not)</td></tr>
+<tr><td class="field-name">shell-mode</td><td>-</td><td class="field-type">String</td><td><code>[[action]]</code> only. <code>|</code>-separated run mode for each rule: <code>hidden</code>, <code>bg-task</code> (or <code>bg</code>), <code>log</code> (or <code>default</code>). Rules are checked left to right and the first match wins; if none matches, a param is missing or a mode is invalid, <code>shell</code> is used. Example: <code>shell = "hidden"</code>, <code>shell-by = "addon_features_toml"</code>, <code>shell-value = "2|3|4"</code>, <code>shell-mode = "bg-task|log|log"</code></td></tr>
 <tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Main script for <code>action</code>/<code>download</code>; set-state script for <code>switch</code>/<code>picker</code> (receives <code>$state</code>)</td></tr>
 </table>
 </div>
@@ -1993,6 +1996,7 @@ script = "sh $state"
 <li>Corrected <code>key</code> default semantics and the single-table / array-of-tables distinction.</li>
 <li>Clarified <code>config-sh</code> inline-TOML detection and dynamic picker option fallback.</li>
 <li>Corrected optional <code>script</code>/<code>get</code>/<code>set</code>/<code>rows</code> markings and expanded dependency aliases/callback behavior.</li>
+<li>Added action <code>shell-by</code> / <code>shell-value</code> / <code>shell-mode</code>: pick <code>hidden</code> / <code>bg-task</code> / <code>log</code> from param values at click time (rules left to right), with <code>shell</code> kept as the fallback.</li>
 </ul>
 </section>
 </main>

@@ -1182,7 +1182,9 @@ function mfItemBlock(container, r) {
     : '';
   const silentLine = runnable && r.silent ? `\nsilent = true` : '';
   let extra = '', tail = '';
-  if (t === 'checkbox') {
+  if (t === 'action') {
+    extra += mfRunLine(r);
+  } else if (t === 'checkbox') {
     if ((r.get||'').trim()) extra += `\nget = "${tomlEsc(r.get.trim())}"`;
     extra += mfRunLine(r);
   } else if (t === 'spinner') {
@@ -1255,6 +1257,9 @@ const A_MAXSDK     = { key:'advMaxSdk',    label:'max-sdk', type:'text', ph:'34'
 const A_TARGETSDK  = { key:'advTargetSdk', label:'target-sdk', type:'text', ph:'35', hint:'Target Android SDK.' };
 const A_SHORTCUT   = { key:'advShortcut',  label:'allow-shortcut', type:'select', options:['auto','true','false'], hint:'Desktop shortcut.' };
 const A_SHELLMODE  = { key:'advShellMode', label:'shell', type:'select', options:['default','bg-task','hidden'], hint:'Mode; ignored with bg-task.' };
+const A_SHELLBY    = { key:'advShellBy', label:'shell-by', type:'text', ph:'key1|key2', hint:'[[action]] only. Param names to test, separated by |. A single entry is shared by every rule.' };
+const A_SHELLVALUE = { key:'advShellValue', label:'shell-value', type:'text', ph:'2,3|4', hint:'Expected value per rule, separated by |. Several accepted values in one rule: separate with a comma (2,3). Spaces inside a value are fine; | and , are not.' };
+const A_SHELLRULEMODE = { key:'advShellRuleMode', label:'shell-mode', type:'text', ph:'log|bg-task', hint:'Run mode per rule: hidden / bg-task / log. Checked left to right, first match wins; no match uses shell.' };
 const A_AUTOKILL   = { key:'advAutoKill',  label:'auto-kill', type:'checkbox', hint:'Kill related processes after run.' };
 const A_AUTORESTART= { key:'advAutoRestart', label:'auto-restart', type:'checkbox', hint:'Restart service after run.' };
 const A_RELOADPAGE = { key:'advReloadPage', label:'reload-page', type:'checkbox', hint:'Reload page after run.' };
@@ -1375,9 +1380,11 @@ function reloadLine(f) {
   return f.reload ? `\nreload = true` : '';
 }
 function shellLine(f) {
-  if (f.bgTask) return `\nbg-task = true`;
+  const by = (f.advShellBy || '').trim(), val = (f.advShellValue || '').trim(), rm = (f.advShellRuleMode || '').trim();
+  const byLine = by && val && rm ? `\nshell-by = "${tomlEsc(by)}"\nshell-value = "${tomlEsc(val)}"\nshell-mode = "${tomlEsc(rm)}"` : '';
+  if (f.bgTask) return `\nbg-task = true` + byLine;
   const m = f.advShellMode || 'default';
-  return m !== 'default' ? `\nshell = "${m}"` : '';
+  return (m !== 'default' ? `\nshell = "${m}"` : '') + byLine;
 }
 function showLine(f) {
   const sh = (f.advShowShell || '').trim();
@@ -1917,7 +1924,7 @@ const TYPES = {
     label: 'action',
     wrap: true,
     desc: 'Runs a shell, optionally with confirm/params. [[action.params]] defines the input dialog.',
-    adv: [...ADV_DYN, ...ADV_VIS, ...ADV_MEDIA, ...ADV_LOCKSEC, ...ADV_RES, A_SHELLMODE, A_AUTOKILL, A_AUTORESTART, A_RELOADPAGE, A_RELOADLIST, A_SHOW_SHELL],
+    adv: [...ADV_DYN, ...ADV_VIS, ...ADV_MEDIA, ...ADV_LOCKSEC, ...ADV_RES, A_SHELLMODE, A_SHELLBY, A_SHELLVALUE, A_SHELLRULEMODE, A_AUTOKILL, A_AUTORESTART, A_RELOADPAGE, A_RELOADLIST, A_SHOW_SHELL],
     advNote: '[[action.params]] cards define the input dialog. warn supports -sh. bg-task runs in background; reload = "keys" overrides reload.',
     fields: [
       { key:'title', label:'title', type:'text', default:'Set CPU governor', sh:true, hint:'-sh: title-sh — the value becomes echo "…" auto.' },
