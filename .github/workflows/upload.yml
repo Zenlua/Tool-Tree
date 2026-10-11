@@ -25,12 +25,12 @@ jobs:
           name: "Tmp"
           tag_name: "V1"
           files: |
-            Up/list_onl.zip
+            Up/UZE.zip
             addon.log
       - name: Upload add-on
         uses: softprops/action-gh-release@v2
         with:
           name: "Add-on"
           tag_name: "V1.0.2"
-          files: Add/*.add
+          files: Add/*.7z
           

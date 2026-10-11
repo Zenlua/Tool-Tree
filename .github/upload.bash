@@ -1,95 +1,73 @@
 # Kakathic
 
 mkdir -p Up Add
-sumcek="$(curl -sSL -G 'https://api.github.com/repos/Kakathic/Tool-Tree/releases/tags/V1' | jq -r --arg name "list_onl.zip" '.assets[] | select(.name == $name and .digest != null) | .digest // empty' | cut -d: -f2)"
-curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/list_onl.zip" -o "list_onl.zip"
-#curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
-unzip -o list_onl.zip -d Up
+curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/UZE.zip" -o "UZE.zip"
+curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1/addon.log" -o "addon.log"
 
-if [[ "$(sha256sum "list_onl.zip" | awk '{print $1}')" != "$sumcek" ]]; then
-echo "E: sha256sum list_onl.zip"
-gh run cancel $GITHUB_RUN_ID
-sleep 5
-exit 0
-exit 1
-fi
-
-if [ -z "$(ls Up)" ]; then
-echo "E: Download failed list_onl.zip"
-gh run cancel $GITHUB_RUN_ID
-sleep 5
-exit 0
-exit 1
-fi
-
+unzip -o UZE.zip -d Up || exit 1
 getp(){ grep -m1 "$1=" | cut -d= -f2 | sed 's|"||g'; }
-list_file="$(curl -sS -u ":$UP_TOKEN" https://pixeldrain.com/api/user/files | jq -r '.files[] | .id')"
+list_file="$(curl -sS -u ":$UP_TOKEN" https://pixeldrain.com/api/user/files)"
 
-# Xử lý từng file
-for vc in $list_file; do
-(
-  # Lấy thông tin file
-  infor="$(curl -sS -u ":$UP_TOKEN" "https://pixeldrain.com/api/file/$vc/info")"
-  file_name="$(echo "$infor" | jq -r .name)"
-  file_size="$(echo "$infor" | jq -r .size)"
-  # Check tên
-  if [[ "$file_name" == account_* ]]; then
-  true
-  elif [[ "$file_name" == addon_* && "$file_size" -lt 10485760 ]]; then
-    # Tải về
-    curl -sSLf -u ":$UP_TOKEN" -o "$file_name" "https://pixeldrain.com/api/file/$vc"
-    # Lấy thông tin add-on
-    if [[ "$file_name" != *.add ]]; then
-      loadmd="$(7z x "$file_name" Add-on.bash -so 2>/dev/null)"
-      id_add="$(echo "$loadmd" | getp id)"
-      author_add="$(echo "$loadmd" | getp author)"
-      vcode_add="$(echo "$loadmd" | getp versionCode)"
-      version_add="$(echo "$loadmd" | getp version)"
-      name_add="$(echo "$loadmd" | getp name)"
-      description_add="$(echo "$loadmd" | getp description)"
-      root_add="$(echo "$loadmd" | getp root)"
-      mv "$file_name" "Add/${id_add}_$vcode_add.add"
-      if [ -d Up/$id_add ]; then
-        if [ "$author_add" == "$(cat Up/$id_add/download.bash | getp author)" ]; then
-        echo "$(date) $id_add: Add-on updated: APPROVED" | tee -a addon.log
-        echo -e "id=$id_add\nauthor=\"$author_add\"\nname=\"$name_add\"\ndescription=\"$description_add\"\nversion=\"$version_add\"\nversionCode=$vcode_add\nroot=$root_add\nurl=https://github.com/Kakathic/Tool-Tree/releases/download/V1.0.2/${id_add}_\$versionCode.add" > Up/$id_add/download.bash
+# Xử lý file add-on
+if echo "$list_file" | grep -q "Addon_"; then
+  list_addonl="$(echo "$list_file" | jq --arg kw "Addon_" -r '.files[] | select(.name | startswith($kw)) | .id // empty')"
+  for vc in $list_addonl; do
+    file_name="$(echo "$list_file" | jq --arg kw "$vc" -r '.files[] | select(.id | startswith($kw)) | .name // empty')"
+    file_size="$(echo "$list_file" | jq --arg kw "$vc" -r '.files[] | select(.id | startswith($kw)) | .size // empty')"
+    if [[ "$file_size" -lt 10485760 ]]; then
+      curl -sSLf -u ":$UP_TOKEN" -o "$file_name" "https://pixeldrain.com/api/file/$vc"
+      eval "$(7z x "$file_name" Add-on.bash -so 2>/dev/null)"
+      download='id='$id'\nauthor="'$author'"\nname="'$name'"\ndescription="'$description'"\nversion="'$version'"\nversionCode='$versionCode'\nroot='$root'\nshum256="'$shum256'"\nurl=https://github.com/Kakathic/Tool-Tree/releases/download/V1.0.2/${id}_$versionCode.7z'
+      if [ -d Up/$id ]; then
+        if [[ "$author" == "$(cat Up/$id/download.bash | getp author)" ]] && [[ "$shum256" == "$(cat Up/$id/download.bash | getp shum256)" ]]; then
+        mv "$file_name" "Add/${id}_$versionCode.7z"
+        echo -e "$download" > Up/$id/download.bash
+        echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') $id: Update detected: approved" | tee -a addon.log
         else
-        echo "$(date) $id_add: This add-on already exists: NO APPROVAL" | tee -a addon.log
+        echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') $id: Mismatch in author name or shum: not approved." | tee -a addon.log
         fi
       else
-        echo "$(date) $id_add: Add-on created: APPROVED" | tee -a addon.log
-        mkdir -p Up/$id_add
-        echo -e "id=$id_add\nauthor=\"$author_add\"\nname=\"$name_add\"\ndescription=\"$description_add\"\nversion=\"$version_add\"\nversionCode=$vcode_add\nroot=$root_add\nurl=https://github.com/Kakathic/Tool-Tree/releases/download/V1.0.2/${id_add}_\$versionCode.add" > Up/$id_add/download.bash
+        mv "$file_name" "Add/${id}_$versionCode.7z"
+        mkdir -p Up/$id
+        echo -e "$download" > Up/$id/download.bash
       fi
-    elif [[ "$file_name" != *.bash ]]; then
-      # Lấy thông tin file add-on
-      id_add="$(cat "$file_name" | getp id)"
-      author_add="$(cat "$file_name" | getp author)"
-      vcode_add="$(cat "$file_name" | getp versionCode)"
-      version_add="$(cat "$file_name" | getp version)"
-      name_add="$(cat "$file_name" | getp name)"
-      description_add="$(cat "$file_name" | getp description)"
-      root_add="$(cat "$file_name" | getp root)"
-      if [ -d Up/$id_add ]; then
-        if [ "$author_add" == "$(cat Up/$id_add/download.bash | getp author)" ]; then
-        echo "$(date) $id_add: Add-on updated: APPROVED" | tee -a addon.log
-        echo -e "id=$id_add\nauthor=\"$author_add\"\nname=\"$name_add\"\ndescription=\"$description_add\"\nversion=\"$version_add\"\nversionCode=$vcode_add\nroot=$root_add\nurl=https://github.com/Kakathic/Tool-Tree/releases/download/V1.0.2/${id_add}_\$versionCode.add" > Up/$id_add/download.bash
-        else
-        echo "$(date) $id_add: This add-on already exists: NO APPROVAL" | tee -a addon.log
-        fi
-      else
-        echo "$(date) $id_add: Add-on created: APPROVED" | tee -a addon.log
-        mkdir -p Up/$id_add
-        echo -e "id=$id_add\nauthor=\"$author_add\"\nname=\"$name_add\"\ndescription=\"$description_add\"\nversion=\"$version_add\"\nversionCode=$vcode_add\nroot=$root_add\nurl=https://github.com/Kakathic/Tool-Tree/releases/download/V1.0.2/${id_add}_\$versionCode.add" > Up/$id_add/download.bash
-      fi
+    else
+      echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') $id: Ignored because the file was larger than 10MB" | tee -a addon.log
     fi
-  fi
-  # Xoá file
-  curl -sS -X DELETE -u ":$UP_TOKEN" "https://pixeldrain.com/api/file/$vc"
-)
-done
+    # Xoá add-on
+    curl -sS -X DELETE -u ":$UP_TOKEN" "https://pixeldrain.com/api/file/$vc"
+    file_size= file_name=
+  done
+fi
+
+# unset
+unset vc list_addonl
+
+# Xử lý xoá add-on
+if echo "$list_file" | grep -q "Delete_"; then
+  list_addonl="$(echo "$list_file" | jq --arg kw "Delete_" -r '.files[] | select(.name | startswith($kw)) | .id // empty')"
+  for vc in $list_addonl; do
+    file_name="$(echo "$list_file" | jq --arg kw "$vc" -r '.files[] | select(.id | startswith($kw)) | .name // empty')"
+    curl -sSLf -u ":$UP_TOKEN" -o "$file_name" "https://pixeldrain.com/api/file/$vc"
+    shum256ss="$(cat $file_name | getp shum256)"
+    idss="$(cat $file_name | getp id)"
+    name_add_onl="$(curl -sSGL "https://api.github.com/repos/Kakathic/Tool-Tree/releases/tags/V1.0.2" | jq -r --arg name "$idss" '.assets[]? | select(.name | startswith($name)) | .name // empty')"
+    curl -sSLf "https://github.com/Kakathic/Tool-Tree/releases/download/V1.0.2/$name_add_onl" -o "del_$name_add_onl"
+    eval "$(7z x "del_$name_add_onl" Add-on.bash -so 2>/dev/null)"
+    if [[ "$shum256" == "$shum256ss" ]]; then
+      echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') Add-on has been removed: $idss" | tee -a addon.log
+      rm -fr "Up/$idss"
+      gh release delete-asset V1.0.2 "$name_add_onl"
+      else
+      echo "$(date +'%Y-%m-%d_%H:%M:%S_%z') Mismatch shum: not approved" | tee -a addon.log
+    fi
+    # Xoá add-on
+    curl -sS -X DELETE -u ":$UP_TOKEN" "https://pixeldrain.com/api/file/$vc"
+    file_name= name_add_onl= idss= shum256ss=
+  done
+fi
 
 (
 cd Up
-zip -r list_onl.zip *
+zip -r UZE.zip *
 )

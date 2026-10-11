@@ -14,14 +14,15 @@ link = "https://kakathic.github.io/Tool-Tree/website/Toml-generator.html"
 [[action]]
 title = "@project_addon_title"
 menu = true
-show = true
 reload = true
+show = '[ -z "$(glog id_add_on)" ] && echo 1'
 shell = "hidden"
 warn = "@project_addon_warn"
 script = '''
-slog id_add_on "$id_add_on"
-slog account_add_on "$account_add_on"
-mkdir -p "$UZZ/$id_add_on"
+  slog id_add_on "$id_add_on"
+  slog account_add_on "$account_add_on"
+  mkdir -p "$UZZ/$id_add_on"
+  upaddon
 '''
 
 [[action.params]]
@@ -30,7 +31,7 @@ title = "@title_addon_features"
 label = "@option_text"
 type = "single-select"
 items = ["1|@default_text", "2|@pack_text", "3|@upload_online_text", "4|@delete_online_text"]
-readonly = '[ -n "$(glog id_add_on)" ] || echo 1'
+readonly = '[ -z "$(glog id_add_on)" ] && echo 1'
 
 [[action.params]]
 name = "account_add_on"
