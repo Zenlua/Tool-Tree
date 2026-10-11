@@ -5,6 +5,7 @@ import com.omarea.common.model.SelectItem
 class PageMenuOption(currentConfigXml: String) : RunnableNode(currentConfigXml) {
     var type: String = ""
     var isFab = false
+    var fabSpin = false
 
     var mime: String = ""
     var suffix: String = ""

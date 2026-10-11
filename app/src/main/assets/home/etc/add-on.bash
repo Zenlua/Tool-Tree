@@ -35,6 +35,7 @@ echo '
     echo '[[fab.items]]
     silent = true
     reload = true
+    fab-spin = true
     icon = "{ICON}/Loading.png"
     script = """
     taiveadd(){

@@ -1544,6 +1544,7 @@ script = "sh /data/data/com.tool.tree/files/run.sh"
 <tr><td class="field-name">script</td><td>set, setstate</td><td class="field-type">String</td><td>Script to run on click. If empty, the parent container's <code>handler</code>/<code>handler-sh</code> is used when provided. The parser treats the inherited handler as the item script; no separate <code>handler-sh</code> item field is needed.</td></tr>
 <tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td><span class="badge shell">shell</span> (type=checkbox) script that decides the tick; (type=spinner) script that reads the current selection for highlighting. Re-run every time the menu opens</td></tr>
 <tr><td class="field-name">silent</td><td>hidden</td><td class="field-type">Bool</td><td>true: run silently in background (no log)</td></tr>
+<tr><td class="field-name">fab-spin</td><td>-</td><td class="field-type">Bool</td><td>Only for <code>[[fab.items]]</code> that run a script (silent or with the log dialog, including after a <code>file</code>/<code>folder</code>/<code>spinner</code> pick). The FAB icon spins continuously while the script is running and stops when it ends. Ignored for menu items and for link/activity/page items. With <code>reload-page</code>, the existing page-reload spin takes over once the script ends</td></tr>
 <tr><td class="field-name">link</td><td>href</td><td class="field-type">String</td><td>URL</td></tr>
 <tr><td class="field-name">activity</td><td>a, intent</td><td class="field-type">String</td><td>Intent</td></tr>
 <tr><td class="field-name">html</td><td>-</td><td class="field-type">String</td><td>WebView URL</td></tr>
@@ -1997,6 +1998,7 @@ script = "sh $state"
 <li>Clarified <code>config-sh</code> inline-TOML detection and dynamic picker option fallback.</li>
 <li>Corrected optional <code>script</code>/<code>get</code>/<code>set</code>/<code>rows</code> markings and expanded dependency aliases/callback behavior.</li>
 <li>Added action <code>shell-by</code> / <code>shell-value</code> / <code>shell-mode</code>: pick <code>hidden</code> / <code>bg-task</code> / <code>log</code> from param values at click time (rules left to right), with <code>shell</code> kept as the fallback.</li>
+<li>Added <code>fab-spin</code> for <code>[[fab.items]]</code>: the FAB icon spins while the item's script is running.</li>
 </ul>
 </section>
 </main>

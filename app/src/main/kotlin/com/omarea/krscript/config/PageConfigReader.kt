@@ -768,6 +768,7 @@ class PageConfigReader {
             }
         }
         tomlGet(table, "silent", "hidden")?.let { option.silent = it.isEmpty() || tomlTruthy(it, "silent", "hidden") }
+        tomlGet(table, "fab-spin")?.let { option.fabSpin = tomlTruthy(it, "fab-spin") }
         tomlGet(table, "link", "href")?.let { option.link = it }
         tomlGet(table, "activity", "a", "intent")?.let { option.activity = it }
         tomlGet(table, "html")?.let { option.onlineHtmlPage = it }

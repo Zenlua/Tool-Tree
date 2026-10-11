@@ -283,6 +283,8 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
 
         if (pendingSpinIcon != null) {
             startFabSpin()
+        } else {
+            fabRunSpinResume()
         }
 
         handler.post { scheduleCheckboxRefresh() }
@@ -660,6 +662,40 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
         invalidateOptionsMenu()
     }
 
+    private var fabRunSpinCount = 0
+
+    private fun fabRunSpinBegin() {
+        if (!::binding.isInitialized || pendingSpinIcon != null) return
+        val rotate = android.view.animation.RotateAnimation(
+            0f, 360f,
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f
+        ).apply {
+            duration = 600
+            repeatCount = android.view.animation.Animation.INFINITE
+            interpolator = android.view.animation.LinearInterpolator()
+        }
+        binding.actionPageFab.startAnimation(rotate)
+    }
+
+    private fun fabRunSpinStart(menuOption: PageMenuOption) {
+        if (!menuOption.isFab || !menuOption.fabSpin) return
+        fabRunSpinCount++
+        if (fabRunSpinCount == 1) fabRunSpinBegin()
+    }
+
+    private fun fabRunSpinStop(menuOption: PageMenuOption) {
+        if (!menuOption.isFab || !menuOption.fabSpin || fabRunSpinCount == 0) return
+        fabRunSpinCount--
+        if (fabRunSpinCount == 0 && pendingSpinIcon == null && ::binding.isInitialized) {
+            binding.actionPageFab.clearAnimation()
+        }
+    }
+
+    private fun fabRunSpinResume() {
+        if (fabRunSpinCount > 0) fabRunSpinBegin()
+    }
+
     private fun openMenuOptionAsPage(menuOption: PageMenuOption) {
         if (menuOption.link.isNotEmpty()) {
             try {
@@ -694,6 +730,7 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
         val config = currentPageConfig ?: return
         val script = menuOption.script
 
+        fabRunSpinStart(menuOption)
         lifecycleScope.launch(Dispatchers.IO) {
            val output = ScriptEnvironmen.executeResultRoot(this@ActionPage, script, config, params)
 
@@ -705,6 +742,7 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
                     SilentShellOutputHandler(this@ActionPage).processOutput(output)
                 }
                 val activityReplaced = menuOption.autoFinish || menuOption.reloadPage || menuOption.autoKill || menuOption.autoRestart
+                if (!activityReplaced) fabRunSpinStop(menuOption)
                 when {
                     menuOption.autoFinish -> finish()
                     menuOption.reloadPage -> triggerPageRecreate()
@@ -1064,9 +1102,10 @@ class ActionPage : AppCompatActivity(), RowRunProgressHost {
         }
 
         val script = menuOption.script
+        fabRunSpinStart(menuOption)
         val dialog = DialogLogFragment.create(
             menuOption,
-            {},
+            Runnable { if (!isFinishing && !isDestroyed) fabRunSpinStop(menuOption) },
             onDismiss,
             script,
             params,

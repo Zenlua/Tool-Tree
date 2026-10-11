@@ -1118,7 +1118,7 @@ function mfNew(style) {
   return { title:'', titleSh:'', titleShOn:false,
     id:'', style:style==='fab'?'fab':'menu', type:'action', preview:'', optSh:'', optMode:'options', options:[], items:[],
     link:'', activity:'', html:'', config:'', configSh:'', suffix:'', mime:'', multiple:false, pathHome:'', get:'', set:'', script:'',
-    silent:false, icon:'', iconSh:'', iconShOn:false, support:'',
+    silent:false, fabSpin:false, icon:'', iconSh:'', iconShOn:false, support:'',
     autoOff:false, autoFinish:false, autoKill:false, autoRestart:false, interruptible:false, needInput:false,
     reload:false, reloadPage:false };
 }
@@ -1140,7 +1140,7 @@ function mfNorm(r) {
   if (!Array.isArray(out.items)) out.items = [];
   out.options = out.options.filter(o => o && typeof o === 'object').map(o => ({ value:(o.value||'')+'', title:(o.title||'')+'' }));
   out.items = out.items.map(x => (x||'')+'');
-  out.multiple = !!out.multiple; out.silent = !!out.silent;
+  out.multiple = !!out.multiple; out.silent = !!out.silent; out.fabSpin = !!out.fabSpin;
   out.titleShOn = !!out.titleShOn; out.descShOn = !!out.descShOn; out.summaryShOn = !!out.summaryShOn; out.iconShOn = !!out.iconShOn;
   return out;
 }
@@ -1181,6 +1181,7 @@ function mfItemBlock(container, r) {
       + (r.reload ? `\nreload = true` : '')
     : '';
   const silentLine = runnable && r.silent ? `\nsilent = true` : '';
+  const fabSpinLine = runnable && container === 'fab' && r.fabSpin ? `\nfab-spin = true` : '';
   let extra = '', tail = '';
   if (t === 'action') {
     extra += mfRunLine(r);
@@ -1225,7 +1226,7 @@ function mfItemBlock(container, r) {
     if ((r.configSh||'').trim()) extra = `\nconfig-sh = "${tomlEsc(r.configSh.trim())}"`;
     else if ((r.config||'').trim()) extra = `\nconfig = "${tomlEsc(r.config.trim())}"`;
   }
-  return `\n\n[[${container}.items]]${mfTextLine(r,'title','title')}${idLine}\ntype = "${tomlEsc(t)}"${iconLine}${silentLine}${common}${runnableCommon}${extra}${tail}`;
+  return `\n\n[[${container}.items]]${mfTextLine(r,'title','title')}${idLine}\ntype = "${tomlEsc(t)}"${iconLine}${silentLine}${fabSpinLine}${common}${runnableCommon}${extra}${tail}`;
 }
 
 function handlerLine(f, key) {
@@ -1728,6 +1729,7 @@ function mfCardHtml(r, idx) {
   if (runnable) cells.push(cell('script', 'script', r.script, t === 'file' ? 'sh $file' : t === 'folder' ? 'sh $folder' : t === 'spinner' ? 'echo $state' : 'echo $menu_id'));
   cells.push(mfShCell('icon — item icon ({HOME}/{ICON} ok)', 'icon', r.icon, r.iconSh, r.iconShOn, '{ICON}/item.png', idx));
   if (runnable) cells.push(chk('silent — no log dialog', 'silent', r.silent));
+  if (runnable && r.style === 'fab') cells.push(chk('fab-spin — spin the FAB icon while the script runs', 'fabSpin', r.fabSpin));
   if (targetType) cells.push(`<div class="param-cell" style="grid-column:1/-1;"><label style="color:var(--fg-muted);">navigation target</label><div class="hint" style="margin-top:0;">This target opens immediately; runnable fields are not used for <code>${esc(t)}</code> items.</div></div>`);
   if (noRunType) cells.push(`<div class="param-cell" style="grid-column:1/-1;"><label style="color:var(--fg-muted);">system action</label><div class="hint" style="margin-top:0;">This type is handled directly by the page and does not run a script.</div></div>`);
   return `<div class="param-card">
@@ -1806,7 +1808,7 @@ const TYPES = {
       { key:'menuIcon', label:'[[menu]] icon', type:'text', default:'', hint:'Icon for the menu container. Alias: icon-path.' },
       { key:'fabHandler', label:'[[fab]] handler', type:'text', default:'', hint:'Default shell command for FAB items that have no own script. Same role as script.' },
       { key:'fabIcon', label:'[[fab]] icon', type:'text', default:'', hint:'Icon for the FAB container.' },
-      { key:'mfItems', label:'menu / fab items', type:'mfitems', default:[], hint:'Toolbar/FAB entries. Cards emit [[menu.items]] / [[fab.items]]. Key → $state / $menu_id; icon, silent. Runnable items expose auto-off / auto-finish / auto-kill / auto-restart / interruptible / need-input / reload-page / reload. Spinner: options-sh / options / items. Checkbox: get + set/script. File: suffix / mime / path-home / multiple. Other targets use matching keys. Empty → no output.' },
+      { key:'mfItems', label:'menu / fab items', type:'mfitems', default:[], hint:'Toolbar/FAB entries. Cards emit [[menu.items]] / [[fab.items]]. Key → $state / $menu_id; icon, silent, fab-spin (fab only). Runnable items expose auto-off / auto-finish / auto-kill / auto-restart / interruptible / need-input / reload-page / reload. Spinner: options-sh / options / items. Checkbox: get + set/script. File: suffix / mime / path-home / multiple. Other targets use matching keys. Empty → no output.' },
     ],
     code: f => {
       const lk = shOrStatic(f, 'loadKey', 'load-key');
