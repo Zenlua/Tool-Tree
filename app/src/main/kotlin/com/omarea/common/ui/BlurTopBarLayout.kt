@@ -85,7 +85,7 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
         val source = blurSource ?: return
         if (!source.isShown || source.width <= 0 || width <= 0 || height <= 0) return
 
-        val scale = (BASE_SIGMA / LIVE_BLUR_SIGMA).coerceIn(0.04f, 0.5f)
+        val scale = (BASE_SIGMA / LIVE_BLUR_SIGMA).coerceIn(0.02f, 0.5f)
         val w = maxOf(1, (width * scale).toInt())
         val h = maxOf(1, (height * scale).toInt())
 
@@ -209,7 +209,7 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
     }
 
     companion object {
-        private const val LIVE_BLUR_SIGMA = 20f
+        private const val LIVE_BLUR_SIGMA = 80f
         private const val LIVE_SATURATION = 1.6f
         private const val LIVE_TINT_BOOST = 1.4f
         private const val LIVE_ALPHA = 255
