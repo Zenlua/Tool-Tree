@@ -208,7 +208,7 @@ Vips() {
   if [ -f "$dirvad/delete" ]; then
     # Xoá Add-on
     [ -f "$dirvad/uninstall.bash" ] && $dirvad/uninstall.bash
-    find "$dirvad" -maxdepth 1 ! -path "$dirvad" \
+    [[ "$1" == "$UZE" ]] || find "$dirvad" -maxdepth 1 ! -path "$dirvad" \
     ! -name 'download.bash' ! -exec rm -rf {} +
     else
     if [[ -f "$dirvad/index.bash" || -f "$dirvad/index.toml" ]]; then
