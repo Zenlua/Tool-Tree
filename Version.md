@@ -1,5 +1,14 @@
 ### Changelog
 
+**Version: 1.6.1 (12-10-2026)**
+
++ Update suggestion
++ Delete all data when updating to this version
++ Update layout changes
++ Upgrade some features
++ Add add-on creation and demo features
++ Fix some errors
+
 **Version: 1.6.0 (5-9-2026)**
 
 + Language update
