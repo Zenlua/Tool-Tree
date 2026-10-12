@@ -29,6 +29,9 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
     private val liveCanvases = arrayOfNulls<Canvas>(2)
     private var liveIndex = 0
     private var livePixels = IntArray(0)
+    private var captureBitmap: Bitmap? = null
+    private var captureCanvas: Canvas? = null
+    private var capturePixels = IntArray(0)
     private var channelA = IntArray(0)
     private var channelR = IntArray(0)
     private var channelG = IntArray(0)
@@ -63,6 +66,8 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
             liveBitmaps[i] = null
             liveCanvases[i] = null
         }
+        captureBitmap = null
+        captureCanvas = null
         super.onDetachedFromWindow()
     }
 
@@ -106,17 +111,27 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
         val offsetX = barLocation[0] - sourceLocation[0]
         val offsetY = barLocation[1] - sourceLocation[1]
 
-        bitmap.eraseColor(0)
-        liveCanvas.save()
-        liveCanvas.scale(w.toFloat() / width, scaleY)
-        liveCanvas.translate(-offsetX.toFloat(), -offsetY.toFloat())
+        val cw = w * LIVE_SUPERSAMPLE
+        val ch = h * LIVE_SUPERSAMPLE
+        var capture = captureBitmap
+        if (capture == null || capture.width != cw || capture.height != ch) {
+            capture = Bitmap.createBitmap(cw, ch, Bitmap.Config.ARGB_8888)
+            captureBitmap = capture
+            captureCanvas = Canvas(capture)
+        }
+        val capCanvas = captureCanvas ?: return
+
+        capture.eraseColor(0)
+        capCanvas.save()
+        capCanvas.scale(cw.toFloat() / width, scaleY * LIVE_SUPERSAMPLE)
+        capCanvas.translate(-offsetX.toFloat(), -offsetY.toFloat())
         try {
-            source.draw(liveCanvas)
+            source.draw(capCanvas)
         } finally {
-            liveCanvas.restore()
+            capCanvas.restore()
         }
 
-        blurPixels(bitmap, w, h)
+        blurPixels(bitmap, capture, w, h)
         liveCanvas.drawColor(frostColor(), PorterDuff.Mode.SRC_ATOP)
 
         liveSrcRect.set(0, 0, w, visibleRows)
@@ -133,7 +148,7 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
         return Color.argb(alpha, Color.red(base), Color.green(base), Color.blue(base))
     }
 
-    private fun blurPixels(bitmap: Bitmap, w: Int, h: Int) {
+    private fun blurPixels(bitmap: Bitmap, capture: Bitmap, w: Int, h: Int) {
         val count = w * h
         if (livePixels.size < count) {
             livePixels = IntArray(count)
@@ -144,14 +159,34 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
         }
         if (channelTmp.size < maxOf(w, h)) channelTmp = IntArray(maxOf(w, h))
 
-        bitmap.getPixels(livePixels, 0, w, 0, 0, w, h)
-        for (i in 0 until count) {
-            val p = livePixels[i]
-            val a = p ushr 24
-            channelA[i] = a
-            channelR[i] = ((p shr 16) and 0xFF) * a / 255
-            channelG[i] = ((p shr 8) and 0xFF) * a / 255
-            channelB[i] = (p and 0xFF) * a / 255
+        val ss = LIVE_SUPERSAMPLE
+        val cw = capture.width
+        if (capturePixels.size < cw * capture.height) capturePixels = IntArray(cw * capture.height)
+        capture.getPixels(capturePixels, 0, cw, 0, 0, cw, capture.height)
+        val area = ss * ss
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                var sa = 0
+                var sr = 0
+                var sg = 0
+                var sb = 0
+                for (dy in 0 until ss) {
+                    val row = (y * ss + dy) * cw + x * ss
+                    for (dx in 0 until ss) {
+                        val p = capturePixels[row + dx]
+                        val a = p ushr 24
+                        sa += a
+                        sr += ((p shr 16) and 0xFF) * a / 255
+                        sg += ((p shr 8) and 0xFF) * a / 255
+                        sb += (p and 0xFF) * a / 255
+                    }
+                }
+                val i = y * w + x
+                channelA[i] = sa / area
+                channelR[i] = sr / area
+                channelG[i] = sg / area
+                channelB[i] = sb / area
+            }
         }
 
         repeat(LIVE_BLUR_PASSES) {
@@ -212,13 +247,14 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
     }
 
     companion object {
-        private const val LIVE_BLUR_SIGMA = 40f
+        private const val LIVE_BLUR_SIGMA = 80f
         private const val LIVE_SATURATION = 1.6f
         private const val LIVE_TINT_BOOST = 1.4f
         private const val LIVE_ALPHA = 255
         private const val LIVE_BLUR_RADIUS = 2
         private const val LIVE_BLUR_PASSES = 3
         private const val LIVE_SAMPLE_MARGIN = 2.5f
+        private const val LIVE_SUPERSAMPLE = 8
         private const val BASE_SIGMA = 2.449f
     }
 }
