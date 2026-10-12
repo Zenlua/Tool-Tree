@@ -51,9 +51,11 @@ echo "$addon_text_3"
 echo
 
 if [ -f "$1" ]; then
+  find "$2/$id" -maxdepth 1 ! -path "$2/$id" ! -name 'download.bash' ! -name 'nodelete' -exec rm -rf {} +
   7z x "$1" -o"$2/$id" -y &>$TMP/unpack_add-on.log
   slog "sumcek_$id" "$(checksum "$1")"
 else
+  find "$2/$id" -maxdepth 1 ! -path "$2/$id" ! -name 'download.bash' ! -name 'nodelete' -exec rm -rf {} +
   7z x "$TMP/$file_random" -o"$2/$id" -y &>$TMP/unpack_add-on.log
   slog "sumcek_$id" "$(checksum "$TMP/$file_random")"
   rm -f "$TMP/$file_random"
