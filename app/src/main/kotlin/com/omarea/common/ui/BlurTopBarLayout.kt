@@ -87,7 +87,10 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
 
         val scale = (BASE_SIGMA / LIVE_BLUR_SIGMA).coerceIn(0.02f, 0.5f)
         val w = maxOf(1, (width * scale).toInt())
-        val h = maxOf(1, (height * scale).toInt())
+        val visibleRows = maxOf(1, (height * scale).toInt())
+        val extraRows = maxOf(1, (LIVE_BLUR_SIGMA * LIVE_SAMPLE_MARGIN * scale).toInt())
+        val h = visibleRows + extraRows
+        val scaleY = visibleRows.toFloat() / height
 
         liveIndex = 1 - liveIndex
         var bitmap = liveBitmaps[liveIndex]
@@ -105,7 +108,7 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
 
         bitmap.eraseColor(0)
         liveCanvas.save()
-        liveCanvas.scale(w.toFloat() / width, h.toFloat() / height)
+        liveCanvas.scale(w.toFloat() / width, scaleY)
         liveCanvas.translate(-offsetX.toFloat(), -offsetY.toFloat())
         try {
             source.draw(liveCanvas)
@@ -116,7 +119,7 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
         blurPixels(bitmap, w, h)
         liveCanvas.drawColor(frostColor(), PorterDuff.Mode.SRC_ATOP)
 
-        liveSrcRect.set(0, 0, w, h)
+        liveSrcRect.set(0, 0, w, visibleRows)
         liveDstRect.set(0, 0, width, height)
         canvas.drawBitmap(bitmap, liveSrcRect, liveDstRect, livePaint)
     }
@@ -209,12 +212,13 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
     }
 
     companion object {
-        private const val LIVE_BLUR_SIGMA = 30f
+        private const val LIVE_BLUR_SIGMA = 80f
         private const val LIVE_SATURATION = 1.6f
         private const val LIVE_TINT_BOOST = 1.4f
         private const val LIVE_ALPHA = 255
         private const val LIVE_BLUR_RADIUS = 2
         private const val LIVE_BLUR_PASSES = 3
+        private const val LIVE_SAMPLE_MARGIN = 2.5f
         private const val BASE_SIGMA = 2.449f
     }
 }
