@@ -247,7 +247,7 @@ class BlurTopBarLayout(context: Context, attrs: AttributeSet?) : BlurViewLinearL
     }
 
     companion object {
-        private const val LIVE_BLUR_SIGMA = 80f
+        private const val LIVE_BLUR_SIGMA = 40f
         private const val LIVE_SATURATION = 1.6f
         private const val LIVE_TINT_BOOST = 1.4f
         private const val LIVE_ALPHA = 255
