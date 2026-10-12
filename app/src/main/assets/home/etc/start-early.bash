@@ -28,7 +28,7 @@ taiveadd AON.zip "$AON"
 taiveadd UPL.zip "$UPL"
 taiveadd UZE.zip "$UZE"
 # Cấp quyền 755 tự động
-set_permis $AON/*/* $AOK/*/* $UPL/*/* $UZE/*/* &>/dev/null
+set_permis $AON/*/* $AOK/*/* $UPL/*/* $UZE/*/* $UZZ/*/* &>/dev/null
 } &
 
 {
@@ -73,9 +73,9 @@ search_image &>/dev/null
 } &
 
 # Dọn bộ đếm
-rm -fr $AON/*/zcheck $AOK/*/zcheck $UPL/*/zcheck $UZE/*/zcheck &
+rm -fr $AON/*/zcheck $AOK/*/zcheck $UPL/*/zcheck $UZE/*/zcheck $UZZ/*/zcheck &
 # Khởi động các file shell ở add-on
-for vadd in $AON/* $AOK/* $UPL/* $UZE/*; do
+for vadd in $AON/* $AOK/* $UPL/* $UZE/* $UZZ/*; do
   if [ -f "$vadd/early_start.bash" ]; then
   echo "Run shell: $vadd/early_start.bash"
   $vadd/early_start.bash &
