@@ -7,7 +7,7 @@ versionCode=361
 shortcut=true
 process=true
 root=false
-description="ROM quick patch tool"
+description="Includes many ROM patching features and APK patches"
 
 # default
 latest_update_text="New update"
@@ -111,7 +111,7 @@ label_xeu_toolbox="Add resetprop"
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Bản vá ROM"
-    description="Công cụ vá nhanh ROM"
+    description="Gồm rất nhiều tính năng vá rom và các bản vá apk"
     project_text="Dự án"
     changelog_text="Nhật ký thay đổi"
     latest_update_text="Cập nhật mới"
@@ -209,7 +209,7 @@ case "$LANGUAGE-$COUNTRY" in
     open_app_text="Loại bỏ thông báo cho phép mở ứng dụng"
     ;;
   hu*)
-    description="ROM gyorsjavító eszköz"
+    description="Számos ROM-javító és APK-javító funkciót tartalmaz"
     project_text="Projekt"
     save_text="Mentés ide:"
     default_text="Alapértelmezett"
@@ -303,7 +303,7 @@ case "$LANGUAGE-$COUNTRY" in
     global_mod_text_6="Nyomja meg és tartsa lenyomva a bekapcsológombot az újraindítási menü megnyitásához"
     ;;
   es*)
-    description="Herramienta de parcheo rápido de ROM"
+    description="Incluye muchas funciones de parcheo de ROM y parches de APK"
     project_text="Proyecto"
     save_text="Guardar en:"
     default_text="Predeterminado"

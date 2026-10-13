@@ -147,26 +147,20 @@ home() {
   
   menuadd "$MPAT"
   echo '
-  [[toml]]
-  
-  [[menu]]
-  [[menu.items]]
-  title = "'$changelog_text'"
-  script = "cat '$MPAT'/changelog.txt | trans -b"
-  
   [[group]]
   title = "'$google_text'"
   
   [[download]]
   title = "'$latest_update_text'"
   auto-finish = true
+  load-after = true
   icon = "'$MPAT'/icon.png"
   support = "add_check '$MPAT'"
   url-sh = "cat '$MPAT'/update"
   script = "installadd $state '${MPAT%/*}'"
 
     [[download.rows]]
-    text-sh = ""
+    text-sh = "xem https://raw.githubusercontent.com/Kakathic/Tool-Tree/refs/heads/main/.github/addon/patch_rom/changelog.txt"
     line = true
 
   [[group]]
