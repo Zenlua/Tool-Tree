@@ -131,6 +131,7 @@ echo '
 home() {
 
   [ -z "$google_text" ] && google_text="$version_text: $version"
+  
   (
   # Điền dữ liệu mặc định
   if [ -z "$(glog ime_color_dark)" ]; then
