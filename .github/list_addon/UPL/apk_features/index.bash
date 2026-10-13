@@ -29,19 +29,17 @@ title = "'$google_text'"
   [[action]]
   title = "'$check_ufs_text'"
   summary = "'$text_root'"
-  lock = """
+  lock-sh = """
   [ "$ROT" == 0 ] && echo "'$fs_text_3'" || echo 0
   """
-  script = """
-  '$MPAT'/scrip/ufs.bash
-  """
+  script = "MPAT='$MPAT' '$MPAT'/scrip/ufs.bash"
 
 [[group]]
   [[action]]
   title = "'$fs_text_2'"
   desc = "'$text_rr'"
   summary = "'$text_root'"
-  lock = """
+  lock-sh = """
   [ "$ROT" == 0 ] && echo "'$fs_text_3'" || echo 0
   """
   script = """
