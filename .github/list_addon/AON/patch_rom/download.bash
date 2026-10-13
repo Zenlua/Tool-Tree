@@ -3,8 +3,8 @@
 id=patch_rom
 name="Patch ROM"
 author=Kakathic
-description="ROM quick patch tool"
+description="Includes many ROM patching features and APK patches"
 version=3.6
 versionCode=361
 root=false
-url=https://github.com/Kakathic/Tool-Tree/releases/download/V1.0.2/patch_rom_$versionCode.add
+url=https://github.com/Kakathic/Tool-Tree/releases/download/V1.0.2/${id}_$versionCode.add
