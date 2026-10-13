@@ -39,10 +39,9 @@ echo '
     icon = "{ICON}/Loading.png"
     script = """
     taiveadd(){
-    local urlgitv1="https://github.com/Kakathic/Tool-Tree/releases/download/V1"
     local shum_add="$(get_shum V1 "$1")"
     if [[ -n "$shum_add" ]] && [[ "$shum_add" != "$(glog "shum_add_${1%.*}")" ]]; then
-    taive -s "$urlgitv1/$1" "$TMP/$1"
+    taive -s "https://github.com/Kakathic/Tool-Tree/releases/download/V1/$1" "$TMP/$1"
     unzip -o "$TMP/$1" -d "$2"
     rm -fr "$TMP/$1"
     slog "shum_add_${1%.*}" "$shum_add"

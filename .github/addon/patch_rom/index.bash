@@ -162,6 +162,7 @@ home() {
     [[download.rows]]
     text-sh = "xem https://raw.githubusercontent.com/Kakathic/Tool-Tree/refs/heads/main/.github/addon/patch_rom/changelog.txt"
     line = true
+    copy = true
 
   [[group]]
   [[page]]
