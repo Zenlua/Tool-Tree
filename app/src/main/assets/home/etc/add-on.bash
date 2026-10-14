@@ -62,17 +62,17 @@ echo '
 
 Download() {
   if [ "$url" ]; then
-  echo '[[group]]
-  [[download]]
-  '$croot_add'
-  icon = "'$icon_vb'"
-  title = "'$name'"
-  summary = "'$sumstxt'"
-  reload = true
-  url = "'$url'"
-  script = """
-  installadd "$state" "'${dirvad%/*}'"
-  """'
+    echo '[[group]]
+    [[download]]
+    '$croot_add'
+    icon = "'$icon_vb'"
+    title = "'$name'"
+    summary = "'$sumstxt'"
+    reload = true
+    url = "'$url'"
+    script = """
+    installadd "$state" "'${dirvad%/*}'"
+    """'
   
     if [ "$(glog show_setting_add)" == 1 ]; then
       echo '
