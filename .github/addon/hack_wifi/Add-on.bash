@@ -10,6 +10,7 @@ root=true
 process=true
 
 # default
+latest_update_text="New update"
 google_text="Currently using a translation tool"
 wifi_text_1="List of networks"
 wifi_text_2="Choose any WIFI network to try to find the password, Prioritize Wi-Fi networks with the letters WPS because they are easier to hack."
@@ -31,6 +32,7 @@ STR_PIN_CODE="PIN code"
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     description="Công cụ dò mật khẩu Wi-Fi 4 hiệu quả"
+    latest_update_text="Cập nhật mới"
     wifi_text_1="Danh sách mạng"
     wifi_text_2="Chọn mạng Wi-Fi bất kỳ để thử tìm mật khẩu, ưu tiên WI-FI có chữ WPS vì dễ hack"
     wifi_text_3="Bắt đầu kết nối"

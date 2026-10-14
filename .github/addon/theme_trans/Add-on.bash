@@ -8,6 +8,7 @@ versionCode=103
 root=true
 
 # default
+latest_update_text="New update"
 google_text="Currently using a translation tool"
 widget_text_1="Auto-translate"
 widget_text_2="Selection"
@@ -50,6 +51,7 @@ case "$LANGUAGE-$COUNTRY" in
   vi*)
 name="Việt hóa widget"
 description="Công cụ dịch widget hiệu quả bằng Gemini"
+latest_update_text="Cập nhật mới"
 widget_text_1="Dịch tự động"
 widget_text_2="Lựa chọn"
 widget_text_3="Có thể tùy chỉnh widget"
