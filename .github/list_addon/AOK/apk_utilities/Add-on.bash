@@ -20,7 +20,7 @@ case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Bản vá apk"
     description="Các bản vá sau khi giải mã apk, lọc bỏ ngôn ngữ"
-    clean_text_1="Dự án"
+    clean_text_1="Lựa chọn dự án"
     clean_text_2="Hiện tại:"
     clean_text_3="Xóa ngôn ngữ"
     clean_text_4="Chọn các ngôn ngữ bạn muốn xóa"

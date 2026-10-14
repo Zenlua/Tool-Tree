@@ -19,7 +19,7 @@ view_source_text_11="Dex to Java Decompiler"
 view_source_text_12="Save to"
 view_source_text_13="Decompilation error!"
 view_source_text_14="Download"
-view_source_text_15="Lack of jadx resources"
+view_source_text_15="More data needs to be loaded to show the feature"
 view_source_text_16="Reset data"
 
 # other languages
@@ -37,7 +37,7 @@ case "$LANGUAGE-$COUNTRY" in
     view_source_text_12="Lưu ở"
     view_source_text_13="Lỗi dịch ngược !"
     view_source_text_14="Tải về"
-    view_source_text_15="Thiếu tài nguyên của jadx"
+    view_source_text_15="Cần tải thêm dữ liệu để hiện tính năng"
     view_source_text_16="Cài lại dữ liệu"
     ;;
   *)

@@ -1,8 +1,8 @@
 # Kakathic
 
-chmod -R 755 $MPAT/home
+chmod -R 755 $1/home
 
-if [ -d "$MPAT/home" ]; then
-    cp -rf $MPAT/home/* $HOME
-    rm -fr $MPAT/home
+if [ -d "$1/home" ]; then
+    cp -rf $1/home/* $1
+    rm -fr $1/home
 fi

@@ -28,6 +28,15 @@ echo '
   [[text]]
   summary = """'"$(iw dev wlan0 link)"'"""
 
+  [[download]]
+  title = "'$latest_update_text'"
+  auto-finish = true
+  load-after = true
+  icon = "'$MPAT'/icon.png"
+  support = "add_check '$MPAT'"
+  url-sh = "cat '$MPAT'/update"
+  script = "installadd $state '${MPAT%/*}'"
+
 [[group]]
   [[picker]]
   title = "'$wifi_text_1'"

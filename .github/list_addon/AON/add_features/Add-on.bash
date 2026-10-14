@@ -5,7 +5,7 @@ author=Kakathic
 version=1.2
 versionCode=102
 root=false
-description="Merge partitions, dex2oat and other features"
+description="Includes many features such as dex2oat, partition merging, etc"
 
 # default
 config_text_1="List of existing projects"
@@ -49,7 +49,7 @@ merge_partition_text="Merge other partitions into the system."
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Tiện ích rom"
-    description="Hợp nhất phân vùng, dex2oat và các tính năng khác"
+    description="Gồm nhiều tính năng như dex2oat, hợp nhất phân vùng v.v"
     config_text_1="Danh sách các dự án hiện có"
     setting_text_3="Dự án"
     input_text="Nhập tệp tin"
