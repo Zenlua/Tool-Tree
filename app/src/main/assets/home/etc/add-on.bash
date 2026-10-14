@@ -184,7 +184,7 @@ Vips() {
   
   # Phát hiện root
   if [ "$root" == "true" ]; then
-  [ "$ROT" == 1 ] sumstxt="$version $author" || sumstxt="$text_root"
+  [ "$ROT" == 1 ] && sumstxt="$version $author" || sumstxt="$text_root"
   croot_add='lock = "'$LOT'|'$root_warning_text'"'
   else
   sumstxt="$version $author"
