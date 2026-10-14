@@ -5,7 +5,7 @@ author=Kakathic
 version=1.2
 versionCode=102
 root=false
-description="Many small amenities"
+description="Merge partitions, dex2oat and other features"
 
 # default
 config_text_1="List of existing projects"
@@ -49,7 +49,7 @@ merge_partition_text="Merge other partitions into the system."
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Tiện ích rom"
-    description="Nhiều tiện ích nhỏ"
+    description="Hợp nhất phân vùng, dex2oat và các tính năng khác"
     config_text_1="Danh sách các dự án hiện có"
     setting_text_3="Dự án"
     input_text="Nhập tệp tin"
@@ -86,7 +86,7 @@ case "$LANGUAGE-$COUNTRY" in
     merge_partition_text="Hợp nhất các phân vùng khác vào system"
     ;;
   hu*)
-    description="Számos apró kényelmi funkció"
+    description="Partíciók egyesítése, dex2oat és egyéb funkciók"
     config_text_1="A meglévő projektek listája"
     setting_text_3="Projekt"
     input_text="Fájl importálása"
@@ -123,7 +123,7 @@ case "$LANGUAGE-$COUNTRY" in
     merge_partition_text="Egyesítse a többi partíciót a rendszerpartícióval"
     ;;
   es*)
-    description="Varias pequeñas utilidades"
+    description="Combinar particiones, dex2oat y otras funciones"
     config_text_1="Lista de proyectos existentes"
     setting_text_3="Proyecto"
     input_text="Importar archivo"

@@ -2,7 +2,7 @@
 id=apk_features
 name="Utility"
 author=Kakathic
-description="Many small amenities"
+description="Small utilities such as speed testing, block cleanup help the device work faster"
 version=1.0
 versionCode=100
 root=false
@@ -29,7 +29,7 @@ transai_text_3="Save at:"
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
-    description="Nhiều tiện ích nhỏ"
+    description="Các tiện ích nhỏ như kiểm tra tốc độ, dọn dẹp block giúp thiết bị hoạt động nhanh hơn"
     fs_text_1="Chạy fstrim để dọn dẹp các khối bộ nhớ"
     fs_text_2="Dọn dẹp khối"
     fs_text_3="Yêu cầu quyền Root"
@@ -48,7 +48,7 @@ case "$LANGUAGE-$COUNTRY" in
     transai_text_3="Lưu ở:"
     ;;
   hu*)
-    description="Számos apró kényelmi funkció"
+    description="A kisebb segédeszközök, mint a sebességtesztelés, a blokk tisztítása gyorsabban segítik az eszköz működését"
     fs_text_1="Futtassa az fstrim parancsot a memóriablokkok tisztításához"
     fs_text_2="Blokk törlése"
     fs_text_3="Root-hozzáférést igényel"
@@ -67,7 +67,7 @@ case "$LANGUAGE-$COUNTRY" in
     transai_text_3="Mentés ide:"
     ;;
   es*)
-    description="Varias pequeñas utilidades"
+    description="Pequeñas empresas como pruebas de velocidad y limpieza de bloques ayudan a que el dispositivo funcione más rápido"
     fs_text_1="Ejecutar fstrim para limpiar los bloques de memoria"
     fs_text_2="Limpiar bloque"
     fs_text_3="Requiere permisos de Root"

@@ -3,9 +3,9 @@
 id=hack_wifi
 name="Hack Wi-Fi"
 author=Kakathic
-description="Wi-Fi hacking tool"
+description="Effective Wi-Fi 4 password detector"
 version=1.0
-versionCode=101
+versionCode=102
 root=true
 process=true
 
@@ -30,7 +30,7 @@ STR_PIN_CODE="PIN code"
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
-    description="Công cụ hack Wi-Fi"
+    description="Công cụ dò mật khẩu Wi-Fi 4 hiệu quả"
     wifi_text_1="Danh sách mạng"
     wifi_text_2="Chọn mạng Wi-Fi bất kỳ để thử tìm mật khẩu, ưu tiên WI-FI có chữ WPS vì dễ hack"
     wifi_text_3="Bắt đầu kết nối"
@@ -48,7 +48,7 @@ case "$LANGUAGE-$COUNTRY" in
     STR_PIN_CODE="Mã PIN"
     ;;
   hu*)
-    description="Wi-Fi feltörő eszköz"
+    description="Hatékony Wi-Fi 4 jelszóérzékelő"
     wifi_text_1="Hálózatlista"
     wifi_text_2="Válasszon ki egy tetszőleges Wi-Fi hálózatot a jelszó megkereséséhez, lehetőleg olyat, amelyiken van „WPS”, mivel azt könnyebb feltörni."
     wifi_text_3="Kezdje el a kapcsolatteremtést"
@@ -66,7 +66,7 @@ case "$LANGUAGE-$COUNTRY" in
     STR_PIN_CODE="PIN kód"
     ;;
   es*)
-    description="Herramienta para hackear Wi-Fi"
+    description="Detector de contraseñas Wi-Fi 4 efectivo"
     wifi_text_1="Lista de redes"
     wifi_text_2="Elige cualquier red Wi-Fi para intentar averiguar la contraseña; se recomiendan las que tienen WPS, ya que son más fáciles de acceder"
     wifi_text_3="Iniciar conexión"

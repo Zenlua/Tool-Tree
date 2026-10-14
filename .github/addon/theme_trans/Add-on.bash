@@ -2,9 +2,9 @@
 id=theme_trans
 name="Theme Trans"
 author=Kakathic
-description="Translate theme, widget, aod"
+description="Effective widget translation tool using Gemini"
 version=1.0
-versionCode=102
+versionCode=103
 root=true
 
 # default
@@ -49,7 +49,7 @@ widget_lang_16="The device is not yet activated. Please support to activate it"
 case "$LANGUAGE-$COUNTRY" in
   vi*)
 name="Việt hóa widget"
-description="Dịch chủ đề, widget, aod"
+description="Công cụ dịch widget hiệu quả bằng Gemini"
 widget_text_1="Dịch tự động"
 widget_text_2="Lựa chọn"
 widget_text_3="Có thể tùy chỉnh widget"

@@ -2,7 +2,7 @@
 id=apk_utilities
 name="Apk patch"
 author=Kakathic
-description="Multiple APK patches"
+description="Patches after decrypting the apk, filtering out the language"
 version=1.0
 versionCode=100
 root=false
@@ -19,7 +19,7 @@ clean_text_5="Deleted:"
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Bản vá apk"
-    description="Nhiều bản vá APK"
+    description="Các bản vá sau khi giải mã apk, lọc bỏ ngôn ngữ"
     clean_text_1="Dự án"
     clean_text_2="Hiện tại:"
     clean_text_3="Xóa ngôn ngữ"
@@ -27,7 +27,7 @@ case "$LANGUAGE-$COUNTRY" in
     clean_text_5="Đã xóa:"
     ;;
   hu*)
-    description="Több APK javítás"
+    description="Javítások az apk dekódolása után, a nyelv kiszűrése"
     clean_text_1="Projekt"
     clean_text_2="Jelenlegi:"
     clean_text_3="Nyelv törlése"
@@ -35,7 +35,7 @@ case "$LANGUAGE-$COUNTRY" in
     clean_text_5="Törölve:"
     ;;
   es*)
-    description="Múltiples parches de APK"
+    description="Parches tras descifrar el apk, filtrando el lenguaje"
     clean_text_1="Proyecto"
     clean_text_2="Actual:"
     clean_text_3="Eliminar idioma"

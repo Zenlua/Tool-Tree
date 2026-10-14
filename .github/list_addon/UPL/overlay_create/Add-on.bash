@@ -2,7 +2,7 @@
 id=overlay_create
 name="Create overlay"
 author=Kakathic
-description="Create overlay language"
+description="Extract the language from the apk and create an overlay, or create an overlay yourself"
 version=1.0
 versionCode=100
 root=false
@@ -33,7 +33,7 @@ overlay_text_11="Importing framework..."
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Tạo Overlay"
-    description="Tạo ngôn ngữ lớp phủ"
+    description="Trích xuất ngôn ngữ từ apk và tạo overlay, hoặc tự tạo overlay"
     home_text_1="Tạo overlay"
     home_text_2="Tạo một overlay từ thư mục ngôn ngữ"
     home_text_3="Trích xuất ngôn ngữ"
@@ -56,7 +56,7 @@ case "$LANGUAGE-$COUNTRY" in
     overlay_text_11="Đang nhập framework..."
     ;;
   hu*)
-    description="Overlay nyelv létrehozása"
+    description="Húzd ki a nyelvet az apk-ból, és hozz létre egy overlay-t, vagy magad hozz létre egy overlay-t"
     home_text_1="Hozz létre egy átfedést (overlay)"
     home_text_2="H hozzon létre overlay-t a nyelvi könyvtárból"
     home_text_3="Nyelvkinyerés"
@@ -79,7 +79,7 @@ case "$LANGUAGE-$COUNTRY" in
     overlay_text_11="framework betöltése..."
     ;;
   es*)
-    description="Crear idioma de overlay"
+    description="Extrae el lenguaje del apk y crea una superposición, o crea una superposición tú mismo"
     home_text_1="Crear overlay"
     home_text_2="Crea un overlay a partir de la carpeta de idioma"
     home_text_3="Extraer idioma"

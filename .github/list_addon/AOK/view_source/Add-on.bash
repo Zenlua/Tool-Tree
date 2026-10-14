@@ -2,7 +2,7 @@
 id=view_source
 name="View source code"
 author=Kakathic
-description="Information and source code"
+description="Decompile apk using tools to view java source code"
 version=1.0
 versionCode=100
 root=false
@@ -26,7 +26,7 @@ view_source_text_16="Reset data"
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Xem mã nguồn"
-    description="Thông tin và mã nguồn"
+    description="Dịch ngược apk bằng tool để xem mã nguồn java"
     view_source_text_5="Tệp đầu vào"
     view_source_text_6="Nhập tệp tin"
     view_source_text_7="Không dịch ngược mã nguồn"

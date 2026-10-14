@@ -2,7 +2,7 @@
 id=upload_file
 name="Upload file online"
 author=Kakathic
-description="Upload files to web"
+description="Upload the file to the web gofile, or pixeldrain if you have an API key"
 version=1.0
 versionCode=100
 root=false
@@ -18,7 +18,7 @@ gofile_text_6="You need to register an account and create a token in the API sec
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
-    description="Tải tập tin lên web"
+    description="Tải tập tin lên web gofile, hoặc pixeldrain nếu có api key"
     gofile_text_1="Đang tải tệp tin lên máy chủ:"
     gofile_text_2="Lỗi tải tệp tin lên !"
     gofile_text_3="Liên kết tải về:"
@@ -26,7 +26,7 @@ case "$LANGUAGE-$COUNTRY" in
     gofile_text_6="Bạn cần đăng ký tài khoản và tạo một token trong mục API tại: pixeldrain.com"
     ;;
   hu*)
-    description="Fájl feltöltése a webre"
+    description="Töltsd fel a fájlt a webes gofile-re, vagy pixeldrainre, ha van API kulcsod"
     gofile_text_1="Fájl feltöltése a szerverre:"
     gofile_text_2="Fájlfeltöltési hiba!"
     gofile_text_3="Letöltési link:"
@@ -34,7 +34,7 @@ case "$LANGUAGE-$COUNTRY" in
     gofile_text_6="Regisztrálnod kell egy fiókot, és létre kell hoznod egy tokent az API-szekcióban: pixeldrain.com"
     ;;
   es*)
-    description="Subir archivo a la web"
+    description="Sube el archivo al gofile web o pixeldrain si tienes una clave API"
     gofile_text_1="Subiendo archivo al servidor:"
     gofile_text_2="¡Error al subir el archivo!"
     gofile_text_3="Enlace de descarga:"

@@ -3,7 +3,7 @@
 id=payload_online
 name="Payload dumper online"
 author=Kakathic
-description="Extract payload online"
+description="Extract IMG files in payload online"
 version=1.0
 versionCode=100
 root=false
@@ -19,7 +19,7 @@ payload_text_5="Select the partition to download"
 # other languages
 case "$LANGUAGE-$COUNTRY" in
   vi*)
-    description="Trích xuất payload online"
+    description="Trích xuất các tệp IMG trong payload online"
     payload_text_1="Nhập đường dẫn URL"
     payload_text_2="Liên kết:"
     payload_text_3="Danh sách phân vùng"
@@ -27,7 +27,7 @@ case "$LANGUAGE-$COUNTRY" in
     payload_text_5="Chọn phân vùng muốn tải về"
     ;;
   hu*)
-    description="Payload kibontása online"
+    description="IMG fájlok kinyerése online a payloadban"
     payload_text_1="Adja meg az URL-t"
     payload_text_2="Link:"
     payload_text_3="Partíciólista"
@@ -35,7 +35,7 @@ case "$LANGUAGE-$COUNTRY" in
     payload_text_5="Válassza ki a letölteni kívánt partíciót"
     ;;
   es*)
-    description="Extraer payload en línea"
+    description="Extraer archivos IMG en la carga útil online"
     payload_text_1="Introduce la URL"
     payload_text_2="Enlace:"
     payload_text_3="Lista de particiones"

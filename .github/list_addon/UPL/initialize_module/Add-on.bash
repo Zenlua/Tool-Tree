@@ -3,7 +3,7 @@
 id=initialize_module
 name="Initialize module"
 author=Kakathic
-description="Customize module"
+description="Create a Module and apply the imported files without having to flash through magisk, ksu..."
 version=1.0
 versionCode=100
 root=true
@@ -30,7 +30,7 @@ lang_desc_service="Edit service.sh"
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Khởi tạo mô-đun"
-    description="Tùy chỉnh mô-đun"
+    description="Tạo một Mô-đun và áp dụng các tệp tin đã nhập mà không cần phải flash thông qua magisk, ksu..."
     lang_action_warn="Add-on này có tác dụng sao chép các tệp tin đã chọn vào module magisk, ksu, apatch v.v, để tạo ra module, sau khi khởi động lại nó sẽ được áp dụng vào hệ thống giống như các module khác."
     lang_title="Nhập tệp tin"
     lang_summary_path="Đường dẫn: "
@@ -47,7 +47,7 @@ case "$LANGUAGE-$COUNTRY" in
     list_modul="Danh sách tệp được áp dụng"
     ;;
   hu*)
-    description="Modul testreszabása"
+    description="Hozz létre egy modult, és alkalmazd az importált fájlokat anélkül, hogy magiskon, ksu-n keresztül kellene villognodnod..."
     lang_action_warn="Ez a kiegészítő a kijelölt fájlokat egy Magisk-, KSU- vagy APatch-modulba másolja; újraindítás után a modul ugyanúgy aktiválódik a rendszerben, mint bármely más modul."
     lang_title="Fájl importálása"
     lang_summary_path="Link: "
@@ -64,7 +64,7 @@ case "$LANGUAGE-$COUNTRY" in
     list_modul="Alkalmazott fájlok listája"
     ;;
   es*)
-    description="Personalizar módulo"
+    description="Crea un módulo y aplica los archivos importados sin tener que flashear por magisk, ksu..."
     lang_action_warn="Este complemento copia los archivos seleccionados a un módulo de Magisk, KSU, APatch, etc., para crear el módulo; tras reiniciar, se aplicará al sistema igual que cualquier otro módulo."
     lang_title="Importar archivo"
     lang_summary_path="Ruta: "
