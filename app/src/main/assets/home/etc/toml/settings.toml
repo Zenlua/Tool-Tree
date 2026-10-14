@@ -102,4 +102,5 @@ icon = "{ICON}/shella.png"
 file = "{HOME}/usr/run_shella.bash"
 need-input = true
 placeholder = "#bash|sh|python"
-value = "# bash"
+value = """# bash
+"""
