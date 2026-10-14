@@ -26,20 +26,6 @@ set = "slog Ticon $state"
 
 [[group]]
 [[action]]
-title = "@project_text_10"
-icon = "{ICON}/java.png"
-warn = "@project_text_9"
-shell = "hidden"
-script = "slog ramoccupied $ramoccupied"
-
-  [[action.params]]
-  name = "ramoccupied"
-  label = "@option_text"
-  value-sh = "glog ramoccupied 4096"
-  items = [ "512", "1024", "2048", "3072", "4096", "5120", "6144", "7168", "8192" ]
-
-[[group]]
-[[action]]
 title = "@project_text_12"
 icon = "{ICON}/cpu.png"
 warn = "@project_text_13"
@@ -52,6 +38,20 @@ script = "slog use_cpu $use_cpus"
   label = "@option_text"
   value-sh = "glog use_cpu"
   options-sh = "seq 1 $(nproc --all)"
+
+[[group]]
+[[action]]
+title = "@project_text_10"
+icon = "{ICON}/java.png"
+warn = "@project_text_9"
+shell = "hidden"
+script = "slog ramoccupied $ramoccupied"
+
+  [[action.params]]
+  name = "ramoccupied"
+  label = "@option_text"
+  value-sh = "glog ramoccupied 4096"
+  items = [ "512", "1024", "2048", "3072", "4096", "5120", "6144", "7168", "8192" ]
 
 [[group]]
 [[action]]

@@ -28,6 +28,7 @@ echo '
   [[text]]
   summary = """'"$(iw dev wlan0 link)"'"""
 
+  [[group]]
   [[download]]
   title = "'$latest_update_text'"
   auto-finish = true
