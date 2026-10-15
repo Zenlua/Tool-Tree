@@ -14,7 +14,6 @@ echo '
   [[menu.items]]
   title = "'$pin_text_add'"
   get = "[ -f '$1'/pin ] && echo 1"
-  auto-finish = true
   type = "checkbox"
   silent = true
   script = """

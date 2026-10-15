@@ -1,11 +1,13 @@
 # Kakathic
 
-if [ -f "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash" ]; then
-  echo "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash"
-elif [ -f "$ETC/lang/$LANGUAGE.bash" ]; then
-  echo "$ETC/lang/$LANGUAGE.bash"
-elif [ -f "$ETC/lang/auto.sh" ]; then
-  echo "$ETC/lang/auto.sh"
+[ -d "$1" ] && pathlang="$1" || pathlang="$ETC/lang"
+
+if [ -f "$pathlang/${LANGUAGE}-${COUNTRY}.bash" ]; then
+  echo "$pathlang/${LANGUAGE}-${COUNTRY}.bash"
+elif [ -f "$pathlang/$LANGUAGE.bash" ]; then
+  echo "$pathlang/$LANGUAGE.bash"
+elif [ -f "$pathlang/auto.sh" ]; then
+  echo "$pathlang/auto.sh"
 else
-  echo "$ETC/lang/default.bash"
+  echo "$pathlang/default.bash"
 fi
