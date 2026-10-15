@@ -114,8 +114,8 @@ script = """
 [[action]]
 title = "$title_delete"
 script = """
-  slog del_app_patch "$del_app_patch"
-  $pathsh del_app "$del_app_patch"
+  slog del_app_patch "\$del_app_patch"
+  $pathsh del_app "\$del_app_patch"
 """
 
   [[action.params]]
@@ -164,8 +164,8 @@ title = "$title_framework_patch"
 warn = "$warning_notes_text"
 summary = "Android 12+"
 script = """
-  slog toolbox_patch_os "$FILE"
-  $pathsh toolbox "$FILE"
+  slog toolbox_patch_os "\$FILE"
+  $pathsh toolbox "\$FILE"
   checktime
 """
 
@@ -219,8 +219,8 @@ title = "$title_cn_global"
 warn = "$warning_notes_text"
 summary = "Xiaomi, Android 12+"
 script = """
-  slog fix_noti_patch_os "$FILE"
-  $pathsh fixnoti "$FILE"
+  slog fix_noti_patch_os "\$FILE"
+  $pathsh fixnoti "\$FILE"
   checktime
 """
 
@@ -334,12 +334,12 @@ title = "$title_ime"
 warn = "Note: MiuiSystemUI.apk (global),\n$warning_notes_text"
 summary = "Xiaomi"
 script = """
-  slog ime_app "$ime_app"
-  slog ime_color "$ime_color"
-  slog ime_color_dark "$ime_color_dark"
-  slog ime_dimen "$ime_dimen"
-  slog fix_key_patch_os "$FILE"
-  $pathsh fixkey "$FILE"
+  slog ime_app "\$ime_app"
+  slog ime_color "\$ime_color"
+  slog ime_color_dark "\$ime_color_dark"
+  slog ime_dimen "\$ime_dimen"
+  slog fix_key_patch_os "\$FILE"
+  $pathsh fixkey "\$FILE"
   checktime
 """
 
@@ -393,8 +393,8 @@ title = "$title_many_patch"
 warn = "$warning_notes_text"
 summary = "Xiaomi, Android 12+"
 script = """
-  slog fix_manyo_patch_os "$FILE"
-  $pathsh fixmultiple "$FILE"
+  slog fix_manyo_patch_os "\$FILE"
+  $pathsh fixmultiple "\$FILE"
   checktime
 """
 
@@ -508,8 +508,8 @@ title = "$title_app_patch"
 warn = "$warning_notes_text"
 summary = "Xiaomi"
 script = """
-  slog fix_manyo_patch_os "$FILE"
-  $pathsh fixapps "$FILE"
+  slog fix_manyo_patch_os "\$FILE"
+  $pathsh fixapps "\$FILE"
   checktime
 """
   
@@ -614,11 +614,11 @@ warn = "$action_warn"
 lock = '[ "$ROT" == 0 ] && echo "$root_warrn" || echo 0'
 interruptible = false
 script = """
-  slog dem_giay $dem_giay
-  slog kill_customize "$kill_customize"
-  slog open_app_bool "$open_app"
-  slog kill_apk_list "$kill_apk_list"
-  '$MPAT'/index.bash test_app "$kill_apk_list"
+  slog dem_giay \$dem_giay
+  slog kill_customize "\$kill_customize"
+  slog open_app_bool "\$open_app"
+  slog kill_apk_list "\$kill_apk_list"
+  '$MPAT'/index.bash test_app "\$kill_apk_list"
 """
 
   [[action.params]]
@@ -731,7 +731,7 @@ script = """
 title = "$title_boot_patch"
 summary = "Android"
 warn = "$title_boot_patch2, $title_boot_patch3_desc"
-script = '$pathsh patch_boot "$FOLDER"'
+script = "$pathsh patch_boot \"\$FOLDER\""
 
   [[action.params]]
   name = "FOLDER"
