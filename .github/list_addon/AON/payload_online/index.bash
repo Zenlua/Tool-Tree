@@ -49,6 +49,9 @@ title = "'$google_text'"
 '
 }
 
+# Ngôn ngữ & Google dịch
+source langadd "${0%/*}"
+
 # Xử lý payload
 if [ -n "$(glog url_text_payload)" ]; then
     checkdjhrh=1
@@ -60,6 +63,4 @@ else
     checkdjhrh=0
 fi
 
-# Ngôn ngữ & Google dịch
-source langadd "${0%/*}"
 "$@"
