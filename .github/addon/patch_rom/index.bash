@@ -143,7 +143,7 @@ load-after = true
 icon = "$MPAT/icon.png"
 support = "add_check $MPAT"
 url-sh = "cat $MPAT/update"
-script = "installadd $state ${MPAT%/*}"
+script = "installadd \$state ${MPAT%/*}"
 
   [[download.rows]]
   text-sh = "xem https://raw.githubusercontent.com/Kakathic/Tool-Tree/refs/heads/main/.github/addon/patch_rom/changelog.txt"
