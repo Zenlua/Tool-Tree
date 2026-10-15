@@ -3,7 +3,7 @@
 id=initialize_module
 name="Initialize module"
 author=Kakathic
-description="Create a Module and apply the imported files without having to flash through magisk, ksu..."
+description="Create a Module and apply the imported files without having to flash through magisk, ksu, etc"
 version=1.0
 versionCode=100
 root=true
@@ -30,7 +30,7 @@ lang_desc_service="Edit service.sh"
 case "$LANGUAGE-$COUNTRY" in
   vi*)
     name="Khởi tạo mô-đun"
-    description="Tạo một Mô-đun và áp dụng các tệp tin đã nhập mà không cần phải flash thông qua magisk, ksu..."
+    description="Tạo một Mô-đun và áp dụng các tệp tin đã nhập mà không cần phải flash thông qua magisk, ksu, v.v"
     lang_action_warn="Add-on này có tác dụng sao chép các tệp tin đã chọn vào module magisk, ksu, apatch v.v, để tạo ra module, sau khi khởi động lại nó sẽ được áp dụng vào hệ thống giống như các module khác."
     lang_title="Nhập tệp tin"
     lang_summary_path="Đường dẫn: "
