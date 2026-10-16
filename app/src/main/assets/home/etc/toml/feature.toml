@@ -111,8 +111,9 @@ underline = true
   name = "api_genmini"
   title = "Gemini API"
   placeholder = "*******************"
-  type = "text"
+  type = "password"
   desc-sh = "transai -c 2>&1"
+  remember = false
   
   [[action.params]]
   name = "models_genmini"
