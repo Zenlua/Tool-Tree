@@ -1,17 +1,11 @@
 # Kakathic
 
-if [ -f "$PAGE_CONFIG_DIR/lang/default.bash" ]; then
-  pathlang="$PAGE_CONFIG_DIR/lang"
+if [ -f "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash" ]; then
+  echo "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash"
+elif [ -f "$ETC/lang/$LANGUAGE.bash" ]; then
+  echo "$ETC/lang/$LANGUAGE.bash"
+elif [ -f "$ETC/lang/auto.sh" ]; then
+  echo "$ETC/lang/auto.sh"
 else
-  pathlang="$ETC/lang"
-fi
-
-if [ -f "$pathlang/${LANGUAGE}-${COUNTRY}.bash" ]; then
-  echo "$pathlang/${LANGUAGE}-${COUNTRY}.bash"
-elif [ -f "$pathlang/$LANGUAGE.bash" ]; then
-  echo "$pathlang/$LANGUAGE.bash"
-elif [ -f "$pathlang/auto.sh" ]; then
-  echo "$pathlang/auto.sh"
-else
-  echo "$pathlang/default.bash"
+  echo "$ETC/lang/default.bash"
 fi
