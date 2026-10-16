@@ -2,6 +2,7 @@
 # Kakathic
 
 fileprop="$1/Add-on.bash"
+check_en="$(grep -cm1 google_text "$1/lang/default.bash" 2>/dev/null)"
 
 if [ -d "$1" ] && [ -f "$fileprop" ]; then
 source language 2>/dev/null
@@ -26,7 +27,14 @@ echo '
   '
 fi
 
-if [ "$google_text" ]; then
+if [ "$google_text" ] || [ "$check_en" == 1 ]; then
+  if [ "$(glog "transai_text_$id")" == 1 ] && [ "$check_en" == 1 ]; then
+    sum_mm="$(checksum "$fileprop")"
+    if [ "$sum_mm" != "$(glog "sum_$id")" ] || [ ! -f "$1/auto.bash" ]; then
+    transai "$(cat "$1/lang/default.bash")" > "$1/lang/auto.bash"
+    slog "sum_$id" "$sum_mm"
+    fi
+  fi
 echo '
   [[group]]
   [[menu]]
@@ -40,7 +48,7 @@ echo '
   if [ "$(glog transai_text_'$id')" == 1 ]; then
   slog transai_text_'$id' 0
   else
-  transai -c && slog transai_text_'$id' 1 || showdialog -t "Gemini" -m "'$warn_gemini_text'" -g 15 -e "'$ETC'/tool-tree.bash Feature"
+  transai -c && slog transai_text_'$id' 1 || showdialog -t "Gemini" -m "'$warn_gemini_text'" -g 15 -e "'$ETC'/toml/feature.toml"
   fi
   """
   '
