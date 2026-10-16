@@ -1,0 +1,6 @@
+description="Parches tras descifrar el apk, filtrando el lenguaje"
+clean_text_1="Proyecto"
+clean_text_2="Actual:"
+clean_text_3="Eliminar idioma"
+clean_text_4="Selecciona los idiomas que quieres eliminar"
+clean_text_5="Eliminado:"

@@ -1,0 +1,6 @@
+description="Javítások az apk dekódolása után, a nyelv kiszűrése"
+clean_text_1="Projekt"
+clean_text_2="Jelenlegi:"
+clean_text_3="Nyelv törlése"
+clean_text_4="Válassza ki a törölni kívánt nyelveket"
+clean_text_5="Törölve:"

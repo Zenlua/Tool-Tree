@@ -90,34 +90,83 @@ class PageConfigReader {
     }
 
     private val loadKeyDirectiveRegex = Regex("""(?m)^[ \t]*load-key(-sh)?[ \t]*=[ \t]*"([^"]*)"[ \t]*\r?\n?""")
+    private val loadTomlDirectiveRegex = Regex("""(?m)^[ \t]*load-toml(-sh)?[ \t]*=[ \t]*(?:"((?:[^"\\]|\\.)*)"|'([^']*)')[ \t]*\r?\n?""")
     private val langLineRegex = Regex("""(?m)^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*=[ \t]*"((?:[^"\\]|\\.)*)"[ \t]*$""")
     private val escapeSeqRegex = Regex("""\\(.)""")
 
-    private fun applyLoadKey(rawText: String): String {
-        val match = loadKeyDirectiveRegex.find(rawText) ?: return rawText
-        val isShell = match.groupValues[1] == "-sh"
-        val rawPath = match.groupValues[2]
-        val stripped = rawText.removeRange(match.range)
-
-        var stream: InputStream? = null
-
-        if (isShell) {
-            val path = executeResultRoot(context, rawPath).trim()
-            if (path.isNotEmpty()) {
-                stream = try {
-                    PathAnalysis(context, parentDir).parsePath(path)
-                } catch (_: Exception) {
-                    null
-                }
+    private fun unescapeTomlBasic(value: String): String {
+        return escapeSeqRegex.replace(value) { m ->
+            when (val c = m.groupValues[1]) {
+                "n" -> "\n"
+                "t" -> "\t"
+                "r" -> "\r"
+                else -> c
             }
-        } else {
-            val path = rawPath.trim()
-            if (path.isNotEmpty()) {
-                stream = try {
-                    PathAnalysis(context, parentDir).parsePath(path)
-                } catch (_: Exception) {
-                    null
-                }
+        }
+    }
+
+    private fun readTomlFileText(path: String): String {
+        if (path.isEmpty()) return ""
+        return try {
+            PathAnalysis(context, parentDir).parsePath(path)
+                ?.use { it.bufferedReader(Charsets.UTF_8).readText() }
+                .orEmpty()
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    private fun prepareTomlPiece(piece: String): String {
+        val trimmed = piece.trim()
+        if (trimmed.isEmpty() || trimmed == "error") return ""
+        val cleaned = loadTomlDirectiveRegex.replace(loadKeyDirectiveRegex.replace(trimmed, ""), "")
+        return applyBuiltinVars(cleaned).trimEnd() + "\n"
+    }
+
+    private fun applyLoadKey(rawText: String): String {
+        val keyMatch = loadKeyDirectiveRegex.find(rawText)
+        val tomlMatches = loadTomlDirectiveRegex.findAll(rawText).toList()
+        if (keyMatch == null && tomlMatches.isEmpty()) return rawText
+
+        val keyIsShell = keyMatch?.groupValues?.get(1) == "-sh"
+        val keyValue = keyMatch?.groupValues?.get(2)?.trim().orEmpty()
+        val tomlValues = tomlMatches.map { m ->
+            (if (m.groups[2] != null) unescapeTomlBasic(m.groupValues[2]) else m.groupValues[3]).trim()
+        }
+
+        val scripts = LinkedHashMap<String, String>()
+        if (keyIsShell && keyValue.isNotEmpty()) scripts["key"] = keyValue
+        tomlMatches.forEachIndexed { index, m ->
+            if (m.groupValues[1] == "-sh" && tomlValues[index].isNotEmpty()) scripts["toml:$index"] = tomlValues[index]
+        }
+        if (vitualRootNode == null) {
+            vitualRootNode = NodeInfoBase(pageConfigAbsPath)
+        }
+        val shellResults = ScriptEnvironmen.executeMultipleResultRoot(context, scripts, vitualRootNode)
+
+        val patches = ArrayList<Pair<IntRange, String>>()
+        keyMatch?.let { patches.add(it.range to "") }
+        tomlMatches.forEachIndexed { index, m ->
+            val piece = if (m.groupValues[1] == "-sh") shellResults["toml:$index"].orEmpty() else readTomlFileText(tomlValues[index])
+            patches.add(m.range to prepareTomlPiece(piece))
+        }
+        val builder = StringBuilder()
+        var cursor = 0
+        for ((range, replacement) in patches.sortedBy { it.first.first }) {
+            builder.append(rawText, cursor, range.first)
+            builder.append(replacement)
+            cursor = range.last + 1
+        }
+        builder.append(rawText, cursor, rawText.length)
+        val merged = builder.toString()
+
+        val keyPath = (if (keyIsShell) shellResults["key"].orEmpty() else keyValue).trim()
+        var stream: InputStream? = null
+        if (keyPath.isNotEmpty() && keyPath != "error") {
+            stream = try {
+                PathAnalysis(context, parentDir).parsePath(keyPath)
+            } catch (_: Exception) {
+                null
             }
         }
 
@@ -131,10 +180,10 @@ class PageConfigReader {
         } catch (_: Exception) {
             null
         }
-        if (keyMap.isNullOrEmpty()) return stripped
+        if (keyMap.isNullOrEmpty()) return merged
 
         val keyRefRegex = Regex("@(" + keyMap.keys.joinToString("|") { Regex.escape(it) } + ")\\b")
-        return keyRefRegex.replace(stripped) { m ->
+        return keyRefRegex.replace(merged) { m ->
             keyMap[m.groupValues[1]]?.replace("\\", "\\\\")?.replace("\"", "\\\"") ?: m.value
         }
     }

@@ -1,0 +1,6 @@
+google_text="Currently using a translation tool"
+clean_text_1="Project"
+clean_text_2="Present:"
+clean_text_3="Remove language"
+clean_text_4="Select the languages you want to delete"
+clean_text_5="Deleted:"

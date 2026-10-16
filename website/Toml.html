@@ -588,7 +588,7 @@ desc = "@string:switch_fast_charge_desc"
 get = "getprop sys.fastcharge"
 set = "setprop sys.fastcharge $state"</code></pre>
 <div class="callout tip">Both <code>@string/name</code> and <code>@string:name</code> point to the same resource lookup - use whichever separator you prefer, they are interchangeable.</div>
-<h3>2.7. <code>load-key</code> - inline key/value substitution (i18n)</h3>
+<h3>2.7. <code>load-key</code> / <code>load-toml</code> - inline key/value substitution and dynamic TOML</h3>
 <p>A page may declare <strong>one</strong> directive line anywhere in the document (typically at the very top):</p>
 <pre><code>load-key = "strings_en.txt"
 
@@ -602,13 +602,32 @@ set = "settings put global wifi_on $state"</code></pre>
 <tr><th>Directive</th><th>Description</th></tr>
 <tr><td><code>load-key = "path"</code></td><td>Path of the key file - resolved like every other path (relative to the page config dir, app-private dir, APK assets, or absolute), and accepts the <code>{HOME}</code>/<code>{ICON}</code> path placeholders described in <a href="#rules">§2.8</a></td></tr>
 <tr><td><code>load-key-sh = "script"</code></td><td><span class="badge shell">shell</span> Script whose output is the key file path instead of a static path</td></tr>
+<tr><td><code>load-toml = "path"</code></td><td>Path of a <code>.toml</code> fragment - resolved like <code>load-key</code>. The directive line is replaced by the file content before parsing</td></tr>
+<tr><td><code>load-toml-sh = "script"</code></td><td><span class="badge shell">shell</span> Script whose <strong>output is TOML text</strong>. The directive line is replaced by that output before parsing. Use <code>"..."</code> (with <code>\"</code> escapes) or a <code>'...'</code> literal string, e.g. <code>load-toml-sh = 'bash menu.sh "$PAGE_CONFIG_DIR"'</code></td></tr>
 </table>
 </div>
 <p>The key file itself is a simple list of lines <code>name = "value"</code> (name starts with a letter/underscore; value is quoted; <code>\</code> escape sequences are supported):</p>
 <pre><code># strings_en.txt
 wifi_title = "Wi-Fi booster"
 wifi_desc = "Keep Wi-Fi on during sleep"</code></pre>
-<div class="callout tip">Substitution details: unknown <code>@name</code> references are left untouched; values are re-escaped (<code>\</code> → <code>\\</code>, <code>"</code> → <code>\"</code>) so they are safe inside TOML strings; the directive line itself is removed from the document after processing. Only the <strong>first</strong> directive line is applied - later ones are ignored.</div>
+<div class="callout tip">Substitution details: unknown <code>@name</code> references are left untouched; values are re-escaped (<code>\</code> → <code>\\</code>, <code>"</code> → <code>\"</code>) so they are safe inside TOML strings; the directive line itself is removed from the document after processing. Only the <strong>first</strong> <code>load-key</code> directive line is applied - later ones are ignored (<code>load-toml*</code> lines may repeat).</div>
+<h4>Dynamic TOML: <code>load-toml</code> / <code>load-toml-sh</code></h4>
+<p>These directives are handled in the <strong>same step as <code>load-key</code></strong>, before <code>Toml.parse()</code>. All <code>load-key-sh</code> and <code>load-toml-sh</code> scripts run together in <strong>one</strong> shell round-trip. Each <code>load-toml*</code> line is replaced in place by the loaded text, then <code>{ROT}</code>/<code>{LOT}</code> and the <code>@name</code> substitution run once over the merged document - so dynamic output can use <code>@name</code> too, and nodes keep the position (and group) of the directive line.</p>
+<pre><code>load-key = "strings_en.txt"
+load-toml-sh = 'bash $ETC/menu-addon.sh "$PAGE_CONFIG_DIR"'
+
+[[group]]
+title = "@main_title"</code></pre>
+<pre><code># menu-addon.sh prints only what it needs - no [[group]]
+echo '[[menu]]
+[[menu.items]]
+title = "@pin_text"
+type = "checkbox"
+get = "[ -f pin ] &amp;&amp; echo 1"
+silent = true
+script = "touch pin"'</code></pre>
+<div class="callout tip">Rules: put the directive on its own line, <strong>between</strong> tables (never between the key/value lines of a table, because the inserted <code>[[...]]</code> headers would cut that table). Several <code>load-toml*</code> lines are allowed. Empty / failed output is skipped. Output is <strong>not</strong> scanned again, so <code>load-key*</code>/<code>load-toml*</code> lines inside it are dropped (no recursion). <code>$1</code> is not set automatically - pass <code>"$PAGE_CONFIG_DIR"</code> (or <code>$PAGE_CONFIG_FILE</code>) yourself.</div>
+<div class="callout warn">Do not print <code>[[group]]</code> from a script that only adds menu/fab entries: a <code>[[group]]</code> in the output opens a new group and every static node written after the directive would be assigned to it. Invalid TOML in the output makes the whole page fail to parse, like any other TOML error.</div>
 <div class="callout warn">The token prefix used to change from <code>$name</code> to <code>@name</code> - a shell variable like <code>$PATH</code>/<code>$HOME</code>/<code>$1</code> inside a <code>script</code>/<code>run</code> field would otherwise collide with a load-key of the same name. For the same reason, avoid naming a load-key <code>string</code>, <code>color</code>, or <code>android</code> - those are reserved by the <code>@string/...</code>, <code>@color/...</code> and <code>@android:color/...</code> resource references from §2.6 and §3.2, and a load-key with one of these names would shadow them.</div>
 <h3>2.8. Path placeholders: <code>{HOME}</code>, <code>{ICON}</code></h3>
 <p>These are resolved by the path lookup itself (<code>PathAnalysis</code>), not by the whole-document text substitution above - so they only take effect inside fields that are actually treated as a <strong>path</strong>: <code>icon</code>/<code>icon-sh</code> output, <code>photo</code>, <code>bg</code>, <code>logo</code>, row <code>icon</code>/<code>photo</code>, <code>html-file</code>, the editor's <code>file</code>, <code>resource-file</code>/<code>resource-dir</code>, and <code>load-key</code>/<code>load-key-sh</code> above.</p>
@@ -1998,6 +2017,7 @@ script = "sh $state"
 <li>Clarified <code>config-sh</code> inline-TOML detection and dynamic picker option fallback.</li>
 <li>Corrected optional <code>script</code>/<code>get</code>/<code>set</code>/<code>rows</code> markings and expanded dependency aliases/callback behavior.</li>
 <li>Added action <code>shell-by</code> / <code>shell-value</code> / <code>shell-mode</code>: pick <code>hidden</code> / <code>bg-task</code> / <code>log</code> from param values at click time (rules left to right), with <code>shell</code> kept as the fallback.</li>
+<li>Added <code>load-toml</code> / <code>load-toml-sh</code> directives (§2.7): merge a TOML fragment (file or shell output) into the document before parsing, in the same step as <code>load-key</code>, so <code>@name</code> substitution also applies to it.</li>
 <li>Added <code>fab-spin</code> for <code>[[fab.items]]</code>: the FAB icon spins only when it is true — while the item's script runs or the page reloads (<code>refresh</code>/<code>reload</code>/<code>reload-page</code>). The old automatic spin on page reload is removed.</li>
 </ul>
 </section>
