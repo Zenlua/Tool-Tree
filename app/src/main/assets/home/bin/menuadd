@@ -9,6 +9,7 @@ source "$fileprop" 2>/dev/null
 
 [ -f "$1/pin" ] && pin_text_add="$unpin_text" || pin_text_add="$pin_text"
 echo '
+  [[group]]
   [[menu]]
   [[menu.items]]
   title = "'$pin_text_add'"
@@ -27,6 +28,7 @@ fi
 
 if [ "$google_text" ]; then
 echo '
+  [[group]]
   [[menu]]
   [[menu.items]]
   title = "Gemini"
