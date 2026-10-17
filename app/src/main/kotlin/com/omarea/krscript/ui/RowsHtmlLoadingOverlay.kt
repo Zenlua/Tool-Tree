@@ -16,7 +16,11 @@ object RowsHtmlLoadingOverlay {
     private const val MAX_WAIT_MS = 30000L
     private const val FADE_MS = 150L
 
-    fun show(container: FrameLayout, webView: WebView) {
+    fun showPlaceholder(container: FrameLayout) {
+        obtainOverlay(container).begin()
+    }
+
+    private fun obtainOverlay(container: FrameLayout): Overlay {
         var found: Overlay? = null
         for (i in 0 until container.childCount) {
             val child = container.getChildAt(i)
@@ -25,7 +29,7 @@ object RowsHtmlLoadingOverlay {
                 break
             }
         }
-        val overlay: Overlay = if (found != null) {
+        return if (found != null) {
             container.bringChildToFront(found)
             found
         } else {
@@ -36,6 +40,10 @@ object RowsHtmlLoadingOverlay {
                 )
             }
         }
+    }
+
+    fun show(container: FrameLayout, webView: WebView) {
+        val overlay = obtainOverlay(container)
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {

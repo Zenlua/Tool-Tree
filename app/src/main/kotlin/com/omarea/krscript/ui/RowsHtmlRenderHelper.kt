@@ -36,7 +36,14 @@ object RowsHtmlRenderHelper {
             container.layoutParams = params
         }
 
-        val webView = container.getChildAt(0) as? WebView ?: createWebView(context).also {
+        val existingWebView = container.getChildAt(0) as? WebView
+        if (existingWebView == null && RowsHtmlDeferral.defer(container) { bind(context, container, rows, config) }) {
+            container.visibility = View.VISIBLE
+            RowsHtmlLoadingOverlay.showPlaceholder(container)
+            return
+        }
+
+        val webView = existingWebView ?: createWebView(context).also {
             container.removeAllViews()
             container.addView(it, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         }
@@ -76,7 +83,6 @@ object RowsHtmlRenderHelper {
         }
 
         webView.setBackgroundColor(Color.TRANSPARENT)
-        // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         return webView
     }
 

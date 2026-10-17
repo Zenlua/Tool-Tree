@@ -162,12 +162,14 @@ class PageLayoutRender(private val mContext: Context,
 
     fun addLoadingPlaceholders(count: Int) {
         if (count <= 0) return
+        RowsHtmlDeferral.begin()
         val views = (0 until count).map { createSkeletonView() }
         rootGroup.addPlaceholders(views)
     }
 
     fun clearLoadingPlaceholders() {
         rootGroup.clearPlaceholders()
+        RowsHtmlDeferral.end()
     }
 
     private fun createSkeletonView(): View {
