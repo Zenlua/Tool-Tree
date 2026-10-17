@@ -22,12 +22,11 @@ type = "text"
 required = true
 
 [[group]]
-
 [[action]]
 visible = '[ -n "$(glog url_text_payload)" ] && echo 1'
 reload = "true"
 title = "@payload_text_3"
-summary = 'echo "@payload_text_4 $PTSD"'
+summary-sh = 'echo "@payload_text_4 $PTSD"'
 script = """
 echo "Downloading..."
 echo
@@ -48,7 +47,9 @@ required = true
 options-sh = '''
 # Xử lý payload
 if [ "$(glog url_text_payload | checksum)" != "$(glog url_text_payload_md5)" ]; then
-listpayload "$(glog url_text_payload)" | awk '{print $1"|"$1" "$2}'
+listpayload "$(glog url_text_payload)" | awk '{print $1"|"$1" "$2}' | tee $PAGE_CONFIG_DIR/list_payload
 slog url_text_payload_md5 "$(glog url_text_payload | checksum)"
+else
+cat $PAGE_CONFIG_DIR/list_payload 2>/dev/null
 fi
 '''
