@@ -1,4 +1,3 @@
-description="Javítások az apk dekódolása után, a nyelv kiszűrése"
 clean_text_1="Projekt"
 clean_text_2="Jelenlegi:"
 clean_text_3="Nyelv törlése"

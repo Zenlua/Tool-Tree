@@ -33,7 +33,7 @@ if [ "$google_text" ] || [ "$transai" == "true" ]; then
     slog "sum_$id" "$sum_mm"
     fi
   fi
-echo '
+  echo '
   [[group]]
   [[menu]]
   [[menu.items]]
@@ -45,9 +45,9 @@ echo '
   script = """
   if [ "$(glog transai_text_'$id')" == 1 ]; then
   slog transai_text_'$id' 0
-  rm -f "'$id'/lang/auto.bash" 2>/dev/null
+  rm -fr "'$1'/lang/auto.bash" 2>/dev/null
   else
-  [ -n $(glog api_genmini) ] && slog transai_text_'$id' 1 || showdialog -t "Gemini" -m "'$warn_gemini_text'" -g 15 -e "'$ETC'/toml/feature.toml"
+  [[ -n "$(glog api_genmini)" ]] && slog transai_text_'$id' 1 || showdialog -t "Gemini" -m "'$warn_gemini_text'" -g 15 -e "'$ETC'/toml/feature.toml"
   fi
   """
   '
