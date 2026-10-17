@@ -134,11 +134,12 @@ class PageConfigReader {
             (if (m.groups[2] != null) unescapeTomlBasic(m.groupValues[2]) else m.groupValues[3]).trim()
         }
 
+        // load-toml-sh chạy TRƯỚC load-key-sh: script toml có thể tạo/xoá file key (vd lang/auto.bash)
         val scripts = LinkedHashMap<String, String>()
-        if (keyIsShell && keyValue.isNotEmpty()) scripts["key"] = keyValue
         tomlMatches.forEachIndexed { index, m ->
             if (m.groupValues[1] == "-sh" && tomlValues[index].isNotEmpty()) scripts["toml:$index"] = tomlValues[index]
         }
+        if (keyIsShell && keyValue.isNotEmpty()) scripts["key"] = keyValue
         if (vitualRootNode == null) {
             vitualRootNode = NodeInfoBase(pageConfigAbsPath)
         }
