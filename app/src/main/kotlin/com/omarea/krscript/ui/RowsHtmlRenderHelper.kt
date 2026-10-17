@@ -76,7 +76,7 @@ object RowsHtmlRenderHelper {
         }
 
         webView.setBackgroundColor(Color.TRANSPARENT)
-        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+        // webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         return webView
     }
 
