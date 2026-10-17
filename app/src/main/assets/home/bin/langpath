@@ -1,11 +1,11 @@
 # Kakathic
 
-if [ -f "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash" ]; then
+if [ -f "$ETC/lang/auto.bash" ]; then
+  echo "$ETC/lang/auto.bash"
+elif [ -f "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash" ]; then
   echo "$ETC/lang/${LANGUAGE}-${COUNTRY}.bash"
 elif [ -f "$ETC/lang/$LANGUAGE.bash" ]; then
   echo "$ETC/lang/$LANGUAGE.bash"
-elif [ -f "$ETC/lang/auto.bash" ]; then
-  echo "$ETC/lang/auto.bash"
 else
   echo "$ETC/lang/default.bash"
 fi
