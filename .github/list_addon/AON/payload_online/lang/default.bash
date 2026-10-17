@@ -1,0 +1,6 @@
+google_text="Currently using a translation tool"
+payload_text_1="Import url path"
+payload_text_2="Link:"
+payload_text_3="Partition list"
+payload_text_4="Save in:"
+payload_text_5="Select the partition to download"

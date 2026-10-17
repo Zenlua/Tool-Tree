@@ -1,0 +1,54 @@
+[[toml]]
+load-key-sh = "ETC=$PAGE_CONFIG_DIR langpath"
+load-toml-sh = "menuadd $PAGE_CONFIG_DIR"
+
+[[group]]
+title-sh = '''
+[ -f $PAGE_CONFIG_DIR/lang/auto.bash ] && echo "@google_text"
+'''
+
+[[action]]
+shell = "hidden"
+reload = true
+title = "@payload_text_1"
+summary-sh = 'echo "@payload_text_2 http://...$(glog url_text_payload | tail -c 25)"'
+script = 'slog url_text_payload "$url_text_payload"'
+
+[[action.params]]
+name = "url_text_payload"
+placeholder = "https://web.com/rom-payload-ota.zip"
+value-sh = "glog url_text_payload"
+type = "text"
+required = true
+
+[[group]]
+
+[[action]]
+visible = '[ -n "$(glog url_text_payload)" ] && echo 1'
+reload = "true"
+title = "@payload_text_3"
+summary = 'echo "@payload_text_4 $PTSD"'
+script = """
+echo "Downloading..."
+echo
+for vv in $partition; do
+$PAGE_CONFIG_DIR/payload.bash $vv
+done
+echo
+echo "@payload_text_4 $PTSD"
+echo
+checktime
+"""
+
+[[action.params]]
+name = "partition"
+desc = "@payload_text_5"
+multiple = true
+required = true
+options-sh = '''
+# Xử lý payload
+if [ "$(glog url_text_payload | checksum)" != "$(glog url_text_payload_md5)" ]; then
+listpayload "$(glog url_text_payload)" | awk '{print $1"|"$1" "$2}'
+slog url_text_payload_md5 "$(glog url_text_payload | checksum)"
+fi
+'''

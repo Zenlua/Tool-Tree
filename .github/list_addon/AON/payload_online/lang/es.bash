@@ -1,0 +1,5 @@
+payload_text_1="Introduce la URL"
+payload_text_2="Enlace:"
+payload_text_3="Lista de particiones"
+payload_text_4="Guardar en:"
+payload_text_5="Selecciona la partición que quieres descargar"

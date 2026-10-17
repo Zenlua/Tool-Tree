@@ -6,6 +6,7 @@ description="Patches after decrypting the apk, filtering out the language"
 version=1.0
 versionCode=100
 root=false
+transai=true
 
 case "$LANGUAGE-$COUNTRY" in
   vi*)

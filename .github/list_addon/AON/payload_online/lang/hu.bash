@@ -1,0 +1,5 @@
+payload_text_1="Adja meg az URL-t"
+payload_text_2="Link:"
+payload_text_3="Partíciólista"
+payload_text_4="Mentés ide:"
+payload_text_5="Válassza ki a letölteni kívánt partíciót"
