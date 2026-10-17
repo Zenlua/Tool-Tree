@@ -70,8 +70,8 @@ value-sh = "glog models_genmini gemini-3.6-flash"
 name = "models_thinking"
 title = "@chatai_think_text"
 label = "@option_text"
-items = [ "0|@default_text", "1024", "2048", "4096" ]
-value = "0"
+items = [ "-1|@default_text", "1024", "2048", "4096" ]
+value = "-1"
 
 [[action.params]]
 name = "chatai_lang"
