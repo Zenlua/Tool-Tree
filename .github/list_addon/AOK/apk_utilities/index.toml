@@ -1,6 +1,6 @@
 [[toml]]
-load-key-sh = 'ETC="$PAGE_CONFIG_DIR" langpath'
-load-toml-sh = 'menuadd "$PAGE_CONFIG_DIR"'
+load-key-sh = "ETC=$PAGE_CONFIG_DIR langpath"
+load-toml-sh = "menuadd $PAGE_CONFIG_DIR"
 
 [[group]]
 title-sh = '''
