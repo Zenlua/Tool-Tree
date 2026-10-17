@@ -7,13 +7,15 @@ title-sh = '''
 [ -f $PAGE_CONFIG_DIR/lang/auto.bash ] && echo "@google_text"
 '''
 
+[[group]]
 [[menu]]
 [[menu.items]]
 title = "@view_source_text_16"
 reload = true
 silent = true
 script = "rm -f $BIN/jadx"
-  
+
+[[group]]
 [[download]]
 title = "@view_source_text_14 jadx"
 desc = "@view_source_text_15"
