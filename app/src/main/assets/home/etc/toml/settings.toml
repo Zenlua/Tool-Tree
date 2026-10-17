@@ -7,7 +7,7 @@ title = "@setting_text_1"
 desc = "@setting_text_2"
 icon = "{ICON}/info.png"
 config = "{HOME}/etc/toml/update.toml"
-  
+
 [[group]]
 [[page]]
 title = "@setting_text_7"
@@ -25,23 +25,23 @@ echo -e "|@default_text\nai|Gemini AI\nen|English\nvi|Việt nam\nru|Русск�
 """
 get = "glog language_kkts"
 set = """
-  if [ "$state" == "ai" ]; then
-    if transai -c; then
-      slog language_kkts "$state"
-      auto_trans
-      echo "exit:[restart]"
-      exit
-    else
-    echo
-    echo "@warn_gemini_text" >&2
-    fi
-  else
+if [ "$state" == "ai" ]; then
+  if transai -c; then
     slog language_kkts "$state"
-    [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
-    slog language "$state"
+    auto_trans
     echo "exit:[restart]"
     exit
+  else
+  echo
+  echo "@warn_gemini_text" >&2
   fi
+else
+  slog language_kkts "$state"
+  [ -f $ETC/lang/auto.sh ] && rm -fr $ETC/lang/auto.sh
+  slog language "$state"
+  echo "exit:[restart]"
+  exit
+fi
 """
   
 [[group]]
@@ -52,6 +52,7 @@ desc = "@chat_gemini_text"
 icon = "{ICON}/chatai.png"
 lock-sh = '[ -z $(glog api_genmini) ] && echo "@warn_gemini_text" || echo 0'
 script = """
+slog models_genmini "$models_genmini"
 [ "$models_thinking" -gt 0 ] && thingkk="-t $models_thinking"
 transai -m "$chatai" -l "$chatai_lang" $thingkk
 """

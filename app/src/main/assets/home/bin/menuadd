@@ -30,7 +30,7 @@ if [ "$google_text" ] || [ "$transai" == "true" ]; then
     sum_mm="$(checksum "$1/lang/default.bash")"
     if [ "$sum_mm" != "$(glog "sum_$id")" ] || [ ! -f "$1/lang/auto.bash" ]; then
     cat "$1/lang/default.bash" | transai > "$1/lang/auto.bash" 2>/dev/null
-    [ -z "$(cat "$1/lang/auto.bash")" ] || slog "sum_$id" "$sum_mm"
+    slog "sum_$id" "$sum_mm"
     fi
   fi
   echo '
