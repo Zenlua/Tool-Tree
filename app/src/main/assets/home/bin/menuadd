@@ -2,8 +2,6 @@
 # Kakathic
 
 fileprop="$1/Add-on.bash"
-check_en="$(grep -cm1 google_text "$1/lang/default.bash" 2>/dev/null)"
-
 if [ -d "$1" ] && [ -f "$fileprop" ]; then
 source language 2>/dev/null
 source "$fileprop" 2>/dev/null
@@ -27,7 +25,7 @@ echo '
   '
 fi
 
-if [ "$google_text" ] || [ "$check_en" == 1 ]; then
+if [ "$google_text" ] || [ "$transai" == "true" ]; then
   if [ "$(glog "transai_text_$id")" == 1 ] && [ "$check_en" == 1 ]; then
     sum_mm="$(checksum "$1/lang/default.bash")"
     if [ "$sum_mm" != "$(glog "sum_$id")" ] || [ ! -f "$1/lang/auto.bash" ]; then
