@@ -34,6 +34,8 @@ if [ "$google_text" ] || [ "$check_en" == 1 ]; then
     cat "$1/lang/default.bash" | transai > "$1/lang/auto.bash" 2>/dev/null
     slog "sum_$id" "$sum_mm"
     fi
+  else
+    [ -f "$1/lang/auto.bash" ] && rm -f "$1/lang/auto.bash"
   fi
 echo '
   [[group]]

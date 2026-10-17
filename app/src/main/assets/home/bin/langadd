@@ -20,4 +20,6 @@ if [ "$(glog "transai_text_$id")" == 1 ]; then
   slog "sum_$id" "$sum_mm"
   fi
   [ -f "$1/auto.bash" ] && source "$1/auto.bash"
+else
+  [ -f "$1/auto.bash" ] && rm -f "$1/auto.bash"
 fi

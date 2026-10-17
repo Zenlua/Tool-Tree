@@ -1,9 +1,11 @@
 [[toml]]
-load-key-sh = "langpath $PAGE_CONFIG_DIR/lang"
+load-key-sh = 'ETC="$PAGE_CONFIG_DIR" langpath'
 load-toml-sh = 'menuadd "$PAGE_CONFIG_DIR"'
 
 [[group]]
-title = "@google_text"
+title-sh = '''
+[ -f $PAGE_CONFIG_DIR/lang/auto.bash ] && echo "@google_text"
+'''
 
 [[picker]]
 shell = "hidden"
