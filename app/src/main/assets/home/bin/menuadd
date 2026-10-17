@@ -26,14 +26,14 @@ echo '
 fi
 
 if [ "$google_text" ] || [ "$transai" == "true" ]; then
-  if [ "$(glog "transai_text_$id")" == 1 ] && [ "$check_en" == 1 ]; then
+  if [ "$(glog "transai_text_$id")" == 1 ] && [ "$transai" == "true" ]; then
     sum_mm="$(checksum "$1/lang/default.bash")"
     if [ "$sum_mm" != "$(glog "sum_$id")" ] || [ ! -f "$1/lang/auto.bash" ]; then
     cat "$1/lang/default.bash" | transai > "$1/lang/auto.bash" 2>/dev/null
     slog "sum_$id" "$sum_mm"
     fi
   else
-    [ -f "$1/lang/auto.bash" ] && rm -f "$1/lang/auto.bash"
+    rm -f "'$id'/lang/auto.bash" 2>/dev/null
   fi
 echo '
   [[group]]
