@@ -46,7 +46,7 @@ multiple = true
 required = true
 options-sh = '''
 # Xử lý payload
-if [ "$(glog url_text_payload | checksum)" != "$(glog url_text_payload_md5)" ]; then
+if [ "$(glog url_text_payload | checksum)" != "$(glog url_text_payload_md5)" ] || [ ! -f $PAGE_CONFIG_DIR/list_payload ]; then
 listpayload "$(glog url_text_payload)" | awk '{print $1"|"$1" "$2}' | tee $PAGE_CONFIG_DIR/list_payload
 slog url_text_payload_md5 "$(glog url_text_payload | checksum)"
 else
