@@ -95,6 +95,7 @@
     <string name="kr_download_create_fail">Не удалось создать задачу загрузки</string>
     <string name="kr_download_create_success">Загрузка файла начата</string>
     <string name="kr_download_confirm">Загрузить этот файл?</string>
+    <string name="kr_confirm_default">Вы уверены, что хотите продолжить?</string>
     <string name="kr_download_completed">Файл успешно загружен</string>
     <string name="kr_banner_confirm">Подтвердить</string>
     <string name="kr_banner_cancel">Отмена</string>

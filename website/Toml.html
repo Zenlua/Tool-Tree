@@ -706,7 +706,7 @@ script = "..."</code></pre>
 <div class="tbl-container">
 <table class="tbl cols-4">
 <tr><th>Field</th><th>Alias</th><th>Type</th><th>Description</th></tr>
-<tr><td class="field-name">confirm</td><td>-</td><td class="field-type">Bool</td><td>Ask for confirmation before running</td></tr>
+<tr><td class="field-name">confirm</td><td>-</td><td class="field-type">Bool</td><td>Ask for confirmation before running. The dialog shows the node <code>title</code> and its <code>desc</code> (also <code>desc-sh</code>); when <code>desc</code> is empty a default question is shown (<code>kr_confirm_default</code>, translated). <code>warning</code> is ignored while <code>confirm = true</code>; <code>summary</code> is never used</td></tr>
 <tr><td class="field-name">warn</td><td>warning</td><td class="field-type">String</td><td>Warning text shown in the confirmation dialog</td></tr>
 <tr><td class="field-name">warn-sh</td><td>warning-sh</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces warning dynamically</td></tr>
 <tr><td class="field-name">auto-off</td><td>auto-close</td><td class="field-type">Bool</td><td>Auto-close the log dialog after running</td></tr>

@@ -94,6 +94,7 @@ Jika setuju, tekan tombol konfirmasi untuk melanjutkan."</string>
     <string name="kr_download_create_fail">Gagal membuat tugas pengunduhan</string>
     <string name="kr_download_create_success">Mulai mengunduh berkas</string>
     <string name="kr_download_confirm">Unduh berkas ini?</string>
+    <string name="kr_confirm_default">Yakin ingin melanjutkan?</string>
     <string name="kr_download_completed">Unduh berkas berhasil</string>
     <string name="kr_banner_confirm">Konfirmasi</string>
     <string name="kr_banner_cancel">Batal</string>

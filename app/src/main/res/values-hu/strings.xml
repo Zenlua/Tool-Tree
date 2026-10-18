@@ -63,6 +63,7 @@
     <string name="kr_download_cancel_confirm_title">Letöltés megszakítása?</string>
     <string name="kr_download_completed">A fájl letöltése sikeres</string>
     <string name="kr_download_confirm">Letölti ezt a fájlt?</string>
+    <string name="kr_confirm_default">Biztosan folytatja?</string>
     <string name="kr_download_create_fail">Nem sikerült létrehozni a letöltési feladatot</string>
     <string name="kr_download_create_success">A fájl letöltése elindult</string>
     <string name="kr_expand_fullscreen">Kibontás teljes képernyős szerkesztőre</string>

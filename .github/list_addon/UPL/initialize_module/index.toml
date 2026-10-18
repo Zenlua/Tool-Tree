@@ -111,7 +111,8 @@ options-sh = '''
 [[switch]]
 title = "@string/remove_text Module"
 get = "[ -f /data/adb/modules/Tool-Tree/remove ] && echo 1"
-reload = "true"
+reload = true
+confirm = true
 shell = "hidden"
 set = """
 path_modun=/data/adb/modules/Tool-Tree
@@ -122,7 +123,6 @@ else
 rm -fr $path_modun/remove
 fi
 """
-confirm = true
 visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
 
 [[end]]

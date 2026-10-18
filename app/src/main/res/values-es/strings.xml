@@ -98,6 +98,7 @@ Si estás de acuerdo, pulsa el botón de confirmar para continuar."</string>
     <string name="kr_download_create_fail">Error al crear la tarea de descarga</string>
     <string name="kr_download_create_success">Descarga del archivo iniciada</string>
     <string name="kr_download_confirm">¿Descargar el archivo?</string>
+    <string name="kr_confirm_default">¿Seguro que quieres continuar?</string>
     <string name="kr_download_completed">Archivo descargado correctamente</string>
     <string name="kr_banner_confirm">Confirmar</string>
     <string name="kr_banner_cancel">Cancelar</string>
