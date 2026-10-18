@@ -332,7 +332,7 @@ object RowsRenderHelper {
         rows.forEachIndexed { idx, r -> if (r.refreshInterval > 0) lastRefreshTimes[idx] = now }
         rowsView.tag = RowsRenderState(animatedRowIcons, rowRanges, zoneGroupRows, lastRefreshTimes = lastRefreshTimes, refreshIntervalMs = refreshIntervalMs)
 
-        rowsView.visibility = View.VISIBLE
+        rowsView.visibility = if (rowsView.text.isEmpty()) View.GONE else View.VISIBLE
 
         if (minRefreshInterval != null) {
             lateinit var tickRunnable: Runnable
@@ -404,6 +404,7 @@ object RowsRenderHelper {
         val end = range[1]
         val oldText = editable.subSequence(start, end).toString()
         editable.replace(start, end, rendered.spannable)
+        rowsView.visibility = if (editable.isEmpty()) View.GONE else View.VISIBLE
         val delta = rendered.spannable.length - (end - start)
         val newEnd = start + rendered.spannable.length
 
