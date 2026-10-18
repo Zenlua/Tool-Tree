@@ -9,7 +9,6 @@ source "$fileprop" 2>/dev/null
 [ -f "$1/pin" ] && pin_text_add="$unpin_text" || pin_text_add="$pin_text"
 echo '
   [[group]]
-  [[menu]]
   [[menu.items]]
   title = "'$pin_text_add'"
   get = "[ -f '$1'/pin ] && echo 1"
@@ -22,6 +21,7 @@ echo '
   echo > "'$1'/pin"
   fi
   """
+  [[end]]
   '
 fi
 
@@ -35,7 +35,6 @@ if [ "$google_text" ] || [ "$transai" == "true" ]; then
   fi
   echo '
   [[group]]
-  [[menu]]
   [[menu.items]]
   title = "Gemini"
   get = "glog transai_text_'$id'"
@@ -50,5 +49,6 @@ if [ "$google_text" ] || [ "$transai" == "true" ]; then
   [[ -n "$(glog api_genmini)" ]] && slog transai_text_'$id' 1 || showdialog -t "Gemini" -m "'$warn_gemini_text'" -g 15 -e "'$ETC'/toml/feature.toml"
   fi
   """
+  [[end]]
   '
 fi

@@ -67,7 +67,7 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var progressTrackColor: Int = -1
         internal var progressWidth: Int = 120
         internal var progressHeight: Int = 8
-        internal var flash: Boolean = true
+        internal var flash: Boolean = false
         internal var flashColor: Int = -1
     }
 }

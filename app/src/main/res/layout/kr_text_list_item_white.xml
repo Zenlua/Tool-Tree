@@ -48,6 +48,7 @@
         android:id="@+id/kr_rows_html"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:visibility="gone" />
 
     <ImageView
@@ -55,6 +56,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
+        android:layout_marginTop="4dp"
         android:scaleType="fitCenter"
         android:visibility="gone" />
 </LinearLayout>
