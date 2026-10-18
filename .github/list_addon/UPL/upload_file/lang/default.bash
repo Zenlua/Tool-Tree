@@ -1,0 +1,6 @@
+google_text="Currently using a translation tool"
+gofile_text_1="Uploading to server:"
+gofile_text_2="Upload file error !"
+gofile_text_3="Link download:"
+gofile_text_5="The file does not exist!"
+gofile_text_6="You need to register an account and create a token in the API section: pixeldrain.com"

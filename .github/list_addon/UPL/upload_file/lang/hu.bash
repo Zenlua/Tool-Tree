@@ -1,0 +1,5 @@
+gofile_text_1="Fájl feltöltése a szerverre:"
+gofile_text_2="Fájlfeltöltési hiba!"
+gofile_text_3="Letöltési link:"
+gofile_text_5="A fájl nem létezik!"
+gofile_text_6="Regisztrálnod kell egy fiókot, és létre kell hoznod egy tokent az API-szekcióban: pixeldrain.com"

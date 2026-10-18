@@ -1,0 +1,54 @@
+[[toml]]
+load-key-sh = "ETC=$PAGE_CONFIG_DIR langpath"
+load-toml-sh = "menuadd $PAGE_CONFIG_DIR"
+
+[[group]]
+title-sh = """
+[ -f $PAGE_CONFIG_DIR/lang/auto.bash ] && echo "@google_text"
+"""
+
+[[action]]
+title = "@transai_text_1"
+desc = "@transai_text_2"
+script = """
+if [ -f "$FILE" ]; then
+  if transai -c; then
+  transai_file "$FILE" "${FILE%/*}/transai_file_new.txt"
+  echo "@transai_text_3 ${FILE%/*}/transai_file_new.txt"
+  fi
+fi
+"""
+[[action.params]]
+name = "FILE"
+type = "file"
+required = "true"
+
+[[group]]
+[[action]]
+title = "@check_ufs_text"
+summary = "{TEXT_ROOT}"
+lock = "{LOT}|@fs_text_3"
+script = "$PAGE_CONFIG_DIR/scrip/ufs.bash"
+
+[[group]]
+[[action]]
+title = "@fs_text_2"
+desc = "@text_rr"
+summary = "{TEXT_ROOT}"
+lock = "{LOT}|@fs_text_3"
+script = """
+echo "@fs_text_4"
+echo
+fstrim -v /vendor
+fstrim -v /system
+fstrim -v /system_ext
+fstrim -v /product
+fstrim -v /cache
+fstrim -v /data
+echo
+echo "@fs_text_4 auto"
+echo
+sm fstrim
+echo
+checktime
+"""

@@ -2,7 +2,7 @@
 # kakathic
 
 # Ngôn ngữ & Google dịch
-source langadd "${0%/*}"
+ETC=$PAGE_CONFIG_DIR source language
 
 [ -d "$extract_folder_lang" ] || killtree "$overlay_text_1"
 [ "$extract_folder_lang_text" ] && text_filters="$(echo "$extract_folder_lang_text" | tr ',' ' ')"

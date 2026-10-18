@@ -2,7 +2,7 @@
 # kakathic
 
 # Ngôn ngữ mặc định
-source langadd "$MPAT"
+ETC=$PAGE_CONFIG_DIR source language
 
 bDeviceLifeTimeEstA=""
 

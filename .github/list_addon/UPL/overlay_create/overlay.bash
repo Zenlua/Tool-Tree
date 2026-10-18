@@ -2,7 +2,7 @@
 # kakathic
 
 # Ngôn ngữ & Google dịch
-source langadd "${0%/*}"
+ETC=$PAGE_CONFIG_DIR source language
 
 [ -d "$overlay_folder" ] || killtree "$overlay_text_1"
 

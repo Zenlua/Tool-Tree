@@ -1,0 +1,133 @@
+[[toml]]
+load-key-sh = "ETC=$PAGE_CONFIG_DIR langpath"
+load-toml-sh = "menuadd $PAGE_CONFIG_DIR"
+
+[[fab]]
+[[fab.items]]
+type = "refresh"
+style = "fab"
+icon = "{ICON}/icon/Loading.png"
+
+[[group]]
+title-sh = """
+[ -f $PAGE_CONFIG_DIR/lang/auto.bash ] && echo "@google_text"
+"""
+[[action]]
+warn = "@lang_action_warn"
+title = "@lang_title"
+summary = "@lang_summary_path /data/adb/modules/Tool-Tree"
+reload = "true"
+script = """
+path_modun=/data/adb/modules/Tool-Tree
+slog uri_adb_moduls "$uri_adb_moduls"
+slog uri_file_modun "$uri_file_modun"
+[ -f $path_modun/remove ] && rm -fr $path_modun/remove
+mkdir -p $path_modun
+if [ -f "$uri_file_modun" ] && [ -n "$uri_adb_moduls" ]; then
+mkdir -p "$path_modun${uri_adb_moduls%/*}"
+cp -rf "$uri_file_modun" "$path_modun$uri_adb_moduls"
+echo "@lang_save_at$path_modun$uri_adb_moduls"
+echo
+else
+echo "@lang_searching"
+echo
+for vc in $uri_file_modun; do
+link_find_file="$(find -L /system -name "${vc##*/}" -type f -print -quit)"
+if [ "$link_find_file" ]; then
+  mkdir -p "$path_modun${link_find_file%/*}"
+  cp -rf "$vc" "$path_modun$link_find_file"
+  echo "@lang_save_at$path_modun$link_find_file"
+  echo
+else
+  echo "@lang_not_found${vc##*/}@lang_input_notice"
+fi
+done
+fi
+if [ ! -f $path_modun/module.prop ]; then
+echo "id=Tool-Tree
+name=Tool-Tree Module
+version=1.0
+versionCode=100
+author=Kakathic
+description=Modified system files" | tee $path_modun/module.prop
+fi
+touch $path_modun/update
+cp -rf $PAGE_CONFIG_DIR/service.sh $path_modun/service.sh
+set_permis -R -o 0:0 -c u:object_r:system_file:s0 $path_modun/system
+"""
+[[action.params]]
+name = "uri_file_modun"
+value-sh = "glog uri_file_modun"
+path-home = "$PTAD"
+multiple = true
+required = "required"
+type="file"
+
+[[action.params]]
+name = "uri_adb_moduls"
+desc = "@lang_desc_adb"
+placeholder = "/system_ext/priv-app/Settings/Settings.apk"
+value-sh = "glog uri_adb_moduls"
+type = "text"
+
+[[group]]
+[[editor]]
+title = "@lang_desc_prop"
+file = "/data/adb/modules/Tool-Tree/system.prop"
+value = "ro.control_privapp_permissions=log"
+placeholder = "ro.control_privapp_permissions=log"
+visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
+
+[[group]]
+[[editor]]
+title = "@lang_desc_service"
+file = "$PAGE_CONFIG_DIR/service.sh"
+visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
+
+[[group]]
+[[action]]
+title = "@lang_del_tile"
+visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
+reload = "true"
+script = """
+for vcx in $del_file_modun; do
+  echo "Delete file: $vcx"
+  [ -f "$vcx" ] && rm -fr "$vcx"
+done
+"""
+
+[[action.params]]
+name = "del_file_modun"
+desc = "@lang_del_desc2 /data/adb/modules/Tool-Tree"
+value-sh = "glog del_file_modun"
+label = "@string/options_text"
+required = "required"
+multiple = "true"
+options-sh = '''
+[ -d /data/adb/modules/Tool-Tree ] && find /data/adb/modules/Tool-Tree/system -type f -printf '%p|%f\n'
+'''
+
+[[group]]
+[[switch]]
+title = "@string/remove_text Module"
+get = "[ -f /data/adb/modules/Tool-Tree/remove ] && echo 1"
+reload = "true"
+shell = "hidden"
+set = """
+path_modun=/data/adb/modules/Tool-Tree
+if [ "$state" == 1 ]; then
+[ -d $path_modun ] && touch $path_modun/remove
+[ -f $path_modun/update ] && rm -f $path_modun/update
+else
+rm -fr $path_modun/remove
+fi
+"""
+confirm = true
+visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
+
+[[text]]
+desc = "@list_modul'"
+visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
+summary-sh = """
+[ -d /data/adb/modules/Tool-Tree ] && tree /data/adb/modules/Tool-Tree;
+"""
