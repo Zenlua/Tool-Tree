@@ -14,10 +14,11 @@ title-sh = """
 """
 [[text]]
 summary-sh = """
-iw dev wlan0 link
 if [ "$(cmd wifi status | grep -cm1 "Wifi is disabled")" == 1 ]; then
 cmd wifi set-wifi-enabled enabled
+sleep 1
 fi
+iw dev wlan0 link
 """
 
 [[group]]
