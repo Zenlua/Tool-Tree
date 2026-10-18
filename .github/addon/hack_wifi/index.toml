@@ -13,7 +13,7 @@ title-sh = """
 [ -f $PAGE_CONFIG_DIR/lang/auto.bash ] && echo "@google_text"
 """
 [[text.rows]]
-refresh-interval = 2
+color = "#0dbda2"
 copy = true
 text-sh = """
 if [ "$(cmd wifi status | grep -cm1 "Wifi is disabled")" == 1 ]; then
