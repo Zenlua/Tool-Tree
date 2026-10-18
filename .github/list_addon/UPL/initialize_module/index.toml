@@ -5,8 +5,8 @@ load-toml-sh = "menuadd $PAGE_CONFIG_DIR"
 [[fab]]
 [[fab.items]]
 type = "refresh"
-style = "fab"
-icon = "{ICON}/icon/Loading.png"
+fab-spin = true
+icon = "{ICON}/Loading.png"
 
 [[group]]
 title-sh = """
@@ -81,7 +81,7 @@ visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
 [[group]]
 [[editor]]
 title = "@lang_desc_service"
-file = "$PAGE_CONFIG_DIR/service.sh"
+file-sh = 'echo "$PAGE_CONFIG_DIR/service.sh"'
 visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
 
 [[group]]
@@ -125,8 +125,9 @@ fi
 confirm = true
 visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
 
+[[end]]
 [[text]]
-desc = "@list_modul'"
+desc = "@list_modul"
 visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
 summary-sh = """
 [ -d /data/adb/modules/Tool-Tree ] && tree /data/adb/modules/Tool-Tree;

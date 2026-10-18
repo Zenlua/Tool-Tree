@@ -776,7 +776,7 @@ title = "Clear cache"
 script = "sync; echo 3 &gt; /proc/sys/vm/drop_caches"
 </code></pre>
 <h3>5.3. Grouping rules (no nesting)</h3>
-<p>Since dot-notation was removed, groups can no longer be nested inside each other. Every <code>[[group]]</code> is a top-level sibling: declaring a new <code>[[group]]</code> closes the previous one, and all following entries belong to the new group. Entries declared before the first <code>[[group]]</code> are rendered directly on the page without a group header.</p>
+<p>Since dot-notation was removed, groups can no longer be nested inside each other. Every <code>[[group]]</code> is a top-level sibling: declaring a new <code>[[group]]</code> closes the previous one, and all following entries belong to the new group. Entries declared before the first <code>[[group]]</code> are rendered directly on the page without a group header. To <strong>stop wrapping</strong> without opening another group, put an empty <code>[[end]]</code> line: everything after it is rendered directly on the page again (e.g. a <code>[[text]]</code> with no card) until the next <code>[[group]]</code>. <code>[[end]]</code> is optional and only needed for this; a following <code>[[group]]</code> already closes the previous group by itself. It also clears the hidden state of a group with <code>support = false</code>.</p>
 <div class="callout warn">Groups also don't support inline <code>resource-file</code>/<code>resource-dir</code> fields (see <a href="#resource">section 3</a>) and have no <code>desc</code>/<code>summary</code> - a group is just a title + its children.</div>
 </section>
 <section id="page">
@@ -2017,6 +2017,7 @@ script = "sh $state"
 <li>Clarified <code>config-sh</code> inline-TOML detection and dynamic picker option fallback.</li>
 <li>Corrected optional <code>script</code>/<code>get</code>/<code>set</code>/<code>rows</code> markings and expanded dependency aliases/callback behavior.</li>
 <li>Added action <code>shell-by</code> / <code>shell-value</code> / <code>shell-mode</code>: pick <code>hidden</code> / <code>bg-task</code> / <code>log</code> from param values at click time (rules left to right), with <code>shell</code> kept as the fallback.</li>
+<li>Added the <code>[[end]]</code> marker (§ groups): closes the current <code>[[group]]</code> so the following nodes render on the page without a group wrapper. Optional - a new <code>[[group]]</code> still closes the previous one.</li>
 <li>Added <code>load-toml</code> / <code>load-toml-sh</code> directives (§2.7): merge a TOML fragment (file or shell output) into the document before parsing, in the same step as <code>load-key</code>, so <code>@name</code> substitution also applies to it.</li>
 <li>Added <code>fab-spin</code> for <code>[[fab.items]]</code>: the FAB icon spins only when it is true — while the item's script runs or the page reloads (<code>refresh</code>/<code>reload</code>/<code>reload-page</code>). The old automatic spin on page reload is removed.</li>
 </ul>

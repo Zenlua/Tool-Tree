@@ -372,7 +372,7 @@ class PageConfigReader {
         }
     }
 
-    private val tomlNodeTypeOrder = listOf("group", "text", "switch", "picker", "action", "page", "download", "editor", "resource", "menu", "fab")
+    private val tomlNodeTypeOrder = listOf("group", "end", "text", "switch", "picker", "action", "page", "download", "editor", "resource", "menu", "fab")
 
     private val collectedMenuOptions = ArrayList<PageMenuOption>()
 
@@ -558,6 +558,14 @@ class PageConfigReader {
         }
 
         for (entry in sortedEntries) {
+            if (entry.type == "end") {
+                closeCurrentGroup(done)
+                done++
+                currentGroup = null
+                groupHidden = false
+                onNodeReady?.invoke(null, done, total)
+                continue
+            }
             if (entry.type == "group") {
                 closeCurrentGroup(done)
                 val group = groupNodeToml(entry.table)

@@ -33,7 +33,7 @@ script = "$PAGE_CONFIG_DIR/scrip/ufs.bash"
 [[group]]
 [[action]]
 title = "@fs_text_2"
-desc = "@text_rr"
+desc = "@fs_text_1"
 summary = "{TEXT_ROOT}"
 lock = "{LOT}|@fs_text_3"
 script = """

@@ -22,7 +22,7 @@ echo '
   [[fab]]
   [[fab.items]]
   type = "refresh"
-  style = "fab"
+  fab-spin = true
   icon = "'$ETC'/icon/Loading.png"
 
   [[text]]
