@@ -52,6 +52,9 @@ author=Kakathic
 description=Modified system files" | tee $path_modun/module.prop
 fi
 touch $path_modun/update
+if [ ! -f $path_modun/service.sh ]; then
+cp -rf $PAGE_CONFIG_DIR/service.sh $path_modun/service.sh
+fi
 set_permis -R -o 0:0 -c u:object_r:system_file:s0 $path_modun/system
 """
 [[action.params]]
@@ -81,8 +84,7 @@ visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
 [[editor]]
 title = "@lang_desc_service"
 file = "/data/adb/modules/Tool-Tree/service.sh"
-value-sh = "cat $PAGE_CONFIG_DIR/service.sh"
-visible = "[ -d /data/adb/modules/Tool-Tree ] && echo 1"
+visible = "[ -f /data/adb/modules/Tool-Tree/service.sh ] && echo 1"
 
 [[group]]
 [[action]]
