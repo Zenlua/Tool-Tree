@@ -100,7 +100,6 @@ value-sh = "glog pin_number_wifi"
 [[group]]
 [[action]]
 title = "@wifi_text_5"
-reload = true
 script = """
 if [ -f $HOME/root/store/wipwn_crack_data.txt ]; then
   cat $HOME/root/store/wipwn_crack_data.txt | sed "s|PSK:|PSK (Password):|g"
