@@ -80,6 +80,14 @@ class IconPathAnalysis {
         return null
     }
 
+    fun loadTextBg(context: Context, path: String, pageDir: String): Drawable? {
+        if (path.isEmpty()) return null
+        decodeBitmap(context, pageDir, path)?.let {
+            return bitmap2Drawable(it)
+        }
+        return null
+    }
+
     fun loadBg(context: Context, clickableNode: ClickableNode): Drawable? {
         if (!clickableNode.bgPath.isEmpty()) {
             decodeBitmap(context, clickableNode.pageConfigDir, clickableNode.bgPath)?.let {

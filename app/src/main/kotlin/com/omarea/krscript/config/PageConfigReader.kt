@@ -724,6 +724,7 @@ class PageConfigReader {
                 bgSh = it.trim()
                 registerDynamicString(this, "bg", bgSh)
             }
+            tomlGet(table, "bg-scale")?.let { bgScale = it.trim().lowercase(getDefault()) }
             tomlGet(table, "allow-shortcut")?.let { allowShortcut = tomlTruthy(it, "allow", "allow-shortcut") }
             if (key.isNotEmpty() && key.startsWith("@") && allowShortcut == null) {
                 allowShortcut = false
@@ -1112,6 +1113,9 @@ class PageConfigReader {
 
     private fun textNodeToml(table: TomlTable): TextNode? {
         val text = mainNodeToml(TextNode(pageConfigAbsPath), table) as TextNode? ?: return null
+        tomlGet(table, "bg-image", "bg-photo")?.let { text.bgImage = it.trim() }
+        tomlGet(table, "bg-image-sh", "bg-photo-sh")?.let { text.bgImageSh = it.trim() }
+        tomlGet(table, "bg-scale")?.let { text.bgScale = it.trim().lowercase(getDefault()) }
         for (rowTable in tomlEntries(table, "rows")) {
             textRowToml(text.rows, rowTable)
         }
@@ -1158,6 +1162,9 @@ class PageConfigReader {
         tomlGet(table, "activity", "a", "intent")?.let { row.activity = it }
         tomlGet(table, "photo", "photo-path")?.let { row.photo = it.trim() }
         tomlGet(table, "photo-sh")?.let { row.photoSh = it.trim() }
+        tomlGet(table, "bg-image", "bg-photo")?.let { row.bgImage = it.trim() }
+        tomlGet(table, "bg-image-sh", "bg-photo-sh")?.let { row.bgImageSh = it.trim() }
+        tomlGet(table, "bg-scale")?.let { row.bgScale = it.trim().lowercase(getDefault()) }
         tomlGet(table, "photo-real-size", "photo-original-size")?.let { row.photoRealSize = tomlTruthy(it, "real-size", "original-size") }
         tomlGet(table, "photo-gif-num", "gif-num", "gif_num")?.let { row.photoGifNum = it.trim().toIntOrNull() ?: row.photoGifNum }
         tomlGet(table, "photo-gif-time", "gif-time", "gif_time")?.let { row.photoGifTime = it.trim().toIntOrNull() ?: row.photoGifTime }

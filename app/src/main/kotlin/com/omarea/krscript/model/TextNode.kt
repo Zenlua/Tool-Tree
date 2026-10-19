@@ -5,6 +5,9 @@ import java.io.Serializable
 
 class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPath) {
     val rows = ArrayList<TextRow>()
+    var bgImage: String = ""
+    var bgImageSh: String = ""
+    var bgScale: String = ""
 
     class TextRow : Serializable {
         internal var size: Int = -1
@@ -39,6 +42,9 @@ class TextNode(currentPageConfigPath: String) : NodeInfoBase(currentPageConfigPa
         internal var photoGifAutoplay: Boolean = true
         internal var photoGifLoopCount: Int = 0
         internal var photoRealGif: Boolean = false
+        internal var bgImage: String = ""
+        internal var bgImageSh: String = ""
+        internal var bgScale: String = ""
 
         internal var icon: String = ""
         internal var iconSh: String = ""

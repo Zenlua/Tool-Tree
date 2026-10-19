@@ -14,6 +14,7 @@ class ListItemText(context: Context,
     private val rowsView = layout.findViewById<TextView?>(R.id.kr_rows)
     protected var extraIconView = layout.findViewById<ImageView?>(R.id.kr_extra_icon_text)
     private val rowsHtmlView = layout.findViewById<FrameLayout?>(R.id.kr_rows_html)
+    private val bgView = layout.findViewById<ImageView?>(R.id.kr_extra_bg)
 
     override fun updateViewByShell() {
         super.updateViewByShell()
@@ -21,6 +22,6 @@ class ListItemText(context: Context,
     }
 
     init {
-        RowsRenderHelper.bind(context, rowsView, extraIconView, config.rows, config, rowsHtmlView)
+        RowsRenderHelper.bind(context, rowsView, extraIconView, config.rows, config, rowsHtmlView, bgView)
     }
 }

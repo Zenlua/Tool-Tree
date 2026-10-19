@@ -978,7 +978,7 @@ const ROW_NUM_KEYS  = [
 ];
 const ROW_STR_KEYS  = [
   'text','sh','text-sh','color','foreground','bg','bgcolor','link','activity','align',
-  'icon','icon-sh','icon-pos','icon-position','photo','photo-sh','support',
+  'icon','icon-sh','icon-pos','icon-position','photo','photo-sh','bg-image','bg-image-sh','bg-photo','bg-photo-sh','bg-scale','support',
   'script','get','set','toggle','toggle-type','confirm',
   'progress-sh','progress-color','progress-bg','progress-track-color',
   'html-file','html-url','letter-spacing','line-height','spacing-top','spacing-bottom',
@@ -2619,6 +2619,7 @@ title = "Performance"`
 <tr><td>break / line / divider / separator</td><td>Bool</td><td>Break or horizontal divider row; <code>divider</code>/<code>separator</code> are aliases for <code>line</code>.</td></tr>
 <tr><td>link / href</td><td>String</td><td>Tappable URL — renders the row as a link.</td></tr>
 <tr><td>activity / a / intent</td><td>String</td><td>Activity intent launched from the row.</td></tr>
+<tr><td>bg-image / bg-image-sh / bg-scale</td><td>String</td><td>Background image of the whole text block (not only this row; <code>bg</code> stays the row color). <code>bg-scale</code> = fit (default) | crop | stretch. Last non-empty row wins.</td></tr>
 <tr><td>photo / photo-sh / photo-real-size / photo-gif-*</td><td>String / Bool / Int</td><td>Row image, dynamic image, original-size mode, and GIF frame/timing controls.</td></tr>
 <tr><td>icon / icon-sh / icon-position / icon-size / icon-gif-*</td><td>String / Bool / Int</td><td>Row icon, dynamic icon, position, size, and GIF controls.</td></tr>
 <tr><td>copy</td><td>Bool</td><td>Tap copies the row text to the clipboard.</td></tr>
@@ -2820,6 +2821,7 @@ const TOPICS = [
 <tr><th>Field</th><th>Applies to</th><th>When it runs</th></tr>
 <tr><td>title-sh / desc-sh / summary-sh</td><td>every node</td><td>Parse time (pending batch)</td></tr>
 <tr><td>icon-sh / photo-sh / bg-sh</td><td>clickable nodes</td><td>Parse time (pending batch)</td></tr>
+<tr><td>bg-scale</td><td>action, switch (also text)</td><td>Not a script: fit | crop | stretch for the bg image</td></tr>
 <tr><td>file-sh</td><td>[[editor]]</td><td>Parse time (pending batch)</td></tr>
 <tr><td>params-sh</td><td>[[action]]</td><td>Parse time (pending batch) — output replaces static params</td></tr>
 <tr><td>rows-sh</td><td>every node with rows</td><td>Parse time (pending batch) — output replaces static rows</td></tr>

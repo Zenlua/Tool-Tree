@@ -20,6 +20,7 @@ open class ClickableNode(currentPageConfigPath: String) : NodeInfoBase(currentPa
     var photoRealGif: Boolean = false
     var bgPath = ""
     var bgSh: String = ""
+    var bgScale: String = ""
 
     var allowShortcut:Boolean? = null
 

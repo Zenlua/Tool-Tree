@@ -78,6 +78,7 @@ open class ListItemClickable(
             view.visibility = View.GONE
             if (config.bgPath.isNotEmpty()) {
                 analyzer.loadBg(context, config)?.let { drawable ->
+                    (view as? TextBgImageView)?.setScaleMode(config.bgScale)
                     view.setImageDrawable(drawable)
                     view.visibility = View.VISIBLE
                 }

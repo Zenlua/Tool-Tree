@@ -87,8 +87,38 @@ object RowsRenderHelper {
         val text: Map<Int, String>,
         val icon: Map<Int, String>,
         val photo: Map<Int, String>,
-        val progress: Map<Int, String>
+        val progress: Map<Int, String>,
+        val bg: Map<Int, String> = emptyMap(),
+        val nodeBg: String = ""
     )
+
+    private class BgState(val dyn: HashMap<Int, String>, val nodeDyn: String)
+
+    private val bgViews = WeakHashMap<TextView, ImageView>()
+    private val bgStates = WeakHashMap<TextView, BgState>()
+
+    private fun applyTextBg(context: Context, rowsView: TextView, rows: List<TextNode.TextRow>, config: NodeInfoBase) {
+        val bgView = bgViews[rowsView] ?: return
+        val state = bgStates[rowsView]
+        val node = config as? TextNode
+        var path = ""
+        var scale = ""
+        if (node != null) {
+            path = (if (node.bgImageSh.isNotEmpty()) state?.nodeDyn.orEmpty() else node.bgImage).trim()
+            scale = node.bgScale
+        }
+        rows.forEachIndexed { index, row ->
+            val p = (if (row.bgImageSh.isNotEmpty()) state?.dyn?.get(index).orEmpty() else row.bgImage).trim()
+            if (p.isNotEmpty()) path = p
+            if (row.bgScale.isNotEmpty()) scale = row.bgScale
+        }
+        bgView.visibility = View.GONE
+        if (path.isEmpty()) return
+        val drawable = IconPathAnalysis().loadTextBg(context, path, config.pageConfigDir) ?: return
+        (bgView as? TextBgImageView)?.setScaleMode(scale)
+        bgView.setImageDrawable(drawable)
+        bgView.visibility = View.VISIBLE
+    }
 
     fun bind(
         context: Context,
@@ -96,13 +126,21 @@ object RowsRenderHelper {
         extraIconView: ImageView?,
         rows: List<TextNode.TextRow>,
         config: NodeInfoBase,
-        htmlContainer: FrameLayout? = null
+        htmlContainer: FrameLayout? = null,
+        extraBgView: ImageView? = null
     ) {
         if (rowsView == null) {
             return
         }
+        if (extraBgView != null) bgViews[rowsView] = extraBgView
         RowsHtmlRenderHelper.bind(context, htmlContainer, rows, config)
         if (rows.isEmpty()) {
+            if (extraBgView != null) {
+                val nodeSh = (config as? TextNode)?.bgImageSh.orEmpty()
+                val nodeDyn = if (nodeSh.isNotEmpty()) ScriptEnvironmen.executeResultRoot(context, nodeSh, config) else ""
+                bgStates[rowsView] = BgState(HashMap(), nodeDyn)
+                applyTextBg(context, rowsView, rows, config)
+            }
             rowsView.visibility = View.GONE
             extraIconView?.visibility = View.GONE
             (rowsView.getTag(R.id.kr_rows_refresh_runnable) as? Runnable)?.let { rowsView.removeCallbacks(it) }
@@ -120,12 +158,16 @@ object RowsRenderHelper {
             if (row.iconSh.isNotEmpty()) scripts["icon:$index"] = row.iconSh
             if (row.photoSh.isNotEmpty()) scripts["photo:$index"] = row.photoSh
             if (row.progressSh.isNotEmpty()) scripts["progress:$index"] = row.progressSh
+            if (row.bgImageSh.isNotEmpty()) scripts["bg:$index"] = row.bgImageSh
         }
+        (config as? TextNode)?.takeIf { it.bgImageSh.isNotEmpty() }?.let { scripts["nodebg:0"] = it.bgImageSh }
         val results = if (scripts.isEmpty()) emptyMap() else ScriptEnvironmen.executeMultipleResultRoot(context, scripts, config)
         val textMap = HashMap<Int, String>()
         val iconMap = HashMap<Int, String>()
         val photoMap = HashMap<Int, String>()
         val progressMap = HashMap<Int, String>()
+        val bgMap = HashMap<Int, String>()
+        var nodeBg = ""
         results.forEach { (key, value) ->
             val sepIndex = key.indexOf(':')
             val prefix = key.substring(0, sepIndex)
@@ -135,9 +177,11 @@ object RowsRenderHelper {
                 "icon" -> iconMap[index] = value
                 "photo" -> photoMap[index] = value
                 "progress" -> progressMap[index] = value
+                "bg" -> bgMap[index] = value
+                "nodebg" -> nodeBg = value
             }
         }
-        return DynamicResults(textMap, iconMap, photoMap, progressMap)
+        return DynamicResults(textMap, iconMap, photoMap, progressMap, bgMap, nodeBg)
     }
 
     private fun estimateAvailableWidth(rowsView: TextView): Int {
@@ -324,6 +368,9 @@ object RowsRenderHelper {
             }
         }
 
+        bgStates[rowsView] = BgState(HashMap(dynamic.bg), dynamic.nodeBg)
+        applyTextBg(context, rowsView, rows, config)
+
         val minRefreshInterval = rows.filter { it.refreshInterval > 0 }.minOfOrNull { it.refreshInterval }
         val refreshIntervalMs = (minRefreshInterval ?: 0) * 1000L
 
@@ -426,6 +473,11 @@ object RowsRenderHelper {
         }
         state.animatedIcons.addAll(animated)
         rowsView.tag = RowsRenderState(state.animatedIcons, newRanges, state.zoneGroupRows, state.flashAnimators, state.lastRefreshTimes, state.refreshIntervalMs)
+
+        if (row.bgImageSh.isNotEmpty()) {
+            bgStates[rowsView]?.dyn?.set(rowIndex, ScriptEnvironmen.executeResultRoot(context, row.bgImageSh, config))
+            applyTextBg(context, rowsView, rows, config)
+        }
 
         if (extraIconView != null && row.photoSh.isNotEmpty()) {
             val effectivePhoto = ScriptEnvironmen.executeResultRoot(context, row.photoSh, config)
