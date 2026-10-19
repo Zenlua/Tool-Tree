@@ -6,155 +6,56 @@
 <meta name="color-scheme" content="light dark">
 <title>Tool-Tree</title>
 <style>
-  :root {
-    color-scheme: light dark;
-    --g1: #10c98f;
-    --g2: #0ea5e9;
-    --g3: #a78bfa;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --g1: #34d399;
-      --g2: #06b6d4;
-      --g3: #818cf8;
-    }
-  }
-
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-
-  html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: transparent;
-  }
-
-  body {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
-
-  .logo {
-    position: relative;
-    z-index: 2;
-    font-size: min(68vh, 16.5vw);
-    font-weight: 900;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-  }
-
-  .gt {
-    background: linear-gradient(90deg, var(--g1), var(--g2), var(--g3));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .halo {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    filter: blur(12px);
-    opacity: 0.5;
-    animation: breathe 4s ease-in-out infinite alternate;
-  }
-
-  @keyframes breathe {
-    to { opacity: 1; transform: scale(1.04); }
-  }
-
-  .p i {
-    position: absolute;
-    bottom: -6px;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--g2);
-    opacity: 0;
-    will-change: transform, opacity;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .halo, .p i { animation: none; display: none; }
-  }
+:root{color-scheme:light dark;--g1:#10c98f;--g2:#0ea5e9;--g3:#a78bfa}
+@media(prefers-color-scheme:dark){:root{--g1:#34d399;--g2:#06b6d4;--g3:#818cf8}}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:transparent}
+body{position:relative;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.logo{position:relative;z-index:2;font-size:min(68vh,16.5vw);font-weight:900;line-height:1.1;letter-spacing:-.02em;white-space:nowrap}
+.gt{background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.halo{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;filter:blur(12px);opacity:.5;will-change:transform,opacity}
+.p i{position:absolute;bottom:-6px;left:var(--l);width:4px;height:4px;border-radius:50%;background:var(--g2);opacity:0;will-change:transform,opacity}
 </style>
 </head>
 <body>
-  <div class="halo" aria-hidden="true"><span class="logo gt">Tool-Tree</span></div>
-  <div class="p" id="bubbles" aria-hidden="true"></div>
-  <div class="logo gt">Tool-Tree</div>
-
-  <script>
-    const container = document.getElementById('bubbles');
-    const configs = [
-      { left: 8, duration: 5000, initialProgress: 0.2 },
-      { left: 19, duration: 6500, initialProgress: 0.5 },
-      { left: 31, duration: 5500, initialProgress: 0.35 },
-      { left: 44, duration: 7000, initialProgress: 0.7 },
-      { left: 57, duration: 5000, initialProgress: 0.8 },
-      { left: 69, duration: 6000, initialProgress: 0.25 },
-      { left: 81, duration: 7500, initialProgress: 0.45 },
-      { left: 92, duration: 5800, initialProgress: 0.6 }
-    ];
-
-    const bubbles = configs.map(cfg => {
-      const el = document.createElement('i');
-      el.style.left = cfg.left + '%';
-      container.appendChild(el);
-      return { el, duration: cfg.duration, progress: cfg.initialProgress };
-    });
-
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (!reduceMotion) {
-      let lastTime = performance.now();
-
-      function animate(now) {
-        let dt = now - lastTime;
-        lastTime = now;
-
-        // Nếu WebView bị đóng băng, dt sẽ rất lớn khi resume. 
-        // Chặn dt lại để các hạt không bị nhảy cóc vị trí.
-        if (dt > 200) {
-          dt = 16;
-        }
-
-        bubbles.forEach(b => {
-          b.progress += dt / b.duration;
-          if (b.progress >= 1) b.progress -= 1;
-
-          let progress = b.progress;
-          let opacity = 0;
-          if (progress < 0.15) {
-            opacity = (progress / 0.15) * 0.9;
-          } else {
-            opacity = 0.9 * (1 - (progress - 0.15) / 0.85);
-          }
-
-          let translateY = -progress * 105;
-
-          b.el.style.transform = `translateY(${translateY}vh)`;
-          b.el.style.opacity = opacity;
-        });
-
-        requestAnimationFrame(animate);
-      }
-      requestAnimationFrame(animate);
-    }
-  </script>
+<div class="halo" id="h"><span class="logo gt">Tool-Tree</span></div>
+<div class="p" id="p">
+<i style="--l:8%" data-d="5" data-s="1"></i>
+<i style="--l:19%" data-d="6.5" data-s="3"></i>
+<i style="--l:31%" data-d="5.5" data-s="2"></i>
+<i style="--l:44%" data-d="7" data-s="5"></i>
+<i style="--l:57%" data-d="5" data-s="4"></i>
+<i style="--l:69%" data-d="6" data-s="1.5"></i>
+<i style="--l:81%" data-d="7.5" data-s="3.5"></i>
+<i style="--l:92%" data-d="5.8" data-s="2.5"></i>
+</div>
+<div class="logo gt">Tool-Tree</div>
+<script>
+(function(){
+var h=document.getElementById('h'),
+D=[].map.call(document.querySelectorAll('#p i'),function(e){return{e:e,d:+e.dataset.d,s:+e.dataset.s}}),
+R=matchMedia('(prefers-reduced-motion:reduce)').matches,
+t=0,l=null,v=innerHeight;
+addEventListener('resize',function(){v=innerHeight});
+function f(n){
+if(l!==null)t+=Math.min(n-l,50)/1000;
+l=n;
+var a=(t/4)%2,b=a<1?a:2-a,e=.5-.5*Math.cos(Math.PI*b);
+h.style.opacity=.5+.5*e;
+h.style.transform='scale('+(1+.04*e)+')';
+for(var i=0;i<D.length;i++){
+var o=D[i],p=((t+o.s)/o.d)%1;
+o.e.style.opacity=p<.15?p/.15*.9:.9*(1-(p-.15)/.85);
+o.e.style.transform='translate3d(0,'+(-1.05*v*p)+'px,0)'
+}
+if(!R)requestAnimationFrame(f)
+}
+R?f(0):requestAnimationFrame(f);
+function r(){l=null}
+addEventListener('pageshow',r);
+addEventListener('focus',r);
+document.addEventListener('visibilitychange',r)
+})()
+</script>
 </body>
 </html>
