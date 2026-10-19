@@ -2,8 +2,6 @@
 load-key-sh = "ETC=$PAGE_CONFIG_DIR langpath"
 load-toml-sh = "menuadd $PAGE_CONFIG_DIR"
 
-[[group]]
-[[menu]]
 [[menu.items]]
 title = "@view_source_text_16"
 reload = true
