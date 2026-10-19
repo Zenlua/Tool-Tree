@@ -399,11 +399,11 @@ class PageConfigReader {
 
     class DeferredNodeResult(val group: GroupNode?, val node: NodeInfoBase, val index: Int)
 
-    private fun isLoadAfter(table: TomlTable): Boolean = tomlTruthy(tomlGet(table, "load-after"))
+    private fun isLoadAfter(table: TomlTable): Boolean = tomlTruthy(tomlGet(table, *TomlKeys.LOAD_AFTER))
 
     private fun menuGroupOptionsToml(table: TomlTable, isFab: Boolean): ArrayList<PageMenuOption> {
         val handler = tomlGet(table, "handler", "handler-sh").orEmpty()
-        tomlGet(table, "icon", "icon-path")?.trim()?.takeIf { it.isNotEmpty() }?.let { path ->
+        tomlGet(table, *TomlKeys.ICON)?.trim()?.takeIf { it.isNotEmpty() }?.let { path ->
             val holder = ClickableNode(pageConfigAbsPath).apply { iconPath = path }
             if (isFab) {
                 if (collectedFabIcon == null) collectedFabIcon = holder
@@ -440,6 +440,14 @@ class PageConfigReader {
         val raw = tomlGet(table, key) ?: return emptyList()
         if (raw.isBlank()) return emptyList()
         return raw.split("|").map { it.trim() }
+    }
+
+    private fun parseIntOr(raw: String, fallback: Int): Int = raw.trim().toIntOrNull() ?: fallback
+
+    private fun parseColorOr(raw: String, fallback: Int): Int = try {
+        raw.toColorInt()
+    } catch (_: Exception) {
+        fallback
     }
 
     private fun tomlGet(table: TomlTable, vararg keys: String): String? {
@@ -662,18 +670,18 @@ class PageConfigReader {
     }
 
     private fun mainNodeToml(nodeInfoBase: NodeInfoBase, table: TomlTable): NodeInfoBase? {
-        tomlGet(table, "support", "visible")?.let {
+        tomlGet(table, *TomlKeys.SUPPORT)?.let {
             if (!resolveBoolOrShell(it, "support", "visible")) return null
         }
-        tomlGet(table, "key", "index", "id")?.let { nodeInfoBase.key = it.trim() }
-        tomlGet(table, "title-sh")?.let {
+        tomlGet(table, *TomlKeys.KEY)?.let { nodeInfoBase.key = it.trim() }
+        tomlGet(table, *TomlKeys.TITLE_SH)?.let {
             nodeInfoBase.titleSh = it
             registerDynamicString(nodeInfoBase, "title", it)
         }
         if (nodeInfoBase.title.isEmpty()) {
             tomlGet(table, "title")?.let { nodeInfoBase.title = StringResRef.resolve(context, it) }
         }
-        tomlGet(table, "desc-sh")?.let {
+        tomlGet(table, *TomlKeys.DESC_SH)?.let {
             nodeInfoBase.descSh = it
             registerDynamicString(nodeInfoBase, "desc", it)
         }
@@ -687,45 +695,45 @@ class PageConfigReader {
         if (nodeInfoBase.summary.isEmpty()) {
             tomlGet(table, "summary")?.let { nodeInfoBase.summary = StringResRef.resolve(context, it) }
         }
-        tomlGet(table, "load-after")?.let { nodeInfoBase.loadAfter = tomlTruthy(it) }
+        tomlGet(table, *TomlKeys.LOAD_AFTER)?.let { nodeInfoBase.loadAfter = tomlTruthy(it) }
         return nodeInfoBase
     }
 
     private fun clickableNodeToml(node: ClickableNode, table: TomlTable): ClickableNode? {
         return (mainNodeToml(node, table) as ClickableNode?)?.apply {
-            tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, this) }
-            tomlGet(table, "lock-sh")?.let { lockShell = it.trim() }
-            tomlGet(table, "min-sdk", "sdk-min")?.let { minSdkVersion = it.trim().toIntOrNull() ?: minSdkVersion }
-            tomlGet(table, "max-sdk", "sdk-max")?.let { maxSdkVersion = it.trim().toIntOrNull() ?: maxSdkVersion }
-            tomlGet(table, "target-sdk", "sdk-target")?.let { targetSdkVersion = it.trim().toIntOrNull() ?: targetSdkVersion }
-            tomlGet(table, "icon", "icon-path")?.let { iconPath = it.trim() }
-            tomlGet(table, "icon-sh")?.let {
+            tomlGet(table, *TomlKeys.LOCK)?.let { parseLockAttr(it, this) }
+            tomlGet(table, *TomlKeys.LOCK_SH)?.let { lockShell = it.trim() }
+            tomlGet(table, "min-sdk", "sdk-min")?.let { minSdkVersion = parseIntOr(it, minSdkVersion) }
+            tomlGet(table, "max-sdk", "sdk-max")?.let { maxSdkVersion = parseIntOr(it, maxSdkVersion) }
+            tomlGet(table, "target-sdk", "sdk-target")?.let { targetSdkVersion = parseIntOr(it, targetSdkVersion) }
+            tomlGet(table, *TomlKeys.ICON)?.let { iconPath = it.trim() }
+            tomlGet(table, *TomlKeys.ICON_SH)?.let {
                 iconSh = it.trim()
                 registerDynamicString(this, "icon", iconSh)
             }
-            tomlGet(table, "icon-gif-num", "icon-gif_num")?.let { iconGifNum = it.trim().toIntOrNull() ?: iconGifNum }
-            tomlGet(table, "icon-gif-time", "icon-gif_time")?.let { iconGifTime = it.trim().toIntOrNull() ?: iconGifTime }
-            tomlGet(table, "icon-gif-autoplay", "icon-gif_autoplay")?.let { iconGifAutoplay = tomlTruthy(it) }
-            tomlGet(table, "icon-gif-loop", "icon-gif-loop-count", "icon-gif_loop_count")?.let { iconGifLoopCount = it.trim().toIntOrNull() ?: iconGifLoopCount }
-            tomlGet(table, "icon-real-gif", "icon-gif-real")?.let { iconRealGif = tomlTruthy(it, "real-gif", "gif-real") }
+            tomlGet(table, *TomlKeys.ICON_GIF_NUM)?.let { iconGifNum = parseIntOr(it, iconGifNum) }
+            tomlGet(table, *TomlKeys.ICON_GIF_TIME)?.let { iconGifTime = parseIntOr(it, iconGifTime) }
+            tomlGet(table, *TomlKeys.ICON_GIF_AUTOPLAY)?.let { iconGifAutoplay = tomlTruthy(it) }
+            tomlGet(table, *TomlKeys.ICON_GIF_LOOP)?.let { iconGifLoopCount = parseIntOr(it, iconGifLoopCount) }
+            tomlGet(table, *TomlKeys.ICON_REAL_GIF)?.let { iconRealGif = tomlTruthy(it, "real-gif", "gif-real") }
             tomlGet(table, "logo", "logo-path")?.let { logoPath = it.trim() }
-            tomlGet(table, "photo", "photo-path")?.let { photoPath = it.trim() }
-            tomlGet(table, "photo-sh")?.let {
+            tomlGet(table, *TomlKeys.PHOTO)?.let { photoPath = it.trim() }
+            tomlGet(table, *TomlKeys.PHOTO_SH)?.let {
                 photoSh = it.trim()
                 registerDynamicString(this, "photo", photoSh)
             }
-            tomlGet(table, "photo-real-size", "photo-original-size")?.let { photoRealSize = tomlTruthy(it, "real-size", "original-size") }
-            tomlGet(table, "photo-gif-num", "gif-num", "gif_num")?.let { photoGifNum = it.trim().toIntOrNull() ?: photoGifNum }
-            tomlGet(table, "photo-gif-time", "gif-time", "gif_time")?.let { photoGifTime = it.trim().toIntOrNull() ?: photoGifTime }
-            tomlGet(table, "photo-gif-autoplay", "gif-autoplay", "gif_autoplay")?.let { photoGifAutoplay = tomlTruthy(it) }
-            tomlGet(table, "photo-gif-loop", "photo-gif-loop-count", "gif-loop", "gif-loop-count", "gif_loop_count")?.let { photoGifLoopCount = it.trim().toIntOrNull() ?: photoGifLoopCount }
-            tomlGet(table, "photo-real-gif", "real-gif", "photo-gif-real")?.let { photoRealGif = tomlTruthy(it, "real-gif", "gif-real") }
-            tomlGet(table, "bg-image", "bg-photo", "bg", "bg-path")?.let { bgPath = it.trim() }
-            tomlGet(table, "bg-image-sh", "bg-photo-sh", "bg-sh")?.let {
+            tomlGet(table, *TomlKeys.PHOTO_REAL_SIZE)?.let { photoRealSize = tomlTruthy(it, "real-size", "original-size") }
+            tomlGet(table, *TomlKeys.PHOTO_GIF_NUM)?.let { photoGifNum = parseIntOr(it, photoGifNum) }
+            tomlGet(table, *TomlKeys.PHOTO_GIF_TIME)?.let { photoGifTime = parseIntOr(it, photoGifTime) }
+            tomlGet(table, *TomlKeys.PHOTO_GIF_AUTOPLAY)?.let { photoGifAutoplay = tomlTruthy(it) }
+            tomlGet(table, *TomlKeys.PHOTO_GIF_LOOP)?.let { photoGifLoopCount = parseIntOr(it, photoGifLoopCount) }
+            tomlGet(table, *TomlKeys.PHOTO_REAL_GIF)?.let { photoRealGif = tomlTruthy(it, "real-gif", "gif-real") }
+            tomlGet(table, *TomlKeys.BG_IMAGE_NODE)?.let { bgPath = it.trim() }
+            tomlGet(table, *TomlKeys.BG_IMAGE_SH_NODE)?.let {
                 bgSh = it.trim()
                 registerDynamicString(this, "bg", bgSh)
             }
-            tomlGet(table, "bg-scale")?.let { bgScale = it.trim().lowercase(getDefault()) }
+            tomlGet(table, *TomlKeys.BG_SCALE)?.let { bgScale = it.trim().lowercase(getDefault()) }
             tomlGet(table, "allow-shortcut")?.let { allowShortcut = tomlTruthy(it, "allow", "allow-shortcut") }
             if (key.isNotEmpty() && key.startsWith("@") && allowShortcut == null) {
                 allowShortcut = false
@@ -746,7 +754,7 @@ class PageConfigReader {
                     }
                 }
             }
-            tomlGet(table, "confirm-text", "confirm-message")?.let {
+            tomlGet(table, *TomlKeys.CONFIRM_TEXT)?.let {
                 confirm = true
                 confirmText = StringResRef.resolve(context, it.trim())
             }
@@ -786,15 +794,15 @@ class PageConfigReader {
 
     private fun groupNodeToml(table: TomlTable): GroupNode {
         val group = GroupNode(pageConfigAbsPath)
-        tomlGet(table, "key", "index", "id")?.let { group.key = it.trim() }
-        tomlGet(table, "title-sh")?.let {
+        tomlGet(table, *TomlKeys.KEY)?.let { group.key = it.trim() }
+        tomlGet(table, *TomlKeys.TITLE_SH)?.let {
             group.titleSh = it
             registerDynamicString(group, "title", it)
         }
         if (group.title.isEmpty()) {
             tomlGet(table, "title")?.let { group.title = StringResRef.resolve(context, it) }
         }
-        tomlGet(table, "support", "visible")?.let { group.supported = resolveBoolOrShell(it, "support", "visible") }
+        tomlGet(table, *TomlKeys.SUPPORT)?.let { group.supported = resolveBoolOrShell(it, "support", "visible") }
         return group
     }
 
@@ -806,13 +814,13 @@ class PageConfigReader {
         tomlGet(table, "after-load", "after-read")?.let { page.afterRead = it }
         tomlGet(table, "load-ok", "load-success")?.let { page.loadSuccess = it }
         tomlGet(table, "load-fail", "load-error")?.let { page.loadFail = it }
-        tomlGet(table, "config-sh")?.let { page.pageConfigSh = it }
+        tomlGet(table, *TomlKeys.CONFIG_SH)?.let { page.pageConfigSh = it }
         tomlGet(table, "process")?.let { page.process = tomlTruthy(it, "process") }
-        tomlGet(table, "placeholder-count", "placeholder_count")?.let { page.placeholderCount = it.trim().toIntOrNull() ?: page.placeholderCount }
-        tomlGet(table, "link", "href")?.let { page.link = it }
-        tomlGet(table, "activity", "a", "intent")?.let { page.activity = it }
-        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, page) }
-        tomlGet(table, "lock-sh")?.let { page.lockShell = it.trim() }
+        tomlGet(table, "placeholder-count", "placeholder_count")?.let { page.placeholderCount = parseIntOr(it, page.placeholderCount) }
+        tomlGet(table, *TomlKeys.LINK)?.let { page.link = it }
+        tomlGet(table, *TomlKeys.INTENT)?.let { page.activity = it }
+        tomlGet(table, *TomlKeys.LOCK)?.let { parseLockAttr(it, page) }
+        tomlGet(table, *TomlKeys.LOCK_SH)?.let { page.lockShell = it.trim() }
 
         for (rowTable in tomlEntries(table, "rows")) {
             textRowToml(page.rows, rowTable)
@@ -833,9 +841,9 @@ class PageConfigReader {
             option.suffix = suffix
         }
         tomlGet(table, "mime")?.let { option.mime = it.lowercase(getDefault()) }
-        tomlGet(table, "path-home", "home-path", "pathhome")?.let { option.pathHome = resolvePathPlaceholders(it.trim()) }
+        tomlGet(table, *TomlKeys.PATH_HOME)?.let { option.pathHome = resolvePathPlaceholders(it.trim()) }
         tomlGet(table, "multiple")?.let { option.multiple = tomlTruthy(it, "multiple") }
-        tomlGet(table, "get", "getstate")?.let {
+        tomlGet(table, *TomlKeys.GET)?.let {
             when (option.type) {
                 "checkbox" -> option.checkedSh = it
                 "spinner" -> option.spinnerGetState = it
@@ -843,13 +851,13 @@ class PageConfigReader {
         }
         tomlGet(table, "silent", "hidden")?.let { option.silent = it.isEmpty() || tomlTruthy(it, "silent", "hidden") }
         tomlGet(table, "fab-spin")?.let { option.fabSpin = tomlTruthy(it, "fab-spin") }
-        tomlGet(table, "link", "href")?.let { option.link = it }
-        tomlGet(table, "activity", "a", "intent")?.let { option.activity = it }
+        tomlGet(table, *TomlKeys.LINK)?.let { option.link = it }
+        tomlGet(table, *TomlKeys.INTENT)?.let { option.activity = it }
         tomlGet(table, "html")?.let { option.onlineHtmlPage = it }
         tomlGet(table, "config")?.let { option.pageConfigPath = it }
-        tomlGet(table, "config-sh")?.let { option.pageConfigSh = it }
-        tomlGet(table, "script", "set", "setstate")?.let { option.script = it }
-        tomlGet(table, "option-sh", "options-sh")?.let {
+        tomlGet(table, *TomlKeys.CONFIG_SH)?.let { option.pageConfigSh = it }
+        tomlGet(table, *TomlKeys.SCRIPT)?.let { option.script = it }
+        tomlGet(table, *TomlKeys.OPTION_SH)?.let {
             if (option.options == null) option.options = ArrayList()
             option.optionsSh = it
         }
@@ -874,17 +882,17 @@ class PageConfigReader {
         }
 
         if (option.title.isEmpty()) {
-            tomlGet(table, "title", "text")?.let { option.title = StringResRef.resolve(context, it) }
+            tomlGet(table, *TomlKeys.TITLE_TEXT)?.let { option.title = StringResRef.resolve(context, it) }
         }
         return option
     }
 
     private fun switchNodeToml(table: TomlTable): SwitchNode? {
         val switchNode = runnableNodeToml(SwitchNode(pageConfigAbsPath), table) as SwitchNode? ?: return null
-        tomlGet(table, "get", "getstate")?.let { switchNode.getState = it }
-        tomlGet(table, "set", "setstate")?.let { switchNode.setState = it }
-        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, switchNode) }
-        tomlGet(table, "lock-sh")?.let { switchNode.lockShell = it.trim() }
+        tomlGet(table, *TomlKeys.GET)?.let { switchNode.getState = it }
+        tomlGet(table, *TomlKeys.SET)?.let { switchNode.setState = it }
+        tomlGet(table, *TomlKeys.LOCK)?.let { parseLockAttr(it, switchNode) }
+        tomlGet(table, *TomlKeys.LOCK_SH)?.let { switchNode.lockShell = it.trim() }
         resourceNodeToml(table)
 
         switchNode.checked = false
@@ -906,12 +914,12 @@ class PageConfigReader {
     private fun selectItemToml(optTable: TomlTable): SelectItem {
         val item = SelectItem()
         tomlGet(optTable, "val", "value")?.let { item.value = it }
-        tomlGet(optTable, "title-sh")?.let {
+        tomlGet(optTable, *TomlKeys.TITLE_SH)?.let {
             item.titleSh = it
             registerDynamicString(item, "title", it)
         }
         if (item.title.isNullOrEmpty()) {
-            tomlGet(optTable, "title", "text")?.let { item.title = StringResRef.resolve(context, it) }
+            tomlGet(optTable, *TomlKeys.TITLE_TEXT)?.let { item.title = StringResRef.resolve(context, it) }
         }
         if (item.value == null) item.value = item.title
         return item
@@ -919,16 +927,16 @@ class PageConfigReader {
 
     private fun pickerNodeToml(table: TomlTable): PickerNode? {
         val picker = runnableNodeToml(PickerNode(pageConfigAbsPath), table) as PickerNode? ?: return null
-        tomlGet(table, "option-sh", "options-sh")?.let {
+        tomlGet(table, *TomlKeys.OPTION_SH)?.let {
             if (picker.options == null) picker.options = ArrayList()
             picker.optionsSh = it
         }
         tomlGet(table, "multiple")?.let { picker.multiple = tomlTruthy(it, "multiple") }
         tomlGet(table, "separator")?.let { picker.separator = it }
-        tomlGet(table, "get", "getstate")?.let { picker.getState = it }
-        tomlGet(table, "set", "setstate")?.let { picker.setState = it }
-        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, picker) }
-        tomlGet(table, "lock-sh")?.let { picker.lockShell = it.trim() }
+        tomlGet(table, *TomlKeys.GET)?.let { picker.getState = it }
+        tomlGet(table, *TomlKeys.SET)?.let { picker.setState = it }
+        tomlGet(table, *TomlKeys.LOCK)?.let { parseLockAttr(it, picker) }
+        tomlGet(table, *TomlKeys.LOCK_SH)?.let { picker.lockShell = it.trim() }
 
         val pickerItemsArray = table.getArray("items")
         if (pickerItemsArray != null) {
@@ -969,9 +977,9 @@ class PageConfigReader {
         val node = runnableNodeToml(DownloadNode(pageConfigAbsPath), table) as DownloadNode? ?: return null
         tomlGet(table, "url")?.let { node.url = it.trim() }
         tomlGet(table, "url-sh")?.let { node.urlSh = it.trim() }
-        tomlGet(table, "script", "set", "setstate")?.let { node.setState = it.trim() }
-        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, node) }
-        tomlGet(table, "lock-sh")?.let { node.lockShell = it.trim() }
+        tomlGet(table, *TomlKeys.SCRIPT)?.let { node.setState = it.trim() }
+        tomlGet(table, *TomlKeys.LOCK)?.let { parseLockAttr(it, node) }
+        tomlGet(table, *TomlKeys.LOCK_SH)?.let { node.lockShell = it.trim() }
         if (node.setState == null) node.setState = ""
         if (node.url.isEmpty() && node.urlSh.isEmpty()) return null
 
@@ -985,9 +993,9 @@ class PageConfigReader {
 
     private fun actionNodeToml(table: TomlTable): ActionNode? {
         val action = runnableNodeToml(ActionNode(pageConfigAbsPath), table) as ActionNode? ?: return null
-        tomlGet(table, "script", "set", "setstate")?.let { action.setState = it.trim() }
-        tomlGet(table, "lock", "lock-state")?.let { parseLockAttr(it, action) }
-        tomlGet(table, "lock-sh")?.let { action.lockShell = it.trim() }
+        tomlGet(table, *TomlKeys.SCRIPT)?.let { action.setState = it.trim() }
+        tomlGet(table, *TomlKeys.LOCK)?.let { parseLockAttr(it, action) }
+        tomlGet(table, *TomlKeys.LOCK_SH)?.let { action.lockShell = it.trim() }
         if (action.setState == null) action.setState = ""
         action.shellBy = tomlPipeList(table, "shell-by")
         action.shellValue = tomlPipeList(table, "shell-value")
@@ -1031,9 +1039,9 @@ class PageConfigReader {
         tomlGet(table, "placeholder")?.let { p.placeholder = StringResRef.resolve(context, it) }
         tomlGet(table, "placeholder-sh")?.let { p.placeholderSh = it }
         tomlGet(table, "title")?.let { p.title = StringResRef.resolve(context, it) }
-        tomlGet(table, "title-sh")?.let { p.titleSh = it }
+        tomlGet(table, *TomlKeys.TITLE_SH)?.let { p.titleSh = it }
         tomlGet(table, "desc")?.let { p.desc = StringResRef.resolve(context, it) }
-        tomlGet(table, "desc-sh")?.let { p.descSh = it }
+        tomlGet(table, *TomlKeys.DESC_SH)?.let { p.descSh = it }
         tomlGet(table, "desc-on", "on-desc", "desc-checked")?.let { p.descOn = StringResRef.resolve(context, it) }
         tomlGet(table, "desc-on-sh", "on-desc-sh", "desc-checked-sh")?.let { p.descOnSh = it }
         tomlGet(table, "separator")?.let { p.separator = it }
@@ -1056,7 +1064,7 @@ class PageConfigReader {
             p.suffix = suffix
         }
         tomlGet(table, "mime")?.let { p.mime = it.lowercase(getDefault()) }
-        tomlGet(table, "path-home", "home-path", "pathhome")?.let { p.pathHome = resolvePathPlaceholders(it.trim()) }
+        tomlGet(table, *TomlKeys.PATH_HOME)?.let { p.pathHome = resolvePathPlaceholders(it.trim()) }
         val readonlyRaw = tomlGet(table, "readonly")
         readonlyRaw?.let { raw ->
             val v = raw.trim()
@@ -1072,17 +1080,17 @@ class PageConfigReader {
             }
         }
         tomlGet(table, "sort")?.let { p.sort = (readonlyRaw != null) && tomlTruthy(it) }
-        tomlGet(table, "maxlength")?.let { p.maxLength = it.trim().toIntOrNull() ?: p.maxLength }
-        tomlGet(table, "min")?.let { p.min = it.trim().toIntOrNull() ?: p.min }
-        tomlGet(table, "max")?.let { p.max = it.trim().toIntOrNull() ?: p.max }
+        tomlGet(table, "maxlength")?.let { p.maxLength = parseIntOr(it, p.maxLength) }
+        tomlGet(table, "min")?.let { p.min = parseIntOr(it, p.min) }
+        tomlGet(table, "max")?.let { p.max = parseIntOr(it, p.max) }
         tomlGet(table, "required")?.let { p.required = tomlTruthy(it, "required") }
         tomlGet(table, "remember", "remember-value")?.let { p.remember = tomlTruthy(it, "remember") }
-        tomlGet(table, "value-sh")?.let { p.valueShell = it }
+        tomlGet(table, *TomlKeys.VALUE_SH)?.let { p.valueShell = it }
         tomlGet(table, "options-sh", "option-sh")?.let {
             if (p.options == null) p.options = ArrayList()
             p.optionsSh = it
         }
-        tomlGet(table, "support", "visible")?.let {
+        tomlGet(table, *TomlKeys.SUPPORT)?.let {
             if (!resolveBoolOrShell(it, "support", "visible")) p.supported = false
         }
         tomlGet(table, "multiple")?.let { p.multiple = tomlTruthy(it, "multiple") }
@@ -1094,7 +1102,7 @@ class PageConfigReader {
         tomlGet(table, "depend-default")?.let { p.dependDefault = it }
         tomlGet(table, "depend-initial", "depend-initial-state")?.let { p.dependInitialState = it }
         tomlGet(table, "depend-negate")?.let { p.dependNegate = tomlTruthy(it, "negate") }
-        tomlGet(table, "depend-threshold")?.let { p.dependThreshold = it.trim().toIntOrNull() ?: -1 }
+        tomlGet(table, "depend-threshold")?.let { p.dependThreshold = parseIntOr(it, -1) }
         tomlGet(table, "depend-include-hidden")?.let { p.dependIncludeHidden = !(it == "false" || it == "0") }
         tomlGet(table, "depend-cascade")?.let { p.dependCascade = !(it == "false" || it == "0") }
         tomlGet(table, "depend-onchange", "depend-on-change", "depend-callback")?.let { p.dependOnChangeCallback = it }
@@ -1128,9 +1136,9 @@ class PageConfigReader {
 
     private fun textNodeToml(table: TomlTable): TextNode? {
         val text = mainNodeToml(TextNode(pageConfigAbsPath), table) as TextNode? ?: return null
-        tomlGet(table, "bg-image", "bg-photo")?.let { text.bgImage = it.trim() }
-        tomlGet(table, "bg-image-sh", "bg-photo-sh")?.let { text.bgImageSh = it.trim() }
-        tomlGet(table, "bg-scale")?.let { text.bgScale = it.trim().lowercase(getDefault()) }
+        tomlGet(table, *TomlKeys.BG_IMAGE)?.let { text.bgImage = it.trim() }
+        tomlGet(table, *TomlKeys.BG_IMAGE_SH)?.let { text.bgImageSh = it.trim() }
+        tomlGet(table, *TomlKeys.BG_SCALE)?.let { text.bgScale = it.trim().lowercase(getDefault()) }
         for (rowTable in tomlEntries(table, "rows")) {
             textRowToml(text.rows, rowTable)
         }
@@ -1142,7 +1150,7 @@ class PageConfigReader {
     private fun textRowToml(rows: ArrayList<TextNode.TextRow>, table: TomlTable) {
         val row = TextNode.TextRow()
         var visibleShellScript: String? = null
-        tomlGet(table, "support", "visible")?.let {
+        tomlGet(table, *TomlKeys.SUPPORT)?.let {
             val v = it.trim()
             val lower = v.lowercase(getDefault())
             when {
@@ -1159,35 +1167,35 @@ class PageConfigReader {
         tomlGet(table, "monospace", "mono", "code")?.let { row.monospace = tomlTruthy(it, "monospace", "mono", "code") }
         tomlGet(table, "letter-spacing", "letterspacing", "spacing")?.let { row.letterSpacing = it.trim().toFloatOrNull() ?: row.letterSpacing }
         tomlGet(table, "line-height", "lineheight", "row-height")?.let { row.lineHeight = it.trim().toFloatOrNull() ?: row.lineHeight }
-        tomlGet(table, "margin-top", "spacing-top", "top-margin")?.let { row.marginTop = it.trim().toIntOrNull() ?: row.marginTop }
-        tomlGet(table, "margin-bottom", "spacing-bottom", "bottom-margin")?.let { row.marginBottom = it.trim().toIntOrNull() ?: row.marginBottom }
+        tomlGet(table, "margin-top", "spacing-top", "top-margin")?.let { row.marginTop = parseIntOr(it, row.marginTop) }
+        tomlGet(table, "margin-bottom", "spacing-bottom", "bottom-margin")?.let { row.marginBottom = parseIntOr(it, row.marginBottom) }
         tomlGet(table, "alpha", "opacity")?.let {
             val v = it.trim().toFloatOrNull()
             if (v != null) {
                 row.alpha = (if (v > 1f) v / 255f else v).coerceIn(0f, 1f)
             }
         }
-        tomlGet(table, "foreground", "color")?.let { try { row.color = it.toColorInt() } catch (_: Exception) {} }
-        tomlGet(table, "bg-color", "bg", "background", "bgcolor")?.let { try { row.bgColor = it.toColorInt() } catch (_: Exception) {} }
-        tomlGet(table, "size")?.let { row.size = it.trim().toIntOrNull() ?: row.size }
+        tomlGet(table, "foreground", "color")?.let { row.color = parseColorOr(it, row.color) }
+        tomlGet(table, *TomlKeys.BG_COLOR)?.let { row.bgColor = parseColorOr(it, row.bgColor) }
+        tomlGet(table, "size")?.let { row.size = parseIntOr(it, row.size) }
         tomlGet(table, "break")?.let { row.breakRow = tomlTruthy(it, "break") }
-        tomlGet(table, "line", "divider", "separator")?.let { row.line = tomlTruthy(it, "line", "divider", "separator") }
+        tomlGet(table, *TomlKeys.LINE)?.let { row.line = tomlTruthy(it, "line", "divider", "separator") }
         tomlGet(table, "copy")?.let { row.copy = tomlTruthy(it, "copy") }
-        tomlGet(table, "link", "href")?.let { row.link = it }
-        tomlGet(table, "activity", "a", "intent")?.let { row.activity = it }
-        tomlGet(table, "photo", "photo-path")?.let { row.photo = it.trim() }
-        tomlGet(table, "photo-sh")?.let { row.photoSh = it.trim() }
-        tomlGet(table, "bg-image", "bg-photo")?.let { row.bgImage = it.trim() }
-        tomlGet(table, "bg-image-sh", "bg-photo-sh")?.let { row.bgImageSh = it.trim() }
-        tomlGet(table, "bg-scale")?.let { row.bgScale = it.trim().lowercase(getDefault()) }
-        tomlGet(table, "photo-real-size", "photo-original-size")?.let { row.photoRealSize = tomlTruthy(it, "real-size", "original-size") }
-        tomlGet(table, "photo-gif-num", "gif-num", "gif_num")?.let { row.photoGifNum = it.trim().toIntOrNull() ?: row.photoGifNum }
-        tomlGet(table, "photo-gif-time", "gif-time", "gif_time")?.let { row.photoGifTime = it.trim().toIntOrNull() ?: row.photoGifTime }
-        tomlGet(table, "photo-gif-autoplay", "gif-autoplay", "gif_autoplay")?.let { row.photoGifAutoplay = tomlTruthy(it) }
-        tomlGet(table, "photo-gif-loop", "photo-gif-loop-count", "gif-loop", "gif-loop-count", "gif_loop_count")?.let { row.photoGifLoopCount = it.trim().toIntOrNull() ?: row.photoGifLoopCount }
-        tomlGet(table, "photo-real-gif", "real-gif", "photo-gif-real")?.let { row.photoRealGif = tomlTruthy(it, "real-gif", "gif-real") }
-        tomlGet(table, "icon", "icon-path")?.let { row.icon = it.trim() }
-        tomlGet(table, "icon-sh")?.let { row.iconSh = it.trim() }
+        tomlGet(table, *TomlKeys.LINK)?.let { row.link = it }
+        tomlGet(table, *TomlKeys.INTENT)?.let { row.activity = it }
+        tomlGet(table, *TomlKeys.PHOTO)?.let { row.photo = it.trim() }
+        tomlGet(table, *TomlKeys.PHOTO_SH)?.let { row.photoSh = it.trim() }
+        tomlGet(table, *TomlKeys.BG_IMAGE)?.let { row.bgImage = it.trim() }
+        tomlGet(table, *TomlKeys.BG_IMAGE_SH)?.let { row.bgImageSh = it.trim() }
+        tomlGet(table, *TomlKeys.BG_SCALE)?.let { row.bgScale = it.trim().lowercase(getDefault()) }
+        tomlGet(table, *TomlKeys.PHOTO_REAL_SIZE)?.let { row.photoRealSize = tomlTruthy(it, "real-size", "original-size") }
+        tomlGet(table, *TomlKeys.PHOTO_GIF_NUM)?.let { row.photoGifNum = parseIntOr(it, row.photoGifNum) }
+        tomlGet(table, *TomlKeys.PHOTO_GIF_TIME)?.let { row.photoGifTime = parseIntOr(it, row.photoGifTime) }
+        tomlGet(table, *TomlKeys.PHOTO_GIF_AUTOPLAY)?.let { row.photoGifAutoplay = tomlTruthy(it) }
+        tomlGet(table, *TomlKeys.PHOTO_GIF_LOOP)?.let { row.photoGifLoopCount = parseIntOr(it, row.photoGifLoopCount) }
+        tomlGet(table, *TomlKeys.PHOTO_REAL_GIF)?.let { row.photoRealGif = tomlTruthy(it, "real-gif", "gif-real") }
+        tomlGet(table, *TomlKeys.ICON)?.let { row.icon = it.trim() }
+        tomlGet(table, *TomlKeys.ICON_SH)?.let { row.iconSh = it.trim() }
         tomlGet(table, "icon-position", "icon-pos")?.let {
             val p = it.trim().lowercase(getDefault())
             row.iconPosition = when (p) {
@@ -1195,12 +1203,12 @@ class PageConfigReader {
                 else -> "before"
             }
         }
-        tomlGet(table, "icon-size")?.let { row.iconSize = it.trim().toIntOrNull() ?: row.iconSize }
-        tomlGet(table, "icon-gif-num", "icon-gif_num")?.let { row.iconGifNum = it.trim().toIntOrNull() ?: row.iconGifNum }
-        tomlGet(table, "icon-gif-time", "icon-gif_time")?.let { row.iconGifTime = it.trim().toIntOrNull() ?: row.iconGifTime }
-        tomlGet(table, "icon-gif-autoplay", "icon-gif_autoplay")?.let { row.iconGifAutoplay = tomlTruthy(it) }
-        tomlGet(table, "icon-gif-loop", "icon-gif-loop-count", "icon-gif_loop_count")?.let { row.iconGifLoopCount = it.trim().toIntOrNull() ?: row.iconGifLoopCount }
-        tomlGet(table, "icon-real-gif", "icon-gif-real")?.let { row.iconRealGif = tomlTruthy(it, "real-gif", "gif-real") }
+        tomlGet(table, "icon-size")?.let { row.iconSize = parseIntOr(it, row.iconSize) }
+        tomlGet(table, *TomlKeys.ICON_GIF_NUM)?.let { row.iconGifNum = parseIntOr(it, row.iconGifNum) }
+        tomlGet(table, *TomlKeys.ICON_GIF_TIME)?.let { row.iconGifTime = parseIntOr(it, row.iconGifTime) }
+        tomlGet(table, *TomlKeys.ICON_GIF_AUTOPLAY)?.let { row.iconGifAutoplay = tomlTruthy(it) }
+        tomlGet(table, *TomlKeys.ICON_GIF_LOOP)?.let { row.iconGifLoopCount = parseIntOr(it, row.iconGifLoopCount) }
+        tomlGet(table, *TomlKeys.ICON_REAL_GIF)?.let { row.iconRealGif = tomlTruthy(it, "real-gif", "gif-real") }
         tomlGet(table, "script", "run")?.let { row.onClickScript = it }
         tomlGet(table, "toast", "toast-result")?.let { row.toastResult = tomlTruthy(it, "toast", "toast-result") }
         tomlGet(table, "sh", "text-sh")?.let { row.dynamicTextSh = it }
@@ -1212,8 +1220,8 @@ class PageConfigReader {
                 else -> row.confirm = StringResRef.resolve(context, v)
             }
         }
-        tomlGet(table, "confirm-text", "confirm-message")?.let { row.confirm = StringResRef.resolve(context, it) }
-        tomlGet(table, "refresh-interval", "refresh", "interval")?.let { row.refreshInterval = it.trim().toIntOrNull() ?: row.refreshInterval }
+        tomlGet(table, *TomlKeys.CONFIRM_TEXT)?.let { row.confirm = StringResRef.resolve(context, it) }
+        tomlGet(table, "refresh-interval", "refresh", "interval")?.let { row.refreshInterval = parseIntOr(it, row.refreshInterval) }
         tomlGet(table, "reset")?.let {
             val v = it.trim()
             row.resetTarget = when {
@@ -1225,21 +1233,21 @@ class PageConfigReader {
         tomlGet(table, "progress")?.let { row.progress = it.trim().toFloatOrNull() ?: row.progress }
         tomlGet(table, "progress-sh")?.let { row.progressSh = it }
         tomlGet(table, "progress-max", "progressmax")?.let { row.progressMax = it.trim().toFloatOrNull() ?: row.progressMax }
-        tomlGet(table, "progress-color")?.let { try { row.progressColor = it.toColorInt() } catch (_: Exception) {} }
-        tomlGet(table, "progress-track-color", "progress-bg")?.let { try { row.progressTrackColor = it.toColorInt() } catch (_: Exception) {} }
-        tomlGet(table, "progress-width")?.let { row.progressWidth = it.trim().toIntOrNull() ?: row.progressWidth }
-        tomlGet(table, "progress-height")?.let { row.progressHeight = it.trim().toIntOrNull() ?: row.progressHeight }
+        tomlGet(table, "progress-color")?.let { row.progressColor = parseColorOr(it, row.progressColor) }
+        tomlGet(table, *TomlKeys.PROGRESS_TRACK_COLOR)?.let { row.progressTrackColor = parseColorOr(it, row.progressTrackColor) }
+        tomlGet(table, "progress-width")?.let { row.progressWidth = parseIntOr(it, row.progressWidth) }
+        tomlGet(table, "progress-height")?.let { row.progressHeight = parseIntOr(it, row.progressHeight) }
         tomlGet(table, "flash")?.let { row.flash = tomlTruthy(it, "flash") }
-        tomlGet(table, "flash-color")?.let { try { row.flashColor = it.toColorInt() } catch (_: Exception) {} }
+        tomlGet(table, "flash-color")?.let { row.flashColor = parseColorOr(it, row.flashColor) }
         tomlGet(table, "markdown", "md")?.let { row.markdown = tomlTruthy(it, "markdown", "md") }
         tomlGet(table, "html-file", "html-path")?.let { row.htmlFile = it.trim() }
         tomlGet(table, "html-url", "html-link")?.let { row.htmlUrl = it.trim() }
-        tomlGet(table, "html-height")?.let { row.htmlHeight = it.trim().toIntOrNull() ?: row.htmlHeight }
+        tomlGet(table, "html-height")?.let { row.htmlHeight = parseIntOr(it, row.htmlHeight) }
         tomlGet(table, "toggle", "toggle-type")?.let {
             val t = it.trim().lowercase(getDefault())
             if (t == "checkbox" || t == "switch") row.toggle = t
         }
-        tomlGet(table, "get", "getstate")?.let {
+        tomlGet(table, *TomlKeys.GET)?.let {
             val v = it.trim()
             val lower = v.lowercase(getDefault())
             row.checked = when {
@@ -1252,7 +1260,7 @@ class PageConfigReader {
                 }
             }
         }
-        tomlGet(table, "set", "setstate")?.let { row.onChangeSh = it }
+        tomlGet(table, *TomlKeys.SET)?.let { row.onChangeSh = it }
         tomlGet(table, "align")?.let {
             when (it) {
                 "right" -> row.align = Layout.Alignment.ALIGN_OPPOSITE
@@ -1277,7 +1285,7 @@ class PageConfigReader {
         tomlGet(table, "placeholder")?.let { editor.placeholder = StringResRef.resolve(context, it) }
         tomlGet(table, "readonly")?.let { editor.readonly = resolveBoolOrShell(it) }
         tomlGet(table, "need-input")?.let { editor.needInput = (it == "true" || it == "1") }
-        tomlGet(table, "value-sh")?.let { editor.valueSh = it }
+        tomlGet(table, *TomlKeys.VALUE_SH)?.let { editor.valueSh = it }
         tomlGet(table, "value")?.let { editor.value = it }
 
         for (rowTable in tomlEntries(table, "rows")) {
