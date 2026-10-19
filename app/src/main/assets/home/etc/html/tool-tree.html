@@ -80,39 +80,81 @@
   .p i {
     position: absolute;
     bottom: -6px;
-    left: var(--l);
     width: 4px;
     height: 4px;
     border-radius: 50%;
     background: var(--g2);
     opacity: 0;
-    animation: rise var(--d) linear var(--s) infinite;
     will-change: transform, opacity;
   }
 
-  @keyframes rise {
-    0%   { transform: translateY(0); opacity: 0; }
-    15%  { opacity: 0.9; }
-    100% { transform: translateY(-105vh); opacity: 0; }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .halo, .p i { animation: none; }
+    .halo, .p i { animation: none; display: none; }
   }
 </style>
 </head>
 <body>
   <div class="halo" aria-hidden="true"><span class="logo gt">Tool-Tree</span></div>
-  <div class="p" aria-hidden="true">
-    <i style="--l:8%;--d:5s;--s:-1s"></i>
-    <i style="--l:19%;--d:6.5s;--s:-3s"></i>
-    <i style="--l:31%;--d:5.5s;--s:-2s"></i>
-    <i style="--l:44%;--d:7s;--s:-5s"></i>
-    <i style="--l:57%;--d:5s;--s:-4s"></i>
-    <i style="--l:69%;--d:6s;--s:-1.5s"></i>
-    <i style="--l:81%;--d:7.5s;--s:-3.5s"></i>
-    <i style="--l:92%;--d:5.8s;--s:-2.5s"></i>
-  </div>
+  <div class="p" id="bubbles" aria-hidden="true"></div>
   <div class="logo gt">Tool-Tree</div>
+
+  <script>
+    const container = document.getElementById('bubbles');
+    const configs = [
+      { left: 8, duration: 5000, initialProgress: 0.2 },
+      { left: 19, duration: 6500, initialProgress: 0.5 },
+      { left: 31, duration: 5500, initialProgress: 0.35 },
+      { left: 44, duration: 7000, initialProgress: 0.7 },
+      { left: 57, duration: 5000, initialProgress: 0.8 },
+      { left: 69, duration: 6000, initialProgress: 0.25 },
+      { left: 81, duration: 7500, initialProgress: 0.45 },
+      { left: 92, duration: 5800, initialProgress: 0.6 }
+    ];
+
+    const bubbles = configs.map(cfg => {
+      const el = document.createElement('i');
+      el.style.left = cfg.left + '%';
+      container.appendChild(el);
+      return { el, duration: cfg.duration, progress: cfg.initialProgress };
+    });
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!reduceMotion) {
+      let lastTime = performance.now();
+
+      function animate(now) {
+        let dt = now - lastTime;
+        lastTime = now;
+
+        // Nếu WebView bị đóng băng, dt sẽ rất lớn khi resume. 
+        // Chặn dt lại để các hạt không bị nhảy cóc vị trí.
+        if (dt > 200) {
+          dt = 16;
+        }
+
+        bubbles.forEach(b => {
+          b.progress += dt / b.duration;
+          if (b.progress >= 1) b.progress -= 1;
+
+          let progress = b.progress;
+          let opacity = 0;
+          if (progress < 0.15) {
+            opacity = (progress / 0.15) * 0.9;
+          } else {
+            opacity = 0.9 * (1 - (progress - 0.15) / 0.85);
+          }
+
+          let translateY = -progress * 105;
+
+          b.el.style.transform = `translateY(${translateY}vh)`;
+          b.el.style.opacity = opacity;
+        });
+
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    }
+  </script>
 </body>
 </html>
