@@ -8,16 +8,12 @@
 <style>
   :root {
     color-scheme: light dark;
-    --dot: rgba(99, 102, 241, 0.18);
-    --glow: rgba(99, 102, 241, 0.35);
-    --g1: #059669;
-    --g2: #0284c7;
-    --g3: #4f46e5;
+    --g1: #10c98f;
+    --g2: #0ea5e9;
+    --g3: #a78bfa;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --dot: rgba(56, 189, 248, 0.22);
-      --glow: rgba(14, 165, 233, 0.55);
       --g1: #34d399;
       --g2: #06b6d4;
       --g3: #818cf8;
@@ -47,17 +43,9 @@
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
-  .grid {
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(circle, var(--dot) 1.3px, transparent 1.6px);
-    background-size: 10px 10px;
-    -webkit-mask-image: radial-gradient(ellipse at center, #000 35%, transparent 78%);
-    mask-image: radial-gradient(ellipse at center, #000 35%, transparent 78%);
-  }
-
   .logo {
     position: relative;
+    z-index: 2;
     font-size: min(68vh, 16.5vw);
     font-weight: 900;
     line-height: 1.1;
@@ -65,42 +53,66 @@
     white-space: nowrap;
   }
 
-  .logo span {
-    display: block;
-  }
-
-  .glow {
-    position: absolute;
-    inset: 0;
-    color: var(--glow);
-    filter: blur(10px);
-  }
-
-  .text {
-    position: relative;
-    background: linear-gradient(90deg, var(--g1), var(--g2), var(--g3), var(--g1));
-    background-size: 300% 100%;
+  .gt {
+    background: linear-gradient(90deg, var(--g1), var(--g2), var(--g3));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
-    animation: slide 6s linear infinite;
   }
 
-  @keyframes slide {
-    to { background-position: -300% 0; }
+  .halo {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: blur(12px);
+    opacity: 0.5;
+    animation: breathe 4s ease-in-out infinite alternate;
+  }
+
+  @keyframes breathe {
+    to { opacity: 1; transform: scale(1.04); }
+  }
+
+  .p i {
+    position: absolute;
+    bottom: -6px;
+    left: var(--l);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--g2);
+    opacity: 0;
+    animation: rise var(--d) linear var(--s) infinite;
+    will-change: transform, opacity;
+  }
+
+  @keyframes rise {
+    0%   { transform: translateY(0); opacity: 0; }
+    15%  { opacity: 0.9; }
+    100% { transform: translateY(-105vh); opacity: 0; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .text { animation: none; }
+    .halo, .p i { animation: none; }
   }
 </style>
 </head>
 <body>
-  <div class="grid"></div>
-  <div class="logo">
-    <span class="glow" aria-hidden="true">Tool-Tree</span>
-    <span class="text">Tool-Tree</span>
+  <div class="halo" aria-hidden="true"><span class="logo gt">Tool-Tree</span></div>
+  <div class="p" aria-hidden="true">
+    <i style="--l:8%;--d:5s;--s:-1s"></i>
+    <i style="--l:19%;--d:6.5s;--s:-3s"></i>
+    <i style="--l:31%;--d:5.5s;--s:-2s"></i>
+    <i style="--l:44%;--d:7s;--s:-5s"></i>
+    <i style="--l:57%;--d:5s;--s:-4s"></i>
+    <i style="--l:69%;--d:6s;--s:-1.5s"></i>
+    <i style="--l:81%;--d:7.5s;--s:-3.5s"></i>
+    <i style="--l:92%;--d:5.8s;--s:-2.5s"></i>
   </div>
+  <div class="logo gt">Tool-Tree</div>
 </body>
 </html>
