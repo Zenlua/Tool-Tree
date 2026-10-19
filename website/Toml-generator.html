@@ -978,7 +978,7 @@ const ROW_NUM_KEYS  = [
 ];
 const ROW_STR_KEYS  = [
   'text','sh','text-sh','color','foreground','bg','bgcolor','link','activity','align',
-  'icon','icon-sh','icon-pos','icon-position','photo','photo-sh','bg-image','bg-image-sh','bg-photo','bg-photo-sh','bg-scale','support',
+  'icon','icon-sh','icon-pos','icon-position','photo','photo-sh','bg-image','bg-image-sh','bg-photo','bg-photo-sh','bg-scale','bg-color','confirm-text','confirm-message','support',
   'script','get','set','toggle','toggle-type','confirm',
   'progress-sh','progress-color','progress-bg','progress-track-color',
   'html-file','html-url','letter-spacing','line-height','spacing-top','spacing-bottom',
@@ -2820,7 +2820,7 @@ const TOPICS = [
 <div class="doc-tbl-wrap"><table class="doc-tbl">
 <tr><th>Field</th><th>Applies to</th><th>When it runs</th></tr>
 <tr><td>title-sh / desc-sh / summary-sh</td><td>every node</td><td>Parse time (pending batch)</td></tr>
-<tr><td>icon-sh / photo-sh / bg-sh</td><td>clickable nodes</td><td>Parse time (pending batch)</td></tr>
+<tr><td>icon-sh / photo-sh / bg-image-sh (bg-sh)</td><td>clickable nodes</td><td>Parse time (pending batch)</td></tr>
 <tr><td>bg-scale</td><td>action, switch (also text)</td><td>Not a script: fit | crop | stretch for the bg image</td></tr>
 <tr><td>file-sh</td><td>[[editor]]</td><td>Parse time (pending batch)</td></tr>
 <tr><td>params-sh</td><td>[[action]]</td><td>Parse time (pending batch) — output replaces static params</td></tr>

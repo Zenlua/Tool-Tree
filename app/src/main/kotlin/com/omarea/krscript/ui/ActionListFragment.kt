@@ -254,7 +254,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         nodeUnlockedAsync(item) {
             val toValue = !item.checked
             if (item.confirm) {
-                DialogHelper.warning(requireActivity(), item.title, item.desc.ifEmpty { getString(R.string.kr_confirm_default) }, { switchExecute(item, toValue, onCompleted) })
+                DialogHelper.warning(requireActivity(), item.title, item.confirmText.ifEmpty { item.desc }.ifEmpty { getString(R.string.kr_confirm_default) }, { switchExecute(item, toValue, onCompleted) })
             } else if (item.warning.isNotEmpty()) {
                 DialogHelper.warning(requireActivity(), item.title, item.warning, { switchExecute(item, toValue, onCompleted) })
             } else {
@@ -328,7 +328,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         if (!checkAndLockClick()) return
         nodeUnlockedAsync(item) {
             if (item.confirm) {
-                DialogHelper.warning(requireActivity(), item.title, item.desc.ifEmpty { getString(R.string.kr_confirm_default) }, { pickerExecute(item, onCompleted) })
+                DialogHelper.warning(requireActivity(), item.title, item.confirmText.ifEmpty { item.desc }.ifEmpty { getString(R.string.kr_confirm_default) }, { pickerExecute(item, onCompleted) })
             } else if (item.warning.isNotEmpty()) {
                 DialogHelper.warning(requireActivity(), item.title, item.warning, { pickerExecute(item, onCompleted) })
             } else {
@@ -440,7 +440,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
         if (!checkAndLockClick()) return
         nodeUnlockedAsync(item) {
             if (item.confirm) {
-                DialogHelper.warning(requireActivity(), item.title, item.desc.ifEmpty { getString(R.string.kr_confirm_default) }, { downloadExecute(item, listItemView, onCompleted) })
+                DialogHelper.warning(requireActivity(), item.title, item.confirmText.ifEmpty { item.desc }.ifEmpty { getString(R.string.kr_confirm_default) }, { downloadExecute(item, listItemView, onCompleted) })
             } else if (item.warning.isNotEmpty()) {
                 DialogHelper.warning(requireActivity(), item.title, item.warning, { downloadExecute(item, listItemView, onCompleted) })
             } else {
@@ -485,7 +485,7 @@ class ActionListFragment : androidx.fragment.app.Fragment(), PageLayoutRender.On
             val onCancel = if (isAutoShow) Runnable { requireActivity().finish() } else null
             val cancelable = !isAutoShow
             if (item.confirm) {
-                DialogHelper.warning(requireActivity(), item.title, item.desc.ifEmpty { getString(R.string.kr_confirm_default) }, { actionExecute(item, onCompleted, isAutoShow) }, onCancel, cancelable)
+                DialogHelper.warning(requireActivity(), item.title, item.confirmText.ifEmpty { item.desc }.ifEmpty { getString(R.string.kr_confirm_default) }, { actionExecute(item, onCompleted, isAutoShow) }, onCancel, cancelable)
             } else if (item.warning.isNotEmpty() && (item.params == null || item.params?.isEmpty() == true)) {
                 DialogHelper.warning(requireActivity(), item.title, item.warning, { actionExecute(item, onCompleted, isAutoShow) }, onCancel, cancelable)
             } else {

@@ -9,6 +9,7 @@ import android.widget.Toast
 import com.omarea.common.model.SelectItem
 import com.omarea.krscript.executor.ExtractAssets
 import com.omarea.krscript.executor.ScriptEnvironmen
+import com.tool.tree.R
 import com.omarea.krscript.model.*
 import java.io.File
 import java.io.InputStream
@@ -719,8 +720,8 @@ class PageConfigReader {
             tomlGet(table, "photo-gif-autoplay", "gif-autoplay", "gif_autoplay")?.let { photoGifAutoplay = tomlTruthy(it) }
             tomlGet(table, "photo-gif-loop", "photo-gif-loop-count", "gif-loop", "gif-loop-count", "gif_loop_count")?.let { photoGifLoopCount = it.trim().toIntOrNull() ?: photoGifLoopCount }
             tomlGet(table, "photo-real-gif", "real-gif", "photo-gif-real")?.let { photoRealGif = tomlTruthy(it, "real-gif", "gif-real") }
-            tomlGet(table, "bg", "bg-path")?.let { bgPath = it.trim() }
-            tomlGet(table, "bg-sh")?.let {
+            tomlGet(table, "bg-image", "bg-photo", "bg", "bg-path")?.let { bgPath = it.trim() }
+            tomlGet(table, "bg-image-sh", "bg-photo-sh", "bg-sh")?.let {
                 bgSh = it.trim()
                 registerDynamicString(this, "bg", bgSh)
             }
@@ -734,7 +735,21 @@ class PageConfigReader {
 
     private fun runnableNodeToml(node: RunnableNode, table: TomlTable): RunnableNode? {
         return (clickableNodeToml(node, table) as RunnableNode?)?.apply {
-            tomlGet(table, "confirm")?.let { confirm = tomlTruthy(it, "confirm") }
+            tomlGet(table, "confirm")?.let {
+                val v = it.trim().lowercase(getDefault())
+                when {
+                    v == "true" || v == "1" || v == "yes" || v == "on" -> confirm = true
+                    v == "false" || v == "0" || v == "no" || v == "off" || v.isEmpty() -> confirm = false
+                    else -> {
+                        confirm = true
+                        confirmText = StringResRef.resolve(context, it.trim())
+                    }
+                }
+            }
+            tomlGet(table, "confirm-text", "confirm-message")?.let {
+                confirm = true
+                confirmText = StringResRef.resolve(context, it.trim())
+            }
             tomlGet(table, "warn-sh", "warning-sh")?.let {
                 warningSh = it
                 registerDynamicString(this, "warning", it)
@@ -1153,7 +1168,7 @@ class PageConfigReader {
             }
         }
         tomlGet(table, "foreground", "color")?.let { try { row.color = it.toColorInt() } catch (_: Exception) {} }
-        tomlGet(table, "bg", "background", "bgcolor")?.let { try { row.bgColor = it.toColorInt() } catch (_: Exception) {} }
+        tomlGet(table, "bg-color", "bg", "background", "bgcolor")?.let { try { row.bgColor = it.toColorInt() } catch (_: Exception) {} }
         tomlGet(table, "size")?.let { row.size = it.trim().toIntOrNull() ?: row.size }
         tomlGet(table, "break")?.let { row.breakRow = tomlTruthy(it, "break") }
         tomlGet(table, "line", "divider", "separator")?.let { row.line = tomlTruthy(it, "line", "divider", "separator") }
@@ -1189,7 +1204,15 @@ class PageConfigReader {
         tomlGet(table, "script", "run")?.let { row.onClickScript = it }
         tomlGet(table, "toast", "toast-result")?.let { row.toastResult = tomlTruthy(it, "toast", "toast-result") }
         tomlGet(table, "sh", "text-sh")?.let { row.dynamicTextSh = it }
-        tomlGet(table, "confirm", "confirm-text", "confirm-message")?.let { row.confirm = StringResRef.resolve(context, it) }
+        tomlGet(table, "confirm")?.let {
+            val v = it.trim()
+            when (v.lowercase(getDefault())) {
+                "true", "1", "yes", "on" -> row.confirm = context.getString(R.string.kr_confirm_default)
+                "false", "0", "no", "off", "" -> row.confirm = ""
+                else -> row.confirm = StringResRef.resolve(context, v)
+            }
+        }
+        tomlGet(table, "confirm-text", "confirm-message")?.let { row.confirm = StringResRef.resolve(context, it) }
         tomlGet(table, "refresh-interval", "refresh", "interval")?.let { row.refreshInterval = it.trim().toIntOrNull() ?: row.refreshInterval }
         tomlGet(table, "reset")?.let {
             val v = it.trim()

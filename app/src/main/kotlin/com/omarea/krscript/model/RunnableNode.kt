@@ -3,6 +3,7 @@ package com.omarea.krscript.model
 open class RunnableNode(currentConfigXml: String) : ClickableNode(currentConfigXml) {
 
     var confirm: Boolean = false
+    var confirmText: String = ""
     var warning: String = ""
     var warningSh: String = ""
     var autoOff: Boolean = false
