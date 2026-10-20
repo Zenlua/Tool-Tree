@@ -1,0 +1,124 @@
+[[toml]]
+load-key-sh = "ETC=$PAGE_CONFIG_DIR langpath"
+
+[[group]]
+title-sh = 'echo "@project_text: $PTSH"'
+[[action]]
+title = "@desc_patch_prop"
+warn = "@desc_patch_prop_long"
+reload = true
+script = "$PAGE_CONFIG_DIR/patch-rom sprop_pris"
+
+[[action.params]]
+name = "fix_pris"
+label = "@select_text"
+desc = "@string_text_2: vendor, system, system_ext, product"
+value-sh = "$PAGE_CONFIG_DIR/patch-rom gprop_pris"
+items = [ "4|none", "2|log", "3|disable", "1|enforce" ]
+required = true
+
+[[group]]
+[[action]]
+title = "@quick_custom_text"
+summary = "Xiaomi"
+warn = "@warn_delete_gms"
+reload = true
+script = "$PAGE_CONFIG_DIR/patch-rom custom_patch"
+
+[[action.params]]
+name = "device_features"
+label = "@label_device_features"
+desc = "@string_text_2: product"
+type = "bool"
+value-sh = "$PAGE_CONFIG_DIR/patch-rom get_patch_1"
+readonly = "$PAGE_CONFIG_DIR/patch-rom get_patch_1"
+
+[[action.params]]
+name = "delete_gms"
+label = "@label_delete_gms"
+desc = "@string_text_2: product"
+type = "bool"
+value-sh = "$PAGE_CONFIG_DIR/patch-rom get_patch_2"
+readonly = "$PAGE_CONFIG_DIR/patch-rom get_patch_2"
+
+[[action.params]]
+name = "xeu_toolbox"
+label = "@label_xeu_toolbox"
+desc = "@string_text_2: system_ext"
+type = "bool"
+value-sh = "$PAGE_CONFIG_DIR/patch-rom check_xeu"
+readonly = "$PAGE_CONFIG_DIR/patch-rom check_xeu"
+
+[[group]]
+[[action]]
+title = "@label_rw_rom"
+summary = "Xiaomi"
+warn = "@warn_delete_gms"
+reload = true
+auto-off = true
+script = "$PAGE_CONFIG_DIR/patch-rom rw_rom_ext"
+
+[[action.params]]
+name = "diss_ovelsy"
+label = "@diss_ovelsy_text"
+desc = "@string_text_2: vendor"
+type = "bool"
+value-sh = "$PAGE_CONFIG_DIR/patch-rom get_rw_rom_1"
+readonly = "$PAGE_CONFIG_DIR/patch-rom get_rw_rom_1"
+
+[[action.params]]
+name = "diss_ovelsy_boot"
+label = "@diss_ovelsy_text"
+desc = "@string_text_2: vendor_boot"
+type = "bool"
+value-sh = "$PAGE_CONFIG_DIR/patch-rom get_rw_rom_2"
+readonly = "$PAGE_CONFIG_DIR/patch-rom get_rw_rom_2"
+
+[[action.params]]
+name = "move_pangu"
+label = "@move_pangu_text"
+desc = "@string_text_2: product, system"
+type = "bool"
+value-sh = "$PAGE_CONFIG_DIR/patch-rom get_rw_rom_3"
+readonly = "$PAGE_CONFIG_DIR/patch-rom get_rw_rom_3"
+
+[[action.params]]
+name = "move_miext"
+label = "@move_miext_text"
+desc = "@string_text_2: mi_ext, system, product, system_ext"
+type = "bool"
+value-sh = "$PAGE_CONFIG_DIR/patch-rom get_rw_rom_4"
+readonly = "$PAGE_CONFIG_DIR/patch-rom get_rw_rom_4"
+
+[[group]]
+[[action]]
+title = "@cover_app_text_1"
+warn = "@cover_app_text_2"
+script = """
+$PAGE_CONFIG_DIR/patch-rom cover_app "$cover_data_app"
+checktime
+"""
+
+[[action.params]]
+name = "cover_data_app"
+type = "text"
+options-sh = "$PAGE_CONFIG_DIR/patch-rom search_apk | sort"
+desc-sh = 'echo "@string_text_1: Project/$PTSH"'
+required = true
+multiple = true
+
+[[group]]
+[[action]]
+title = "@title_delete"
+script = """
+slog del_app_patch "$del_app_patch"
+$PAGE_CONFIG_DIR/patch-rom del_app "$del_app_patch"
+"""
+
+[[action.params]]
+name = "del_app_patch"
+type = "text"
+desc = "@text_del_file"
+required = true
+placeholder = "VoiceAssist Sogou"
+value-sh = 'glog del_app_patch "BaidulME MIGalleryLockscreen MIService MIUIEmail MIUIVirtualSim MIUIXiaoAiSpeechEngine OS2VipAccount SmartHome XMRemoteController iFlytekIME CarWith MITSMClient MIS MINextpay VoiceAssistAndroidT VoiceTrigger UPTsmService Music MIUIgreenguard MIUIQuickSearchBox MIUIBrowser MiGameCenterSDKService YouTube YTMusic"'

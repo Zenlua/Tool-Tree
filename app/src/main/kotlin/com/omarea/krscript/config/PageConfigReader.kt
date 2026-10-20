@@ -92,6 +92,7 @@ class PageConfigReader {
 
     private val loadKeyDirectiveRegex = Regex("""(?m)^[ \t]*load-key(-sh)?[ \t]*=[ \t]*"([^"]*)"[ \t]*\r?\n?""")
     private val loadTomlDirectiveRegex = Regex("""(?m)^[ \t]*load-toml(-sh)?[ \t]*=[ \t]*(?:"((?:[^"\\]|\\.)*)"|'([^']*)')[ \t]*\r?\n?""")
+    private val loadTextDirectiveRegex = Regex("""(?m)^[ \t]*load-text(-sh)?[ \t]*=[ \t]*(?:\"\"\"([\s\S]*?)\"\"\"|'''([\s\S]*?)'''|"((?:[^"\\]|\\.)*)"|'([^']*)')[ \t]*\r?\n?""")
     private val langLineRegex = Regex("""(?m)^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*=[ \t]*"((?:[^"\\]|\\.)*)"[ \t]*$""")
     private val escapeSeqRegex = Regex("""\\(.)""")
 
@@ -120,27 +121,49 @@ class PageConfigReader {
     private fun prepareTomlPiece(piece: String): String {
         val trimmed = piece.trim()
         if (trimmed.isEmpty() || trimmed == "error") return ""
-        val cleaned = loadTomlDirectiveRegex.replace(loadKeyDirectiveRegex.replace(trimmed, ""), "")
+        val cleaned = loadTextDirectiveRegex.replace(loadTomlDirectiveRegex.replace(loadKeyDirectiveRegex.replace(trimmed, ""), ""), "")
         return applyBuiltinVars(cleaned).trimEnd() + "\n"
+    }
+
+    private fun directiveValue(m: MatchResult): String {
+        return (if (m.groups[2] != null) unescapeTomlBasic(m.groupValues[2]) else m.groupValues[3]).trim()
+    }
+
+    private fun textDirectiveValue(m: MatchResult): String {
+        return when {
+            m.groups[2] != null -> m.groupValues[2]
+            m.groups[3] != null -> m.groupValues[3]
+            m.groups[4] != null -> unescapeTomlBasic(m.groupValues[4])
+            else -> m.groupValues[5]
+        }
+    }
+
+    private fun parseKeyLines(text: String, into: MutableMap<String, String>) {
+        langLineRegex.findAll(text).forEach { m ->
+            into[m.groupValues[1]] = escapeSeqRegex.replace(m.groupValues[2]) { it.groupValues[1] }
+        }
     }
 
     private fun applyLoadKey(rawText: String): String {
         val keyMatch = loadKeyDirectiveRegex.find(rawText)
         val tomlMatches = loadTomlDirectiveRegex.findAll(rawText).toList()
-        if (keyMatch == null && tomlMatches.isEmpty()) return rawText
+        val textMatches = loadTextDirectiveRegex.findAll(rawText).toList()
+        if (keyMatch == null && tomlMatches.isEmpty() && textMatches.isEmpty()) return rawText
 
         val keyIsShell = keyMatch?.groupValues?.get(1) == "-sh"
         val keyValue = keyMatch?.groupValues?.get(2)?.trim().orEmpty()
-        val tomlValues = tomlMatches.map { m ->
-            (if (m.groups[2] != null) unescapeTomlBasic(m.groupValues[2]) else m.groupValues[3]).trim()
-        }
+        val tomlValues = tomlMatches.map { directiveValue(it) }
+        val textValues = textMatches.map { textDirectiveValue(it) }
 
-        // load-toml-sh chạy TRƯỚC load-key-sh: script toml có thể tạo/xoá file key (vd lang/auto.bash)
+        // Thứ tự chạy: load-toml-sh -> load-key-sh -> load-text-sh
         val scripts = LinkedHashMap<String, String>()
         tomlMatches.forEachIndexed { index, m ->
             if (m.groupValues[1] == "-sh" && tomlValues[index].isNotEmpty()) scripts["toml:$index"] = tomlValues[index]
         }
         if (keyIsShell && keyValue.isNotEmpty()) scripts["key"] = keyValue
+        textMatches.forEachIndexed { index, m ->
+            if (m.groupValues[1] == "-sh" && textValues[index].isNotBlank()) scripts["text:$index"] = textValues[index].trim()
+        }
         if (vitualRootNode == null) {
             vitualRootNode = NodeInfoBase(pageConfigAbsPath)
         }
@@ -148,6 +171,7 @@ class PageConfigReader {
 
         val patches = ArrayList<Pair<IntRange, String>>()
         keyMatch?.let { patches.add(it.range to "") }
+        textMatches.forEach { patches.add(it.range to "") }
         tomlMatches.forEachIndexed { index, m ->
             val piece = if (m.groupValues[1] == "-sh") shellResults["toml:$index"].orEmpty() else readTomlFileText(tomlValues[index])
             patches.add(m.range to prepareTomlPiece(piece))
@@ -162,27 +186,24 @@ class PageConfigReader {
         builder.append(rawText, cursor, rawText.length)
         val merged = builder.toString()
 
+        val keyMap = LinkedHashMap<String, String>()
+
         val keyPath = (if (keyIsShell) shellResults["key"].orEmpty() else keyValue).trim()
-        var stream: InputStream? = null
         if (keyPath.isNotEmpty() && keyPath != "error") {
-            stream = try {
+            try {
                 PathAnalysis(context, parentDir).parsePath(keyPath)
+                    ?.use { it.bufferedReader(Charsets.UTF_8).readText() }
+                    ?.let { parseKeyLines(it, keyMap) }
             } catch (_: Exception) {
-                null
             }
         }
 
-        val keyMap = try {
-            stream?.use { s ->
-                val keyText = s.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                langLineRegex.findAll(keyText).associate { m ->
-                    m.groupValues[1] to escapeSeqRegex.replace(m.groupValues[2]) { it.groupValues[1] }
-                }
-            }
-        } catch (_: Exception) {
-            null
+        // load-text xử lý sau cùng: ghi đè key của load-key, dòng sau ghi đè dòng trước
+        textMatches.forEachIndexed { index, m ->
+            val text = if (m.groupValues[1] == "-sh") shellResults["text:$index"].orEmpty() else textValues[index]
+            if (text.isNotEmpty()) parseKeyLines(text, keyMap)
         }
-        if (keyMap.isNullOrEmpty()) return merged
+        if (keyMap.isEmpty()) return merged
 
         val keyRefRegex = Regex("@(" + keyMap.keys.joinToString("|") { Regex.escape(it) } + ")\\b")
         return keyRefRegex.replace(merged) { m ->
