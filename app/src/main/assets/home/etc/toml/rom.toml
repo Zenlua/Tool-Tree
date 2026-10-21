@@ -124,7 +124,7 @@ script = '''
 [[group]]
 [[action]]
 title = "@decompile_text"
-desc = "@path_text: $SDCARD"
+desc = "@path_text: @SDCARD"
 icon = "{ICON}/decom.png"
 script = '''
   for vkl in $IMAGES; do

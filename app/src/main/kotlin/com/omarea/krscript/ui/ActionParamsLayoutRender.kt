@@ -629,7 +629,7 @@ class ActionParamsLayoutRender(private var linearLayout: LinearLayout, activity:
                 text = actionParamInfo.label
             }
         } else {
-            layout.findViewById<TextView>(R.id.kr_param_label).visibility = View.GONE
+            layout.findViewById<View>(R.id.kr_param_label_group).visibility = View.GONE
         }
 
         if (!actionParamInfo.desc.isNullOrEmpty()) {

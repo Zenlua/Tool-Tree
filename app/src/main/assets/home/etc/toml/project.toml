@@ -1,5 +1,8 @@
 [[toml]]
 load-key-sh = "langpath"
+load-text-sh = '''
+echo "SDC=${SDC/$SDCARD_PATH/\/sdcard}"
+'''
 
 [[group]]
 [[menu]]
@@ -13,7 +16,7 @@ shell = "hidden"
 reload = true
 icon = "{ICON}/folder_rom.png"
 title = "@folder_text"
-desc-sh = 'echo "@path_text: $SDC"'
+desc = "@path_text: @SDC"
 script = '''
   if [ ! -d "$FOLDER" ]; then
   slog SDC "$FOLDER"
