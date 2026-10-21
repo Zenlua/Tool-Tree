@@ -28,7 +28,7 @@ iw dev wlan0 link
 title = "@latest_update_text"
 auto-finish = true
 load-after = true
-icon-sh = 'echo "$PAGE_CONFIG_DIR/icon.png"'
+icon = "icon.png"
 support = "add_check $PAGE_CONFIG_DIR"
 url-sh = "cat $PAGE_CONFIG_DIR/update"
 script = "installadd $state ${PAGE_CONFIG_DIR%/*}"

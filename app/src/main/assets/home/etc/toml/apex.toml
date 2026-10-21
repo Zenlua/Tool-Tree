@@ -1,5 +1,11 @@
 [[toml]]
 load-key-sh = "langpath"
+load-text-sh = '''
+echo "PTAD=$PTAD
+APK=$APK
+PTAH=$PTAH
+SDCARD=${PTAD/$SDCARD_PATH/\/sdcard}"
+'''
 
 [[group]]
 [[action]]
@@ -7,7 +13,7 @@ shell = "hidden"
 reload = true
 menu = true
 title = "@projects_text"
-desc-sh = 'echo "@path_text: $PTAD"'
+desc = "@path_text: @PTAD"
 script = '''
 slog APK "$APK"
 if [ ! -d "$SDC/$Name" ] || [ ! -d "$APK/$Name" ]; then
@@ -23,7 +29,7 @@ fi
   [[action.params]]
   name = "APK"
   title = "@output_folder_text"
-  desc-sh = 'echo "@path_text: $APK"'
+  desc = "@path_text: @APK"
   type = "folder"
   value-sh = "glog APK"
   path-home = "{HOME}"
@@ -41,7 +47,7 @@ fi
 [[group]]
 [[action]]
 title = "@decompile_text"
-desc-sh = 'echo "@path_text: ${PTAD/#$SDCARD_PATH//sdcard}"'
+desc = "@path_text: @SDCARD"
 icon = "{ICON}/decom.png"
 script = '''
   IFS=$'\n'
@@ -63,7 +69,7 @@ script = '''
 
 [[action]]
 title = "@build_text"
-desc-sh = 'echo "@projects_text: $PTAH"'
+desc = "@projects_text: @PTAH"
 icon = "{ICON}/build.png"
 script = '''
   IFS=$'\n'

@@ -1,5 +1,11 @@
 [[toml]]
 load-key-sh = "langpath"
+load-text-sh = '''
+echo "PTSD=$PTSD
+PTSH=$PTSH
+SDH=$SDH
+SDCARD=${PTSD/$SDCARD_PATH/\/sdcard}"
+'''
 
 [[group]]
 [[action]]
@@ -7,7 +13,7 @@ shell = "hidden"
 reload = true
 menu = true
 title = "@projects_text"
-desc-sh = 'echo "@path_text: $PTSD"'
+desc = "@path_text: @PTSD"
 script = '''
 slog SDH "$SDH"
 if [ ! -d "$SDC/$Name" ] || [ ! -d "$SDH/$Name" ]; then
@@ -23,7 +29,7 @@ fi
   [[action.params]]
   name = "SDH"
   title = "@output_folder_text"
-  desc-sh = 'echo "@path_text: $SDH"'
+  desc = "@path_text: @SDH"
   type = "folder"
   value-sh = "glog SDH"
   path-home = "{HOME}"
@@ -118,7 +124,7 @@ script = '''
 [[group]]
 [[action]]
 title = "@decompile_text"
-desc-sh = 'echo "@path_text: ${PTSD/$SDCARD_PATH//sdcard}"'
+desc = "@path_text: $SDCARD"
 icon = "{ICON}/decom.png"
 script = '''
   for vkl in $IMAGES; do
@@ -198,7 +204,7 @@ script = '''
 
 [[action]]
 title = "@build_text"
-desc-sh = 'echo "@projects_text: $PTSH"'
+desc = "@projects_text: @PTSH"
 icon = "{ICON}/build.png"
 script = '''
   slog nen_br "$nen_br"

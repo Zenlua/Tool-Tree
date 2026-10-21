@@ -1,5 +1,9 @@
 [[toml]]
 load-key-sh = "langpath"
+load-text-sh = '''
+echo "PTSD=$PTSD
+SDH=$SDH"
+'''
 
 [[group]]
 [[action]]
@@ -7,7 +11,7 @@ shell = "hidden"
 reload = true
 menu = true
 title = "@projects_text"
-desc-sh = 'echo "@path_text: $PTSD"'
+desc = "@path_text: @PTSD"
 script = '''
 slog SDH "$SDH"
 if [ ! -d "$SDC/$Name" ] || [ ! -d "$SDH/$Name" ]; then
@@ -23,7 +27,7 @@ fi
   [[action.params]]
   name = "SDH"
   title = "@output_folder_text"
-  desc-sh = 'echo "@path_text: $SDH"'
+  desc = "@path_text: @SDH"
   type = "folder"
   value-sh = "glog SDH"
   path-home = "{HOME}"

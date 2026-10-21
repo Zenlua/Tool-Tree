@@ -20,9 +20,7 @@ config = "{HOME}/etc/toml/feature.toml"
 title = "@permis_text_2"
 desc = "@permis_text_5"
 icon = "{ICON}/language.png"
-option-sh = """
-echo -e "|@default_text\nai|Gemini AI\nen|English\nvi|Việt nam\nru|Русский\nhu|Hungarian\nid|Indonesia\nes|Spanish"
-"""
+items = [ "|@default_text", "ai|Gemini AI", "en|English", "vi|Việt nam", "ru|Русский", "hu|Hungarian", "id|Indonesia", "es|Spanish" ]
 get = "glog language_kkts"
 set = """
 if [ "$state" == "ai" ]; then
