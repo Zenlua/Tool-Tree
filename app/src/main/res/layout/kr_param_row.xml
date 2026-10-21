@@ -56,7 +56,7 @@
                 style="@style/textTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:maxWidth="99dp"
+                android:maxWidth="89dp"
                 android:maxLines="2"
                 android:textStyle="normal" />
 
