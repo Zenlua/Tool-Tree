@@ -529,11 +529,23 @@ class PageConfigReader {
         }
     }
 
+    // items = ["v|Title"] hoặc options = ["v|Title"] (mảng chuỗi) -> cùng một danh sách lựa chọn
+    private fun itemsOrStringOptions(table: TomlTable): TomlArray? {
+        table.getArray("items")?.let { return it }
+        if (!table.isArray("options")) return null
+        val arr = table.getArray("options") ?: return null
+        if (arr.size() == 0) return null
+        for (i in 0 until arr.size()) {
+            if (arr.get(i) !is String) return null
+        }
+        return arr
+    }
+
     private fun tomlEntries(parent: TomlTable, key: String): List<TomlTable> {
         return when {
             parent.isArray(key) -> {
                 val arr = parent.getArray(key) ?: return emptyList()
-                (0 until arr.size()).map { arr.getTable(it) }
+                (0 until arr.size()).mapNotNull { if (arr.get(it) is TomlTable) arr.getTable(it) else null }
             }
             parent.isTable(key) -> listOf(parent.getTable(key)!!)
             else -> emptyList()
@@ -897,7 +909,7 @@ class PageConfigReader {
             if (option.options == null) option.options = ArrayList()
             option.optionsSh = it
         }
-        val spinnerItemsArray = table.getArray("items")
+        val spinnerItemsArray = itemsOrStringOptions(table)
         if (spinnerItemsArray != null) {
             if (option.options == null) option.options = ArrayList()
             for (i in 0 until spinnerItemsArray.size()) {
@@ -974,7 +986,7 @@ class PageConfigReader {
         tomlGet(table, *TomlKeys.LOCK)?.let { parseLockAttr(it, picker) }
         tomlGet(table, *TomlKeys.LOCK_SH)?.let { picker.lockShell = it.trim() }
 
-        val pickerItemsArray = table.getArray("items")
+        val pickerItemsArray = itemsOrStringOptions(table)
         if (pickerItemsArray != null) {
             if (picker.options == null) picker.options = ArrayList()
             for (i in 0 until pickerItemsArray.size()) {
@@ -1146,7 +1158,7 @@ class PageConfigReader {
         tomlGet(table, "depend-sort")?.let { p.dependSort = p.dependReadonly && tomlTruthy(it) }
         tomlGet(table, "allow-no-selection", "no-select")?.let { p.allowNoSelection = tomlTruthy(it) }
 
-        val itemsArray = table.getArray("items")
+        val itemsArray = itemsOrStringOptions(table)
         if (itemsArray != null) {
             if (p.options == null) p.options = ArrayList()
             for (i in 0 until itemsArray.size()) {

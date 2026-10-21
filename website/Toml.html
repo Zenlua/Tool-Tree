@@ -936,7 +936,7 @@ type = "password"
 <tr><td class="field-name">min</td><td>-</td><td class="field-type">Int</td><td>Minimum value (seekbar)</td></tr>
 <tr><td class="field-name">max</td><td>-</td><td class="field-type">Int</td><td>Maximum value (seekbar). Default <code>Int.MAX_VALUE</code></td></tr>
 <tr><td class="field-name">options</td><td>-</td><td class="field-type">Array</td><td>List of choices (spinner/single-select/multi-select)</td></tr>
-<tr><td class="field-name">items</td><td>-</td><td class="field-type">Array of String</td><td>Shorthand choice list - each entry is <code>"value|title"</code> or just <code>"value"</code>. Takes priority over <code>options</code> tables when both are declared</td></tr>
+<tr><td class="field-name">items</td><td>-</td><td class="field-type">Array of String</td><td>Shorthand choice list - each entry is <code>"value|title"</code> or just <code>"value"</code>. Takes priority over <code>options</code> tables when both are declared. The same string list may also be written as <code>options = ["value|title", ...]</code></td></tr>
 <tr><td class="field-name">options-sh</td><td>option-sh</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options dynamically</td></tr>
 <tr><td class="field-name">multiple</td><td>-</td><td class="field-type">Bool</td><td>Allow multiple files/options</td></tr>
 <tr><td class="field-name">separator</td><td>-</td><td class="field-type">String</td><td>Value separator (multi). Default <code>\n</code></td></tr>
@@ -1085,7 +1085,7 @@ set = "settings put system screen_brightness_mode $state"
 <tr><td class="field-name">get</td><td>getstate</td><td class="field-type">String</td><td>Script to read the current value. If omitted, no dynamic current-state read is performed.</td></tr>
 <tr><td class="field-name">set</td><td>setstate</td><td class="field-type">String</td><td>Script to set the value. Receives <code>$state</code>. If omitted or empty, no set-state script is executed.</td></tr>
 <tr><td class="field-name">options</td><td>-</td><td class="field-type">Array</td><td>Static options list - <code>[[picker.options]]</code> with <code>title</code>/<code>value</code></td></tr>
-<tr><td class="field-name">items</td><td>-</td><td class="field-type">Array of String</td><td>Shorthand static choice list - each entry is <code>"value|title"</code> or just <code>"value"</code>. Takes priority over <code>[[picker.options]]</code> when both are declared (the two are alternative ways to write the same static list, not additive)</td></tr>
+<tr><td class="field-name">items</td><td>-</td><td class="field-type">Array of String</td><td>Shorthand static choice list - each entry is <code>"value|title"</code> or just <code>"value"</code>. Takes priority over <code>[[picker.options]]</code> when both are declared (the two are alternative ways to write the same static list, not additive). The same string list may also be written as <code>options = ["value|title", ...]</code></td></tr>
 <tr><td class="field-name">option-sh</td><td>options-sh</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options dynamically. Each line <code>value|title</code> or just <code>value</code></td></tr>
 <tr><td class="field-name">multiple</td><td>-</td><td class="field-type">Bool</td><td>Allow selecting multiple values</td></tr>
 <tr><td class="field-name">separator</td><td>-</td><td class="field-type">String</td><td>Separator for multi-select values (default <code>\n</code>)</td></tr>
@@ -1595,7 +1595,7 @@ script = "sh /data/data/com.tool.tree/files/run.sh"
 <tr><td class="field-name">path-home</td><td>home-path, pathhome</td><td class="field-type">String</td><td>Initial directory (file picker). Accepts <code>{HOME}</code> placeholders</td></tr>
 <tr><td class="field-name">multiple</td><td>-</td><td class="field-type">Bool</td><td>Allow multiple file selection</td></tr>
 <tr><td class="field-name">options</td><td>-</td><td class="field-type">Array</td><td>(type=spinner) Choice list</td></tr>
-<tr><td class="field-name">items</td><td>-</td><td class="field-type">Array of String</td><td>(type=spinner) Shorthand choice list - each entry is <code>"value|title"</code> or just <code>"value"</code>. Takes priority over <code>options</code> when both are declared</td></tr>
+<tr><td class="field-name">items</td><td>-</td><td class="field-type">Array of String</td><td>(type=spinner) Shorthand choice list - each entry is <code>"value|title"</code> or just <code>"value"</code>. Takes priority over <code>options</code> when both are declared. The same string list may also be written as <code>options = ["value|title", ...]</code></td></tr>
 <tr><td class="field-name">option-sh</td><td>options-sh</td><td class="field-type">String</td><td><span class="badge shell">shell</span> Script that produces options. Each line <code>value|title</code> or just <code>value</code></td></tr>
 <tr><td colspan="4" style="background:var(--bg-soft);font-style:italic;">The fields above are the menu/FAB item fields that are actually used by the page menu/FAB runtime.</td></tr>
 <tr><td class="field-name">auto-off</td><td>auto-close</td><td class="field-type">Bool</td><td>Close the execution log after the item finishes</td></tr>
