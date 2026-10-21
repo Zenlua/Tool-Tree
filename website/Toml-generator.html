@@ -1305,6 +1305,23 @@ function shOrStatic(f, key, tomlKey) {
   const tomlName = f[key + 'ShOn'] ? `${tomlKey}-sh` : tomlKey;
   return `\n${tomlName} = "${tomlEsc(v)}"`;
 }
+function loadTextLines(f) {
+  const norm = v => (v || '').replace(/\r\n?/g, '\n');
+  const triple = (name, v) => {
+    const lit = v.includes('"""') ? "'''" : '"""';
+    return `\n${name} = ${lit}\n${v}\n${lit}`;
+  };
+  let out = '';
+  const txt = norm(f.loadText).replace(/^\n+/, '').replace(/\s+$/, '');
+  if (txt) out += triple('load-text', txt);
+  const sh = norm(f.loadTextSh).trim();
+  if (sh) {
+    if (sh.includes('\n')) out += triple('load-text-sh', sh);
+    else if (!sh.includes("'")) out += `\nload-text-sh = '${sh}'`;
+    else out += `\nload-text-sh = "${tomlEsc(sh)}"`;
+  }
+  return out;
+}
 const titleLine   = f => shOrStatic(f, 'title',      'title');
 const descLine    = f => shOrStatic(f, 'desc',       'desc');
 const iconLine    = f => shOrStatic(f, 'icon',       'icon');
@@ -1794,10 +1811,12 @@ const TYPES = {
     label: 'group',
     desc: 'Groups related nodes. Resource, menu and FAB blocks can also be added here.',
     adv: [A_RESDIR],
-    advNote: 'Group uses title, key and support. load-key / load-toml are top-level directives. support: true = show · false = hide children · other = shell → 1. The Shell toggle makes support shell-backed. resource-dir extends [[resource]].',
+    advNote: 'Group uses title, key and support. load-key / load-toml / load-text are top-level directives. support: true = show · false = hide children · other = shell → 1. The Shell toggle makes support shell-backed. resource-dir extends [[resource]].',
     fields: [
       { key:'loadKey', label:'load-key', type:'text', default:'', sh:true, hint:'Top-level i18n file. @name tokens use this file. -sh = dynamic path. Blank → omitted.' },
       { key:'loadToml', label:'load-toml', type:'text', default:'', sh:true, hint:'Top-level dynamic TOML. Static = path of a .toml fragment; -sh = script whose output is TOML text. Merged before parsing, same step as load-key, so @name works inside it. Blank → omitted.' },
+      { key:'loadText', label:'load-text (inline keys)', type:'textarea', default:'', ph:'Key="test"\nKey2="test2"', hint:'Top-level inline key text, one name = "value" per line (single-quoted or unquoted values also work). Emitted as a triple-quoted block. Processed after load-key, so it adds missing keys and overrides same-name ones. Blank → omitted.' },
+      { key:'loadTextSh', label:'load-text-sh (script)', type:'text', default:'', ph:'cat lang/extra.bash', hint:'Script whose output is key text (name = "value" lines; single-quoted or unquoted values also work), e.g. cat file or echo "PTSH=$PTSH". Same rules as load-text. Blank → omitted.' },
       { key:'title', label:'title', type:'text', default:'CPU', sh:true, hint:'Display title. -sh = title-sh shell form.' },
       { key:'nodeKey', label:'key (id, optional)', type:'text', default:'', hint:'Unique ID. Required for desktop shortcuts. @ prefix disables them.' },
       { key:'support', label:'support', type:'text', default:'true', sh:true, shellOnly:true, hint:'true = show · false = hide group/children · other = shell → 1. -sh = shell form.' },
@@ -1814,7 +1833,8 @@ const TYPES = {
     code: f => {
       const lk = shOrStatic(f, 'loadKey', 'load-key');
       const lt = shOrStatic(f, 'loadToml', 'load-toml');
-      const loadKey = (lk || lt) ? '[[toml]]' + lk + lt + '\n\n' : '';
+      const lx = loadTextLines(f);
+      const loadKey = (lk || lt || lx) ? '[[toml]]' + lk + lt + lx + '\n\n' : '';
       const keyLine = f.nodeKey ? `\nkey = "${tomlEsc(f.nodeKey)}"` : '';
       let out = loadKey + `[[group]]${titleLine(f)}${keyLine}${supportLine(f)}\n`;
       const rf = (f.resourceFile||'').trim();
@@ -1869,6 +1889,7 @@ const TYPES = {
       if (f.supportShOn) h += ' a shell support makes visibility dynamic — the demo cannot predict it.';
       if ((f.loadKey||'').trim()) h += ' load-key is emitted at the very top of the file, under a [[toml]] marker line (page-level i18n directive).';
       if ((f.loadToml||'').trim()) h += ' load-toml is emitted next to load-key; the directive line is replaced by the loaded TOML before parsing, so the script should not print its own [[group]].';
+      if ((f.loadText||'').trim() || (f.loadTextSh||'').trim()) h += ' load-text / load-text-sh carry key lines directly (name = "value"); they are applied after load-key, so they add missing keys and override same-name ones.';
       return h;
     }
   },
@@ -2340,6 +2361,7 @@ const DOCS = {
       ['tip','Groups cannot be nested: declaring a new <code>[[group]]</code> closes the previous one. To stop wrapping without a new group, add an empty <code>[[end]]</code> line — the nodes after it render on the page without a group wrapper (optional; not needed before another <code>[[group]]</code>). Reserved name: <code>[[toml]]</code> is a parser marker (inline TOML from <code>config-sh</code>), not a node — it is skipped harmlessly. To wrap a single node in a group, use the <b>wrap in [[group]]</b> checkbox at the top of its Fields panel.'],
       ['tip','<b>load-key / load-key-sh</b> is a page-level directive, not a group field — this tab emits it (with its -sh toggle) at the very top of the file when filled, preceded by a <code>[[toml]]</code> marker line.'],
       ['tip','<b>load-toml / load-toml-sh</b> works the same way: the line is replaced by a <code>.toml</code> fragment (or the script output) <i>before</i> parsing, loaded together with <code>load-key</code> so <code>@name</code> also applies to it. Do not print <code>[[group]]</code> from a menu/fab-only script — it would capture the static nodes after the directive.'],
+      ['tip','<b>load-text / load-text-sh</b> take key lines directly instead of a file path: <code>load-text = """\nKey="test"\nKey2="test2"\n"""</code> or <code>load-text-sh = \'cat lang/extra.bash\'</code> (script output = key text). Several lines are allowed; they run after <code>load-key</code>, so they add missing keys and override same-name ones (later line wins).'],
     ],
     example: `[[group]]
 title = "CPU"
@@ -2769,7 +2791,9 @@ const TOPICS = [
 <h4>String resources</h4>
 <p>Any text field accepts <code>@string/name</code> or <code>@string:name</code> (interchangeable). Unknown resources are kept as-is.</p>
 <h4>load-key / load-key-sh — inline key/value substitution (i18n)</h4>
-<p>Declare <b>one</b> directive line (usually at the top): <code>load-key = "strings_en.txt"</code> or the dynamic <code>load-key-sh = "..."</code>. Before parsing, every <code>@name</code> token in the whole document is replaced with the matching line from the key file (<code>name = "value"</code> per line). Unknown names are left untouched; the first directive wins. In this generator, the <b>group tab</b> has a load-key field (with a -sh toggle) that emits it at the very top of the output.</p>
+<p>Declare <b>one</b> directive line (usually at the top): <code>load-key = "strings_en.txt"</code> or the dynamic <code>load-key-sh = "..."</code>. Before parsing, every <code>@name</code> token in the whole document is replaced with the matching line from the key file (<code>name = "value"</code> per line). Unknown names are left untouched; the first directive wins. All load-* directives accept the same quote forms: <code>"…"</code> (with <code>\"</code> escapes), <code>'…'</code>, <code>"""…"""</code> and <code>'''…'''</code>. In this generator, the <b>group tab</b> has a load-key field (with a -sh toggle) that emits it at the very top of the output.</p>
+<h4>load-text / load-text-sh — inline key text</h4>
+<p>Same <code>name = "value"</code> lines as a key file, but written inline or produced by a script instead of loaded from a path: <code>load-text = """…"""</code> (also <code>'''…'''</code>, <code>"…"</code> or <code>'…'</code>) and <code>load-text-sh = 'cat file.txt'</code> (the script <i>output</i> is the key text). Several lines are allowed. They are applied after <code>load-key</code>: keys missing from the key file are added, same-name keys are overridden, and a later <code>load-text</code> wins over an earlier one. Script order in the shared round-trip: <code>load-toml-sh</code>, <code>load-key-sh</code>, then <code>load-text-sh</code>. In this generator, the group tab has <b>load-text</b> and <b>load-text-sh</b> fields.</p>
 <h4>load-toml / load-toml-sh — dynamic TOML merged before parsing</h4>
 <p><code>load-toml = "extra.toml"</code> or <code>load-toml-sh = 'bash menu.sh "$PAGE_CONFIG_DIR"'</code>. Runs in the same step as <code>load-key</code> (all <code>-sh</code> scripts in one shell round-trip; <code>load-toml-sh</code> run first, <code>load-key-sh</code> last, so a toml script can create/delete the key file). The directive line is replaced in place by the file content / script output, then <code>{ROT}</code>/<code>{LOT}</code> and <code>@name</code> substitution run once over the merged text. Several lines are allowed; empty output is skipped; output is not re-scanned (no recursion). Put the line between tables, and do not print <code>[[group]]</code> from a script that only adds <code>[[menu]]</code>/<code>[[fab]]</code> entries. <code>$1</code> is not set automatically — pass <code>"$PAGE_CONFIG_DIR"</code> yourself.</p>
 <div class="doc-note warn">Avoid naming a load-key <code>string</code>, <code>color</code> or <code>android</code> — they would shadow the <code>@string/…</code>, <code>@color/…</code>, <code>@android:color/…</code> resource references. The <code>@name</code> prefix (instead of <code>$name</code>) exists precisely to avoid collisions with shell variables like <code>$PATH</code> inside scripts.</div>
@@ -2833,6 +2857,7 @@ const TOPICS = [
 <tr><td>config-sh</td><td>[[page]]</td><td>When the sub-page opens — .toml path or inline TOML</td></tr>
 <tr><td>load-key-sh</td><td>directive</td><td>Before parsing — outputs the key file path</td></tr>
 <tr><td>load-toml-sh</td><td>directive</td><td>Before parsing (batched with load-key-sh) — outputs TOML text that replaces the directive line</td></tr>
+<tr><td>load-text-sh</td><td>directive</td><td>Before parsing (batched, runs after load-key-sh) — outputs key text (<code>name = "value"</code> lines)</td></tr>
 </table></div>
 <div class="doc-note tip">If a *-sh script fails or returns empty, the static field value is kept — the page never crashes because of a failed dynamic script.</div>
 <div class="doc-note warn"><b>One-variant rule (generator):</b> every field kind is emitted <b>exactly once</b>. Param cards: <code>name</code> always names the $env_var while each pill (title / value / desc / support) swaps its cell between text and shell; <code>options-sh</code> replaces the whole static option list. The Advanced pairs resolve to one line too: <code>options</code>/<code>options-sh</code> (picker), <code>reload = true</code>/<code>reload = "keys"</code>, <code>bg-task = true</code>/<code>shell = "..."</code>. Fields left <b>empty</b> are omitted from the output entirely.</div>`
@@ -2873,7 +2898,7 @@ config-sh = "gen_module_list.sh"</pre>`
 <p>Opening a page (main or sub) runs this sequence:</p>
 <ol>
 <li><code>before-load</code> (page field) — shell before the config is read</li>
-<li>config read/parse — <code>load-key</code> / <code>load-toml</code> merge + substitution → <code>Toml.parse()</code> → node tree build (immediate shells run here)</li>
+<li>config read/parse — <code>load-key</code> / <code>load-toml</code> / <code>load-text</code> merge + substitution → <code>Toml.parse()</code> → node tree build (immediate shells run here)</li>
 <li><code>after-load</code> — shell after reading completes</li>
 <li><code>load-ok</code> or <code>load-fail</code> — depending on the outcome</li>
 <li>page shown → pending states batch (get / *-sh / row support) applied</li>

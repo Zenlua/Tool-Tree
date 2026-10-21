@@ -588,7 +588,7 @@ desc = "@string:switch_fast_charge_desc"
 get = "getprop sys.fastcharge"
 set = "setprop sys.fastcharge $state"</code></pre>
 <div class="callout tip">Both <code>@string/name</code> and <code>@string:name</code> point to the same resource lookup - use whichever separator you prefer, they are interchangeable.</div>
-<h3>2.7. <code>load-key</code> / <code>load-toml</code> - inline key/value substitution and dynamic TOML</h3>
+<h3>2.7. <code>load-key</code> / <code>load-text</code> / <code>load-toml</code> - inline key/value substitution and dynamic TOML</h3>
 <p>A page may declare <strong>one</strong> directive line anywhere in the document (typically at the very top):</p>
 <pre><code>load-key = "strings_en.txt"
 
@@ -602,8 +602,10 @@ set = "settings put global wifi_on $state"</code></pre>
 <tr><th>Directive</th><th>Description</th></tr>
 <tr><td><code>load-key = "path"</code></td><td>Path of the key file - resolved like every other path (relative to the page config dir, app-private dir, APK assets, or absolute), and accepts the <code>{HOME}</code>/<code>{ICON}</code> path placeholders described in <a href="#rules">§2.8</a></td></tr>
 <tr><td><code>load-key-sh = "script"</code></td><td><span class="badge shell">shell</span> Script whose output is the key file path instead of a static path</td></tr>
+<tr><td><code>load-text = """..."""</code></td><td>Key lines written <strong>inline</strong> (<code>name = "value"</code> per line) instead of a file path. Accepts <code>"""..."""</code> / <code>'''...'''</code> (multi-line, raw) and <code>"..."</code> (with escapes) / <code>'...'</code> (single line). May repeat</td></tr>
+<tr><td><code>load-text-sh = "script"</code></td><td><span class="badge shell">shell</span> Script whose <strong>output is key text</strong> (e.g. <code>load-text-sh = 'cat lang/extra.bash'</code>). May repeat</td></tr>
 <tr><td><code>load-toml = "path"</code></td><td>Path of a <code>.toml</code> fragment - resolved like <code>load-key</code>. The directive line is replaced by the file content before parsing</td></tr>
-<tr><td><code>load-toml-sh = "script"</code></td><td><span class="badge shell">shell</span> Script whose <strong>output is TOML text</strong>. The directive line is replaced by that output before parsing. Use <code>"..."</code> (with <code>\"</code> escapes) or a <code>'...'</code> literal string, e.g. <code>load-toml-sh = 'bash menu.sh "$PAGE_CONFIG_DIR"'</code></td></tr>
+<tr><td><code>load-toml-sh = "script"</code></td><td><span class="badge shell">shell</span> Script whose <strong>output is TOML text</strong>. The directive line is replaced by that output before parsing. Use any quote form (<code>"..."</code> with <code>\"</code> escapes, <code>'...'</code>, <code>"""..."""</code>, <code>'''...'''</code>), e.g. <code>load-toml-sh = 'bash menu.sh "$PAGE_CONFIG_DIR"'</code></td></tr>
 </table>
 </div>
 <p>The key file itself is a simple list of lines <code>name = "value"</code> (name starts with a letter/underscore; value is quoted; <code>\</code> escape sequences are supported):</p>
@@ -611,6 +613,16 @@ set = "settings put global wifi_on $state"</code></pre>
 wifi_title = "Wi-Fi booster"
 wifi_desc = "Keep Wi-Fi on during sleep"</code></pre>
 <div class="callout tip">Substitution details: unknown <code>@name</code> references are left untouched; values are re-escaped (<code>\</code> → <code>\\</code>, <code>"</code> → <code>\"</code>) so they are safe inside TOML strings; the directive line itself is removed from the document after processing. Only the <strong>first</strong> <code>load-key</code> directive line is applied - later ones are ignored (<code>load-toml*</code> lines may repeat).</div>
+<div class="callout tip">Quote forms - identical for <code>load-key*</code>, <code>load-toml*</code> and <code>load-text*</code>: <code>"..."</code> (with <code>\"</code> / <code>\\</code> escapes), <code>'...'</code> (literal), <code>"""..."""</code> and <code>'''...'''</code> (multi-line, raw). So a script can use either quote style, e.g. <code>load-key-sh = 'echo "$PAGE_CONFIG_DIR/lang/vi.bash"'</code>. Every <code>load-key*</code> line is removed from the document, but only the first one is applied.</div>
+<h4>Inline key text: <code>load-text</code> / <code>load-text-sh</code></h4>
+<p><code>load-text</code> takes the key lines directly, so no separate key file is needed. It can be combined with <code>load-key</code> in the same page:</p>
+<pre><code>load-key = "strings_en.txt"
+load-text = """
+extra_title = "Added inline"
+wifi_desc = "Overrides the key file"
+"""
+load-text-sh = 'cat lang/more.bash'</code></pre>
+<div class="callout tip">Rules: <code>load-text*</code> is applied <strong>after</strong> <code>load-key</code> - keys missing from the key file are added, a same-name key is overridden, and a later <code>load-text*</code> line wins over an earlier one. Several lines are allowed. Each key line is a single line: <code>name = "value"</code> (escapes supported), <code>name = 'value'</code> or unquoted <code>name=value</code> (rest of the line, taken as-is - handy for <code>echo "PTSH=$PTSH"</code>); lines that do not match are ignored and an empty / failed output is skipped. Shell order in the shared round-trip: <code>load-toml-sh</code>, <code>load-key-sh</code>, then <code>load-text-sh</code>. The whole directive (including a multi-line block) is removed from the document before parsing.</div>
 <h4>Dynamic TOML: <code>load-toml</code> / <code>load-toml-sh</code></h4>
 <p>These directives are handled in the <strong>same step as <code>load-key</code></strong>, before <code>Toml.parse()</code>. All <code>load-key-sh</code> and <code>load-toml-sh</code> scripts run together in <strong>one</strong> shell round-trip. Order inside that round-trip: every <code>load-toml-sh</code> first (file order), <code>load-key-sh</code> <strong>last</strong> - so a toml script may create or delete the key file (e.g. <code>lang/auto.bash</code>) before the key path is resolved. Each <code>load-toml*</code> line is replaced in place by the loaded text, then <code>{ROT}</code>/<code>{LOT}</code> and the <code>@name</code> substitution run once over the merged document - so dynamic output can use <code>@name</code> too, and nodes keep the position (and group) of the directive line.</p>
 <pre><code>load-key = "strings_en.txt"
@@ -2030,6 +2042,7 @@ script = "sh $state"
 <li>Naming unification (old names still work): <code>bg-image</code>/<code>bg-image-sh</code> = background image everywhere (nodes, text, rows; legacy node <code>bg</code>/<code>bg-sh</code>), <code>bg-color</code> = background color (legacy row <code>bg</code>), <code>confirm</code> = Bool everywhere with <code>confirm-text</code> for the message (legacy row string <code>confirm</code> still works).</li>
 <li>Added the <code>[[end]]</code> marker (§ groups): closes the current <code>[[group]]</code> so the following nodes render on the page without a group wrapper. Optional - a new <code>[[group]]</code> still closes the previous one.</li>
 <li>Added <code>load-toml</code> / <code>load-toml-sh</code> directives (§2.7): merge a TOML fragment (file or shell output) into the document before parsing, in the same step as <code>load-key</code>, so <code>@name</code> substitution also applies to it.</li>
+<li>Added <code>load-text</code> / <code>load-text-sh</code> directives (§2.7): inline key text (<code>"""..."""</code> block or script output) applied after <code>load-key</code>, so it adds missing keys and overrides same-name ones; several lines allowed.</li>
 <li>Added <code>fab-spin</code> for <code>[[fab.items]]</code>: the FAB icon spins only when it is true — while the item's script runs or the page reloads (<code>refresh</code>/<code>reload</code>/<code>reload-page</code>). The old automatic spin on page reload is removed.</li>
 </ul>
 </section>

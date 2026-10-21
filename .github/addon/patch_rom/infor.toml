@@ -1,8 +1,9 @@
 [[toml]]
 load-key-sh = "ETC=$PAGE_CONFIG_DIR langpath"
+load-text-sh = 'echo "PTSH=$PTSH"'
 
 [[group]]
-title-sh = 'echo "@project_text: $PTSH"'
+title = "@project_text: @PTSH"
 [[action]]
 title = "@desc_patch_prop"
 warn = "@desc_patch_prop_long"
@@ -103,7 +104,7 @@ checktime
 name = "cover_data_app"
 type = "text"
 options-sh = "$PAGE_CONFIG_DIR/patch-rom search_apk | sort"
-desc-sh = 'echo "@string_text_1: Project/$PTSH"'
+desc = "@string_text_1: Project/@PTSH"
 required = true
 multiple = true
 
