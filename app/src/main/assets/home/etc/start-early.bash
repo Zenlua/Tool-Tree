@@ -22,9 +22,8 @@ taive -s "$urlgitv1/$1" "$TMP/$1"
 for vv in $2/*/nodelete; do
 [ -f "$vv" ] && rm -fr "${vv%/*}"
 done
-unzip -o "$TMP/$1" -d "$2"
+unzip -o "$TMP/$1" -d "$2" && slog "shum_add_${1%.*}" "$shum_add"
 rm -fr "$TMP/$1"
-slog "shum_add_${1%.*}" "$shum_add"
 fi
 }
 taiveadd AOK.zip "$AOK"
