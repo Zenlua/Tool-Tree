@@ -29,7 +29,6 @@ config = "infor.toml"
 
 [[group]]
 title = "@reminder_notes"
-
 [[action]]
 title = "@title_framework_patch"
 warn = "@warning_notes_text"
@@ -67,7 +66,7 @@ label = "@label_fix_toolbox"
 desc = "@required_files_text: framework.jar, services.jar"
 type = "bool"
 depend = "FILE"
-depend-value = "*framework.jar,* services.jar"
+depend-value = "*framework.jar,*services.jar"
 depend-mode = "show"
 depend-readonly = "true"
 depend-sort = "true"
@@ -516,7 +515,7 @@ else
   path_apk="${urlapk%/*}"
   goc_apk="${tep_apk%/*}"
   if [ -d "$path_apk/lib" ] && [ -f "$TMP/app/${urlapk##*/}" ]; then
-    cp -af "$path_apk/lib" "$TMP/app"
+  cp -af "$path_apk/lib" "$TMP/app"
   fi
 fi
 su -mm -c umount -l "$path_apk" 2>/dev/null
@@ -563,7 +562,7 @@ desc = "@param2_desc"
 type = "seekbar"
 min = 5
 max = 300
-value = "60"
+value = 60
 
 [[action.params]]
 name = "kill_customize"
@@ -648,7 +647,7 @@ type = "bool"
 [[group]]
 [[action]]
 title = "@title_boot_patch"
-summary = "Android"
+summary = "Xiaomi"
 warn = "@title_boot_patch2, @title_boot_patch3_desc"
 script = '$PAGE_CONFIG_DIR/patch-rom patch_boot "$FOLDER"'
 
@@ -669,4 +668,4 @@ type = "bool"
 [[action.params]]
 name = "fix_diselinux"
 label = "@title_boot_patch4"
-items = [ "0|$default_text", "1|enforcing", "2|permissive", "3|disabled" ]
+items = [ "0|@default_text", "1|enforcing", "2|permissive", "3|disabled" ]
