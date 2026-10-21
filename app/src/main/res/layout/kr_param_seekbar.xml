@@ -35,5 +35,4 @@
         android:id="@+id/kr_param_seekbar_plus"
         style="@style/SceneSeekbarIcon"
         android:src="@drawable/kr_plus" />
-
 </LinearLayout>
