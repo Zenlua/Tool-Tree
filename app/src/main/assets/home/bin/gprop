@@ -6,5 +6,5 @@ if [ "$1" == '-h' ] || [ "$1" == '--help' ] || [ -z "$1" ]; then
 fi
 
 if [ -f "$2" ]; then
-    awk -F= -v k="$1" '$1==k{print $2}' "$2"
+    awk -F= -v k="$1" '$1==k{print $2; exit}' "$2"
 fi
