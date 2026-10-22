@@ -6,6 +6,12 @@ echo "PTSH=$PTSH
 SDCARD=${PTAD/$SDCARD_PATH/\/sdcard}"
 '''
 
+[[menu.items]]
+title = "@check_updates"
+auto-finish = true
+silent = true
+script = "rm -f $PAGE_CONFIG_DIR/zcheck"
+
 [[group]]
 [[download]]
 title = "@latest_update_text"

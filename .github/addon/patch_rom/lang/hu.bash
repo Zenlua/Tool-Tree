@@ -89,3 +89,4 @@ open_app_text="Értesítés eltávolítása az alkalmazás megnyitásának enged
 label_fix_window="Ablak korlátozásának feloldása"
 install_text="App telepítése"
 global_mod_text_6="Nyomja meg és tartsa lenyomva a bekapcsológombot az újraindítási menü megnyitásához"
+check_updates="Ellenőrizd a frissítéseket"
