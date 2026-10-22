@@ -139,21 +139,21 @@ class PageConfigReader {
     private val langLineSingleRegex = Regex("""^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*=[ \t]*'([^']*)'[ \t]*$""")
     private val langLineRawRegex = Regex("""^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*=[ \t]*([^"'\s][^\r\n]*?|)[ \t]*$""")
 
-    // lenient=true (load-text): ngoài name = "value" còn nhận name = 'value' và name=value (không nháy)
+    // Luôn nhận name = "value" (có escape \n \t \r) và name = 'value'; lenient=true (load-text) nhận thêm name=value (không nháy)
     private fun parseKeyLines(text: String, into: MutableMap<String, String>, lenient: Boolean = false) {
         for (rawLine in text.split('\n')) {
             val line = rawLine.trimEnd('\r')
             val quoted = langLineRegex.matchEntire(line)
             if (quoted != null) {
-                into[quoted.groupValues[1]] = escapeSeqRegex.replace(quoted.groupValues[2]) { it.groupValues[1] }
+                into[quoted.groupValues[1]] = unescapeTomlBasic(quoted.groupValues[2])
                 continue
             }
-            if (!lenient) continue
             val single = langLineSingleRegex.matchEntire(line)
             if (single != null) {
                 into[single.groupValues[1]] = single.groupValues[2]
                 continue
             }
+            if (!lenient) continue
             val raw = langLineRawRegex.matchEntire(line)
             if (raw != null) into[raw.groupValues[1]] = raw.groupValues[2]
         }
@@ -222,7 +222,13 @@ class PageConfigReader {
 
         val keyRefRegex = Regex("@(" + keyMap.keys.joinToString("|") { Regex.escape(it) } + ")\\b")
         return keyRefRegex.replace(merged) { m ->
-            keyMap[m.groupValues[1]]?.replace("\\", "\\\\")?.replace("\"", "\\\"") ?: m.value
+            keyMap[m.groupValues[1]]
+                ?.replace("\\", "\\\\")
+                ?.replace("\"", "\\\"")
+                ?.replace("\r", "\\r")
+                ?.replace("\n", "\\n")
+                ?.replace("\t", "\\t")
+                ?: m.value
         }
     }
 
