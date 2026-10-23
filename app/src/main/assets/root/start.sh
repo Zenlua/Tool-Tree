@@ -1,1 +1,1 @@
-exec $ETC/boot
+$ETC/boot
